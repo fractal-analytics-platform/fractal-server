@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import TaskGroupV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.fixtures_slurm import SLURM_USER
@@ -95,17 +96,13 @@ async def test_task_collection_ssh_from_pypi(
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
         task_groupv2_id = task_group_activity["taskgroupv2_id"]
-        # Check pip_freeze attribute in TaskGroupV2
-        res = await client.get("/api/v2/task-group/" f"{task_groupv2_id}/")
-        assert res.status_code == 200
-        task_group = res.json()
-        assert (
-            f"testing-tasks-mock=={package_version}"
-            in task_group["pip_freeze"]
-        )
+        # Check env_info attribute in TaskGroupV2
+        db.expunge_all()
+        task_group = await db.get(TaskGroupV2, task_groupv2_id)
+        assert f"testing-tasks-mock=={package_version}" in task_group.env_info
         # Check venv_size and venv_file_number in TaskGroupV2
-        assert task_group["venv_size_in_kB"] is not None
-        assert task_group["venv_file_number"] is not None
+        assert task_group.venv_size_in_kB is not None
+        assert task_group.venv_file_number is not None
         # API FAILURE 1, due to non-duplication constraint
         res = await client.post(
             f"{PREFIX}/collect/pip/",
@@ -245,7 +242,7 @@ async def test_task_collection_ssh_failure(
     )
 
     # Prepare payload that leads to a failed collection
-    local_wheel_path = (
+    local_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
@@ -253,9 +250,13 @@ async def test_task_collection_ssh_failure(
     payload = dict(
         python_version=current_py_version,
     )
-    with open(local_wheel_path, "rb") as f:
+    with open(local_archive_path, "rb") as f:
         files = {
-            "file": (Path(local_wheel_path).name, f.read(), "application/zip")
+            "file": (
+                Path(local_archive_path).name,
+                f.read(),
+                "application/zip",
+            )
         }
 
     async with MockCurrentUser(
@@ -276,13 +277,13 @@ async def test_task_collection_ssh_failure(
 
         monkeypatch.setattr(
             fractal_server.tasks.v2.ssh._utils.FractalSSH,
-            "remove_folder",
-            patched_remove_folder,
+            "send_file",
+            patched_send_file,
         )
         monkeypatch.setattr(
             fractal_server.tasks.v2.ssh._utils.FractalSSH,
-            "send_file",
-            patched_send_file,
+            "remove_folder",
+            patched_remove_folder,
         )
         res = await client.post(
             f"{PREFIX}/collect/pip/", data=payload, files=files

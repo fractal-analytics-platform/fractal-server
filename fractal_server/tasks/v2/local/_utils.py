@@ -31,7 +31,7 @@ def _customize_and_run_template(
             f"Invalid {template_filename=} (it must end with '.sh')."
         )
 
-    script_filename = f"{prefix}{template_filename}"
+    script_filename = f"{prefix}_{template_filename}"
     script_path_local = Path(script_dir) / script_filename
     # Read template
     customize_template(
@@ -53,16 +53,17 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
     Args:
         task_list:
     """
+
     for _task in task_list:
         if _task.command_non_parallel is not None:
-            _task_path = _task.command_non_parallel.split()[1]
+            _task_path = _task.command_non_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(
                     f"Task `{_task.name}` has `command_non_parallel` "
                     f"pointing to missing file `{_task_path}`."
                 )
         if _task.command_parallel is not None:
-            _task_path = _task.command_parallel.split()[1]
+            _task_path = _task.command_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(
                     f"Task `{_task.name}` has `command_parallel` "

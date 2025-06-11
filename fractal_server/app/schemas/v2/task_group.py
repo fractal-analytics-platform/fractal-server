@@ -16,6 +16,7 @@ from fractal_server.types import NonEmptyStr
 class TaskGroupV2OriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
+    PIXI = "pixi"
     OTHER = "other"
 
 
@@ -41,11 +42,12 @@ class TaskGroupCreateV2(BaseModel):
     pkg_name: str
     version: str | None = None
     python_version: NonEmptyStr = None
+    pixi_version: NonEmptyStr = None
     path: AbsolutePathStr = None
     venv_path: AbsolutePathStr = None
-    wheel_path: AbsolutePathStr = None
+    archive_path: AbsolutePathStr = None
     pip_extras: NonEmptyStr = None
-    pip_freeze: str | None = None
+    env_info: str | None = None
     pinned_package_versions: DictStrStr = Field(default_factory=dict)
 
 
@@ -55,8 +57,8 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     """
 
     path: AbsolutePathStr
-    venv_path: AbsolutePathStr
     version: NonEmptyStr
+    venv_path: AbsolutePathStr
     python_version: NonEmptyStr
 
 
@@ -71,10 +73,10 @@ class TaskGroupReadV2(BaseModel):
     pkg_name: str
     version: str | None = None
     python_version: str | None = None
+    pixi_version: str | None = None
     path: str | None = None
     venv_path: str | None = None
-    wheel_path: str | None = None
-    pip_freeze: str | None = None
+    archive_path: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(default_factory=dict)
 

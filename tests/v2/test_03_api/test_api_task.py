@@ -25,15 +25,19 @@ async def test_non_verified_user(client, MockCurrentUser):
 
 async def test_fail_wheel_file_and_version(client, testdata_path):
 
-    local_wheel_path = (
+    local_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     ).as_posix()
 
-    with open(local_wheel_path, "rb") as f:
+    with open(local_archive_path, "rb") as f:
         files = {
-            "file": (Path(local_wheel_path).name, f.read(), "application/zip")
+            "file": (
+                Path(local_archive_path).name,
+                f.read(),
+                "application/zip",
+            )
         }
     res = await client.post(
         f"{PREFIX}/collect/pip/",

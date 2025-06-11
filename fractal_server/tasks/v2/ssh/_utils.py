@@ -1,6 +1,10 @@
 import os
 from pathlib import Path
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..utils_background import fail_and_cleanup
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -10,7 +14,7 @@ from fractal_server.tasks.v2.utils_templates import customize_template
 def _customize_and_run_template(
     *,
     template_filename: str,
-    replacements: list[tuple[str, str]],
+    replacements: set[tuple[str, str]],
     script_dir_local: str,
     prefix: str,
     fractal_ssh: FractalSSH,
@@ -66,22 +70,59 @@ def _customize_and_run_template(
 
 
 def _copy_wheel_file_ssh(
-    *, task_group: TaskGroupV2, fractal_ssh: FractalSSH, logger_name: str
+    *,
+    task_group: TaskGroupV2,
+    fractal_ssh: FractalSSH,
+    logger_name: str,
 ) -> str:
     """
-    Handle the situation where `task_group.wheel_path` is not part of
-    `task_group.path`, by copying `wheel_path` into `path`.
+    Handle the situation where `task_group.archive_path` is not part of
+    `task_group.path`, by copying `archive_path` into `path`.
 
     Returns:
-        The new `wheel_path`.
+        The new `archive_path`.
     """
     logger = get_logger(logger_name=logger_name)
-    source = task_group.wheel_path
+    source = task_group.archive_path
     dest = (
-        Path(task_group.path) / Path(task_group.wheel_path).name
+        Path(task_group.path) / Path(task_group.archive_path).name
     ).as_posix()
     cmd = f"cp {source} {dest}"
-    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
+    logger.debug(f"[_copy_wheel_file_ssh] START {source=} {dest=}")
     fractal_ssh.run_command(cmd=cmd)
-    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
+    logger.debug(f"[_copy_wheel_file_ssh] END {source=} {dest=}")
     return dest
+
+
+def check_ssh_or_fail_and_cleanup(
+    *,
+    fractal_ssh: FractalSSH,
+    task_group: TaskGroupV2,
+    task_group_activity: TaskGroupActivityV2,
+    logger_name: str,
+    log_file_path: Path,
+    db: AsyncSession,
+) -> bool:
+    """
+    Check SSH connection.
+
+    Returns:
+        Whether SSH connection is OK.
+    """
+    try:
+        fractal_ssh.check_connection()
+        return True
+    except Exception as e:
+        logger = get_logger(logger_name=logger_name)
+        logger.error(
+            "Cannot establish SSH connection. " f"Original error: {str(e)}"
+        )
+        fail_and_cleanup(
+            task_group=task_group,
+            task_group_activity=task_group_activity,
+            logger_name=logger_name,
+            log_file_path=log_file_path,
+            exception=e,
+            db=db,
+        )
+        return False

@@ -204,6 +204,32 @@ class FractalSSH:
         self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
+    def read_remote_text_file(self, filepath: str) -> dict[str, Any]:
+        """
+        Read a remote text file into a string.
+
+        Note from paramiko docs:
+        > The Python 'b' flag is ignored, since SSH treats all files as binary.
+        """
+        self.logger.info(f"START reading remote text file {filepath}.")
+        with _acquire_lock_with_timeout(
+            lock=self._lock,
+            label="read_remote_text_file",
+            timeout=self.default_lock_timeout,
+        ):
+            try:
+                with self._sftp_unsafe().open(filepath, "r") as f:
+                    data = f.read().decode()
+            except Exception as e:
+                self.log_and_raise(
+                    e=e,
+                    message=(
+                        f"Error in `read_remote_text_file`, for {filepath=}."
+                    ),
+                )
+        self.logger.info(f"END reading remote text file {filepath}.")
+        return data
+
     def check_connection(self) -> None:
         """
         Open the SSH connection and handle exceptions.

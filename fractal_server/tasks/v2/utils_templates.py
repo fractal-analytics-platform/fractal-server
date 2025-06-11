@@ -12,10 +12,21 @@ SCRIPTS_SUBFOLDER = "scripts"
 logger = set_logger(__name__)
 
 
+def _check_pixi_frozen_option(replacements: list[tuple[str, str]]):
+    try:
+        replacement = next(
+            rep for rep in replacements if rep[0] == "__FROZEN_OPTION__"
+        )
+        if replacement[1] not in ["", "--frozen"]:
+            raise ValueError(f"Invalid {replacement=}.")
+    except StopIteration:
+        pass
+
+
 def customize_template(
     *,
     template_name: str,
-    replacements: list[tuple[str, str]],
+    replacements: set[tuple[str, str]],
     script_path: str,
 ) -> str:
     """
@@ -26,6 +37,8 @@ def customize_template(
         replacements: List of replacements for template customization.
         script_path: Local path where the customized template will be written.
     """
+    _check_pixi_frozen_option(replacements=replacements)
+
     # Read template
     template_path = TEMPLATES_DIR / template_name
     with template_path.open("r") as f:

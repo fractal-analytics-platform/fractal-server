@@ -1,15 +1,14 @@
-import logging
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
+from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
+from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
@@ -56,46 +55,34 @@ def reactivate_ssh(
             log_file_path=log_file_path,
         )
 
-        with SingleUseFractalSSH(
-            ssh_config=ssh_config,
-            logger_name=LOGGER_NAME,
-        ) as fractal_ssh:
+        logger.info("START")
+        with next(get_sync_db()) as db:
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
+                return
 
-            with next(get_sync_db()) as db:
-
-                # Get main objects from db
-                activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-                task_group = db.get(TaskGroupV2, task_group_id)
-                if activity is None or task_group is None:
-                    # Use `logging` directly
-                    logging.error(
-                        "Cannot find database rows with "
-                        f"{task_group_id=} and {task_group_activity_id=}:\n"
-                        f"{task_group=}\n{activity=}. Exit."
-                    )
-                    return
-
-                # Log some info
-                logger.info("START")
-                for key, value in task_group.model_dump().items():
-                    logger.debug(f"task_group.{key}: {value}")
-
-                # Check that SSH connection works
+            with SingleUseFractalSSH(
+                ssh_config=ssh_config,
+                logger_name=LOGGER_NAME,
+            ) as fractal_ssh:
                 try:
-                    fractal_ssh.check_connection()
-                except Exception as e:
-                    logger.error("Cannot establish SSH connection.")
-                    fail_and_cleanup(
+                    # Check SSH connection
+                    ssh_ok = check_ssh_or_fail_and_cleanup(
+                        fractal_ssh=fractal_ssh,
                         task_group=task_group,
                         task_group_activity=activity,
                         logger_name=LOGGER_NAME,
                         log_file_path=log_file_path,
-                        exception=e,
                         db=db,
                     )
-                    return
+                    if not ssh_ok:
+                        return
 
-                try:
                     # Check that the (remote) task_group venv_path does not
                     # exist
                     if fractal_ssh.remote_exists(task_group.venv_path):
@@ -128,7 +115,7 @@ def reactivate_ssh(
                         Path(task_group.path) / "_tmp_pip_freeze.txt"
                     ).as_posix()
                     with open(pip_freeze_file_local, "w") as f:
-                        f.write(task_group.pip_freeze)
+                        f.write(task_group.env_info)
                     fractal_ssh.send_file(
                         local=pip_freeze_file_local,
                         remote=pip_freeze_file_remote,
@@ -199,8 +186,8 @@ def reactivate_ssh(
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:
                         logger.error(
-                            "Removing folder failed.\n"
-                            f"Original error:\n{str(rm_e)}"
+                            "Removing folder failed. "
+                            f"Original error: {str(rm_e)}"
                         )
 
                     fail_and_cleanup(

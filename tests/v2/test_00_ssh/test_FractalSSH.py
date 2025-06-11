@@ -355,7 +355,8 @@ def test_novalidconnectionserror_in_sftp_methods(caplog):
     ) as connection:
         LOGGER_NAME = "invalid_ssh"
         fractal_ssh = FractalSSH(
-            connection=connection, logger_name=LOGGER_NAME
+            connection=connection,
+            logger_name=LOGGER_NAME,
         )
         logger = logging.getLogger(LOGGER_NAME)
         logger.propagate = True
@@ -385,6 +386,13 @@ def test_novalidconnectionserror_in_sftp_methods(caplog):
         caplog.clear
         with pytest.raises(NoValidConnectionsError):
             fractal_ssh.read_remote_json_file(
+                filepath="/invalid",
+            )
+        assert "NoValidConnectionsError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            fractal_ssh.read_remote_text_file(
                 filepath="/invalid",
             )
         assert "NoValidConnectionsError" in caplog.text
@@ -477,3 +485,21 @@ def test_closed_socket(
     assert fractal_ssh.remote_exists(remote_file_2)
 
     fractal_ssh.close()
+
+
+@pytest.mark.container
+def test_read_remote_text_file(
+    fractal_ssh: FractalSSH,
+    tmp777_path: Path,
+):
+    filepath = (tmp777_path / "file").as_posix()
+    CONTENTS = "somethin\nelse"
+
+    # Failure
+    with pytest.raises(FileNotFoundError):
+        fractal_ssh.read_remote_text_file(filepath)
+
+    # Success
+    with open(filepath, "w") as f:
+        f.write(CONTENTS)
+    assert fractal_ssh.read_remote_text_file(filepath) == CONTENTS

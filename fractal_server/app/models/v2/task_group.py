@@ -29,8 +29,9 @@ class TaskGroupV2(SQLModel, table=True):
     pkg_name: str
     version: str | None = None
     python_version: str | None = None
+    pixi_version: str | None = None
     path: str | None = None
-    wheel_path: str | None = None
+    archive_path: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
@@ -40,7 +41,7 @@ class TaskGroupV2(SQLModel, table=True):
             nullable=True,
         ),
     )
-    pip_freeze: str | None = None
+    env_info: str | None = None
     venv_path: str | None = None
     venv_size_in_kB: int | None = None
     venv_file_number: int | None = None
@@ -66,15 +67,20 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
+        if self.origin == "pixi":
+            raise ValueError(
+                f"Cannot call 'pip_install_string' if {self.origin=}."
+            )
+
         extras = f"[{self.pip_extras}]" if self.pip_extras is not None else ""
 
-        if self.wheel_path is not None:
-            return f"{self.wheel_path}{extras}"
+        if self.archive_path is not None:
+            return f"{self.archive_path}{extras}"
         else:
             if self.version is None:
                 raise ValueError(
                     "Cannot run `pip_install_string` with "
-                    f"{self.pkg_name=}, {self.wheel_path=}, {self.version=}."
+                    f"{self.pkg_name=}, {self.archive_path=}, {self.version=}."
                 )
             return f"{self.pkg_name}{extras}=={self.version}"
 
@@ -83,6 +89,12 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
+        if self.origin == "pixi":
+            raise ValueError(
+                "Cannot call 'pinned_package_versions_string' if "
+                f"{self.origin=}."
+            )
+
         if self.pinned_package_versions is None:
             return ""
         output = " ".join(

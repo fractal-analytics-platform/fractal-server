@@ -1,5 +1,4 @@
 import json
-import logging
 import shutil
 import time
 from pathlib import Path
@@ -8,20 +7,22 @@ from tempfile import TemporaryDirectory
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
-from fractal_server.tasks.v2.utils_background import _prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
+from fractal_server.tasks.v2.utils_background import (
+    get_activity_and_task_group,
+)
 from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter_v2,
@@ -38,7 +39,7 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    wheel_file: WheelFile | None = None,
+    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Collect a task package.
@@ -66,23 +67,16 @@ def collect_local(
             log_file_path=log_file_path,
         )
 
+        logger.info("START")
         with next(get_sync_db()) as db:
-            # Get main objects from db
-            activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-            task_group = db.get(TaskGroupV2, task_group_id)
-            if activity is None or task_group is None:
-                # Use `logging` directly
-                logging.error(
-                    "Cannot find database rows with "
-                    f"{task_group_id=} and {task_group_activity_id=}:\n"
-                    f"{task_group=}\n{activity=}. Exit."
-                )
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
                 return
-
-            # Log some info
-            logger.info("START")
-            for key, value in task_group.model_dump().items():
-                logger.debug(f"task_group.{key}: {value}")
 
             # Check that the (local) task_group path does exist
             if Path(task_group.path).exists():
@@ -103,16 +97,18 @@ def collect_local(
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
 
-                # Write wheel file and set task_group.wheel_path
+                # Write wheel file and set task_group.archive_path
                 if wheel_file is not None:
 
-                    wheel_path = (
+                    archive_path = (
                         Path(task_group.path) / wheel_file.filename
                     ).as_posix()
-                    logger.info(f"Write wheel-file contents into {wheel_path}")
-                    with open(wheel_path, "wb") as f:
+                    logger.info(
+                        f"Write wheel-file contents into {archive_path}"
+                    )
+                    with open(archive_path, "wb") as f:
                         f.write(wheel_file.contents)
-                    task_group.wheel_path = wheel_path
+                    task_group.archive_path = archive_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates
@@ -131,7 +127,7 @@ def collect_local(
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.COLLECT}_"
+                        f"{TaskGroupActivityActionV2.COLLECT}"
                     ),
                     logger_name=LOGGER_NAME,
                 )
@@ -220,7 +216,7 @@ def collect_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 logger.info("_prepare_tasks_metadata - start")
-                task_list = _prepare_tasks_metadata(
+                task_list = prepare_tasks_metadata(
                     package_manifest=pkg_manifest,
                     package_version=task_group.version,
                     package_root=Path(package_root),
@@ -241,15 +237,15 @@ def collect_local(
 
                 # Update task_group data
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                task_group.pip_freeze = pip_freeze_stdout
+                task_group.env_info = pip_freeze_stdout
                 task_group.venv_size_in_kB = int(venv_size)
                 task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info(
-                    "Add pip_freeze, venv_size and venv_file_number "
+                    "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - end"
                 )
 

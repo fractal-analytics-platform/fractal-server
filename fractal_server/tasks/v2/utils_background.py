@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import TypeVar
 
@@ -9,6 +10,7 @@ from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.utils import get_timestamp
@@ -21,6 +23,31 @@ def add_commit_refresh(*, obj: T, db: DBSyncSession) -> T:
     db.commit()
     db.refresh(obj)
     return obj
+
+
+def get_activity_and_task_group(
+    *,
+    task_group_activity_id: int,
+    task_group_id: int,
+    db: DBSyncSession,
+    logger_name: str,
+) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2]:
+    task_group = db.get(TaskGroupV2, task_group_id)
+    activity = db.get(TaskGroupActivityV2, task_group_activity_id)
+    if activity is None or task_group is None:
+        logging.error(
+            "Cannot find database rows with "
+            f"{task_group_id=} and {task_group_activity_id=}:\n"
+            f"{task_group=}\n{activity=}. Exit."
+        )
+        return False, None, None
+
+    # Log some info about task group
+    logger = get_logger(logger_name=logger_name)
+    for key, value in task_group.model_dump(exclude={"env_info"}).items():
+        logger.debug(f"task_group.{key}: {value}")
+
+    return True, task_group, activity
 
 
 def fail_and_cleanup(
@@ -47,11 +74,12 @@ def fail_and_cleanup(
     reset_logger_handlers(logger)
 
 
-def _prepare_tasks_metadata(
+def prepare_tasks_metadata(
     *,
     package_manifest: ManifestV2,
-    python_bin: Path,
     package_root: Path,
+    python_bin: Path | None = None,
+    project_python_wrapper: Path | None = None,
     package_version: str | None = None,
 ) -> list[TaskCreateV2]:
     """
@@ -59,10 +87,22 @@ def _prepare_tasks_metadata(
 
     Args:
         package_manifest:
-        python_bin:
         package_root:
         package_version:
+        python_bin:
+        project_python_wrapper:
     """
+
+    if bool(project_python_wrapper is None) == bool(python_bin is None):
+        raise UnreachableBranchError(
+            f"Either {project_python_wrapper} or {python_bin} must be set."
+        )
+
+    if python_bin is not None:
+        actual_python = python_bin
+    else:
+        actual_python = project_python_wrapper
+
     task_list = []
     for _task in package_manifest.task_list:
         # Set non-command attributes
@@ -76,14 +116,16 @@ def _prepare_tasks_metadata(
         # Set command attributes
         if _task.executable_non_parallel is not None:
             non_parallel_path = package_root / _task.executable_non_parallel
-            task_attributes["command_non_parallel"] = (
-                f"{python_bin.as_posix()} " f"{non_parallel_path.as_posix()}"
+            cmd_non_parallel = (
+                f"{actual_python.as_posix()} {non_parallel_path.as_posix()}"
             )
+            task_attributes["command_non_parallel"] = cmd_non_parallel
         if _task.executable_parallel is not None:
             parallel_path = package_root / _task.executable_parallel
-            task_attributes[
-                "command_parallel"
-            ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+            cmd_parallel = (
+                f"{actual_python.as_posix()} {parallel_path.as_posix()}"
+            )
+            task_attributes["command_parallel"] = cmd_parallel
         # Create object
         task_obj = TaskCreateV2(
             **_task.model_dump(

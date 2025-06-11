@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
@@ -25,9 +24,13 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
+from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import reactivate_local
+from fractal_server.tasks.v2.local import reactivate_local_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
@@ -44,7 +47,6 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    request: Request,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -125,9 +127,12 @@ async def deactivate_task_group(
             host=user_settings.ssh_host,
             key_path=user_settings.ssh_private_key_path,
         )
-
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            deactivate_function = deactivate_ssh_pixi
+        else:
+            deactivate_function = deactivate_ssh
         background_tasks.add_task(
-            deactivate_ssh,
+            deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
@@ -135,8 +140,12 @@ async def deactivate_task_group(
         )
 
     else:
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            deactivate_function = deactivate_local_pixi
+        else:
+            deactivate_function = deactivate_local
         background_tasks.add_task(
-            deactivate_local,
+            deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )
@@ -157,7 +166,6 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    request: Request,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -210,12 +218,12 @@ async def reactivate_task_group(
         response.status_code = status.HTTP_202_ACCEPTED
         return task_group_activity
 
-    if task_group.pip_freeze is None:
+    if task_group.env_info is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Cannot reactivate a task group with "
-                f"{task_group.pip_freeze=}."
+                f"{task_group.env_info=}."
             ),
         )
 
@@ -247,8 +255,12 @@ async def reactivate_task_group(
             key_path=user_settings.ssh_private_key_path,
         )
 
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            reactivate_function = reactivate_ssh_pixi
+        else:
+            reactivate_function = reactivate_ssh
         background_tasks.add_task(
-            reactivate_ssh,
+            reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
@@ -256,8 +268,12 @@ async def reactivate_task_group(
         )
 
     else:
+        if task_group.origin == TaskGroupV2OriginEnum.PIXI:
+            reactivate_function = reactivate_local_pixi
+        else:
+            reactivate_function = reactivate_local
         background_tasks.add_task(
-            reactivate_local,
+            reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
         )

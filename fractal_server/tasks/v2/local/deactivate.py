@@ -1,4 +1,3 @@
-import logging
 import shutil
 import time
 from pathlib import Path
@@ -6,11 +5,10 @@ from tempfile import TemporaryDirectory
 
 from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
+from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -48,25 +46,16 @@ def deactivate_local(
             log_file_path=log_file_path,
         )
 
+        logger.debug("START")
         with next(get_sync_db()) as db:
-
-            # Get main objects from db
-            activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-            task_group = db.get(TaskGroupV2, task_group_id)
-            if activity is None or task_group is None:
-                # Use `logging` directly
-                logging.error(
-                    "Cannot find database rows with "
-                    f"{task_group_id=} and {task_group_activity_id=}:\n"
-                    f"{task_group=}\n{activity=}. Exit."
-                )
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
                 return
-
-            # Log some info
-            logger.debug("START")
-
-            for key, value in task_group.model_dump().items():
-                logger.debug(f"task_group.{key}: {value}")
 
             # Check that the (local) task_group venv_path does exist
             if not Path(task_group.venv_path).exists():
@@ -87,10 +76,10 @@ def deactivate_local(
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                if task_group.pip_freeze is None:
+                if task_group.env_info is None:
                     logger.warning(
                         "Recreate pip-freeze information, since "
-                        f"{task_group.pip_freeze=}. NOTE: this should only "
+                        f"{task_group.env_info=}. NOTE: this should only "
                         "happen for task groups created before 2.9.0."
                     )
                     # Prepare replacements for templates
@@ -107,7 +96,7 @@ def deactivate_local(
                         ).as_posix(),
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.DEACTIVATE}_"
+                            f"{TaskGroupActivityActionV2.DEACTIVATE}"
                         ),
                         logger_name=LOGGER_NAME,
                     )
@@ -120,7 +109,7 @@ def deactivate_local(
                     logger.info("Add pip freeze stdout to TaskGroupV2 - start")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
-                    task_group.pip_freeze = pip_freeze_stdout
+                    task_group.env_info = pip_freeze_stdout
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
@@ -131,15 +120,15 @@ def deactivate_local(
                         f"Handle specific cases for {task_group.origin=}."
                     )
 
-                    # Blocking situation: `wheel_path` is not set or points
+                    # Blocking situation: `archive_path` is not set or points
                     # to a missing path
                     if (
-                        task_group.wheel_path is None
-                        or not Path(task_group.wheel_path).exists()
+                        task_group.archive_path is None
+                        or not Path(task_group.archive_path).exists()
                     ):
                         error_msg = (
                             "Invalid wheel path for task group with "
-                            f"{task_group_id=}. {task_group.wheel_path=} is "
+                            f"{task_group_id=}. {task_group.archive_path=} is "
                             "unset or does not exist."
                         )
                         logger.error(error_msg)
@@ -153,48 +142,52 @@ def deactivate_local(
                         )
                         return
 
-                    # Recoverable situation: `wheel_path` was not yet copied
+                    # Recoverable situation: `archive_path` was not yet copied
                     # over to the correct server-side folder
-                    wheel_path_parent_dir = Path(task_group.wheel_path).parent
-                    if wheel_path_parent_dir != Path(task_group.path):
+                    archive_path_parent_dir = Path(
+                        task_group.archive_path
+                    ).parent
+                    if archive_path_parent_dir != Path(task_group.path):
                         logger.warning(
-                            f"{wheel_path_parent_dir.as_posix()} differs from "
-                            f"{task_group.path}. NOTE: this should only "
+                            f"{archive_path_parent_dir.as_posix()} differs "
+                            f"from {task_group.path}. NOTE: this should only "
                             "happen for task groups created before 2.9.0."
                         )
 
-                        if task_group.wheel_path not in task_group.pip_freeze:
+                        if task_group.archive_path not in task_group.env_info:
                             raise ValueError(
-                                f"Cannot find {task_group.wheel_path=} in "
+                                f"Cannot find {task_group.archive_path=} in "
                                 "pip-freeze data. Exit."
                             )
 
                         logger.info(
                             f"Now copy wheel file into {task_group.path}."
                         )
-                        new_wheel_path = (
+                        new_archive_path = (
                             Path(task_group.path)
-                            / Path(task_group.wheel_path).name
+                            / Path(task_group.archive_path).name
                         ).as_posix()
-                        shutil.copy(task_group.wheel_path, new_wheel_path)
-                        logger.info(f"Copied wheel file to {new_wheel_path}.")
-
-                        task_group.wheel_path = new_wheel_path
-                        new_pip_freeze = task_group.pip_freeze.replace(
-                            task_group.wheel_path,
-                            new_wheel_path,
+                        shutil.copy(task_group.archive_path, new_archive_path)
+                        logger.info(
+                            f"Copied wheel file to {new_archive_path}."
                         )
-                        task_group.pip_freeze = new_pip_freeze
+
+                        task_group.archive_path = new_archive_path
+                        new_pip_freeze = task_group.env_info.replace(
+                            task_group.archive_path,
+                            new_archive_path,
+                        )
+                        task_group.env_info = new_pip_freeze
                         task_group = add_commit_refresh(obj=task_group, db=db)
                         logger.info(
-                            "Updated `wheel_path` and `pip_freeze` "
+                            "Updated `archive_path` and `env_info` "
                             "task-group attributes."
                         )
 
                 # Fail if `pip_freeze` includes "github.com", see
                 # https://github.com/fractal-analytics-platform/fractal-server/issues/2142
                 for forbidden_string in FORBIDDEN_DEPENDENCY_STRINGS:
-                    if forbidden_string in task_group.pip_freeze:
+                    if forbidden_string in task_group.env_info:
                         raise ValueError(
                             "Deactivation and reactivation of task packages "
                             f"with direct {forbidden_string} dependencies "

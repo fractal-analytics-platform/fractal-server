@@ -1,21 +1,20 @@
-import logging
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ....ssh._fabric import SingleUseFractalSSH
-from ..utils_background import _prepare_tasks_metadata
 from ..utils_background import fail_and_cleanup
+from ..utils_background import get_activity_and_task_group
+from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
+from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import WheelFile
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
@@ -38,7 +37,7 @@ def collect_ssh(
     task_group_activity_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
-    wheel_file: WheelFile | None = None,
+    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Collect a task package over SSH
@@ -70,47 +69,39 @@ def collect_ssh(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-        with SingleUseFractalSSH(
-            ssh_config=ssh_config,
-            logger_name=LOGGER_NAME,
-        ) as fractal_ssh:
+        logger.info("START")
+        with next(get_sync_db()) as db:
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
+                task_group_activity_id=task_group_activity_id,
+                task_group_id=task_group_id,
+                db=db,
+                logger_name=LOGGER_NAME,
+            )
+            if not db_objects_ok:
+                return
 
-            with next(get_sync_db()) as db:
-                # Get main objects from db
-                activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-                task_group = db.get(TaskGroupV2, task_group_id)
-                if activity is None or task_group is None:
-                    # Use `logging` directly
-                    logging.error(
-                        "Cannot find database rows with "
-                        f"{task_group_id=} and {task_group_activity_id=}:\n"
-                        f"{task_group=}\n{activity=}. Exit."
-                    )
-                    return
+            with SingleUseFractalSSH(
+                ssh_config=ssh_config,
+                logger_name=LOGGER_NAME,
+            ) as fractal_ssh:
 
-                # Log some info
-                logger.info("START")
-                for key, value in task_group.model_dump().items():
-                    logger.debug(f"task_group.{key}: {value}")
-
-                # Check that SSH connection works
                 try:
-                    fractal_ssh.check_connection()
-                except Exception as e:
-                    logger.error("Cannot establish SSH connection.")
-                    fail_and_cleanup(
+                    # Check SSH connection
+                    ssh_ok = check_ssh_or_fail_and_cleanup(
+                        fractal_ssh=fractal_ssh,
                         task_group=task_group,
                         task_group_activity=activity,
                         logger_name=LOGGER_NAME,
                         log_file_path=log_file_path,
-                        exception=e,
                         db=db,
                     )
-                    return
-
-                try:
+                    if not ssh_ok:
+                        return
 
                     # Check that the (remote) task_group path does not exist
+                    # NOTE: this is not part of the try/except below, in order
+                    # to avoid removing the existing folder (as part of the
+                    # exception-handling).
                     if fractal_ssh.remote_exists(task_group.path):
                         error_msg = f"{task_group.path} already exists."
                         logger.error(error_msg)
@@ -125,9 +116,7 @@ def collect_ssh(
                         return
 
                     # Create remote `task_group.path` and `script_dir_remote`
-                    # folders (note that because of `parents=True` we  are in
-                    # the `no error if existing, make parent directories as
-                    # needed` scenario for `mkdir`)
+                    # folders
                     script_dir_remote = (
                         Path(task_group.path) / SCRIPTS_SUBFOLDER
                     ).as_posix()
@@ -135,25 +124,25 @@ def collect_ssh(
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
                     # Write wheel file locally and send it to remote path,
-                    # and set task_group.wheel_path
+                    # and set task_group.archive_path
                     if wheel_file is not None:
                         wheel_filename = wheel_file.filename
-                        wheel_path = (
+                        archive_path = (
                             Path(task_group.path) / wheel_filename
                         ).as_posix()
-                        tmp_wheel_path = (
+                        tmp_archive_path = (
                             Path(tmpdir) / wheel_filename
                         ).as_posix()
                         logger.info(
-                            f"Write wheel-file contents into {tmp_wheel_path}"
+                            f"Write wheel file into {tmp_archive_path}"
                         )
-                        with open(tmp_wheel_path, "wb") as f:
+                        with open(tmp_archive_path, "wb") as f:
                             f.write(wheel_file.contents)
                         fractal_ssh.send_file(
-                            local=tmp_wheel_path,
-                            remote=wheel_path,
+                            local=tmp_archive_path,
+                            remote=archive_path,
                         )
-                        task_group.wheel_path = wheel_path
+                        task_group.archive_path = archive_path
                         task_group = add_commit_refresh(obj=task_group, db=db)
 
                     replacements = get_collection_replacements(
@@ -166,8 +155,8 @@ def collect_ssh(
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
                         replacements=replacements,
-                        script_dir_local=(
-                            Path(tmpdir) / SCRIPTS_SUBFOLDER
+                        script_dir_local=Path(
+                            tmpdir, SCRIPTS_SUBFOLDER
                         ).as_posix(),
                         script_dir_remote=script_dir_remote,
                         prefix=(
@@ -192,6 +181,7 @@ def collect_ssh(
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
+
                     # Run script 2
                     stdout = _customize_and_run_template(
                         template_filename="2_pip_install.sh",
@@ -263,7 +253,7 @@ def collect_ssh(
                     logger.info("Manifest is a valid ManifestV2")
 
                     logger.info("_prepare_tasks_metadata - start")
-                    task_list = _prepare_tasks_metadata(
+                    task_list = prepare_tasks_metadata(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
@@ -283,15 +273,15 @@ def collect_ssh(
 
                     # Update task_group data
                     logger.info(
-                        "Add pip_freeze, venv_size and venv_file_number "
+                        "Add env_info, venv_size and venv_file_number "
                         "to TaskGroupV2 - start"
                     )
-                    task_group.pip_freeze = pip_freeze_stdout
+                    task_group.env_info = pip_freeze_stdout
                     task_group.venv_size_in_kB = int(venv_size)
                     task_group.venv_file_number = int(venv_file_number)
                     task_group = add_commit_refresh(obj=task_group, db=db)
                     logger.info(
-                        "Add pip_freeze, venv_size and venv_file_number "
+                        "Add env_info, venv_size and venv_file_number "
                         "to TaskGroupV2 - end"
                     )
 
@@ -320,7 +310,7 @@ def collect_ssh(
                     except Exception as e_rm:
                         logger.error(
                             "Removing folder failed. "
-                            f"Original error:\n{str(e_rm)}"
+                            f"Original error: {str(e_rm)}"
                         )
                     fail_and_cleanup(
                         task_group=task_group,

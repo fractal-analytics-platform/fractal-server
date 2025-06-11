@@ -96,7 +96,7 @@ async def test_reactivate_local_fail(
         path=path.as_posix(),
         venv_path="/fake/folder/impossible/",
         user_id=first_user.id,
-        pip_freeze="something==99.99.99",
+        env_info="something==99.99.99",
     )
     debug(task_group)
     db.add(task_group)
