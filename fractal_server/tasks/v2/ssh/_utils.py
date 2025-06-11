@@ -70,7 +70,10 @@ def _customize_and_run_template(
 
 
 def _copy_wheel_file_ssh(
-    *, task_group: TaskGroupV2, fractal_ssh: FractalSSH, logger_name: str
+    *,
+    task_group: TaskGroupV2,
+    fractal_ssh: FractalSSH,
+    logger_name: str,
 ) -> str:
     """
     Handle the situation where `task_group.archive_path` is not part of
@@ -85,9 +88,9 @@ def _copy_wheel_file_ssh(
         Path(task_group.path) / Path(task_group.archive_path).name
     ).as_posix()
     cmd = f"cp {source} {dest}"
-    logger.debug(f"[_copy_wheel_file] START {source=} {dest=}")
+    logger.debug(f"[_copy_wheel_file_ssh] START {source=} {dest=}")
     fractal_ssh.run_command(cmd=cmd)
-    logger.debug(f"[_copy_wheel_file] END {source=} {dest=}")
+    logger.debug(f"[_copy_wheel_file_ssh] END {source=} {dest=}")
     return dest
 
 
