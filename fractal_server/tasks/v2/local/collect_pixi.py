@@ -58,21 +58,8 @@ def collect_local_pixi(
             if not db_objects_ok:
                 return
 
-            if Path(task_group.path).exists():
-                error_msg = f"{task_group.path} already exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileExistsError(error_msg),
-                    db=db,
-                )
-                return
-
             try:
-                Path(task_group.path).mkdir(parents=True)
+                Path(task_group.path).mkdir(parents=True, exist_ok=True)
                 logger.info(f"Created {task_group.path}")
                 archive_path = Path(
                     task_group.path, tar_gz_file.filename
