@@ -99,6 +99,9 @@ def collect_ssh(
                         return
 
                     # Check that the (remote) task_group path does not exist
+                    # NOTE: this is not part of the try/except below, in order
+                    # to avoid removing the existing folder (as part of the
+                    # exception-handling).
                     if fractal_ssh.remote_exists(task_group.path):
                         error_msg = f"{task_group.path} already exists."
                         logger.error(error_msg)
