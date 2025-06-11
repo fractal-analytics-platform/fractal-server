@@ -114,8 +114,38 @@ async def test_task_group_lifecycle_pixi_ssh(
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
-    ):
-        # Successful collection
+    ) as user:
+
+        # 1 / Failed collection - remote folder already exists
+        task_group_path = (
+            Path(REMOTE_TASKS_BASE_DIR)
+            / str(user.id)
+            / "mock-pixi-tasks"
+            / "0.2.1"
+        ).as_posix()
+        fractal_ssh.mkdir(folder=task_group_path, parents=True)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files=files,
+        )
+        debug(res.json())
+        assert res.status_code == 202
+        assert res.json()["status"] == "pending"
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        activity = res.json()
+        assert activity["log"] is not None
+        assert activity["timestamp_ended"] is not None
+        assert activity["status"] == "failed"
+        assert "already exists" in activity["log"]
+        fractal_ssh.remove_folder(
+            folder=task_group_path,
+            safe_root=REMOTE_TASKS_BASE_DIR,
+        )
+
+        # 2 / Successful collection
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={},
@@ -143,7 +173,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert task_group.venv_file_number is not None
         assert task_group.env_info is not None
 
-        # Failed collection - due to non-duplication constraint
+        # 3 / Failed collection - due to non-duplication constraint
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={},
@@ -152,7 +182,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert res.status_code == 422
         assert "already owns a task group" in str(res.json()["detail"])
 
-        # Successful deactivation
+        # 4 / Successful deactivation
         res = await client.post(
             f"/api/v2/task-group/{task_group_id}/deactivate/",
             data={},
@@ -166,7 +196,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert Path(task_group.archive_path).exists()
         assert not Path(task_group.path, SOURCE_DIR_NAME).exists()
 
-        # Failed deactivation (folder does not exist)
+        # 5 / Failed deactivation (folder does not exist)
         db.expunge_all()
         task_group.active = True  # mock an active task group
         await db.merge(task_group)
@@ -186,7 +216,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         await db.merge(task_group)
         await db.commit()
 
-        # Failed reactivation - (fake) folder already exists
+        # 6 / Failed reactivation - (fake) folder already exists
         fake_remote_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
         fractal_ssh.mkdir(folder=fake_remote_dir)  # Create fake folder
         res = await client.post(
@@ -205,7 +235,7 @@ async def test_task_group_lifecycle_pixi_ssh(
             safe_root=task_group.path,
         )
 
-        # Successful reactivation
+        # 7 / Successful reactivation
         res = await client.post(
             f"/api/v2/task-group/{task_group_id}/reactivate/",
             data={},
