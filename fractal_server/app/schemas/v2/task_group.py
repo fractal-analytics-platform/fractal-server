@@ -62,15 +62,6 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     python_version: NonEmptyStr
 
 
-class TaskGroupCreateV2StrictPixi(TaskGroupCreateV2):
-    """
-    A strict version of TaskGroupCreateV2, to be used for pixi task collection.
-    """
-
-    path: AbsolutePathStr
-    pixi_version: NonEmptyStr
-
-
 class TaskGroupReadV2(BaseModel):
     id: int
     task_list: list[TaskReadV2]

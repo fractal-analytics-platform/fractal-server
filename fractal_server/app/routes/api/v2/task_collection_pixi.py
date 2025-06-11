@@ -10,7 +10,6 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
-from pydantic import ValidationError
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -35,7 +34,6 @@ from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2StrictPixi
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -147,13 +145,6 @@ async def collect_task_pixi(
         version=version,
         path=task_group_path,
     )
-    try:
-        TaskGroupCreateV2StrictPixi(**task_group_attrs)
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid task-group object. Original error: {e}",
-        )
 
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
