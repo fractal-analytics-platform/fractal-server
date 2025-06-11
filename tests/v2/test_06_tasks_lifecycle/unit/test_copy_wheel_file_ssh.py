@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._utils import _copy_wheel_file_ssh
 
 
+@pytest.mark.container
 def test_copy_wheel_file_ssh(
     fractal_ssh: FractalSSH,
     tmp777_path: Path,
