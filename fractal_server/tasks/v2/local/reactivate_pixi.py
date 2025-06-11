@@ -148,8 +148,8 @@ def reactivate_local_pixi(
                     logger.info(f"Deleted folder {source_dir}")
                 except Exception as rm_e:
                     logger.error(
-                        "Removing folder failed.\n"
-                        f"Original error:\n{str(rm_e)}"
+                        "Removing folder failed. "
+                        f"Original error: {str(rm_e)}"
                     )
 
                 fail_and_cleanup(

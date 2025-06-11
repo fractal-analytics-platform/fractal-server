@@ -192,16 +192,14 @@ def reactivate_ssh_pixi(
                     reset_logger_handlers(logger)
 
                 except Exception as reactivate_e:
-                    # Delete corrupted venv_path
+                    # Delete corrupted source_dir
                     try:
-                        logger.info(
-                            f"Now delete folder {task_group.venv_path}"
-                        )
+                        logger.info(f"Now delete folder {source_dir}")
                         fractal_ssh.remove_folder(
-                            folder=task_group.venv_path,
+                            folder=source_dir,
                             safe_root=tasks_base_dir,
                         )
-                        logger.info(f"Deleted folder {task_group.venv_path}")
+                        logger.info(f"Deleted folder {source_dir}")
                     except Exception as rm_e:
                         logger.error(
                             "Removing folder failed. "
