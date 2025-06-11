@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
@@ -51,7 +50,6 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    request: Request,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
@@ -157,7 +155,6 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    request: Request,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:

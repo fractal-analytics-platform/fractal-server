@@ -6,7 +6,6 @@ from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import Form
 from fastapi import HTTPException
-from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
@@ -79,7 +78,6 @@ def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
     response_model=TaskGroupActivityV2Read,
 )
 async def collect_task_pixi(
-    request: Request,
     response: Response,
     background_tasks: BackgroundTasks,
     file: UploadFile,

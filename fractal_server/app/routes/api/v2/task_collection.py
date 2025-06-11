@@ -7,7 +7,6 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import Form
 from fastapi import HTTPException
-from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
@@ -151,7 +150,6 @@ def parse_request_data(
     response_model=TaskGroupActivityV2Read,
 )
 async def collect_tasks_pip(
-    request: Request,
     response: Response,
     background_tasks: BackgroundTasks,
     request_data: CollectionRequestData = Depends(parse_request_data),
