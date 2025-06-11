@@ -1,5 +1,24 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.0
+
+* Database:
+    * Rename `TaskGroupV2.wheel_path` into `TaskGroupV2.archive_path` (\#2627).
+    * Rename `TaskGroupV2.pip_freeze` into `TaskGroupV2.env_info` (\#2627).
+    * Add `TaskGroupV2.pixi_version` (\#2627).
+* API:
+    * Introduce new value `TaskGroupV2OriginEnum.PIXI` (\#2627).
+    * Exclude `TaskGroupV2.env_info` from API responses (\#2627).
+    * Introduce `POST /api/v2/task/collect/pixi/` (\#2627).
+    * Extend deactivation/reactivation endpoints to pixi task groups (\#2627).
+* Task lifecycle:
+    * Introduce full support for pixi task-group lifecycle (\#2627).
+* SSH:
+    * Introduce `FractalSSH.read_remote_text_file` (\#2627).
+* App configuration:
+    * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627).
+
+
 # 2.14.16
 
 * Internal:
