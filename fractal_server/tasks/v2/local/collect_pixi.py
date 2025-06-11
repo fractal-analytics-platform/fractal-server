@@ -59,7 +59,7 @@ def collect_local_pixi(
                 return
 
             try:
-                Path(task_group.path).mkdir(parents=True, exist_ok=True)
+                Path(task_group.path).mkdir(parents=True, exist_ok=False)
                 logger.info(f"Created {task_group.path}")
                 archive_path = Path(
                     task_group.path, tar_gz_file.filename
