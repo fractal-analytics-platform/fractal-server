@@ -59,6 +59,7 @@ def collect_local_pixi(
                 return
 
             if Path(task_group.path).exists():
+                # We handle this before the try/except to avoid the rmtree
                 error_msg = f"{task_group.path} already exists."
                 logger.error(error_msg)
                 fail_and_cleanup(
