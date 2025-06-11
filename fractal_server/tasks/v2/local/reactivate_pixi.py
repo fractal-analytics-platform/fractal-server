@@ -88,7 +88,7 @@ def reactivate_local_pixi(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__FROZEN_OPTION__", "true"),
+                        ("__FROZEN_OPTION__", "--frozen"),
                     },
                     script_dir=Path(
                         task_group.path, SCRIPTS_SUBFOLDER

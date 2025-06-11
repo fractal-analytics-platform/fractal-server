@@ -32,14 +32,9 @@ write_log "Changed working directory to ${PACKAGE_DIR}"
 
 # -----------------------------------------------------------------------------
 
-FROZEN_FLAG=""
-if [[ "${FROZEN_OPTION}" == "true" ]]; then
-  FROZEN_FLAG="--frozen"
-fi
-
-write_log "START '${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path ${PYPROJECT_TOML}'"
-${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path "${PYPROJECT_TOML}"
-write_log "END   '${PIXI_EXECUTABLE} install ${FROZEN_FLAG} --manifest-path ${PYPROJECT_TOML}'"
+write_log "START '${PIXI_EXECUTABLE} install ${FROZEN_OPTION} --manifest-path ${PYPROJECT_TOML}'"
+${PIXI_EXECUTABLE} install ${FROZEN_OPTION} --manifest-path "${PYPROJECT_TOML}"
+write_log "END   '${PIXI_EXECUTABLE} install ${FROZEN_OPTION} --manifest-path ${PYPROJECT_TOML}'"
 echo
 
 TIME_END=$(date +%s)

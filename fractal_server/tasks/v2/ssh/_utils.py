@@ -14,7 +14,7 @@ from fractal_server.tasks.v2.utils_templates import customize_template
 def _customize_and_run_template(
     *,
     template_filename: str,
-    replacements: list[tuple[str, str]],
+    replacements: set[tuple[str, str]],
     script_dir_local: str,
     prefix: str,
     fractal_ssh: FractalSSH,
