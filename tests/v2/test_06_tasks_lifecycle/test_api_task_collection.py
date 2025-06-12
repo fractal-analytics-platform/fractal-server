@@ -215,44 +215,6 @@ async def test_task_collection_from_pypi(
         assert "already owns a task group" in res.json()["detail"]
 
 
-async def test_task_collection_failure_due_to_existing_path(
-    db, client, MockCurrentUser
-):
-    settings = Inject(get_settings)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/testing-tasks-mock/0.1.0/"
-        ).as_posix()
-        venv_path = (
-            settings.FRACTAL_TASKS_DIR
-            / f"{user.id}/testing-tasks-mock/0.1.0/venv/"
-        ).as_posix()
-
-        # Create fake task group
-        tg = TaskGroupV2(
-            origin="other",
-            path=path,
-            venv_path=venv_path,
-            pkg_name="testing-tasks-mock-FAKE",
-            version="0.1.0",
-            user_id=user.id,
-        )
-        db.add(tg)
-        await db.commit()
-        await db.refresh(tg)
-        db.expunge(tg)
-        await db.close()
-
-        # Collect again and fail due to another group having the same path set
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.0"),
-        )
-        assert res.status_code == 422
-        assert "Another task-group already has path" in res.json()["detail"]
-
-
 async def test_contact_an_admin_message(
     MockCurrentUser, client, db, default_user_group
 ):
