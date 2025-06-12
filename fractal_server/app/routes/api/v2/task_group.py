@@ -12,6 +12,7 @@ from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions_task_lifecycle import check_no_ongoing_activity
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -215,6 +216,8 @@ async def delete_task_group(
         user_id=user.id,
         db=db,
     )
+
+    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
 
     stm = select(WorkflowTaskV2).where(
         WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
