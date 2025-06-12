@@ -11,6 +11,7 @@
     * Exclude `TaskGroupV2.env_info` from API responses (\#2627).
     * Introduce `POST /api/v2/task/collect/pixi/` (\#2627).
     * Extend deactivation/reactivation endpoints to pixi task groups (\#2627).
+    * Block `DELETE /api/v2/task-group/{task_group_id}/` if a task-group activity is ongoing (\#2642).
 * Task lifecycle:
     * Introduce full support for pixi task-group lifecycle (\#2627).
 * SSH:
