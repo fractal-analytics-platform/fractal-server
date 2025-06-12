@@ -296,7 +296,6 @@ async def _verify_non_duplication_group_constraint(
     user_group_id: int | None,
     pkg_name: str,
     version: str | None,
-    path: str,
 ):
     if user_group_id is None:
         return
@@ -333,10 +332,12 @@ async def _verify_non_duplication_group_constraint(
             ),
         )
 
+
+async def _verify_non_duplication_group_path(db: AsyncSession, path: str):
     stm = select(TaskGroupV2.id).where(TaskGroupV2.path == path)
     res = await db.execute(stm)
     duplicate_ids = res.scalars().all()
-    if duplicate:
+    if duplicate_ids:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(

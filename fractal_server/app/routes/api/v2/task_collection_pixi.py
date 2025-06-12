@@ -22,6 +22,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_group_constraint,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_path,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -153,6 +156,9 @@ async def collect_task_pixi(
         user_group_id=task_group_attrs["user_group_id"],
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
+        db=db,
+    )
+    await _verify_non_duplication_group_path(
         path=task_group_attrs["path"],
         db=db,
     )
