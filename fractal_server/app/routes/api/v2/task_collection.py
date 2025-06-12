@@ -13,6 +13,7 @@ from fastapi import UploadFile
 from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
+from sqlmodel import select
 
 from .....config import get_settings
 from .....logger import reset_logger_handlers
@@ -290,6 +291,18 @@ async def collect_tasks_pip(
         version=task_group_attrs["version"],
         db=db,
     )
+
+    # Verify that task-group path is unique
+    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
+    res = await db.execute(stm)
+    for conflicting_task_group in res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Another task-group already has path={task_group_path}.\n"
+                f"{conflicting_task_group=}"
+            ),
+        )
 
     # On-disk checks
 

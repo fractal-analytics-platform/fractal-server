@@ -30,7 +30,7 @@ class TaskGroupV2(SQLModel, table=True):
     version: str | None = None
     python_version: str | None = None
     pixi_version: str | None = None
-    path: str | None = Field(default=None, unique=True)
+    path: str | None = None
     archive_path: str | None = None
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
