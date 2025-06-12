@@ -13,7 +13,9 @@ def check_taskgroup_path_unique() -> None:
             .where(TaskGroupV2.path.isnot(None))
             .group_by(TaskGroupV2.path)
         ).all()
-        not_unique_paths = [res for res in results if len(res[1]) > 1]
+        not_unique_paths = [
+            (path, sorted(ids)) for path, ids in results if len(ids) > 1
+        ]
         if not_unique_paths:
             logger = set_logger(__name__)
             for not_unique_path, ids in not_unique_paths:
