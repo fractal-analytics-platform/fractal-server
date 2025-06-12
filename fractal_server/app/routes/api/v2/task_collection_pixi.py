@@ -9,7 +9,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
-from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -154,20 +153,9 @@ async def collect_task_pixi(
         user_group_id=task_group_attrs["user_group_id"],
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
+        path=task_group_attrs["path"],
         db=db,
     )
-
-    # NOTE: to be removed with issue #2634
-    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
-    res = await db.execute(stm)
-    for conflicting_task_group in res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Another task-group already has path={task_group_path}.\n"
-                f"{conflicting_task_group=}"
-            ),
-        )
 
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
         if Path(task_group_path).exists():

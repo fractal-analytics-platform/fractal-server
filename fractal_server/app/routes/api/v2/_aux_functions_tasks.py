@@ -296,6 +296,7 @@ async def _verify_non_duplication_group_constraint(
     user_group_id: int | None,
     pkg_name: str,
     version: str | None,
+    path: str,
 ):
     if user_group_id is None:
         return
@@ -329,6 +330,18 @@ async def _verify_non_duplication_group_constraint(
             detail=(
                 f"UserGroup {user_group.name} already owns a task group "
                 f"with {pkg_name=} and {version=}.{state_msg}"
+            ),
+        )
+
+    stm = select(TaskGroupV2.id).where(TaskGroupV2.path == path)
+    res = await db.execute(stm)
+    duplicate_ids = res.scalars().all()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Another task-group already has {path=}.\n"
+                f"{duplicate_ids=}"
             ),
         )
 
