@@ -1,4 +1,6 @@
+import shlex
 import shutil
+import subprocess  # nosec
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -129,6 +131,14 @@ def reactivate_local_pixi(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                command = f"chmod 755 '{SOURCE_DIR_NAME}' -R"
+                t1 = time.perf_counter()
+                subprocess.run(shlex.split(command))  # nosec
+                t2 = time.perf_counter()
+                logger.info(
+                    f"Running {command=}: elapsed {(t2 - t1):.3f} seconds."
+                )
 
                 activity.log = get_current_log(log_file_path)
                 activity.status = TaskGroupActivityStatusV2.OK

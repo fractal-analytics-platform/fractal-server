@@ -1,5 +1,7 @@
 import json
+import shlex
 import shutil
+import subprocess  # nosec
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -145,6 +147,14 @@ def collect_local_pixi(
                 project_python_wrapper = parsed_output[
                     "project_python_wrapper"
                 ]
+
+                command = f"chmod 755 '{SOURCE_DIR_NAME}' -R"
+                t1 = time.perf_counter()
+                subprocess.run(shlex.split(command))  # nosec
+                t2 = time.perf_counter()
+                logger.info(
+                    f"Running {command=}: elapsed {(t2 - t1):.3f} seconds."
+                )
 
                 # Read and validate manifest
                 # NOTE: we are only supporting the manifest path being relative

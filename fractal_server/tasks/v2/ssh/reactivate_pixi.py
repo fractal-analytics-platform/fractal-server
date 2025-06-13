@@ -181,6 +181,8 @@ def reactivate_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    fractal_ssh.run_command(f"chmod 755 {SOURCE_DIR_NAME} -R")
+
                     # Finalize (write metadata to DB)
                     activity.status = TaskGroupActivityStatusV2.OK
                     activity.timestamp_ended = get_timestamp()
