@@ -114,6 +114,18 @@ def reactivate_ssh_pixi(
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
                         ("__FROZEN_OPTION__", "--frozen"),
+                        (
+                            "__TOKIO_WORKER_THREADS__",
+                            str(settings.pixi.TOKIO_WORKER_THREADS),
+                        ),
+                        (
+                            "__PIXI_CONCURRENT_SOLVES__",
+                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
+                        ),
+                        (
+                            "__PIXI_CONCURRENT_DOWNLOADS__",
+                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
+                        ),
                     }
 
                     logger.info("installing - START")

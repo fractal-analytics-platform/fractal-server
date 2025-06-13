@@ -568,6 +568,9 @@ def test_pixi_config(tmp_path):
             "0.41.0": "/common/path/pixi/0.41.0/",
             "0.43.0": "/common/path/pixi/0.43.0/",
         },
+        "TOKIO_WORKER_THREADS": 2,
+        "PIXI_CONCURRENT_SOLVES": 4,
+        "PIXI_CONCURRENT_DOWNLOADS": 4,
     }
     pixi_config_file = tmp_path / "pixi_config.json"
     with pixi_config_file.open("w") as f:
