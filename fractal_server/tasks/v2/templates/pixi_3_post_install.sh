@@ -70,9 +70,9 @@ write_log "Disk usage: ${ENV_DISK_USAGE}"
 write_log "Number of files: ${ENV_FILE_NUMBER}"
 echo
 
-write_log "START chmod 755 ${SOURCE_DIR} -R"
-chmod 755 "${SOURCE_DIR}" -R
-write_log "END chmod 755 ${SOURCE_DIR} -R"
+# write_log "START chmod 755 ${SOURCE_DIR} -R"
+# chmod 755 "${SOURCE_DIR}" -R
+# write_log "END chmod 755 ${SOURCE_DIR} -R"
 
 TIME_END=$(date +%s)
 write_log "Elapsed: $((TIME_END - TIME_START)) seconds"

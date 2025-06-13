@@ -203,6 +203,8 @@ def collect_ssh_pixi(
                         "project_python_wrapper"
                     ]
 
+                    fractal_ssh.run_command(f"chmod 755 {SOURCE_DIR_NAME} -R")
+
                     # Read and validate remote manifest file
                     manifest_path_remote = (
                         f"{package_root_remote}/__FRACTAL_MANIFEST__.json"
