@@ -250,7 +250,7 @@ async def test_task_collection_failure_due_to_existing_path(
             data=dict(package="testing-tasks-mock", package_version="0.1.0"),
         )
         assert res.status_code == 422
-        assert "Another task-group already has path" in res.json()["detail"]
+        assert "Other TaskGroups already have path" in res.json()["detail"]
 
 
 async def test_contact_an_admin_message(

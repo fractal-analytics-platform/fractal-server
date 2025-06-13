@@ -333,6 +333,28 @@ async def _verify_non_duplication_group_constraint(
         )
 
 
+async def _verify_non_duplication_group_path(
+    path: str | None,
+    db: AsyncSession,
+) -> None:
+    """
+    Verify uniqueness of non-`None` `TaskGroupV2.path`
+    """
+    if path is None:
+        return
+    stm = select(TaskGroupV2.id).where(TaskGroupV2.path == path)
+    res = await db.execute(stm)
+    duplicate_ids = res.scalars().all()
+    if duplicate_ids:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Other TaskGroups already have {path=}: "
+                f"{sorted(duplicate_ids)}."
+            ),
+        )
+
+
 async def _add_warnings_to_workflow_tasks(
     wftask_list: list[WorkflowTaskV2], user_id: int, db: AsyncSession
 ) -> list[dict[str, Any]]:
