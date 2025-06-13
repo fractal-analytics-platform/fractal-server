@@ -116,15 +116,15 @@ def reactivate_ssh_pixi(
                         ("__FROZEN_OPTION__", "--frozen"),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            settings.pixi.TOKIO_WORKER_THREADS,
+                            str(settings.pixi.TOKIO_WORKER_THREADS),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            settings.pixi.PIXI_CONCURRENT_SOLVES,
+                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            settings.pixi.PIXI_CONCURRENT_DOWNLOADS,
+                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
                         ),
                     }
 
