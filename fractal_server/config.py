@@ -68,6 +68,10 @@ class PixiSettings(BaseModel):
     default_version: str
     versions: DictStrStr
 
+    TOKIO_WORKER_THREADS: int = 2
+    PIXI_CONCURRENT_SOLVES: int = 4
+    PIXI_CONCURRENT_DOWNLOADS: int = 4
+
     @model_validator(mode="after")
     def check_pixi_settings(self):
 
