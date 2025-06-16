@@ -364,21 +364,17 @@ async def _workflow_insert_task(
     # and db_task.meta_parallel (lower priority)
     final_meta_parallel = (db_task.meta_parallel or {}).copy()
     final_meta_parallel.update(meta_parallel or {})
-    if final_meta_parallel == {}:
-        final_meta_parallel = None
     # Combine meta_non_parallel (higher priority)
     # and db_task.meta_non_parallel (lower priority)
     final_meta_non_parallel = (db_task.meta_non_parallel or {}).copy()
     final_meta_non_parallel.update(meta_non_parallel or {})
-    if final_meta_non_parallel == {}:
-        final_meta_non_parallel = None
 
     # Create DB entry
     wf_task = WorkflowTaskV2(
         task_type=task_type,
         task_id=task_id,
-        args_non_parallel=args_non_parallel,
-        args_parallel=args_parallel,
+        args_non_parallel=args_non_parallel or {},
+        args_parallel=args_parallel or {},
         meta_parallel=final_meta_parallel,
         meta_non_parallel=final_meta_non_parallel,
         type_filters=(type_filters or dict()),
