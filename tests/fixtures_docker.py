@@ -220,21 +220,23 @@ def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
 
 
 @pytest.fixture
+def monkeypatch_stdin_fabric(monkeypatch):
+    # https://github.com/fabric/fabric/issues/1979
+    # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
+
+@pytest.fixture
 def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,
     ssh_keys,
-    monkeypatch,
+    monkeypatch_stdin_fabric,
 ) -> Generator[FractalSSHList, Any, None]:
     """
     Return a `FractalSSHList` object which already contains a valid
     `FractalSSH` object.
     """
-
-    # https://github.com/fabric/fabric/issues/1979
-    # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
-
     collection = FractalSSHList()
     fractal_ssh_obj: FractalSSH = collection.get(
         host=slurmlogin_ip,
@@ -252,6 +254,7 @@ def fractal_ssh_list(
 def ssh_config_dict(
     slurmlogin_ip: str,
     ssh_keys: dict[str, str],
+    monkeypatch_stdin_fabric,
 ) -> dict[str, str | dict[str, str]]:
     return dict(
         host=slurmlogin_ip,
