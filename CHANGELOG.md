@@ -18,7 +18,7 @@
 * SSH:
     * Introduce `FractalSSH.read_remote_text_file` (\#2627).
 * App configuration:
-    * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627).
+    * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627, \#2650).
 
 
 # 2.14.16
