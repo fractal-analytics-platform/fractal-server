@@ -109,13 +109,11 @@ def check_ssh_or_fail_and_cleanup(
     Returns:
         Whether SSH connection is OK.
     """
-    logger = get_logger(logger_name=logger_name)
     try:
         fractal_ssh.check_connection()
-        hostname = fractal_ssh.run_command(cmd="hostname")
-        logger.debug(f"Hostname: {hostname.strip()}")
         return True
     except Exception as e:
+        logger = get_logger(logger_name=logger_name)
         logger.error(
             "Cannot establish SSH connection. " f"Original error: {str(e)}"
         )

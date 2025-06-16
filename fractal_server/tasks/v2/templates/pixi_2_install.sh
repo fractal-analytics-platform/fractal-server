@@ -31,6 +31,9 @@ export TOKIO_WORKER_THREADS="${TOKIO_WORKER_THREADS}"
 
 TIME_START=$(date +%s)
 
+HOSTNAME=$(hostname)
+echo "Hostname: ${HOSTNAME}"
+
 cd "${PACKAGE_DIR}"
 write_log "Changed working directory to ${PACKAGE_DIR}"
 
