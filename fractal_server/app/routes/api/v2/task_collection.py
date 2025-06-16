@@ -13,7 +13,6 @@ from fastapi import UploadFile
 from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
-from sqlmodel import select
 
 from .....config import get_settings
 from .....logger import reset_logger_handlers
@@ -31,6 +30,7 @@ from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -291,18 +291,10 @@ async def collect_tasks_pip(
         version=task_group_attrs["version"],
         db=db,
     )
-
-    # Verify that task-group path is unique
-    stm = select(TaskGroupV2).where(TaskGroupV2.path == task_group_path)
-    res = await db.execute(stm)
-    for conflicting_task_group in res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Another task-group already has path={task_group_path}.\n"
-                f"{conflicting_task_group=}"
-            ),
-        )
+    await _verify_non_duplication_group_path(
+        path=task_group_attrs["path"],
+        db=db,
+    )
 
     # On-disk checks
 
