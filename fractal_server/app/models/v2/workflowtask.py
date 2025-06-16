@@ -17,17 +17,17 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     workflow_id: int = Field(foreign_key="workflowv2.id", ondelete="CASCADE")
     order: int | None = None
-    meta_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    meta_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
-    meta_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    meta_non_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
-    args_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    args_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
-    args_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    args_non_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
     type_filters: dict[str, bool] = Field(
