@@ -18,6 +18,7 @@ from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 
@@ -141,6 +142,14 @@ def reactivate_local_pixi(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                # Make task folder 755
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+                command = f"chmod 755 {source_dir} -R"
+                execute_command_sync(
+                    command=command,
+                    logger_name=LOGGER_NAME,
+                )
 
                 activity.log = get_current_log(log_file_path)
                 activity.status = TaskGroupActivityStatusV2.OK

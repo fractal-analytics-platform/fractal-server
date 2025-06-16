@@ -27,6 +27,7 @@ from fractal_server.tasks.v2.utils_background import (
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 
@@ -157,6 +158,14 @@ def collect_local_pixi(
                 project_python_wrapper = parsed_output[
                     "project_python_wrapper"
                 ]
+
+                # Make task folder 755
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+                command = f"chmod 755 {source_dir} -R"
+                execute_command_sync(
+                    command=command,
+                    logger_name=LOGGER_NAME,
+                )
 
                 # Read and validate manifest
                 # NOTE: we are only supporting the manifest path being relative
