@@ -132,7 +132,8 @@ def reactivate_local_pixi(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                command = f"chmod 755 '{SOURCE_DIR_NAME}' -R"
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+                command = f"chmod 755 '{source_dir}' -R"
                 t1 = time.perf_counter()
                 subprocess.run(shlex.split(command))  # nosec
                 t2 = time.perf_counter()
