@@ -14,7 +14,7 @@
     * Block `DELETE /api/v2/task-group/{task_group_id}/` if a task-group activity is ongoing (\#2642).
     * Introduce `_verify_non_duplication_group_path` auxiliary function (\#2643).
 * Task lifecycle:
-    * Introduce full support for pixi task-group lifecycle (\#2627).
+    * Introduce full support for pixi task-group lifecycle (\#2627, \#2651).
 * SSH:
     * Introduce `FractalSSH.read_remote_text_file` (\#2627).
 * App configuration:
