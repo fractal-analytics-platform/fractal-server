@@ -65,12 +65,36 @@ class MailSettings(BaseModel):
 
 
 class PixiSettings(BaseModel):
-    default_version: str
-    versions: DictStrStr
+    """
+    Configuration for Pixi task collection
 
-    TOKIO_WORKER_THREADS: int = 2
+    See https://pixi.sh/latest/reference/cli/pixi/install/#config-options for
+    `pixi install` concurrency options.
+    See https://docs.rs/tokio/latest/tokio/#cpu-bound-tasks-and-blocking-code
+    for `tokio` configuration.
+
+    versions:
+        Available `pixi` versions and their `PIXI_HOME` folders.
+    default_version:
+        Default `pixi` version to use for task collection - must be one
+        of `versions` keys.
+    PIXI_CONCURRENT_SOLVES:
+        Value of `--concurrent-solves` for `pixi install`.
+    PIXI_CONCURRENT_DOWNLOADS:
+        Value of `--concurrent-downloads for `pixi install`.
+    TOKIO_WORKER_THREADS:
+        From tokio docs, "The core threads are where all asynchronous code
+        runs, and Tokio will by default spawn one for each CPU core. You can
+        use the environment variable TOKIO_WORKER_THREADS to override the
+        default value."
+    """
+
+    versions: DictStrStr
+    default_version: str
+
     PIXI_CONCURRENT_SOLVES: int = 4
     PIXI_CONCURRENT_DOWNLOADS: int = 4
+    TOKIO_WORKER_THREADS: int = 2
 
     @model_validator(mode="after")
     def check_pixi_settings(self):
