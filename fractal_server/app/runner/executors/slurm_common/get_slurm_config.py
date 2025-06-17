@@ -125,7 +125,14 @@ def get_slurm_config_internal(
             )
             logger.error(error_msg)
             raise SlurmConfigError(error_msg)
-        for key in ["time", "gres", "gpus", "constraint"]:
+        for key in [
+            "time",
+            "gres",
+            "gpus",
+            "constraint",
+            "nodelist",
+            "exclude",
+        ]:
             value = wftask_meta.get(key, None)
             if value is not None:
                 slurm_dict[key] = value
