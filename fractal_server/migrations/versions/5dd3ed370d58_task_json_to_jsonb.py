@@ -1,8 +1,8 @@
-"""Task JSON non-sql-nullable
+"""Task JSON to JSONB
 
-Revision ID: a08feef5e541
+Revision ID: 5dd3ed370d58
 Revises: b1e7f7a1ff71
-Create Date: 2025-06-17 15:44:49.111192
+Create Date: 2025-06-17 17:53:42.965888
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "a08feef5e541"
+revision = "5dd3ed370d58"
 down_revision = "b1e7f7a1ff71"
 branch_labels = None
 depends_on = None
@@ -22,12 +22,14 @@ def upgrade() -> None:
         batch_op.alter_column(
             "args_schema_non_parallel",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=False,
+            type_=postgresql.JSONB(astext_type=sa.Text()),
+            existing_nullable=True,
         )
         batch_op.alter_column(
             "args_schema_parallel",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=False,
+            type_=postgresql.JSONB(astext_type=sa.Text()),
+            existing_nullable=True,
         )
 
     # ### end Alembic commands ###
@@ -38,13 +40,15 @@ def downgrade() -> None:
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
         batch_op.alter_column(
             "args_schema_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=True,
+            existing_type=postgresql.JSONB(astext_type=sa.Text()),
+            type_=postgresql.JSON(astext_type=sa.Text()),
+            existing_nullable=True,
         )
         batch_op.alter_column(
             "args_schema_non_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=True,
+            existing_type=postgresql.JSONB(astext_type=sa.Text()),
+            type_=postgresql.JSON(astext_type=sa.Text()),
+            existing_nullable=True,
         )
 
     # ### end Alembic commands ###
