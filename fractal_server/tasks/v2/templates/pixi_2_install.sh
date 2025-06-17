@@ -2,7 +2,7 @@ set -e
 
 write_log(){
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    echo "[collect-task-pixi, ${TIMESTAMP}] ${1}"
+    echo "[install-tasks-pixi, ${TIMESTAMP}] ${1}"
 }
 
 # Replacements
@@ -31,7 +31,7 @@ export TOKIO_WORKER_THREADS="${TOKIO_WORKER_THREADS}"
 
 TIME_START=$(date +%s)
 
-echo "Hostname: $(hostname)"
+write_log "Hostname: $(hostname)"
 
 cd "${PACKAGE_DIR}"
 write_log "Changed working directory to ${PACKAGE_DIR}"
