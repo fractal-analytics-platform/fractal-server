@@ -104,10 +104,14 @@ async def full_workflow(
         debug(wftask2_id)
 
         # EXECUTE WORKFLOW
+        # Note: we include a fake `worker_init` in order to catch the bug
+        # in issue 2659
         res = await client.post(
             f"{PREFIX}/project/{project_id}/job/submit/"
             f"?workflow_id={workflow_id}&dataset_id={dataset_id}",
-            json={},
+            json={
+                "worker_init": "# this is a fake extra line, with no meaning"
+            },
         )
         job_data = res.json()
         debug(job_data)
