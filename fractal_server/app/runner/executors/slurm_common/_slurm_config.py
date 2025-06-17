@@ -48,8 +48,6 @@ class _SlurmConfigSet(BaseModel):
         constraint:
         gres:
         time:
-        exclude:
-        nodelist:
         account:
         extra_lines:
     """
@@ -61,8 +59,6 @@ class _SlurmConfigSet(BaseModel):
     mem: int | str | None = None
     constraint: str | None = None
     gres: str | None = None
-    exclude: str | None = None
-    nodelist: str | None = None
     time: str | None = None
     account: str | None = None
     extra_lines: list[str] | None = None
@@ -231,8 +227,6 @@ class SlurmConfig(BaseModel):
         account: Corresponds to SLURM option.
         gpus: Corresponds to SLURM option.
         time: Corresponds to SLURM option (WARNING: not fully supported).
-        nodelist: Corresponds to SLURM option.
-        exclude: Corresponds to SLURM option.
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
         extra_lines: Additional lines to include in SLURM submission scripts.
@@ -274,8 +268,6 @@ class SlurmConfig(BaseModel):
     gpus: str | None = None
     time: str | None = None
     account: str | None = None
-    nodelist: str | None = None
-    exclude: str | None = None
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
@@ -369,8 +361,6 @@ class SlurmConfig(BaseModel):
             "gpus",
             "time",
             "account",
-            "exclude",
-            "nodelist",
         ]:
             value = getattr(self, key)
             if value is not None:
