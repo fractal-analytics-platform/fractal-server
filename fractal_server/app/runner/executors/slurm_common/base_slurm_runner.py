@@ -182,6 +182,44 @@ class BaseSlurmRunner(BaseRunner):
     def _mkdir_remote_folder(self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
 
+    def _enrich_slurm_config(
+        self,
+        slurm_config: SlurmConfig,
+    ) -> SlurmConfig:
+        """
+        Return an enriched `SlurmConfig` object
+
+        Include `self.account` and `self.common_script_lines` into a
+        `SlurmConfig` object. Extracting this logic into an independent
+        class method is useful to fix issue #2659 (which was due to
+        performing this same operation multiple times rather than once).
+
+        Args:
+            slurm_config: The original `SlurmConfig` object.
+
+        Returns:
+            A new, up-to-date, `SlurmConfig` object.
+        """
+
+        new_slurm_config = slurm_config.model_copy()
+
+        # Include SLURM account in `slurm_config`.
+        if self.slurm_account is not None:
+            new_slurm_config.account = self.slurm_account
+
+        # Include common_script_lines in extra_lines
+        if len(self.common_script_lines) > 0:
+            logger.debug(
+                f"Add {self.common_script_lines} to "
+                f"{new_slurm_config.extra_lines=}."
+            )
+            current_extra_lines = new_slurm_config.extra_lines or []
+            new_slurm_config.extra_lines = (
+                current_extra_lines + self.common_script_lines
+            )
+
+        return new_slurm_config
+
     def _submit_single_sbatch(
         self,
         *,
@@ -190,24 +228,6 @@ class BaseSlurmRunner(BaseRunner):
         slurm_config: SlurmConfig,
     ) -> str:
         logger.debug("[_submit_single_sbatch] START")
-
-        # Include SLURM account in `slurm_config`. Note: we make this change
-        # here, rather than exposing a new argument of `get_slurm_config`,
-        # because it's a backend-specific argument while `get_slurm_config` has
-        # a generic interface.
-        if self.slurm_account is not None:
-            slurm_config.account = self.slurm_account
-
-        # Include common_script_lines in extra_lines
-        if len(self.common_script_lines) > 0:
-            logger.debug(
-                f"Add {self.common_script_lines} to "
-                f"{slurm_config.extra_lines=}."
-            )
-            current_extra_lines = slurm_config.extra_lines or []
-            slurm_config.extra_lines = (
-                current_extra_lines + self.common_script_lines
-            )
 
         for task in slurm_job.tasks:
             # Write input file
@@ -508,6 +528,9 @@ class BaseSlurmRunner(BaseRunner):
         user_id: int,
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
+
+        config = self._enrich_slurm_config(config)
+
         try:
             workdir_local = task_files.wftask_subfolder_local
             workdir_remote = task_files.wftask_subfolder_remote
@@ -648,6 +671,8 @@ class BaseSlurmRunner(BaseRunner):
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
         """
+
+        config = self._enrich_slurm_config(config)
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
