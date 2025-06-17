@@ -37,11 +37,11 @@ class WorkflowTaskReadV2(BaseModel):
 
     workflow_id: int
     order: int | None = None
-    meta_non_parallel: dict[str, Any]
-    meta_parallel: dict[str, Any]
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
 
-    args_non_parallel: dict[str, Any]
-    args_parallel: dict[str, Any]
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
 
     type_filters: dict[str, bool]
 
@@ -106,10 +106,10 @@ class WorkflowTaskImportV2(BaseModel):
 
 
 class WorkflowTaskExportV2(BaseModel):
-    meta_non_parallel: dict[str, Any]
-    meta_parallel: dict[str, Any]
-    args_non_parallel: dict[str, Any]
-    args_parallel: dict[str, Any]
+    meta_non_parallel: dict[str, Any] | None = None
+    meta_parallel: dict[str, Any] | None = None
+    args_non_parallel: dict[str, Any] | None = None
+    args_parallel: dict[str, Any] | None = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
     task: TaskExportV2

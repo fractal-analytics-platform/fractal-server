@@ -23,11 +23,11 @@ class TaskV2(SQLModel, table=True):
     )
 
     version: str | None = None
-    args_schema_non_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
+    args_schema_non_parallel: dict[str, Any] | None = Field(
+        sa_column=Column(JSON), default=None
     )
-    args_schema_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
+    args_schema_parallel: dict[str, Any] | None = Field(
+        sa_column=Column(JSON), default=None
     )
     args_schema_version: str | None = None
     docs_info: str | None = None

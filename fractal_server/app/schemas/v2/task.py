@@ -102,8 +102,8 @@ class TaskReadV2(BaseModel):
     command_parallel: str | None = None
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
-    args_schema_non_parallel: dict[str, Any]
-    args_schema_parallel: dict[str, Any]
+    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any] | None = None
     args_schema_version: str | None = None
     docs_info: str | None = None
     docs_link: str | None = None
