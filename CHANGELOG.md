@@ -19,6 +19,7 @@
     * Introduce `FractalSSH.read_remote_text_file` (\#2627).
 * Runner:
     * Fix use of `worker_init/extra_lines` for multi-image job execution (\#2660).
+    * Support SLURM configuration options `nodelist` and `exclude` (\#2660).
 * App configuration:
     * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627, \#2650).
 
