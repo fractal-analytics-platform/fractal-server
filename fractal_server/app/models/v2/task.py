@@ -1,7 +1,6 @@
 from typing import Any
 
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -25,10 +24,10 @@ class TaskV2(SQLModel, table=True):
 
     version: str | None = None
     args_schema_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+        sa_column=Column(JSON), default=None
     )
     args_schema_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+        sa_column=Column(JSON), default=None
     )
     args_schema_version: str | None = None
     docs_info: str | None = None
