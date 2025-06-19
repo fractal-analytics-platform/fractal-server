@@ -3,8 +3,8 @@ from typing import Any
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
-from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -31,13 +31,13 @@ class JobV2(SQLModel, table=True):
     slurm_account: str | None = None
 
     dataset_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False)
+        sa_column=Column(JSONB, nullable=False)
     )
     workflow_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False)
+        sa_column=Column(JSONB, nullable=False)
     )
     project_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False)
+        sa_column=Column(JSONB, nullable=False)
     )
 
     worker_init: str | None = None
@@ -57,8 +57,8 @@ class JobV2(SQLModel, table=True):
     log: str | None = None
 
     attribute_filters: AttributeFilters = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+        sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     type_filters: dict[str, bool] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+        sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
