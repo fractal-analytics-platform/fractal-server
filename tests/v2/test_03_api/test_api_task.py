@@ -137,8 +137,8 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
         assert res.json()["version"] is None
-        assert res.json()["args_schema_non_parallel"] is None
-        assert res.json()["args_schema_parallel"] is None
+        assert res.json()["args_schema_non_parallel"] == {}
+        assert res.json()["args_schema_parallel"] == {}
         assert res.json()["args_schema_version"] is None
         assert res.json()["docs_info"] is None
         assert res.json()["docs_link"] is None
