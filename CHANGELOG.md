@@ -6,6 +6,7 @@
     * Rename `TaskGroupV2.wheel_path` into `TaskGroupV2.archive_path` (\#2627).
     * Rename `TaskGroupV2.pip_freeze` into `TaskGroupV2.env_info` (\#2627).
     * Add `TaskGroupV2.pixi_version` (\#2627).
+    * Transform every JSON column to JSONB (\#2662).
 * API:
     * Introduce new value `TaskGroupV2OriginEnum.PIXI` (\#2627).
     * Exclude `TaskGroupV2.env_info` from API responses (\#2627).

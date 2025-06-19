@@ -3,8 +3,8 @@ from typing import Any
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
-from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -24,7 +24,7 @@ class DatasetV2(SQLModel, table=True):
     )
 
     history: list[dict[str, Any]] = Field(
-        sa_column=Column(JSON, server_default="[]", nullable=False)
+        sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
 
     timestamp_created: datetime = Field(
@@ -34,7 +34,7 @@ class DatasetV2(SQLModel, table=True):
 
     zarr_dir: str
     images: list[dict[str, Any]] = Field(
-        sa_column=Column(JSON, server_default="[]", nullable=False)
+        sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
 
     @property
