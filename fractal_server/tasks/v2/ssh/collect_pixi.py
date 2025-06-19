@@ -182,19 +182,21 @@ def collect_ssh_pixi(
                     )
 
                     # Run the three pixi-related scripts
-                    _customize_and_run_template(
+                    stdout = _customize_and_run_template(
                         template_filename="pixi_1_extract.sh",
                         replacements=replacements,
                         **common_args,
                     )
+                    logger.debug(f"STDOUT: {stdout}")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    _customize_and_run_template(
+                    stdout = _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
                         **common_args,
                     )
+                    logger.debug(f"STDOUT: {stdout}")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
@@ -203,6 +205,7 @@ def collect_ssh_pixi(
                         replacements=replacements,
                         **common_args,
                     )
+                    logger.debug(f"STDOUT: {stdout}")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 

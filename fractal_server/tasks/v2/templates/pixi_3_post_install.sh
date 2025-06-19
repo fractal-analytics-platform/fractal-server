@@ -2,7 +2,7 @@ set -e
 
 write_log(){
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    echo "[collect-task-pixi, ${TIMESTAMP}] ${1}"
+    echo "[after-install-pixi, ${TIMESTAMP}] ${1}"
 }
 
 # Replacements

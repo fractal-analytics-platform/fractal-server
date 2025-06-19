@@ -14,9 +14,12 @@
     * Block `DELETE /api/v2/task-group/{task_group_id}/` if a task-group activity is ongoing (\#2642).
     * Introduce `_verify_non_duplication_group_path` auxiliary function (\#2643).
 * Task lifecycle:
-    * Introduce full support for pixi task-group lifecycle (\#2627, \#2651, \#2652).
+    * Introduce full support for pixi task-group lifecycle (\#2627, \#2651, \#2652, \#2654).
 * SSH:
     * Introduce `FractalSSH.read_remote_text_file` (\#2627).
+* Runner:
+    * Fix use of `worker_init/extra_lines` for multi-image job execution (\#2660).
+    * Support SLURM configuration options `nodelist` and `exclude` (\#2660).
 * App configuration:
     * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627, \#2650).
 
