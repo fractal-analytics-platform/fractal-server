@@ -68,8 +68,8 @@ class HistoryRunReadAggregated(BaseModel):
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
-    args_schema_parallel: dict[str, Any] | None = None
-    args_schema_non_parallel: dict[str, Any] | None = None
+    args_schema_parallel: dict[str, Any]
+    args_schema_non_parallel: dict[str, Any]
     version: str | None = None
 
     @field_serializer("timestamp_started")

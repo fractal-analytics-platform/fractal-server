@@ -78,9 +78,9 @@ class TaskManifestV2(BaseModel):
                 )
 
             args_schema_non_parallel = self.args_schema_non_parallel
-            if args_schema_non_parallel is not None:
+            if args_schema_non_parallel:
                 raise ValueError(
-                    "`TaskManifestV2.args_schema_non_parallel` must be None "
+                    "`TaskManifestV2.args_schema_non_parallel` must be empty "
                     "if `TaskManifestV2.executable_non_parallel` is None. "
                     f"Given: {args_schema_non_parallel}."
                 )
@@ -95,9 +95,9 @@ class TaskManifestV2(BaseModel):
                 )
 
             args_schema_parallel = self.args_schema_parallel
-            if args_schema_parallel is not None:
+            if args_schema_parallel:
                 raise ValueError(
-                    "`TaskManifestV2.args_schema_parallel` must be None if "
+                    "`TaskManifestV2.args_schema_parallel` must be empty if "
                     "`TaskManifestV2.executable_parallel` is None. "
                     f"Given: {args_schema_parallel}."
                 )
@@ -142,14 +142,14 @@ class ManifestV2(BaseModel):
         if has_args_schemas is True:
             for task in task_list:
                 if task.executable_parallel is not None:
-                    if task.args_schema_parallel is None:
+                    if not task.args_schema_parallel:
                         raise ValueError(
                             f"Manifest has {has_args_schemas=}, but "
                             f"task '{task.name}' has "
                             f"{task.args_schema_parallel=}."
                         )
                 if task.executable_non_parallel is not None:
-                    if task.args_schema_non_parallel is None:
+                    if not task.args_schema_non_parallel:
                         raise ValueError(
                             f"Manifest has {has_args_schemas=}, but "
                             f"task '{task.name}' has "

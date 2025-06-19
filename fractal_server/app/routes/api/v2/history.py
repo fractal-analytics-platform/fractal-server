@@ -208,8 +208,8 @@ async def get_history_run_list(
     task_args = {
         _id: {
             "version": version,
-            "args_schema_parallel": parallel,
-            "args_schema_non_parallel": non_parallel,
+            "args_schema_parallel": parallel or {},
+            "args_schema_non_parallel": non_parallel or {},
         }
         for _id, version, parallel, non_parallel in res.all()
     }
