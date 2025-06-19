@@ -153,7 +153,8 @@ async def create_task(
     )
 
     if task.type == TaskType.PARALLEL and (
-        task.args_schema_non_parallel != {} or task.meta_non_parallel != {}
+        task.args_schema_non_parallel is not None
+        or task.meta_non_parallel is not None
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -163,7 +164,7 @@ async def create_task(
             ),
         )
     elif task.type == TaskType.NON_PARALLEL and (
-        task.args_schema_parallel != {} or task.meta_parallel != {}
+        task.args_schema_parallel is not None or task.meta_parallel is not None
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

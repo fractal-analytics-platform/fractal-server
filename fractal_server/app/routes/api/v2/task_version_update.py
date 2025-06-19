@@ -6,7 +6,6 @@ from packaging.version import parse
 from packaging.version import Version
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlmodel import and_
 from sqlmodel import cast
 from sqlmodel import or_
 from sqlmodel import select
@@ -114,15 +113,8 @@ async def get_workflow_version_update_candidates(
             select(TaskV2.id, TaskV2.type, TaskGroupV2.version)
             .where(
                 or_(
-                    and_(
-                        TaskV2.args_schema_parallel != {},
-                        cast(TaskV2.args_schema_parallel, String) != "null",
-                    ),
-                    and_(
-                        TaskV2.args_schema_non_parallel != {},
-                        cast(TaskV2.args_schema_non_parallel, String)
-                        != "null",
-                    ),
+                    cast(TaskV2.args_schema_parallel, String) != "null",
+                    cast(TaskV2.args_schema_non_parallel, String) != "null",
                 )
             )
             .where(TaskV2.name == current_task.name)
