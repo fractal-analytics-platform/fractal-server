@@ -2,8 +2,8 @@ from datetime import datetime
 from datetime import timezone
 
 from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
-from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -35,7 +35,7 @@ class TaskGroupV2(SQLModel, table=True):
     pip_extras: str | None = None
     pinned_package_versions: dict[str, str] = Field(
         sa_column=Column(
-            JSON,
+            JSONB,
             server_default="{}",
             default={},
             nullable=True,

@@ -1,5 +1,5 @@
 from sqlalchemy import Column
-from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -25,7 +25,7 @@ class UserSettings(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     slurm_accounts: list[str] = Field(
-        sa_column=Column(JSON, server_default="[]", nullable=False)
+        sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
     ssh_host: str | None = None
     ssh_username: str | None = None
