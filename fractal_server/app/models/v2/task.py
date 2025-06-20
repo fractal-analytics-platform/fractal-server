@@ -17,14 +17,10 @@ class TaskV2(SQLModel, table=True):
     source: str | None = None
 
     meta_non_parallel: dict[str, Any] = Field(
-        sa_column=Column(
-            JSONB, server_default="{}", default={}, nullable=False
-        )
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
     meta_parallel: dict[str, Any] = Field(
-        sa_column=Column(
-            JSONB, server_default="{}", default={}, nullable=False
-        )
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
     version: str | None = None

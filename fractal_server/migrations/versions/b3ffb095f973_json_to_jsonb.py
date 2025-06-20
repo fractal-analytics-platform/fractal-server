@@ -79,20 +79,6 @@ def upgrade() -> None:
 
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
         batch_op.alter_column(
-            "meta_non_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=False,
-            existing_server_default=sa.text("'{}'::json"),
-        )
-        batch_op.alter_column(
-            "meta_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=False,
-            existing_server_default=sa.text("'{}'::json"),
-        )
-        batch_op.alter_column(
             "input_types",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
             type_=postgresql.JSONB(astext_type=sa.Text()),
@@ -131,18 +117,6 @@ def upgrade() -> None:
         )
 
     with op.batch_alter_table("workflowtaskv2", schema=None) as batch_op:
-        batch_op.alter_column(
-            "meta_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "meta_non_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
         batch_op.alter_column(
             "args_parallel",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
@@ -188,18 +162,6 @@ def downgrade() -> None:
             type_=postgresql.JSON(astext_type=sa.Text()),
             existing_nullable=True,
         )
-        batch_op.alter_column(
-            "meta_non_parallel",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "meta_parallel",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
 
     with op.batch_alter_table("usergroup", schema=None) as batch_op:
         batch_op.alter_column(
@@ -238,20 +200,6 @@ def downgrade() -> None:
             existing_type=postgresql.JSONB(astext_type=sa.Text()),
             type_=postgresql.JSON(astext_type=sa.Text()),
             existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "meta_parallel",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=False,
-            existing_server_default=sa.text("'{}'::json"),
-        )
-        batch_op.alter_column(
-            "meta_non_parallel",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=False,
-            existing_server_default=sa.text("'{}'::json"),
         )
 
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:

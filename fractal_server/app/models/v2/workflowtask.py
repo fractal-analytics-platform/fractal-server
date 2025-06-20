@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -18,10 +19,10 @@ class WorkflowTaskV2(SQLModel, table=True):
     workflow_id: int = Field(foreign_key="workflowv2.id", ondelete="CASCADE")
     order: int | None = None
     meta_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+        sa_column=Column(JSON), default=None
     )
     meta_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+        sa_column=Column(JSON), default=None
     )
     args_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSONB), default=None
