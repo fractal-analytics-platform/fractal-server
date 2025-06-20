@@ -1,4 +1,6 @@
 from devtools import debug
+from sqlmodel import select
+from sqlmodel import text
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -131,3 +133,48 @@ async def test_collection_state(db):
         TaskGroupActivityV2, task_group_activity.id
     )
     assert task_group_activity.taskgroupv2_id is None
+
+
+async def test_non_nullable_json(task_factory_v2, db, MockCurrentUser):
+    async with MockCurrentUser() as user:
+
+        # Create TaskGroupV2 via factory
+        await task_factory_v2(
+            user_id=user.id,
+            args_schema_parallel={"foo": "bar"},
+            args_schema_non_parallel={"foo": "bar"},
+        )
+        res = await db.execute(select(TaskGroupV2))
+        task_group = res.scalar()
+
+        # Add a TaskV2 without any args_schemas
+        task = TaskV2(
+            name="foo",
+            type="bar",
+            taskgroupv2_id=task_group.id,
+        )
+        db.add(task)
+        await db.commit()
+        await db.refresh(task)
+
+        # Assert that args_schemas are actully null
+        assert task.args_schema_parallel is None
+        assert task.args_schema_non_parallel is None
+
+        # Assert that the query for SQL-null gives 0 results
+        res = await db.execute(
+            text("SELECT * FROM taskv2 WHERE args_schema_parallel IS NULL")
+        )
+        sql_null = res.fetchall()
+        assert len(sql_null) == 0
+
+        # Assert that the query for JSON-null gives one result
+        res = await db.execute(
+            text(
+                "SELECT * FROM taskv2 "
+                "WHERE args_schema_parallel = 'null'::jsonb"
+            )
+        )
+        json_null = res.fetchall()
+        assert len(json_null) == 1
+        assert json_null[0][0] == task.id
