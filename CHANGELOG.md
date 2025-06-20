@@ -6,7 +6,7 @@
 This release fixes the reason for yanking 2.15.0.
 
 * Databas
-    * Modify `JSON->JSONB` database schema migration in-place, so that columns which represent JSON Schemas remain in JSON form rather than JSONB (\#2664).
+    * Modify `JSON->JSONB` database schema migration in-place, so that columns which represent JSON Schemas or `meta_*` fields remain in JSON form rather than JSONB (\#2664, \#2666).
 
 # 2.15.0 [yanked]
 
