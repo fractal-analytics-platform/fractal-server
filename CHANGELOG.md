@@ -1,6 +1,19 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.0
+# 2.15.1
+
+
+This release fixes the reason for yanking 2.15.0.
+
+* Databas
+    * Modify `JSON->JSONB` database schema migration in-place, so that columns which represent JSON Schemas remain in JSON form rather than JSONB (\#2664).
+
+# 2.15.0 [yanked]
+
+> This release was yanked on PyPI, because its conversion of all JSON columns
+> into JSONB changes the key order, see
+> https://github.com/fractal-analytics-platform/fractal-server/issues/2663.
+
 
 * Database:
     * Rename `TaskGroupV2.wheel_path` into `TaskGroupV2.archive_path` (\#2627).
