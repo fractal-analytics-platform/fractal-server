@@ -93,18 +93,6 @@ def upgrade() -> None:
             existing_server_default=sa.text("'{}'::json"),
         )
         batch_op.alter_column(
-            "args_schema_non_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "args_schema_parallel",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            type_=postgresql.JSONB(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
             "input_types",
             existing_type=postgresql.JSON(astext_type=sa.Text()),
             type_=postgresql.JSONB(astext_type=sa.Text()),
@@ -247,18 +235,6 @@ def downgrade() -> None:
         )
         batch_op.alter_column(
             "input_types",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "args_schema_parallel",
-            existing_type=postgresql.JSONB(astext_type=sa.Text()),
-            type_=postgresql.JSON(astext_type=sa.Text()),
-            existing_nullable=True,
-        )
-        batch_op.alter_column(
-            "args_schema_non_parallel",
             existing_type=postgresql.JSONB(astext_type=sa.Text()),
             type_=postgresql.JSON(astext_type=sa.Text()),
             existing_nullable=True,
