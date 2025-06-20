@@ -161,7 +161,15 @@ async def test_non_nullable_json(task_factory_v2, db, MockCurrentUser):
         assert task.args_schema_parallel is None
         assert task.args_schema_non_parallel is None
 
-        # Assert that the query for SQL-null gives 0 results
+        # Assert that the query for SQL-null works
+        res = await db.execute(
+            text("SELECT * FROM taskv2 WHERE command_parallel IS NULL")
+        )
+        sql_null_command_parallel = res.fetchall()
+        assert len(sql_null_command_parallel) == 1
+        assert sql_null_command_parallel[0][0] == task.id
+
+        # Assert that the query for SQL-null gives 0 results with JSONs
         res = await db.execute(
             text("SELECT * FROM taskv2 WHERE args_schema_parallel IS NULL")
         )
