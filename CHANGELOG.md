@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.2 (Unreleased)
+
+* Runner
+    * Remove `mkdir` in SLURM SSH runner (\#2668).
+
 # 2.15.1
 
 
