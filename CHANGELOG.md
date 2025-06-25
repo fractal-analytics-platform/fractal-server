@@ -3,7 +3,7 @@
 # 2.15.2 (Unreleased)
 
 * Runner
-    * Remove redundant `mkdir` in SLURM SSH runner (\#2669).
+    * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
 
 # 2.15.1
 
