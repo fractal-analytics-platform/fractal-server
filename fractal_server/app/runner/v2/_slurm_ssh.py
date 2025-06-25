@@ -20,6 +20,7 @@ from pathlib import Path
 from ....ssh._fabric import FractalSSH
 from ...models.v2 import DatasetV2
 from ...models.v2 import WorkflowV2
+from ..exceptions import JobExecutionError
 from ..executors.slurm_common.get_slurm_config import get_slurm_config
 from ..executors.slurm_ssh.runner import SlurmSSHRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
@@ -62,6 +63,18 @@ def process_workflow(
 
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
+
+    # Create main remote folder
+    try:
+        fractal_ssh.mkdir(folder=str(workflow_dir_remote))
+        logger.info(f"Created {str(workflow_dir_remote)} via SSH.")
+    except Exception as e:
+        error_msg = (
+            f"Could not create {str(workflow_dir_remote)} via SSH.\n"
+            f"Original error: {str(e)}."
+        )
+        logger.error(error_msg)
+        raise JobExecutionError(info=error_msg)
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
