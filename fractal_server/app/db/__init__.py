@@ -2,6 +2,7 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
+import logging
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
@@ -14,6 +15,9 @@ from sqlalchemy.orm import sessionmaker
 from ...config import get_settings
 from ...logger import set_logger
 from ...syringe import Inject
+
+logging.basicConfig()
+logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
 
 logger = set_logger(__name__)
@@ -45,14 +49,16 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        engine_kwargs_async = {"pool_pre_ping": True}
-
         cls._engine_async = create_async_engine(
             settings.DATABASE_ASYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            **engine_kwargs_async,
+            pool_pre_ping=True,
+            echo_pool=True,
         )
+        from devtools import debug
+
+        debug(cls._engine_async.pool)
         cls._async_session_maker = sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
@@ -65,14 +71,16 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        engine_kwargs_sync = {}
-
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            **engine_kwargs_sync,
+            pool_pre_ping=True,
+            echo_pool=True,
         )
+        from devtools import debug
+
+        debug(cls._engine_sync.pool)
 
         cls._sync_session_maker = sessionmaker(
             bind=cls._engine_sync,
