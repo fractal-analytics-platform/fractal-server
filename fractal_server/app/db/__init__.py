@@ -45,13 +45,11 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        engine_kwargs_async = {"pool_pre_ping": True}
-
         cls._engine_async = create_async_engine(
             settings.DATABASE_ASYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            **engine_kwargs_async,
+            pool_pre_ping=True,
         )
         cls._async_session_maker = sessionmaker(
             cls._engine_async,
@@ -65,13 +63,11 @@ class DB:
         settings = Inject(get_settings)
         settings.check_db()
 
-        engine_kwargs_sync = {}
-
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            **engine_kwargs_sync,
+            pool_pre_ping=True,
         )
 
         cls._sync_session_maker = sessionmaker(
