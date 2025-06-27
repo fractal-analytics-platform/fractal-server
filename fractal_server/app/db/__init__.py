@@ -53,7 +53,7 @@ class DB:
             settings.DATABASE_ASYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            pool_pre_ping=True,
+            pool_pre_ping=False,
             echo_pool=True,
         )
         from devtools import debug
@@ -75,7 +75,7 @@ class DB:
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            pool_pre_ping=True,
+            pool_pre_ping=False,
             echo_pool=True,
         )
         from devtools import debug

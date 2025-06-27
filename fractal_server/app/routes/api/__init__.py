@@ -2,6 +2,7 @@
 `api` module
 """
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,18 +34,14 @@ async def view_settings(user: UserOAuth = Depends(current_active_superuser)):
 
 
 @router_api.get("/db-async-dependency/")
-async def test_db_async(
-    db: AsyncSession = Depends(get_async_db),
-):
+async def test_db_async(db: AsyncSession = Depends(get_async_db)):
     res = await db.execute(select(UserOAuth.id))
     res.scalars().all()
     return "OK"
 
 
 @router_api.get("/db-sync-dependency/")
-async def test_db_sync(
-    db: Session = Depends(get_sync_db),
-):
+async def test_db_sync(db: Session = Depends(get_sync_db)):
     res = db.execute(select(UserOAuth.id))
     res.scalars().all()
     return "OK"
@@ -59,10 +56,21 @@ async def test_db_async_context():
 
 
 @router_api.get("/db-sync-context/")
-async def test_db_sync_context(
-    db: Session = Depends(get_sync_db),
-):
+async def test_db_sync_context():
     with next(get_sync_db()) as db:
         res = db.execute(select(UserOAuth.id))
         res.scalars().all()
     return "OK"
+
+
+def job_execution():
+    with next(get_sync_db()) as db:
+        res = db.execute(select(UserOAuth.id))
+        res.scalars().all()
+    print("all good in the background!")
+
+
+@router_api.get("/db-sync-background/")
+async def test_db_async_background(background_tasks: BackgroundTasks):
+    background_tasks.add_task(job_execution)
+    return "SUBMITTED"
