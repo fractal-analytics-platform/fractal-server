@@ -6,7 +6,7 @@
 |-------------------------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | fractal\_server/\_\_init\_\_.py                                                 |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/\_\_init\_\_.py                                             |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/db/\_\_init\_\_.py                                          |       60 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/db/\_\_init\_\_.py                                          |       58 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                      |        5 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkusergroup.py                                     |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkuserproject.py                                   |        5 |        0 |        0 |        0 |    100% |           |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9205** |  **296** | **1722** |  **104** | **96%** |           |
+|                                                                       **TOTAL** | **9203** |  **296** | **1722** |  **104** | **96%** |           |
 
 
 ## Setup coverage badge
