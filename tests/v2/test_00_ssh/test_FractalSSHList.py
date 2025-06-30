@@ -93,7 +93,9 @@ def test_run_command_through_FractalSSHList(
     assert fractal_ssh_list.contains(**invalid_credentials)
 
     # Try using the invalid `FractalSSH` object
-    with pytest.raises(FractalSSHUnknownError, match="ValueError"):
+    with pytest.raises(FractalSSHUnknownError):
+        # NOTE: on Ubuntu22 this is a ValueError,
+        # on MacOS this is a paramiko.ssh_exception.AuthenticationException
         invalid_fractal_ssh.run_command(cmd="ls")
 
     # Check that `close_all` works both for valid and invalid connections

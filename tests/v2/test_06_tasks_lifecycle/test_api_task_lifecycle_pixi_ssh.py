@@ -40,7 +40,7 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
         "export PIXI_VERSION=0.47.0\n"
         f"export PIXI_HOME={pixi_home.as_posix()}\n"
         "curl -fsSL https://pixi.sh/install.sh | sh\n"
-        f"chmod 777 {pixi_home.as_posix()} -R\n"
+        f"chmod -R 777 {pixi_home.as_posix()}\n"
     )
     script_path = pixi_common / "install_pixi.sh"
     with script_path.open("w") as f:
@@ -60,6 +60,7 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
 
 @pytest.mark.container
 @pytest.mark.ssh
+@pytest.mark.fails_on_macos
 async def test_task_group_lifecycle_pixi_ssh(
     db,
     app,
