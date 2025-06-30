@@ -161,7 +161,7 @@ def collect_local_pixi(
 
                 # Make task folder 755
                 source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
-                command = f"chmod 755 {source_dir} -R"
+                command = f"chmod -R 755 {source_dir}"
                 execute_command_sync(
                     command=command,
                     logger_name=LOGGER_NAME,
