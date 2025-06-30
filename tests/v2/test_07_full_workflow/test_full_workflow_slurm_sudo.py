@@ -37,6 +37,7 @@ def _reset_permissions_for_user_folder(folder):
 
 
 @pytest.mark.container
+@pytest.mark.fails_on_macos
 async def test_full_workflow_slurm(
     db,
     client,
@@ -87,6 +88,7 @@ async def test_full_workflow_slurm(
 
 
 @pytest.mark.container
+@pytest.mark.fails_on_macos
 async def test_full_workflow_TaskExecutionError_slurm(
     client,
     MockCurrentUser,
