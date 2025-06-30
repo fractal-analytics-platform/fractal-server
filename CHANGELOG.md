@@ -2,14 +2,16 @@
 
 # 2.15.2 (unreleased)
 
-* Database
-    *  Set `pool_pre_ping=True` for sync db engine (\#2676).
+* Database:
+    * Set `pool_pre_ping=True` for sync db engine (\#2676).
+* Testing:
+    * Fix `test_FractalSSH.py::test_folder_utils` for MacOS (\#2678).
 
 # 2.15.1
 
 This release fixes the reason for yanking 2.15.0.
 
-* Database
+* Database:
     * Modify `JSON->JSONB` database schema migration in-place, so that columns which represent JSON Schemas or `meta_*` fields remain in JSON form rather than JSONB (\#2664, \#2666).
 
 # 2.15.0 [yanked]
