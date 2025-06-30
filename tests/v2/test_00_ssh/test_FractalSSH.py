@@ -234,7 +234,7 @@ def test_send_file_concurrency(fractal_ssh: FractalSSH, tmp_path: Path):
 
 @pytest.mark.container
 @pytest.mark.ssh
-def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH, tmp_path):
+def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     """
     Test basic working of `mkdir` and `remove_folder` methods.
     """
@@ -262,7 +262,7 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH, tmp_path):
 
     # Remove folder
     fractal_ssh.remove_folder(
-        folder=folder, safe_root=tmp_path.parent.as_posix()
+        folder=folder, safe_root=tmp777_path.parent.as_posix()
     )
 
     # Check that folder does not exist
