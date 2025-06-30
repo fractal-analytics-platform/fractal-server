@@ -1,15 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.2 (Unreleased)
+# 2.15.2 (unreleased)
 
 * Runner
     * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
+* Database
+    *  Set `pool_pre_ping=True` for sync db engine (\#2676).
 
 # 2.15.1
 
 This release fixes the reason for yanking 2.15.0.
 
-* Databas
+* Database
     * Modify `JSON->JSONB` database schema migration in-place, so that columns which represent JSON Schemas or `meta_*` fields remain in JSON form rather than JSONB (\#2664, \#2666).
 
 # 2.15.0 [yanked]
