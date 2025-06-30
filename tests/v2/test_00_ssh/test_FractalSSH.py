@@ -261,7 +261,9 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     print()
 
     # Remove folder
-    fractal_ssh.remove_folder(folder=folder, safe_root="/tmp")
+    fractal_ssh.remove_folder(
+        folder=folder, safe_root=tmp777_path.parent.as_posix()
+    )
 
     # Check that folder does not exist
     with pytest.raises(RuntimeError) as e:
