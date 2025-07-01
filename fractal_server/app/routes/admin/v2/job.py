@@ -156,8 +156,15 @@ async def update_job(
             detail=f"Cannot set job status to {job_update.status}",
         )
 
+    timestamp = get_timestamp()
     setattr(job, "status", job_update.status)
-    setattr(job, "end_timestamp", get_timestamp())
+    setattr(job, "end_timestamp", timestamp)
+    setattr(
+        job,
+        "log",
+        f"{job.log}\nThis job was manually marked as 'failed' by an admin "
+        f"({timestamp.isoformat()}).",
+    )
     await db.commit()
     await db.refresh(job)
     await db.close()
