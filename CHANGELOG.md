@@ -8,6 +8,7 @@
     * Set `pool_pre_ping=True` for sync db engine (\#2676).
 * Runner:
     * Update `chmod ... -R` to `chmod -R ...` (\#2681).
+    * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
 * Testing:
     * Fix `test_FractalSSH.py::test_folder_utils` for MacOS (\#2678).
     * Add pytest marker `fails_on_macos` (\#2681).

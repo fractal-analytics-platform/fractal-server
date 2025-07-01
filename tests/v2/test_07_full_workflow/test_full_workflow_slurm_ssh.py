@@ -119,7 +119,9 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         tmp777_path=tmp777_path,
         this_should_fail=True,
     )
-    assert "Could not create" in job_logs
-    assert "via SSH" in job_logs
+    assert (
+        "No such file or directory: "
+        f"'{user_settings_dict['ssh_private_key_path']}'" in job_logs
+    )
 
     app.state.fractal_ssh_list.close_all()
