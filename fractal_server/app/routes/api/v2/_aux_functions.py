@@ -325,23 +325,22 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
     return stm
 
 
-async def _check_submitted_job_for_current_workflow(
+async def _workflow_has_submitted_job(
     workflow_id: int,
     db: AsyncSession,
-) -> None:
-    stm = _get_submitted_jobs_statement().where(
-        JobV2.workflow_id == workflow_id
+) -> bool:
+
+    res = await db.execute(
+        select(JobV2.id)
+        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.workflow_id == workflow_id)
+        .limit(1)
     )
-    res = await db.execute(stm)
-    submitted_jobs = res.scalars().all()
+    submitted_jobs = res.scalar_one_or_none()
     if submitted_jobs:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Jobs {[job.id for job in submitted_jobs]} associated to "
-                "this workflow have status 'submitted'."
-            ),
-        )
+        return True
+
+    return False
 
 
 async def _workflow_insert_task(
