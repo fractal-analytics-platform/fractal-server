@@ -102,7 +102,7 @@
 | fractal\_server/app/runner/task\_files.py                                       |       73 |        2 |        6 |        2 |     95% |    54, 75 |
 | fractal\_server/app/runner/v2/\_\_init\_\_.py                                   |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/\_local.py                                        |       15 |        1 |        2 |        1 |     88% |        59 |
-| fractal\_server/app/runner/v2/\_slurm\_ssh.py                                   |       26 |        1 |        2 |        1 |     93% |        65 |
+| fractal\_server/app/runner/v2/\_slurm\_ssh.py                                   |       18 |        1 |        2 |        1 |     90% |        64 |
 | fractal\_server/app/runner/v2/\_slurm\_sudo.py                                  |       17 |        1 |        4 |        1 |     90% |        61 |
 | fractal\_server/app/runner/v2/db\_tools.py                                      |       41 |        2 |       10 |        2 |     92% |    27, 41 |
 | fractal\_server/app/runner/v2/deduplicate\_list.py                              |       14 |        0 |        4 |        0 |    100% |           |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9203** |  **296** | **1722** |  **104** | **96%** |           |
+|                                                                       **TOTAL** | **9195** |  **296** | **1722** |  **104** | **96%** |           |
 
 
 ## Setup coverage badge
