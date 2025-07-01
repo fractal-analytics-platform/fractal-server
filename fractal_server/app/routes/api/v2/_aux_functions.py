@@ -336,7 +336,7 @@ async def _check_submitted_job_for_current_workflow(
     submitted_jobs = res.scalars().all()
     if submitted_jobs:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_409_CONFLICT,
             detail=(
                 f"Jobs {[job.id for job in submitted_jobs]} associated to "
                 "this workflow have status 'submitted'."
