@@ -162,8 +162,8 @@ async def update_job(
     setattr(
         job,
         "log",
-        f"{job.log}\nThis job was manually marked as 'failed' by an admin "
-        f"({timestamp.isoformat()}).",
+        f"{job.log or ''}\nThis job was manually marked as "
+        f"'{JobStatusTypeV2.FAILED}' by an admin ({timestamp.isoformat()}).",
     )
     await db.commit()
     await db.refresh(job)
