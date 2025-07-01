@@ -2,6 +2,8 @@
 
 # 2.15.2 (unreleased)
 
+* API:
+    * Improve logging for `PATCH /admin/v2/job/{job_id}/` (\#2686).
 * Database:
     * Set `pool_pre_ping=True` for sync db engine (\#2676).
 * Runner:
