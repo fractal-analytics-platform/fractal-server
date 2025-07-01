@@ -317,6 +317,10 @@ async def test_patch_job(
             debug(res.json())
             assert res.json()["status"] == NEW_STATUS
             assert res.json()["end_timestamp"] is not None
+            assert (
+                "This job was manually marked as 'failed' by an admin"
+                in res.json()["log"]
+            )
 
         # Read job as job owner (standard user)
         res = await client.get(f"/api/v2/project/{project.id}/job/{job.id}/")
