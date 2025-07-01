@@ -8,6 +8,7 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
+from ._aux_functions import _check_submitted_job_for_current_workflow
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions import _workflow_insert_task
@@ -222,6 +223,10 @@ async def delete_workflowtask(
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
+    )
+
+    await _check_submitted_job_for_current_workflow(
+        workflow_id=workflow_id, db=db
     )
 
     # Delete WorkflowTask

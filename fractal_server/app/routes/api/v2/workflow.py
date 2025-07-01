@@ -18,6 +18,7 @@ from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowReadV2
 from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowUpdateV2
+from ._aux_functions import _check_submitted_job_for_current_workflow
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
@@ -146,6 +147,11 @@ async def update_workflow(
 
     for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
+
+            await _check_submitted_job_for_current_workflow(
+                workflow_id=workflow_id, db=db
+            )
+
             current_workflowtask_ids = [
                 wftask.id for wftask in workflow.task_list
             ]

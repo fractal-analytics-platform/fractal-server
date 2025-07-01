@@ -325,6 +325,25 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
     return stm
 
 
+async def _check_submitted_job_for_current_workflow(
+    workflow_id: int,
+    db: AsyncSession,
+) -> None:
+    stm = _get_submitted_jobs_statement().where(
+        JobV2.workflow_id == workflow_id
+    )
+    res = await db.execute(stm)
+    submitted_jobs = res.scalars().all()
+    if submitted_jobs:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Jobs {[job.id for job in submitted_jobs]} associated to "
+                "this workflow have status 'submitted'."
+            ),
+        )
+
+
 async def _workflow_insert_task(
     *,
     workflow_id: int,
