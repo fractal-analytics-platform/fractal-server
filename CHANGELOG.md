@@ -4,7 +4,7 @@
 
 * Database:
     * Set `pool_pre_ping=True` for sync db engine (\#2676).
-* Runner
+* Runner:
     * Update `chmod ... -R` to `chmod -R ...` (\#2681).
     * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
 * Testing:
