@@ -6,8 +6,10 @@ from sqlmodel import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 
 PREFIX = "api/v2"
@@ -262,6 +264,31 @@ async def test_delete_workflow_task(
         assert len(workflow["task_list"]) == 3
         for i, task in enumerate(workflow["task_list"]):
             assert task["order"] == i
+
+        # Fail because of running Job
+        running_job = JobV2(
+            workflow_id=workflow["id"],
+            status=JobStatusTypeV2.SUBMITTED,
+            user_email="foo@bar.com",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=1,
+        )
+        db.add(running_job)
+        await db.commit()
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"{wftasks[1]['id']}/"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot delete a WorkflowTask while a Job is running for this "
+            "Workflow."
+        )
+        await db.delete(running_job)  # clean up
+        await db.commit()
 
         # Remove the WorkflowTask in the middle
         wf_task_id = wftasks[1]["id"]
@@ -715,6 +742,7 @@ async def test_reorder_task_list_fail(
     client,
     MockCurrentUser,
     project_factory_v2,
+    db,
 ):
     """
     GIVEN a workflow with a task_list
@@ -767,6 +795,36 @@ async def test_reorder_task_list_fail(
         debug(res.json())
         assert "must be a permutation" in res.json()["detail"]
         assert res.status_code == 422
+
+        # Fail because of running Job
+        running_job = JobV2(
+            workflow_id=wf_id,
+            status=JobStatusTypeV2.SUBMITTED,
+            user_email="foo@bar.com",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=1,
+        )
+        db.add(running_job)
+        await db.commit()
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
+            json=dict(reordered_workflowtask_ids=[]),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot re-order WorkflowTasks while a Job is running for this "
+            "Workflow."
+        )
+        await db.delete(running_job)  # clean up
+        await db.commit()
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
+            json=dict(reordered_workflowtask_ids=[]),
+        )
+        assert res.status_code == 200
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
