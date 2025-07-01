@@ -12,6 +12,14 @@ from fractal_server.app.runner.executors.slurm_common.slurm_job_task_models impo
 )
 
 
+class MockBaseSlurmRunner(BaseSlurmRunner):
+    def _mkdir_local_folder(self, *args):
+        pass
+
+    def _mkdir_remote_folder(self, *args):
+        pass
+
+
 async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
     jobs_ok = [
         SlurmJob(
@@ -102,13 +110,6 @@ async def test_check_no_active_jobs(tmp_path: Path):
 
 
 async def test_not_implemented_errors(tmp_path: Path):
-    class MockBaseSlurmRunner(BaseSlurmRunner):
-        def _mkdir_local_folder(self, *args):
-            pass
-
-        def _mkdir_remote_folder(self, *args):
-            pass
-
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
@@ -123,3 +124,38 @@ async def test_not_implemented_errors(tmp_path: Path):
 
         with pytest.raises(NotImplementedError):
             runner._fetch_artifacts(finished_slurm_jobs=[])
+
+
+async def test_recoverable_squeue_error(tmp_path: Path):
+
+    with MockBaseSlurmRunner(
+        root_dir_local=tmp_path / "server",
+        root_dir_remote=tmp_path / "user",
+        slurm_runner_type="sudo",
+        python_worker_interpreter=sys.executable,
+    ) as runner:
+        recoverable_msg = """
+Encountered a bad command exit code!
+Command: \"squeue --noheader --format='%i %T' --states=all --jobs=111,222,333\"
+Exit code: 1
+Stdout:
+Stderr:
+slurm_load_jobs error: Socket timed out on send/recv operation
+.
+"""
+        non_recoverable_msg = """
+Encountered a bad command exit code!
+Command: \"ls --invalid\"
+Exit code: 2
+Stdout:
+Stderr:
+ls: unrecognized option '--invalid'
+Try 'ls --help' for more information.
+.
+"""
+        assert runner._is_squeue_error_recoverable(
+            RuntimeError(recoverable_msg)
+        )
+        assert not runner._is_squeue_error_recoverable(
+            RuntimeError(non_recoverable_msg)
+        )
