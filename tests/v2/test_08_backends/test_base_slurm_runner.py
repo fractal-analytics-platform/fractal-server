@@ -66,13 +66,6 @@ async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
         ),
     ]
 
-    class MockBaseSlurmRunner(BaseSlurmRunner):
-        def _mkdir_local_folder(self, *args):
-            pass
-
-        def _mkdir_remote_folder(self, *args):
-            pass
-
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
@@ -87,12 +80,6 @@ async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
 
 
 async def test_check_no_active_jobs(tmp_path: Path):
-    class MockBaseSlurmRunner(BaseSlurmRunner):
-        def _mkdir_local_folder(self, *args):
-            pass
-
-        def _mkdir_remote_folder(self, *args):
-            pass
 
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
