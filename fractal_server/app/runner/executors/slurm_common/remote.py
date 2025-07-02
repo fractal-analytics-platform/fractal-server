@@ -58,8 +58,9 @@ def worker(
         # Raise a warning for Python version mismatch
         if worker_python_version != server_python_version:
             if worker_python_version[:2] != server_python_version[:2]:
-                logging.warning(
-                    f"{server_python_version=} but {worker_python_version=}."
+                print(
+                    f"WARNING: {server_python_version=} but "
+                    f"{worker_python_version=}."
                 )
 
         # Extract some useful paths
