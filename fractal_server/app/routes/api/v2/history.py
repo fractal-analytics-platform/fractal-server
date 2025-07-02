@@ -88,7 +88,6 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
-    # 1: look for a submitted JobV2 associated to a workflow/dataset pair
     res = await db.execute(
         _get_submitted_jobs_statement()
         .where(JobV2.dataset_id == dataset_id)
@@ -107,21 +106,14 @@ async def get_workflow_tasks_statuses(
                 f"{workflow_id=}. This is unexpected."
             ),
         )
-    # ----- 1
 
-    # 2: compute the list of workflow-task IDs (or positional indices)
-    #    that would be part of the submitted job.
     if running_job is not None:
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
-        running_job_wftasks = [  # noqa: F841
+        running_job_wftasks = [
             workflow.task_list[i].id for i in range(start, end)
         ]
-    # ----- 2
 
-    # 3: prepare the list of all latest_history_runs (one per wftask),
-    #    in advance - and extract the latest (workflow_latest_history_run)
-    #    based on timestamps.
     latest_history_runs = {
         wftask.id: (
             await db.execute(
@@ -134,10 +126,9 @@ async def get_workflow_tasks_statuses(
         ).scalar_one_or_none()
         for wftask in workflow.task_list
     }
-    workflow_latest_history_run = max(  # noqa: F841
+    workflow_latest_history_run = max(
         latest_history_runs.values(), key=lambda hr: hr.timestamp_started
     )
-    # ----- 3
 
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
