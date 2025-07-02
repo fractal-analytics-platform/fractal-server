@@ -2,11 +2,14 @@
 
 # 2.15.2 (unreleased)
 
+* API:
+    * Improve logging for `PATCH /admin/v2/job/{job_id}/` (\#2686).
 * Database:
     * Set `pool_pre_ping=True` for sync db engine (\#2676).
 * Runner:
     * Update `chmod ... -R` to `chmod -R ...` (\#2681).
     * Add custom handling of some `slurm_load_jobs` socket-timeout error (\#2683).
+    * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
 * Testing:
     * Fix `test_FractalSSH.py::test_folder_utils` for MacOS (\#2678).
     * Add pytest marker `fails_on_macos` (\#2681).
