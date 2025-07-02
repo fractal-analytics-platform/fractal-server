@@ -197,7 +197,11 @@ class BaseSlurmRunner(BaseRunner):
                     if self._is_squeue_error_recoverable(e):
                         logger.warning(
                             "[_get_finished_jobs] Recoverable `squeue` "
-                            f"error - retry later for {job_id=}."
+                            f"error - mark {job_id=} as FRACTAL_UNDEFINED and"
+                            " retry later."
+                        )
+                        slurm_statuses.update(
+                            {str(job_id): "FRACTAL_UNDEFINED"}
                         )
                     else:
                         logger.warning(
