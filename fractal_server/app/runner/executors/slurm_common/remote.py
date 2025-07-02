@@ -51,8 +51,11 @@ def worker(
                 f"{worker_fractal_server_version=}"
             )
 
-        # Python version mismatch only raises a warning
-        worker_python_version = tuple(sys.version_info[:3])
+        # Get `worker_python_version` as a `list` since this is the type of
+        # `server_python_version` after a JSON dump/load round trip.
+        worker_python_version = list(sys.version_info[:3])
+
+        # Raise a warning for Python version mismatch
         if worker_python_version != server_python_version:
             if worker_python_version[:2] != server_python_version[:2]:
                 logging.warning(
