@@ -1,6 +1,5 @@
 import argparse
 import json
-import logging
 import os
 import sys
 
@@ -32,7 +31,6 @@ def worker(
     # Create output folder, if missing
     out_dir = os.path.dirname(out_fname)
     if not os.path.exists(out_dir):
-        logging.debug(f"_slurm.remote.worker: create {out_dir=}")
         os.mkdir(out_dir)
 
     # Execute the job and capture exceptions
@@ -120,7 +118,6 @@ if __name__ == "__main__":
         required=True,
     )
     parsed_args = parser.parse_args()
-    logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
         in_fname=parsed_args.input_file,
