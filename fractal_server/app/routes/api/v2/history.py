@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -9,6 +10,7 @@ from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
@@ -23,6 +25,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -85,6 +88,48 @@ async def get_workflow_tasks_statuses(
         user_id=user.id,
         db=db,
     )
+
+    res = await db.execute(
+        _get_submitted_jobs_statement()
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.workflow_id == workflow_id)
+    )
+    running_jobs = res.scalars().all()
+    if len(running_jobs) == 0:
+        running_job = None
+    elif len(running_jobs) == 1:
+        running_job = running_jobs[0]
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Multiple running jobs found for {dataset_id=} and "
+                f"{workflow_id=}. This is unexpected."
+            ),
+        )
+
+    if running_job is not None:
+        start = running_job.first_task_index
+        end = running_job.last_task_index + 1
+        running_job_wftasks_ids = [
+            workflow.task_list[i].id for i in range(start, end)
+        ]
+        latest_history_runs = {
+            _id: (
+                await db.execute(
+                    select(HistoryRun)
+                    .where(HistoryRun.dataset_id == dataset_id)
+                    .where(HistoryRun.workflowtask_id == _id)
+                    .order_by(HistoryRun.timestamp_started.desc())
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+            for _id in running_job_wftasks_ids
+        }
+        _ = max(
+            latest_history_runs.values(),
+            key=lambda hr: hr.timestamp_started if hr else datetime.min,
+        )
 
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
