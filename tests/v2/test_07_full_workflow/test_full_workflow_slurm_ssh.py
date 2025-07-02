@@ -1,5 +1,3 @@
-import io
-
 import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
@@ -48,8 +46,6 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     )
 
     app.state.fractal_ssh_list = FractalSSHList()
-
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
     await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
@@ -104,8 +100,6 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     )
 
     app.state.fractal_ssh_list = FractalSSHList()
-
-    monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
     job_logs = await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
