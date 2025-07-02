@@ -126,7 +126,7 @@ async def get_workflow_tasks_statuses(
             ).scalar_one_or_none()
             for _id in running_job_wftasks_ids
         }
-        _ = max(
+        _ = max(  # workflow_latest_history_run
             latest_history_runs.values(),
             key=lambda hr: hr.timestamp_started if hr else datetime.min,
         )
