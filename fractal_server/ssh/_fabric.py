@@ -357,7 +357,6 @@ class FractalSSH:
                     label=f"run {cmd}",
                     lock_timeout=actual_lock_timeout,
                     hide=True,
-                    in_stream=False,
                 )
                 t_1 = time.perf_counter()
                 self.logger.info(
