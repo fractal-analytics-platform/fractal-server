@@ -10,6 +10,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _workflow_has_submitted_job
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_read_access
@@ -223,6 +224,15 @@ async def delete_workflowtask(
         user_id=user.id,
         db=db,
     )
+
+    if await _workflow_has_submitted_job(workflow_id=workflow_id, db=db):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot delete a WorkflowTask while a Job is running for this "
+                "Workflow."
+            ),
+        )
 
     # Delete WorkflowTask
     await db.delete(db_workflow_task)

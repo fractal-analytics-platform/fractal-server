@@ -325,6 +325,24 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
     return stm
 
 
+async def _workflow_has_submitted_job(
+    workflow_id: int,
+    db: AsyncSession,
+) -> bool:
+
+    res = await db.execute(
+        select(JobV2.id)
+        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.workflow_id == workflow_id)
+        .limit(1)
+    )
+    submitted_jobs = res.scalar_one_or_none()
+    if submitted_jobs is not None:
+        return True
+
+    return False
+
+
 async def _workflow_insert_task(
     *,
     workflow_id: int,

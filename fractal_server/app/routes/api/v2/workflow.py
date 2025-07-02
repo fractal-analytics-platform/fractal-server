@@ -22,6 +22,7 @@ from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _workflow_has_submitted_job
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -146,6 +147,18 @@ async def update_workflow(
 
     for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
+
+            if await _workflow_has_submitted_job(
+                workflow_id=workflow_id, db=db
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        "Cannot re-order WorkflowTasks while a Job is running "
+                        "for this Workflow."
+                    ),
+                )
+
             current_workflowtask_ids = [
                 wftask.id for wftask in workflow.task_list
             ]

@@ -4,6 +4,7 @@
 
 * API:
     * Improve logging for `PATCH /admin/v2/job/{job_id}/` (\#2686).
+    * Prevent deletion and reordering of `WorkflowTask`s in `Workflow`s associated to submitted `Job`s (\#2689).
 * Database:
     * Set `pool_pre_ping=True` for sync db engine (\#2676).
 * Runner:
