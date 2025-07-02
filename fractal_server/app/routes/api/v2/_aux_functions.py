@@ -337,7 +337,7 @@ async def _workflow_has_submitted_job(
         .limit(1)
     )
     submitted_jobs = res.scalar_one_or_none()
-    if submitted_jobs:
+    if submitted_jobs is not None:
         return True
 
     return False
