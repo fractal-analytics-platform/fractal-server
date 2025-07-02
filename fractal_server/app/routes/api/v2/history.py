@@ -144,15 +144,13 @@ async def get_workflow_tasks_statuses(
             <= latest_history_run.timestamp_started
             < workflow_latest_history_run.timestamp_started
         ):
-            response[wftask.id] = dict(
-                status=latest_history_run.status,
-                num_available_images=latest_history_run.num_available_images,
-            )
+            response[wftask.id] = dict(status=latest_history_run.status)
         else:
-            response[wftask.id] = dict(
-                status="submitted",
-                num_available_images=latest_history_run.num_available_images,
-            )
+            response[wftask.id] = dict(status="submitted")
+
+        response[wftask.id]["num_available_images"] = (
+            latest_history_run.num_available_images,
+        )
 
         for target_status in HistoryUnitStatus:
             stm = (
