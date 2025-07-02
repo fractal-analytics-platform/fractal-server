@@ -1,6 +1,5 @@
 import argparse
 import json
-import logging
 import os
 import sys
 
@@ -32,7 +31,6 @@ def worker(
     # Create output folder, if missing
     out_dir = os.path.dirname(out_fname)
     if not os.path.exists(out_dir):
-        logging.debug(f"_slurm.remote.worker: create {out_dir=}")
         os.mkdir(out_dir)
 
     # Execute the job and capture exceptions
@@ -40,10 +38,8 @@ def worker(
         with open(in_fname) as f:
             input_data = json.load(f)
 
-        server_python_version = input_data["python_version"]
-        server_fractal_server_version = input_data["fractal_server_version"]
-
         # Fractal-server version must be identical
+        server_fractal_server_version = input_data["fractal_server_version"]
         worker_fractal_server_version = __VERSION__
         if worker_fractal_server_version != server_fractal_server_version:
             raise FractalVersionMismatch(
@@ -51,11 +47,16 @@ def worker(
                 f"{worker_fractal_server_version=}"
             )
 
-        # Python version mismatch only raises a warning
-        worker_python_version = tuple(sys.version_info[:3])
+        # Get `worker_python_version` as a `list` since this is the type of
+        # `server_python_version` after a JSON dump/load round trip.
+        worker_python_version = list(sys.version_info[:3])
+
+        # Print a warning for Python version mismatch
+        server_python_version = input_data["python_version"]
         if worker_python_version != server_python_version:
             if worker_python_version[:2] != server_python_version[:2]:
-                logging.warning(
+                print(
+                    "WARNING: "
                     f"{server_python_version=} but {worker_python_version=}."
                 )
 
@@ -116,7 +117,6 @@ if __name__ == "__main__":
         required=True,
     )
     parsed_args = parser.parse_args()
-    logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
         in_fname=parsed_args.input_file,
