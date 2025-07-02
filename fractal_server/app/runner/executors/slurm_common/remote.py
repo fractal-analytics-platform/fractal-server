@@ -38,10 +38,8 @@ def worker(
         with open(in_fname) as f:
             input_data = json.load(f)
 
-        server_python_version = input_data["python_version"]
-        server_fractal_server_version = input_data["fractal_server_version"]
-
         # Fractal-server version must be identical
+        server_fractal_server_version = input_data["fractal_server_version"]
         worker_fractal_server_version = __VERSION__
         if worker_fractal_server_version != server_fractal_server_version:
             raise FractalVersionMismatch(
@@ -53,12 +51,13 @@ def worker(
         # `server_python_version` after a JSON dump/load round trip.
         worker_python_version = list(sys.version_info[:3])
 
-        # Raise a warning for Python version mismatch
+        # Print a warning for Python version mismatch
+        server_python_version = input_data["python_version"]
         if worker_python_version != server_python_version:
             if worker_python_version[:2] != server_python_version[:2]:
                 print(
-                    f"WARNING: {server_python_version=} but "
-                    f"{worker_python_version=}."
+                    "WARNING: "
+                    f"{server_python_version=} but {worker_python_version=}."
                 )
 
         # Extract some useful paths
