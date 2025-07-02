@@ -114,7 +114,9 @@ async def get_workflow_tasks_statuses(
     if running_job is not None:
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
-        running_job_wftasks = workflow.task_list[start:end]  # noqa: F841
+        running_job_wftasks = [  # noqa: F841
+            workflow.task_list[i].id for i in range(start, end)
+        ]
     # ----- 2
 
     # 3: prepare the list of all latest_history_runs (one per wftask),
@@ -146,10 +148,20 @@ async def get_workflow_tasks_statuses(
             )
             response[wftask.id] = None
             continue
-        response[wftask.id] = dict(
-            status=latest_history_run.status,
-            num_available_images=latest_history_run.num_available_images,
-        )
+        elif (wftask.id not in running_job_wftasks) or (
+            running_job.start_timestamp
+            <= latest_history_run.timestamp_started
+            < workflow_latest_history_run.timestamp_started
+        ):
+            response[wftask.id] = dict(
+                status=latest_history_run.status,
+                num_available_images=latest_history_run.num_available_images,
+            )
+        else:
+            response[wftask.id] = dict(
+                status="submitted",
+                num_available_images=latest_history_run.num_available_images,
+            )
 
         for target_status in HistoryUnitStatus:
             stm = (
