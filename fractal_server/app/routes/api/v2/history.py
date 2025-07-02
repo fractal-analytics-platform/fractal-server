@@ -1,5 +1,4 @@
 from copy import deepcopy
-from datetime import datetime
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -89,6 +88,7 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
+    # 1: look for a submitted JobV2 associated to a workflow/dataset pair
     res = await db.execute(
         _get_submitted_jobs_statement()
         .where(JobV2.dataset_id == dataset_id)
@@ -107,40 +107,39 @@ async def get_workflow_tasks_statuses(
                 f"{workflow_id=}. This is unexpected."
             ),
         )
+    # ----- 1
 
+    # 2: compute the list of workflow-task IDs (or positional indices)
+    #    that would be part of the submitted job.
     if running_job is not None:
         start = running_job.first_task_index
         end = running_job.last_task_index + 1
-        running_job_wftasks_ids = [
-            workflow.task_list[i].id for i in range(start, end)
-        ]
-        latest_history_runs = {
-            _id: (
-                await db.execute(
-                    select(HistoryRun)
-                    .where(HistoryRun.dataset_id == dataset_id)
-                    .where(HistoryRun.workflowtask_id == _id)
-                    .order_by(HistoryRun.timestamp_started.desc())
-                    .limit(1)
-                )
-            ).scalar_one_or_none()
-            for _id in running_job_wftasks_ids
-        }
-        _ = max(  # workflow_latest_history_run
-            latest_history_runs.values(),
-            key=lambda hr: hr.timestamp_started if hr else datetime.min,
-        )
+        running_job_wftasks = workflow.task_list[start:end]  # noqa: F841
+    # ----- 2
+
+    # 3: prepare the list of all latest_history_runs (one per wftask),
+    #    in advance - and extract the latest (workflow_latest_history_run)
+    #    based on timestamps.
+    latest_history_runs = {
+        wftask.id: (
+            await db.execute(
+                select(HistoryRun)
+                .where(HistoryRun.dataset_id == dataset_id)
+                .where(HistoryRun.workflowtask_id == wftask.id)
+                .order_by(HistoryRun.timestamp_started.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        for wftask in workflow.task_list
+    }
+    workflow_latest_history_run = max(  # noqa: F841
+        latest_history_runs.values(), key=lambda hr: hr.timestamp_started
+    )
+    # ----- 3
 
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
-        res = await db.execute(
-            select(HistoryRun)
-            .where(HistoryRun.dataset_id == dataset_id)
-            .where(HistoryRun.workflowtask_id == wftask.id)
-            .order_by(HistoryRun.timestamp_started.desc())
-            .limit(1)
-        )
-        latest_history_run = res.scalar_one_or_none()
+        latest_history_run = latest_history_runs[wftask.id]
         if latest_history_run is None:
             logger.debug(
                 f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
