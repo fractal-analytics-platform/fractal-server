@@ -808,6 +808,19 @@ async def test_reorder_task_list_fail(
             last_task_index=1,
         )
         db.add(running_job)
+        running_job2 = JobV2(
+            workflow_id=wf_id,
+            status=JobStatusTypeV2.SUBMITTED,
+            user_email="foo@bar.com",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=1,
+        )
+        # we add a second running job to test the behavior of
+        # `limit(1) + scalar_one_or_none()` in _workflow_has_submitted_job
+        db.add(running_job2)
         await db.commit()
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
@@ -819,6 +832,7 @@ async def test_reorder_task_list_fail(
             "Workflow."
         )
         await db.delete(running_job)  # clean up
+        await db.delete(running_job2)
         await db.commit()
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
