@@ -137,6 +137,34 @@ class BaseSlurmRunner(BaseRunner):
     def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
         raise NotImplementedError("Implement in child class.")
 
+    def _is_squeue_error_recoverable(self, exception: BaseException) -> True:
+        """
+        Determine whether a `squeue` error is considered recoverable.
+
+        A _recoverable_ error is one which will disappear after some time,
+        without any specific action from the `fractal-server` side.
+
+        Note: if this function returns `True` for an error that does not
+        actually recover, this leads to an infinite loop  where
+        `fractal-server` keeps polling `squeue` information forever.
+
+        More info at
+        https://github.com/fractal-analytics-platform/fractal-server/issues/2682
+
+        Args:
+            exception: The exception raised by `self.run_squeue`.
+        Returns:
+            Whether the error is considered recoverable.
+        """
+        str_exception = str(exception)
+        if (
+            "slurm_load_jobs" in str_exception
+            and "Socket timed out on send/recv operation" in str_exception
+        ):
+            return True
+        else:
+            return False
+
     def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
         #  If there is no Slurm job to check, return right away
         if not job_ids:
@@ -161,12 +189,26 @@ class BaseSlurmRunner(BaseRunner):
                         {stdout.split()[0]: stdout.split()[1]}
                     )
                 except Exception as e:
-                    logger.warning(
-                        "[_get_finished_jobs] `squeue` failed for "
-                        f"{job_id=}, mark job as completed. "
+                    msg = (
+                        f"[_get_finished_jobs] `squeue` failed for {job_id=}. "
                         f"Original error: {str(e)}."
                     )
-                    slurm_statuses.update({str(job_id): "COMPLETED"})
+                    logger.warning(msg)
+                    if self._is_squeue_error_recoverable(e):
+                        logger.warning(
+                            "[_get_finished_jobs] Recoverable `squeue` "
+                            f"error - mark {job_id=} as FRACTAL_UNDEFINED and"
+                            " retry later."
+                        )
+                        slurm_statuses.update(
+                            {str(job_id): "FRACTAL_UNDEFINED"}
+                        )
+                    else:
+                        logger.warning(
+                            "[_get_finished_jobs] Non-recoverable `squeue`"
+                            f"error - mark {job_id=} as completed."
+                        )
+                        slurm_statuses.update({str(job_id): "COMPLETED"})
 
         # If a job is not in `squeue` output, mark it as completed.
         finished_jobs = {
