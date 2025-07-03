@@ -144,7 +144,10 @@ async def get_workflow_tasks_statuses(
             logger.debug(
                 f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
             )
-            response[wftask.id] = None
+            if wftask.id in running_job_wftasks:
+                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
+            else:
+                response[wftask.id] = None
             continue
         elif (wftask.id not in running_job_wftasks) or (
             running_job.start_timestamp
