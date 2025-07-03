@@ -1,6 +1,4 @@
 from copy import deepcopy
-from datetime import datetime
-from datetime import timezone
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -131,12 +129,13 @@ async def get_workflow_tasks_statuses(
         ).scalar_one_or_none()
         for wftask in workflow.task_list
     }
-    workflow_latest_history_run = max(
-        latest_history_runs.values(),
-        key=lambda hr: hr.timestamp_started
-        if hr
-        else datetime.min.replace(tzinfo=timezone.utc),
-    )
+    list_timestamps = [
+        hr.timestamp_started
+        for hr in latest_history_runs.values()
+        if hr is not None
+    ]
+    if list_timestamps:
+        workflow_latest_history_run_timestamp = max(list_timestamps)
 
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
@@ -150,7 +149,7 @@ async def get_workflow_tasks_statuses(
         elif (wftask.id not in running_job_wftasks) or (
             running_job.start_timestamp
             <= latest_history_run.timestamp_started
-            < workflow_latest_history_run.timestamp_started
+            < workflow_latest_history_run_timestamp
         ):
             response[wftask.id] = dict(status=latest_history_run.status)
         else:
