@@ -11,6 +11,8 @@
     * Update `chmod ... -R` to `chmod -R ...` (\#2681).
     * Add custom handling of some `slurm_load_jobs` socket-timeout error (\#2683).
     * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
+    * Do not write to SLURM stderr from remote worker (\#2691).
+    * Fix spurious version-mismatch warning in remote worker (\#2691).
 * Testing:
     * Fix `test_FractalSSH.py::test_folder_utils` for MacOS (\#2678).
     * Add pytest marker `fails_on_macos` (\#2681).
@@ -209,9 +211,9 @@ component, with the goal of simplifying the SLURM version.
 * API:
     * Add `POST /project/{project_id}/dataset/{dataset_id}/images/non-processed/` endpoint (\#2524, \#2533).
 * Runner:
-    * Do not create temporary output-pickle files (\#2538).
-    * Set logging level to `DEBUG` within `compress_folder` and `extract_archive` modules (\#2538).
-    * Transform job-error log into warning (\#2538).
+    * Do not create temporary output-pickle files (\#2539).
+    * Set logging level to `DEBUG` within `compress_folder` and `extract_archive` modules (\#2539).
+    * Transform job-error log into warning (\#2539).
     * Drop `FRACTAL_SLURM_INTERVAL_BEFORE_RETRIEVAL` (\#2525, \#2531).
     * Increase `MAX_NUM_THREADS` from 4 to 12 (\#2520).
     * Support re-deriving an existing image with a non-trivial `origin` (\#2527).
