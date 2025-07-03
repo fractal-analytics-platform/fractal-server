@@ -1,4 +1,6 @@
 from copy import deepcopy
+from datetime import datetime
+from datetime import timezone
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -128,7 +130,10 @@ async def get_workflow_tasks_statuses(
         for wftask in workflow.task_list
     }
     workflow_latest_history_run = max(
-        latest_history_runs.values(), key=lambda hr: hr.timestamp_started
+        latest_history_runs.values(),
+        key=lambda hr: hr.timestamp_started
+        if hr
+        else datetime.min.replace(tzinfo=timezone.utc),
     )
 
     response: dict[int, dict[str, int | str] | None] = {}
