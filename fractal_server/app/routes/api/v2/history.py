@@ -109,12 +109,14 @@ async def get_workflow_tasks_statuses(
             )
         ]
     else:
+        error_msg = (
+            f"Multiple running jobs found for {dataset_id=} and "
+            f"{workflow_id=}. This is unexpected."
+        )
+        logger.error(f"UnreachableBranchError: {error_msg}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Multiple running jobs found for {dataset_id=} and "
-                f"{workflow_id=}. This is unexpected."
-            ),
+            detail=error_msg,
         )
 
     latest_history_runs = {
