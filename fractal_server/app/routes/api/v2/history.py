@@ -96,8 +96,16 @@ async def get_workflow_tasks_statuses(
     running_jobs = res.scalars().all()
     if len(running_jobs) == 0:
         running_job = None
+        running_job_wftasks = []
     elif len(running_jobs) == 1:
         running_job = running_jobs[0]
+        running_job_wftasks = [
+            workflow.task_list[i].id
+            for i in range(
+                running_job.first_task_index,
+                running_job.last_task_index + 1,
+            )
+        ]
     else:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -106,13 +114,6 @@ async def get_workflow_tasks_statuses(
                 f"{workflow_id=}. This is unexpected."
             ),
         )
-
-    if running_job is not None:
-        start = running_job.first_task_index
-        end = running_job.last_task_index + 1
-        running_job_wftasks = [
-            workflow.task_list[i].id for i in range(start, end)
-        ]
 
     latest_history_runs = {
         wftask.id: (
@@ -148,9 +149,9 @@ async def get_workflow_tasks_statuses(
         else:
             response[wftask.id] = dict(status="submitted")
 
-        response[wftask.id]["num_available_images"] = (
-            latest_history_run.num_available_images,
-        )
+        response[wftask.id][
+            "num_available_images"
+        ] = latest_history_run.num_available_images
 
         for target_status in HistoryUnitStatus:
             stm = (
