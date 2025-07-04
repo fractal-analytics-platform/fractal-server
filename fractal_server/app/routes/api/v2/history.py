@@ -156,7 +156,7 @@ async def get_workflow_tasks_statuses(
         ):
             response[wftask.id] = dict(status=latest_history_run.status)
         else:
-            response[wftask.id] = dict(status="submitted")
+            response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
 
         response[wftask.id][
             "num_available_images"
