@@ -149,14 +149,17 @@ async def get_workflow_tasks_statuses(
             else:
                 response[wftask.id] = None
             continue
-        elif (wftask.id not in running_job_wftasks) or (
-            running_job.start_timestamp
-            <= latest_history_run.timestamp_started
-            < workflow_latest_history_run_timestamp
-        ):
-            response[wftask.id] = dict(status=latest_history_run.status)
+        elif wftask.id in running_job_wftasks:
+            if (
+                running_job.start_timestamp
+                <= latest_history_run.timestamp_started
+                < workflow_latest_history_run_timestamp
+            ):
+                response[wftask.id] = dict(status=latest_history_run.status)
+            else:
+                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
         else:
-            response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
+            response[wftask.id] = dict(status=latest_history_run.status)
 
         response[wftask.id][
             "num_available_images"
