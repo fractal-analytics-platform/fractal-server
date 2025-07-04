@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.2 (unreleased)
+# 2.15.2
 
 * API:
     * Improve logging for `PATCH /admin/v2/job/{job_id}/` (\#2686).
