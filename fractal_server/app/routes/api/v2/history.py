@@ -145,8 +145,14 @@ async def get_workflow_tasks_statuses(
                 f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
             )
             if wftask.id in running_job_wftasks:
+                logger.debug(
+                    f"{wftask.id=} is part of {running_job_wftasks=}."
+                )
                 response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
             else:
+                logger.debug(
+                    f"{wftask.id=} is **NOT** part of {running_job_wftasks=}."
+                )
                 response[wftask.id] = None
             continue
         elif wftask.id in running_job_wftasks:
@@ -181,15 +187,19 @@ async def get_workflow_tasks_statuses(
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
     new_response = deepcopy(response)
-    for key, value in response.items():
-        if value is not None:
-            num_total_images = sum(
-                value[f"num_{target_status}_images"]
-                for target_status in HistoryUnitStatus
-            )
-            if num_total_images > value["num_available_images"]:
-                value["num_available_images"] = None
-        new_response[key] = value
+    for wftask_id, value in response.items():
+        # FIXME: any better approach is welcome
+        try:
+            if value is not None:
+                num_total_images = sum(
+                    value[f"num_{target_status}_images"]
+                    for target_status in HistoryUnitStatus
+                )
+                if num_total_images > value["num_available_images"]:
+                    value["num_available_images"] = None
+        except KeyError:
+            pass
+        new_response[wftask_id] = value
 
     return JSONResponse(content=new_response, status_code=200)
 
