@@ -165,7 +165,11 @@ class FractalSSH:
         raise e
 
     def _run(
-        self, *args, label: str, lock_timeout: float | None = None, **kwargs
+        self,
+        *args,
+        label: str,
+        lock_timeout: float | None = None,
+        **kwargs,
     ) -> Any:
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
@@ -353,6 +357,7 @@ class FractalSSH:
                     label=f"run {cmd}",
                     lock_timeout=actual_lock_timeout,
                     hide=True,
+                    in_stream=False,
                 )
                 t_1 = time.perf_counter()
                 self.logger.info(
