@@ -9,6 +9,7 @@ from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
@@ -23,6 +24,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -86,26 +88,88 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
+    res = await db.execute(
+        _get_submitted_jobs_statement()
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.workflow_id == workflow_id)
+    )
+    running_jobs = res.scalars().all()
+    if len(running_jobs) == 0:
+        running_job = None
+        running_job_wftasks = []
+    elif len(running_jobs) == 1:
+        running_job = running_jobs[0]
+        running_job_wftasks = [
+            workflow.task_list[i].id
+            for i in range(
+                running_job.first_task_index,
+                running_job.last_task_index + 1,
+            )
+        ]
+    else:
+        error_msg = (
+            f"Multiple running jobs found for {dataset_id=} and "
+            f"{workflow_id=}. This is unexpected."
+        )
+        logger.error(f"UnreachableBranchError: {error_msg}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_msg,
+        )
+
+    latest_history_runs = {
+        wftask.id: (
+            await db.execute(
+                select(HistoryRun)
+                .where(HistoryRun.dataset_id == dataset_id)
+                .where(HistoryRun.workflowtask_id == wftask.id)
+                .order_by(HistoryRun.timestamp_started.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        for wftask in workflow.task_list
+    }
+    list_timestamps = [
+        hr.timestamp_started
+        for hr in latest_history_runs.values()
+        if hr is not None
+    ]
+    if list_timestamps:
+        workflow_latest_history_run_timestamp = max(list_timestamps)
+
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
-        res = await db.execute(
-            select(HistoryRun)
-            .where(HistoryRun.dataset_id == dataset_id)
-            .where(HistoryRun.workflowtask_id == wftask.id)
-            .order_by(HistoryRun.timestamp_started.desc())
-            .limit(1)
-        )
-        latest_history_run = res.scalar_one_or_none()
+        latest_history_run = latest_history_runs[wftask.id]
         if latest_history_run is None:
             logger.debug(
                 f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
             )
-            response[wftask.id] = None
+            if wftask.id in running_job_wftasks:
+                logger.debug(
+                    f"{wftask.id=} is part of {running_job_wftasks=}."
+                )
+                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
+            else:
+                logger.debug(
+                    f"{wftask.id=} is **NOT** part of {running_job_wftasks=}."
+                )
+                response[wftask.id] = None
             continue
-        response[wftask.id] = dict(
-            status=latest_history_run.status,
-            num_available_images=latest_history_run.num_available_images,
-        )
+        elif wftask.id in running_job_wftasks:
+            if (
+                running_job.start_timestamp
+                <= latest_history_run.timestamp_started
+                < workflow_latest_history_run_timestamp
+            ):
+                response[wftask.id] = dict(status=latest_history_run.status)
+            else:
+                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
+        else:
+            response[wftask.id] = dict(status=latest_history_run.status)
+
+        response[wftask.id][
+            "num_available_images"
+        ] = latest_history_run.num_available_images
 
         for target_status in HistoryUnitStatus:
             stm = (
@@ -123,15 +187,19 @@ async def get_workflow_tasks_statuses(
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
     new_response = deepcopy(response)
-    for key, value in response.items():
-        if value is not None:
-            num_total_images = sum(
-                value[f"num_{target_status}_images"]
-                for target_status in HistoryUnitStatus
-            )
-            if num_total_images > value["num_available_images"]:
-                value["num_available_images"] = None
-        new_response[key] = value
+    for wftask_id, value in response.items():
+        # FIXME: any better approach is welcome
+        try:
+            if value is not None:
+                num_total_images = sum(
+                    value[f"num_{target_status}_images"]
+                    for target_status in HistoryUnitStatus
+                )
+                if num_total_images > value["num_available_images"]:
+                    value["num_available_images"] = None
+        except KeyError:
+            pass
+        new_response[wftask_id] = value
 
     return JSONResponse(content=new_response, status_code=200)
 
