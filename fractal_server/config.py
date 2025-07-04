@@ -95,6 +95,8 @@ class PixiSettings(BaseModel):
     PIXI_CONCURRENT_SOLVES: int = 4
     PIXI_CONCURRENT_DOWNLOADS: int = 4
     TOKIO_WORKER_THREADS: int = 2
+    DEFAULT_ENVIRONMENT: str = "default"
+    DEFAULT_PLATFORM: str = "linux-64"
 
     @model_validator(mode="after")
     def check_pixi_settings(self):

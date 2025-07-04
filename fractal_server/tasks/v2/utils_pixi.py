@@ -1,4 +1,8 @@
+import shutil
 from typing import TypedDict
+
+import tomli_w
+import tomllib
 
 SOURCE_DIR_NAME = "source_dir"
 
@@ -36,3 +40,40 @@ def parse_collect_stdout(stdout: str) -> ParsedOutput:
             attribute_value = actual_line.split(search)[-1].strip(" ")
             attributes[attribute_name] = attribute_value
     return attributes
+
+
+def update_pyproject_toml(
+    *,
+    path: str,
+    environment: str | None = None,
+    target_platform: str | None = None,
+):
+    """
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2653#issuecomment-3035035436
+    """
+    if not path.endswith(".toml"):
+        raise ValueError()
+
+    shutil.copy(src=path, dst=f"{path}.backup")
+
+    with open(path, "rb") as fp:
+        data = tomllib.load(fp)
+
+    if target_platform is not None:
+        data["tool"]["pixi"]["workspace"]["platforms"] = [target_platform]
+
+    if environment is not None:
+        environments = data["tool"]["pixi"]["environments"]
+        data["tool"]["pixi"]["environments"] = {
+            key: value
+            for key, value in environments.items()
+            if key == environment
+        }
+
+    toml_string = tomli_w.dumps(data)
+
+    # Additional validation
+    tomllib.loads(toml_string)
+
+    with open(path, "w") as fp:
+        fp.write(toml_string)
