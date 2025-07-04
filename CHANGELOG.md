@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.2 (unreleased)
+# 2.15.2
 
 * API:
     * Improve logging for `PATCH /admin/v2/job/{job_id}/` (\#2686).
@@ -13,9 +13,12 @@
     * Remove redundant `mkdir` in SLURM SSH runner (\#2671).
     * Do not write to SLURM stderr from remote worker (\#2691).
     * Fix spurious version-mismatch warning in remote worker (\#2691).
+* SSH:
+    * Always set `in_stream=False` for `fabric.Connection.run` (\#2694).
 * Testing:
     * Fix `test_FractalSSH.py::test_folder_utils` for MacOS (\#2678).
     * Add pytest marker `fails_on_macos` (\#2681).
+    * Remove patching of `sys.stdin`, thanks to updates to `fabric.Connection.run` arguments (\#2694).
 
 # 2.15.1
 
