@@ -153,3 +153,23 @@ async def test_get_workflow_tasks_statuses(
             HistoryUnitStatus.SUBMITTED
         )
         assert res.json()[str(task_group.task_list[4].id)] is None
+
+        yet_another_running_job = JobV2(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            user_email=user.email,
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=0,
+        )
+        db.add(yet_another_running_job)
+        await db.commit()
+        res = await client.get(
+            f"api/v2/project/{project.id}/status/"
+            f"?dataset_id={dataset.id}&workflow_id={workflow.id}"
+        )
+        assert res.status_code == 422
+        assert "Multiple running jobs found" in res.json()["detail"]
