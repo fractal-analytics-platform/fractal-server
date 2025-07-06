@@ -159,7 +159,7 @@ async def get_workflow_tasks_statuses(
             if (
                 running_job.start_timestamp
                 <= latest_history_run.timestamp_started
-                < workflow_latest_history_run_timestamp
+                <= workflow_latest_history_run_timestamp
             ):
                 response[wftask.id] = dict(status=latest_history_run.status)
             else:
