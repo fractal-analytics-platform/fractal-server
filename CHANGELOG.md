@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.3 (unreleased)
+
+* API:
+    * Ongoing `WorkflowTask`s are marked as submitted during `Job` execution (\#2692).
+
 # 2.15.2
 
 * API:
