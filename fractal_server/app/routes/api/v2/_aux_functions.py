@@ -6,6 +6,7 @@ from typing import Literal
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
@@ -499,3 +500,23 @@ async def _get_workflowtask_or_404(
         )
     else:
         return wftask
+
+
+async def _get_submitted_job_or_none(
+    *, dataset_id: int, workflow_id: int, db: AsyncSession
+) -> JobV2 | None:
+    res = await db.execute(
+        _get_submitted_jobs_statement()
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.workflow_id == workflow_id)
+    )
+    try:
+        return res.scalars().one_or_none()
+    except MultipleResultsFound:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Multiple running jobs found for {dataset_id=} and "
+                f"{workflow_id=}. This is unexpected."
+            ),
+        )
