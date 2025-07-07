@@ -503,8 +503,22 @@ async def _get_workflowtask_or_404(
 
 
 async def _get_submitted_job_or_none(
-    *, dataset_id: int, workflow_id: int, db: AsyncSession
+    *,
+    dataset_id: int,
+    workflow_id: int,
+    db: AsyncSession,
 ) -> JobV2 | None:
+    """
+    Get the submitted job for given dataset/workflow, if any.
+
+    This function also handles the invalid branch where more than one job
+    is found.
+
+    Args:
+        dataset_id:
+        workflow_id:
+        db:
+    """
     res = await db.execute(
         _get_submitted_jobs_statement()
         .where(JobV2.dataset_id == dataset_id)
