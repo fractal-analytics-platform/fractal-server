@@ -202,7 +202,7 @@ async def test_multiple_jobs_error(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset.id,
-            user_email=user.email,
+            user_email="",
             dataset_dump={},
             workflow_dump={},
             project_dump={},
