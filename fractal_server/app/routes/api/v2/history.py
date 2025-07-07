@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -9,6 +7,7 @@ from sqlmodel import func
 from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_submitted_job_or_none
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
@@ -72,6 +71,7 @@ async def get_workflow_tasks_statuses(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
+
     # Access control
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -86,6 +86,19 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
+    running_job = await _get_submitted_job_or_none(
+        db=db,
+        dataset_id=dataset_id,
+        workflow_id=workflow_id,
+    )
+    if running_job is not None:
+        running_wftasks = workflow.task_list[
+            running_job.first_task_index : running_job.last_task_index + 1
+        ]
+        running_wftask_ids = [wft.id for wft in running_wftasks]
+    else:
+        running_wftask_ids = []
+
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
         res = await db.execute(
@@ -95,17 +108,37 @@ async def get_workflow_tasks_statuses(
             .order_by(HistoryRun.timestamp_started.desc())
             .limit(1)
         )
-        latest_history_run = res.scalar_one_or_none()
-        if latest_history_run is None:
-            logger.debug(
-                f"No HistoryRun found for {dataset_id=} and {wftask.id=}."
-            )
-            response[wftask.id] = None
+        latest_run = res.scalar_one_or_none()
+
+        if latest_run is None:
+            if wftask.id in running_wftask_ids:
+                logger.debug(f"A1: No HistoryRun for {wftask.id=}.")
+                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
+            else:
+                logger.debug(f"A2: No HistoryRun for {wftask.id=}.")
+                response[wftask.id] = None
             continue
-        response[wftask.id] = dict(
-            status=latest_history_run.status,
-            num_available_images=latest_history_run.num_available_images,
-        )
+        else:
+            if wftask.id in running_wftask_ids:
+                if latest_run.job_id == running_job.id:
+                    logger.debug(
+                        f"B1 for {wftask.id} and {latest_run.job_id=}."
+                    )
+                    response[wftask.id] = dict(status=latest_run.status)
+                else:
+                    logger.debug(
+                        f"B2 for {wftask.id} and {latest_run.job_id=}."
+                    )
+                    response[wftask.id] = dict(
+                        status=HistoryUnitStatus.SUBMITTED
+                    )
+            else:
+                logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
+                response[wftask.id] = dict(status=latest_run.status)
+
+        response[wftask.id][
+            "num_available_images"
+        ] = latest_run.num_available_images
 
         for target_status in HistoryUnitStatus:
             stm = (
@@ -122,18 +155,24 @@ async def get_workflow_tasks_statuses(
             num_images = res.scalar()
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
-    new_response = deepcopy(response)
-    for key, value in response.items():
-        if value is not None:
-            num_total_images = sum(
-                value[f"num_{target_status}_images"]
-                for target_status in HistoryUnitStatus
-            )
-            if num_total_images > value["num_available_images"]:
-                value["num_available_images"] = None
-        new_response[key] = value
+    # Set `num_available_images=None` for cases where it would be
+    # smaller than `num_total_images`
+    values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
+    response_update = {}
+    for wftask_id, status_value in response.items():
+        if status_value in values_to_skip:
+            # Skip cases where status has no image counters
+            continue
+        num_total_images = sum(
+            status_value[f"num_{target_status}_images"]
+            for target_status in HistoryUnitStatus
+        )
+        if num_total_images > status_value["num_available_images"]:
+            status_value["num_available_images"] = None
+            response_update[wftask_id] = status_value
+    response.update(response_update)
 
-    return JSONResponse(content=new_response, status_code=200)
+    return JSONResponse(content=response, status_code=200)
 
 
 @router.get("/project/{project_id}/status/run/")
