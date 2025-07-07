@@ -156,19 +156,20 @@ async def get_workflow_tasks_statuses(
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
     # Set `num_available_images=None` for cases where it would be
-    # smaller than `num_total_images`; skip cases where status has
-    # no image counters, or where there would be no update.
+    # smaller than `num_total_images`
     values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
     response_update = {}
     for wftask_id, status_value in response.items():
-        if status_value not in values_to_skip:
-            num_total_images = sum(
-                status_value[f"num_{target_status}_images"]
-                for target_status in HistoryUnitStatus
-            )
-            if num_total_images > status_value["num_available_images"]:
-                status_value["num_available_images"] = None
-                response_update[wftask_id] = status_value
+        if status_value in values_to_skip:
+            # Skip cases where status has no image counters
+            continue
+        num_total_images = sum(
+            status_value[f"num_{target_status}_images"]
+            for target_status in HistoryUnitStatus
+        )
+        if num_total_images > status_value["num_available_images"]:
+            status_value["num_available_images"] = None
+            response_update[wftask_id] = status_value
     response.update(response_update)
 
     return JSONResponse(content=response, status_code=200)
