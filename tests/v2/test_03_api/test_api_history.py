@@ -15,7 +15,6 @@ async def test_get_workflow_tasks_statuses(
     db,
 ):
     N_WFTASKS = 6
-    assert N_WFTASKS > 2
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         task = TaskV2(
