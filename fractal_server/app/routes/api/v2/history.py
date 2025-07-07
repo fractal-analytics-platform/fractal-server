@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -159,9 +157,9 @@ async def get_workflow_tasks_statuses(
 
     # Set `num_available_images=None` for cases where it would be
     # smaller than `num_total_images`; skip cases where status has
-    # no image counters.
+    # no image counters, or where there would be no update.
     values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
-    new_response = deepcopy(response)
+    response_update = {}
     for wftask_id, status_value in response.items():
         if status_value not in values_to_skip:
             num_total_images = sum(
@@ -170,10 +168,10 @@ async def get_workflow_tasks_statuses(
             )
             if num_total_images > status_value["num_available_images"]:
                 status_value["num_available_images"] = None
-                # Update a key-value pair (since the value changed)
-                new_response[wftask_id] = status_value
+                response_update[wftask_id] = status_value
+    response.update(response_update)
 
-    return JSONResponse(content=new_response, status_code=200)
+    return JSONResponse(content=response, status_code=200)
 
 
 @router.get("/project/{project_id}/status/run/")
