@@ -170,6 +170,7 @@ async def get_workflow_tasks_statuses(
             )
             if num_total_images > status_value["num_available_images"]:
                 status_value["num_available_images"] = None
+                # Update a key-value pair (since the value changed)
                 new_response[wftask_id] = status_value
 
     return JSONResponse(content=new_response, status_code=200)
