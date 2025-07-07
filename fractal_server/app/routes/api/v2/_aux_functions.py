@@ -20,6 +20,9 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
 
 
 async def _get_project_check_owner(
@@ -526,11 +529,13 @@ async def _get_submitted_job_or_none(
     )
     try:
         return res.scalars().one_or_none()
-    except MultipleResultsFound:
+    except MultipleResultsFound as e:
+        error_msg = (
+            "Multiple running jobs found for "
+            f"{dataset_id=} and {workflow_id=}."
+        )
+        logger.error(f"{error_msg} Original error: {str(e)}.")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Multiple running jobs found for {dataset_id=} and "
-                f"{workflow_id=}. This is unexpected."
-            ),
+            detail=error_msg,
         )
