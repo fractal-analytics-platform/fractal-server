@@ -157,17 +157,20 @@ async def get_workflow_tasks_statuses(
             num_images = res.scalar()
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
+    # Set `num_available_images=None` for cases where it would be
+    # smaller than `num_total_images`; skip cases where status has
+    # no image counters.
+    values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
     new_response = deepcopy(response)
-    special_case = {"status": HistoryUnitStatus.SUBMITTED}
-    for wftask_id, value in response.items():
-        if value is not None and value != special_case:
+    for wftask_id, status_value in response.items():
+        if status_value not in values_to_skip:
             num_total_images = sum(
-                value[f"num_{target_status}_images"]
+                status_value[f"num_{target_status}_images"]
                 for target_status in HistoryUnitStatus
             )
-            if num_total_images > value["num_available_images"]:
-                value["num_available_images"] = None
-        new_response[wftask_id] = value
+            if num_total_images > status_value["num_available_images"]:
+                status_value["num_available_images"] = None
+                new_response[wftask_id] = status_value
 
     return JSONResponse(content=new_response, status_code=200)
 
