@@ -110,30 +110,37 @@ async def get_workflow_tasks_statuses(
             .order_by(HistoryRun.timestamp_started.desc())
             .limit(1)
         )
-        latest_history_run = res.scalar_one_or_none()
+        latest_run = res.scalar_one_or_none()
 
-        if latest_history_run is None:
+        if latest_run is None:
             if wftask.id in running_wftask_ids:
+                logger.debug(f"A1: No HistoryRun for {wftask.id=}.")
                 response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
             else:
+                logger.debug(f"A2: No HistoryRun for {wftask.id=}.")
                 response[wftask.id] = None
             continue
         else:
             if wftask.id in running_wftask_ids:
-                if latest_history_run.job_id == running_job.id:
-                    response[wftask.id] = dict(
-                        status=latest_history_run.status
+                if latest_run.job_id == running_job.id:
+                    logger.debug(
+                        f"B1 for {wftask.id} and {latest_run.job_id=}."
                     )
+                    response[wftask.id] = dict(status=latest_run.status)
                 else:
+                    logger.debug(
+                        f"B2 for {wftask.id} and {latest_run.job_id=}."
+                    )
                     response[wftask.id] = dict(
                         status=HistoryUnitStatus.SUBMITTED
                     )
             else:
-                response[wftask.id] = dict(status=latest_history_run.status)
+                logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
+                response[wftask.id] = dict(status=latest_run.status)
 
         response[wftask.id][
             "num_available_images"
-        ] = latest_history_run.num_available_images
+        ] = latest_run.num_available_images
 
         for target_status in HistoryUnitStatus:
             stm = (
@@ -151,10 +158,9 @@ async def get_workflow_tasks_statuses(
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
     new_response = deepcopy(response)
+    special_case = {"status": HistoryUnitStatus.SUBMITTED}
     for wftask_id, value in response.items():
-        if value is not None and value != {
-            "status": HistoryUnitStatus.SUBMITTED
-        }:
+        if value is not None and value != special_case:
             num_total_images = sum(
                 value[f"num_{target_status}_images"]
                 for target_status in HistoryUnitStatus
