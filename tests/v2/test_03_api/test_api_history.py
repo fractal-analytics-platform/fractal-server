@@ -14,11 +14,31 @@ async def test_get_workflow_tasks_statuses(
     client,
     db,
 ):
-    N_WFTASKS = 6
+    """
+    Test the status endpoint, especially as of
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2690
+
+
+    WFTask | job_A | job_B               | expected status
+    ------------------------------------------------------
+    0      | DONE  | None                | DONE + counters
+    1      | DONE  | DONE                | DONE + counters
+    2      | DONE  | SUBMITTED (ongoing) | SUBMITTED + counters
+    3      | DONE  | SUBMITTED           | SUBMITTED + counters
+    4      | None  | SUBMITTED           | SUBMITTED (no counters)
+    5      | None  | None                | None
+
+    """
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         user_id = user.id
         project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset1"
+        )
+        workflow = await workflow_factory_v2(
+            project_id=project.id, name="workflow"
+        )
 
     task = TaskV2(
         name="echo",
@@ -37,13 +57,9 @@ async def test_get_workflow_tasks_statuses(
     db.add(task_group)
     await db.commit()
 
-    dataset = await dataset_factory_v2(project_id=project.id, name="dataset1")
-    workflow = await workflow_factory_v2(
-        project_id=project.id, name="workflow"
-    )
-
     wftask_ids = []
-    for _ in range(0, N_WFTASKS):
+    num_wftasks = 6
+    for _ in range(0, num_wftasks):
         res = await client.post(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"?task_id={task.id}",
@@ -52,37 +68,33 @@ async def test_get_workflow_tasks_statuses(
         assert res.status_code == 201
         wftask_ids.append(res.json()["id"])
 
-    job_A = JobV2(
+    common_job_args = dict(
         project_id=project.id,
         workflow_id=workflow.id,
         dataset_id=dataset.id,
-        user_email=user.email,
+        user_email="",
         dataset_dump={},
         workflow_dump={},
         project_dump={},
+    )
+    job_A = JobV2(
         first_task_index=0,
         last_task_index=3,
         status=JobStatusTypeV2.DONE,
+        **common_job_args,
     )
-
     job_B = JobV2(
-        project_id=project.id,
-        workflow_id=workflow.id,
-        dataset_id=dataset.id,
-        user_email=user.email,
-        dataset_dump={},
-        workflow_dump={},
-        project_dump={},
         first_task_index=1,
         last_task_index=4,
         status=JobStatusTypeV2.SUBMITTED,
+        **common_job_args,
     )
     db.add_all([job_A, job_B])
     await db.commit()
     await db.refresh(job_A)
     await db.refresh(job_B)
 
-    common_args = dict(
+    common_run_args = dict(
         dataset_id=dataset.id,
         task_id=task.id,
         workflowtask_dump={},
@@ -90,44 +102,16 @@ async def test_get_workflow_tasks_statuses(
         num_available_images=0,
     )
 
-    # WFTask | job_A | job_B               | expected status
-    # ------------------------------------------------------
-    # 0      | DONE  | None                | DONE
-    # 1      | DONE  | DONE                | DONE
-    # 2      | DONE  | SUBMITTED (ongoing) | SUBMITTED
-    # 3      | DONE  | SUBMITTED           | SUBMITTED
-    # 4      | None  | SUBMITTED           | SUBMITTED
-    # 5      | None  | None                | None
-
     # Job_A's HistoryRuns
-    db.add(
-        HistoryRun(
-            workflowtask_id=wftask_ids[0],
-            job_id=job_A.id,
-            status=HistoryUnitStatus.DONE,
-            **common_args,
-        )
-    )
     db.add_all(
         [
             HistoryRun(
-                workflowtask_id=wftask_ids[1],
+                workflowtask_id=wftask_ids[ind],
                 job_id=job_A.id,
                 status=HistoryUnitStatus.DONE,
-                **common_args,
-            ),
-            HistoryRun(
-                workflowtask_id=wftask_ids[2],
-                job_id=job_A.id,
-                status=HistoryUnitStatus.DONE,
-                **common_args,
-            ),
-            HistoryRun(
-                workflowtask_id=wftask_ids[3],
-                job_id=job_A.id,
-                status=HistoryUnitStatus.DONE,
-                **common_args,
-            ),
+                **common_run_args,
+            )
+            for ind in [0, 1, 2, 3]
         ]
     )
     await db.commit()
@@ -139,13 +123,13 @@ async def test_get_workflow_tasks_statuses(
                 workflowtask_id=wftask_ids[1],
                 job_id=job_B.id,
                 status=HistoryUnitStatus.DONE,
-                **common_args,
+                **common_run_args,
             ),
             HistoryRun(
                 workflowtask_id=wftask_ids[2],
                 job_id=job_B.id,
                 status=HistoryUnitStatus.SUBMITTED,
-                **common_args,
+                **common_run_args,
             ),
         ]
     )
@@ -185,26 +169,50 @@ async def test_get_workflow_tasks_statuses(
             "num_done_images": 0,
             "num_failed_images": 0,
         },
-        str(wftask_ids[4]): {
-            "status": "submitted",
-        },
+        str(wftask_ids[4]): {"status": "submitted"},
         str(wftask_ids[5]): None,
     }
 
+
+async def test_multiple_jobs_error(
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    MockCurrentUser,
+    client,
+    db,
+):
+    """
+    Test the 422 response for the (in principle unreachable) case of two
+    simultaneouly-submitted jobs for the same dataset/workflow pair.
+    """
+
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset1"
+        )
+        workflow = await workflow_factory_v2(
+            project_id=project.id, name="workflow"
+        )
+
     # UnreachableBranchError
-    job_C = JobV2(
-        project_id=project.id,
-        workflow_id=workflow.id,
-        dataset_id=dataset.id,
-        user_email=user.email,
-        dataset_dump={},
-        workflow_dump={},
-        project_dump={},
-        first_task_index=0,
-        last_task_index=0,
-    )
-    db.add(job_C)
-    await db.commit()
+    for ind in [0, 1]:
+        job = JobV2(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            user_email=user.email,
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=0,
+            status=JobStatusTypeV2.SUBMITTED,
+        )
+        db.add(job)
+        await db.commit()
+
     res = await client.get(
         f"api/v2/project/{project.id}/status/"
         f"?dataset_id={dataset.id}&workflow_id={workflow.id}"
