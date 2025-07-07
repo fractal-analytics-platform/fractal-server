@@ -159,17 +159,15 @@ async def get_workflow_tasks_statuses(
 
     new_response = deepcopy(response)
     for wftask_id, value in response.items():
-        # FIXME: any better approach is welcome
-        try:
-            if value is not None:
-                num_total_images = sum(
-                    value[f"num_{target_status}_images"]
-                    for target_status in HistoryUnitStatus
-                )
-                if num_total_images > value["num_available_images"]:
-                    value["num_available_images"] = None
-        except KeyError:
-            pass
+        if value is not None and value != {
+            "status": HistoryUnitStatus.SUBMITTED
+        }:
+            num_total_images = sum(
+                value[f"num_{target_status}_images"]
+                for target_status in HistoryUnitStatus
+            )
+            if num_total_images > value["num_available_images"]:
+                value["num_available_images"] = None
         new_response[wftask_id] = value
 
     return JSONResponse(content=new_response, status_code=200)
