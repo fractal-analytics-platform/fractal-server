@@ -73,6 +73,7 @@ async def get_workflow_tasks_statuses(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
+
     # Access control
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -87,46 +88,38 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
-    latest_history_runs = {
-        wftask.id: (
-            await db.execute(
-                select(HistoryRun)
-                .where(HistoryRun.dataset_id == dataset_id)
-                .where(HistoryRun.workflowtask_id == wftask.id)
-                .order_by(HistoryRun.timestamp_started.desc())
-                .limit(1)
-            )
-        ).scalar_one_or_none()
-        for wftask in workflow.task_list
-    }
-
     running_job = await _get_submitted_job_or_none(
         db=db,
         dataset_id=dataset_id,
         workflow_id=workflow_id,
     )
     if running_job is not None:
-        running_job_wftasks = [
-            workflow.task_list[i].id
-            for i in range(
-                running_job.first_task_index,
-                running_job.last_task_index + 1,
-            )
+        running_wftasks = workflow.task_list[
+            running_job.first_task_index : running_job.last_task_index + 1
         ]
+        running_wftask_ids = [wft.id for wft in running_wftasks]
     else:
-        running_job_wftasks = []
+        running_wftask_ids = []
 
     response: dict[int, dict[str, int | str] | None] = {}
     for wftask in workflow.task_list:
-        latest_history_run = latest_history_runs[wftask.id]
+        res = await db.execute(
+            select(HistoryRun)
+            .where(HistoryRun.dataset_id == dataset_id)
+            .where(HistoryRun.workflowtask_id == wftask.id)
+            .order_by(HistoryRun.timestamp_started.desc())
+            .limit(1)
+        )
+        latest_history_run = res.scalar_one_or_none()
+
         if latest_history_run is None:
-            if wftask.id in running_job_wftasks:
+            if wftask.id in running_wftask_ids:
                 response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
             else:
                 response[wftask.id] = None
             continue
         else:
-            if wftask.id in running_job_wftasks:
+            if wftask.id in running_wftask_ids:
                 if latest_history_run.job_id == running_job.id:
                     response[wftask.id] = dict(
                         status=latest_history_run.status
