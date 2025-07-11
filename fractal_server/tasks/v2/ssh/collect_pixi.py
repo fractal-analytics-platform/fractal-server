@@ -198,7 +198,10 @@ def collect_ssh_pixi(
                         SOURCE_DIR_NAME,
                     ).as_posix()
                     pyproject_toml_path = Path(source_dir, "pyproject.toml")
-                    edit_pyproject_toml_in_place_ssh(pyproject_toml_path)
+                    edit_pyproject_toml_in_place_ssh(
+                        fractal_ssh=fractal_ssh,
+                        pyproject_toml_path=pyproject_toml_path,
+                    )
 
                     stdout = _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
