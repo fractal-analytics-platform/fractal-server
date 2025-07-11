@@ -113,3 +113,21 @@ def test_simplify_pyproject_toml():
             pixi_environment="default",
             pixi_platform="x",
         )
+
+    # Only tasks update
+    old = tomli_w.dumps(
+        dict(
+            tool=dict(
+                pixi=dict(
+                    tasks="something",
+                )
+            )
+        )
+    )
+    expected_new = tomli_w.dumps(dict(tool=dict(pixi=dict())))
+    new = simplify_pyproject_toml(
+        original_toml_string=old,
+        pixi_environment="x",
+        pixi_platform="x",
+    )
+    assert new == expected_new
