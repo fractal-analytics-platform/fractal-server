@@ -115,7 +115,6 @@ async def deactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
@@ -242,7 +241,6 @@ async def reactivate_task_group(
     # Submit background task
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
             user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db

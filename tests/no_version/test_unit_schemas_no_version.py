@@ -13,7 +13,6 @@ from fractal_server.types.validators import val_absolute_path
 
 
 def test_user_create():
-
     u = UserCreate(email="a@b.c", password="asd")
     assert u.username is None
 
@@ -105,7 +104,6 @@ def test_user_settings_read():
 
 
 def test_user_settings_update():
-
     update_request_body = UserSettingsUpdate(ssh_host="NEW_HOST")
     assert update_request_body.slurm_accounts is None
 

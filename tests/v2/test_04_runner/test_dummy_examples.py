@@ -1030,14 +1030,18 @@ async def test_status_based_submission(
             workflow_id=workflow.id,
             task_id=task_id,
             order=i,
-            args_non_parallel={
-                "full_new_image": dict(
-                    zarr_url=Path(zarr_dir, f"plate.zarr/B0{i+1}").as_posix(),
-                    types={"is_3D": True, f"task_{i}_processed": True},
-                )
-            }
-            if i == 0
-            else {},  # First task adds a new image, others process
+            args_non_parallel=(
+                {
+                    "full_new_image": dict(
+                        zarr_url=Path(
+                            zarr_dir, f"plate.zarr/B0{i + 1}"
+                        ).as_posix(),
+                        types={"is_3D": True, f"task_{i}_processed": True},
+                    )
+                }
+                if i == 0
+                else {}
+            ),  # First task adds a new image, others process
         )
         for i in range(3)
     ]

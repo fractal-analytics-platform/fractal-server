@@ -81,7 +81,6 @@ async def test_submit_fail(
     tmp_path,
     task_type: str,
 ):
-
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     if not task_type.startswith("converter_"):
@@ -172,7 +171,6 @@ async def test_multisubmit_parallel(
     db,
     history_mock_for_multisubmit,
 ):
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     with LocalRunner(root_dir_local=tmp_path) as runner:
         results, exceptions = runner.multisubmit(

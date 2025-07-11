@@ -75,7 +75,6 @@ def test_create_zip_fail(tmp_path, monkeypatch):
 
 
 def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
-
     test_folder = make_folder(tmp_path)
 
     # Case 1: zip file does not exist yet
@@ -127,7 +126,6 @@ def test_zip_folder_to_byte_stream_iterator(tmp_path: Path):
 
 
 def test_folder_can_be_deleted(tmp_path: Path, monkeypatch):
-
     test_folder = make_folder(tmp_path)
     assert _folder_can_be_deleted(test_folder) is False
 
@@ -144,7 +142,6 @@ def test_folder_can_be_deleted(tmp_path: Path, monkeypatch):
 
 
 def test_zip_folder_to_file_and_remove(tmp_path: Path, monkeypatch):
-
     assert os.listdir(tmp_path) == []
 
     test_folder = make_folder(tmp_path)

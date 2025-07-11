@@ -307,7 +307,6 @@ async def test_get_user_optional_group_info(
 async def test_patch_user_settings_bulk(
     MockCurrentUser, registered_superuser_client, default_user_group, db
 ):
-
     # Register 4 users
     async with MockCurrentUser() as user1:
         pass

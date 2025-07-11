@@ -23,7 +23,6 @@ def image_fail(model: T, **kwargs) -> str:
 
 
 def test_SingleImageBase():
-
     image_fail(model=_SingleImageBase)
 
     # zarr_url
@@ -84,7 +83,6 @@ def test_SingleImageBase():
 
 
 def test_url_normalization():
-
     image = image_ok(model=_SingleImageBase, zarr_url="/valid/url")
     assert image.zarr_url == "/valid/url"
     image = image_ok(model=_SingleImageBase, zarr_url="/remove/slash/")
@@ -109,7 +107,6 @@ def test_url_normalization():
 
 
 def test_SingleImageTaskOutput():
-
     image_ok(
         model=SingleImageTaskOutput,
         zarr_url="/x",
@@ -149,7 +146,6 @@ def test_SingleImageTaskOutput():
 
 
 def test_SingleImage():
-
     image_ok(
         model=SingleImage,
         zarr_url="/x",
@@ -193,7 +189,6 @@ def test_SingleImage():
 
 
 def test_SingleImageUpdate():
-
     image_fail(model=SingleImageUpdate)
 
     # zarr_url

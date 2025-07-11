@@ -24,7 +24,6 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 with next(get_sync_db()) as db:
-
     # USERS
     stm = select(UserOAuth)
     users = db.execute(stm).scalars().unique().all()

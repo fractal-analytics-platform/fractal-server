@@ -246,7 +246,6 @@ async def test_get_collection_task_group_activity_status_message(
 
 
 def test_get_new_workflow_task_meta():
-
     assert get_new_workflow_task_meta(
         old_task_meta=None,
         old_workflow_task_meta={"foo": "bar"},

@@ -62,7 +62,6 @@ commands = [
 
 @pytest.mark.parametrize("cmd", commands)
 def test_startup_commands(cmd, set_test_db):
-
     debug(cmd)
     p = subprocess.Popen(
         shlex.split(f"poetry run {cmd}"),
@@ -90,7 +89,6 @@ def test_startup_commands(cmd, set_test_db):
 
 
 def test_email_settings():
-
     cmd = "poetry run fractalctl email-settings"
     res = subprocess.run(
         shlex.split(cmd),

@@ -33,7 +33,6 @@ TABLES_V1 = [
 
 
 def upgrade() -> None:
-
     logger = logging.getLogger("alembic.runtime.migration")
 
     target_metadata = SQLModel.metadata

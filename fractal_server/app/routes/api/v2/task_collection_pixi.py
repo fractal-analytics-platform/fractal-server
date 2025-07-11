@@ -89,7 +89,6 @@ async def collect_task_pixi(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
-
     settings = Inject(get_settings)
     # Check if Pixi is available
     if settings.pixi is None:

@@ -8,7 +8,6 @@ from fractal_server.app.schemas.v1.workflow import WorkflowReadV1
 
 
 with next(get_sync_db()) as db:
-
     stm = select(ApplyWorkflow)
 
     applyworkflows = db.execute(stm)
@@ -16,7 +15,6 @@ with next(get_sync_db()) as db:
     rows = applyworkflows.scalars().all()
 
     for row in rows:
-
         # get correspondent workflow, input_dataset, output_dataset
         workflow = db.get(Workflow, row.workflow_id)
 

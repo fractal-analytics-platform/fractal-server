@@ -17,7 +17,6 @@ async def test_alive(client, override_settings):
 
 
 async def test_settings_endpoint(client, MockCurrentUser):
-
     settings = Inject(get_settings).model_dump()
     for k, v in settings.items():
         if isinstance(v, Path):

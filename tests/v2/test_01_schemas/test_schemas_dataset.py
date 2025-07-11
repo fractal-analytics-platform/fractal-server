@@ -11,7 +11,6 @@ from fractal_server.urls import normalize_url
 
 
 async def test_schemas_dataset_v2():
-
     project = ProjectV2(id=1, name="project")
 
     # Test zarr_dir=None is valid
@@ -61,7 +60,6 @@ async def test_schemas_dataset_v2():
 
 
 def test_zarr_dir():
-
     DatasetCreateV2(name="foo", zarr_dir="/")
     assert (
         DatasetCreateV2(name="foo", zarr_dir="/foo/bar").zarr_dir

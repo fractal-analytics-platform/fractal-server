@@ -39,7 +39,6 @@ async def get_list_user_groups(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
-
     # Get all groups
     stm_all_groups = select(UserGroup)
     res = await db.execute(stm_all_groups)
@@ -88,7 +87,6 @@ async def create_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-
     # Check that name is not already in use
     existing_name_str = select(UserGroup).where(
         UserGroup.name == group_create.name
@@ -121,7 +119,6 @@ async def update_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-
     group = await _usergroup_or_404(group_id, db)
 
     # Patch `viewer_paths`
@@ -143,7 +140,6 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-
     group = await _usergroup_or_404(group_id, db)
 
     if group.name == FRACTAL_DEFAULT_GROUP_NAME:
@@ -219,7 +215,6 @@ async def remove_user_from_group(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
-
     # Check that user and group exist
     await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)

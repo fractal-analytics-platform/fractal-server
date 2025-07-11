@@ -84,7 +84,6 @@ def collect_ssh(
                 ssh_config=ssh_config,
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
-
                 try:
                     # Check SSH connection
                     ssh_ok = check_ssh_or_fail_and_cleanup(

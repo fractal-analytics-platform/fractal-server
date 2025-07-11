@@ -61,7 +61,6 @@ class Benchmark:
         endpoints: list[dict[str, str]],
         users: list[UserBench],
     ):
-
         self.endpoints = endpoints
         self.users = users
         self.client = Client(base_url=FRACTAL_SERVER_URL)
@@ -101,7 +100,6 @@ class Benchmark:
         return aggregated_values
 
     def to_html(self, aggregated_values: dict, n_requests: int):
-
         env = Environment(
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
@@ -117,7 +115,6 @@ class Benchmark:
             output_file.write(rendered_html)
 
     def make_md_diff(self, agg_values_main: dict, agg_values_curr: dict):
-
         env = Environment(
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
@@ -181,7 +178,6 @@ class Benchmark:
         n_requests: int,
         keys_to_sum: list[str],
     ):
-
         # list of dicts made by get_metrics()
         verb = endpoint.get("verb")
         path = endpoint.get("path")
@@ -230,7 +226,6 @@ class Benchmark:
         )
 
     def run_benchmark(self, n_requests: int) -> list:
-
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
         user_metrics: list[dict] = []
@@ -257,7 +252,6 @@ class Benchmark:
 
 
 if __name__ == "__main__":
-
     benchmark = Benchmark(
         endpoints=ENDPOINTS,
         users=USERS,

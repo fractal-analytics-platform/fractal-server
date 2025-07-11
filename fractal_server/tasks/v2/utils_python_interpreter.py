@@ -5,7 +5,7 @@ from fractal_server.syringe import Inject
 
 
 def get_python_interpreter_v2(
-    python_version: Literal["3.9", "3.10", "3.11", "3.12"]
+    python_version: Literal["3.9", "3.10", "3.11", "3.12"],
 ) -> str:
     """
     Return the path to the Python interpreter

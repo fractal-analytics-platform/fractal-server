@@ -65,7 +65,6 @@ async def test_submit_shutdown(
     monkey_slurm,
     valid_user_id,
 ):
-
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SudoSlurmRunner(
@@ -123,7 +122,6 @@ async def test_multisubmit_shutdown(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
@@ -191,7 +189,6 @@ async def test_shutdown_before_submit(
     monkey_slurm,
     valid_user_id,
 ):
-
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     with SudoSlurmRunner(
@@ -242,7 +239,6 @@ async def test_shutdown_before_multisubmit(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(

@@ -7,7 +7,6 @@ from fractal_server.app.runner.executors.call_command_wrapper import (
 
 
 def test_call_command_wrapper(tmp_path):
-
     # Invalid command
     with pytest.raises(
         TaskExecutionError,

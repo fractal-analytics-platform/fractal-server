@@ -28,7 +28,6 @@ def test_find_image_by_zarr_url():
 
 
 def test_match_filter():
-
     # empty filters (always match)
     assert match_filter(image=..., type_filters={}, attribute_filters={})
 
@@ -102,7 +101,6 @@ def test_match_filter():
 
 
 def test_filter_image_list():
-
     images = [
         {"types": {"a": True}, "attributes": {"a": 1, "b": 2}},
         {"types": {"a": True}, "attributes": {"a": 2, "b": 2}},

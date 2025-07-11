@@ -7,7 +7,6 @@ from fractal_server.app.models.v2 import WorkflowV2
 
 
 async def test_project_and_workflows(db):
-
     with pytest.raises(IntegrityError):
         # missing relatioship with project
         broken_workflow = WorkflowV2(name="broken")

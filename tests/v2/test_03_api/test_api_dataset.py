@@ -33,9 +33,7 @@ def n_images(n: int) -> list[dict]:
 
 
 async def test_new_dataset_v2(client, MockCurrentUser):
-
     async with MockCurrentUser():
-
         res = await client.post("api/v2/project/", json=dict(name="projectV2"))
         debug(res.json())
         assert res.status_code == 201
@@ -152,9 +150,7 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
 async def test_get_user_datasets(
     client, MockCurrentUser, project_factory_v2, dataset_factory_v2
 ):
-
     async with MockCurrentUser(user_kwargs={}) as user:
-
         project1 = await project_factory_v2(user, name="p1")
         project2 = await project_factory_v2(user, name="p2")
         await dataset_factory_v2(project_id=project1.id, name="ds1a")
@@ -265,7 +261,6 @@ async def test_delete_dataset_cascade_jobs(
          else the corresponding `dataset_id` is set None
     """
     async with MockCurrentUser() as user:
-
         # Populate the database with the appropriate objects
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)

@@ -13,7 +13,6 @@ PKG = "fractal-tasks-core"
 
 
 async def test_get_package_version_from_pypi():
-
     # Success: Provide complete version
     version = await get_package_version_from_pypi(PKG, version="1.2.0")
     debug(version)
@@ -41,7 +40,6 @@ async def test_get_package_version_from_pypi():
 
 
 async def test_get_package_version_from_pypi_failures(monkeypatch):
-
     # Failure 1: not found
     with pytest.raises(HTTPException, match="status_code 404"):
         await get_package_version_from_pypi(

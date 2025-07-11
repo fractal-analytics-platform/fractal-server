@@ -133,7 +133,6 @@ async def db_create_tables(override_settings):
 
 @pytest.fixture
 async def db(db_create_tables):
-
     async for session in get_async_db():
         yield session
 
@@ -165,9 +164,12 @@ async def register_routers(app, override_settings):
 async def client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         yield client
 
 
@@ -175,14 +177,16 @@ async def client(
 async def registered_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-
     EMAIL = "test@test.com"
     PWD = "12345"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
 
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         data_login = dict(
             username=EMAIL,
             password=PWD,
@@ -200,9 +204,12 @@ async def registered_superuser_client(
     EMAIL = "some-admin@fractal.xy"
     PWD = "some-admin-password"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         data_login = dict(username=EMAIL, password=PWD)
         res = await client.post("auth/token/login/", data=data_login)
         token = res.json()["access_token"]
@@ -245,7 +252,6 @@ async def MockCurrentUser(app, db, default_user_group):
         previous_dependencies: dict = field(default_factory=dict)
 
         async def __aenter__(self):
-
             if self.user_kwargs is not None and "id" in self.user_kwargs:
                 db_user = await db.get(
                     UserOAuth, self.user_kwargs["id"], populate_existing=True
@@ -368,7 +374,6 @@ async def user_group_factory(db: AsyncSession):
         *other_users_id: list[int],
         db: AsyncSession = db,
     ):
-
         user_group = UserGroup(name=group_name)
         db.add(user_group)
         await db.commit()

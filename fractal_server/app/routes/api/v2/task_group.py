@@ -72,7 +72,6 @@ async def get_task_group_activity_list(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
-
     stm = select(TaskGroupActivityV2).where(
         TaskGroupActivityV2.user_id == user.id
     )
@@ -105,7 +104,6 @@ async def get_task_group_activity(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
-
     activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
 
     if activity is None:

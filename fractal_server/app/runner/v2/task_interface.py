@@ -11,7 +11,6 @@ from fractal_server.types import ZarrUrlStr
 
 
 class TaskOutput(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     image_list_updates: list[SingleImageTaskOutput] = Field(
@@ -40,7 +39,6 @@ class TaskOutput(BaseModel):
 
 
 class InitArgsModel(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     zarr_url: ZarrUrlStr
@@ -48,14 +46,13 @@ class InitArgsModel(BaseModel):
 
 
 class InitTaskOutput(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     parallelization_list: list[InitArgsModel] = Field(default_factory=list)
 
 
 def _cast_and_validate_TaskOutput(
-    task_output: dict[str, Any]
+    task_output: dict[str, Any],
 ) -> TaskOutput | None:
     try:
         validated_task_output = TaskOutput(**task_output)

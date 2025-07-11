@@ -116,7 +116,6 @@ async def test_task_group_lifecycle_pixi_ssh(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
     ) as user:
-
         # 1 / Failed collection - remote folder already exists
         task_group_path = (
             Path(REMOTE_TASKS_BASE_DIR)

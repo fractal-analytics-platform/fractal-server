@@ -334,7 +334,6 @@ async def test_get_job_check_owner(
 
 
 async def test_get_submitted_jobs_statement():
-
     stm = _get_submitted_jobs_statement()
     from sqlmodel.sql.expression import SelectOfScalar
 

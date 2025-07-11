@@ -53,7 +53,6 @@ async def test_task_group_admin(
         task_group_3 = res.json()
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         # GET /{id}/
         for task_group in [task_group_1, task_group_2, task_group_3]:
             res = await client.get(f"{PREFIX}/task-group/{task_group['id']}/")
@@ -262,7 +261,6 @@ async def test_get_task_group_activity(
         assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         res = await client.get(f"{PREFIX}/task-group/activity/")
         assert res.status_code == 200
         assert len(res.json()) == 4
@@ -395,7 +393,6 @@ async def test_admin_deactivate_task_group_api(
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True},
     ):
-
         # API failure: Non-active task group cannot be deactivated
         res = await client.post(
             f"{PREFIX}/task-group/{non_active_task.taskgroupv2_id}/deactivate/"

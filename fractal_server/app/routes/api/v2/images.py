@@ -31,7 +31,6 @@ router = APIRouter()
 
 
 class ImagePage(PaginationResponse[SingleImage]):
-
     attributes: dict[str, list[ImageAttributeValue]]
     types: list[str]
 
@@ -64,7 +63,6 @@ async def post_new_image(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
@@ -117,7 +115,6 @@ async def query_dataset_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
-
     page = pagination.page
     page_size = pagination.page_size
 
@@ -131,7 +128,6 @@ async def query_dataset_images(
     types = aggregate_types(images)
 
     if query is not None:
-
         if query.zarr_url is not None:
             image = next(
                 (
@@ -190,7 +186,6 @@ async def delete_dataset_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )

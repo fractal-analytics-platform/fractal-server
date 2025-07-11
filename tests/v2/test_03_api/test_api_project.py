@@ -25,7 +25,6 @@ async def _project_list_v2(user: UserOAuth, db):
 
 
 async def test_post_and_get_project(client, db, MockCurrentUser):
-
     PAYLOAD = dict(name="project_v2")
 
     # unauthenticated
@@ -44,7 +43,6 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
         other_project = res.json()
 
     async with MockCurrentUser() as userB:
-
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert res.json() == await _project_list_v2(userB, db) == []

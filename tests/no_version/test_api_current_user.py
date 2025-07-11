@@ -32,7 +32,6 @@ async def test_get_current_user(
 async def test_get_current_user_group_ids_names_order(
     client, MockCurrentUser, db, default_user_group
 ):
-
     async with MockCurrentUser() as user:
         group1 = UserGroup(name="group1")
         group2 = UserGroup(name="group2")

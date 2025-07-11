@@ -26,7 +26,6 @@ def illumination_correction_init(
 
     parallelization_list = []
     for zarr_url in zarr_urls:
-
         # Create new zarr image if needed
         if not overwrite_input:
             new_zarr_url = f"{zarr_url}_corr"

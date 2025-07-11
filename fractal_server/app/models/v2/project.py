@@ -12,7 +12,6 @@ from fractal_server.utils import get_timestamp
 
 
 class ProjectV2(SQLModel, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
     name: str
     timestamp_created: datetime = Field(

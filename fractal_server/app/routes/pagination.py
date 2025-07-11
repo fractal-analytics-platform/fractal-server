@@ -11,7 +11,6 @@ T = TypeVar("T")
 
 
 class PaginationRequest(BaseModel):
-
     page: int = Field(ge=1)
     page_size: int | None = Field(ge=1)
 
@@ -38,7 +37,6 @@ def get_pagination_params(
 
 
 class PaginationResponse(BaseModel, Generic[T]):
-
     current_page: int = Field(ge=1)
     page_size: int = Field(ge=0)
     total_count: int = Field(ge=0)

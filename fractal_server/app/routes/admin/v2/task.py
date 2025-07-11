@@ -20,7 +20,6 @@ router = APIRouter()
 
 
 class TaskV2Minimal(BaseModel):
-
     id: int
     name: str
     type: str
@@ -32,13 +31,11 @@ class TaskV2Minimal(BaseModel):
 
 
 class ProjectUser(BaseModel):
-
     id: int
     email: EmailStr
 
 
 class TaskV2Relationship(BaseModel):
-
     workflow_id: int
     workflow_name: str
     project_id: int
@@ -47,7 +44,6 @@ class TaskV2Relationship(BaseModel):
 
 
 class TaskV2Info(BaseModel):
-
     task: TaskV2Minimal
     relationships: list[TaskV2Relationship]
 

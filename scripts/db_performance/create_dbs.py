@@ -85,7 +85,6 @@ def bulk_insert_history_units(
     num_units: int,
     db: Session,
 ) -> list[int]:
-
     BATCH_SIZE = 2_000
     if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
         BATCH_SIZE = num_units
@@ -98,9 +97,11 @@ def bulk_insert_history_units(
                 {
                     "history_run_id": hr_run_id,
                     "logfile": "fake",
-                    "status": HistoryUnitStatus.DONE
-                    if i % 2 == 0
-                    else HistoryUnitStatus.FAILED,
+                    "status": (
+                        HistoryUnitStatus.DONE
+                        if i % 2 == 0
+                        else HistoryUnitStatus.FAILED
+                    ),
                     "zarr_urls": [],
                 }
                 for i in range(
@@ -130,7 +131,6 @@ def bulk_insert_history_image_cache(
     history_run_id: int,
     history_unit_ids: list[int],
 ) -> None:
-
     num_units = len(history_unit_ids)
     BATCH_SIZE = 2_000
     if BATCH_SIZE > num_units or (num_units % BATCH_SIZE) != 0:
@@ -215,5 +215,5 @@ if __name__ == "__main__":
                 f"Cluster {cluster} out of {num_clusters} "
                 f"- cluster size: {len(unit_ids)} "
                 f"- elapsed: {t_end - t_start:.4f} s "
-                f"- units: {t2-t1:.4f} - image caches: {t3-t2:.4f}"
+                f"- units: {t2 - t1:.4f} - image caches: {t3 - t2:.4f}"
             )

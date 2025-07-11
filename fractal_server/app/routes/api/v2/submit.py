@@ -57,7 +57,6 @@ async def apply_workflow(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2 | None:
-
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
     settings = Inject(get_settings)

@@ -18,7 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-
     with op.batch_alter_table("workflowtaskv2") as batch_op:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False

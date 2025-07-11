@@ -83,7 +83,6 @@ async def lifespan(app: FastAPI):
     settings = Inject(get_settings)
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
         from fractal_server.ssh._fabric import FractalSSHList
 
         app.state.fractal_ssh_list = FractalSSHList()

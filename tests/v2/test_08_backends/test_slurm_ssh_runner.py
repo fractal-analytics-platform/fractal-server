@@ -106,7 +106,6 @@ async def test_submit_fail(
     current_py_version: str,
     valid_user_id,
 ):
-
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
     )
@@ -235,7 +234,6 @@ async def test_multisubmit_compound(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         list_task_files = [
             get_dummy_task_files(
                 tmp777_path,

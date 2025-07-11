@@ -73,7 +73,6 @@ def test_task_output():
 
 
 def test_cast_and_validate_functions():
-
     _cast_and_validate_TaskOutput(
         dict(image_list_updates=[dict(zarr_url="/some/image")])
     )
@@ -93,7 +92,6 @@ def test_cast_and_validate_functions():
 
 
 def test_merge_outputs():
-
     # 1
     merged = merge_outputs([])
     assert merged == TaskOutput()
@@ -125,7 +123,6 @@ def test_merge_outputs():
 
 
 def test_process_task_output():
-
     oe = _process_task_output(result=None, exception=None)
     assert oe.task_output == TaskOutput()
     assert oe.exception is None
@@ -149,7 +146,6 @@ def test_process_task_output():
 
 
 def test_process_init_task_output():
-
     oe = _process_init_task_output(result=None, exception=None)
     assert oe.task_output == InitTaskOutput()
     assert oe.exception is None

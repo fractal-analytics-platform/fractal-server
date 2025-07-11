@@ -100,7 +100,6 @@ class PixiSettings(BaseModel):
 
     @model_validator(mode="after")
     def check_pixi_settings(self):
-
         if self.default_version not in self.versions:
             raise ValueError(
                 f"Default version '{self.default_version}' not in "
@@ -110,7 +109,6 @@ class PixiSettings(BaseModel):
         pixi_base_dir = Path(self.versions[self.default_version]).parent
 
         for key, value in self.versions.items():
-
             pixi_path = Path(value)
 
             if pixi_path.parent != pixi_base_dir:

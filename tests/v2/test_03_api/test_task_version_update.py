@@ -11,7 +11,6 @@ async def test_get_workflow_version_update_candidates(
     db,
 ):
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
 

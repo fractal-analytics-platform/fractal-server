@@ -24,7 +24,6 @@ async def test_check_fractal_server_versions_executable(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
     ) as runner:
-
         # Successful check
         runner.check_fractal_server_versions()
 

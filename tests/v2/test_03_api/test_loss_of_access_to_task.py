@@ -109,7 +109,6 @@ async def test_loss_of_access_to_task(
             raise RuntimeError("Wrong branch.")
 
         async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
-
             # User A cannot get task_B any more
             res = await client.get(f"/api/v2/task/{task_B.id}/")
             assert res.status_code == 403

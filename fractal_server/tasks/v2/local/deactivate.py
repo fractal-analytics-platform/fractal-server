@@ -72,7 +72,6 @@ def deactivate_local(
                 return
 
             try:
-
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
@@ -115,7 +114,6 @@ def deactivate_local(
 
                 # Handle some specific cases for wheel-file case
                 if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
-
                     logger.info(
                         f"Handle specific cases for {task_group.origin=}."
                     )

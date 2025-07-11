@@ -17,7 +17,6 @@ from fractal_server.utils import get_timestamp
 logger = set_logger(sys.argv[0])
 
 if __name__ == "__main__":
-
     if len(sys.argv) != 2:
         raise ValueError(f"Usage: 'python {sys.argv[0]} FOLDER'")
 

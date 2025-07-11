@@ -84,7 +84,6 @@ fractal_tasks_mock_venv = mock_venv(venv_dir)
 
 
 def benchmark(N: int, tmp_path: str):
-
     WORKING_DIR = Path(f"{tmp_path}/job")
     ZARR_DIR = Path(f"{tmp_path}/zarr").as_posix().rstrip("/")
     execute_tasks_v2(
@@ -127,7 +126,6 @@ if __name__ == "__main__":
     results = []
 
     for N in [100, 200, 300]:
-
         tmp_path = tempfile.mkdtemp()
         cProfile.run(f"benchmark({N}, '{tmp_path}')", "profile_results")
         stats = pstats.Stats("profile_results")
@@ -149,7 +147,7 @@ if __name__ == "__main__":
                 if os.path.isfile(f"{path}/{file}"):
                     count += 1
                     size += os.path.getsize(f"{path}/{file}")
-            list_dirs[key] = dict(count=count, size=f"{size/1024:.2f} KB")
+            list_dirs[key] = dict(count=count, size=f"{size / 1024:.2f} KB")
 
         shutil.rmtree(tmp_path)
 

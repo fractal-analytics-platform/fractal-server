@@ -59,7 +59,6 @@ async def test_list_users(registered_client, registered_superuser_client):
 
 
 async def test_show_user(registered_client, registered_superuser_client):
-
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(email="to_show@asd.asd", password="12345"),
@@ -81,7 +80,6 @@ async def test_show_user(registered_client, registered_superuser_client):
 
 
 async def test_edit_users_as_superuser(registered_superuser_client):
-
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(email="test@fractal.xy", password="12345"),
@@ -178,7 +176,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
 
 async def test_add_superuser(registered_superuser_client):
-
     # Create non-superuser user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
@@ -238,7 +235,6 @@ async def test_set_groups_endpoint(
     registered_superuser_client,
     default_user_group,
 ):
-
     # Preliminary step: create a user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
@@ -335,7 +331,6 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-
     u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
     u2 = UserOAuth(email="user2@email.com", hashed_password="abc2")
     db.add(u1)
@@ -413,7 +408,6 @@ async def test_oauth_accounts_list(
 
 
 async def test_get_and_patch_user_settings(registered_superuser_client):
-
     # Register new user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")

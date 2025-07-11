@@ -76,7 +76,6 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
 
 
 def test_compress_and_extract_with_filelist(tmp_path: Path):
-
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
     extracted_path = Path(f"{tmp_path}/extracted")
@@ -124,7 +123,6 @@ def test_compress_folder_failure(tmp_path: Path):
 
 
 def test_extract_archive_failure(tmp_path: Path):
-
     # Wwrong suffixes
 
     with pytest.raises(ValueError, match="must end with"):

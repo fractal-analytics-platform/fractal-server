@@ -27,7 +27,6 @@ async def test_update_status_of_history_unit(
     job_factory_v2,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser() as user:
         task = await task_factory_v2(user.id)
         project = await project_factory_v2(user)

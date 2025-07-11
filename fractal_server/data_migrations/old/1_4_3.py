@@ -39,7 +39,6 @@ def fix_db():
         )
 
     with next(get_sync_db()) as db:
-
         # add timestamp_created to Workflows
         stm = select(Workflow)
         workflows = db.execute(stm).scalars().all()

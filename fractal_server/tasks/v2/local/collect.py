@@ -99,7 +99,6 @@ def collect_local(
 
                 # Write wheel file and set task_group.archive_path
                 if wheel_file is not None:
-
                     archive_path = (
                         Path(task_group.path) / wheel_file.filename
                     ).as_posix()

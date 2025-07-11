@@ -224,7 +224,6 @@ async def _get_collection_task_group_activity_status_message(
     task_group_id: int,
     db: AsyncSession,
 ) -> str:
-
     res = await db.execute(
         select(TaskGroupActivityV2)
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)

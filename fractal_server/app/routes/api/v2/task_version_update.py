@@ -78,7 +78,6 @@ async def get_workflow_version_update_candidates(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[list[TaskVersionRead]]:
-
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
         workflow_id=workflow_id,
@@ -181,7 +180,6 @@ async def replace_workflowtask(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskReadV2:
-
     # Get objects from database
     workflow_task, workflow = await _get_workflow_task_check_owner(
         project_id=project_id,

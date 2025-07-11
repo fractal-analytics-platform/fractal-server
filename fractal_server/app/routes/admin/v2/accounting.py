@@ -82,7 +82,6 @@ async def query_accounting_slurm(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-
     stm = select(AccountingRecordSlurm.slurm_job_ids)
     if query.user_id is not None:
         stm = stm.where(AccountingRecordSlurm.user_id == query.user_id)

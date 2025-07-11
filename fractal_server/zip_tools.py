@@ -62,7 +62,6 @@ def _zip_folder_to_byte_stream_iterator(folder: str) -> Iterator:
         return iterfile()
 
     else:
-
         byte_stream = _create_zip(folder, output=BytesIO())
         return iter([byte_stream.getvalue()])
 

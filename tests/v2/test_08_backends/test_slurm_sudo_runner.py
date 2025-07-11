@@ -152,7 +152,6 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
@@ -204,7 +203,6 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     valid_user_id,
 ):
-
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with SudoSlurmRunner(
@@ -269,7 +267,6 @@ async def test_multisubmit_parallel_partial_failure(
     valid_user_id,
     testdata_path,
 ):
-
     raw_script_path = testdata_path / "script_for_selective_failure.py"
     script_path = tmp777_path / "script_for_selective_failure.py"
 

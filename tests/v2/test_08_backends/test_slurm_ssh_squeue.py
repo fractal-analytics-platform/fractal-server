@@ -14,7 +14,6 @@ async def test_run_squeue(
     tmp777_path,
     fractal_ssh: FractalSSH,
 ):
-
     fractal_ssh.default_lock_timeout = 1.0
 
     with SlurmSSHRunner(
@@ -23,7 +22,6 @@ async def test_run_squeue(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         # Start a long SLURM job
         stdout = fractal_ssh.run_command(
             cmd="sbatch --parsable --wrap 'sleep 1000' "

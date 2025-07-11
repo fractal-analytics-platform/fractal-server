@@ -12,7 +12,6 @@ from .workflowtask import WorkflowTaskV2
 
 
 class WorkflowV2(SQLModel, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
     name: str
     project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
