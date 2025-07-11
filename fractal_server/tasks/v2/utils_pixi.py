@@ -1,4 +1,3 @@
-import shutil
 from typing import TypedDict
 
 import tomli_w
@@ -42,38 +41,43 @@ def parse_collect_stdout(stdout: str) -> ParsedOutput:
     return attributes
 
 
-def update_pyproject_toml(
+def simplify_pyproject_toml(
     *,
-    path: str,
-    environment: str | None = None,
-    target_platform: str | None = None,
-):
+    original_toml_string: str,
+    pixi_environment: str,
+    pixi_platform: str,
+) -> str:
     """
-    https://github.com/fractal-analytics-platform/fractal-server/issues/2653#issuecomment-3035035436
+    Simplify `pyproject.toml` contents to make `pixi install` less heavy.
+
+    Args:
+        original_toml_string: Original `pyproject.toml` contents
+        environment: Name of the pixi environment to use (e.g. `default`).
+        target_platform: Name of the platform (e.g. `linux-64`)
+
+    Returns:
+        New `pyproject.toml` contents
     """
-    if not path.endswith(".toml"):
-        raise ValueError()
 
-    shutil.copy(src=path, dst=f"{path}.backup")
+    # Parse TOML string
+    data = tomllib.loads(original_toml_string)
 
-    with open(path, "rb") as fp:
-        data = tomllib.load(fp)
+    # Use a single platform
+    data["tool"]["pixi"]["workspace"]["platforms"] = [pixi_platform]
 
-    if target_platform is not None:
-        data["tool"]["pixi"]["workspace"]["platforms"] = [target_platform]
+    # Keep a single environment
+    current_environments = data["tool"]["pixi"]["environments"]
+    data["tool"]["pixi"]["environments"] = {
+        key: value
+        for key, value in current_environments.items()
+        if key == pixi_environment
+    }
 
-    if environment is not None:
-        environments = data["tool"]["pixi"]["environments"]
-        data["tool"]["pixi"]["environments"] = {
-            key: value
-            for key, value in environments.items()
-            if key == environment
-        }
+    # Drop pixi.tasks
+    data["tool"]["pixi"].pop("tasks", None)
 
-    toml_string = tomli_w.dumps(data)
+    # Prepare and validate new `pyprojectl.toml` contents
+    new_toml_string = tomli_w.dumps(data)
+    tomllib.loads(new_toml_string)
 
-    # Additional validation
-    tomllib.loads(toml_string)
-
-    with open(path, "w") as fp:
-        fp.write(toml_string)
+    return new_toml_string
