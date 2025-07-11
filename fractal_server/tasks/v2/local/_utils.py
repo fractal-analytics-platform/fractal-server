@@ -1,9 +1,16 @@
 from pathlib import Path
 
+from ..utils_pixi import simplify_pyproject_toml
 from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import execute_command_sync
+
+
+logger = set_logger(__name__)
 
 
 def _customize_and_run_template(
@@ -69,3 +76,28 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
                     f"Task `{_task.name}` has `command_parallel` "
                     f"pointing to missing file `{_task_path}`."
                 )
+
+
+def edit_pyproject_toml_in_place_local(pyproject_toml_path: Path) -> None:
+    """
+    Wrapper of `simplify_pyproject_toml`, with I/O.
+    """
+
+    # Read `pyproject.toml`
+    with pyproject_toml_path.open() as f:
+        pyproject_contents = f.read()
+
+    # Simplify contents
+    settings = Inject(get_settings)
+    new_pyproject_contents = simplify_pyproject_toml(
+        original_toml_string=pyproject_contents,
+        pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
+        pixi_platform=settings.pixi.DEFAULT_PLATFORM,
+    )
+    # Write new `pyproject.toml`
+    with pyproject_toml_path.open("w") as f:
+        f.write(new_pyproject_contents)
+    logger.debug(
+        f"Replaced local {pyproject_toml_path.as_posix()} "
+        "with simplified version."
+    )

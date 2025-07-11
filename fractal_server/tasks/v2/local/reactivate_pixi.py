@@ -7,6 +7,7 @@ from ..utils_background import add_commit_refresh
 from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
+from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -120,6 +121,10 @@ def reactivate_local_pixi(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                # Simplify `pyproject.toml`
+                pyproject_toml_path = Path(source_dir, "pyproject.toml")
+                edit_pyproject_toml_in_place_local(pyproject_toml_path)
 
                 # Write pixi.lock into `source_dir`
                 logger.debug(f"start - writing {source_dir}/pixi.lock")
