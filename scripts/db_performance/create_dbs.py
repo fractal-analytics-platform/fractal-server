@@ -98,9 +98,11 @@ def bulk_insert_history_units(
                 {
                     "history_run_id": hr_run_id,
                     "logfile": "fake",
-                    "status": HistoryUnitStatus.DONE
-                    if i % 2 == 0
-                    else HistoryUnitStatus.FAILED,
+                    "status": (
+                        HistoryUnitStatus.DONE
+                        if i % 2 == 0
+                        else HistoryUnitStatus.FAILED
+                    ),
                     "zarr_urls": [],
                 }
                 for i in range(
@@ -215,5 +217,5 @@ if __name__ == "__main__":
                 f"Cluster {cluster} out of {num_clusters} "
                 f"- cluster size: {len(unit_ids)} "
                 f"- elapsed: {t_end - t_start:.4f} s "
-                f"- units: {t2-t1:.4f} - image caches: {t3-t2:.4f}"
+                f"- units: {t2 - t1:.4f} - image caches: {t3 - t2:.4f}"
             )

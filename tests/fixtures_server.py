@@ -165,9 +165,12 @@ async def register_routers(app, override_settings):
 async def client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         yield client
 
 
@@ -180,9 +183,12 @@ async def registered_client(
     PWD = "12345"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
 
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         data_login = dict(
             username=EMAIL,
             password=PWD,
@@ -200,9 +206,12 @@ async def registered_superuser_client(
     EMAIL = "some-admin@fractal.xy"
     PWD = "some-admin-password"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
-    async with AsyncClient(
-        base_url="http://test", transport=ASGITransport(app=app)
-    ) as client, LifespanManager(app):
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=app)
+        ) as client,
+        LifespanManager(app),
+    ):
         data_login = dict(username=EMAIL, password=PWD)
         res = await client.post("auth/token/login/", data=data_login)
         token = res.json()["access_token"]
@@ -299,20 +308,20 @@ async def MockCurrentUser(app, db, default_user_group):
             # Find out which dependencies should be overridden, and store their
             # pre-override value
             if self.user.is_active:
-                self.previous_dependencies[
-                    current_active_user
-                ] = app.dependency_overrides.get(current_active_user, None)
+                self.previous_dependencies[current_active_user] = (
+                    app.dependency_overrides.get(current_active_user, None)
+                )
             if self.user.is_active and self.user.is_superuser:
-                self.previous_dependencies[
-                    current_active_superuser
-                ] = app.dependency_overrides.get(
-                    current_active_superuser, None
+                self.previous_dependencies[current_active_superuser] = (
+                    app.dependency_overrides.get(
+                        current_active_superuser, None
+                    )
                 )
             if self.user.is_active and self.user.is_verified:
-                self.previous_dependencies[
-                    current_active_verified_user
-                ] = app.dependency_overrides.get(
-                    current_active_verified_user, None
+                self.previous_dependencies[current_active_verified_user] = (
+                    app.dependency_overrides.get(
+                        current_active_verified_user, None
+                    )
                 )
 
             # Override dependencies in the FastAPI app

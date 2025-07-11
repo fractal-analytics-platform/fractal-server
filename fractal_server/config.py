@@ -483,9 +483,9 @@ class Settings(BaseSettings):
             _info = sys.version_info
             current_version = f"{_info.major}_{_info.minor}"
             current_version_dot = f"{_info.major}.{_info.minor}"
-            values[
-                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
-            ] = current_version_dot
+            values["FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"] = (
+                current_version_dot
+            )
             logging.info(
                 "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
                 f"{current_version_dot}"

@@ -175,9 +175,9 @@ async def collect_tasks_pip(
 
     # Set/check python version
     if task_collect.python_version is None:
-        task_group_attrs[
-            "python_version"
-        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        task_group_attrs["python_version"] = (
+            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:
@@ -199,9 +199,9 @@ async def collect_tasks_pip(
 
     # Set pinned_package_versions
     if task_collect.pinned_package_versions is not None:
-        task_group_attrs[
-            "pinned_package_versions"
-        ] = task_collect.pinned_package_versions
+        task_group_attrs["pinned_package_versions"] = (
+            task_collect.pinned_package_versions
+        )
 
     # Initialize wheel_file_content as None
     wheel_file = None

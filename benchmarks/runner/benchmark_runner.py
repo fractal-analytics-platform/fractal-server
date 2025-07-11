@@ -56,14 +56,14 @@ def mock_venv(tmp_path: str) -> dict:
     for ind, task in enumerate(manifest["task_list"]):
         args = {}
         if task.get("executable_non_parallel"):
-            args[
-                "command_non_parallel"
-            ] = f"{python} {src_dir / task['executable_non_parallel']}"
+            args["command_non_parallel"] = (
+                f"{python} {src_dir / task['executable_non_parallel']}"
+            )
             args["meta_non_parallel"] = task.get("meta_non_parallel")
         if task.get("executable_parallel"):
-            args[
-                "command_parallel"
-            ] = f"{python} {src_dir / task['executable_parallel']}"
+            args["command_parallel"] = (
+                f"{python} {src_dir / task['executable_parallel']}"
+            )
             args["meta_parallel"] = task.get("meta_parallel")
 
         t = TaskV2Mock(
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 if os.path.isfile(f"{path}/{file}"):
                     count += 1
                     size += os.path.getsize(f"{path}/{file}")
-            list_dirs[key] = dict(count=count, size=f"{size/1024:.2f} KB")
+            list_dirs[key] = dict(count=count, size=f"{size / 1024:.2f} KB")
 
         shutil.rmtree(tmp_path)
 

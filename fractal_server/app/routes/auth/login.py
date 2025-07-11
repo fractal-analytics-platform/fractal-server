@@ -1,6 +1,7 @@
 """
 Definition of `/auth/{login,logout}/`, `/auth/token/{login/logout}` routes.
 """
+
 from fastapi import APIRouter
 
 from . import cookie_backend

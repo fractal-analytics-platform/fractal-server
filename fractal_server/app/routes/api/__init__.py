@@ -1,6 +1,7 @@
 """
 `api` module
 """
+
 from fastapi import APIRouter
 from fastapi import Depends
 

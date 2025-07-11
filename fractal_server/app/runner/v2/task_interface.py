@@ -55,7 +55,7 @@ class InitTaskOutput(BaseModel):
 
 
 def _cast_and_validate_TaskOutput(
-    task_output: dict[str, Any]
+    task_output: dict[str, Any],
 ) -> TaskOutput | None:
     try:
         validated_task_output = TaskOutput(**task_output)
