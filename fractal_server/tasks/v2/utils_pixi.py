@@ -3,6 +3,10 @@ from typing import TypedDict
 import tomli_w
 import tomllib
 
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
+
 SOURCE_DIR_NAME = "source_dir"
 
 
@@ -61,22 +65,36 @@ def simplify_pyproject_toml(
 
     # Parse TOML string
     data = tomllib.loads(original_toml_string)
+    try:
+        pixi_data = data["tool"]["pixi"]
+    except KeyError:
+        logger.warning(
+            "KeyError when looking for tool/pixi path. Return original value."
+        )
+        return original_toml_string
 
-    # Use a single platform
-    data["tool"]["pixi"]["workspace"]["platforms"] = [pixi_platform]
+    # Use a single platform (or skip, if not set)
+    try:
+        pixi_data["workspace"]["platforms"] = [pixi_platform]
+    except KeyError:
+        logger.info("KeyError for workspace/platforms - skip.")
 
-    # Keep a single environment
-    current_environments = data["tool"]["pixi"]["environments"]
-    data["tool"]["pixi"]["environments"] = {
-        key: value
-        for key, value in current_environments.items()
-        if key == pixi_environment
-    }
+    # Keep a single environment (or skip, if not set)
+    try:
+        current_environments = pixi_data["environments"]
+        pixi_data["environments"] = {
+            key: value
+            for key, value in current_environments.items()
+            if key == pixi_environment
+        }
+    except KeyError:
+        logger.info("KeyError for workspace/platforms - skip.")
 
     # Drop pixi.tasks
-    data["tool"]["pixi"].pop("tasks", None)
+    pixi_data.pop("tasks", None)
 
     # Prepare and validate new `pyprojectl.toml` contents
+    data["tool"]["pixi"] = pixi_data
     new_toml_string = tomli_w.dumps(data)
     tomllib.loads(new_toml_string)
 
