@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
+from ..utils_pixi import simplify_pyproject_toml
 from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import FractalUploadedFile
@@ -133,6 +134,25 @@ def collect_local_pixi(
                 )
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                # Simplify `pyproject.toml`
+                pyproject_toml_path = Path(
+                    task_group.path,
+                    SOURCE_DIR_NAME,
+                    "pyproject.toml",
+                )
+                with pyproject_toml_path.open() as f:
+                    pyproject_contents = f.read()
+                logger.debug(
+                    f"Read contents of {pyproject_toml_path.as_posix()}"
+                )
+                new_pyproject_contents = simplify_pyproject_toml(
+                    original_toml_string=pyproject_contents,
+                    pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
+                    pixi_platform=settings.pixi.DEFAULT_PLATFORM,
+                )
+                with pyproject_toml_path.open("w") as f:
+                    f.write(new_pyproject_contents)
 
                 # Run script 2
                 _customize_and_run_template(
