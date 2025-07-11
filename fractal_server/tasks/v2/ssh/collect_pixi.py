@@ -194,8 +194,7 @@ def collect_ssh_pixi(
 
                     # Simplify `pyproject.toml`
                     source_dir = Path(
-                        task_group.path,
-                        SOURCE_DIR_NAME,
+                        task_group.path, SOURCE_DIR_NAME
                     ).as_posix()
                     pyproject_toml_path = Path(source_dir, "pyproject.toml")
                     edit_pyproject_toml_in_place_ssh(
