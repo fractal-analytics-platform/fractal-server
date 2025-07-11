@@ -6,7 +6,6 @@ from fractal_server.ssh._fabric import FractalSSH
 
 
 def test_check_connection_failure():
-
     with Connection(
         host="localhost",
         user="invalid",

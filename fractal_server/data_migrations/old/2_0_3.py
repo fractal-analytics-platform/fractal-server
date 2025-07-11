@@ -29,7 +29,6 @@ def fix_db():
         )
 
     with next(get_sync_db()) as db:
-
         # V1 jobs
         stm = select(ApplyWorkflow)
         jobs_v1 = db.execute(stm).scalars().all()

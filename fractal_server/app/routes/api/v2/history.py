@@ -71,7 +71,6 @@ async def get_workflow_tasks_statuses(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-
     # Access control
     workflow = await _get_workflow_check_owner(
         project_id=project_id,
@@ -335,7 +334,6 @@ async def get_history_images(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> ImagePage:
-
     # Access control and object retrieval
     wftask = await get_wftask_check_owner(
         project_id=project_id,

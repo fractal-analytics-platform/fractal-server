@@ -15,9 +15,7 @@ async def test_status_legacy(
     dataset_factory_v2,
     job_factory_v2,
 ):
-
     async with MockCurrentUser() as user:
-
         task1 = await task_factory_v2(
             user_id=user.id, name="task1", command_non_parallel="echo"
         )

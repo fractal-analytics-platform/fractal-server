@@ -14,7 +14,6 @@ def test_parse_wheel_filename():
 
 
 def test_compare_package_names(caplog):
-
     compare_package_names(
         pkg_name_pip_show="aaa",
         pkg_name_task_group="aaa",

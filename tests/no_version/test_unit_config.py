@@ -554,7 +554,6 @@ def test_python_interpreters():
 
 
 def test_pixi_config(tmp_path):
-
     # Without Pixi config
     settings = Settings()
     assert settings.FRACTAL_PIXI_CONFIG_FILE is None

@@ -64,7 +64,6 @@ async def test_verify_workflow_and_dataset_access(
     dataset_factory_v2,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser() as user:
         project1 = await project_factory_v2(user=user)
         wf1 = await workflow_factory_v2(project_id=project1.id)

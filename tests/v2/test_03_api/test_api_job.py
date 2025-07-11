@@ -242,7 +242,6 @@ async def test_project_apply_missing_user_attributes(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=dict(something="else"),
     ) as user:
-
         # Create project, datasets, workflow, task, workflowtask
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
@@ -709,7 +708,6 @@ async def test_get_latest_jobs(
     tmp_path,
     MockCurrentUser,
 ):
-
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(

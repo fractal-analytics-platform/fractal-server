@@ -5,7 +5,6 @@ Revises: af8673379a5c
 Create Date: 2025-01-10 13:17:47.838607
 
 """
-
 import logging
 
 from alembic import op
@@ -34,7 +33,6 @@ TABLES_V1 = [
 
 
 def upgrade() -> None:
-
     logger = logging.getLogger("alembic.runtime.migration")
 
     target_metadata = SQLModel.metadata

@@ -155,7 +155,6 @@ def deactivate_ssh(
 
                     # Handle some specific cases for wheel-file case
                     if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
-
                         logger.info(
                             f"Handle specific cases for {task_group.origin=}."
                         )

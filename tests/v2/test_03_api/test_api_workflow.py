@@ -43,7 +43,6 @@ async def add_task(
 
 
 async def test_post_workflow(db, client, MockCurrentUser, project_factory_v2):
-
     async with MockCurrentUser() as user:
         project_id = None
         res = await client.post(
@@ -100,7 +99,6 @@ async def test_delete_workflow(
     THEN the Workflow and its associated WorkflowTasks are removed from the db
     """
     async with MockCurrentUser() as user:
-
         # Create project
         project = await project_factory_v2(user)
         p_id = project.id
@@ -238,7 +236,6 @@ async def test_get_workflow(
     await db.commit()
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
-
         project = await project_factory_v2(user_A)
         p_id = project.id
 
@@ -436,7 +433,6 @@ async def test_delete_workflow_with_job(
     THEN Job.workflow_id is set to None
     """
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
 
         # Create a workflow and a job in relationship with it

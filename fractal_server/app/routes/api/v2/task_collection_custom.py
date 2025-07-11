@@ -47,7 +47,6 @@ async def collect_task_custom(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
-
     settings = Inject(get_settings)
 
     # Validate query parameters related to user-group ownership
@@ -97,7 +96,6 @@ async def collect_task_custom(
                 )
 
     if task_collect.package_root is None:
-
         package_name_underscore = task_collect.package_name.replace("-", "_")
         # Note that python_command is then used as part of a subprocess.run
         # statement: be careful with mixing `'` and `"`.

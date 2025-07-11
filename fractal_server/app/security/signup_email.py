@@ -23,9 +23,9 @@ def mail_new_oauth_signup(msg: str, email_settings: MailSettings):
             for recipient in email_settings.recipients
         ]
     )
-    mail_msg["Subject"] = (
-        f"[Fractal, {email_settings.instance_name}] New OAuth signup"
-    )
+    mail_msg[
+        "Subject"
+    ] = f"[Fractal, {email_settings.instance_name}] New OAuth signup"
 
     with smtplib.SMTP(
         email_settings.smtp_server, email_settings.port

@@ -50,7 +50,6 @@ def bulk_update_status_of_history_unit(
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-
     len_history_unit_ids = len(history_unit_ids)
     logger.debug(
         f"[bulk_update_status_of_history_unit] {len_history_unit_ids=}."

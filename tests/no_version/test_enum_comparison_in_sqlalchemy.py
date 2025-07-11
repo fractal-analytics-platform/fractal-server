@@ -2,7 +2,6 @@
 These tests are related to issue
 https://github.com/fractal-analytics-platform/fractal-server/issues/2449
 """
-
 from enum import StrEnum
 
 from sqlmodel import select

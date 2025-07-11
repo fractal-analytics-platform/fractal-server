@@ -261,7 +261,6 @@ async def test_deactivate_local_github_dependency(
     db,
     first_user,
 ):
-
     path = tmp_path / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(

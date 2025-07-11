@@ -21,7 +21,6 @@ async def test_task_collection_custom(
     # ---
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-
         payload_name = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,

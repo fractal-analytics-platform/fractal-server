@@ -66,7 +66,6 @@ def deactivate_local_pixi(
                 return
 
             try:
-
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 

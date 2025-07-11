@@ -1,7 +1,6 @@
 """
 `api/v2` module
 """
-
 from fastapi import APIRouter
 
 from .dataset import router as dataset_router_v2

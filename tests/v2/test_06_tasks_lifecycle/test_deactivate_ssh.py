@@ -306,7 +306,6 @@ async def test_deactivate_ssh_github_dependency(
     fractal_ssh,
     ssh_config_dict,
 ):
-
     path = tmp777_path / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(

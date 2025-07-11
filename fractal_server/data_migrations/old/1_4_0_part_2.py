@@ -12,7 +12,6 @@ from fractal_server.app.models.v1.project import Project
 
 
 with next(get_sync_db()) as db:
-
     # Get list of jobs
     stm = select(ApplyWorkflow)
     applyworkflows = db.execute(stm)

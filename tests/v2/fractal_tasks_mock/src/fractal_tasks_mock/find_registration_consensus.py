@@ -24,7 +24,6 @@ def find_registration_consensus(
     for well, well_zarr_urls in well_to_zarr_urls.items():
         logging.info(f"[find_registration_consensus] {well=}")
         for zarr_url in well_zarr_urls:
-
             table_path = Path(zarr_url) / "registration_table"
             try:
                 with table_path.open("r") as f:

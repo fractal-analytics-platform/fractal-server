@@ -147,7 +147,6 @@ async def update_workflow(
 
     for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
-
             if await _workflow_has_submitted_job(
                 workflow_id=workflow_id, db=db
             ):
@@ -329,7 +328,6 @@ async def get_workflow_type_filters(
 
     response_items = []
     for wftask in workflow.task_list:
-
         # Compute input_type_filters, based on wftask and task manifest
         input_type_filters = merge_type_filters(
             wftask_type_filters=wftask.type_filters,

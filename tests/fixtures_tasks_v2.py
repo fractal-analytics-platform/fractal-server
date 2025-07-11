@@ -91,7 +91,6 @@ def fractal_tasks_mock_db(
     first_user: UserOAuth,
     default_user_group: UserGroup,
 ) -> dict[str, TaskV2]:
-
     task_group_obj = TaskGroupCreateV2(
         origin="other",
         pkg_name="fractal_tasks_mock",

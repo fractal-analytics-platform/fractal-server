@@ -20,7 +20,6 @@ async def test_fail_submit_workflows_wrong_IDs(
     db,
 ):
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(user_id=user.id)
@@ -69,7 +68,6 @@ async def test_fail_submit_workflows_wrong_backend(
     override_settings_factory(FRACTAL_RUNNER_BACKEND="invalid")
 
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
@@ -111,7 +109,6 @@ async def test_mkdir_error(
         FRACTAL_SLURM_WORKER_PYTHON=None,
     )
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
-
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
         workflow = await workflow_factory_v2(

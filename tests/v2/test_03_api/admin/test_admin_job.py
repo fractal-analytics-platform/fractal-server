@@ -34,7 +34,6 @@ async def test_view_job(
     job_factory_v2,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-
         project = await project_factory_v2(user)
 
         workflow1 = await workflow_factory_v2(project_id=project.id)
@@ -188,7 +187,6 @@ async def test_view_single_job(
     job_factory_v2,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-
         project = await project_factory_v2(user)
 
         workflow1 = await workflow_factory_v2(project_id=project.id)
@@ -215,7 +213,6 @@ async def test_view_single_job(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         res = await client.get(f"{PREFIX}/job/{job.id + 1}/")
         assert res.status_code == 404
 
@@ -364,7 +361,6 @@ async def test_stop_job(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         res = await registered_superuser_client.get(
             f"{PREFIX}/job/{job.id}/stop/",
         )
@@ -410,7 +406,6 @@ async def test_download_job_logs(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         # Write a log file in working_dir
         LOG_CONTENT = "This is a log\n"
         LOG_FILE = "log.txt"

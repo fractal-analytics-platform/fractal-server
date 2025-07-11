@@ -104,7 +104,6 @@ async def test_lifespan_shutdown_empty_jobs_list(
     caplog,
     db,
 ):
-
     monkeypatch.setattr(
         "fractal_server.config.Settings.check_runner", lambda x: x
     )
@@ -127,7 +126,6 @@ async def test_lifespan_shutdown_raise_error(
     caplog,
     db,
 ):
-
     monkeypatch.setattr(
         "fractal_server.config.Settings.check_runner", lambda x: x
     )
@@ -169,7 +167,6 @@ async def test_lifespan_slurm_ssh(
     testdata_path,
     db,
 ):
-
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON="/not/relevant",

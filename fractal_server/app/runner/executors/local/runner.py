@@ -28,7 +28,6 @@ def run_single_task(
     parameters: dict[str, Any],
     task_files: TaskFiles,
 ):
-
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
         json.dump(parameters, f)
@@ -169,7 +168,6 @@ class LocalRunner(BaseRunner):
         exceptions: dict[int, BaseException] = {}
 
         try:
-
             self.validate_multisubmit_parameters(
                 list_parameters=list_parameters,
                 task_type=task_type,
@@ -208,7 +206,6 @@ class LocalRunner(BaseRunner):
 
         # Execute tasks, in chunks of size `parallel_tasks_per_job`
         for ind_chunk in range(0, n_elements, parallel_tasks_per_job):
-
             list_parameters_chunk = list_parameters[
                 ind_chunk : ind_chunk + parallel_tasks_per_job
             ]

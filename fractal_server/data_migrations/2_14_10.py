@@ -15,7 +15,6 @@ def fix_db():
     logger.info("START execution of fix_db function")
 
     with next(get_sync_db()) as db:
-
         stm = select(HistoryRun).order_by(HistoryRun.id)
         history_runs = db.execute(stm).scalars().all()
 

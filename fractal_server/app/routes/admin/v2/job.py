@@ -111,7 +111,6 @@ async def view_single_job(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
-
     job = await db.get(JobV2, job_id)
     if not job:
         raise HTTPException(

@@ -17,14 +17,12 @@ from fractal_server.types import NonEmptyStr
 
 
 class WorkflowCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
 
 
 class WorkflowReadV2(BaseModel):
-
     id: int
     name: str
     project_id: int
@@ -42,7 +40,6 @@ class WorkflowReadV2WithWarnings(WorkflowReadV2):
 
 
 class WorkflowUpdateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None

@@ -18,7 +18,6 @@ async def test_delete_user(
     MockCurrentUser,
     project_factory_v2,
 ):
-
     assert len(await user_list(db)) == 0
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
@@ -51,7 +50,6 @@ async def test_delete_user(
 
 
 async def test_cascade_on_delete_user_settings(db):
-
     user = UserOAuth(
         email="user@fractal.xy",
         hashed_password="fake_hashed_password",

@@ -103,7 +103,6 @@ def test_run_command_through_FractalSSHList(
 
 
 def test_lock_FractalSSHList():
-
     # Create empty collection
     collection = FractalSSHList(timeout=0.1)
     assert not collection._lock.locked()

@@ -24,7 +24,6 @@ async def test_non_verified_user(client, MockCurrentUser):
 
 
 async def test_fail_wheel_file_and_version(client, testdata_path):
-
     local_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
@@ -55,7 +54,6 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
 async def test_task_get_list(
     db, client, task_factory_v2, MockCurrentUser, user_group_factory
 ):
-
     async with MockCurrentUser() as user:
         new_group = await user_group_factory(
             group_name="new_group", user_id=user.id
@@ -114,7 +112,6 @@ async def test_task_get_list(
 
 async def test_post_task(client, MockCurrentUser):
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-
         # Successful task creations
         task = TaskCreateV2(
             name="task_name",
@@ -236,7 +233,6 @@ async def test_post_task_user_group_id(
     monkeypatch,
     db,
 ):
-
     # Create a usergroup
     team1_group = UserGroup(name="team1")
     db.add(team1_group)
@@ -246,7 +242,6 @@ async def test_post_task_user_group_id(
     args = dict(command_non_parallel="cmd")
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-
         # No query parameter
         res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
@@ -302,7 +297,6 @@ async def test_patch_task_auth(
     MockCurrentUser,
     client,
 ):
-
     # POST-task as user_A
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
         user_A_id = user_A.id
@@ -342,7 +336,6 @@ async def test_patch_task(
     MockCurrentUser,
     client,
 ):
-
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)
     ) as user_A:

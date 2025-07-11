@@ -1,7 +1,6 @@
 """
 v2 `models` module
 """
-
 from ..linkuserproject import LinkUserProjectV2
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm

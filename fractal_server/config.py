@@ -100,7 +100,6 @@ class PixiSettings(BaseModel):
 
     @model_validator(mode="after")
     def check_pixi_settings(self):
-
         if self.default_version not in self.versions:
             raise ValueError(
                 f"Default version '{self.default_version}' not in "
@@ -110,7 +109,6 @@ class PixiSettings(BaseModel):
         pixi_base_dir = Path(self.versions[self.default_version]).parent
 
         for key, value in self.versions.items():
-
             pixi_path = Path(value)
 
             if pixi_path.parent != pixi_base_dir:
@@ -483,9 +481,9 @@ class Settings(BaseSettings):
             _info = sys.version_info
             current_version = f"{_info.major}_{_info.minor}"
             current_version_dot = f"{_info.major}.{_info.minor}"
-            values["FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"] = (
-                current_version_dot
-            )
+            values[
+                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
+            ] = current_version_dot
             logging.info(
                 "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
                 f"{current_version_dot}"

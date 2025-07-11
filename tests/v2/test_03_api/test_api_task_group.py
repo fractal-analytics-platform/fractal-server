@@ -41,7 +41,6 @@ async def test_get_single_task_group(
         assert res.status_code == 404
 
     async with MockCurrentUser():
-
         res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 403
         res = await client.get(f"{PREFIX}/{task.taskgroupv2_id + 1}/")
@@ -55,7 +54,6 @@ async def test_get_task_group_list(
     default_user_group,
     db,
 ):
-
     # Create a task-group that belongs to user1. This task group won't be part
     # of the `GET /api/v2/task-group/` response, because it has lower priority
     # than the same task group belonging to user2
@@ -191,7 +189,6 @@ async def test_get_task_group_list(
         assert len(res.json()) == 2
 
     async with MockCurrentUser(user_kwargs={"id": user2.id}):
-
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -307,7 +304,6 @@ async def test_patch_task_group(
         assert "already owns a task group" in res.json()["detail"]
 
     async with MockCurrentUser():
-
         # Unauthorized
         res = await client.patch(
             f"{PREFIX}/{taskA.taskgroupv2_id}/",

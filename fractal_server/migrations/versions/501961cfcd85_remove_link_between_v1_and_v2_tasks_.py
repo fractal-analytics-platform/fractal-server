@@ -5,7 +5,6 @@ Revises: 5bf02391cfef
 Create Date: 2024-09-09 14:15:34.415926
 
 """
-
 import sqlalchemy as sa
 from alembic import op
 
@@ -19,7 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-
     with op.batch_alter_table("workflowtaskv2") as batch_op:
         batch_op.alter_column(
             "task_id", existing_type=sa.INTEGER(), nullable=False

@@ -20,7 +20,6 @@ async def test_import_export(
     testdata_path,
     db,
 ):
-
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
         workflow_from_file = json.load(f)
 

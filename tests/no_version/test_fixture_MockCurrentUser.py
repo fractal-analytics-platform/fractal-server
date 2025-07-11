@@ -9,7 +9,6 @@ async def test_MockCurrentUser_fixture(
     username,
     slurm_user,
 ):
-
     user_kwargs = dict(username=username)
     user_settings_dict = dict(slurm_user=slurm_user)
     async with MockCurrentUser(

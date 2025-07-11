@@ -96,7 +96,6 @@ async def check_non_processed_images(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_task_id=workflowtask_id,

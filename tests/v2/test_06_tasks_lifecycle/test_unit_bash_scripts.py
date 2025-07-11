@@ -190,7 +190,6 @@ def test_template_2(
 def test_template_4_missing_manifest(
     tmp_path, testdata_path, current_py_version
 ):
-
     path = tmp_path / "unit_templates"
     venv_path = path / "venv_miss_manifest"
     install_string_miss = testdata_path.parent / (

@@ -62,7 +62,6 @@ async def test_sync_db(db_sync, db):
 
 
 async def test_DB_class_async():
-
     try:
         assert DB._engine_async
         delattr(DB, "_engine_async")

@@ -9,14 +9,12 @@ from fractal_server.types import NonEmptyStr
 
 
 class ProjectCreateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
 
 
 class ProjectReadV2(BaseModel):
-
     id: int
     name: str
     timestamp_created: AwareDatetime
@@ -27,7 +25,6 @@ class ProjectReadV2(BaseModel):
 
 
 class ProjectUpdateV2(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None

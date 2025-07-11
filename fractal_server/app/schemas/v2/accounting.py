@@ -6,7 +6,6 @@ from pydantic.types import AwareDatetime
 
 
 class AccountingRecordRead(BaseModel):
-
     id: int
     user_id: int
     timestamp: AwareDatetime

@@ -333,7 +333,6 @@ async def _workflow_has_submitted_job(
     workflow_id: int,
     db: AsyncSession,
 ) -> bool:
-
     res = await db.execute(
         select(JobV2.id)
         .where(JobV2.status == JobStatusTypeV2.SUBMITTED)

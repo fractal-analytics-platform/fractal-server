@@ -9,7 +9,6 @@ async def test_get_python_interpreter_v2(
     override_settings_factory,
     tmp_path,
 ):
-
     MOCK_PYTHON_3_9 = (tmp_path / "python3.9").as_posix()
     MOCK_PYTHON_3_12 = (tmp_path / "python3.12").as_posix()
     override_settings_factory(

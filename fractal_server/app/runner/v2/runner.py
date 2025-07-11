@@ -415,7 +415,6 @@ def execute_tasks_v2(
             # Write current dataset images into the database.
             db_dataset = db.get(DatasetV2, dataset.id)
             if ENRICH_IMAGES_WITH_STATUS:
-
                 db_dataset.images = _remove_status_from_attributes(tmp_images)
             else:
                 db_dataset.images = tmp_images

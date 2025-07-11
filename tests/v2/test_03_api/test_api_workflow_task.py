@@ -876,7 +876,6 @@ async def test_replace_task_in_workflowtask(
     db,
 ):
     async with MockCurrentUser() as user:
-
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         assert workflow.task_list == []

@@ -12,7 +12,6 @@ FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 @pytest.fixture(scope="function")
 async def set_test_db(tmp_path):
-
     if not tmp_path.exists():
         tmp_path.mkdir(parents=True)
 

@@ -193,7 +193,6 @@ def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
         f"with a sleep interval of {interval} seconds."
     )
     for attempt in range(max_attempts):
-
         res = subprocess.run(
             shlex.split(command),
             capture_output=True,

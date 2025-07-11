@@ -2,7 +2,6 @@
 Loop over jobs.
 If the corresponding project still exists, set the project_dump.
 """
-
 import json
 import logging
 from datetime import datetime

@@ -52,7 +52,6 @@ async def prepare_data():
 
 def function1(dataset_id, job_id):
     with next(get_sync_db()) as db_sync:
-
         dataset = db_sync.get(DatasetV2, dataset_id)
         dataset.name = "NEW NAME"
         db_sync.merge(dataset)

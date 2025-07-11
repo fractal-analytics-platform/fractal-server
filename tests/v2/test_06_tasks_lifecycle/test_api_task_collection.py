@@ -93,7 +93,6 @@ async def test_task_collection_from_pypi_api_only(
     package_version,
     monkeypatch,
 ):
-
     import fractal_server.app.routes.api.v2.task_collection  # noqa
 
     def fake_collect_local(*args, **kwargs) -> None:
@@ -158,7 +157,6 @@ async def test_task_collection_from_pypi(
     tmp_path: Path,
     current_py_version,
 ):
-
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included

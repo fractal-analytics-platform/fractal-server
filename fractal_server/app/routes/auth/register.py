@@ -1,7 +1,6 @@
 """
 Definition of `/auth/register/` routes.
 """
-
 from fastapi import APIRouter
 from fastapi import Depends
 

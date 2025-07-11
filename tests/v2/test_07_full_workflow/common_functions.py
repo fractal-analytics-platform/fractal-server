@@ -262,7 +262,6 @@ async def full_workflow(
         }
 
         for wftask_id in [wftask0_id, wftask1_id, wftask2_id]:
-
             # GET history runs
             query_wft = f"dataset_id={dataset_id}&workflowtask_id={wftask_id}"
             this_prefix = f"api/v2/project/{project_id}/status"

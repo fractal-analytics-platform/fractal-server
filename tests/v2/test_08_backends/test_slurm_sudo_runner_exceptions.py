@@ -23,7 +23,6 @@ async def test_submit_exception(
     monkey_slurm,
     valid_user_id,
 ):
-
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     parameters = dict(zarr_urls=ZARR_URLS)
@@ -34,7 +33,6 @@ async def test_submit_exception(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         runner.jobs = {"0": "fake"}
 
         result, exception = runner.submit(
@@ -80,7 +78,6 @@ async def test_multisubmit_exception_submission(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         results, exceptions = runner.multisubmit(
             base_command="true",
             workflow_task_order=0,
@@ -132,7 +129,6 @@ async def test_multisubmit_exception_fetch_artifacts(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         runner._fetch_artifacts = fake_fetch_artifacts
 
         results, exceptions = runner.multisubmit(
@@ -184,7 +180,6 @@ async def test_multisubmit_exception_postprocess_single_task(
         root_dir_remote=tmp777_path / "user",
         poll_interval=0,
     ) as runner:
-
         runner._postprocess_single_task = fake_postprocess_single_task
 
         results, exceptions = runner.multisubmit(

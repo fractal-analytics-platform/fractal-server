@@ -133,7 +133,6 @@ async def db_create_tables(override_settings):
 
 @pytest.fixture
 async def db(db_create_tables):
-
     async for session in get_async_db():
         yield session
 
@@ -178,7 +177,6 @@ async def client(
 async def registered_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-
     EMAIL = "test@test.com"
     PWD = "12345"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
@@ -254,7 +252,6 @@ async def MockCurrentUser(app, db, default_user_group):
         previous_dependencies: dict = field(default_factory=dict)
 
         async def __aenter__(self):
-
             if self.user_kwargs is not None and "id" in self.user_kwargs:
                 db_user = await db.get(
                     UserOAuth, self.user_kwargs["id"], populate_existing=True
@@ -308,20 +305,20 @@ async def MockCurrentUser(app, db, default_user_group):
             # Find out which dependencies should be overridden, and store their
             # pre-override value
             if self.user.is_active:
-                self.previous_dependencies[current_active_user] = (
-                    app.dependency_overrides.get(current_active_user, None)
-                )
+                self.previous_dependencies[
+                    current_active_user
+                ] = app.dependency_overrides.get(current_active_user, None)
             if self.user.is_active and self.user.is_superuser:
-                self.previous_dependencies[current_active_superuser] = (
-                    app.dependency_overrides.get(
-                        current_active_superuser, None
-                    )
+                self.previous_dependencies[
+                    current_active_superuser
+                ] = app.dependency_overrides.get(
+                    current_active_superuser, None
                 )
             if self.user.is_active and self.user.is_verified:
-                self.previous_dependencies[current_active_verified_user] = (
-                    app.dependency_overrides.get(
-                        current_active_verified_user, None
-                    )
+                self.previous_dependencies[
+                    current_active_verified_user
+                ] = app.dependency_overrides.get(
+                    current_active_verified_user, None
                 )
 
             # Override dependencies in the FastAPI app
@@ -377,7 +374,6 @@ async def user_group_factory(db: AsyncSession):
         *other_users_id: list[int],
         db: AsyncSession = db,
     ):
-
         user_group = UserGroup(name=group_name)
         db.add(user_group)
         await db.commit()

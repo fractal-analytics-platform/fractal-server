@@ -43,7 +43,6 @@ async def get_task_group_activity_list(
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
-
     stm = select(TaskGroupActivityV2)
     if task_group_activity_id is not None:
         stm = stm.where(TaskGroupActivityV2.id == task_group_activity_id)
@@ -73,7 +72,6 @@ async def query_task_group(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
-
     task_group = await db.get(TaskGroupV2, task_group_id)
     if task_group is None:
         raise HTTPException(
@@ -96,7 +94,6 @@ async def query_task_group_list(
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
-
     stm = select(TaskGroupV2)
 
     if user_group_id is not None and private is True:

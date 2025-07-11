@@ -107,7 +107,6 @@ class TaskGroupV2(SQLModel, table=True):
 
 
 class TaskGroupActivityV2(SQLModel, table=True):
-
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id")
     taskgroupv2_id: int | None = Field(
