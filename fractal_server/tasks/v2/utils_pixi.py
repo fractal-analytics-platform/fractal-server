@@ -1,5 +1,12 @@
 from typing import TypedDict
 
+import tomli_w
+import tomllib
+
+from fractal_server.logger import set_logger
+
+logger = set_logger(__name__)
+
 SOURCE_DIR_NAME = "source_dir"
 
 
@@ -36,3 +43,63 @@ def parse_collect_stdout(stdout: str) -> ParsedOutput:
             attribute_value = actual_line.split(search)[-1].strip(" ")
             attributes[attribute_name] = attribute_value
     return attributes
+
+
+def simplify_pyproject_toml(
+    *,
+    original_toml_string: str,
+    pixi_environment: str,
+    pixi_platform: str,
+) -> str:
+    """
+    Simplify `pyproject.toml` contents to make `pixi install` less heavy.
+
+    Args:
+        original_toml_string: Original `pyproject.toml` contents
+        environment: Name of the pixi environment to use (e.g. `default`).
+        target_platform: Name of the platform (e.g. `linux-64`)
+
+    Returns:
+        New `pyproject.toml` contents
+    """
+
+    # Parse TOML string
+    data = tomllib.loads(original_toml_string)
+    try:
+        pixi_data = data["tool"]["pixi"]
+    except KeyError:
+        logger.warning(
+            "KeyError when looking for tool/pixi path. Return original value."
+        )
+        return original_toml_string
+
+    # Use a single platform (or skip, if not set)
+    try:
+        pixi_data["workspace"]["platforms"] = [pixi_platform]
+    except KeyError:
+        logger.info("KeyError for workspace/platforms - skip.")
+
+    # Keep a single environment (or skip, if not set)
+    try:
+        current_environments = pixi_data["environments"]
+        pixi_data["environments"] = {
+            key: value
+            for key, value in current_environments.items()
+            if key == pixi_environment
+        }
+        if pixi_data["environments"] == {}:
+            raise ValueError(
+                f"No '{pixi_environment}' pixi environment found."
+            )
+    except KeyError:
+        logger.info("KeyError for workspace/platforms - skip.")
+
+    # Drop pixi.tasks
+    pixi_data.pop("tasks", None)
+
+    # Prepare and validate new `pyprojectl.toml` contents
+    data["tool"]["pixi"] = pixi_data
+    new_toml_string = tomli_w.dumps(data)
+    tomllib.loads(new_toml_string)
+
+    return new_toml_string

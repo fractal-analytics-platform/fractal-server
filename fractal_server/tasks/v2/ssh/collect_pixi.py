@@ -9,6 +9,7 @@ from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
 from ._utils import check_ssh_or_fail_and_cleanup
+from ._utils import edit_pyproject_toml_in_place_ssh
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -191,6 +192,16 @@ def collect_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    # Simplify `pyproject.toml`
+                    source_dir = Path(
+                        task_group.path, SOURCE_DIR_NAME
+                    ).as_posix()
+                    pyproject_toml_path = Path(source_dir, "pyproject.toml")
+                    edit_pyproject_toml_in_place_ssh(
+                        fractal_ssh=fractal_ssh,
+                        pyproject_toml_path=pyproject_toml_path,
+                    )
+
                     stdout = _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
@@ -218,9 +229,6 @@ def collect_ssh_pixi(
                         "project_python_wrapper"
                     ]
 
-                    source_dir = Path(
-                        task_group.path, SOURCE_DIR_NAME
-                    ).as_posix()
                     fractal_ssh.run_command(cmd=f"chmod -R 755 {source_dir}")
 
                     # Read and validate remote manifest file

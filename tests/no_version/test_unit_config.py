@@ -571,6 +571,8 @@ def test_pixi_config(tmp_path):
         "TOKIO_WORKER_THREADS": 2,
         "PIXI_CONCURRENT_SOLVES": 4,
         "PIXI_CONCURRENT_DOWNLOADS": 4,
+        "DEFAULT_ENVIRONMENT": "default",
+        "DEFAULT_PLATFORM": "linux-64",
     }
     pixi_config_file = tmp_path / "pixi_config.json"
     with pixi_config_file.open("w") as f:

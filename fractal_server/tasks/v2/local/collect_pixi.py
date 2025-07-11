@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
+from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -134,6 +135,11 @@ def collect_local_pixi(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
+                # Simplify `pyproject.toml`
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+                pyproject_toml_path = Path(source_dir, "pyproject.toml")
+                edit_pyproject_toml_in_place_local(pyproject_toml_path)
+
                 # Run script 2
                 _customize_and_run_template(
                     template_filename="pixi_2_install.sh",
@@ -160,7 +166,6 @@ def collect_local_pixi(
                 ]
 
                 # Make task folder 755
-                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
                 command = f"chmod -R 755 {source_dir}"
                 execute_command_sync(
                     command=command,
@@ -205,11 +210,7 @@ def collect_local_pixi(
                     "Add env_info, venv_size and venv_file_number "
                     "to TaskGroupV2 - start"
                 )
-                with Path(
-                    task_group.path,
-                    SOURCE_DIR_NAME,
-                    "pixi.lock",
-                ).open() as f:
+                with Path(source_dir, "pixi.lock").open() as f:
                     pixi_lock_contents = f.read()
 
                 # NOTE: see issue 2626 about whether to keep `pixi.lock` files

@@ -4,11 +4,17 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..utils_background import fail_and_cleanup
+from ..utils_pixi import simplify_pyproject_toml
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_templates import customize_template
+
+logger = set_logger(__name__)
 
 
 def _customize_and_run_template(
@@ -126,3 +132,35 @@ def check_ssh_or_fail_and_cleanup(
             db=db,
         )
         return False
+
+
+def edit_pyproject_toml_in_place_ssh(
+    *,
+    fractal_ssh: FractalSSH,
+    pyproject_toml_path: Path,
+) -> None:
+    """
+    Wrapper of `simplify_pyproject_toml`, with I/O.
+    """
+
+    # Read `pyproject.toml`
+    pyproject_contents = fractal_ssh.read_remote_text_file(
+        pyproject_toml_path.as_posix()
+    )
+
+    # Simplify contents
+    settings = Inject(get_settings)
+    new_pyproject_contents = simplify_pyproject_toml(
+        original_toml_string=pyproject_contents,
+        pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
+        pixi_platform=settings.pixi.DEFAULT_PLATFORM,
+    )
+    # Write new `pyproject.toml`
+    fractal_ssh.write_remote_file(
+        path=pyproject_toml_path.as_posix(),
+        content=new_pyproject_contents,
+    )
+    logger.debug(
+        f"Replaced remote {pyproject_toml_path.as_posix()} "
+        "with simplified version."
+    )

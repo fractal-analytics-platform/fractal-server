@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.4
+
+* Task lifecycle:
+    * Edit `pyproject.toml` in-place before running `pixi install` (\#2696).
+
 # 2.15.3
 
 * API:
