@@ -151,6 +151,11 @@ async def update_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
+    if job.status != JobStatusTypeV2.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Job {job_id} has status {job.status=} != 'submitted'.",
+        )
 
     if job_update.status != JobStatusTypeV2.FAILED:
         raise HTTPException(

@@ -269,6 +269,14 @@ async def test_patch_job(
             workflow_id=workflow.id,
             status=ORIGINAL_STATUS,
         )
+        job_done = await job_factory_v2(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            status=JobStatusTypeV2.DONE,
+        )
+
         hr = HistoryRun(
             dataset_id=dataset.id,
             job_id=job.id,
@@ -324,6 +332,12 @@ async def test_patch_job(
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{job.id}/",
                 json={"status": "done"},
+            )
+            assert res.status_code == 422
+            # Fail because job is not in submitted state
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/job/{job_done.id}/",
+                json={"status": NEW_STATUS},
             )
             assert res.status_code == 422
             # Fail due to non-existing job
