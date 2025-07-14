@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.5 (unreleased)
+
+* API:
+    * Update `HistoryRun` and `HistoryUnit`s statuses when `Workflow`s are manually labeled as failed (\#2705).
+
 # 2.15.4
 
 * Task lifecycle:
