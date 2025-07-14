@@ -12,12 +12,15 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import JobUpdateV2
@@ -148,6 +151,11 @@ async def update_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
+    if job.status != JobStatusTypeV2.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Job {job_id} has status {job.status=} != 'submitted'.",
+        )
 
     if job_update.status != JobStatusTypeV2.FAILED:
         raise HTTPException(
@@ -164,6 +172,25 @@ async def update_job(
         f"{job.log or ''}\nThis job was manually marked as "
         f"'{JobStatusTypeV2.FAILED}' by an admin ({timestamp.isoformat()}).",
     )
+
+    res = await db.execute(
+        select(HistoryRun)
+        .where(HistoryRun.job_id == job_id)
+        .order_by(HistoryRun.timestamp_started.desc())
+        .limit(1)
+    )
+    latest_run = res.scalar_one_or_none()
+    if latest_run is not None:
+        setattr(latest_run, "status", HistoryUnitStatus.FAILED)
+        res = await db.execute(
+            select(HistoryUnit).where(
+                HistoryUnit.history_run_id == latest_run.id
+            )
+        )
+        history_units = res.scalars().all()
+        for history_unit in history_units:
+            setattr(history_unit, "status", HistoryUnitStatus.FAILED)
+
     await db.commit()
     await db.refresh(job)
     await db.close()
