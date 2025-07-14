@@ -176,6 +176,7 @@ async def update_job(
     )
     latest_run = res.scalar_one_or_none()
     if latest_run is not None:
+        setattr(latest_run, "status", HistoryUnitStatus.FAILED)
         res = await db.execute(
             select(HistoryUnit).where(
                 HistoryUnit.history_run_id == latest_run.id

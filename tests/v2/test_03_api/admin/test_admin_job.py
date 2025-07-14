@@ -6,7 +6,10 @@ from zipfile import ZipFile
 
 import pytest
 from devtools import debug
+from sqlmodel import select
 
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -266,6 +269,30 @@ async def test_patch_job(
             workflow_id=workflow.id,
             status=ORIGINAL_STATUS,
         )
+        hr = HistoryRun(
+            dataset_id=dataset.id,
+            job_id=job.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            num_available_images=0,
+            status=ORIGINAL_STATUS,
+        )
+        db.add(hr)
+        await db.commit()
+        await db.refresh(hr)
+        db.add_all(
+            [
+                HistoryUnit(
+                    history_run_id=hr.id,
+                    logfile=f"logfile_{i}",
+                    status=ORIGINAL_STATUS,
+                )
+                for i in range(3)
+            ]
+        )
+        await db.commit()
+        db.expunge_all()
+
         # Read job as job owner (standard user)
         res = await client.get(f"/api/v2/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
@@ -305,6 +332,7 @@ async def test_patch_job(
                 json={"status": NEW_STATUS},
             )
             assert res.status_code == 404
+
             # Successfully apply patch
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{job.id}/",
@@ -318,6 +346,21 @@ async def test_patch_job(
                 "This job was manually marked as 'failed' by an admin"
                 in res.json()["log"]
             )
+
+            res = await db.execute(
+                select(HistoryRun)
+                .where(HistoryRun.job_id == job.id)
+                .order_by(HistoryRun.timestamp_started.desc())
+            )
+            history_run = res.scalar_one_or_none()
+            assert history_run.status == NEW_STATUS
+            res = await db.execute(
+                select(HistoryUnit).where(
+                    HistoryUnit.history_run_id == history_run.id
+                )
+            )
+            for history_units in res.scalars().all():
+                assert history_units.status == NEW_STATUS
 
         # Read job as job owner (standard user)
         res = await client.get(f"/api/v2/project/{project.id}/job/{job.id}/")
