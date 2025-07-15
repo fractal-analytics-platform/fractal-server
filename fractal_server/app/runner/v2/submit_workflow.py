@@ -25,7 +25,6 @@ from ...models.v2 import JobV2
 from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
-from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
@@ -310,19 +309,6 @@ def submit_workflow(
         job.log = logs
         db_sync.merge(job)
         db_sync.commit()
-
-    except TaskExecutionError as e:
-        logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
-        logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
-
-        exception_args_string = "\n".join(e.args)
-        log_msg = (
-            f"TASK ERROR: "
-            f"Task name: {e.task_name}, "
-            f"position in Workflow: {e.workflow_task_order}\n"
-            f"TRACEBACK:\n{exception_args_string}"
-        )
-        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
 
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
