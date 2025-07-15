@@ -190,6 +190,7 @@ def reactivate_ssh_pixi(
                     stdout = _customize_and_run_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
+                        login=True,
                         **common_args,
                     )
                     logger.debug(f"STDOUT: {stdout}")
