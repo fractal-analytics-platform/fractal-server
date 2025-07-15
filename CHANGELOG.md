@@ -3,6 +3,7 @@
 # 2.15.6 (unreleased)
 
 * Runner:
+    * Remove obsolete `JobExecutionError` attributes and `TaskExecutionError` handling (\#2708).
     * Always interpret `needs_gpu` string as a boolean (\#2706).
 
 # 2.15.5
