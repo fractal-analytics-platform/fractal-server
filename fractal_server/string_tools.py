@@ -60,3 +60,26 @@ def validate_cmd(
             f"'{forbidden}'\n"
             f"Provided {attribute_name.lower()}: '{command}'."
         )
+
+
+def interpret_as_bool(value: bool | str) -> bool:
+    """
+    Interpret a boolean or a string representation of a boolean as a boolean
+    value.
+
+    Accepts either a boolean (`True` or `False`) or a case-insensitive string
+    representation of a boolean ("true" or "false").
+    Returns the corresponding boolean value.
+    """
+    if isinstance(value, bool):
+        return value
+    elif isinstance(value, str):
+        value_lower = value.lower()
+        if value_lower == "true":
+            return True
+        elif value_lower == "false":
+            return False
+        else:
+            raise ValueError("String must be 'true' or 'false'.")
+    else:
+        raise TypeError(f"Expected bool or str, got {type(value)}: '{value}'.")

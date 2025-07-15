@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.6 (unreleased)
+
+* Runner:
+    * Always interpret `needs_gpu` string as a boolean (\#2706).
+
 # 2.15.5
 
 * API:

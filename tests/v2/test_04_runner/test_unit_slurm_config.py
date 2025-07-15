@@ -187,7 +187,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     meta = dict(
         cpus_per_task=CPUS_PER_TASK_OVERRIDE,
         mem=MEM_OVERRIDE,
-        needs_gpu=True,
+        needs_gpu="tRuE",
         constraint=CUSTOM_CONSTRAINT,
         extra_lines=CUSTOM_EXTRA_LINES,
     )

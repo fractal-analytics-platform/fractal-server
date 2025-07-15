@@ -8,6 +8,7 @@ from ._slurm_config import logger
 from ._slurm_config import SlurmConfig
 from ._slurm_config import SlurmConfigError
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.string_tools import interpret_as_bool
 
 
 def get_slurm_config_internal(
@@ -86,7 +87,7 @@ def get_slurm_config_internal(
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.meta_parallel).
     if wftask_meta is not None:
-        needs_gpu = wftask_meta.get("needs_gpu", False)
+        needs_gpu = interpret_as_bool(wftask_meta.get("needs_gpu", False))
     else:
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
