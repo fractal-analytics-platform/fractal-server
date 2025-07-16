@@ -26,7 +26,7 @@ def _customize_and_run_template(
     fractal_ssh: FractalSSH,
     script_dir_remote: str,
     logger_name: str,
-    login: bool = False,
+    login_shell: bool = False,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -39,6 +39,7 @@ def _customize_and_run_template(
         prefix: Prefix for the script filename.
         fractal_ssh: FractalSSH object
         script_dir_remote: Remote scripts directory
+        login_shell: If `True`, use `bash --login` for remote script execution.
     """
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
@@ -68,8 +69,8 @@ def _customize_and_run_template(
     )
 
     # Execute script remotely
-    login_option = " --login " if login else " "
-    cmd = f"bash{login_option}{script_path_remote}"
+    bash = "bash --login " if login_shell else "bash"
+    cmd = f"{bash} {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
     stdout = fractal_ssh.run_command(cmd=cmd)
 
