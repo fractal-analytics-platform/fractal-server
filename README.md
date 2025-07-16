@@ -166,7 +166,7 @@
 | fractal\_server/tasks/v2/utils\_background.py                                   |       68 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_database.py                                     |       21 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_package\_names.py                               |       23 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/tasks/v2/utils\_pixi.py                                         |       48 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/tasks/v2/utils\_pixi.py                                         |       52 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_python\_interpreter.py                          |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_templates.py                                    |       45 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/types/\_\_init\_\_.py                                           |       30 |        0 |        0 |        0 |    100% |           |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9302** |  **268** | **1744** |  **101** | **96%** |           |
+|                                                                       **TOTAL** | **9306** |  **268** | **1744** |  **101** | **96%** |           |
 
 
 ## Setup coverage badge
