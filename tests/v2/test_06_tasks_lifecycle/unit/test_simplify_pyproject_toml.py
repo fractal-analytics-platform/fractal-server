@@ -24,7 +24,7 @@ def test_simplify_pyproject_toml():
     )
     assert old == new
 
-    # Only platforms update
+    # Only workspace/platforms update
     old = tomli_w.dumps(
         dict(
             tool=dict(
@@ -45,6 +45,42 @@ def test_simplify_pyproject_toml():
             tool=dict(
                 pixi=dict(
                     workspace=dict(
+                        platforms=[
+                            "linux-64",
+                        ]
+                    )
+                )
+            )
+        )
+    )
+    new = simplify_pyproject_toml(
+        original_toml_string=old,
+        pixi_environment="x",
+        pixi_platform="linux-64",
+    )
+    assert new == expected_new
+
+    # Only project/platforms update
+    old = tomli_w.dumps(
+        dict(
+            tool=dict(
+                pixi=dict(
+                    project=dict(
+                        platforms=[
+                            "a",
+                            "b",
+                            "c",
+                        ]
+                    )
+                )
+            )
+        )
+    )
+    expected_new = tomli_w.dumps(
+        dict(
+            tool=dict(
+                pixi=dict(
+                    project=dict(
                         platforms=[
                             "linux-64",
                         ]

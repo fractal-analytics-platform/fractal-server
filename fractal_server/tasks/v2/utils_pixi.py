@@ -78,6 +78,10 @@ def simplify_pyproject_toml(
         pixi_data["workspace"]["platforms"] = [pixi_platform]
     except KeyError:
         logger.info("KeyError for workspace/platforms - skip.")
+    try:
+        pixi_data["project"]["platforms"] = [pixi_platform]
+    except KeyError:
+        logger.info("KeyError for project/platforms - skip.")
 
     # Keep a single environment (or skip, if not set)
     try:
