@@ -1,10 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.6 (unreleased)
+# 2.15.6
 
 * Runner:
     * Remove obsolete `JobExecutionError` attributes and `TaskExecutionError` handling (\#2708).
     * Always interpret `needs_gpu` string as a boolean (\#2706).
+* Task life cycle:
+    * Use `bash --login` for `pixi install` execution over SSH (\#2709).
 
 # 2.15.5
 
