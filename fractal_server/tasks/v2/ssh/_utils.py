@@ -69,7 +69,7 @@ def _customize_and_run_template(
     )
 
     # Execute script remotely
-    bash = "bash --login " if login_shell else "bash"
+    bash = "bash --login" if login_shell else "bash"
     cmd = f"{bash} {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
     stdout = fractal_ssh.run_command(cmd=cmd)
