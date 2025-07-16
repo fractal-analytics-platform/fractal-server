@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.7 (unreleased)
+
+* Task life cycle:
+    * Also edit `tool.pixi.project.platforms` section of `pyproject.toml`, for `pixi`-based task collection (\#2711).
+
 # 2.15.6
 
 * Runner:
