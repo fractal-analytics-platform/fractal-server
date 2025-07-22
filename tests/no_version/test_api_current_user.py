@@ -1,3 +1,4 @@
+import pytest
 from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
@@ -7,8 +8,7 @@ PREFIX = "/auth/current-user/"
 
 
 async def test_get_current_user(
-    client,
-    MockCurrentUser,
+    client, registered_client, registered_superuser_client
 ):
     # Anonymous user
     res = await client.get(PREFIX)
@@ -16,19 +16,17 @@ async def test_get_current_user(
     assert res.status_code == 401
 
     # Registered non-superuser user
-    async with MockCurrentUser():
-        res = await client.get(PREFIX)
-        debug(res.json())
-        assert res.status_code == 200
-        assert not res.json()["is_superuser"]
-        assert res.json()["oauth_accounts"] == []
+    res = await registered_client.get(PREFIX)
+    debug(res.json())
+    assert res.status_code == 200
+    assert not res.json()["is_superuser"]
+    assert res.json()["oauth_accounts"] == []
 
     # Registered superuser
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
-        res = await client.get(PREFIX)
-        debug(res.json())
-        assert res.status_code == 200
-        assert res.json()["is_superuser"]
+    res = await registered_superuser_client.get(PREFIX)
+    debug(res.json())
+    assert res.status_code == 200
+    assert res.json()["is_superuser"]
 
 
 async def test_get_current_user_group_ids_names_order(
@@ -84,67 +82,114 @@ async def test_get_current_user_group_ids_names_order(
         ]
 
 
-async def test_patch_current_user_response(
-    MockCurrentUser,
-    client,
-):
-    async with MockCurrentUser():
-        res = await client.get(f"{PREFIX}?group_ids_names=True")
-        pre_patch_user = res.json()
+async def test_patch_current_user_response(registered_client):
+    res = await registered_client.get(f"{PREFIX}?group_ids_names=True")
+    pre_patch_user = res.json()
 
-        # Successful API call with empty payload
-        res = await client.patch(PREFIX, json={})
-        assert res.status_code == 200
-        assert res.json() == pre_patch_user
+    # Successful API call with empty payload
+    res = await registered_client.patch(PREFIX, json={})
+    assert res.status_code == 200
+    assert res.json() == pre_patch_user
 
 
-async def test_patch_current_user_no_extra(MockCurrentUser, client):
+async def test_patch_current_user_no_extra(registered_client):
     """
     Test that the PATCH-current-user endpoint fails when extra attributes are
     provided.
     """
-    async with MockCurrentUser():
-        res = await client.patch(PREFIX, json={})
-        assert res.status_code == 200
-        res = await client.patch(PREFIX, json={"foo": "bar"})
-        assert res.status_code == 422
+    res = await registered_client.patch(PREFIX, json={})
+    assert res.status_code == 200
+    res = await registered_client.patch(PREFIX, json={"foo": "bar"})
+    assert res.status_code == 422
 
 
-async def test_patch_current_user_password_fails(MockCurrentUser, client):
+async def test_patch_current_user_password_fails(registered_client, client):
     """
     This test exists for the same reason that test_patch_current_user_password
     is skipped.
     """
-    async with MockCurrentUser():
-        res = await client.patch(PREFIX, json={"password": "something"})
-        assert res.status_code == 422
+    res = await registered_client.patch(PREFIX, json={"password": "something"})
+    assert res.status_code == 422
 
 
-async def test_get_and_patch_current_user_settings(MockCurrentUser, client):
-    async with MockCurrentUser(user_settings_dict=dict(slurm_user=None)):
-        res = await client.get(f"{PREFIX}settings/")
-        assert res.status_code == 200
-        for k, v in res.json().items():
-            if k == "slurm_accounts":
-                assert v == []
-            else:
-                assert v is None
+@pytest.mark.skip(reason="Users cannot edit their own password for the moment")
+async def test_patch_current_user_password(registered_client, client):
+    """
+    Test several scenarios for updating `password` for the current user.
+    """
+    res = await registered_client.get(PREFIX)
+    user_email = res.json()["email"]
 
-        patch = dict(slurm_accounts=["foo", "bar"])
-        res = await client.patch(f"{PREFIX}settings/", json=patch)
-        assert res.status_code == 200
+    # Fail due to null password
+    res = await registered_client.patch(PREFIX, json={"password": None})
+    assert res.status_code == 422
 
-        # Assert patch was successful
-        res = await client.get(f"{PREFIX}settings/")
-        for k, v in res.json().items():
-            if k in patch:
-                assert v == patch[k]
-            else:
-                assert v is None
+    # Fail due to empty-string password
+    res = await registered_client.patch(PREFIX, json={"password": ""})
+    assert res.status_code == 422
+
+    # Fail due to invalid password (too short)
+    res = await registered_client.patch(PREFIX, json={"password": "abc"})
+    assert res.status_code == 400
+    assert "too short" in res.json()["detail"]["reason"]
+
+    # Fail due to invalid password (too long)
+    res = await registered_client.patch(PREFIX, json={"password": "x" * 101})
+    assert res.status_code == 400
+    assert "too long" in res.json()["detail"]["reason"]
+
+    # Successful password update
+    NEW_PASSWORD = "my-new-password"
+    res = await registered_client.patch(
+        PREFIX, json={"password": NEW_PASSWORD}
+    )
+    assert res.status_code == 200
+
+    # Check that old password is not valid any more
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password="12345",  # default password of registered_client
+        ),
+    )
+    assert res.status_code == 400
+
+    # Check that new password is valid
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password=NEW_PASSWORD,
+        ),
+    )
+    assert res.status_code == 200
+
+
+async def test_get_and_patch_current_user_settings(registered_client):
+    res = await registered_client.get(f"{PREFIX}settings/")
+    assert res.status_code == 200
+    for k, v in res.json().items():
+        if k == "slurm_accounts":
+            assert v == []
+        else:
+            assert v is None
+
+    patch = dict(slurm_accounts=["foo", "bar"])
+    res = await registered_client.patch(f"{PREFIX}settings/", json=patch)
+    assert res.status_code == 200
+
+    # Assert patch was successful
+    res = await registered_client.get(f"{PREFIX}settings/")
+    for k, v in res.json().items():
+        if k in patch:
+            assert v == patch[k]
+        else:
+            assert v is None
 
 
 async def test_get_current_user_allowed_viewer_paths(
-    MockCurrentUser, client, override_settings_factory
+    registered_client, registered_superuser_client, override_settings_factory
 ):
     # Start test with "viewer-paths" auth scheme
     override_settings_factory(
@@ -152,88 +197,84 @@ async def test_get_current_user_allowed_viewer_paths(
     )
 
     # Check that a vanilla user has no viewer_paths
-    async with MockCurrentUser(
-        user_settings_dict=dict(slurm_user=None)
-    ) as user:
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert res.json() == []
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert res.json() == []
 
-        # Find current-user ID
-        user_id = user.id
-
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
-        # Add one group to this user
-        res = await client.post(
-            "/auth/group/", json=dict(name="group1", viewer_paths=["/a", "/b"])
-        )
-        assert res.status_code == 201
-        group1_id = res.json()["id"]
-
-        # Add user to group1
-        res = await client.post(f"/auth/group/{group1_id}/add-user/{user_id}/")
-        assert res.status_code == 200
-
-    # Check current-user viewer-paths again
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {"/a", "/b"}
+    # Find current-user ID
+    res = await registered_client.get(f"{PREFIX}")
+    assert res.status_code == 200
+    user_id = res.json()["id"]
 
     # Add one group to this user
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
-        res = await client.post(
-            "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
-        )
-        assert res.status_code == 201
-        group2_id = res.json()["id"]
+    res = await registered_superuser_client.post(
+        "/auth/group/", json=dict(name="group1", viewer_paths=["/a", "/b"])
+    )
+    assert res.status_code == 201
+    group1_id = res.json()["id"]
 
-        # Add user to group2
-        res = await client.post(f"/auth/group/{group2_id}/add-user/{user_id}/")
-        assert res.status_code == 200
+    # Add user to group1
+    res = await registered_superuser_client.post(
+        f"/auth/group/{group1_id}/add-user/{user_id}/"
+    )
+    assert res.status_code == 200
 
-        # Update user settings defining project_dir
-        res = await client.patch(
-            f"/auth/users/{user_id}/settings/",
-            json=dict(project_dir="/path/to/project_dir"),
-        )
-        assert res.status_code == 200
+    # Check current-user viewer-paths again
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/a", "/b"}
+
+    # Add one group to this user
+    res = await registered_superuser_client.post(
+        "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
+    )
+    assert res.status_code == 201
+    group2_id = res.json()["id"]
+
+    # Add user to group2
+    res = await registered_superuser_client.post(
+        f"/auth/group/{group2_id}/add-user/{user_id}/"
+    )
+    assert res.status_code == 200
+
+    # Update user settings defining project_dir
+    res = await registered_superuser_client.patch(
+        f"/auth/users/{user_id}/settings/",
+        json=dict(project_dir="/path/to/project_dir"),
+    )
+    assert res.status_code == 200
 
     # Check that project_dir is used by "viewer-paths" auth scheme
     override_settings_factory(
         FRACTAL_VIEWER_AUTHORIZATION_SCHEME="viewer-paths"
     )
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {"/path/to/project_dir", "/a", "/b", "/c"}
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir", "/a", "/b", "/c"}
 
     # Test with "users-folders" scheme
     override_settings_factory(FRACTAL_VIEWER_BASE_FOLDER="/path/to/base")
     override_settings_factory(
         FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders"
     )
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {"/path/to/project_dir"}
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir"}
 
     # Update user settings adding the slurm_user
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
-        res = await client.patch(
-            f"/auth/users/{user_id}/settings/",
-            json=dict(project_dir="/path/to/project_dir", slurm_user="foo"),
-        )
-        assert res.status_code == 200
+    res = await registered_superuser_client.patch(
+        f"/auth/users/{user_id}/settings/",
+        json=dict(project_dir="/path/to/project_dir", slurm_user="foo"),
+    )
+    assert res.status_code == 200
 
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        # Test that user dir is added when using "users-folders" scheme
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {"/path/to/project_dir", "/path/to/base/foo"}
+    # Test that user dir is added when using "users-folders" scheme
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {"/path/to/project_dir", "/path/to/base/foo"}
 
-        # Verify that scheme "none" returns an empty list
-        override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert res.json() == []
+    # Verify that scheme "none" returns an empty list
+    override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert res.json() == []
