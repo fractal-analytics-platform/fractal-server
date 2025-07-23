@@ -7,44 +7,25 @@ from fractal_server.app.models.v2 import TaskGroupV2
 PREFIX = "/auth"
 
 
-async def test_no_access_user_group_api(
-    client,
-    MockCurrentUser,
-):
+async def test_no_access_user_group_api(client, registered_client):
     """
     Verify that anonymous or non-superuser users have no access to user-group
     CRUD.
     """
+    for _client, expected_status in [(client, 401), (registered_client, 403)]:
+        res = await _client.get(f"{PREFIX}/group/")
+        assert res.status_code == expected_status
 
-    expected_status = 401
-    res = await client.get(f"{PREFIX}/group/")
-    assert res.status_code == expected_status
-    res = await client.post(f"{PREFIX}/group/")
-    assert res.status_code == expected_status
-    res = await client.get(f"{PREFIX}/group/1/")
-    assert res.status_code == expected_status
-    res = await client.patch(f"{PREFIX}/group/1/")
-    assert res.status_code == expected_status
-    res = await client.delete(f"{PREFIX}/group/1/")
-    assert res.status_code == expected_status
+        res = await _client.post(f"{PREFIX}/group/")
+        assert res.status_code == expected_status
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_active=True,
-            is_verified=True,
-            is_superuser=False,
-        )
-    ):
-        expected_status = 403
-        res = await client.get(f"{PREFIX}/group/")
+        res = await _client.get(f"{PREFIX}/group/1/")
         assert res.status_code == expected_status
-        res = await client.post(f"{PREFIX}/group/")
+
+        res = await _client.patch(f"{PREFIX}/group/1/")
         assert res.status_code == expected_status
-        res = await client.get(f"{PREFIX}/group/1/")
-        assert res.status_code == expected_status
-        res = await client.patch(f"{PREFIX}/group/1/")
-        assert res.status_code == expected_status
-        res = await client.delete(f"{PREFIX}/group/1/")
+
+        res = await _client.delete(f"{PREFIX}/group/1/")
         assert res.status_code == expected_status
 
 

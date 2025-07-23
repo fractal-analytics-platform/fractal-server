@@ -10,7 +10,6 @@ from typing import Any
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from fastapi import HTTPException
 from httpx import ASGITransport
 from httpx import AsyncClient
 from pydantic import SecretStr
@@ -309,8 +308,7 @@ async def MockCurrentUser(app, db, default_user_group):
                 self.previous_dependencies[
                     current_active_user
                 ] = app.dependency_overrides.get(current_active_user, None)
-            # FIXME
-            if self.user.is_active:  # and self.user.is_superuser:
+            if self.user.is_active and self.user.is_superuser:
                 self.previous_dependencies[
                     current_active_superuser
                 ] = app.dependency_overrides.get(
@@ -326,16 +324,6 @@ async def MockCurrentUser(app, db, default_user_group):
             # Override dependencies in the FastAPI app
             for dep in self.previous_dependencies.keys():
                 app.dependency_overrides[dep] = lambda: self.user
-                if (
-                    dep == current_active_superuser
-                    and not self.user.is_superuser
-                ):
-
-                    def raise_403():
-                        # FIXME
-                        raise HTTPException(status_code=403)
-
-                    app.dependency_overrides[dep] = raise_403
 
             return self.user
 
