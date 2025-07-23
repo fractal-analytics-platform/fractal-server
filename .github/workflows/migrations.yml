@@ -26,7 +26,7 @@ jobs:
 
   migrations:
     name: "Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     strategy:
@@ -50,7 +50,7 @@ jobs:
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
       - name: Install poetry
-        run: pipx install poetry==2.1.0
+        run: pipx install poetry==2.1.3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -72,7 +72,7 @@ jobs:
 
   downgrade:
     name: "Alembic downgrade"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
@@ -87,7 +87,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Install poetry
-        run: pipx install poetry==2.1.0
+        run: pipx install poetry==2.1.3
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5

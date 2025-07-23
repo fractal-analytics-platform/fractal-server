@@ -13,7 +13,7 @@ jobs:
   tests_api:
 
     name: "V2 - API - Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -34,7 +34,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Install poetry
-        run: pipx install poetry==2.1.0
+        run: pipx install poetry==2.1.3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -62,7 +62,7 @@ jobs:
   tests_not_api:
 
     name: "V2 - not API - Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -83,7 +83,7 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
       - name: Install poetry
-        run: pipx install poetry==2.1.0
+        run: pipx install poetry==2.1.3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -112,7 +112,7 @@ jobs:
   tests_containers:
 
     name: "V2 - Containers - Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -146,7 +146,7 @@ jobs:
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
       - name: Install poetry
-        run: pipx install poetry==2.1.0
+        run: pipx install poetry==2.1.3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -171,7 +171,7 @@ jobs:
 
   coverage:
     name: Coverage
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [tests_api, tests_not_api, tests_containers]
 
     permissions:
@@ -184,7 +184,7 @@ jobs:
       # py-cov-action/python-coverage-comment-action@v3
       - uses: actions/checkout@v4
 
-      - run: pipx install poetry==2.1.0
+      - run: pipx install poetry==2.1.3
 
       - uses: actions/setup-python@v5
         with:
