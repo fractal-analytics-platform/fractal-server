@@ -542,7 +542,7 @@ def test_python_interpreters():
         Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
     assert "String must be an absolute path" in str(e.value)
 
-    for version in ["3_9", "3_10", "3_11", "3_12"]:
+    for version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
         key = f"FRACTAL_TASKS_PYTHON_{version}"
         version_dot = version.replace("_", ".")
         attrs = common_attributes.copy()
