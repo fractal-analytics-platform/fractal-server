@@ -102,8 +102,9 @@ async def _verify_workflow_and_dataset_access(
     Verify user access to a dataset/workflow pair.
 
     Args:
+        project_id:
+        workflow_id:
         dataset_id:
-        workflow_task_id:
         user_id:
         db:
     """
@@ -148,7 +149,7 @@ async def get_wftask_check_owner(
     Args:
         project_id:
         dataset_id:
-        workflow_task_id:
+        workflowtask_id:
         user_id:
         db:
     """
