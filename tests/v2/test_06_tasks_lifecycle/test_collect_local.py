@@ -11,7 +11,7 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import collect_local
 
 
-async def test_collect_pip_existing_file(tmp_path, db, first_user):
+async def test_collect_pip_existing_folder(tmp_path, db, first_user):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -32,7 +32,7 @@ async def test_collect_pip_existing_file(tmp_path, db, first_user):
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
         pkg_name="pkg",
-        version="1.0.0",
+        version="1.2.3",
     )
     db.add(task_group_activity)
     await db.commit()
