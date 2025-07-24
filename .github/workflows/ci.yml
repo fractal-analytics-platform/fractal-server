@@ -184,7 +184,7 @@ jobs:
       # py-cov-action/python-coverage-comment-action@v3
       - uses: actions/checkout@v4
 
-      - run: pipx install poetry==2.1.0
+      - run: pipx install poetry==2.1.3
 
       - uses: actions/setup-python@v5
         with:
