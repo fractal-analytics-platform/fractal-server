@@ -76,7 +76,7 @@
 | fractal\_server/app/runner/components.py                                        |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/exceptions.py                                        |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/base\_runner.py                            |       56 |        0 |       32 |        1 |     99% |  130->138 |
+| fractal\_server/app/runner/executors/base\_runner.py                            |       56 |        0 |       32 |        1 |     99% |  131->139 |
 | fractal\_server/app/runner/executors/call\_command\_wrapper.py                  |       26 |        2 |        6 |        1 |     91% |40-42, 46->49 |
 | fractal\_server/app/runner/executors/local/\_\_init\_\_.py                      |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/local/get\_local\_config.py                |       40 |        9 |       10 |        4 |     74% |91, 97, 99->102, 105-115 |
