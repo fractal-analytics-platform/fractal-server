@@ -1,6 +1,6 @@
 # Fractal Users
 
-Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/12.1/) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/12.1/configuration/overview).
+Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview).
 
 ## User Model
 <a name="user-model"></a>
@@ -49,13 +49,13 @@ An _authentication backend_ is composed of two parts:
 - the <ins>transport</ins>, that manages how the token will be carried over the request,
 - the <ins>strategy</ins>, which manages how the token is generated and secured.
 
-Fractal Server provides two authentication backends (Bearer and Cookie), both based the [JWT](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/strategies/jwt/) strategy. Each backend produces both [`/auth/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/auth/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
+Fractal Server provides two authentication backends (Bearer and Cookie), both based the [JWT](https://fastapi-users.github.io/fastapi-users/latest/configuration/authentication/strategies/jwt/) strategy. Each backend produces both [`/auth/login`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#post-login) and [`/auth/logout`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#post-logout) routes.
 
 > FastAPI Users provides the `logout` endpoint by default, but this is not relevant in `fractal-server` since we do not store tokens in the database.
 
 #### Bearer
 
-The [Bearer](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/transports/bearer/) transport backend provides login at `/auth/token/login`
+The [Bearer](https://fastapi-users.github.io/fastapi-users/latest/configuration/authentication/transports/bearer/) transport backend provides login at `/auth/token/login`
 ```console
 $ curl \
     -X POST \
@@ -71,7 +71,7 @@ $ curl \
 
 #### Cookie
 
-The [Cookie](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/transports/cookie/) transport backend provides login at `/auth/login`
+The [Cookie](https://fastapi-users.github.io/fastapi-users/latest/configuration/authentication/transports/cookie/) transport backend provides login at `/auth/login`
 
 ```console
 $ curl \
@@ -285,7 +285,7 @@ The three cases are described more in detail below.
 ### User attributes
 
 Some endpoints require the user to have a specific attribute.
-This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/12.1/usage/current-user/#current_user):
+This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/latest/usage/current-user/#current_user):
 ```python
 current_active_user = fastapi_users.current_user(active=True)
 
@@ -347,13 +347,13 @@ The following endpoints require a non-superuser user to be the owner of the Task
 ## User Management
 <a name="user-management"></a>
 
-The endpoints to manage users can be found under the route `/auth/`. On top of the `login/logout` ones ([described above](#login)), several other endpoints are available, including all the ones exposed by FastAPI Users (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes)). Here are more details for the most relevant endpoints.
+The endpoints to manage users can be found under the route `/auth/`. On top of the `login/logout` ones ([described above](#login)), several other endpoints are available, including all the ones exposed by FastAPI Users (see [here](https://fastapi-users.github.io/fastapi-users/latest/usage/routes)). Here are more details for the most relevant endpoints.
 
 ### POST `/auth/register`
 
 🔐 *Restricted to superusers*.
 
-New users can be registred by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#register-router):
+New users can be registred by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#register-router):
 
 ```console
 $ curl \
@@ -463,7 +463,7 @@ curl \
 
 🔐 *Restricted to superusers*.
 
-The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
+The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/latest/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
 
 **GET `/{id}/`**
 
