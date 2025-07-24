@@ -45,17 +45,16 @@ commands = [
     "fractalctl start --reload --host 0.0.0.0 --port 8000",
     (
         "gunicorn fractal_server.main:app "
-        "--bind 0.0.0.0:8000 "
         "--workers 2 "
-        "--worker-class uvicorn.workers.UvicornWorker "
+        "--bind 0.0.0.0:8000 "
+        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
     ),
     (
         "gunicorn fractal_server.main:app "
         "--workers 2 "
         "--bind 0.0.0.0:8000 "
         "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
-        "--logger-class "
-        "fractal_server.gunicorn_fractal.FractalGunicornLogger "
+        "--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger "
     ),
 ]
 
