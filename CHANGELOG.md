@@ -13,6 +13,7 @@
     * Remove/fix several obsolete docs pages (\#2722).
 * Testing:
     * Improve/optimize several tests (\#2727).
+    * Use `poetry` 2.1.3 in all GitHub Actions and always install it using `pipx` (\#2731).
 
 # 2.15.6
 
