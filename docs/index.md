@@ -6,11 +6,7 @@
 
 Fractal is a framework developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) to process bioimaging data at scale in the OME-Zarr format and prepare the images for interactive visualization.
 
-This is the server component of the fractal analytics platform (find more
-information about Fractal in general and the other repositories at the [Fractal
-home page](https://fractal-analytics-platform.github.io)). The source code is
-available on the [fractal-server GitHub
-repository](https://github.com/fractal-analytics-platform/fractal-server).
+This is the server component of the fractal analytics platform (find more information about Fractal in general and the other repositories at the [Fractal home page](https://fractal-analytics-platform.github.io)). The source code is available on the [fractal-server GitHub repository](https://github.com/fractal-analytics-platform/fractal-server).
 
 
 ## Licence and Copyright

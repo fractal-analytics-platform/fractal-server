@@ -91,14 +91,15 @@ class BaseRunner:
             workflow_task_order:
             workflow_task_id:
             task_name:
-            parameters:
-                Dictionary of parameters. Must include `zarr_urls` key.
+            list_parameters:
+                List of dictionaries of parameters (each one must include
+                `zarr_urls` key).
             history_unit_ids:
                 Database IDs of the corresponding `HistoryUnit` entries.
+            list_task_files: `TaskFiles` objects.
             task_type: Task type.
-            task_files: `TaskFiles` object.
             config: Runner-specific parameters.
-            user_id
+            user_id:
         """
         raise NotImplementedError()
 
