@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -95,7 +96,7 @@ async def test_collect_pip_local_fail_rmtree(
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
         pkg_name="pkg",
-        version="1.0.0",
+        version="0.0.1",
     )
     await db.commit()
     db.add(task_group_activity)
@@ -108,7 +109,7 @@ async def test_collect_pip_local_fail_rmtree(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             wheel_file=FractalUploadedFile(
-                contents=b"fake-bytes",
+                contents=b"fakebytes",
                 filename="fractal_tasks_mock-0.0.1-py3-none-any.whl",
             ),
         )
@@ -128,6 +129,9 @@ async def test_collect_pip_local_fail_rmtree(
     assert path.exists()
 
 
+@pytest.mark.skip(
+    reason="Is this a duplicate of test_collect_pip_local_fail_rmtree? FIXME"
+)
 async def test_bad_wheel_file_arguments(
     tmp_path,
     db,
@@ -176,7 +180,7 @@ async def test_bad_wheel_file_arguments(
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.COLLECT,
         pkg_name="pkg",
-        version="1.0.0",
+        version="0.0.1",
     )
     await db.commit()
     db.add(task_group_activity)
