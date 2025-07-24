@@ -10,7 +10,7 @@ jobs:
 
   benchmark_api:
     name: Benchmarks
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
 
@@ -81,7 +81,7 @@ jobs:
   benchmark_runner:
     if: false
     name: Benchmark Runner
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
 

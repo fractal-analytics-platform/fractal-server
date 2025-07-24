@@ -14,6 +14,7 @@
 * Testing:
     * Improve/optimize several tests (\#2727).
     * Use `poetry` 2.1.3 in all GitHub Actions and always install it using `pipx` (\#2731).
+    * Move all GitHub Action runners to `ubuntu-24` (\#2732).
 
 # 2.15.6
 
