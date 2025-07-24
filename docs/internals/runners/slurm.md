@@ -70,7 +70,7 @@ Also note that in this case `fractal-server` only compiles the configuration opt
 The SLURM backend in `fractal-server` may combine multiple tasks in the same SLURM job (AKA batching), in order to reduce the total number of SLURM jobs
 that are submitted. This is especially relevant for clusters with constraints on the number of jobs that a user is allowed to submit over a certain timespan.
 
-The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this submodule](../..//reference/fractal_server/app/runner/executors/slurm_common/_batching.md).
+The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this submodule](../../reference/fractal_server/app/runner/executors/slurm_common/_batching.md).
 
 
 ## User impersonation
