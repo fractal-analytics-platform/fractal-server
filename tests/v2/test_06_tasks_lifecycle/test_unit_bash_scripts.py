@@ -228,22 +228,6 @@ def test_templates_freeze(tmp_path, current_py_version):
             logger_name=__name__,
             prefix="prefix",
         )
-        _customize_and_run_template(
-            template_filename="2_pip_install.sh",
-            replacements=[
-                ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
-                ("__INSTALL_STRING__", "pip"),
-                ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-                ("__PINNED_PACKAGE_LIST__", ""),
-                (
-                    "__FRACTAL_PIP_CACHE_DIR_ARG__",
-                    Settings().PIP_CACHE_DIR_ARG,
-                ),
-            ],
-            script_dir=tmp_path,
-            logger_name=__name__,
-            prefix="prefix",
-        )
 
     # Pip-install devtools on 'venv1'
     _customize_and_run_template(
@@ -268,7 +252,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         prefix="prefix",
     )
     dependencies_1 = _parse_pip_freeze_output(pip_freeze_venv_1)
-    assert "pip" in dependencies_1
+    assert "devtools" in dependencies_1
 
     # Write requirements file
     requirements_file = tmp_path / "requirements.txt"
