@@ -262,13 +262,13 @@ async def test_task_query(
         new_project = await project_factory_v2(user)
         new_workflow = await workflow_factory_v2(project_id=new_project.id)
 
-        for i in range(30):
+        for i in range(2):
             task = await task_factory_v2(
                 user_id=user.id, name=f"n{i}", source=f"s{i}"
             )
             await _workflow_insert_task(
                 workflow_id=new_workflow.id, task_id=task.id, db=db
             )
-        res = await client.get(f"{PREFIX}/task/")
+        res = await client.get(f"{PREFIX}/task/?max_number_of_results=1")
         assert res.status_code == 422
         assert "Please add more query filters" in res.json()["detail"]
