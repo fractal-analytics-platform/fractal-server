@@ -86,7 +86,9 @@ async def test_task_query(
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
         )
-        task3 = await task_factory_v2(user_id=user.id, index=3, modality="EM")
+        task3 = await task_factory_v2(
+            user_id=user.id, index=3, source="source3", modality="EM"
+        )
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(

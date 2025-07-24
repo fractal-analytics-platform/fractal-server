@@ -28,7 +28,6 @@ async def add_task(
 ):
     task = dict(
         name=f"task{index}",
-        source=f"source{index}",
         command_non_parallel="cmd",
         command_parallel="cmd",
     )
@@ -111,9 +110,7 @@ async def test_delete_workflow(
         wf_id = res.json()["id"]
 
         # Create a task
-        task = await task_factory_v2(
-            user_id=user.id, name="task1", source="dummy"
-        )
+        task = await task_factory_v2(user_id=user.id, name="task1")
 
         # Add a dummy task to workflow
         res = await client.post(
@@ -152,9 +149,7 @@ async def test_delete_workflow(
         wf_deletable_1 = await workflow_factory_v2(project_id=project.id)
         wf_deletable_2 = await workflow_factory_v2(project_id=project.id)
         wf_not_deletable_1 = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(
-            user_id=user.id, name="task2", source="source"
-        )
+        task = await task_factory_v2(user_id=user.id, name="task2")
         await _workflow_insert_task(
             workflow_id=wf_deletable_1.id, task_id=task.id, db=db
         )
@@ -223,10 +218,10 @@ async def test_get_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, source="1", name="1")
-        t2 = await task_factory_v2(user_id=user_A_id, source="2", name="2")
+        t1 = await task_factory_v2(user_id=user_A_id, name="1")
+        t2 = await task_factory_v2(user_id=user_A_id, name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, source="3", name="3")
+        t3 = await task_factory_v2(user_id=user_B.id, name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -350,10 +345,10 @@ async def test_patch_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, source="1", name="1")
-        t2 = await task_factory_v2(user_id=user_A_id, source="2", name="2")
+        t1 = await task_factory_v2(user_id=user_A_id, name="1")
+        t2 = await task_factory_v2(user_id=user_A_id, name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, source="3", name="3")
+        t3 = await task_factory_v2(user_id=user_B.id, name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -437,7 +432,7 @@ async def test_delete_workflow_with_job(
 
         # Create a workflow and a job in relationship with it
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="1", source="1")
+        task = await task_factory_v2(user_id=user.id, name="1")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
