@@ -7,7 +7,7 @@ from pathlib import Path
 def get_tar_compression_cmd(
     subfolder_path: Path,
     filelist_path: Path | None,
-) -> tuple[str, str]:
+) -> str:
     """
     Prepare command to compress e.g. `/path/dir` into `/path/dir.tar.gz`.
 
@@ -17,7 +17,6 @@ def get_tar_compression_cmd(
     Args:
         subfolder_path: Absolute path to the folder to compress.
         filelist_path: If set, to be used in the `--files-from` option.
-        expected_tarfile: If set, it should match to the returned one.
 
     Returns:
         tar command

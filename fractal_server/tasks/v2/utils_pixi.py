@@ -56,8 +56,8 @@ def simplify_pyproject_toml(
 
     Args:
         original_toml_string: Original `pyproject.toml` contents
-        environment: Name of the pixi environment to use (e.g. `default`).
-        target_platform: Name of the platform (e.g. `linux-64`)
+        pixi_environment: Name of the pixi environment to use (e.g. `default`).
+        pixi_platform: Name of the platform (e.g. `linux-64`)
 
     Returns:
         New `pyproject.toml` contents
