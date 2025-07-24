@@ -187,37 +187,23 @@ def test_template_2(
     assert condition_1 or condition_2
 
 
-def test_template_4_missing_manifest(
-    tmp_path, testdata_path, current_py_version
-):
-    path = tmp_path / "unit_templates"
-    venv_path = path / "venv_miss_manifest"
-    install_string_miss = testdata_path.parent / (
-        "v2/fractal_tasks_fail/missing_manifest/dist/"
-        "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    package_name = "fractal-tasks-mock"
+def test_template_4_missing_manifest(tmp_path, current_py_version):
+    venv_path = (tmp_path / "venv_miss_manifest").as_posix()
     execute_command_sync(
         command=f"python{current_py_version} -m venv {venv_path}"
     )
-    execute_command_sync(
-        command=(
-            f"{venv_path}/bin/python{current_py_version} "
-            f"-m pip install {install_string_miss}"
-        )
-    )
     replacements = [
-        ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
-        ("__PACKAGE_NAME__", package_name),
+        ("__PACKAGE_ENV_DIR__", venv_path),
+        ("__PACKAGE_NAME__", "pip"),
     ]
-    script_path = tmp_path / "4_good.sh"
+    script_path = (tmp_path / "4_good.sh").as_posix()
     customize_template(
         template_name="4_pip_show.sh",
         replacements=replacements,
-        script_path=script_path.as_posix(),
+        script_path=script_path,
     )
     with pytest.raises(RuntimeError) as expinfo:
-        execute_command_sync(command=f"bash {script_path.as_posix()}")
+        execute_command_sync(command=f"bash {script_path}")
     assert "ERROR: manifest path not found" in str(expinfo.value)
 
 
