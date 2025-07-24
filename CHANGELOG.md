@@ -1553,7 +1553,7 @@ Warning: updating to this version requires changes to the configuration variable
     * Fix many-to-many relationship between users and project (\#660).
     * Rename `Project.user_member_list` into `Project.user_list` (\#660).
     * Add `username` column (\#704).
-* Update endpoints (see also [1.2->1.3 upgrade info](../internals/version_upgrades/upgrade_1_2_5_to_1_3_0/) in the documentation):
+* Update endpoints (see also [1.2->1.3 upgrade info](internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md) in the documentation):
     * Review endpoint URLs (\#669).
     * Remove foreign keys from payloads (\#669).
 * Update `Task` models, task collection and task-related endpoints:
