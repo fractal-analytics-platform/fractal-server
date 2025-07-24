@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -127,95 +126,6 @@ async def test_collect_pip_local_fail_rmtree(
     assert task_group_activity_v2.status == "failed"
     assert "Broken rm" in task_group_activity_v2.log
     assert path.exists()
-
-
-@pytest.mark.skip(
-    reason="Is this a duplicate of test_collect_pip_local_fail_rmtree? FIXME"
-)
-async def test_bad_wheel_file_arguments(
-    tmp_path,
-    db,
-    first_user,
-    testdata_path,
-    current_py_version,
-    monkeypatch,
-):
-    import fractal_server.tasks.v2.local.collect
-
-    def patched_function(*args, **kwargs):
-        raise RuntimeError("Broken rm")
-
-    monkeypatch.setattr(
-        fractal_server.tasks.v2.local.collect.shutil,
-        "rmtree",
-        patched_function,
-    )
-
-    # Prepare db objects
-    path = tmp_path / "rmtree-error"
-    task_group = TaskGroupV2(
-        pkg_name="fractal-tasks-mock",
-        version="0.0.1",
-        origin="local",
-        archive_path=(
-            testdata_path.parent
-            / (
-                "v2/fractal_tasks_fail/invalid_manifest/dist/"
-                "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-            )
-        ).as_posix(),
-        python_version=current_py_version,
-        path=path.as_posix(),
-        venv_path=(path / "venv").as_posix(),
-        user_id=first_user.id,
-    )
-    debug(task_group)
-    db.add(task_group)
-    await db.commit()
-    await db.refresh(task_group)
-    db.expunge(task_group)
-    task_group_activity = TaskGroupActivityV2(
-        user_id=first_user.id,
-        taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
-        pkg_name="pkg",
-        version="0.0.1",
-    )
-    await db.commit()
-    db.add(task_group_activity)
-    await db.commit()
-    await db.refresh(task_group_activity)
-    db.expunge(task_group_activity)
-    # Run background task
-    archive_path = testdata_path.parent / (
-        "v2/fractal_tasks_fail/invalid_manifest/dist/"
-        "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    with open(archive_path, "rb") as whl:
-        try:
-            collect_local(
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-                wheel_file=FractalUploadedFile(
-                    contents=whl.read(),
-                    filename=archive_path.name,
-                ),
-            )
-        except RuntimeError as e:
-            print(
-                f"Caught exception {e} within the test, "
-                "which is taking place in "
-                "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
-            )
-        # Verify that collection failed
-        task_group_activity_v2 = await db.get(
-            TaskGroupActivityV2, task_group_activity.id
-        )
-        debug(task_group_activity_v2)
-        assert task_group_activity_v2.status == "failed"
-        assert "Broken rm" in task_group_activity_v2.log
-        assert path.exists()
 
 
 async def test_invalid_wheel(
