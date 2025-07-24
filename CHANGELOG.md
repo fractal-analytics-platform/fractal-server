@@ -12,6 +12,8 @@
     * Always interpret `needs_gpu` string as a boolean (\#2706).
 * Task life cycle:
     * Use `bash --login` for `pixi install` execution over SSH (\#2709).
+* Development:
+    * Move `example` folder to root directory (\#2720).
 
 # 2.15.5
 
