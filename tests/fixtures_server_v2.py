@@ -202,7 +202,6 @@ async def task_factory_v2(db: AsyncSession):
         args = dict(
             type=type,
             name=f"task{index}",
-            source=f"source{index}",
             version=f"{index}",
             command_parallel="cmd_parallel",
             command_non_parallel="cmd_non_parallel",

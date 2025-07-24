@@ -10,17 +10,15 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.app.runner.v2.submit_workflow import _backends
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
-
-backends_available = list(_backends.keys())
 
 PREFIX = "/admin/v2"
 
@@ -383,56 +381,65 @@ async def test_patch_job(
         assert res.json()["end_timestamp"] is not None
 
 
-@pytest.mark.parametrize("backend", backends_available)
-async def test_stop_job(
+async def test_stop_job_local(
+    MockCurrentUser,
+    client,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    assert not _backend_supports_shutdown(backend="local")
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        res = await client.get(
+            f"{PREFIX}/job/123/stop/",
+        )
+        assert res.status_code == 422
+
+
+@pytest.mark.parametrize("backend", ["slurm", "slurm_ssh"])
+async def test_stop_job_slurm(
     backend,
     MockCurrentUser,
+    client,
+    db,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
-    registered_superuser_client,
-    db,
     tmp_path,
     override_settings_factory,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
-        )
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
         dataset = await dataset_factory_v2(project_id=project.id)
-        job = await job_factory_v2(
+        job = JobV2(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
             status=JobStatusTypeV2.SUBMITTED,
+            user_email="fake@example.org",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=0,
         )
+        db.add(job)
+        await db.commit()
+        await db.refresh(job)
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await registered_superuser_client.get(
-            f"{PREFIX}/job/{job.id}/stop/",
-        )
+        # Stop missing job
+        res = await client.get(f"{PREFIX}/job/{job.id + 42}/stop/")
+        assert res.status_code == 404
 
-        if _backend_supports_shutdown(backend=backend):
-            assert res.status_code == 202
-            shutdown_file = tmp_path / SHUTDOWN_FILENAME
-            debug(shutdown_file)
-            assert shutdown_file.exists()
-            res = await registered_superuser_client.get(
-                f"{PREFIX}/job/{job.id + 42}/stop/",
-            )
-            assert res.status_code == 404
-        else:
-            assert res.status_code == 422
+        # Stop actual job
+        res = await client.get(f"{PREFIX}/job/{job.id}/stop/")
+        assert res.status_code == 202
+        shutdown_file = tmp_path / SHUTDOWN_FILENAME
+        debug(shutdown_file)
+        assert shutdown_file.exists()
 
 
 async def test_download_job_logs(

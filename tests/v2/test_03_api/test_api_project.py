@@ -286,7 +286,6 @@ async def test_delete_project_ongoing_jobs(
             t = await task_factory_v2(
                 user_id=user.id,
                 name=f"task_{status}",
-                source=f"source_{status}",
             )
             await _workflow_insert_task(workflow_id=w.id, task_id=t.id, db=db)
             await job_factory_v2(

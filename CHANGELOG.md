@@ -11,6 +11,8 @@
     * Bump all `docs` optional dependencies (\#2722).
 * Documentation:
     * Remove/fix several obsolete docs pages (\#2722).
+* Testing:
+    * Improve/optimize several tests (\#2727).
 
 # 2.15.6
 

@@ -50,13 +50,11 @@ async def test_loss_of_access_to_task(
         # Create tasks with different ownership info
         task_A = await task_factory_v2(
             command_non_parallel="echo",
-            source="1",
             user_id=user_A.id,
             name=f"iteration-{i}-A",
         )
         task_B = await task_factory_v2(
             command_non_parallel="echo",
-            source="2",
             user_id=user_B.id,
             task_group_kwargs=dict(user_group_id=team_group.id),
             name=f"iteration-{i}-B",

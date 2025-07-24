@@ -20,13 +20,19 @@ async def test_task_group_v2(db):
     await db.refresh(user_group)
 
     task1 = TaskV2(
-        name="task1", type="parallel", command_parallel="cmd", source="xxx"
+        name="task1",
+        type="parallel",
+        command_parallel="cmd",
     )
     task2 = TaskV2(
-        name="task2", type="parallel", command_parallel="cmd", source="yyy"
+        name="task2",
+        type="parallel",
+        command_parallel="cmd",
     )
     task3 = TaskV2(
-        name="task3", type="parallel", command_parallel="cmd", source="zzz"
+        name="task3",
+        type="parallel",
+        command_parallel="cmd",
     )
 
     task_group = TaskGroupV2(

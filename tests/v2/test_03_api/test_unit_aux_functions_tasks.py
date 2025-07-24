@@ -54,13 +54,10 @@ async def test_get_task(db, task_factory_v2):
     db.add(LinkUserGroup(user_id=user_A2.id, group_id=group_A.id))
     await db.commit()
 
-    task_A_no_group = await task_factory_v2(
-        user_id=user_A1.id, source="1", name="1"
-    )
+    task_A_no_group = await task_factory_v2(user_id=user_A1.id, name="1")
     task_A_group_A = await task_factory_v2(
         user_id=user_A1.id,
         task_group_kwargs=dict(user_group_id=group_A.id),
-        source="2",
         name="2",
     )
 
@@ -134,7 +131,7 @@ async def test_get_task_require_active(db, task_factory_v2):
     db.add(LinkUserGroup(user_id=user.id, group_id=group_0.id))
     await db.commit()
 
-    task = await task_factory_v2(user_id=user.id, source="1")
+    task = await task_factory_v2(user_id=user.id)
     task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
 
     # Make sure task group is active, and verify access is always OK
