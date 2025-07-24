@@ -180,7 +180,7 @@ async def test_task_group_admin(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, source="source")
+        task = await task_factory_v2(user_id=user.id)
         await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
         task_group_activity = TaskGroupActivityV2(
             user_id=user.id,
@@ -232,7 +232,7 @@ async def test_get_task_group_activity(
             action=TaskGroupActivityActionV2.REACTIVATE,
         )
     async with MockCurrentUser() as user2:
-        task = await task_factory_v2(user_id=user2.id, source="source")
+        task = await task_factory_v2(user_id=user2.id)
         activity3 = TaskGroupActivityV2(
             user_id=user2.id,
             pkg_name="foo",

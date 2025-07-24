@@ -32,6 +32,7 @@ from fractal_server.app.runner.v2.task_interface import (
 )
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 
 __all__ = [
@@ -349,11 +350,11 @@ def run_v2_task_parallel(
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
             error_msg = (
-                f"Invalid branch: {ind=} is not in `results.keys()` "
+                f"UnreachableBranchError: {ind=} is not in `results.keys()` "
                 "nor in `exceptions.keys()`."
             )
             logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            raise UnreachableBranchError(error_msg)
         outcome[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),
@@ -567,13 +568,12 @@ def run_v2_task_compound(
     failure = False
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
-            # NOTE: see issue 2484
             error_msg = (
-                f"Invalid branch: {ind=} is not in `results.keys()` "
+                f"UnreachableBranchError: {ind=} is not in `results.keys()` "
                 "nor in `exceptions.keys()`."
             )
             logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            raise UnreachableBranchError(error_msg)
         compute_outcomes[ind] = _process_task_output(
             result=results.get(ind, None),
             exception=exceptions.get(ind, None),

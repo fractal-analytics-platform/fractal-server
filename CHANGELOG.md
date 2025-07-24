@@ -4,11 +4,16 @@
 
 * Task life cycle:
     * Also edit `tool.pixi.project.platforms` section of `pyproject.toml`, for `pixi`-based task collection (\#2711).
+* Internal:
+    * Extend use of `UnreachableBranchError` in API and runner (\#2726).
 * Dependencies:
     * Bump `fastapi` to version `0.116.*` (\#2718).
     * Bump all `docs` optional dependencies (\#2722).
 * Documentation:
     * Remove/fix several obsolete docs pages (\#2722).
+* Testing:
+    * Improve/optimize several tests (\#2727).
+    * Use `poetry` 2.1.3 in all GitHub Actions and always install it using `pipx` (\#2731).
 
 # 2.15.6
 

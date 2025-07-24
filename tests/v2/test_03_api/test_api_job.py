@@ -110,9 +110,7 @@ async def test_submit_incompatible_filters(
     task_factory_v2,
 ):
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        task = await task_factory_v2(
-            user_id=user.id, source="foo", input_types={"a": True}
-        )
+        task = await task_factory_v2(user_id=user.id, input_types={"a": True})
 
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
@@ -301,29 +299,23 @@ async def test_project_apply_workflow_subset(
             project_id=project.id, name="ds2", type="type2"
         )
 
-        workflow = await workflow_factory_v2(project_id=project.id)
+        wf = await workflow_factory_v2(project_id=project.id)
 
-        task12 = await task_factory_v2(
-            user_id=user.id, source="admin:1to2", name="1to2"
-        )
-        task23 = await task_factory_v2(
-            user_id=user.id, source="admin:2to3", name="2to3"
+        task12 = await task_factory_v2(user_id=user.id, name="1to2")
+        task23 = await task_factory_v2(user_id=user.id, name="2to3")
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=task12.id, db=db
         )
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task12.id, db=db
+            workflow_id=wf.id, task_id=task23.id, db=db
         )
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task23.id, db=db
-        )
-
-        debug(workflow)
 
         # This job (with no first_task_index or last_task_index) is submitted
         # correctly (and then fails, because tasks have invalid `command`
         # values)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json={},
         )
         debug(res.json())
@@ -337,7 +329,7 @@ async def test_project_apply_workflow_subset(
         # Case A
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=0, last_task_index=0),
         )
         debug(res.json())
@@ -352,7 +344,7 @@ async def test_project_apply_workflow_subset(
         # Case B
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset2.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset2.id}",
             json=dict(first_task_index=1, last_task_index=1),
         )
         debug(res.json())
@@ -367,7 +359,7 @@ async def test_project_apply_workflow_subset(
         # Case B (invalid first_task_index)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=-2, last_task_index=1),
         )
         debug(res.json())
@@ -376,7 +368,7 @@ async def test_project_apply_workflow_subset(
         # Case C (invalid last_task_index)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=0, last_task_index=99),
         )
         debug(res.json())
@@ -385,7 +377,7 @@ async def test_project_apply_workflow_subset(
         # Case D (first_task_index and last_task_index exchanged)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=1, last_task_index=0),
         )
         debug(res.json())
@@ -394,14 +386,14 @@ async def test_project_apply_workflow_subset(
         # Check dumps field
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset1.id}",
+            f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDumpV2(
             **json.loads(project.model_dump_json(exclude={"user_list"}))
         ).model_dump()
         expected_workflow_dump = WorkflowDumpV2(
-            **json.loads(workflow.model_dump_json(exclude={"task_list"}))
+            **json.loads(wf.model_dump_json(exclude={"task_list"}))
         ).model_dump()
         expected_dataset_dump = DatasetDumpV2(
             **json.loads(
@@ -430,7 +422,7 @@ async def test_project_apply_slurm_account(
             project_id=project.id, name="ds1", type="type1"
         )
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, source="source")
+        task = await task_factory_v2(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -469,7 +461,6 @@ async def test_project_apply_slurm_account(
             user_id=user.id,
             input_type="type2",
             output_type="type2",
-            source="source2",
             command="ls",
             name="ls",
         )
@@ -632,9 +623,7 @@ async def test_stop_job(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
-        )
+        t = await task_factory_v2(user_id=user.id, name="task")
         ds = await dataset_factory_v2(project_id=project.id)
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
         job = await job_factory_v2(

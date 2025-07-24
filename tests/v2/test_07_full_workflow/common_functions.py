@@ -431,7 +431,6 @@ async def non_executable_task_command(
         task = await task_factory_v2(
             user_id=user.id,
             name="invalid-task-command",
-            source="some_source",
             type="non_parallel",
             command_non_parallel=str(testdata_path / "non_executable_task.sh"),
         )
@@ -634,7 +633,6 @@ async def workflow_with_non_python_task(
         task = await task_factory_v2(
             user_id=user.id,
             name="non-python",
-            source="custom-task",
             type="non_parallel",
             command_non_parallel=(f"bash {script_path.as_posix()}"),
         )

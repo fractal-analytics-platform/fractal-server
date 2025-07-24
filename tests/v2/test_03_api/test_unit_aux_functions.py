@@ -137,14 +137,12 @@ async def test_get_workflow_task_check_owner(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, source="A", name="a")
+        task = await task_factory_v2(user_id=user.id, name="a")
         wftask = await workflowtask_factory_v2(
             workflow_id=workflow.id, task_id=task.id
         )
         other_workflow = await workflow_factory_v2(project_id=project.id)
-        other_task = await task_factory_v2(
-            user_id=user.id, source="B", name="B"
-        )
+        other_task = await task_factory_v2(user_id=user.id, name="B")
         other_wftask = await workflowtask_factory_v2(
             workflow_id=other_workflow.id, task_id=other_task.id
         )

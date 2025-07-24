@@ -27,7 +27,6 @@ async def test_get_single_task_group(
         task = await task_factory_v2(
             user_id=user1.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
-            source="source",
         )
 
         res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -70,7 +69,6 @@ async def test_get_task_group_list(
     async with MockCurrentUser() as user2:
         await task_factory_v2(
             user_id=user2.id,
-            source="source1",
             args_schema_non_parallel={"foo": 0, "bar": 1},
             args_schema_parallel={"xxx": 2, "yyy": 3},
             task_group_kwargs=dict(
@@ -81,7 +79,6 @@ async def test_get_task_group_list(
         )
         await task_factory_v2(
             user_id=user2.id,
-            source="source2",
             task_group_kwargs=dict(
                 active=False, pkg_name="aaa", version="1.2.3"
             ),
@@ -90,21 +87,18 @@ async def test_get_task_group_list(
         )
         await task_factory_v2(
             user_id=user2.id,
-            source="source3",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="xxx"
             ),
         )
         await task_factory_v2(
             user_id=user2.id,
-            source="source4",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="abc"
             ),
         )
         await task_factory_v2(
             user_id=user2.id,
-            source="source5",
             task_group_kwargs=dict(
                 pkg_name="bbb",
                 version=None,
@@ -112,7 +106,6 @@ async def test_get_task_group_list(
         )
         await task_factory_v2(
             user_id=user2.id,
-            source="source6",
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="1.0.1"
             ),
@@ -173,7 +166,6 @@ async def test_get_task_group_list(
         await task_factory_v2(
             user_id=user3.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
-            source="source3",
         )
 
         res = await client.get(f"{PREFIX}/")
@@ -196,7 +188,7 @@ async def test_get_task_group_list(
 
 async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
     async with MockCurrentUser() as user1:
-        task = await task_factory_v2(user_id=user1.id, source="source")
+        task = await task_factory_v2(user_id=user1.id)
 
     task_group_activity = TaskGroupActivityV2(
         user_id=user1.id,
@@ -236,7 +228,7 @@ async def test_delete_task_group_fail(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, source="source")
+        task = await task_factory_v2(user_id=user.id)
         await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
 
         res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
@@ -340,7 +332,7 @@ async def test_get_task_group_activity_list(
     client, MockCurrentUser, db, task_factory_v2
 ):
     async with MockCurrentUser() as user:
-        task = await task_factory_v2(user_id=user.id, source="source")
+        task = await task_factory_v2(user_id=user.id)
 
         activity1 = TaskGroupActivityV2(
             user_id=user.id,
