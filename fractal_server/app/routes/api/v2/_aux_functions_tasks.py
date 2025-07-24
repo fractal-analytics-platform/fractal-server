@@ -231,11 +231,14 @@ async def _get_collection_task_group_activity_status_message(
     )
     task_group_activity_list = res.scalars().all()
     if len(task_group_activity_list) > 1:
-        msg = (
-            "\nWarning: "
+        msg_short = (
             "Expected only one TaskGroupActivityV2 associated to TaskGroup "
             f"{task_group_id}, found {len(task_group_activity_list)} "
             f"(IDs: {[tga.id for tga in task_group_activity_list]})."
+        )
+        logger.error(f"UnreachableBranchError: {msg_short}")
+        msg = (
+            f"\nWarning: {msg_short}\n"
             "Warning: this should have not happened, please contact an admin."
         )
     elif len(task_group_activity_list) == 1:
@@ -268,13 +271,16 @@ async def _verify_non_duplication_user_constraint(
     if duplicate:
         user = await db.get(UserOAuth, user_id)
         if len(duplicate) > 1:
+            error_msg = (
+                f"User '{user.email}' already owns {len(duplicate)} task "
+                f"groups with name='{pkg_name}' and {version=} "
+                f"(IDs: {[group.id for group in duplicate]})."
+            )
+            logger.error(f"UnreachableBranchError: {error_msg}")
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    "Invalid state:\n"
-                    f"User '{user.email}' already owns {len(duplicate)} task "
-                    f"groups with name='{pkg_name}' and {version=} "
-                    f"(IDs: {[group.id for group in duplicate]}).\n"
+                    f"Invalid state: {error_msg}\n"
                     "This should have not happened: please contact an admin."
                 ),
             )
@@ -310,13 +316,16 @@ async def _verify_non_duplication_group_constraint(
     if duplicate:
         user_group = await db.get(UserGroup, user_group_id)
         if len(duplicate) > 1:
+            error_msg = (
+                f"UserGroup '{user_group.name}' already owns "
+                f"{len(duplicate)} task groups with name='{pkg_name}' and "
+                f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
+            )
+            logger.error(error_msg)
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    "Invalid state:\n"
-                    f"UserGroup '{user_group.name}' already owns "
-                    f"{len(duplicate)} task groups with name='{pkg_name}' and "
-                    f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
+                    f"Invalid state:\n{error_msg}"
                     "This should have not happened: please contact an admin."
                 ),
             )

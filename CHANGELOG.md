@@ -4,6 +4,8 @@
 
 * Task life cycle:
     * Also edit `tool.pixi.project.platforms` section of `pyproject.toml`, for `pixi`-based task collection (\#2711).
+* Internal:
+    * Extend use of `UnreachableBranchError` in API and runner (\#2726).
 * Dependencies:
     * Bump `fastapi` to version `0.116.*` (\#2718).
     * Bump all `docs` optional dependencies (\#2722).
