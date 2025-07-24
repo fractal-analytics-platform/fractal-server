@@ -58,7 +58,6 @@ async def test_collect_pip_local_fail_rmtree(
     tmp_path,
     db,
     first_user,
-    testdata_path,
     current_py_version,
     monkeypatch,
 ):
@@ -79,13 +78,7 @@ async def test_collect_pip_local_fail_rmtree(
         pkg_name="fractal-tasks-mock",
         version="0.0.1",
         origin="local",
-        archive_path=(
-            testdata_path.parent
-            / (
-                "v2/fractal_tasks_fail/invalid_manifest/dist/"
-                "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-            )
-        ).as_posix(),
+        archive_path=(tmp_path / "fake/path").as_posix(),
         python_version=current_py_version,
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
@@ -110,34 +103,29 @@ async def test_collect_pip_local_fail_rmtree(
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
     # Run background task
-    archive_path = testdata_path.parent / (
-        "v2/fractal_tasks_fail/invalid_manifest/dist/"
-        "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    with open(archive_path, "rb") as whl:
-        try:
-            collect_local(
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-                wheel_file=FractalUploadedFile(
-                    contents=whl.read(),
-                    filename=archive_path.name,
-                ),
-            )
-        except RuntimeError as e:
-            print(
-                f"Caught exception {e} within the test, "
-                "which is taking place in "
-                "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
-            )
-        # Verify that collection failed
-        task_group_activity_v2 = await db.get(
-            TaskGroupActivityV2, task_group_activity.id
+    try:
+        collect_local(
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            wheel_file=FractalUploadedFile(
+                contents=b"fake-bytes",
+                filename="fractal_tasks_mock-0.0.1-py3-none-any.whl",
+            ),
         )
-        debug(task_group_activity_v2)
-        assert task_group_activity_v2.status == "failed"
-        assert "Broken rm" in task_group_activity_v2.log
-        assert path.exists()
+    except RuntimeError as e:
+        print(
+            f"Caught exception {e} within the test, "
+            "which is taking place in "
+            "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
+        )
+    # Verify that collection failed
+    task_group_activity_v2 = await db.get(
+        TaskGroupActivityV2, task_group_activity.id
+    )
+    debug(task_group_activity_v2)
+    assert task_group_activity_v2.status == "failed"
+    assert "Broken rm" in task_group_activity_v2.log
+    assert path.exists()
 
 
 async def test_bad_wheel_file_arguments(
