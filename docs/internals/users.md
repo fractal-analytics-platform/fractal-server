@@ -5,7 +5,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## User Model
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](../../reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
+A Fractal user corresponds to an instance of the [`UserOAuth`](..//reference/fractal_server/app/models/security.md/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
 | Attribute | Type | Nullable | Default |
 | :--- | :---: | :---: | :---: |
@@ -23,18 +23,18 @@ The colored attributes are specific for Fractal users, while the other attribute
 
 In the startup phase, `fractal-server` always creates a default user, who also has the superuser privileges that are necessary for managing other users.
 The credentials for this user are defined via the environment variables
-[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@fractal.xy`)
+[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@fractal.xy`)
 and
-[`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
+[`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
 > **⚠️ You should always modify the password of the default user after it's created;**
-> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
+> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../openapi.md), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
 > <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
 
 The most common use cases for `fractal-server` are:
 
-1. The server is used by a single user (e.g. on their own machine, with the [local backend](../runners/local)); in this case you may simply customize and use the default user.
-2. The server has multiple users; in this case the admin may use the default user (or another user with superuser privileges) to create additional users (with no superuser privileges). For `fractal-server` to execute jobs on a SLURM cluster (through the corresponding [SLURM backend](../runners/slurm)), each Fractal must be associated to a cluster user via the `slurm_user` attribute (see [here](../runners/slurm/#user-impersonation) for more details about SLURM users).
+1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)); in this case you may simply customize and use the default user.
+2. The server has multiple users; in this case the admin may use the default user (or another user with superuser privileges) to create additional users (with no superuser privileges). For `fractal-server` to execute jobs on a SLURM cluster (through the corresponding [SLURM backend](runners/slurm.md)), each Fractal must be associated to a cluster user via the `slurm_user` attribute (see [here](runners/slurm.md/#user-impersonation) for more details about SLURM users).
 
 More details about user management are provided in the [User Management section](#user-management) below.
 
@@ -125,7 +125,7 @@ and at the end of this procedure, you will kwnow the _Client ID_ and _Client Sec
 
 > You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
 
-To add an `OAuth2` client, the following environment variables must be added to [`fractal-server` configuration](../../configuration/):
+To add an `OAuth2` client, the following environment variables must be added to [`fractal-server` configuration](../configuration.md):
 
 === "OIDC (single client)"
 
@@ -333,11 +333,11 @@ Each endpoint that operates on one of these resources (or directly on a `Project
 
 ### Endpoint logic
 
-The [User Model](#user-model) includes additional attributes `username` and `slurm_user`, which are optional and default to `None`. Apart from `slurm_user` being needed for [User Impersonation in SLURM](../runners/slurm/#user-impersonation), these two attributes are also used for additional access control to `Task` resources.
+The [User Model](#user-model) includes additional attributes `username` and `slurm_user`, which are optional and default to `None`. Apart from `slurm_user` being needed for [User Impersonation in SLURM](runners/slurm.md#user-impersonation), these two attributes are also used for additional access control to `Task` resources.
 
 > ⚠️ This is an experimental feature, which will likely evolve in the future (possibly towards the implementation of user groups/roles).
 
-When a `Task` is [created](../..//reference/fractal_server/app/routes/api/routes/v1/task/#fractal_server.app.routes.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
+When a `Task` is created, the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
 The following endpoints require a non-superuser user to be the owner of the Task:
 
 - PATCH `/api/v1/task/{task_id}/`,
@@ -473,7 +473,7 @@ Return the user with a given `id`.
 
 Update the user with a given `id`.
 
-Requires a [`UserUpdate`](../../reference/fractal_server/app/schemas/user#fractal_server.app.schemas.user.UserUpdate).
+Requires a `UserUpdate` payload.
 
 **DELETE `/{id}/`**
 

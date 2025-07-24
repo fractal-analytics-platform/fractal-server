@@ -33,8 +33,8 @@ will initialise a Python virtual environment and install Fractal Server and all 
 ## Update database schema during development
 
 Whenever the models are modified (either in
-[`app/models`](../reference/fractal_server/app/models/) or in
-[`app/schemas`](../reference/fractal_server/app/schemas)), you should
+[`app/models`](reference/fractal_server/app/models/index.md) or in
+[`app/schemas`](reference/fractal_server/app/schemas/index.md)), you should
 update them via a migration. To check whether this is needed, run
 ```
 poetry run alembic check
@@ -55,7 +55,7 @@ $ poetry run alembic revision --autogenerate -m "Some migration message"
 1. Checkout to branch `main`.
 2. Check that the current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
 3. Update the `CHANGELOG.md` file (e.g. remove `(unreleased)` from the upcoming version).
-4. If you have modified the models, then you must also [create](./#update-database-schema) a new migration script (note: in principle the CI will fail if you forget this step).
+4. If you have modified the models, then you must also [create](#update-database-schema) a new migration script (note: in principle the CI will fail if you forget this step).
 5. Use one of the following
 ```
 poetry run bumpver update --tag-num --tag-commit --commit --dry

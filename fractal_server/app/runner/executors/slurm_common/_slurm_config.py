@@ -213,7 +213,7 @@ class SlurmConfig(BaseModel):
     `SlurmConfig` attributes (e.g. `mem_per_task_MB`), which are not meant to
     be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on the
     expected file content are defined in
-    [`SlurmConfigFile`](./#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
+    [`SlurmConfigFile`](#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
 
     Part of the attributes map directly to some of the SLURM attributes (see
     https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes
