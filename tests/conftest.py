@@ -71,7 +71,7 @@ from .fixtures_pixi import *  # noqa F403
 
 
 def _get_threads():
-    threads = [t for t in threading.enumerate() if not t.is_alive()]
+    threads = [t for t in threading.enumerate() if t.is_alive()]
     return threads, len(threads)
 
 
