@@ -8,81 +8,9 @@ permissions: {}
 
 jobs:
 
-  tests_api:
+  tests:
 
-    name: "V2 - API - Python 3.13"
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-      - name: Install poetry
-        run: pipx install poetry==2.1.3
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
-          cache: "poetry"
-
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
-
-      - name: Test with pytest
-        env:
-          DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" tests/v2/test_03_api --durations 0
-
-
-  tests_not_api:
-
-    name: "V2 - not API - Python 3.13"
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-      - name: Install poetry
-        run: pipx install poetry==2.1.3
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
-          cache: "poetry"
-
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
-
-      - name: Test with pytest
-        env:
-          DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" --ignore tests/v2/test_03_api --durations 0
-
-
-  tests_containers:
-
-    name: "V2 - Containers - Python 3.13"
+    name: "V2 - Python 3.13"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -126,4 +54,4 @@ jobs:
           poetry install --with dev --no-interaction
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
+        run: poetry run -m pytest -vv --durations 0
