@@ -9,6 +9,7 @@
 * Dependencies:
     * Bump `fastapi` to version `0.116.*` (\#2718).
     * Bump all `docs` optional dependencies (\#2722).
+    * Add support for Python 3.13 (\2716).
 * Documentation:
     * Remove/fix several obsolete docs pages (\#2722).
 * Testing:
