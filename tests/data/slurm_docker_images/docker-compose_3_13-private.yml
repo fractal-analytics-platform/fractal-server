@@ -10,7 +10,7 @@ services:
       context: ./slurm
       dockerfile: Dockerfile
       args:
-        - PYTHON_PATH=/.venv3.10/bin/python3.10
+        - PYTHON_PATH=/.venv3.13/bin/python3.13
     hostname: slurm
     volumes:
       - /private:/private:rw
