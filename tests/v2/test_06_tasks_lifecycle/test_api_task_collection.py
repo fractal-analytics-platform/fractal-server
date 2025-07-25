@@ -220,11 +220,11 @@ async def test_task_collection_failure_due_to_existing_path(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/testing-tasks-mock/0.1.0/"
+            settings.FRACTAL_TASKS_DIR / f"{user.id}/testing-tasks-mock/0.1.3/"
         ).as_posix()
         venv_path = (
             settings.FRACTAL_TASKS_DIR
-            / f"{user.id}/testing-tasks-mock/0.1.0/venv/"
+            / f"{user.id}/testing-tasks-mock/0.1.3/venv/"
         ).as_posix()
 
         # Create fake task group
@@ -233,7 +233,7 @@ async def test_task_collection_failure_due_to_existing_path(
             path=path,
             venv_path=venv_path,
             pkg_name="testing-tasks-mock-FAKE",
-            version="0.1.0",
+            version="0.1.3",
             user_id=user.id,
         )
         db.add(tg)
@@ -245,7 +245,7 @@ async def test_task_collection_failure_due_to_existing_path(
         # Collect again and fail due to another group having the same path set
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.0"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.3"),
         )
         assert res.status_code == 422
         assert "Other TaskGroups already have path" in res.json()["detail"]

@@ -76,7 +76,7 @@ async def test_task_collection_ssh_from_pypi(
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "0.0.3"
+        package_version = "0.1.2"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
@@ -146,7 +146,7 @@ async def test_task_collection_ssh_from_pypi(
         debug(res.json())
 
         # BACKGROUND FAILURE 1: existing folder
-        package_version = "0.1.1"
+        package_version = "0.1.2"
         remote_folder = (
             Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
