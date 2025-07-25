@@ -76,7 +76,7 @@ async def test_task_collection_ssh_from_pypi(
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "0.0.3"
+        package_version = "0.1.3"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(
@@ -146,7 +146,7 @@ async def test_task_collection_ssh_from_pypi(
         debug(res.json())
 
         # BACKGROUND FAILURE 1: existing folder
-        package_version = "0.1.1"
+        package_version = "0.1.2"
         remote_folder = (
             Path(REMOTE_TASKS_BASE_DIR)
             / str(user.id)
@@ -183,7 +183,7 @@ async def test_task_collection_ssh_from_pypi(
             safe_root=REMOTE_TASKS_BASE_DIR,
         )
 
-        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+    _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
 
 @pytest.mark.container
@@ -300,7 +300,7 @@ async def test_task_collection_ssh_failure(
         assert "Removing folder failed" in task_group_activity["log"]
         assert ERROR_MSG_2 in task_group_activity["log"]
 
-        _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+    _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
 
 
 async def test_task_collection_ssh_failure_no_connection(

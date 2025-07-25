@@ -405,7 +405,7 @@ class Settings(BaseSettings):
     """
 
     FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: None | (
-        Literal["3.9", "3.10", "3.11", "3.12"]
+        Literal["3.9", "3.10", "3.11", "3.12", "3.13"]
     ) = None
     """
     Default Python version to be used for task collection. Defaults to the
@@ -437,6 +437,11 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
+    FRACTAL_TASKS_PYTHON_3_13: str | None = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.13.
+    """
+
     @model_validator(mode="before")
     @classmethod
     def check_tasks_python(cls, values):
@@ -450,7 +455,7 @@ class Settings(BaseSettings):
             `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
         """
         # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
-        for version in ["3_9", "3_10", "3_11", "3_12"]:
+        for version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
             key = f"FRACTAL_TASKS_PYTHON_{version}"
             value = values.get(key)
             if value is not None and not Path(value).is_absolute():
@@ -490,7 +495,7 @@ class Settings(BaseSettings):
             )
 
             # Unset all existing interpreters variable
-            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+            for _version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
                 if _version == current_version:
                     values[key] = sys.executable

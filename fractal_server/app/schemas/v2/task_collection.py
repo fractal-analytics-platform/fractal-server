@@ -49,7 +49,9 @@ class TaskCollectPipV2(BaseModel):
     package: NonEmptyStr | None = None
     package_version: NonEmptyStr | None = None
     package_extras: NonEmptyStr | None = None
-    python_version: Literal["3.9", "3.10", "3.11", "3.12"] | None = None
+    python_version: Literal[
+        "3.9", "3.10", "3.11", "3.12", "3.13"
+    ] | None = None
     pinned_package_versions: DictStrStr | None = None
 
     @field_validator(
