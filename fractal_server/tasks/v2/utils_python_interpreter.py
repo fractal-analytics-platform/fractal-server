@@ -21,7 +21,7 @@ def get_python_interpreter_v2(
         interpreter: string representing the python executable or its path
     """
 
-    if python_version not in ["3.9", "3.10", "3.11", "3.12"]:
+    if python_version not in ["3.9", "3.10", "3.11", "3.12", "3.13"]:
         raise ValueError(f"Invalid {python_version=}.")
 
     settings = Inject(get_settings)
