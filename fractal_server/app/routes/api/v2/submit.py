@@ -167,9 +167,13 @@ async def apply_workflow(
         try:
             fractal_ssh = fractal_ssh_list.get(**ssh_config)
         except Exception as e:
+            logger.error(
+                "Could not get a valid SSH connection in the submit endpoint. "
+                f"Original error: '{str(e)}'."
+            )
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=str(e),
+                detail="Error in setting up the SSH connection.",
             )
     else:
         fractal_ssh = None
