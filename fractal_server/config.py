@@ -495,7 +495,7 @@ class Settings(BaseSettings):
             )
 
             # Unset all existing interpreters variable
-            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+            for _version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
                 if _version == current_version:
                     values[key] = sys.executable
