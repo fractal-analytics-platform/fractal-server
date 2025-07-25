@@ -169,10 +169,7 @@ async def apply_workflow(
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Error in SSH connection to the remote server."
-                    f"Original error: '{e}'."
-                ),
+                detail=str(e),
             )
     else:
         fractal_ssh = None
