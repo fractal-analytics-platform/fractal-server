@@ -986,7 +986,7 @@ async def test_status_based_submission(
         user_id=user_id,
     )
 
-    return
+    return  # FIXME: see issue 2736
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
