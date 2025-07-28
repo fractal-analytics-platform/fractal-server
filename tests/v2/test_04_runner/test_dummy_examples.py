@@ -888,7 +888,7 @@ async def test_status_based_submission(
         execute_tasks_v2_mod(
             wf_task_list=[wftask_failing],
             dataset=dataset,
-            workflow_dir_local=tmp_path / "job0",
+            workflow_dir_local=tmp_path / str(job.id),
             job_id=job.id,
             runner=local_runner,
             user_id=user_id,
@@ -925,7 +925,7 @@ async def test_status_based_submission(
     execute_tasks_v2_mod(
         wf_task_list=[wftask_ok],
         dataset=dataset,
-        workflow_dir_local=tmp_path / "job1",
+        workflow_dir_local=tmp_path / str(job.id),
         job_id=job.id,
         runner=local_runner,
         user_id=user_id,
@@ -939,8 +939,6 @@ async def test_status_based_submission(
     assert last_history_unit.zarr_urls == []
     assert last_history_unit.status == HistoryUnitStatusWithUnset.DONE
 
-    return
-
     # Case 1: Run and succeed for no images (by requiring the DONE ones)
     job = await job_factory_v2(
         project_id=project.id,
@@ -951,7 +949,7 @@ async def test_status_based_submission(
     execute_tasks_v2_mod(
         wf_task_list=[wftask_ok],
         dataset=dataset,
-        workflow_dir_local=tmp_path / "job1",
+        workflow_dir_local=tmp_path / str(job.id),
         job_id=job.id,
         runner=local_runner,
         user_id=user_id,
@@ -966,8 +964,6 @@ async def test_status_based_submission(
     debug(res.scalars().all())
     res = await db.execute(select(HistoryUnit).order_by(HistoryUnit.id))
     debug(res.scalars().all())
-
-    return
 
     # Case 2: Run successfully on all images
     dataset = await dataset_factory_v2(
@@ -984,13 +980,12 @@ async def test_status_based_submission(
     execute_tasks_v2_mod(
         wf_task_list=[wftask_ok],
         dataset=dataset,
-        workflow_dir_local=tmp_path / "job1",
+        workflow_dir_local=tmp_path / str(job.id),
         job_id=job.id,
         runner=local_runner,
         user_id=user_id,
     )
 
-    ##
     return
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
