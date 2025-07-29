@@ -100,6 +100,57 @@ async def test_submit_job_failures(
         assert "empty task list" in res.json()["detail"]
 
 
+async def test_submit_job_ssh_connection_failure(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    override_settings_factory,
+    current_py_version,
+    testdata_path,
+    ssh_keys,
+    tmp777_path,
+):
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm_ssh",
+        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=dict(
+            ssh_host="localhost",
+            ssh_username="SLURM_USER",
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+        ),
+    ) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="ds1", type="type1"
+        )
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(user_id=user.id, name="1to2")
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"] == "Error in setting up the SSH connection."
+        )
+
+
 async def test_submit_incompatible_filters(
     db,
     client,
