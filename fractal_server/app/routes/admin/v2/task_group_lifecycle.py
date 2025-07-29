@@ -25,7 +25,6 @@ from fractal_server.app.routes.aux.validate_user_settings import (
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -52,7 +51,7 @@ async def deactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupActivityV2Read:
     """
     Deactivate task-group venv
     """
@@ -157,7 +156,7 @@ async def reactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupActivityV2Read:
     """
     Deactivate task-group venv
     """

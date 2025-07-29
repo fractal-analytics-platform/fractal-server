@@ -137,7 +137,9 @@ class BaseSlurmRunner(BaseRunner):
     def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def _is_squeue_error_recoverable(self, exception: BaseException) -> True:
+    def _is_squeue_error_recoverable(
+        self, exception: BaseException
+    ) -> Literal[True]:
         """
         Determine whether a `squeue` error is considered recoverable.
 
@@ -726,8 +728,8 @@ class BaseSlurmRunner(BaseRunner):
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
-                results = {}
-                exceptions = {
+                results: dict[int, Any] = {}
+                exceptions: dict[int, BaseException] = {
                     ind: SHUTDOWN_EXCEPTION
                     for ind in range(len(list_parameters))
                 }
@@ -830,8 +832,10 @@ class BaseSlurmRunner(BaseRunner):
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
                     )
-            results = {}
-            exceptions = {ind: e for ind in range(len(list_parameters))}
+            results: dict[int, Any] = {}
+            exceptions: dict[int, BaseException] = {
+                ind: e for ind in range(len(list_parameters))
+            }
             return results, exceptions
 
         # Retrieval phase

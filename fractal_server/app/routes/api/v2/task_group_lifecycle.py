@@ -49,7 +49,7 @@ async def deactivate_task_group(
     response: Response,
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupActivityV2Read:
     """
     Deactivate task-group venv
     """

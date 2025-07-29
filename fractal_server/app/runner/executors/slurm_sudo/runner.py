@@ -167,7 +167,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         )
         return res.stdout
 
-    def run_squeue(self, job_ids: list[str]) -> str:
+    def run_squeue(self, *, job_ids: list[str]) -> str:
         """
         Run `squeue` for a set of SLURM job IDs.
         """
