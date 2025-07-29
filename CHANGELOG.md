@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.8 (Unreleased)
+
+* Documentation:
+    * Fix `Fractal Users` documentation page (\#2738).
+
 # 2.15.7
 
 * API:
