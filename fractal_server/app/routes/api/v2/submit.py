@@ -156,6 +156,28 @@ async def apply_workflow(
         if len(user_settings.slurm_accounts) > 0:
             job_create.slurm_account = user_settings.slurm_accounts[0]
 
+    # User appropriate FractalSSH object
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        ssh_config = dict(
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
+        )
+        fractal_ssh_list = request.app.state.fractal_ssh_list
+        try:
+            fractal_ssh = fractal_ssh_list.get(**ssh_config)
+        except Exception as e:
+            logger.error(
+                "Could not get a valid SSH connection in the submit endpoint. "
+                f"Original error: '{str(e)}'."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Error in setting up the SSH connection.",
+            )
+    else:
+        fractal_ssh = None
+
     # Add new Job object to DB
     job = JobV2(
         project_id=project_id,
@@ -218,18 +240,6 @@ async def apply_workflow(
     job.working_dir_user = WORKFLOW_DIR_REMOTE.as_posix()
     await db.merge(job)
     await db.commit()
-
-    # User appropriate FractalSSH object
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        ssh_config = dict(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-        fractal_ssh_list = request.app.state.fractal_ssh_list
-        fractal_ssh = fractal_ssh_list.get(**ssh_config)
-    else:
-        fractal_ssh = None
 
     # Expunge user settings from db, to use in background task
     db.expunge(user_settings)
