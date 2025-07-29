@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.8 (unreleased)
+
+* Internal
+    * Improve type hints (\#2739).
+
 # 2.15.7
 
 * API:
