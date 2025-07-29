@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.7 (unreleased)
+# 2.15.7
 
 * API:
     * Capture SSH related failure in submit-job endpoint (\#2734).
