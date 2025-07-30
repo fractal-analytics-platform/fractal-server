@@ -73,10 +73,9 @@ class UserOAuth(SQLModel, table=True):
         is_active:
         is_superuser:
         is_verified:
-        slurm_user:
-        slurm_accounts:
         username:
         oauth_accounts:
+        settings:
     """
 
     __tablename__ = "user_oauth"
