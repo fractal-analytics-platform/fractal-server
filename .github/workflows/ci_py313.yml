@@ -1,6 +1,7 @@
-name: ci
+name: ci python 3.13
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 23 * * 2"
 
@@ -39,4 +40,4 @@ jobs:
           poetry install --with dev --no-interaction
 
       - name: Test with pytest
-        run: poetry run -m pytest -vv --durations 0
+        run: poetry run pytest -vv --durations 0

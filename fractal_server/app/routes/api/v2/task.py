@@ -69,7 +69,7 @@ async def get_list_task(
         stm = stm.where(TaskV2.authors.icontains(author))
 
     res = await db.execute(stm)
-    task_list = res.scalars().all()
+    task_list = list(res.scalars().all())
     await db.close()
     if args_schema is False:
         for task in task_list:

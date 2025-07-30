@@ -4,6 +4,8 @@
 
 * Documentation:
     * Fix `Fractal Users` documentation page (\#2738).
+* Internal
+    * Improve type hints (\#2739).
 
 # 2.15.7
 

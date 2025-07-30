@@ -6,7 +6,7 @@ def get_new_workflow_task_meta(
     old_workflow_task_meta: dict | None,
     old_task_meta: dict | None,
     new_task_meta: dict | None,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """
     Prepare new meta field based on old/new tasks and old workflow task.
     """

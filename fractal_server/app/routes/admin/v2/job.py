@@ -109,7 +109,7 @@ async def view_job(
 
 @router.get("/{job_id}/", response_model=JobReadV2)
 async def view_single_job(
-    job_id: int = None,
+    job_id: int,
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
