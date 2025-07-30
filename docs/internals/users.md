@@ -5,7 +5,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## User Model
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](..//reference/fractal_server/app/models/security.md/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
+A Fractal user corresponds to an instance of the [`UserOAuth`](../../reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
 | Attribute | Type | Nullable | Default |
 | :--- | :---: | :---: | :---: |
@@ -17,9 +17,9 @@ A Fractal user corresponds to an instance of the [`UserOAuth`](..//reference/fra
 | is_verified | bool | | false |
 | <span style="background-color:teal;color:white">&nbsp;username&nbsp;</span> | string | * | null |
 
-The colored attribute (`username`) is specific for Fractal users, while the other attributes are [provided](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/fastapi_users_db_sqlmodel/__init__.py) by FastAPI Users.
+The colored attribute (`username`) is specific for Fractal users, while the other attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
-In the startup phase, `fractal-server` always creates a default user, who also has the superuser privileges that are necessary for managing other users.
+In the startup phase, `fractal-server` creates a default user, who also has the superuser privileges that are necessary for managing other users.
 The credentials for this user are defined via the environment variables
 [`FRACTAL_ADMIN_DEFAULT_EMAIL`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@fractal.xy`)
 and
@@ -32,7 +32,7 @@ and
 The most common use cases for `fractal-server` are:
 
 1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)); in this case you may simply customize and use the default user.
-2. The server has multiple users; in this case the admin may use the default user (or another user with superuser privileges) to create additional users (with no superuser privileges). For `fractal-server` to execute jobs on a SLURM cluster (through the corresponding [SLURM backend](runners/slurm.md)), each Fractal must be associated to a cluster user via the `slurm_user` attribute defined in the related table `UserSettings` (see [here](runners/slurm.md/#user-impersonation) for more details about SLURM users).
+2. The server has multiple users, and it is connected to a SLURM cluster. For `fractal-server` to execute jobs on the SLURM cluster each Fractal must be associated to a cluster user via additional properties defined in the [`UserSettings` table](../../reference/fractal_server/app/models/user_settings/). See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
 
 More details about user management are provided in the [User Management section](#user-management) below.
 
