@@ -616,7 +616,7 @@ class Settings(BaseSettings):
 
     FRACTAL_PIXI_CONFIG_FILE: Path | None = None
     """
-    Path to the Pixi configuration JSON file that will populate `PixiSettings`
+    Path to the Pixi configuration JSON file that will populate `PixiSettings`.
     """
 
     pixi: PixiSettings | None = None
