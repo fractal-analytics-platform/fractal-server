@@ -66,37 +66,74 @@ class MailSettings(BaseModel):
 
 class PixiSettings(BaseModel):
     """
-    Configuration for Pixi task collection
+    Configuration for Pixi Task collection.
 
-    See https://pixi.sh/latest/reference/cli/pixi/install/#config-options for
-    `pixi install` concurrency options.
-    See https://docs.rs/tokio/latest/tokio/#cpu-bound-tasks-and-blocking-code
-    for `tokio` configuration.
+    In order to use Pixi for Task collection, you must have one or more Pixi
+    binaries in your machine
+    (see
+    [example/get_pixi.sh](https://github.com/fractal-analytics-platform/fractal-server/blob/main/example/get_pixi.sh)
+    for installation example).
 
-    versions:
-        Available `pixi` versions and their `PIXI_HOME` folders.
-    default_version:
-        Default `pixi` version to use for task collection - must be one
-        of `versions` keys.
-    PIXI_CONCURRENT_SOLVES:
-        Value of `--concurrent-solves` for `pixi install`.
-    PIXI_CONCURRENT_DOWNLOADS:
-        Value of `--concurrent-downloads for `pixi install`.
-    TOKIO_WORKER_THREADS:
-        From tokio docs, "The core threads are where all asynchronous code
-        runs, and Tokio will by default spawn one for each CPU core. You can
-        use the environment variable TOKIO_WORKER_THREADS to override the
-        default value."
+    To let Fractal Server use these binaries for Task collection, a JSON file
+    must be prepared with the data to populate `PixiSettings` (arguments with
+    default values may be omitted).
+
+    The path to this JSON file must then be provided to Fractal via the
+    environment variable `FRACTAL_PIXI_CONFIG_FILE`.
     """
 
     versions: DictStrStr
-    default_version: str
+    """
+    A dictionary with Pixi versions as keys and paths to the corresponding
+    folder as values.
 
+    E.g. let's assume that you have Pixi v0.47.0 at
+    `/pixi-path/0.47.0/bin/pixi` and Pixi v0.48.2 at
+    `/pixi-path/0.48.2/bin/pixi`, then
+    ```json
+    "versions": {
+        "0.47.0": "/pixi-path/0.47.0",
+        "0.48.2": "/pixi-path/0.48.2"
+    }
+    ```
+    """
+    default_version: str
+    """
+    Default Pixi version to be used for Task collection.
+
+    Must be a key of the `versions` dictionary.
+    """
     PIXI_CONCURRENT_SOLVES: int = 4
+    """
+    Value of
+    [`--concurrent-solves`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-solves)
+    for `pixi install`.
+    """
     PIXI_CONCURRENT_DOWNLOADS: int = 4
+    """
+    Value of
+    [`--concurrent-downloads`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-downloads)
+    for `pixi install`.
+    """
     TOKIO_WORKER_THREADS: int = 2
+    """
+    From
+    [Tokio documentation](
+    https://docs.rs/tokio/latest/tokio/#cpu-bound-tasks-and-blocking-code
+    )
+    :
+
+        The core threads are where all asynchronous code runs,
+        and Tokio will by default spawn one for each CPU core.
+        You can use the environment variable `TOKIO_WORKER_THREADS` to override
+        the default value.
+    """
     DEFAULT_ENVIRONMENT: str = "default"
+    """
+    """
     DEFAULT_PLATFORM: str = "linux-64"
+    """
+    """
 
     @model_validator(mode="after")
     def check_pixi_settings(self):
@@ -578,6 +615,9 @@ class Settings(BaseSettings):
     """
 
     FRACTAL_PIXI_CONFIG_FILE: Path | None = None
+    """
+    Path to the Pixi configuration JSON file that will populate `PixiSettings`.
+    """
 
     pixi: PixiSettings | None = None
 
