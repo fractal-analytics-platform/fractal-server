@@ -654,9 +654,9 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            self._old_submit_single_sbatch(
+            self._submit_sbatch(
                 base_command=base_command,
-                slurm_job=slurm_job,
+                slurm_job=[slurm_job],
                 slurm_config=config,
             )
             logger.debug(f"[submit] END submission phase, {self.job_ids=}")
