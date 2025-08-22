@@ -47,11 +47,7 @@ def _remove_status_from_attributes(
     Drop attribute `IMAGE_STATUS_KEY` from all images.
     """
     images_copy = deepcopy(images)
-    [
-        img["attributes"].pop(IMAGE_STATUS_KEY)
-        for img in images_copy
-        if "attributes" in img
-    ]
+    [img["attributes"].pop(IMAGE_STATUS_KEY, None) for img in images_copy]
     return images_copy
 
 
