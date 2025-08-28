@@ -81,8 +81,6 @@ def test_run_command(fractal_ssh: FractalSSH):
     # Successful remote execution
     stdout = fractal_ssh.run_command(
         cmd="whoami",
-        max_attempts=1,
-        base_interval=1.0,
         lock_timeout=1.0,
     )
     assert stdout.strip("\n") == "fractal"
@@ -93,8 +91,6 @@ def test_run_command(fractal_ssh: FractalSSH):
     ):
         fractal_ssh.run_command(
             cmd="ls --invalid-option",
-            max_attempts=1,
-            base_interval=1.0,
             lock_timeout=1.0,
         )
 
@@ -157,16 +153,10 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
 
     mocked_fractal_ssh = MockFractalSSH(connection=fractal_ssh._connection)
 
-    # Call with max_attempts=1 fails
-    with pytest.raises(RuntimeError, match="Reached last attempt"):
-        mocked_fractal_ssh.run_command(cmd="whoami", max_attempts=1)
-
     # Call with max_attempts=2 goes through (note that we have to reset
     # `please_raise`)
     mocked_fractal_ssh.please_raise = True
-    stdout = mocked_fractal_ssh.run_command(
-        cmd="whoami", max_attempts=2, base_interval=0.1
-    )
+    stdout = mocked_fractal_ssh.run_command(cmd="whoami")
     assert stdout.strip() == "fractal"
 
 
@@ -471,9 +461,9 @@ def test_closed_socket(
     assert fractal_ssh._sftp_unsafe().sock.closed
 
     # Running an SFTP command now fails with an OSError
-    with pytest.raises(OSError, match="Socket is closed"):
-        fractal_ssh.send_file(local=local_file, remote=remote_file_2)
-    assert not Path(remote_file_2).exists()
+    # with pytest.raises(OSError, match="Socket is closed"):
+    fractal_ssh.send_file(local=local_file, remote=remote_file_2)
+    assert Path(remote_file_2).exists()
 
     # `check_connection` does its best to restore a corrupt connection
     fractal_ssh.check_connection()

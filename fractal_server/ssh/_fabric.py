@@ -3,6 +3,7 @@ import logging
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
+from functools import wraps
 from pathlib import Path
 from threading import Lock
 from typing import Any
@@ -42,6 +43,32 @@ class SSHConfig(BaseModel):
 
 
 logger = set_logger(__name__)
+
+
+def retry_if_socket_error(func):
+    @wraps(func)
+    def func_with_retry(*args, **kwargs):
+        self = args[0]
+        try:
+            self.logger.warning("FIRST TRY")
+            return func(*args, **kwargs)
+        except NoValidConnectionsError as e:
+            self.logger.warning(
+                f"Socket error type: {e.__class__.__name__}, {e}"
+            )
+            self.logger.warning("Now refresh connection")
+            self.check_connection()
+            self.logger.warning(f"Now retry {func.__name__}")
+            return func(*args, **kwargs)
+        except OSError as e:
+            self.logger.warning(f"Something goes wrong,{e}")
+            if "Socket is closed" in str(e):
+                self.logger.warning("Now refresh connection")
+                self.check_connection()
+                self.logger.warning(f"Now retry {func.__name__}")
+                return func(*args, **kwargs)
+
+    return func_with_retry
 
 
 @contextmanager
@@ -102,8 +129,6 @@ class FractalSSH:
     _lock: Lock
     _connection: Connection
     default_lock_timeout: float
-    default_max_attempts: int
-    default_base_interval: float
     sftp_get_prefetch: bool
     sftp_get_max_requests: int
     logger_name: str
@@ -112,8 +137,6 @@ class FractalSSH:
         self,
         connection: Connection,
         default_timeout: float = 250,
-        default_max_attempts: int = 5,
-        default_base_interval: float = 3.0,
         sftp_get_prefetch: bool = False,
         sftp_get_max_requests: int = 64,
         logger_name: str = __name__,
@@ -121,8 +144,6 @@ class FractalSSH:
         self._lock = Lock()
         self._connection = connection
         self.default_lock_timeout = default_timeout
-        self.default_base_interval = default_base_interval
-        self.default_max_attempts = default_max_attempts
         self.sftp_get_prefetch = sftp_get_prefetch
         self.sftp_get_max_requests = sftp_get_max_requests
         self.logger_name = logger_name
@@ -264,7 +285,7 @@ class FractalSSH:
                     "[check_connection] SSH connection is already OK, exit."
                 )
                 return
-            except (OSError, EOFError) as e:
+            except (OSError, EOFError, NoValidConnectionsError) as e:
                 self.logger.warning(
                     f"[check_connection] Detected error {str(e)}, re-open."
                 )
@@ -307,13 +328,12 @@ class FractalSSH:
             if self._connection.client is not None:
                 self._connection.client.close()
 
+    @retry_if_socket_error
     def run_command(
         self,
         *,
         cmd: str,
         allow_char: str | None = None,
-        max_attempts: int | None = None,
-        base_interval: float | None = None,
         lock_timeout: int | None = None,
     ) -> str:
         """
@@ -332,81 +352,50 @@ class FractalSSH:
 
         validate_cmd(cmd, allow_char=allow_char)
 
-        actual_max_attempts = self.default_max_attempts
-        if max_attempts is not None:
-            actual_max_attempts = max_attempts
-
-        actual_base_interval = self.default_base_interval
-        if base_interval is not None:
-            actual_base_interval = base_interval
-
         actual_lock_timeout = self.default_lock_timeout
         if lock_timeout is not None:
             actual_lock_timeout = lock_timeout
 
         t_0 = time.perf_counter()
-        ind_attempt = 0
-        while ind_attempt <= actual_max_attempts:
-            ind_attempt += 1
-            prefix = f"[attempt {ind_attempt}/{actual_max_attempts}]"
-            self.logger.info(f"{prefix} START running '{cmd}' over SSH.")
-            try:
-                # Case 1: Command runs successfully
-                res = self._run(
-                    cmd,
-                    label=f"run {cmd}",
-                    lock_timeout=actual_lock_timeout,
-                    hide=True,
-                    in_stream=False,
-                )
-                t_1 = time.perf_counter()
-                self.logger.info(
-                    f"{prefix} END   running '{cmd}' over SSH, "
-                    f"elapsed={t_1 - t_0:.3f}"
-                )
-                self.logger.debug("STDOUT:")
-                self.logger.debug(res.stdout)
-                self.logger.debug("STDERR:")
-                self.logger.debug(res.stderr)
-                return res.stdout
-            except NoValidConnectionsError as e:
-                # Case 2: Command fails with a connection error
-                self.logger.warning(
-                    f"{prefix} Running command `{cmd}` over SSH failed.\n"
-                    f"Original NoValidConnectionError:\n{str(e)}.\n"
-                    f"{e.errors=}\n"
-                )
-                if ind_attempt < actual_max_attempts:
-                    sleeptime = actual_base_interval**ind_attempt
-                    self.logger.warning(
-                        f"{prefix} Now sleep {sleeptime:.3f} "
-                        "seconds and retry."
-                    )
-                    time.sleep(sleeptime)
-                else:
-                    self.logger.error(f"{prefix} Reached last attempt")
-                    raise FractalSSHConnectionError(
-                        f"Reached last attempt "
-                        f"({max_attempts=}) for running "
-                        f"'{cmd}' over SSH"
-                    )
-            except UnexpectedExit as e:
-                # Case 3: Command fails with an actual error
-                error_msg = (
-                    f"{prefix} Running command `{cmd}` over SSH failed.\n"
-                    f"Original error:\n{str(e)}."
-                )
-                self.logger.error(error_msg)
-                raise FractalSSHCommandError(error_msg)
-            except FractalSSHTimeoutError as e:
-                raise e
-            except Exception as e:
-                self.logger.error(
-                    f"Running command `{cmd}` over SSH failed.\n"
-                    f"Original Error:\n{str(e)}."
-                )
-                raise FractalSSHUnknownError(f"{type(e)}: {str(e)}")
+        try:
+            # Case 1: Command runs successfully
+            res = self._run(
+                cmd,
+                label=f"run {cmd}",
+                lock_timeout=actual_lock_timeout,
+                hide=True,
+                in_stream=False,
+            )
+            t_1 = time.perf_counter()
+            self.logger.info(
+                f"END   running '{cmd}' over SSH, " f"elapsed={t_1 - t_0:.3f}"
+            )
+            self.logger.debug("STDOUT:")
+            self.logger.debug(res.stdout)
+            self.logger.debug("STDERR:")
+            self.logger.debug(res.stderr)
+            return res.stdout
+        # Case 2: Command fails with a connection error
+        except NoValidConnectionsError as e:
+            raise NoValidConnectionsError(errors=e.errors)
+        except UnexpectedExit as e:
+            # Case 3: Command fails with an actual error
+            error_msg = (
+                f"Running command `{cmd}` over SSH failed.\n"
+                f"Original error:\n{str(e)}."
+            )
+            self.logger.error(error_msg)
+            raise FractalSSHCommandError(error_msg)
+        except FractalSSHTimeoutError as e:
+            raise e
+        except Exception as e:
+            self.logger.error(
+                f"Running command `{cmd}` over SSH failed.\n"
+                f"Original Error:\n{str(e)}."
+            )
+            raise FractalSSHUnknownError(f"{type(e)}: {str(e)}")
 
+    @retry_if_socket_error
     def send_file(
         self,
         *,
@@ -447,6 +436,7 @@ class FractalSSH:
                 ),
             )
 
+    @retry_if_socket_error
     def fetch_file(
         self,
         *,
@@ -489,6 +479,7 @@ class FractalSSH:
                 ),
             )
 
+    @retry_if_socket_error
     def mkdir(self, *, folder: str, parents: bool = True) -> None:
         """
         Create a folder remotely via SSH.
@@ -503,6 +494,7 @@ class FractalSSH:
             cmd = f"mkdir {folder}"
         self.run_command(cmd=cmd)
 
+    @retry_if_socket_error
     def remove_folder(
         self,
         *,
@@ -538,6 +530,7 @@ class FractalSSH:
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)
 
+    @retry_if_socket_error
     def write_remote_file(
         self,
         *,
