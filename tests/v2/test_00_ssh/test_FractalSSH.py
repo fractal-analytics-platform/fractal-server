@@ -356,34 +356,34 @@ def test_novalidconnectionserror_in_sftp_methods(caplog):
         # Fail in several methods, because connection is closed
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.write_remote_file(path="/invalid", content="..")
         assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.send_file(local="/invalid", remote="/invalid")
         assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.fetch_file(local="/invalid", remote="/invalid")
         assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.remote_exists(path="/invalid")
         assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.read_remote_json_file(
                 filepath="/invalid",
             )
         assert "NoValidConnectionsError" in caplog.text
 
         caplog.clear
-        with pytest.raises(NoValidConnectionsError):
+        with pytest.raises(RuntimeError):
             fractal_ssh.read_remote_text_file(
                 filepath="/invalid",
             )
