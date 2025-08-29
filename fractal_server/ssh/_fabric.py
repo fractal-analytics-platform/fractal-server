@@ -50,7 +50,6 @@ def retry_if_socket_error(func):
     def func_with_retry(*args, **kwargs):
         self = args[0]
         try:
-            self.logger.warning("FIRST TRY")
             return func(*args, **kwargs)
         except NoValidConnectionsError as e:
             self.logger.warning(
@@ -67,6 +66,7 @@ def retry_if_socket_error(func):
                 self.check_connection()
                 self.logger.warning(f"Now retry {func.__name__}")
                 return func(*args, **kwargs)
+            raise e
 
     return func_with_retry
 
