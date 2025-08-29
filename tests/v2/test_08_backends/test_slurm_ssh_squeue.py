@@ -54,7 +54,6 @@ async def test_run_squeue(
         # must be returned
         squeue_stdout = runner.run_squeue(
             job_ids=[slurm_job_id],
-            max_attempts=1,
         )
         debug(squeue_stdout)
         assert f"{slurm_job_id} FRACTAL_STATUS_PLACEHOLDER" in squeue_stdout
