@@ -209,6 +209,7 @@ class FractalSSH:
         """
         return self._connection.sftp()
 
+    @retry_if_socket_error
     def read_remote_json_file(self, filepath: str) -> dict[str, Any]:
         self.logger.info(f"START reading remote JSON file {filepath}.")
         with _acquire_lock_with_timeout(
@@ -229,6 +230,7 @@ class FractalSSH:
         self.logger.info(f"END reading remote JSON file {filepath}.")
         return data
 
+    @retry_if_socket_error
     def read_remote_text_file(self, filepath: str) -> dict[str, Any]:
         """
         Read a remote text file into a string.
@@ -567,6 +569,7 @@ class FractalSSH:
         elapsed = time.perf_counter() - t_start
         self.logger.info(f"[write_remote_file] END, {elapsed=} s ({path}).")
 
+    @retry_if_socket_error
     def remote_exists(self, path: str) -> bool:
         """
         Return whether a remote file/folder exists
