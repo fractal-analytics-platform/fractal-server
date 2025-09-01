@@ -285,7 +285,7 @@ class FractalSSH:
                     "[check_connection] SSH connection is already OK, exit."
                 )
                 return
-            except (OSError, EOFError, NoValidConnectionsError) as e:
+            except (OSError, EOFError) as e:
                 self.logger.warning(
                     f"[check_connection] Detected error {str(e)}, re-open."
                 )
