@@ -69,7 +69,6 @@ async def test_run_squeue(
         with Connection("localhost") as connection:
             runner.fractal_ssh = FractalSSH(
                 connection=connection,
-                default_base_interval=1.0,
             )
             squeue_stdout = runner.run_squeue(job_ids=[123])
             debug(squeue_stdout)

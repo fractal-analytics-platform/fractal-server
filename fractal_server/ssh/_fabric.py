@@ -119,8 +119,6 @@ class FractalSSH:
         _lock:
         _connection:
         default_lock_timeout:
-        default_max_attempts:
-        default_base_interval:
         sftp_get_prefetch:
         sftp_get_max_requests:
         logger_name:
