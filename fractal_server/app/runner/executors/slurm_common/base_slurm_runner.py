@@ -443,6 +443,12 @@ class BaseSlurmRunner(BaseRunner):
         )
         logger.debug("[_submit_single_sbatch] END")
 
+    def _prepare_single_slurm_job(self) -> None:
+        pass
+
+    def _send_many_job_inputs(self) -> None:
+        pass
+
     def _fetch_artifacts(
         self,
         finished_slurm_jobs: list[SlurmJob],
@@ -803,8 +809,16 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 )
 
-            # NOTE: see issue 2431
-            logger.debug("[multisubmit] Transfer files and submit jobs.")
+            logger.debug("[multisubmit] Prepare jobs.")
+            for slurm_job in jobs_to_submit:
+                self._prepare_single_slurm_job()
+
+            if self.slurm_runner_type == "ssh":
+                logger.debug("[multisubmit] Transfer files via SSH.")
+                for slurm_job in jobs_to_submit:
+                    self._send_many_job_inputs()
+
+            logger.debug("[multisubmit] Submit jobs.")
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
                     base_command=base_command,
