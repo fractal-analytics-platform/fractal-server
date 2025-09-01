@@ -461,7 +461,6 @@ def test_closed_socket(
     assert fractal_ssh._sftp_unsafe().sock.closed
 
     # Running an SFTP command now fails with an OSError
-    # with pytest.raises(OSError, match="Socket is closed"):
     fractal_ssh.send_file(local=local_file, remote=remote_file_2)
     assert Path(remote_file_2).exists()
 
