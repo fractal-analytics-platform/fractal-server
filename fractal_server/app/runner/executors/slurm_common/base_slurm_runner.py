@@ -264,14 +264,14 @@ class BaseSlurmRunner(BaseRunner):
 
         return new_slurm_config
 
-    def _submit_single_sbatch(
+    def _prepare_single_slurm_job(
         self,
         *,
         base_command: str,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
-    ) -> str:
-        logger.debug("[_submit_single_sbatch] START")
+    ) -> None:
+        logger.debug("[_prepare_single_slurm_job] START")
 
         for task in slurm_job.tasks:
             # Write input file
@@ -301,7 +301,8 @@ class BaseSlurmRunner(BaseRunner):
                 json.dump(task.parameters, f, indent=2)
 
             logger.debug(
-                "[_submit_single_sbatch] Written " f"{task.input_file_local=}"
+                "[_prepare_single_slurm_job] Written "
+                f"{task.input_file_local=}"
             )
 
             if self.slurm_runner_type == "ssh":
@@ -315,7 +316,7 @@ class BaseSlurmRunner(BaseRunner):
                     remote=task.task_files.args_file_remote,
                 )
                 logger.debug(
-                    "[_submit_single_sbatch] Transferred "
+                    "[_prepare_single_slurm_job] Transferred "
                     f"{task.input_file_local=}"
                 )
 
@@ -355,7 +356,7 @@ class BaseSlurmRunner(BaseRunner):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logger.debug(script_lines)
+        logger.debug(f"[_prepare_single_slurm_job] {script_lines=}")
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
@@ -385,10 +386,19 @@ class BaseSlurmRunner(BaseRunner):
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
         logger.debug(
-            "[_submit_single_sbatch] Written "
+            "[_prepare_single_slurm_job] Written "
             f"{slurm_job.slurm_submission_script_local=}"
         )
 
+    def _send_many_job_inputs(self) -> None:
+        pass
+
+    def _submit_single_sbatch(
+        self,
+        *,
+        slurm_job: SlurmJob,
+        slurm_config: SlurmConfig,
+    ) -> str:
         if self.slurm_runner_type == "ssh":
             self.fractal_ssh.send_file(
                 local=slurm_job.slurm_submission_script_local,
@@ -442,12 +452,6 @@ class BaseSlurmRunner(BaseRunner):
             f"{slurm_job.slurm_job_id} to self.jobs."
         )
         logger.debug("[_submit_single_sbatch] END")
-
-    def _prepare_single_slurm_job(self) -> None:
-        pass
-
-    def _send_many_job_inputs(self) -> None:
-        pass
 
     def _fetch_artifacts(
         self,
@@ -631,8 +635,13 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            self._submit_single_sbatch(
+            self._prepare_single_slurm_job(
                 base_command=base_command,
+                slurm_job=slurm_job,
+                slurm_config=config,
+            )
+            self._submit_single_sbatch(
+                # base_command=base_command,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
@@ -811,7 +820,11 @@ class BaseSlurmRunner(BaseRunner):
 
             logger.debug("[multisubmit] Prepare jobs.")
             for slurm_job in jobs_to_submit:
-                self._prepare_single_slurm_job()
+                self._prepare_single_slurm_job(
+                    base_command=base_command,
+                    slurm_job=slurm_job,
+                    slurm_config=config,
+                )
 
             if self.slurm_runner_type == "ssh":
                 logger.debug("[multisubmit] Transfer files via SSH.")
@@ -821,7 +834,7 @@ class BaseSlurmRunner(BaseRunner):
             logger.debug("[multisubmit] Submit jobs.")
             for slurm_job in jobs_to_submit:
                 self._submit_single_sbatch(
-                    base_command=base_command,
+                    # base_command=base_command,
                     slurm_job=slurm_job,
                     slurm_config=config,
                 )
