@@ -56,14 +56,14 @@ def retry_if_socket_error(func):
                 f"Socket error type: {e.__class__.__name__}, {e}"
             )
             self.logger.warning("Now refresh connection")
-            self.check_connection()
+            self.refresh_connection()
             self.logger.warning(f"Now retry {func.__name__}")
             return func(*args, **kwargs)
         except OSError as e:
             self.logger.warning(f"Something goes wrong,{e}")
             if "Socket is closed" in str(e):
                 self.logger.warning("Now refresh connection")
-                self.check_connection()
+                self.refresh_connection()
                 self.logger.warning(f"Now retry {func.__name__}")
                 return func(*args, **kwargs)
             raise e
@@ -293,6 +293,9 @@ class FractalSSH:
                 )
         # Try opening the connection (if it was closed) or to re-open it (if
         # an error happened).
+        self.refresh_connection()
+
+    def refresh_connection(self) -> None:
         try:
             self.close()
             with _acquire_lock_with_timeout(
@@ -481,7 +484,6 @@ class FractalSSH:
                 ),
             )
 
-    @retry_if_socket_error
     def mkdir(self, *, folder: str, parents: bool = True) -> None:
         """
         Create a folder remotely via SSH.
@@ -496,7 +498,6 @@ class FractalSSH:
             cmd = f"mkdir {folder}"
         self.run_command(cmd=cmd)
 
-    @retry_if_socket_error
     def remove_folder(
         self,
         *,
