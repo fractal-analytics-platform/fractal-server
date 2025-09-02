@@ -652,7 +652,7 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            self._prepare_single_slurm_job(
+            slurm_job = self._prepare_single_slurm_job(
                 base_command=base_command,
                 slurm_job=slurm_job,
                 slurm_config=config,
