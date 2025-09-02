@@ -7,9 +7,9 @@
 * Internal
     * Improve type hints (\#2739).
 * SSH
-    * Add decorator to open a new connection (socket) if the decorated function
+    * Add a decorator to open a new connection (socket) if the decorated function
       hits a `NoValidConnectionError` or a `OSError` (\#2747).
-
+    * Remove multiple attempt logic (\#2747).
 # 2.15.7
 
 * API:
