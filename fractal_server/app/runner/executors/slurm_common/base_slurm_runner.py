@@ -389,6 +389,7 @@ class BaseSlurmRunner(BaseRunner):
             "[_prepare_single_slurm_job] Written "
             f"{slurm_job.slurm_submission_script_local=}"
         )
+        return slurm_job
 
     def _send_many_job_inputs(self) -> None:
         pass
@@ -835,20 +836,23 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             logger.debug("[multisubmit] Prepare jobs.")
+            jobs_to_submit_new = []
             for slurm_job in jobs_to_submit:
-                self._prepare_single_slurm_job(
-                    base_command=base_command,
-                    slurm_job=slurm_job,
-                    slurm_config=config,
+                jobs_to_submit_new.append(
+                    self._prepare_single_slurm_job(
+                        base_command=base_command,
+                        slurm_job=slurm_job,
+                        slurm_config=config,
+                    )
                 )
 
             if self.slurm_runner_type == "ssh":
                 logger.debug("[multisubmit] Transfer files via SSH.")
-                for slurm_job in jobs_to_submit:
+                for slurm_job in jobs_to_submit_new:
                     self._send_many_job_inputs()
 
             logger.debug("[multisubmit] Submit jobs.")
-            for slurm_job in jobs_to_submit:
+            for slurm_job in jobs_to_submit_new:
                 self._submit_single_sbatch(
                     # base_command=base_command,
                     slurm_job=slurm_job,
