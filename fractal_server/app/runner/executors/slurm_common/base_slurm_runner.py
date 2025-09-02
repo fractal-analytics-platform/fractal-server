@@ -264,15 +264,13 @@ class BaseSlurmRunner(BaseRunner):
 
         return new_slurm_config
 
-    def _submit_single_sbatch(
+    def _prepare_single_slurm_job(
         self,
         *,
         base_command: str,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        logger.debug("[_submit_single_sbatch] START")
-
         for task in slurm_job.tasks:
             # Write input file
             if self.slurm_runner_type == "ssh":
@@ -403,6 +401,26 @@ class BaseSlurmRunner(BaseRunner):
                 "sbatch --parsable "
                 f"{slurm_job.slurm_submission_script_local}"
             )
+        return submit_command
+
+    def _send_many_job_inputs(
+        self,
+        *,
+        base_command: str,
+        slurm_job: SlurmJob,
+        slurm_config: SlurmConfig,
+    ):
+        pass
+
+    def _submit_single_sbatch(
+        self,
+        *,
+        submit_command: str,
+        slurm_job: SlurmJob,
+        slurm_config: SlurmConfig,
+    ) -> None:
+        logger.debug("[_submit_single_sbatch] START")
+
         # Run sbatch
         pre_submission_cmds = slurm_config.pre_submission_commands
         if len(pre_submission_cmds) == 0:
@@ -625,8 +643,19 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            self._submit_single_sbatch(
+            submit_command = self._prepare_single_slurm_job(
                 base_command=base_command,
+                slurm_job=slurm_job,
+                slurm_config=config,
+            )
+            if self.slurm_runner_type == "ssh":
+                self._send_many_job_inputs(
+                    base_command=base_command,
+                    slurm_job=slurm_job,
+                    slurm_config=config,
+                )
+            self._submit_single_sbatch(
+                submit_command=submit_command,
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
@@ -804,10 +833,26 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             # NOTE: see issue 2431
-            logger.debug("[multisubmit] Transfer files and submit jobs.")
+            submit_commands = []
             for slurm_job in jobs_to_submit:
-                self._submit_single_sbatch(
+                submit_commands.append(
+                    self._prepare_single_slurm_job(
+                        base_command=base_command,
+                        slurm_job=slurm_job,
+                        slurm_config=config,
+                    )
+                )
+            if self.slurm_runner_type == "ssh":
+                self._send_many_job_inputs(
                     base_command=base_command,
+                    slurm_job=slurm_job,
+                    slurm_config=config,
+                )
+            for slurm_job, submit_command in zip(
+                jobs_to_submit, submit_commands
+            ):
+                self._submit_single_sbatch(
+                    submit_command=submit_command,
                     slurm_job=slurm_job,
                     slurm_config=config,
                 )
