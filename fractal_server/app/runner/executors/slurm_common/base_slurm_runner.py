@@ -656,8 +656,7 @@ class BaseSlurmRunner(BaseRunner):
             )
             if self.slurm_runner_type == "ssh":
                 self._send_many_job_inputs(
-                    base_command=base_command,
-                    slurm_job=slurm_job,
+                    slurm_jobs=[slurm_job],
                     slurm_config=config,
                 )
             self._submit_single_sbatch(
@@ -848,11 +847,7 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 )
             if self.slurm_runner_type == "ssh":
-                self._send_many_job_inputs(
-                    base_command=base_command,
-                    slurm_job=slurm_job,
-                    slurm_config=config,
-                )
+                self._send_many_job_inputs(slurm_jobs=jobs_to_submit)
             for slurm_job, submit_command in zip(
                 jobs_to_submit, submit_commands
             ):
