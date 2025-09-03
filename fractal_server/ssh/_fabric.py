@@ -489,13 +489,15 @@ class FractalSSH:
                 )
                 run_subprocess(tar_cmd, logger_name=logger.name)
 
-                self.send_file(tarfile_path_local, tarfile_path_remote)
+                self.send_file(
+                    local=tarfile_path_local, remote=tarfile_path_remote
+                )
 
                 target_dir, tar_cmd = get_tar_extraction_cmd(
                     tarfile_path_remote
                 )
 
-                self.mkdir(target_dir, parents=True)
+                self.mkdir(folder=target_dir, parents=True)
                 self.run_command(cmd=tar_cmd)
 
             except Exception as e:
