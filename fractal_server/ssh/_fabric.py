@@ -447,6 +447,49 @@ class FractalSSH:
                 ),
             )
 
+    def send_multiple_files(
+        self,
+        *,
+        locals: list[str],
+        remotes: list[str],
+        lock_timeout: float | None = None,
+    ) -> None:
+        """
+        Transfer a file via SSH
+
+        Args:
+            local: Local path to file.
+            remote: Target path on remote host.
+            lock_timeout: Timeout for lock acquisition (overrides default).
+        """
+        try:
+            if len(locals) != len(remotes):
+                raise ValueError(
+                    "`locals` and `remotes` have different lengths."
+                )
+
+            self.logger.info(
+                "[send_multiple_files] START multiple transfers over SSH."
+            )
+            actual_lock_timeout = self.default_lock_timeout
+            if lock_timeout is not None:
+                actual_lock_timeout = lock_timeout
+            with _acquire_lock_with_timeout(
+                lock=self._lock,
+                label="send_multiple_files",
+                timeout=actual_lock_timeout,
+            ):
+                for local, remote in zip(locals, remotes):
+                    self._sftp_unsafe().put(local, remote)
+            self.logger.info(
+                "[send_multiple_files] END multiple transfers over SSH."
+            )
+        except Exception as e:
+            self.log_and_raise(
+                e=e,
+                message="Error in `send_multiple_files`.",
+            )
+
     def fetch_file(
         self,
         *,
