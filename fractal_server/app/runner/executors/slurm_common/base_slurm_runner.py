@@ -373,7 +373,6 @@ class BaseSlurmRunner(BaseRunner):
                 f"--mem={mem_per_task_MB}MB "
                 f"{cmd} &"
             )
-
         script_lines.append("wait\n")
         script_lines.append(
             'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
@@ -384,8 +383,8 @@ class BaseSlurmRunner(BaseRunner):
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
         logger.debug(
-            "[_submit_single_sbatch] "
-            f"Written {slurm_job.slurm_submission_script_local=}"
+            "[_submit_single_sbatch] Written "
+            f"{slurm_job.slurm_submission_script_local=}"
         )
 
         if self.slurm_runner_type == "ssh":
@@ -832,7 +831,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
 
             submit_commands = []
-            for i, slurm_job in enumerate(jobs_to_submit):
+            for slurm_job in jobs_to_submit:
                 submit_commands.append(
                     self._prepare_single_slurm_job(
                         base_command=base_command,
