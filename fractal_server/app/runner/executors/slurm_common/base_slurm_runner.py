@@ -416,18 +416,25 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
 
-    def _send_many_job_inputs(self, *, slurm_jobs: list[SlurmJob]):
+    def _send_many_job_inputs(
+        self, *, slurm_jobs: list[SlurmJob], slurm_config: SlurmConfig
+    ):
         for slurm_job in slurm_jobs:
             self.fractal_ssh.send_file(
                 local=slurm_job.slurm_submission_script_local,
                 remote=slurm_job.slurm_submission_script_remote,
             )
-            self.fractal_ssh.send_file(
-                local=f"{slurm_job.slurm_submission_script_local}_wrapper.sh",
-                remote=(
-                    f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
-                ),
-            )
+            if len(slurm_config.pre_submission_commands) > 0:
+                self.fractal_ssh.send_file(
+                    local=(
+                        f"{slurm_job.slurm_submission_script_local}"
+                        "_wrapper.sh"
+                    ),
+                    remote=(
+                        f"{slurm_job.slurm_submission_script_remote}"
+                        "_wrapper.sh"
+                    ),
+                )
 
     def _submit_single_sbatch(
         self,
@@ -847,7 +854,9 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 )
             if self.slurm_runner_type == "ssh":
-                self._send_many_job_inputs(slurm_jobs=jobs_to_submit)
+                self._send_many_job_inputs(
+                    slurm_jobs=jobs_to_submit, slurm_config=config
+                )
             for slurm_job, submit_command in zip(
                 jobs_to_submit, submit_commands
             ):
