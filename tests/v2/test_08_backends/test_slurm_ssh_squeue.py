@@ -54,7 +54,6 @@ async def test_run_squeue(
         # must be returned
         squeue_stdout = runner.run_squeue(
             job_ids=[slurm_job_id],
-            max_attempts=1,
         )
         debug(squeue_stdout)
         assert f"{slurm_job_id} FRACTAL_STATUS_PLACEHOLDER" in squeue_stdout
@@ -70,9 +69,8 @@ async def test_run_squeue(
         with Connection("localhost") as connection:
             runner.fractal_ssh = FractalSSH(
                 connection=connection,
-                default_base_interval=1.0,
             )
-            squeue_stdout = runner.run_squeue(job_ids=[123], max_attempts=1)
+            squeue_stdout = runner.run_squeue(job_ids=[123])
             debug(squeue_stdout)
             assert squeue_stdout == ""
         runner.fractal_ssh.close()
