@@ -17,6 +17,15 @@ from pydantic import BaseModel
 
 from ..logger import get_logger
 from ..logger import set_logger
+from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
+    run_subprocess,
+)
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_compression_cmd,
+)
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_extraction_cmd,
+)
 from fractal_server.string_tools import validate_cmd
 
 
@@ -443,8 +452,8 @@ class FractalSSH:
     def send_multiple_files(
         self,
         *,
-        locals: list[str],
-        remotes: list[str],
+        workdir_local: Path,
+        workdir_remote: Path,
         lock_timeout: float | None = None,
     ) -> None:
         """
@@ -455,33 +464,49 @@ class FractalSSH:
             remotes: Target paths on remote host.
             lock_timeout: Timeout for lock acquisition (overrides default).
         """
-        try:
-            if len(locals) != len(remotes):
-                raise ValueError(
-                    "`locals` and `remotes` have different lengths."
+
+        self.logger.info(
+            "[send_multiple_files] START transfer "
+            f"{workdir_local=} to {workdir_remote=} over SSH."
+        )
+
+        actual_lock_timeout = self.default_lock_timeout
+        if lock_timeout is not None:
+            actual_lock_timeout = lock_timeout
+
+        with _acquire_lock_with_timeout(
+            lock=self._lock,
+            label="send_multiple_files",
+            timeout=actual_lock_timeout,
+        ):
+            try:
+                tarfile_path_local = workdir_local.with_suffix(".tar.gz")
+                tarfile_path_remote = workdir_remote.with_suffix(".tar.gz")
+
+                tar_cmd = get_tar_compression_cmd(
+                    workdir_local,
+                    filelist_path=None,
+                )
+                run_subprocess(tar_cmd, logger_name=logger.name)
+
+                self._sftp_unsafe().put(
+                    tarfile_path_local, tarfile_path_remote
                 )
 
-            self.logger.info(
-                "[send_multiple_files] START multiple transfers over SSH."
-            )
-            actual_lock_timeout = self.default_lock_timeout
-            if lock_timeout is not None:
-                actual_lock_timeout = lock_timeout
-            with _acquire_lock_with_timeout(
-                lock=self._lock,
-                label="send_multiple_files",
-                timeout=actual_lock_timeout,
-            ):
-                for local, remote in zip(locals, remotes):
-                    self._sftp_unsafe().put(local, remote)
-            self.logger.info(
-                "[send_multiple_files] END multiple transfers over SSH."
-            )
-        except Exception as e:
-            self.log_and_raise(
-                e=e,
-                message="Error in `send_multiple_files`.",
-            )
+                target_dir, tar_cmd = get_tar_extraction_cmd(
+                    tarfile_path_remote
+                )
+
+                self._sftp_unsafe().mkdir(target_dir)
+                self.run_command(cmd=tar_cmd)
+
+            except Exception as e:
+                self.log_and_raise(
+                    e=e,
+                    message="Error in `send_multiple_files`.",
+                )
+            finally:
+                Path(tarfile_path_local).unlink(missing_ok=True)
 
     @retry_if_socket_error
     def fetch_file(
