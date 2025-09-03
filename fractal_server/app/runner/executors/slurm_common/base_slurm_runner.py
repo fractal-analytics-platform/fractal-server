@@ -39,10 +39,6 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 logger = set_logger(__name__)
 
 
-def _add_index(path: str, index: int) -> str:
-    return (Path(path).parent / f"{index}-{Path(path).name}").as_posix()
-
-
 class RemoteInputData(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -274,7 +270,6 @@ class BaseSlurmRunner(BaseRunner):
         base_command: str,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
-        index: int | None = None,
     ) -> str:
         for task in slurm_job.tasks:
             # Write input file
@@ -385,29 +380,26 @@ class BaseSlurmRunner(BaseRunner):
         )
         script = "\n".join(script_lines)
 
-        slurm_submission_script_local = _add_index(
-            slurm_job.slurm_submission_script_local, index
-        )
-
         # Write submission script
-        with open(slurm_submission_script_local, "w") as f:
+        with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
         logger.debug(
-            f"[_submit_single_sbatch] Written {slurm_submission_script_local=}"
+            "[_submit_single_sbatch] "
+            f"Written {slurm_job.slurm_submission_script_local=}"
         )
 
         if self.slurm_runner_type == "ssh":
-            remote = _add_index(
-                slurm_job.slurm_submission_script_remote, index
-            )
             self.fractal_ssh.send_file(
-                local=slurm_submission_script_local,
-                remote=remote,
+                local=slurm_job.slurm_submission_script_local,
+                remote=slurm_job.slurm_submission_script_remote,
             )
-            submit_command = f"sbatch --parsable {remote}"
+            submit_command = (
+                f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
+            )
         else:
             submit_command = (
-                "sbatch --parsable " f"{slurm_submission_script_local}"
+                "sbatch --parsable "
+                f"{slurm_job.slurm_submission_script_local}"
             )
         return submit_command
 
@@ -832,14 +824,13 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 jobs_to_submit.append(
                     SlurmJob(
-                        prefix=prefix,
+                        prefix=f"{ind_batch}-{prefix}",
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         tasks=tasks,
                     )
                 )
 
-            # NOTE: see issue 2431
             submit_commands = []
             for i, slurm_job in enumerate(jobs_to_submit):
                 submit_commands.append(
@@ -847,7 +838,6 @@ class BaseSlurmRunner(BaseRunner):
                         base_command=base_command,
                         slurm_job=slurm_job,
                         slurm_config=config,
-                        index=i,
                     )
                 )
             if self.slurm_runner_type == "ssh":
