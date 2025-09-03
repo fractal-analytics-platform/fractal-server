@@ -141,7 +141,7 @@
 | fractal\_server/logger.py                                                       |       44 |        3 |       14 |        4 |     88% |96->99, 115, 164, 168 |
 | fractal\_server/main.py                                                         |       66 |        1 |       10 |        1 |     97% |       131 |
 | fractal\_server/ssh/\_\_init\_\_.py                                             |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/ssh/\_fabric.py                                                 |      296 |        0 |       46 |        3 |     99% |175->177, 307->exit, 349->exit |
+| fractal\_server/ssh/\_fabric.py                                                 |      306 |        2 |       40 |        2 |     99% |194->196, 288-289, 331->exit |
 | fractal\_server/string\_tools.py                                                |       27 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                      |       28 |        2 |        2 |        0 |     93% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                           |        0 |        0 |        0 |        0 |    100% |           |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9326** |  **268** | **1744** |  **101** | **96%** |           |
+|                                                                       **TOTAL** | **9336** |  **270** | **1738** |  **100** | **96%** |           |
 
 
 ## Setup coverage badge
