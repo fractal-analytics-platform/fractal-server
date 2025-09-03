@@ -455,11 +455,11 @@ class FractalSSH:
         lock_timeout: float | None = None,
     ) -> None:
         """
-        Transfer a file via SSH
+        Transfer multiple files via SSH
 
         Args:
-            local: Local path to file.
-            remote: Target path on remote host.
+            locals: Local paths to files.
+            remotes: Target paths on remote host.
             lock_timeout: Timeout for lock acquisition (overrides default).
         """
         try:
