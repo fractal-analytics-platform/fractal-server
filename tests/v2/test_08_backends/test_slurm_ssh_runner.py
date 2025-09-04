@@ -289,12 +289,13 @@ async def test_multisubmit_compound(
 
 @pytest.mark.ssh
 @pytest.mark.container
-def test_send_many_job_inputs_failure(tmp777_path, fractal_ssh):
+def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     root_dir_local = tmp777_path / "local"
-    remote_dir = Path("/tmp/remote")
-
+    root_dir_local.mkdir(parents=True)
     with (root_dir_local / "test.txt").open("w") as f:
         json.dump({"foo": "bar"}, f)
+
+    remote_dir = Path("/tmp/remote")
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
