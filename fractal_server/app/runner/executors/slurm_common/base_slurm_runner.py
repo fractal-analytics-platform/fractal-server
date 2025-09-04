@@ -27,6 +27,9 @@ from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
 from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
     get_tar_compression_cmd,
 )
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_extraction_cmd,
+)
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
@@ -432,11 +435,10 @@ class BaseSlurmRunner(BaseRunner):
         tar_compression_cmd = get_tar_compression_cmd(
             subfolder_path=workdir_local, filelist_path=None
         )
-        tar_extraction_cmd = (
-            f"tar -xzvf {tar_path_remote.as_posix()} "
-            f"--directory={workdir_remote.as_posix()} "
+        _, tar_extraction_cmd = get_tar_extraction_cmd(
+            archive_path=tar_path_remote
         )
-        rm_remote_tar_cmd = f"rm {tar_path_remote.as_posix()}"
+        rm_tar_cmd = f"rm {tar_path_remote.as_posix()}"
 
         try:
             run_subprocess(tar_compression_cmd, logger_name=logger.name)
@@ -445,7 +447,7 @@ class BaseSlurmRunner(BaseRunner):
                 remote=tar_path_remote.as_posix(),
             )
             self.fractal_ssh.run_command(cmd=tar_extraction_cmd)
-            self.fractal_ssh.run_command(cmd=rm_remote_tar_cmd)
+            self.fractal_ssh.run_command(cmd=rm_tar_cmd)
         except Exception as e:
             raise e
         finally:
