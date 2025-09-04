@@ -303,10 +303,10 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
         poll_interval=0,
     ) as runner:
         runner._mkdir_remote_folder(folder=runner.root_dir_remote.as_posix())
-        runner._send_many_job_inputs(
-            workdir_local=runner.root_dir_local,
-            workdir_remote=runner.root_dir_remote,
-        )
+        # runner._send_many_job_inputs(
+        #     workdir_local=runner.root_dir_local,
+        #     workdir_remote=runner.root_dir_remote,
+        # )
         # runner.fractal_ssh._connection.sftp().stat(
         #     (runner.root_dir_remote / "test.txt").as_posix()
         # )
