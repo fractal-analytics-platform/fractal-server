@@ -314,21 +314,6 @@ class BaseSlurmRunner(BaseRunner):
                 f"{task.input_file_local=}"
             )
 
-            if self.slurm_runner_type == "ssh":
-                # Send input file (only relevant for SSH)
-                self.fractal_ssh.send_file(
-                    local=task.input_file_local,
-                    remote=task.input_file_remote,
-                )
-                self.fractal_ssh.send_file(
-                    local=task.task_files.args_file_local,
-                    remote=task.task_files.args_file_remote,
-                )
-                logger.debug(
-                    "[_prepare_single_slurm_job] Transferred "
-                    f"{task.input_file_local=}"
-                )
-
         # Prepare commands to be included in SLURM submission script
         cmdlines = []
         for task in slurm_job.tasks:
@@ -400,10 +385,6 @@ class BaseSlurmRunner(BaseRunner):
         )
 
         if self.slurm_runner_type == "ssh":
-            self.fractal_ssh.send_file(
-                local=slurm_job.slurm_submission_script_local,
-                remote=slurm_job.slurm_submission_script_remote,
-            )
             submit_command = (
                 f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
             )
