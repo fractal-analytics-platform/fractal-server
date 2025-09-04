@@ -24,6 +24,9 @@ from fractal_server.app.runner.executors.base_runner import SubmitTaskType
 from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
     run_subprocess,
 )
+from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_compression_cmd,
+)
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
@@ -426,11 +429,8 @@ class BaseSlurmRunner(BaseRunner):
         tar_name = Path(tar_path_local).name
         tar_path_remote = workdir_remote.parent / tar_name
 
-        tar_compression_cmd = (
-            f"tar -c -z "
-            f"-f {tar_path_local} "
-            f"--directory={workdir_local.as_posix()} "
-            "."
+        tar_compression_cmd = get_tar_compression_cmd(
+            subfolder_path=workdir_local, filelist_path=None
         )
         tar_extraction_cmd = (
             f"tar -xzvf {tar_path_remote.as_posix()} "
