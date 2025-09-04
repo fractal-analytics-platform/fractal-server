@@ -407,7 +407,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def _send_many_job_inputs(
         self, *, workdir_local: Path, workdir_remote: Path
-    ):
+    ) -> None:
         logger.debug("[_send_many_job_inputs] START")
 
         tar_path_local = workdir_local.with_suffix(".tar.gz")
