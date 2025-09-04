@@ -21,6 +21,9 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.executors.base_runner import MultisubmitTaskType
 from fractal_server.app.runner.executors.base_runner import SubmitTaskType
+from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
+    run_subprocess,
+)
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
@@ -417,26 +420,35 @@ class BaseSlurmRunner(BaseRunner):
         return submit_command
 
     def _send_many_job_inputs(
-        self, *, slurm_jobs: list[SlurmJob], slurm_config: SlurmConfig
+        self, *, workdir_local: Path, workdir_remote: Path
     ):
-        suffixes = (
-            ["", "_wrapper.sh"]
-            if slurm_config.pre_submission_commands
-            else [""]
+        tar_path_local = workdir_local.with_suffix(".tar.gz")
+        tar_name = Path(tar_path_local).name
+        tar_path_remote = workdir_remote.parent / tar_name
+
+        tar_compression_cmd = (
+            f"tar -c -z "
+            f"-f {tar_path_local} "
+            f"--directory={workdir_local.as_posix()} "
+            "."
+        )
+        tar_extraction_cmd = (
+            f"tar -xzvf {tar_path_remote.as_posix()} "
+            f"--directory={workdir_remote.as_posix()} "
+            f"&& rm {tar_path_remote.as_posix()}"
         )
 
-        locals = [
-            f"{job.slurm_submission_script_local}{suffix}"
-            for job in slurm_jobs
-            for suffix in suffixes
-        ]
-        remotes = [
-            f"{job.slurm_submission_script_remote}{suffix}"
-            for job in slurm_jobs
-            for suffix in suffixes
-        ]
-
-        self.fractal_ssh.send_multiple_files(locals=locals, remotes=remotes)
+        try:
+            run_subprocess(tar_compression_cmd, logger_name=logger.name)
+            self.fractal_ssh.send_file(
+                local=tar_path_local.as_posix(),
+                remote=tar_path_remote.as_posix(),
+            )
+            self.fractal_ssh.run_command(cmd=tar_extraction_cmd)
+        except Exception as e:
+            raise e
+        finally:
+            Path(tar_path_local).unlink(missing_ok=True)
 
     def _submit_single_sbatch(
         self,
@@ -665,8 +677,7 @@ class BaseSlurmRunner(BaseRunner):
             )
             if self.slurm_runner_type == "ssh":
                 self._send_many_job_inputs(
-                    slurm_jobs=[slurm_job],
-                    slurm_config=config,
+                    workdir_local=workdir_local, workdir_remote=workdir_remote
                 )
             self._submit_single_sbatch(
                 submit_command=submit_command,
@@ -857,7 +868,7 @@ class BaseSlurmRunner(BaseRunner):
                 )
             if self.slurm_runner_type == "ssh":
                 self._send_many_job_inputs(
-                    slurm_jobs=jobs_to_submit, slurm_config=config
+                    workdir_local=workdir_local, workdir_remote=workdir_remote
                 )
             for slurm_job, submit_command in zip(
                 jobs_to_submit, submit_commands
