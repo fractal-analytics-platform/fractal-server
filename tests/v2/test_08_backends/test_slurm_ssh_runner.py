@@ -283,6 +283,8 @@ async def test_multisubmit_compound(
         assert unit.status == HistoryUnitStatus.SUBMITTED
 
 
+@pytest.mark.ssh
+@pytest.mark.container
 def test_send_many_job_inputs_failure(tmp777_path, fractal_ssh):
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
