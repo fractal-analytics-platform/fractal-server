@@ -1,5 +1,9 @@
+import json
+from pathlib import Path
+
 import pytest
 from devtools import debug
+from invoke.exceptions import UnexpectedExit
 
 from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
@@ -286,14 +290,28 @@ async def test_multisubmit_compound(
 @pytest.mark.ssh
 @pytest.mark.container
 def test_send_many_job_inputs_failure(tmp777_path, fractal_ssh):
+    root_dir_local = tmp777_path / "local"
+    remote_dir = Path("/tmp/remote")
+
+    with (root_dir_local / "test.txt").open("w") as f:
+        json.dump({"foo": "bar"}, f)
+
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
-        root_dir_local=tmp777_path / "local",
-        root_dir_remote=tmp777_path / "remote",
+        root_dir_local=root_dir_local,
+        root_dir_remote=remote_dir,
         poll_interval=0,
     ) as runner:
-        runner.fractal_ssh.close()
         runner._send_many_job_inputs(
             workdir_local=runner.root_dir_local,
             workdir_remote=runner.root_dir_remote,
         )
+        runner.fractal_ssh._connection.sftp().stat(
+            (runner.root_dir_remote / "test.txt").as_posix()
+        )
+        runner.fractal_ssh.close()
+        with pytest.raises(UnexpectedExit):
+            runner._send_many_job_inputs(
+                workdir_local=runner.root_dir_local,
+                workdir_remote=runner.root_dir_remote,
+            )
