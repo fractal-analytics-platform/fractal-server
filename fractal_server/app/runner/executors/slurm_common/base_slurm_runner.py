@@ -394,7 +394,6 @@ class BaseSlurmRunner(BaseRunner):
                 f"{slurm_job.slurm_submission_script_local}"
             )
         if len(slurm_config.pre_submission_commands) > 0:
-            raise NotImplementedError("🚀")
             script_lines = slurm_config.pre_submission_commands + [
                 submit_command
             ]
@@ -468,7 +467,6 @@ class BaseSlurmRunner(BaseRunner):
             logger.debug(f"[_submit_single_sbatch] Now run {submit_command=}")
             sbatch_stdout = self._run_remote_cmd(submit_command)
         else:
-            raise NotImplementedError("🔥")
             if self.slurm_runner_type == "ssh":
                 wrapper_script = (
                     f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
