@@ -310,7 +310,7 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
         runner.fractal_ssh._connection.sftp().stat(
             (runner.root_dir_remote / "test.txt").as_posix()
         )
-        runner.fractal_ssh.close()
+        # runner.fractal_ssh.close()
         # with pytest.raises(UnexpectedExit):
         #     runner._send_many_job_inputs(
         #         workdir_local=runner.root_dir_local,
