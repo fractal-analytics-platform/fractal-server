@@ -451,7 +451,8 @@ class BaseSlurmRunner(BaseRunner):
         finally:
             Path(tar_path_local).unlink(missing_ok=True)
             logger.debug(f"[_send_many_job_inputs] {tar_path_local=} removed.")
-            logger.debug("[_send_many_job_inputs] END.")
+
+        logger.debug("[_send_many_job_inputs] END.")
 
     def _submit_single_sbatch(
         self,
