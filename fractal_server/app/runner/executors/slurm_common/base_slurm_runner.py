@@ -435,8 +435,8 @@ class BaseSlurmRunner(BaseRunner):
         tar_extraction_cmd = (
             f"tar -xzvf {tar_path_remote.as_posix()} "
             f"--directory={workdir_remote.as_posix()} "
-            f"&& rm {tar_path_remote.as_posix()}"
         )
+        rm_remote_tar_cmd = f"rm {tar_path_remote.as_posix()}"
 
         try:
             run_subprocess(tar_compression_cmd, logger_name=logger.name)
@@ -445,6 +445,7 @@ class BaseSlurmRunner(BaseRunner):
                 remote=tar_path_remote.as_posix(),
             )
             self.fractal_ssh.run_command(cmd=tar_extraction_cmd)
+            self.fractal_ssh.run_command(cmd=rm_remote_tar_cmd)
         except Exception as e:
             raise e
         finally:
