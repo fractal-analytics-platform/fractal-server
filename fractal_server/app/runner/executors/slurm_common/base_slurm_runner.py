@@ -393,15 +393,14 @@ class BaseSlurmRunner(BaseRunner):
                 "sbatch --parsable "
                 f"{slurm_job.slurm_submission_script_local}"
             )
-
         if len(slurm_config.pre_submission_commands) > 0:
             script_lines = slurm_config.pre_submission_commands + [
                 submit_command
             ]
-            with open(
-                f"{slurm_job.slurm_submission_script_local}_wrapper.sh", "w"
-            ) as f:
+            wrapper = f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
+            with open(wrapper, "w") as f:
                 f.write("\n".join(script_lines) + "\n")
+            logger.debug(f"[_prepare_single_slurm_job] Written {wrapper=}")
 
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
@@ -409,6 +408,8 @@ class BaseSlurmRunner(BaseRunner):
     def _send_many_job_inputs(
         self, *, workdir_local: Path, workdir_remote: Path
     ):
+        logger.debug("[_send_many_job_inputs] START")
+
         tar_path_local = workdir_local.with_suffix(".tar.gz")
         tar_name = Path(tar_path_local).name
         tar_path_remote = workdir_remote.parent / tar_name
@@ -423,16 +424,33 @@ class BaseSlurmRunner(BaseRunner):
 
         try:
             run_subprocess(tar_compression_cmd, logger_name=logger.name)
+            logger.debug(
+                "[_send_many_job_inputs] "
+                f"{workdir_local=} compressed to {tar_path_local=}."
+            )
             self.fractal_ssh.send_file(
                 local=tar_path_local.as_posix(),
                 remote=tar_path_remote.as_posix(),
             )
+            logger.debug(
+                "[_send_many_job_inputs] "
+                f"{tar_path_local=} sent via SSH to {tar_path_remote=}."
+            )
             self.fractal_ssh.run_command(cmd=tar_extraction_cmd)
+            logger.debug(
+                "[_send_many_job_inputs] "
+                f"{tar_path_remote=} extracted to {workdir_remote=}."
+            )
             self.fractal_ssh.run_command(cmd=rm_tar_cmd)
+            logger.debug(
+                "[_send_many_job_inputs] "
+                f"{tar_path_remote=} removed from remote server."
+            )
         except Exception as e:
             raise e
         finally:
             Path(tar_path_local).unlink(missing_ok=True)
+            logger.debug(f"[_send_many_job_inputs] {tar_path_local=} removed.")
 
     def _submit_single_sbatch(
         self,
