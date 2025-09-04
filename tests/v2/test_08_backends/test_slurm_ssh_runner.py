@@ -281,3 +281,17 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
+
+
+def test_send_many_job_inputs_failure(tmp777_path, fractal_ssh):
+    with SlurmSSHRunner(
+        fractal_ssh=fractal_ssh,
+        root_dir_local=tmp777_path / "local",
+        root_dir_remote=tmp777_path / "remote",
+        poll_interval=0,
+    ) as runner:
+        runner.fractal_ssh.close()
+        runner._send_many_job_inputs(
+            workdir_local=runner.root_dir_local,
+            workdir_remote=runner.root_dir_remote,
+        )
