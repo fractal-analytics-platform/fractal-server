@@ -295,7 +295,7 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     with (root_dir_local / "test.txt").open("w") as f:
         json.dump({"foo": "bar"}, f)
 
-    remote_dir = Path("/tmp/remote")
+    remote_dir = tmp777_path / "remote"
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
