@@ -5,6 +5,8 @@
 * Documentation:
     * Fix `Fractal Users` documentation page (\#2738).
     * Improve documentation for Pixi task collection (\#2742).
+* Task life cycle:
+    * Add test to lock `FRACTAL_MAX_PIP_VERSION` with latest version on PyPI (\#2752).
 * Internal
     * Improve type hints (\#2739).
 * SSH

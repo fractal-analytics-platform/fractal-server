@@ -579,7 +579,7 @@ class Settings(BaseSettings):
         else:
             return "--no-cache-dir"
 
-    FRACTAL_MAX_PIP_VERSION: str = "24.0"
+    FRACTAL_MAX_PIP_VERSION: str = "25.2"
     """
     Maximum value at which to update `pip` before performing task collection.
     """
