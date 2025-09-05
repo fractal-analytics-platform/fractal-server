@@ -293,6 +293,7 @@ async def test_multisubmit_compound(
 def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     root_dir_local = tmp777_path / "local"
     root_dir_local.mkdir(parents=True)
+    root_dir_remote = tmp777_path / "remote"
     json_file = root_dir_local / "foo.json"
     with json_file.open("w") as f:
         json.dump({"foo": "bar"}, f)
@@ -300,7 +301,7 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
-        root_dir_remote=Path("/foo"),
+        root_dir_remote=root_dir_remote,
         poll_interval=0,
     ) as runner:
         with Connection("localhost") as connection:
