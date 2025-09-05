@@ -300,7 +300,7 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
-        root_dir_remote="/foo",
+        root_dir_remote=Path("/foo"),
         poll_interval=0,
     ) as runner:
         with Connection("localhost") as connection:
