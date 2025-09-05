@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from fabric.connection import Connection
 
 from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
@@ -304,13 +303,12 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
         root_dir_remote=root_dir_remote,
         poll_interval=0,
     ) as runner:
-        with Connection("localhost") as connection:
-            runner.fractal_ssh = FractalSSH(connection=connection)
-            with pytest.raises(Exception):
-                runner._send_many_job_inputs(
-                    workdir_local=runner.root_dir_local,
-                    workdir_remote=runner.root_dir_remote,
-                )
+        runner.fractal_ssh = FractalSSH(connection=None)
+        with pytest.raises(Exception):
+            runner._send_many_job_inputs(
+                workdir_local=runner.root_dir_local,
+                workdir_remote=runner.root_dir_remote,
+            )
 
     tar_path_local = root_dir_local.with_suffix(".tar.gz")
     assert not tar_path_local.exists()
