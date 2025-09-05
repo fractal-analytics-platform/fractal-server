@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 
 import pytest
 from devtools import debug
+from fabric.connection import Connection
 
 from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
@@ -13,6 +15,7 @@ from fractal_server.app.runner.executors.slurm_ssh.runner import (
     SlurmSSHRunner,
 )
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -290,16 +293,24 @@ async def test_multisubmit_compound(
 def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     root_dir_local = tmp777_path / "local"
     root_dir_local.mkdir(parents=True)
-    remote_dir = tmp777_path / "remote"
+    json_file = root_dir_local / "foo.json"
+    with json_file.open("w") as f:
+        json.dump({"foo": "bar"}, f)
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
-        root_dir_remote=remote_dir,
+        root_dir_remote="/foo",
         poll_interval=0,
     ) as runner:
-        with pytest.raises(Exception):
-            runner._send_many_job_inputs(
-                workdir_local=runner.root_dir_local,
-                workdir_remote=runner.root_dir_remote,
-            )
+        with Connection("localhost") as connection:
+            runner.fractal_ssh = FractalSSH(connection=connection)
+            with pytest.raises(Exception):
+                runner._send_many_job_inputs(
+                    workdir_local=runner.root_dir_local,
+                    workdir_remote=runner.root_dir_remote,
+                )
+
+    tar_path_local = root_dir_local.with_suffix(".tar.gz")
+    assert not tar_path_local.exists()
+    assert json_file.exists()
