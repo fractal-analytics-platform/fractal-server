@@ -408,6 +408,16 @@ class BaseSlurmRunner(BaseRunner):
     def _send_many_job_inputs(
         self, *, workdir_local: Path, workdir_remote: Path
     ) -> None:
+        """
+        Compress, transfer, and extract a local working directory onto a remote
+        host.
+
+        This method creates a temporary `.tar.gz` archive of the given
+        `workdir_local`, transfers it to the remote machine via the configured
+        SSH connection, extracts it into `workdir_remote`, and removes the
+        temporary archive from both local and remote filesystems.
+        """
+
         logger.debug("[_send_many_job_inputs] START")
 
         tar_path_local = workdir_local.with_suffix(".tar.gz")
