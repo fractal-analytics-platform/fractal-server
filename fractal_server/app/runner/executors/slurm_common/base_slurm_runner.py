@@ -370,7 +370,7 @@ class BaseSlurmRunner(BaseRunner):
                 f"--mem={mem_per_task_MB}MB "
                 f"{cmd} &"
             )
-        script_lines.append("wait\n")
+        script_lines.append("wait\n\n")
         script_lines.append(
             'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
         )
