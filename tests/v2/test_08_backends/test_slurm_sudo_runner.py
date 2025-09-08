@@ -223,6 +223,8 @@ async def test_multisubmit_compound(
                 tmp777_path,
                 component=str(ind),
                 is_slurm=True,
+                # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
             )
             for ind in range(len(ZARR_URLS))
         ]
