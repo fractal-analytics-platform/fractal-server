@@ -864,7 +864,7 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 jobs_to_submit.append(
                     SlurmJob(
-                        prefix=f"{ind_batch}-{prefix}",
+                        prefix=prefix,
                         workdir_local=workdir_local,
                         workdir_remote=workdir_remote,
                         tasks=tasks,
