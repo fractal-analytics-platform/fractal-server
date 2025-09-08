@@ -3,7 +3,8 @@
 # 2.15.8 (Unreleased)
 
 * Runner:
-    * Split `SlurmJob` submission into three steps, reducing SSH connections (\#2431).
+    * Split `SlurmJob` submission into three steps, reducing SSH connections (\#2749).
+    * Deprecate experimental `pre_submission_commands` feature (\#2749).
 * Documentation:
     * Fix `Fractal Users` documentation page (\#2738).
     * Improve documentation for Pixi task collection (\#2742).
