@@ -393,14 +393,6 @@ class BaseSlurmRunner(BaseRunner):
                 "sbatch --parsable "
                 f"{slurm_job.slurm_submission_script_local}"
             )
-        if len(slurm_config.pre_submission_commands) > 0:
-            script_lines = slurm_config.pre_submission_commands + [
-                submit_command
-            ]
-            wrapper = f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
-            with open(wrapper, "w") as f:
-                f.write("\n".join(script_lines) + "\n")
-            logger.debug(f"[_prepare_single_slurm_job] Written {wrapper=}")
 
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
@@ -473,20 +465,16 @@ class BaseSlurmRunner(BaseRunner):
     ) -> None:
         logger.debug("[_submit_single_sbatch] START")
         # Run sbatch
-        if len(slurm_config.pre_submission_commands) == 0:
-            logger.debug(f"[_submit_single_sbatch] Now run {submit_command=}")
-            sbatch_stdout = self._run_remote_cmd(submit_command)
+        if self.slurm_runner_type == "ssh":
+            wrapper_script = (
+                f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
+            )
         else:
-            if self.slurm_runner_type == "ssh":
-                wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
-                )
-            else:
-                wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
-                )
-            logger.debug(f"[_submit_single_sbatch] Now run {wrapper_script=}")
-            sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
+            wrapper_script = (
+                f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
+            )
+        logger.debug(f"[_submit_single_sbatch] Now run {wrapper_script=}")
+        sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
 
         # Submit SLURM job and retrieve job ID
         logger.info(f"[_submit_single_sbatch] {sbatch_stdout=}")

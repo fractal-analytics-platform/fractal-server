@@ -66,7 +66,6 @@ class _SlurmConfigSet(BaseModel):
     time: str | None = None
     account: str | None = None
     extra_lines: list[str] | None = None
-    pre_submission_commands: list[str] | None = None
     gpus: str | None = None
 
 
@@ -253,8 +252,6 @@ class SlurmConfig(BaseModel):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
-        pre_submission_commands: List of commands to be prepended to the sbatch
-            command.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -293,8 +290,6 @@ class SlurmConfig(BaseModel):
     max_mem_per_job: int
     target_num_jobs: int
     max_num_jobs: int
-
-    pre_submission_commands: list[str] = Field(default_factory=list)
 
     def _sorted_extra_lines(self) -> list[str]:
         """
