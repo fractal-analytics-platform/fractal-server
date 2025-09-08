@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pytest
@@ -293,9 +292,8 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     root_dir_local = tmp777_path / "local"
     root_dir_local.mkdir(parents=True)
     root_dir_remote = tmp777_path / "remote"
-    json_file = root_dir_local / "foo.json"
-    with json_file.open("w") as f:
-        json.dump({"foo": "bar"}, f)
+    dummy_file = root_dir_local / "foo.txt"
+    dummy_file.touch()
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
@@ -303,8 +301,14 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
         root_dir_remote=root_dir_remote,
         poll_interval=0,
     ) as runner:
+        # Set connection to None, so that all SSH-related `fractal_ssh`
+        # methods will fail
         runner.fractal_ssh = FractalSSH(connection=None)
-        with pytest.raises(Exception):
+
+        with pytest.raises(
+            AttributeError,
+            match="'NoneType' object has no attribute 'sftp'",
+        ):
             runner._send_many_job_inputs(
                 workdir_local=runner.root_dir_local,
                 workdir_remote=runner.root_dir_remote,
@@ -312,4 +316,4 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
 
     tar_path_local = root_dir_local.with_suffix(".tar.gz")
     assert not tar_path_local.exists()
-    assert json_file.exists()
+    assert dummy_file.exists()
