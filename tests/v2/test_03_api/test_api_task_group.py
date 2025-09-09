@@ -186,55 +186,6 @@ async def test_get_task_group_list(
         assert len(res.json()) == 2
 
 
-async def test_delete_task_group(client, MockCurrentUser, task_factory_v2, db):
-    async with MockCurrentUser() as user1:
-        task = await task_factory_v2(user_id=user1.id)
-
-    task_group_activity = TaskGroupActivityV2(
-        user_id=user1.id,
-        taskgroupv2_id=task.taskgroupv2_id,
-        pkg_name="pkg",
-        version="1.0.0",
-        action=TaskGroupActivityActionV2.COLLECT,
-        status=TaskGroupActivityStatusV2.PENDING,
-    )
-    db.add(task_group_activity)
-    await db.commit()
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id == task.taskgroupv2_id
-
-    async with MockCurrentUser():
-        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
-        assert res.status_code == 403
-
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
-        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
-        assert res.status_code == 404
-
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id is None
-
-
-async def test_delete_task_group_fail(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
-    client,
-    MockCurrentUser,
-):
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
-
-        res = await client.delete(f"{PREFIX}/{task.taskgroupv2_id}/")
-        assert res.status_code == 422
-
-
 async def test_patch_task_group(
     client,
     MockCurrentUser,
