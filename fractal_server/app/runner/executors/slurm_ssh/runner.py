@@ -170,8 +170,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         self,
         *,
         job_ids: list[str],
-        base_interval: float = 2.0,
-        max_attempts: int = 7,
     ) -> str:
         """
         Run `squeue` for a set of SLURM job IDs.
@@ -205,8 +203,6 @@ class SlurmSSHRunner(BaseSlurmRunner):
         try:
             stdout = self.fractal_ssh.run_command(
                 cmd=cmd,
-                base_interval=base_interval,
-                max_attempts=max_attempts,
             )
             return stdout
         except FractalSSHCommandError as e:
