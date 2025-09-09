@@ -519,14 +519,15 @@ class BaseSlurmRunner(BaseRunner):
             Path(task.output_file_local).unlink(missing_ok=True)
 
             # Extract SLURM errors from stderr file if available
-            if slurm_job is not None:
+            if slurm_job is not None and self.executor_error_log is None:
                 slurm_error = self._extract_slurm_error(slurm_job)
                 if slurm_error:
                     logger.warning(f"SLURM error detected: {slurm_error}")
+                    self.executor_error_log = slurm_error
 
     def _extract_slurm_error(self, slurm_job: SlurmJob) -> str | None:
         """
-        Extract SLURM-specific errors from the stderr file."""
+        Extract SLURM stderr content from the stderr file."""
         stderr_path = slurm_job.slurm_stderr_local_path
 
         if not stderr_path.exists():
@@ -534,33 +535,10 @@ class BaseSlurmRunner(BaseRunner):
 
         try:
             with open(stderr_path) as f:
-                stderr_content = f.read()
+                stderr_content = f.read().strip()
 
-            # Look for common SLURM error patterns
-            slurm_error_patterns = [
-                "slurm_load_jobs error",
-                "Socket timed out",
-                "sbatch: error:",
-                "slurmstepd: error:",
-                "Job cancelled",
-                "Job failed",
-            ]
-
-            for pattern in slurm_error_patterns:
-                if pattern in stderr_content:
-                    # Return the first few lines containing the error
-                    lines = stderr_content.split("\n")
-                    error_lines = []
-                    for line in lines:
-                        if any(
-                            pattern in line for pattern in slurm_error_patterns
-                        ):
-                            error_lines.append(line.strip())
-                            if (
-                                len(error_lines) >= 3
-                            ):  # Limit to first 3 error lines
-                                break
-                    return "\n".join(error_lines) if error_lines else pattern
+            if stderr_content:
+                return stderr_content
 
         except Exception as e:
             logger.debug(f"Failed to read SLURM stderr file: {e}")
