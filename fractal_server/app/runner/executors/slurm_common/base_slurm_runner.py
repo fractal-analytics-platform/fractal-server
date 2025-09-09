@@ -472,7 +472,6 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
-        slurm_job: SlurmJob | None = None,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
@@ -691,7 +690,6 @@ class BaseSlurmRunner(BaseRunner):
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         result, exception = self._postprocess_single_task(
                             task=slurm_job.tasks[0],
-                            slurm_job=slurm_job,
                             was_job_scancelled=was_job_scancelled,
                         )
 
@@ -922,7 +920,6 @@ class BaseSlurmRunner(BaseRunner):
                                     exception,
                                 ) = self._postprocess_single_task(
                                     task=task,
-                                    slurm_job=slurm_job,
                                     was_job_scancelled=was_job_scancelled,
                                 )
                             except Exception as e:
