@@ -280,7 +280,17 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        # FIXME: Add docstring
+        """
+        Prepare submission script locally.
+
+        Args:
+            base_command: Base of task executable command.
+            slurm_job: `SlurmJob` object
+            slurm_config: Configuration for SLURM job
+
+        Returns:
+            Command to submit the SLURM job.
+        """
         logger.debug("[_prepare_single_slurm_job] START")
 
         for task in slurm_job.tasks:
@@ -461,7 +471,15 @@ class BaseSlurmRunner(BaseRunner):
         submit_command: str,
         slurm_job: SlurmJob,
     ) -> None:
-        # FIXME: Add docstring
+        """
+        Run `sbatch` and add the `slurm_job` to `self.jobs`.
+
+        Args:
+            submit_command:
+                The SLURM submission command prepared in
+                `self._prepare_single_slurm_job`.
+            slurm_job: The `SlurmJob` object.
+        """
 
         logger.debug("[_submit_single_sbatch] START")
 
