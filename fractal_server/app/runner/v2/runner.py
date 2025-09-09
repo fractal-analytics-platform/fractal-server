@@ -257,19 +257,21 @@ def execute_tasks_v2(
             }
             num_tasks = 0
 
-        # Try to get SLURM error from the most recent job
-        for slurm_job_id, slurm_job in runner.jobs.items():
-            error = runner._extract_slurm_error(slurm_job)
-            if error:
-                slurm_error = error
-                # Store the first SLURM error encountered in the job database
-                with next(get_sync_db()) as db:
-                    job_db = db.get(JobV2, job_id)
-                    if job_db and not job_db.executor_error_log:
-                        job_db.executor_error_log = slurm_error
-                        db.merge(job_db)
-                        db.commit()
-                break
+        # Extract SLURM error if available (for SLURM backends, exclude Local)
+        if hasattr(runner, "jobs"):
+            # Try to get SLURM error from the most recent job
+            for slurm_job_id, slurm_job in runner.jobs.items():
+                error = runner._extract_slurm_error(slurm_job)
+                if error:
+                    slurm_error = error
+                    # Store the SLURM error in the job database
+                    with next(get_sync_db()) as db:
+                        job_db = db.get(JobV2, job_id)
+                        if job_db and not job_db.executor_error_log:
+                            job_db.executor_error_log = slurm_error
+                            db.merge(job_db)
+                            db.commit()
+                    break
 
         # POST TASK EXECUTION
         try:
