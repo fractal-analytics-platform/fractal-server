@@ -280,6 +280,7 @@ class BaseSlurmRunner(BaseRunner):
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
+        # FIXME: Add docstring
         logger.debug("[_prepare_single_slurm_job] START")
 
         for task in slurm_job.tasks:
@@ -390,10 +391,8 @@ class BaseSlurmRunner(BaseRunner):
             )
         else:
             submit_command = (
-                "sbatch --parsable "
-                f"{slurm_job.slurm_submission_script_local}"
+                f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
             )
-
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
 
@@ -461,22 +460,14 @@ class BaseSlurmRunner(BaseRunner):
         *,
         submit_command: str,
         slurm_job: SlurmJob,
-        slurm_config: SlurmConfig,
     ) -> None:
+        # FIXME: Add docstring
+
         logger.debug("[_submit_single_sbatch] START")
-        # Run sbatch
-        if self.slurm_runner_type == "ssh":
-            wrapper_script = (
-                f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
-            )
-        else:
-            wrapper_script = (
-                f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
-            )
-        logger.debug(f"[_submit_single_sbatch] Now run {wrapper_script=}")
-        sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
 
         # Submit SLURM job and retrieve job ID
+        logger.debug(f"[_submit_single_sbatch] Now run {submit_command=}")
+        sbatch_stdout = self._run_remote_cmd(submit_command)
         logger.info(f"[_submit_single_sbatch] {sbatch_stdout=}")
         stdout = sbatch_stdout.strip("\n")
         submitted_job_id = int(stdout)
@@ -679,12 +670,12 @@ class BaseSlurmRunner(BaseRunner):
             )
             if self.slurm_runner_type == "ssh":
                 self._send_many_job_inputs(
-                    workdir_local=workdir_local, workdir_remote=workdir_remote
+                    workdir_local=workdir_local,
+                    workdir_remote=workdir_remote,
                 )
             self._submit_single_sbatch(
                 submit_command=submit_command,
                 slurm_job=slurm_job,
-                slurm_config=config,
             )
             logger.debug(f"[submit] END submission phase, {self.job_ids=}")
 
@@ -870,7 +861,8 @@ class BaseSlurmRunner(BaseRunner):
                 )
             if self.slurm_runner_type == "ssh":
                 self._send_many_job_inputs(
-                    workdir_local=workdir_local, workdir_remote=workdir_remote
+                    workdir_local=workdir_local,
+                    workdir_remote=workdir_remote,
                 )
             for slurm_job, submit_command in zip(
                 jobs_to_submit, submit_commands
@@ -878,7 +870,6 @@ class BaseSlurmRunner(BaseRunner):
                 self._submit_single_sbatch(
                     submit_command=submit_command,
                     slurm_job=slurm_job,
-                    slurm_config=config,
                 )
 
             logger.info(f"[multisubmit] END submission phase, {self.job_ids=}")
