@@ -309,19 +309,6 @@ async def delete_task_group(
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
     await check_no_related_workflowtask(task_group=task_group, db=db)
 
-    task_group_activity = TaskGroupActivityV2(
-        user_id=task_group.user_id,
-        taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DELETE,
-        pkg_name=task_group.pkg_name,
-        version=task_group.version,
-        timestamp_started=get_timestamp(),
-    )
-    db.add(task_group_activity)
-    await db.commit()
-
-    # Shortcut for task-group with origin="other"
     if task_group.origin == TaskGroupV2OriginEnum.OTHER:
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
@@ -336,9 +323,20 @@ async def delete_task_group(
         db.add(task_group_activity)
         await db.delete(task_group)
         await db.commit()
-
         response.status_code = status.HTTP_202_ACCEPTED
         return task_group_activity
+
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.DELETE,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        timestamp_started=get_timestamp(),
+    )
+    db.add(task_group_activity)
+    await db.commit()
 
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
