@@ -472,6 +472,7 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
+        slurm_job: SlurmJob | None = None,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception]:
         try:
@@ -516,6 +517,55 @@ class BaseSlurmRunner(BaseRunner):
         finally:
             Path(task.input_file_local).unlink(missing_ok=True)
             Path(task.output_file_local).unlink(missing_ok=True)
+
+            # Extract SLURM errors from stderr file if available
+            if slurm_job is not None:
+                slurm_error = self._extract_slurm_error(slurm_job)
+                if slurm_error:
+                    logger.warning(f"SLURM error detected: {slurm_error}")
+
+    def _extract_slurm_error(self, slurm_job: SlurmJob) -> str | None:
+        """
+        Extract SLURM-specific errors from the stderr file."""
+        stderr_path = slurm_job.slurm_stderr_local_path
+
+        if not stderr_path.exists():
+            return None
+
+        try:
+            with open(stderr_path) as f:
+                stderr_content = f.read()
+
+            # Look for common SLURM error patterns
+            slurm_error_patterns = [
+                "slurm_load_jobs error",
+                "Socket timed out",
+                "sbatch: error:",
+                "slurmstepd: error:",
+                "Job cancelled",
+                "Job failed",
+            ]
+
+            for pattern in slurm_error_patterns:
+                if pattern in stderr_content:
+                    # Return the first few lines containing the error
+                    lines = stderr_content.split("\n")
+                    error_lines = []
+                    for line in lines:
+                        if any(
+                            pattern in line for pattern in slurm_error_patterns
+                        ):
+                            error_lines.append(line.strip())
+                            if (
+                                len(error_lines) >= 3
+                            ):  # Limit to first 3 error lines
+                                break
+                    return "\n".join(error_lines) if error_lines else pattern
+
+        except Exception as e:
+            logger.debug(f"Failed to read SLURM stderr file: {e}")
+
+        return None
 
     def is_shutdown(self) -> bool:
         return self.shutdown_file.exists()
@@ -658,6 +708,7 @@ class BaseSlurmRunner(BaseRunner):
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         result, exception = self._postprocess_single_task(
                             task=slurm_job.tasks[0],
+                            slurm_job=slurm_job,
                             was_job_scancelled=was_job_scancelled,
                         )
 
@@ -878,6 +929,7 @@ class BaseSlurmRunner(BaseRunner):
                                     exception,
                                 ) = self._postprocess_single_task(
                                     task=task,
+                                    slurm_job=slurm_job,
                                     was_job_scancelled=was_job_scancelled,
                                 )
                             except Exception as e:

@@ -22,6 +22,7 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -194,6 +195,7 @@ def execute_tasks_v2(
             history_run_id = history_run.id
 
         # TASK EXECUTION (V2)
+        slurm_error = None
         try:
             if task.type in [
                 TaskType.NON_PARALLEL,
@@ -210,8 +212,8 @@ def execute_tasks_v2(
                     get_runner_config=get_runner_config,
                     history_run_id=history_run_id,
                     dataset_id=dataset.id,
-                    user_id=user_id,
                     task_type=task.type,
+                    user_id=user_id,
                 )
             elif task.type == TaskType.PARALLEL:
                 outcomes_dict, num_tasks = run_v2_task_parallel(
@@ -254,6 +256,20 @@ def execute_tasks_v2(
                 )
             }
             num_tasks = 0
+
+        # Try to get SLURM error from the most recent job
+        for slurm_job_id, slurm_job in runner.jobs.items():
+            error = runner._extract_slurm_error(slurm_job)
+            if error:
+                slurm_error = error
+                # Store the first SLURM error encountered in the job database
+                with next(get_sync_db()) as db:
+                    job_db = db.get(JobV2, job_id)
+                    if job_db and not job_db.executor_error_log:
+                        job_db.executor_error_log = slurm_error
+                        db.merge(job_db)
+                        db.commit()
+                break
 
         # POST TASK EXECUTION
         try:
