@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from devtools import debug
 
@@ -10,7 +12,9 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_ssh.runner import (
     SlurmSSHRunner,
 )
+from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -60,7 +64,9 @@ async def test_submit_success(
             task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(
-                tmp777_path, component="0", is_slurm=True
+                tmp777_path,
+                component="0",
+                is_slurm=True,
             ),
             task_type=task_type,
             history_unit_id=history_unit_id,
@@ -131,7 +137,9 @@ async def test_submit_fail(
             parameters=parameters,
             history_unit_id=history_unit_id,
             task_files=get_dummy_task_files(
-                tmp777_path, component="0", is_slurm=True
+                tmp777_path,
+                component="0",
+                is_slurm=True,
             ),
             config=get_default_slurm_config(),
             task_type=task_type,
@@ -184,7 +192,11 @@ async def test_multisubmit_parallel(
             list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
-                    tmp777_path, component=str(ind), is_slurm=True
+                    tmp777_path,
+                    component=str(ind),
+                    is_slurm=True,
+                    # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                    prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
                 )
                 for ind in range(len(ZARR_URLS))
             ],
@@ -239,6 +251,8 @@ async def test_multisubmit_compound(
                 tmp777_path,
                 component=str(ind),
                 is_slurm=True,
+                # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
             )
             for ind in range(len(ZARR_URLS))
         ]
@@ -281,3 +295,36 @@ async def test_multisubmit_compound(
         # `HistoryUnit.status` is not updated from within `runner.multisubmit`,
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
+
+
+@pytest.mark.ssh
+@pytest.mark.container
+def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
+    root_dir_local = tmp777_path / "local"
+    root_dir_local.mkdir(parents=True)
+    root_dir_remote = tmp777_path / "remote"
+    dummy_file = root_dir_local / "foo.txt"
+    dummy_file.touch()
+
+    with SlurmSSHRunner(
+        fractal_ssh=fractal_ssh,
+        root_dir_local=root_dir_local,
+        root_dir_remote=root_dir_remote,
+        poll_interval=0,
+    ) as runner:
+        # Set connection to None, so that all SSH-related `fractal_ssh`
+        # methods will fail
+        runner.fractal_ssh = FractalSSH(connection=None)
+
+        with pytest.raises(
+            AttributeError,
+            match="'NoneType' object has no attribute 'sftp'",
+        ):
+            runner._send_many_job_inputs(
+                workdir_local=runner.root_dir_local,
+                workdir_remote=runner.root_dir_remote,
+            )
+
+    tar_path_local = root_dir_local.with_suffix(".tar.gz")
+    assert not tar_path_local.exists()
+    assert dummy_file.exists()
