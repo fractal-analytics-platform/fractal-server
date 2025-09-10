@@ -523,3 +523,64 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         assert res.status_code == 422
         assert "submitted jobs use its tasks" in res.json()["detail"]
+
+
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local"])
+@pytest.mark.container
+async def test_delete_task_group_api(
+    client,
+    MockCurrentUser,
+    db,
+    testdata_path,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
+    app,
+    tmp777_path: Path,
+    request,
+    current_py_version,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+
+    user_settings_dict = {}
+
+    # Absolute path to wheel file (use a path in tmp77_path, so that it is
+    # also accessible on the SSH remote host)
+    old_archive_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    archive_path = tmp777_path / old_archive_path.name
+    shutil.copy(old_archive_path, archive_path)
+    with open(archive_path, "rb") as f:
+        files = {"file": (archive_path.name, f.read(), "application/zip")}
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+        user_settings_dict=user_settings_dict,
+    ):
+        # STEP 1: Task collection
+        res = await client.post("api/v2/task/collect/pip/", files=files)
+        assert res.status_code == 202
+        task_group_id = res.json()["taskgroupv2_id"]
+
+        # STEP 2: Delete task group
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        assert Path(task_group.path).exists()
+        assert Path(task_group.path).is_dir()
+
+        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        assert res.status_code == 202
+        activity = res.json()
+        activity_id = activity["id"]
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        assert activity["timestamp_ended"] is None
+
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
+        assert activity["timestamp_ended"] is not None
+
+        assert not Path(task_group.path).exists()
