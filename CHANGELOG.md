@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.8 (Unreleased)
+# 2.15.8
 
 * Runner:
     * Split `SlurmJob` submission into three steps, reducing SSH connections (\#2749).
