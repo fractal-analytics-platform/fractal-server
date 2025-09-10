@@ -33,7 +33,7 @@ class TaskGroupV2(SQLModel, table=True):
     path: str | None = None
     archive_path: str | None = None
     pip_extras: str | None = None
-    pinned_package_versions: dict[str, str] = Field(
+    pinned_package_versions_post: dict[str, str] = Field(
         sa_column=Column(
             JSONB,
             server_default="{}",
@@ -85,22 +85,22 @@ class TaskGroupV2(SQLModel, table=True):
             return f"{self.pkg_name}{extras}=={self.version}"
 
     @property
-    def pinned_package_versions_string(self) -> str:
+    def pinned_package_versions_post_string(self) -> str:
         """
         Prepare string to be used in `python -m pip install`.
         """
         if self.origin == "pixi":
             raise ValueError(
-                "Cannot call 'pinned_package_versions_string' if "
+                "Cannot call 'pinned_package_versions_postr_string' if "
                 f"{self.origin=}."
             )
 
-        if self.pinned_package_versions is None:
+        if self.pinned_package_versions_post is None:
             return ""
         output = " ".join(
             [
                 f"{key}=={value}"
-                for key, value in self.pinned_package_versions.items()
+                for key, value in self.pinned_package_versions_post.items()
             ]
         )
         return output

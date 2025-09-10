@@ -195,12 +195,14 @@ async def test_failure_cleanup(
         assert not TASK_GROUP_PATH.exists()
 
         # Endpoint returns correctly,
-        # despite invalid `pinned_package_versions`
+        # despite invalid `pinned_package_versions_post`
         res = await client.post(
             "api/v2/task/collect/pip/",
             data=dict(
                 **payload,
-                pinned_package_versions=json.dumps({"pydantic": "99.99.99"}),
+                pinned_package_versions_post=json.dumps(
+                    {"pydantic": "99.99.99"}
+                ),
             ),
             files=files,
         )

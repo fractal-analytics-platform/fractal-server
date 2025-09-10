@@ -22,32 +22,36 @@ def test_TaskCollectPipV2():
     assert collection.package_version == "1.2.3"
 
     collection_none = TaskCollectPipV2(
-        package="pkg", pinned_package_versions=None
+        package="pkg", pinned_package_versions_post=None
     )
-    assert collection_none.pinned_package_versions is None
+    assert collection_none.pinned_package_versions_post is None
 
     sanitized_keys = TaskCollectPipV2(
-        package="pkg", pinned_package_versions={"    a      ": "1.0.0"}
+        package="pkg", pinned_package_versions_post={"    a      ": "1.0.0"}
     )
-    assert sanitized_keys.pinned_package_versions == dict(a="1.0.0")
+    assert sanitized_keys.pinned_package_versions_post == dict(a="1.0.0")
 
     with pytest.raises(ValidationError):
         TaskCollectPipV2(
-            package="pkg", pinned_package_versions={";maliciouscmd": "1.0.0"}
-        )
-
-    with pytest.raises(ValidationError):
-        TaskCollectPipV2(
-            package="pkg", pinned_package_versions={"pkg": ";maliciouscmd"}
+            package="pkg",
+            pinned_package_versions_post={";maliciouscmd": "1.0.0"},
         )
 
     with pytest.raises(ValidationError):
         TaskCollectPipV2(
             package="pkg",
-            pinned_package_versions={" a ": "1.0.0", "a": "2.0.0"},
+            pinned_package_versions_post={"pkg": ";maliciouscmd"},
+        )
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(
+            package="pkg",
+            pinned_package_versions_post={" a ": "1.0.0", "a": "2.0.0"},
         )
     with pytest.raises(ValidationError):
-        TaskCollectPipV2(package="pkg", pinned_package_versions={" ": "1.0.0"})
+        TaskCollectPipV2(
+            package="pkg", pinned_package_versions_post={" ": "1.0.0"}
+        )
 
     with pytest.raises(ValidationError, match="must not contain"):
         TaskCollectPipV2(package="; rm x")

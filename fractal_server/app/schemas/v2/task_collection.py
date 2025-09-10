@@ -39,7 +39,7 @@ class TaskCollectPipV2(BaseModel):
         package_version: Version of the package
         package_extras: Package extras to include in the `pip install` command
         python_version: Python version to install and run the package tasks
-        pinned_package_versions:
+        pinned_package_versions_post:
             dictionary 'package':'version' used to pin versions for specific
             packages.
 
@@ -52,7 +52,7 @@ class TaskCollectPipV2(BaseModel):
     python_version: Literal[
         "3.9", "3.10", "3.11", "3.12", "3.13"
     ] | None = None
-    pinned_package_versions: DictStrStr | None = None
+    pinned_package_versions_post: DictStrStr | None = None
 
     @field_validator(
         "package", "package_version", "package_extras", mode="after"
@@ -63,9 +63,9 @@ class TaskCollectPipV2(BaseModel):
             validate_cmd(value)
         return value
 
-    @field_validator("pinned_package_versions", mode="after")
+    @field_validator("pinned_package_versions_post", mode="after")
     @classmethod
-    def validate_pinned_package_versions(cls, value):
+    def validate_pinned_package_versions_post(cls, value):
         if value is not None:
             for pkg, version in value.items():
                 validate_cmd(pkg)
