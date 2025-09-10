@@ -537,6 +537,21 @@ class BaseSlurmRunner(BaseRunner):
 
         return None
 
+    def _set_executor_error_log(self, slurm_jobs: list[SlurmJob]) -> None:
+        """
+        If `executor_error_log` is unset, update it based on a list of jobs.
+
+        Note: this method only captures the first error.
+        """
+        if self.executor_error_log is None:
+            return
+        for slurm_job in slurm_jobs:
+            slurm_error = self._extract_slurm_error(slurm_job)
+            if slurm_error:
+                logger.warning(f"SLURM error detected: {slurm_error}")
+                self.executor_error_log = slurm_error
+                return
+
     def is_shutdown(self) -> bool:
         return self.shutdown_file.exists()
 
@@ -671,16 +686,8 @@ class BaseSlurmRunner(BaseRunner):
                     for _slurm_job_id in finished_job_ids
                 ]
 
-                # Extract SLURM errors if available (only capture first error)
-                if self.executor_error_log is None:
-                    for slurm_job in finished_jobs:
-                        slurm_error = self._extract_slurm_error(slurm_job)
-                        if slurm_error:
-                            logger.warning(
-                                f"SLURM error detected: {slurm_error}"
-                            )
-                            self.executor_error_log = slurm_error
-                            break
+                # Extract SLURM errors
+                self._set_executor_error_log(finished_jobs)
 
                 self._fetch_artifacts(finished_jobs)
                 with next(get_sync_db()) as db:
@@ -881,14 +888,8 @@ class BaseSlurmRunner(BaseRunner):
                 self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
             ]
 
-            # Extract SLURM errors if available (only capture first error)
-            if self.executor_error_log is None:
-                for slurm_job in finished_jobs:
-                    slurm_error = self._extract_slurm_error(slurm_job)
-                    if slurm_error:
-                        logger.warning(f"SLURM error detected: {slurm_error}")
-                        self.executor_error_log = slurm_error
-                        break
+            # Extract SLURM errors
+            self._set_executor_error_log(finished_jobs)
 
             fetch_artifacts_exception = None
             try:
