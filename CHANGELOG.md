@@ -2,15 +2,21 @@
 
 # 2.15.8 (Unreleased)
 
+* Runner:
+    * Split `SlurmJob` submission into three steps, reducing SSH connections (\#2749).
+    * Deprecate experimental `pre_submission_commands` feature (\#2749).
 * Documentation:
     * Fix `Fractal Users` documentation page (\#2738).
     * Improve documentation for Pixi task collection (\#2742).
+* Task life cycle:
+    * Add test to lock `FRACTAL_MAX_PIP_VERSION` with latest version on PyPI (\#2752).
+    * Use pixi v0.54.1 in tests (\#2758).
 * Internal
     * Improve type hints (\#2739).
-* SSH
-    * Add a decorator to open a new connection (socket) if the decorated function
-      hits a `NoValidConnectionError` or a `OSError` (\#2747).
-    * Remove multiple attempt logic (\#2747).
+* SSH:
+    * Add a decorator to open a new connection (socket) if the decorated function hits a `NoValidConnectionError` or a `OSError` (\#2747).
+    * Remove multiple-attempts logic (\#2747).
+
 # 2.15.7
 
 * API:

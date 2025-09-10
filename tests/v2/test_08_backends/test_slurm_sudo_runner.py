@@ -12,6 +12,7 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
+from fractal_server.app.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
@@ -56,7 +57,9 @@ async def test_submit_success(
             task_name="fake-task-name",
             parameters=parameters,
             task_files=get_dummy_task_files(
-                tmp777_path, component="0", is_slurm=True
+                tmp777_path,
+                component="0",
+                is_slurm=True,
             ),
             task_type=task_type,
             history_unit_id=history_unit_id,
@@ -168,7 +171,11 @@ async def test_multisubmit_parallel(
             list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
-                    tmp777_path, component=str(ind), is_slurm=True
+                    tmp777_path,
+                    component=str(ind),
+                    is_slurm=True,
+                    # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                    prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
                 )
                 for ind in range(len(ZARR_URLS))
             ],
@@ -216,6 +223,8 @@ async def test_multisubmit_compound(
                 tmp777_path,
                 component=str(ind),
                 is_slurm=True,
+                # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
             )
             for ind in range(len(ZARR_URLS))
         ]
@@ -288,7 +297,11 @@ async def test_multisubmit_parallel_partial_failure(
             list_parameters=ZARR_URLS_AND_PARAMETER,
             list_task_files=[
                 get_dummy_task_files(
-                    tmp777_path, component=str(ind), is_slurm=True
+                    tmp777_path,
+                    component=str(ind),
+                    is_slurm=True,
+                    # Set a realistic prefix (c.f. `enrich_task_files_multisubmit` function)  # noqa
+                    prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
                 )
                 for ind in range(len(ZARR_URLS))
             ],

@@ -264,14 +264,25 @@ class BaseSlurmRunner(BaseRunner):
 
         return new_slurm_config
 
-    def _submit_single_sbatch(
+    def _prepare_single_slurm_job(
         self,
         *,
         base_command: str,
         slurm_job: SlurmJob,
         slurm_config: SlurmConfig,
     ) -> str:
-        logger.debug("[_submit_single_sbatch] START")
+        """
+        Prepare submission script locally.
+
+        Args:
+            base_command: Base of task executable command.
+            slurm_job: `SlurmJob` object
+            slurm_config: Configuration for SLURM job
+
+        Returns:
+            Command to submit the SLURM job.
+        """
+        logger.debug("[_prepare_single_slurm_job] START")
 
         for task in slurm_job.tasks:
             # Write input file
@@ -301,23 +312,9 @@ class BaseSlurmRunner(BaseRunner):
                 json.dump(task.parameters, f, indent=2)
 
             logger.debug(
-                "[_submit_single_sbatch] Written " f"{task.input_file_local=}"
+                "[_prepare_single_slurm_job] Written "
+                f"{task.input_file_local=}"
             )
-
-            if self.slurm_runner_type == "ssh":
-                # Send input file (only relevant for SSH)
-                self.fractal_ssh.send_file(
-                    local=task.input_file_local,
-                    remote=task.input_file_remote,
-                )
-                self.fractal_ssh.send_file(
-                    local=task.task_files.args_file_local,
-                    remote=task.task_files.args_file_remote,
-                )
-                logger.debug(
-                    "[_submit_single_sbatch] Transferred "
-                    f"{task.input_file_local=}"
-                )
 
         # Prepare commands to be included in SLURM submission script
         cmdlines = []
@@ -355,7 +352,7 @@ class BaseSlurmRunner(BaseRunner):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logger.debug(script_lines)
+        logger.debug(f"[_prepare_single_slurm_job] {script_lines=}")
 
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
@@ -375,61 +372,64 @@ class BaseSlurmRunner(BaseRunner):
                 f"--mem={mem_per_task_MB}MB "
                 f"{cmd} &"
             )
-        script_lines.append("wait\n")
-        script = "\n".join(script_lines)
+        script_lines.append("wait\n\n")
         script_lines.append(
             'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
         )
+        script = "\n".join(script_lines)
 
         # Write submission script
         with open(slurm_job.slurm_submission_script_local, "w") as f:
             f.write(script)
         logger.debug(
-            "[_submit_single_sbatch] Written "
+            "[_prepare_single_slurm_job] Written "
             f"{slurm_job.slurm_submission_script_local=}"
         )
 
         if self.slurm_runner_type == "ssh":
-            self.fractal_ssh.send_file(
-                local=slurm_job.slurm_submission_script_local,
-                remote=slurm_job.slurm_submission_script_remote,
-            )
             submit_command = (
-                "sbatch --parsable "
-                f"{slurm_job.slurm_submission_script_remote}"
+                f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
             )
         else:
             submit_command = (
-                "sbatch --parsable "
-                f"{slurm_job.slurm_submission_script_local}"
+                f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
             )
-        # Run sbatch
-        pre_submission_cmds = slurm_config.pre_submission_commands
-        if len(pre_submission_cmds) == 0:
-            logger.debug(f"Now run {submit_command=}")
-            sbatch_stdout = self._run_remote_cmd(submit_command)
-        else:
-            logger.debug(f"Now using {pre_submission_cmds=}")
-            script_lines = pre_submission_cmds + [submit_command]
-            wrapper_script_contents = "\n".join(script_lines)
-            wrapper_script_contents = f"{wrapper_script_contents}\n"
-            if self.slurm_runner_type == "ssh":
-                wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_remote}_wrapper.sh"
-                )
-                self.fractal_ssh.write_remote_file(
-                    path=wrapper_script, content=wrapper_script_contents
-                )
-            else:
-                wrapper_script = (
-                    f"{slurm_job.slurm_submission_script_local}_wrapper.sh"
-                )
-                with open(wrapper_script, "w") as f:
-                    f.write(wrapper_script_contents)
-            logger.debug(f"Now run {wrapper_script=}")
-            sbatch_stdout = self._run_remote_cmd(f"bash {wrapper_script}")
+        logger.debug("[_prepare_single_slurm_job] END")
+        return submit_command
+
+    def _send_many_job_inputs(
+        self, *, workdir_local: Path, workdir_remote: Path
+    ) -> None:
+        """
+        Placeholder method.
+
+        This method is intentionally left unimplemented in the base class.
+        Subclasses must override it to provide the logic for transferring
+        input data.
+        """
+        pass
+
+    def _submit_single_sbatch(
+        self,
+        *,
+        submit_command: str,
+        slurm_job: SlurmJob,
+    ) -> None:
+        """
+        Run `sbatch` and add the `slurm_job` to `self.jobs`.
+
+        Args:
+            submit_command:
+                The SLURM submission command prepared in
+                `self._prepare_single_slurm_job`.
+            slurm_job: The `SlurmJob` object.
+        """
+
+        logger.debug("[_submit_single_sbatch] START")
 
         # Submit SLURM job and retrieve job ID
+        logger.debug(f"[_submit_single_sbatch] Now run {submit_command=}")
+        sbatch_stdout = self._run_remote_cmd(submit_command)
         logger.info(f"[_submit_single_sbatch] {sbatch_stdout=}")
         stdout = sbatch_stdout.strip("\n")
         submitted_job_id = int(stdout)
@@ -661,10 +661,18 @@ class BaseSlurmRunner(BaseRunner):
             )
 
             config.parallel_tasks_per_job = 1
-            self._submit_single_sbatch(
+            submit_command = self._prepare_single_slurm_job(
                 base_command=base_command,
                 slurm_job=slurm_job,
                 slurm_config=config,
+            )
+            self._send_many_job_inputs(
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+            )
+            self._submit_single_sbatch(
+                submit_command=submit_command,
+                slurm_job=slurm_job,
             )
             logger.debug(f"[submit] END submission phase, {self.job_ids=}")
 
@@ -844,13 +852,25 @@ class BaseSlurmRunner(BaseRunner):
                     )
                 )
 
-            # NOTE: see issue 2431
-            logger.debug("[multisubmit] Transfer files and submit jobs.")
+            submit_commands = []
             for slurm_job in jobs_to_submit:
+                submit_commands.append(
+                    self._prepare_single_slurm_job(
+                        base_command=base_command,
+                        slurm_job=slurm_job,
+                        slurm_config=config,
+                    )
+                )
+            self._send_many_job_inputs(
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+            )
+            for slurm_job, submit_command in zip(
+                jobs_to_submit, submit_commands
+            ):
                 self._submit_single_sbatch(
-                    base_command=base_command,
+                    submit_command=submit_command,
                     slurm_job=slurm_job,
-                    slurm_config=config,
                 )
 
             logger.info(f"[multisubmit] END submission phase, {self.job_ids=}")
