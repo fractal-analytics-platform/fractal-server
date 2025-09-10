@@ -12,6 +12,24 @@ from .task import TaskV2
 from fractal_server.utils import get_timestamp
 
 
+def _check_origin_not_pixi(origin: str):
+    """
+    Raise `ValueError` if `origin=="pixi"`
+    """
+    if origin == "pixi":
+        raise ValueError(f"Cannot call 'pip_install_string' if {origin=}.")
+
+
+def _create_dependency_string(pinned_versions: dict[str, str]) -> str:
+    """
+    Expand e.g. `{"a": "1.2", "b": "3"}` into `"a==1.2 b==3"`.
+    """
+    output = " ".join(
+        [f"{key}=={value}" for key, value in pinned_versions.items()]
+    )
+    return output
+
+
 class TaskGroupV2(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     task_list: list[TaskV2] = Relationship(
@@ -75,10 +93,7 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
-        if self.origin == "pixi":
-            raise ValueError(
-                f"Cannot call 'pip_install_string' if {self.origin=}."
-            )
+        _check_origin_not_pixi(self.origin)
 
         extras = f"[{self.pip_extras}]" if self.pip_extras is not None else ""
 
@@ -97,20 +112,11 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
-        if self.origin == "pixi":
-            raise ValueError(
-                "Cannot call 'pinned_package_versions_pre_string' if "
-                f"{self.origin=}."
-            )
+        _check_origin_not_pixi(self.origin)
 
         if self.pinned_package_versions_pre is None:
             return ""
-        output = " ".join(
-            [
-                f"{key}=={value}"
-                for key, value in self.pinned_package_versions_pre.items()
-            ]
-        )
+        output = _create_dependency_string(self.pinned_package_versions_pre)
         return output
 
     @property
@@ -118,20 +124,11 @@ class TaskGroupV2(SQLModel, table=True):
         """
         Prepare string to be used in `python -m pip install`.
         """
-        if self.origin == "pixi":
-            raise ValueError(
-                "Cannot call 'pinned_package_versions_post_string' if "
-                f"{self.origin=}."
-            )
+        _check_origin_not_pixi(self.origin)
 
         if self.pinned_package_versions_post is None:
             return ""
-        output = " ".join(
-            [
-                f"{key}=={value}"
-                for key, value in self.pinned_package_versions_post.items()
-            ]
-        )
+        output = _create_dependency_string(self.pinned_package_versions_post)
         return output
 
 
