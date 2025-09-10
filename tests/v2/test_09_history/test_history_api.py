@@ -756,7 +756,7 @@ async def test_get_history_images(
                 "failed",
                 "unset",
             ],
-            "a_or_b": ["b"],
+            "a_or_b": ["a", "b"],
             "well": [f"well-{i}" for i in range(5)],
         }
         assert set(res.json()["types"]) == {"x", "is_b"}
