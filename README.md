@@ -84,14 +84,14 @@
 | fractal\_server/app/runner/executors/slurm\_common/\_\_init\_\_.py              |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_common/\_batching.py                |       67 |       36 |       28 |        5 |     42% |49, 125-130, 132-137, 139-144, 149-198 |
 | fractal\_server/app/runner/executors/slurm\_common/\_job\_states.py             |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm\_common/\_slurm\_config.py           |      164 |       26 |       52 |       11 |     79% |173-174, 191->195, 307, 349, 355, 380, 393-399, 449-450, 452, 456-457, 462-463, 465-473 |
-| fractal\_server/app/runner/executors/slurm\_common/base\_slurm\_runner.py       |      419 |       18 |       98 |        7 |     95% |173, 190, 224, 227, 412-430, 462, 509->515, 724->731, 771, 828->835, 896->866 |
+| fractal\_server/app/runner/executors/slurm\_common/\_slurm\_config.py           |      162 |       26 |       52 |       11 |     79% |172-173, 190->194, 302, 344, 350, 375, 388-394, 444-445, 447, 451-452, 457-458, 460-468 |
+| fractal\_server/app/runner/executors/slurm\_common/base\_slurm\_runner.py       |      411 |        6 |       94 |        6 |     98% |173, 190, 224, 227, 462, 509->515, 732->739, 779, 848->855, 916->886 |
 | fractal\_server/app/runner/executors/slurm\_common/get\_slurm\_config.py        |       77 |        4 |       34 |        4 |     93% |55, 68->72, 99->103, 121-128 |
 | fractal\_server/app/runner/executors/slurm\_common/remote.py                    |       51 |        6 |       10 |        2 |     87% |57->64, 106-125 |
 | fractal\_server/app/runner/executors/slurm\_common/slurm\_job\_task\_models.py  |       83 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_ssh/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_ssh/run\_subprocess.py              |       19 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/runner/executors/slurm\_ssh/runner.py                       |       86 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/app/runner/executors/slurm\_ssh/runner.py                       |      108 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_ssh/tar\_commands.py                |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_sudo/\_\_init\_\_.py                |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/executors/slurm\_sudo/\_subprocess\_run\_as\_user.py |       23 |        2 |        6 |        2 |     86% |    52, 83 |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9336** |  **270** | **1738** |  **100** | **96%** |           |
+|                                                                       **TOTAL** | **9348** |  **258** | **1734** |   **99** | **96%** |           |
 
 
 ## Setup coverage badge
