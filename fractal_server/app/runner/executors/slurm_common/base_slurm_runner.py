@@ -397,6 +397,16 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
 
+    def _send_many_job_inputs(self, *args, **kwargs) -> None:
+        """
+        Placeholder method.
+
+        This method is intentionally left unimplemented in the base class.
+        Subclasses must override it to provide the logic for transferring
+        input data.
+        """
+        pass
+
     def _submit_single_sbatch(
         self,
         *,
@@ -618,11 +628,10 @@ class BaseSlurmRunner(BaseRunner):
                 slurm_job=slurm_job,
                 slurm_config=config,
             )
-            if self.slurm_runner_type == "ssh":
-                self._send_many_job_inputs(
-                    workdir_local=workdir_local,
-                    workdir_remote=workdir_remote,
-                )
+            self._send_many_job_inputs(
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+            )
             self._submit_single_sbatch(
                 submit_command=submit_command,
                 slurm_job=slurm_job,
@@ -809,11 +818,10 @@ class BaseSlurmRunner(BaseRunner):
                         slurm_config=config,
                     )
                 )
-            if self.slurm_runner_type == "ssh":
-                self._send_many_job_inputs(
-                    workdir_local=workdir_local,
-                    workdir_remote=workdir_remote,
-                )
+            self._send_many_job_inputs(
+                workdir_local=workdir_local,
+                workdir_remote=workdir_remote,
+            )
             for slurm_job, submit_command in zip(
                 jobs_to_submit, submit_commands
             ):
