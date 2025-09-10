@@ -21,15 +21,6 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.base_runner import BaseRunner
 from fractal_server.app.runner.executors.base_runner import MultisubmitTaskType
 from fractal_server.app.runner.executors.base_runner import SubmitTaskType
-from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
-    run_subprocess,
-)
-from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
-    get_tar_compression_cmd,
-)
-from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
-    get_tar_extraction_cmd,
-)
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.runner.v2.db_tools import (
@@ -405,65 +396,6 @@ class BaseSlurmRunner(BaseRunner):
             )
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
-
-    def _send_many_job_inputs(
-        self, *, workdir_local: Path, workdir_remote: Path
-    ) -> None:
-        """
-        Compress, transfer, and extract a local working directory onto a remote
-        host.
-
-        This method creates a temporary `.tar.gz` archive of the given
-        `workdir_local`, transfers it to the remote machine via the configured
-        SSH connection, extracts it into `workdir_remote`, and removes the
-        temporary archive from both local and remote filesystems.
-        """
-
-        logger.debug("[_send_many_job_inputs] START")
-
-        tar_path_local = workdir_local.with_suffix(".tar.gz")
-        tar_name = Path(tar_path_local).name
-        tar_path_remote = workdir_remote.parent / tar_name
-
-        tar_compression_cmd = get_tar_compression_cmd(
-            subfolder_path=workdir_local, filelist_path=None
-        )
-        _, tar_extraction_cmd = get_tar_extraction_cmd(
-            archive_path=tar_path_remote
-        )
-        rm_tar_cmd = f"rm {tar_path_remote.as_posix()}"
-
-        try:
-            run_subprocess(tar_compression_cmd, logger_name=logger.name)
-            logger.debug(
-                "[_send_many_job_inputs] "
-                f"{workdir_local=} compressed to {tar_path_local=}."
-            )
-            self.fractal_ssh.send_file(
-                local=tar_path_local.as_posix(),
-                remote=tar_path_remote.as_posix(),
-            )
-            logger.debug(
-                "[_send_many_job_inputs] "
-                f"{tar_path_local=} sent via SSH to {tar_path_remote=}."
-            )
-            self.fractal_ssh.run_command(cmd=tar_extraction_cmd)
-            logger.debug(
-                "[_send_many_job_inputs] "
-                f"{tar_path_remote=} extracted to {workdir_remote=}."
-            )
-            self.fractal_ssh.run_command(cmd=rm_tar_cmd)
-            logger.debug(
-                "[_send_many_job_inputs] "
-                f"{tar_path_remote=} removed from remote server."
-            )
-        except Exception as e:
-            raise e
-        finally:
-            Path(tar_path_local).unlink(missing_ok=True)
-            logger.debug(f"[_send_many_job_inputs] {tar_path_local=} removed.")
-
-        logger.debug("[_send_many_job_inputs] END.")
 
     def _submit_single_sbatch(
         self,
