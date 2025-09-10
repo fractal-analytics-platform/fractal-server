@@ -194,12 +194,15 @@ async def test_failure_cleanup(
         TASK_GROUP_PATH = tmp_path / str(user.id) / "fractal-tasks-mock/0.0.1"
         assert not TASK_GROUP_PATH.exists()
 
-        # Endpoint returns correctly,
-        # despite invalid `pinned_package_versions_post`
+        # Endpoint returns correctly, despite invalid
+        # `pinned_package_versions_pre` and `pinned_package_versions_post`
         res = await client.post(
             "api/v2/task/collect/pip/",
             data=dict(
                 **payload,
+                pinned_package_versions_pre=json.dumps(
+                    {"pydantic": "99.99.99"}
+                ),
                 pinned_package_versions_post=json.dumps(
                     {"pydantic": "99.99.99"}
                 ),
