@@ -541,6 +541,7 @@ class BaseSlurmRunner(BaseRunner):
         """
         If `executor_error_log` is unset, update it based on a list of jobs.
 
+        Note that this must be executed **after** `_fetch_artifacts`.
         Note: this method only captures the first error.
         """
         if self.executor_error_log is None:
@@ -686,10 +687,11 @@ class BaseSlurmRunner(BaseRunner):
                     for _slurm_job_id in finished_job_ids
                 ]
 
+                self._fetch_artifacts(finished_jobs)
+
                 # Extract SLURM errors
                 self._set_executor_error_log(finished_jobs)
 
-                self._fetch_artifacts(finished_jobs)
                 with next(get_sync_db()) as db:
                     for slurm_job_id in finished_job_ids:
                         logger.debug(f"[submit] Now process {slurm_job_id=}")
@@ -888,9 +890,6 @@ class BaseSlurmRunner(BaseRunner):
                 self.jobs[_slurm_job_id] for _slurm_job_id in finished_job_ids
             ]
 
-            # Extract SLURM errors
-            self._set_executor_error_log(finished_jobs)
-
             fetch_artifacts_exception = None
             try:
                 self._fetch_artifacts(finished_jobs)
@@ -901,6 +900,9 @@ class BaseSlurmRunner(BaseRunner):
                     f"Original error: {str(e)}"
                 )
                 fetch_artifacts_exception = e
+
+            # Extract SLURM errors
+            self._set_executor_error_log(finished_jobs)
 
             with next(get_sync_db()) as db:
                 for slurm_job_id in finished_job_ids:
