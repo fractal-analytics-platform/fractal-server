@@ -354,21 +354,21 @@ async def get_history_images(
     # Setup prefix for logging
     prefix = f"[DS{dataset.id}-WFT{workflowtask_id}-images]"
 
-    # (1) Apply type filters
-    type_filtered_images = filter_image_list(
-        images=dataset.images,
-        type_filters=request_body.type_filters,
-    )
-
     # (2) Extract valid values for attributes and types
-    attributes = aggregate_attributes(type_filtered_images)
+    types = aggregate_types(dataset.images)
+    attributes = aggregate_attributes(dataset.images)
     attributes[IMAGE_STATUS_KEY] = [
         HistoryUnitStatusWithUnset.DONE,
         HistoryUnitStatusWithUnset.SUBMITTED,
         HistoryUnitStatusWithUnset.FAILED,
         HistoryUnitStatusWithUnset.UNSET,
     ]
-    types = aggregate_types(type_filtered_images)
+
+    # (1) Apply type filters
+    type_filtered_images = filter_image_list(
+        images=dataset.images,
+        type_filters=request_body.type_filters,
+    )
 
     # (3) Enrich images with status attribute
     type_filtered_images_with_status = await enrich_images_unsorted_async(
