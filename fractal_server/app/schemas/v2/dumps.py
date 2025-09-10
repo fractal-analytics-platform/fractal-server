@@ -82,6 +82,7 @@ class TaskGroupDumpV2(BaseModel):
     version: str | None = None
     python_version: str | None = None
     pip_extras: str | None = None
+    pinned_package_versions_pre: dict[str, str] = Field(default_factory=dict)
     pinned_package_versions_post: dict[str, str] = Field(default_factory=dict)
 
     path: str | None = None
