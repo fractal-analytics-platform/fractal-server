@@ -354,7 +354,7 @@ async def get_history_images(
     # Setup prefix for logging
     prefix = f"[DS{dataset.id}-WFT{workflowtask_id}-images]"
 
-    # (2) Extract valid values for attributes and types
+    # (1) Extract valid values for attributes and types
     types = aggregate_types(dataset.images)
     attributes = aggregate_attributes(dataset.images)
     attributes[IMAGE_STATUS_KEY] = [
@@ -364,7 +364,7 @@ async def get_history_images(
         HistoryUnitStatusWithUnset.UNSET,
     ]
 
-    # (1) Apply type filters
+    # (2) Apply type filters
     type_filtered_images = filter_image_list(
         images=dataset.images,
         type_filters=request_body.type_filters,
