@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.15.9 (unreleased)
+
+* Task life cycle:
+    * Support both pre-pinning and post-pinning of dependencies (\#2761).
+
 # 2.15.8
 
 * Runner:
