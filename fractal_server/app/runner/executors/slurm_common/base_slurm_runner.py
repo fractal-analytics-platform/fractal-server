@@ -397,7 +397,9 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[_prepare_single_slurm_job] END")
         return submit_command
 
-    def _send_many_job_inputs(self, *args, **kwargs) -> None:
+    def _send_many_job_inputs(
+        self, *, workdir_local: Path, workdir_remote: Path
+    ) -> None:
         """
         Placeholder method.
 
