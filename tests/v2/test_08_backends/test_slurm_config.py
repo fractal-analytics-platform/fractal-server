@@ -329,7 +329,6 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
     GPU_MEM = "20G"
     GPU_MEM_PER_TASK_MB = 20000
     GPUS = "1"
-    PRE_SUBMISSION_COMMANDS = ["module load gpu"]
 
     slurm_config_dict = {
         "default_slurm_config": {
@@ -341,7 +340,6 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
             "partition": GPU_PARTITION,
             "mem": GPU_MEM,
             "gpus": GPUS,
-            "pre_submission_commands": PRE_SUBMISSION_COMMANDS,
         },
         "batching_config": {
             "target_cpus_per_job": 10,
@@ -365,7 +363,6 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
     )
     assert slurm_config.partition == STANDARD_PARTITION
     assert slurm_config.gpus is None
-    assert slurm_config.pre_submission_commands == []
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
     mywftask = WorkflowTaskV2Mock(
@@ -381,4 +378,3 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
     assert slurm_config.partition == GPU_PARTITION
     assert slurm_config.gpus == GPUS
     assert slurm_config.mem_per_task_MB == GPU_MEM_PER_TASK_MB
-    assert slurm_config.pre_submission_commands == PRE_SUBMISSION_COMMANDS
