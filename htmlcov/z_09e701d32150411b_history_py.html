@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_images_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-09-10 13:29 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
+            created at 2025-09-11 07:55 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -438,21 +438,21 @@
     <p class="pln"><span class="n"><a id="t354" href="#t354">354</a></span><span class="t">    <span class="com"># Setup prefix for logging</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t355" href="#t355">355</a></span><span class="t">    <span class="nam">prefix</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">[DS</span><span class="op">{</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst">-WFT</span><span class="op">{</span><span class="nam">workflowtask_id</span><span class="op">}</span><span class="fst">-images]</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t356" href="#t356">356</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t357" href="#t357">357</a></span><span class="t">    <span class="com"># (1) Apply type filters</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t358" href="#t358">358</a></span><span class="t">    <span class="nam">type_filtered_images</span> <span class="op">=</span> <span class="nam">filter_image_list</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t359" href="#t359">359</a></span><span class="t">        <span class="nam">images</span><span class="op">=</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t360" href="#t360">360</a></span><span class="t">        <span class="nam">type_filters</span><span class="op">=</span><span class="nam">request_body</span><span class="op">.</span><span class="nam">type_filters</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t361" href="#t361">361</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t362" href="#t362">362</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t363" href="#t363">363</a></span><span class="t">    <span class="com"># (2) Extract valid values for attributes and types</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t364" href="#t364">364</a></span><span class="t">    <span class="nam">attributes</span> <span class="op">=</span> <span class="nam">aggregate_attributes</span><span class="op">(</span><span class="nam">type_filtered_images</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t365" href="#t365">365</a></span><span class="t">    <span class="nam">attributes</span><span class="op">[</span><span class="nam">IMAGE_STATUS_KEY</span><span class="op">]</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t366" href="#t366">366</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">DONE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t367" href="#t367">367</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">SUBMITTED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">FAILED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">UNSET</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">    <span class="nam">types</span> <span class="op">=</span> <span class="nam">aggregate_types</span><span class="op">(</span><span class="nam">type_filtered_images</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t357" href="#t357">357</a></span><span class="t">    <span class="com"># (1) Extract valid values for attributes and types</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t358" href="#t358">358</a></span><span class="t">    <span class="nam">types</span> <span class="op">=</span> <span class="nam">aggregate_types</span><span class="op">(</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t359" href="#t359">359</a></span><span class="t">    <span class="nam">attributes</span> <span class="op">=</span> <span class="nam">aggregate_attributes</span><span class="op">(</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t360" href="#t360">360</a></span><span class="t">    <span class="nam">attributes</span><span class="op">[</span><span class="nam">IMAGE_STATUS_KEY</span><span class="op">]</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t361" href="#t361">361</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">DONE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t362" href="#t362">362</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">SUBMITTED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t363" href="#t363">363</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">FAILED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t364" href="#t364">364</a></span><span class="t">        <span class="nam">HistoryUnitStatusWithUnset</span><span class="op">.</span><span class="nam">UNSET</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t365" href="#t365">365</a></span><span class="t">    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t366" href="#t366">366</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t367" href="#t367">367</a></span><span class="t">    <span class="com"># (2) Apply type filters</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">    <span class="nam">type_filtered_images</span> <span class="op">=</span> <span class="nam">filter_image_list</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">        <span class="nam">images</span><span class="op">=</span><span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">        <span class="nam">type_filters</span><span class="op">=</span><span class="nam">request_body</span><span class="op">.</span><span class="nam">type_filters</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">    <span class="com"># (3) Enrich images with status attribute</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">    <span class="nam">type_filtered_images_with_status</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">enrich_images_unsorted_async</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -623,8 +623,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_09e701d32150411b_images_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-09-10 13:29 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
+            created at 2025-09-11 07:55 +0000
         </p>
     </div>
 </footer>
