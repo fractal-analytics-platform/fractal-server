@@ -415,6 +415,15 @@ async def test_lifecycle(
         assert not Path(task_group.venv_path).exists()
         assert Path(task_group.archive_path).exists()
 
+        # STEP 5: Delete task group
+        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert res.json()["status"] == "OK"
+
 
 async def test_fail_due_to_ongoing_activities(
     client,
@@ -539,10 +548,7 @@ async def test_delete_task_group_api(
     request,
     current_py_version,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR=tmp777_path / test_delete_task_group_api.__name__,
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
     user_settings_dict = {}
 
