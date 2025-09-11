@@ -539,7 +539,10 @@ async def test_delete_task_group_api(
     request,
     current_py_version,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_TASKS_DIR=tmp777_path / test_delete_task_group_api.__name__,
+    )
 
     user_settings_dict = {}
 
