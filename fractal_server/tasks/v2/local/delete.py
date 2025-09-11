@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -21,6 +22,8 @@ def delete_local(
     task_group_id: int,
 ) -> None:
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
+    from fractal_server.app.models.v2 import TaskGroupActivityV2
+    from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 
     with TemporaryDirectory() as tmpdir:
         log_file_path = get_log_path(Path(tmpdir))
@@ -38,6 +41,21 @@ def delete_local(
                 logger_name=LOGGER_NAME,
             )
             if not db_objects_ok:
+                return
+            if task_group.origin == TaskGroupV2OriginEnum.OTHER:
+                task_group_activity = TaskGroupActivityV2(
+                    user_id=task_group.user_id,
+                    taskgroupv2_id=task_group.id,
+                    status=TaskGroupActivityStatusV2.OK,
+                    action=TaskGroupActivityActionV2.DELETE,
+                    pkg_name=task_group.pkg_name,
+                    version=(task_group.version or "N/A"),
+                    timestamp_started=get_timestamp(),
+                    timestamp_ended=get_timestamp(),
+                )
+                db.add(task_group_activity)
+                db.delete(task_group)
+                db.commit()
                 return
 
             try:
