@@ -1,7 +1,6 @@
 data
 fractal-server.out
 fractal-server.err
-artifacts
 LOG*
 logs
 logs*
@@ -12,4 +11,4 @@ tmp
 OLD
 db
 Tasks
-Artifacts
+Jobs

@@ -1,9 +1,16 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.9 (unreleased)
+# 2.15.10 (unreleased)
 
 * Task life cycle:
     * Support both pre-pinning and post-pinning of dependencies (\#2761).
+
+# 2.15.9
+
+* API:
+    * In `POST /api/v2/project/{project_id}/status/images/`, include _all_ available types&attributes (\#2762).
+* Internal:
+    * Optimize `fractal_server.images.tools.aggregate_attributes` (\#2762).
 
 # 2.15.8
 
