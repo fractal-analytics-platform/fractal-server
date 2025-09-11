@@ -310,7 +310,7 @@ async def test_lifecycle(
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
-    ):
+    ) as user:
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
@@ -325,16 +325,16 @@ async def test_lifecycle(
         task_group_id = activity["taskgroupv2_id"]
         res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "OK"
-        assert task_group_activity["timestamp_ended"] is not None
+        task_group_activity_collection = res.json()
+        assert task_group_activity_collection["status"] == "OK"
+        assert task_group_activity_collection["timestamp_ended"] is not None
 
-        log = task_group_activity["log"]
+        log = task_group_activity_collection["log"]
         assert log is not None
         assert log.count("\n") > 0
         assert log.count("\\n") == 0
 
-        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        task_groupv2_id = task_group_activity_collection["taskgroupv2_id"]
         # Check env_info attribute in TaskGroupV2
         db.expunge_all()
         task_group = await db.get(TaskGroupV2, task_groupv2_id)
@@ -420,8 +420,17 @@ async def test_lifecycle(
         # Assert that we must DELETE the task group before collect again
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
-        debug(res.json())
         assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"User '{user.email}' already owns a task group with "
+            f"name='{task_group.pkg_name}' "
+            f"and version='{task_group.version}'.\n"
+            "Note: There exists another task-group collection "
+            f"(activity ID={task_group_activity_collection['id']}) "
+            "for this task group "
+            f"(ID={task_group_activity_collection['taskgroupv2_id']}), "
+            f"with status '{TaskGroupActivityStatusV2.OK}'."
+        )
 
         assert Path(task_group.path).exists()
 
