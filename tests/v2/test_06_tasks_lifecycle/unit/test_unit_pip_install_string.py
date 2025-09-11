@@ -40,19 +40,26 @@ def test_pip_install_string():
 
 def test_pinned_package_versions_string():
     tg = TaskGroupV2(pkg_name="pkg", version="1.2.3")
-    assert tg.pinned_package_versions_string == ""
-
-    tg = TaskGroupV2(
-        pkg_name="pkg", version="1.2.3", pinned_package_versions=dict()
-    )
-    assert tg.pinned_package_versions_string == ""
+    assert tg.pinned_package_versions_pre_string == ""
+    assert tg.pinned_package_versions_post_string == ""
 
     tg = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
-        pinned_package_versions=dict(pkgA="1.2.3a", pkgB="3.2.1b"),
+        pinned_package_versions_pre={},
+        pinned_package_versions_post={},
     )
-    assert tg.pinned_package_versions_string == "pkgA==1.2.3a pkgB==3.2.1b"
+    assert tg.pinned_package_versions_pre_string == ""
+    assert tg.pinned_package_versions_post_string == ""
+
+    tg = TaskGroupV2(
+        pkg_name="pkg",
+        version="1.2.3",
+        pinned_package_versions_pre=dict(pkg1="v1", pkg2="v2"),
+        pinned_package_versions_post=dict(A="1.2.3a", B="3.2.1b"),
+    )
+    assert tg.pinned_package_versions_pre_string == "pkg1==v1 pkg2==v2"
+    assert tg.pinned_package_versions_post_string == "A==1.2.3a B==3.2.1b"
 
 
 def test_properties_for_pixi_task_group():
@@ -64,4 +71,6 @@ def test_properties_for_pixi_task_group():
     with pytest.raises(ValueError):
         assert tg.pip_install_string
     with pytest.raises(ValueError):
-        assert tg.pinned_package_versions_string
+        assert tg.pinned_package_versions_pre_string
+    with pytest.raises(ValueError):
+        assert tg.pinned_package_versions_post_string

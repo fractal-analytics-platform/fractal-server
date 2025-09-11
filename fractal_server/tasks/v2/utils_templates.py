@@ -99,8 +99,12 @@ def get_collection_replacements(
         ),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
         (
-            "__PINNED_PACKAGE_LIST__",
-            task_group.pinned_package_versions_string,
+            "__PINNED_PACKAGE_LIST_PRE__",
+            task_group.pinned_package_versions_pre_string,
+        ),
+        (
+            "__PINNED_PACKAGE_LIST_POST__",
+            task_group.pinned_package_versions_post_string,
         ),
     ]
     logger.info(
