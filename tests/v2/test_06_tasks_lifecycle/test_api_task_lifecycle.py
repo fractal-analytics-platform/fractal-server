@@ -423,13 +423,20 @@ async def test_lifecycle(
         debug(res.json())
         assert res.status_code == 422
 
+        assert Path(task_group.path).exists()
+
         res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
-        activity_id = res.json()["id"]
-        res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
         activity = res.json()
-        debug(activity["log"])
-        assert res.json()["status"] == "OK"
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+
+        assert not Path(task_group.path).exists()
+
+        res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 202
