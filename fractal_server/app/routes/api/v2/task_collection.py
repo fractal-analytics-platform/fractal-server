@@ -108,7 +108,8 @@ def parse_request_data(
     package_version: str | None = Form(None),
     package_extras: str | None = Form(None),
     python_version: str | None = Form(None),
-    pinned_package_versions: str | None = Form(None),
+    pinned_package_versions_pre: str | None = Form(None),
+    pinned_package_versions_post: str | None = Form(None),
     file: UploadFile | None = File(None),
 ) -> CollectionRequestData:
     """
@@ -117,9 +118,14 @@ def parse_request_data(
 
     try:
         # Convert dict_pinned_pkg from a JSON string into a Python dictionary
-        dict_pinned_pkg = (
-            json.loads(pinned_package_versions)
-            if pinned_package_versions
+        dict_pinned_pkg_pre = (
+            json.loads(pinned_package_versions_pre)
+            if pinned_package_versions_pre
+            else None
+        )
+        dict_pinned_pkg_post = (
+            json.loads(pinned_package_versions_post)
+            if pinned_package_versions_post
             else None
         )
         # Validate and coerce form data
@@ -128,7 +134,8 @@ def parse_request_data(
             package_version=package_version,
             package_extras=package_extras,
             python_version=python_version,
-            pinned_package_versions=dict_pinned_pkg,
+            pinned_package_versions_pre=dict_pinned_pkg_pre,
+            pinned_package_versions_post=dict_pinned_pkg_post,
         )
 
         data = CollectionRequestData(
@@ -198,10 +205,14 @@ async def collect_tasks_pip(
         task_group_attrs["pip_extras"] = task_collect.package_extras
 
     # Set pinned_package_versions
-    if task_collect.pinned_package_versions is not None:
+    if task_collect.pinned_package_versions_pre is not None:
         task_group_attrs[
-            "pinned_package_versions"
-        ] = task_collect.pinned_package_versions
+            "pinned_package_versions_pre"
+        ] = task_collect.pinned_package_versions_pre
+    if task_collect.pinned_package_versions_post is not None:
+        task_group_attrs[
+            "pinned_package_versions_post"
+        ] = task_collect.pinned_package_versions_post
 
     # Initialize wheel_file_content as None
     wheel_file = None
