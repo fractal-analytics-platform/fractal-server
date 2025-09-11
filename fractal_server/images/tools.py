@@ -131,8 +131,8 @@ def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
     for image in images:
         for k, v in image["attributes"].items():
             attributes.setdefault(k, []).append(v)
-        for k, v in attributes.items():
-            attributes[k] = list(set(v))
+    for k, v in attributes.items():
+        attributes[k] = list(set(v))
     sorted_attributes = {
         key: sorted(value) for key, value in attributes.items()
     }
