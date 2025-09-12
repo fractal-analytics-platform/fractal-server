@@ -268,7 +268,10 @@ async def test_lifecycle(
     request,
     current_py_version,
 ):
-    overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    overrides = dict(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_TASKS_DIR=tmp777_path,
+    )
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # Setup remote Python interpreter
         current_py_version_underscore = current_py_version.replace(".", "_")
@@ -569,7 +572,10 @@ async def test_need_cleanup(
     MockCurrentUser,
     testdata_path,
     tmp777_path: Path,
+    override_settings_factory,
 ):
+    override_settings_factory(FRACTAL_TASKS_DIR=tmp777_path)
+
     old_archive_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
