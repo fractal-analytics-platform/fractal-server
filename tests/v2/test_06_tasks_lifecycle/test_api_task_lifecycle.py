@@ -5,6 +5,7 @@ import pytest
 from devtools import debug
 from packaging.version import Version
 
+import fractal_server.app.routes.api.v2.task_collection as task_collection
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -267,6 +268,7 @@ async def test_lifecycle(
     tmp777_path: Path,
     request,
     current_py_version,
+    monkeypatch,
 ):
     overrides = dict(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
@@ -421,6 +423,11 @@ async def test_lifecycle(
 
         # STEP 5: Delete task group
         # Assert that we must DELETE the task group before collect again
+        def dummy_collect(*args, **kwargs):
+            pass
+
+        monkeypatch.setattr(task_collection, "collect_local", dummy_collect)
+        monkeypatch.setattr(task_collection, "collect_ssh", dummy_collect)
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 422
