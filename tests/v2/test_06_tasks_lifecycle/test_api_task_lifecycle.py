@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from packaging.version import Version
 
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -342,12 +341,6 @@ async def test_lifecycle(
         assert (
             f"fractal-tasks-mock @ file://{task_group_archive_path}"
             in env_info
-        )
-        pip_version = next(
-            line for line in env_info.split("\n") if line.startswith("pip")
-        ).split("==")[1]
-        assert Version(pip_version) <= Version(
-            settings.FRACTAL_MAX_PIP_VERSION
         )
         assert (
             Path(task_group.path) / Path(archive_path).name

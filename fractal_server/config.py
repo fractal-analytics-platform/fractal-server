@@ -579,11 +579,6 @@ class Settings(BaseSettings):
         else:
             return "--no-cache-dir"
 
-    FRACTAL_MAX_PIP_VERSION: str = "25.2"
-    """
-    Maximum value at which to update `pip` before performing task collection.
-    """
-
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME: Literal[
         "viewer-paths", "users-folders", "none"
     ] = "none"

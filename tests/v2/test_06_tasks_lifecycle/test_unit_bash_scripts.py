@@ -83,7 +83,6 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST_PRE__", "pydantic==2.8.2"),
         ("__PINNED_PACKAGE_LIST_POST__", "devtools==0.12.2"),
-        ("__FRACTAL_MAX_PIP_VERSION__", "99"),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_good.sh"
@@ -123,7 +122,6 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST_PRE__", ""),
         ("__PINNED_PACKAGE_LIST_POST__", pinned_pkg_list_post),
-        ("__FRACTAL_MAX_PIP_VERSION__", "25"),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_bad_pkg.sh"
@@ -152,7 +150,6 @@ def test_template_2(
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__FRACTAL_MAX_PIP_VERSION__", "99"),
         ("__PINNED_PACKAGE_LIST_PRE__", ""),
         ("__PINNED_PACKAGE_LIST_POST__", ""),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
@@ -226,7 +223,6 @@ def test_templates_freeze(tmp_path, current_py_version):
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
             ("__INSTALL_STRING__", "devtools"),
-            ("__FRACTAL_MAX_PIP_VERSION__", "99"),
             ("__PINNED_PACKAGE_LIST_PRE__", ""),
             ("__PINNED_PACKAGE_LIST_POST__", ""),
             ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
@@ -257,7 +253,6 @@ def test_templates_freeze(tmp_path, current_py_version):
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
-            ("__FRACTAL_MAX_PIP_VERSION__", "99"),
             ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
