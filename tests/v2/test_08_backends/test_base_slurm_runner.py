@@ -14,10 +14,10 @@ from fractal_server.app.runner.executors.slurm_common.slurm_job_task_models impo
 
 
 class MockBaseSlurmRunner(BaseSlurmRunner):
-    def _mkdir_local_folder(self, *args):
+    def _mkdir_local_folder(self, folder: str) -> None:
         pass
 
-    def _mkdir_remote_folder(self, *args):
+    def _mkdir_remote_folder(self, folder: str) -> None:
         pass
 
 
@@ -91,7 +91,15 @@ async def test_check_no_active_jobs(tmp_path: Path):
         runner._check_no_active_jobs()
 
         # Failure
-        runner.jobs = {0: "fake"}
+        runner.jobs = {
+            "123": SlurmJob(
+                slurm_job_id="123",
+                prefix="fake",
+                workdir_local=tmp_path / "fake",
+                workdir_remote=tmp_path / "remote/fake",
+                tasks=[],
+            )
+        }
         with pytest.raises(JobExecutionError, match="jobs must be empty"):
             runner._check_no_active_jobs()
 
@@ -134,7 +142,7 @@ Try 'ls --help' for more information.
 .
 """
 
-    def patched_run_squeue(job_ids: list[str]):
+    def patched_run_squeue(*, job_ids: list[str], **kwargs):
         """
         This is a mock, so that we can easily cover several branches
         of `BaseSlurmRunner._get_finished_jobs`.
@@ -179,3 +187,82 @@ Try 'ls --help' for more information.
 
         finished_jobs = runner._get_finished_jobs(job_ids=["3", "4"])
         assert finished_jobs == {"3", "4"}
+
+
+async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
+    job1 = SlurmJob(
+        slurm_job_id="123",
+        prefix="job1",
+        workdir_local=tmp_path / "job1",
+        workdir_remote=tmp_path / "remote/job1",
+        tasks=[],
+    )
+    job2 = SlurmJob(
+        slurm_job_id="456",
+        prefix="job2",
+        workdir_local=tmp_path / "job2",
+        workdir_remote=tmp_path / "remote/job2",
+        tasks=[],
+    )
+    job3 = SlurmJob(
+        slurm_job_id="789",
+        prefix="job3",
+        workdir_local=tmp_path / "job3",
+        workdir_remote=tmp_path / "remote/job3",
+        tasks=[],
+    )
+
+    for job in [job1, job2, job3]:
+        job.workdir_local.mkdir(parents=True, exist_ok=True)
+
+    err_msg = (
+        "sbatch: error: Unable to allocate resources: "
+        "Invalid account or account/partition combination specified\n"
+    )
+    # Create stderr files with different content
+    # Job 1: Has SLURM error
+    stderr1_path = job1.slurm_stderr_local_path
+    stderr1_path.write_text()
+
+    # Job 2: Has empty stderr file
+    stderr2_path = job2.slurm_stderr_local_path
+    stderr2_path.write_text(err_msg)
+
+    # Job 3: No stderr file (doesn't exist)
+
+    with MockBaseSlurmRunner(
+        root_dir_local=tmp_path / "server",
+        root_dir_remote=tmp_path / "user",
+        slurm_runner_type="sudo",
+        python_worker_interpreter=sys.executable,
+    ) as runner:
+        # Test _extract_slurm_error for individual jobs
+        error1 = runner._extract_slurm_error(job1)
+        assert error1 == err_msg
+
+        error2 = runner._extract_slurm_error(job2)
+        assert error2 is None  # Empty file
+
+        error3 = runner._extract_slurm_error(job3)
+        assert error3 is None  # File doesn't exist
+
+        # Test _set_executor_error_log with multiple jobs
+        assert runner.executor_error_log is None
+
+        # Set error log from jobs - should capture first error (job1)
+        runner._set_executor_error_log([job1, job2, job3])
+        assert runner.executor_error_log == err_msg
+
+        # Reset and test with different order
+        runner.executor_error_log = None
+        runner._set_executor_error_log([job3, job2, job1])
+        assert runner.executor_error_log == err_msg
+
+        # Test that once set, it doesn't change
+        runner._set_executor_error_log([job1, job2, job3])
+        assert runner.executor_error_log == err_msg
+
+        # Test with no errors
+        runner.executor_error_log = None
+        runner._set_executor_error_log([job2, job3])
+        assert runner.executor_error_log is None

@@ -528,7 +528,6 @@ class BaseSlurmRunner(BaseRunner):
         try:
             with open(stderr_path) as f:
                 stderr_content = f.read().strip()
-
             if stderr_content:
                 return stderr_content
 
@@ -544,7 +543,7 @@ class BaseSlurmRunner(BaseRunner):
         Note that this must be executed **after** `_fetch_artifacts`.
         Note: this method only captures the first error.
         """
-        if self.executor_error_log is None:
+        if self.executor_error_log is not None:
             return
         for slurm_job in slurm_jobs:
             slurm_error = self._extract_slurm_error(slurm_job)
@@ -609,6 +608,7 @@ class BaseSlurmRunner(BaseRunner):
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
+        self.executor_error_log = None
         config = self._enrich_slurm_config(config)
 
         try:
@@ -764,7 +764,7 @@ class BaseSlurmRunner(BaseRunner):
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
         """
-
+        self.executor_error_log = None
         config = self._enrich_slurm_config(config)
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
