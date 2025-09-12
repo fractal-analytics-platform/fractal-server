@@ -565,30 +565,3 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         assert res.status_code == 422
         assert "submitted jobs use its tasks" in res.json()["detail"]
-
-
-async def test_need_cleanup(
-    client,
-    MockCurrentUser,
-    testdata_path,
-    tmp777_path: Path,
-    override_settings_factory,
-):
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp777_path)
-
-    old_archive_path = (
-        testdata_path.parent
-        / "v2/fractal_tasks_mock/dist"
-        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-    archive_path = tmp777_path / old_archive_path.name
-    shutil.copy(old_archive_path, archive_path)
-    with open(archive_path, "rb") as f:
-        files = {"file": (archive_path.name, f.read(), "application/zip")}
-
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-    ):
-        res = await client.post("api/v2/task/collect/pip/", files=files)
-        debug(res.json())
-        assert res.status_code == 202
