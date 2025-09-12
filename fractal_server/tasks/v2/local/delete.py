@@ -3,8 +3,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
@@ -42,21 +40,6 @@ def delete_local(
             )
             if not db_objects_ok:
                 return
-            if task_group.origin == TaskGroupV2OriginEnum.OTHER:
-                task_group_activity = TaskGroupActivityV2(
-                    user_id=task_group.user_id,
-                    taskgroupv2_id=task_group.id,
-                    status=TaskGroupActivityStatusV2.OK,
-                    action=TaskGroupActivityActionV2.DELETE,
-                    pkg_name=task_group.pkg_name,
-                    version=(task_group.version or "N/A"),
-                    timestamp_started=get_timestamp(),
-                    timestamp_ended=get_timestamp(),
-                )
-                db.add(task_group_activity)
-                db.delete(task_group)
-                db.commit()
-                return
 
             try:
                 activity.status = TaskGroupActivityStatusV2.ONGOING
@@ -65,7 +48,8 @@ def delete_local(
 
                 db.delete(task_group)
                 db.commit()
-                shutil.rmtree(task_group.path)
+                if task_group.origin != TaskGroupV2OriginEnum.OTHER:
+                    shutil.rmtree(task_group.path)
 
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()

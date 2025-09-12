@@ -114,11 +114,12 @@ def delete_ssh(
                     logger.info(f"Now removing {task_group.path}.")
                     db.delete(task_group)
                     db.commit()
-                    fractal_ssh.remove_folder(
-                        folder=task_group.path,
-                        safe_root=tasks_base_dir,
-                    )
-                    logger.info(f"All good, {task_group.path} removed.")
+                    if task_group.origin != TaskGroupV2OriginEnum.OTHER:
+                        fractal_ssh.remove_folder(
+                            folder=task_group.path,
+                            safe_root=tasks_base_dir,
+                        )
+                        logger.info(f"All good, {task_group.path} removed.")
 
                     activity.status = TaskGroupActivityStatusV2.OK
                     activity.log = get_current_log(log_file_path)
