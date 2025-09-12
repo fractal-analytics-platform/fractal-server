@@ -49,7 +49,9 @@ def delete_local(
                 db.delete(task_group)
                 db.commit()
                 if task_group.origin != TaskGroupV2OriginEnum.OTHER:
+                    logger.debug(f"Removing {task_group.path=}.")
                     shutil.rmtree(task_group.path)
+                    logger.debug(f"{task_group.path=} removed.")
 
                 activity.status = TaskGroupActivityStatusV2.OK
                 activity.timestamp_ended = get_timestamp()

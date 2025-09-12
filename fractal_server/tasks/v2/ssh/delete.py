@@ -6,8 +6,6 @@ from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import reset_logger_handlers
@@ -60,22 +58,6 @@ def delete_ssh(
             if not db_objects_ok:
                 return
 
-            if task_group.origin == TaskGroupV2OriginEnum.OTHER:
-                task_group_activity = TaskGroupActivityV2(
-                    user_id=task_group.user_id,
-                    taskgroupv2_id=task_group.id,
-                    status=TaskGroupActivityStatusV2.OK,
-                    action=TaskGroupActivityActionV2.DELETE,
-                    pkg_name=task_group.pkg_name,
-                    version=(task_group.version or "N/A"),
-                    timestamp_started=get_timestamp(),
-                    timestamp_ended=get_timestamp(),
-                )
-                db.add(task_group_activity)
-                db.delete(task_group)
-                db.commit()
-                return
-
             with SingleUseFractalSSH(
                 ssh_config=ssh_config,
                 logger_name=LOGGER_NAME,
@@ -115,11 +97,15 @@ def delete_ssh(
                     db.delete(task_group)
                     db.commit()
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
+                        logger.debug(
+                            f"Removing remote {task_group.path=} "
+                            f"(with {tasks_base_dir=})."
+                        )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
                             safe_root=tasks_base_dir,
                         )
-                        logger.info(f"All good, {task_group.path} removed.")
+                        logger.debug(f"Remote {task_group.path=} removed.")
 
                     activity.status = TaskGroupActivityStatusV2.OK
                     activity.log = get_current_log(log_file_path)
