@@ -75,7 +75,7 @@ def delete_ssh(
                     if not ssh_ok:
                         return
 
-                    # Check that the (local) task_group path does exist
+                    # Check that the (remote) task_group path does exist
                     if not fractal_ssh.remote_exists(task_group.path):
                         error_msg = f"{task_group.path} does not exist."
                         logger.error(error_msg)
