@@ -315,7 +315,7 @@ async def delete_task_group(
         status=TaskGroupActivityStatusV2.PENDING,
         action=TaskGroupActivityActionV2.DELETE,
         pkg_name=task_group.pkg_name,
-        version=task_group.version,
+        version=(task_group.version or "N/A"),
         timestamp_started=get_timestamp(),
     )
     db.add(task_group_activity)
