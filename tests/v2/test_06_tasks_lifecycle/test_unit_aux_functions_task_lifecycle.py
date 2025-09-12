@@ -41,7 +41,7 @@ async def test_check_no_related_workflowtask(
             workflow_id=workflow.id, task_id=task_group.task_list[-1].id
         )
 
-        with pytest.raises(HTTPException) as e:
+        with pytest.raises(
+            HTTPException, match=f"TaskV2 {task2.id} is still in use"
+        ):
             await check_no_related_workflowtask(task_group=task_group, db=db)
-        assert e._excinfo[1].status_code == 422
-        assert e._excinfo[1].detail == f"TaskV2 {task2.id} is still in use"
