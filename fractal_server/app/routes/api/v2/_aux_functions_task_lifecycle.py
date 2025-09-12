@@ -211,6 +211,10 @@ async def check_no_related_workflowtask(
     task_group: TaskGroupV2,
     db: AsyncSession,
 ) -> None:
+    """
+    Raises an HTTPException if any of the tasks in the TaskGroup are referenced
+    by an existing WorkflowTask.
+    """
     stm = select(WorkflowTaskV2).where(
         WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
     )
