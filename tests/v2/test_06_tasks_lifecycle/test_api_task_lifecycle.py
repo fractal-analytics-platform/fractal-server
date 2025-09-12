@@ -452,10 +452,6 @@ async def test_lifecycle(
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 202
-        # # clean up
-        # task_group_id = res.json()["taskgroupv2_id"]
-        # res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
-        # assert res.status_code == 202
 
 
 async def test_fail_due_to_ongoing_activities(
