@@ -449,10 +449,10 @@ async def test_lifecycle(
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 202
-        # clean up
-        task_group_id = res.json()["taskgroupv2_id"]
-        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
-        assert res.status_code == 202
+        # # clean up
+        # task_group_id = res.json()["taskgroupv2_id"]
+        # res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        # assert res.status_code == 202
 
 
 async def test_fail_due_to_ongoing_activities(
@@ -562,3 +562,27 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         assert res.status_code == 422
         assert "submitted jobs use its tasks" in res.json()["detail"]
+
+
+async def test_need_cleanup(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path: Path,
+):
+    old_archive_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    archive_path = tmp777_path / old_archive_path.name
+    shutil.copy(old_archive_path, archive_path)
+    with open(archive_path, "rb") as f:
+        files = {"file": (archive_path.name, f.read(), "application/zip")}
+
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True),
+    ):
+        res = await client.post("api/v2/task/collect/pip/", files=files)
+        debug(res.json())
+        assert res.status_code == 202
