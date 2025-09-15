@@ -277,7 +277,7 @@ async def delete_task_group(
         task_group_id=task_group_id, db=db
     )
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
-    await check_no_submitted_job(task_group_id=task_group.id, db=db)
+    await check_no_submitted_job(task_group_id=task_group_id, db=db)
     await check_no_related_workflowtask(task_group=task_group, db=db)
 
     task_group_activity = TaskGroupActivityV2(
