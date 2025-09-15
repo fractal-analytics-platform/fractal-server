@@ -584,7 +584,6 @@ async def test_lifecycle_actions_with_submitted_jobs(
 async def test_admin_delete_task_group_api(
     client,
     MockCurrentUser,
-    testdata_path,  # FIXME see issue 2775
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
     app,

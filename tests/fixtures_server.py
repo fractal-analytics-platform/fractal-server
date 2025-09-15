@@ -2,6 +2,7 @@ import logging
 import random
 import sys
 from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -146,7 +147,7 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
+def app(override_settings) -> Generator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobsV2 = []
     app.state.fractal_ssh_list = None
@@ -154,7 +155,7 @@ async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
 
 
 @pytest.fixture
-async def register_routers(app, override_settings):
+def register_routers(app, override_settings):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
