@@ -107,9 +107,9 @@
 | fractal\_server/app/runner/v2/db\_tools.py                                      |       41 |        2 |       10 |        2 |     92% |    27, 41 |
 | fractal\_server/app/runner/v2/deduplicate\_list.py                              |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/merge\_outputs.py                                 |       14 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/runner.py                                         |      185 |        2 |       40 |        2 |     98% |  249, 300 |
+| fractal\_server/app/runner/v2/runner.py                                         |      190 |        2 |       40 |        2 |     98% |  259, 310 |
 | fractal\_server/app/runner/v2/runner\_functions.py                              |      186 |       10 |       48 |        7 |     92% |113, 151, 174->178, 181-182, 352-357, 421->425, 571-576 |
-| fractal\_server/app/runner/v2/submit\_workflow.py                               |      156 |       10 |       30 |        4 |     92% |114-119, 127->129, 129->133, 186-202, 266 |
+| fractal\_server/app/runner/v2/submit\_workflow.py                               |      158 |       10 |       30 |        4 |     93% |114-119, 127->129, 129->133, 186-202, 267 |
 | fractal\_server/app/runner/v2/task\_interface.py                                |       40 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                                     |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/user.py                                             |       31 |        0 |        0 |        0 |    100% |           |
@@ -177,7 +177,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9402** |  **258** | **1746** |   **99** | **96%** |           |
+|                                                                       **TOTAL** | **9409** |  **258** | **1746** |   **99** | **96%** |           |
 
 
 ## Setup coverage badge
