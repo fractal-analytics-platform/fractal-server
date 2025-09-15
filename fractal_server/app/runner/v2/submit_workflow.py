@@ -244,6 +244,7 @@ def submit_workflow(
         logger.debug(f"job.first_task_index: {job.first_task_index}")
         logger.debug(f"job.last_task_index: {job.last_task_index}")
         logger.debug(f'START workflow "{workflow.name}"')
+        job_working_dir = job.working_dir
 
     try:
         if FRACTAL_RUNNER_BACKEND == "local":
@@ -266,19 +267,6 @@ def submit_workflow(
             raise RuntimeError(
                 f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"
             )
-
-        # "The Session.close() method does not prevent the Session from being
-        # used again. The Session itself does not actually have a distinct
-        # “closed” state; it merely means the Session will release all database
-        # connections and ORM objects."
-        # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close).
-        #
-        # We close the session before the (possibly long) process_workflow
-        # call, to make sure all DB connections are released. The reason why we
-        # are not using a context manager within the try block is that we also
-        # need access to db_sync in the except branches.
-        db_sync = next(DB.get_sync_db())
-        db_sync.close()
 
         process_workflow(
             workflow=workflow,
@@ -303,47 +291,46 @@ def submit_workflow(
         logger.debug(f'END workflow "{workflow.name}"')
 
         # Update job DB entry
-        job = db_sync.get(JobV2, job_id)  # refetch, in case it was updated
-        job.status = JobStatusTypeV2.DONE
-        job.end_timestamp = get_timestamp()
-        with log_file_path.open("r") as f:
-            logs = f.read()
-        job.log = logs
-        db_sync.merge(job)
-        db_sync.commit()
+        with next(DB.get_sync_db()) as db_sync:
+            job = db_sync.get(JobV2, job_id)  # refetch, in case it was updated
+            job.status = JobStatusTypeV2.DONE
+            job.end_timestamp = get_timestamp()
+            with log_file_path.open("r") as f:
+                logs = f.read()
+            job.log = logs
+            db_sync.merge(job)
+            db_sync.commit()
 
     except JobExecutionError as e:
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
-
-        fail_job(
-            db=db_sync,
-            job=job,
-            log_msg=(
-                f"JOB ERROR in Fractal job {job.id}:\n"
-                f"TRACEBACK:\n{e.assemble_error()}"
-            ),
-            logger_name=logger_name,
-        )
+        with next(DB.get_sync_db()) as db_sync:
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=(
+                    f"JOB ERROR in Fractal job {job.id}:\n"
+                    f"TRACEBACK:\n{e.assemble_error()}"
+                ),
+                logger_name=logger_name,
+            )
 
     except Exception:
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
         current_traceback = traceback.format_exc()
-        fail_job(
-            db=db_sync,
-            job=job,
-            log_msg=(
-                f"UNKNOWN ERROR in Fractal job {job.id}\n"
-                f"TRACEBACK:\n{current_traceback}"
-            ),
-            logger_name=logger_name,
-        )
+        with next(DB.get_sync_db()) as db_sync:
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=(
+                    f"UNKNOWN ERROR in Fractal job {job.id}\n"
+                    f"TRACEBACK:\n{current_traceback}"
+                ),
+                logger_name=logger_name,
+            )
 
     finally:
         reset_logger_handlers(logger)
-        # refetch, in case it is not already available
-        job = db_sync.get(JobV2, job_id)
-        db_sync.close()
-        _zip_folder_to_file_and_remove(folder=job.working_dir)
+        _zip_folder_to_file_and_remove(folder=job_working_dir)
