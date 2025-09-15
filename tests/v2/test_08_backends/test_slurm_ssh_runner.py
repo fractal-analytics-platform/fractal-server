@@ -8,7 +8,6 @@ from .aux_unit_runner import ZARR_URLS
 from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_ssh.runner import (
     SlurmSSHRunner,
@@ -331,66 +330,66 @@ def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
     assert dummy_file.exists()
 
 
-@pytest.mark.ssh
-@pytest.mark.container
-async def test_slurm_error_capture(
-    db,
-    tmp777_path,
-    fractal_ssh,
-    history_mock_for_submit,
-    override_settings_factory,
-    current_py_version: str,
-    valid_user_id,
-):
-    """
-    Test that SLURM errors are captured and stored in the database.
-    This test submits a job that will fail during execution, testing the error
-    capture mechanism for runtime job failures.
-    """
+# @pytest.mark.ssh
+# @pytest.mark.container
+# async def test_slurm_error_capture(
+#     db,
+#     tmp777_path,
+#     fractal_ssh,
+#     history_mock_for_submit,
+#     override_settings_factory,
+#     current_py_version: str,
+#     valid_user_id,
+# ):
+#     """
+#     Test that SLURM errors are captured and stored in the database.
+#     This test submits a job that will fail during execution, testing the
+#     error capture mechanism for runtime job failures.
+#     """
 
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
+#     override_settings_factory(
+#         FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
+#     )
 
-    history_run_id, history_unit_id, wftask_id = history_mock_for_submit
+#     history_run_id, history_unit_id, wftask_id = history_mock_for_submit  # noqa
 
-    history_run = await db.get(HistoryRun, history_run_id)
-    job_id = history_run.job_id
+#     history_run = await db.get(HistoryRun, history_run_id)
+#     job_id = history_run.job_id
 
-    config = get_default_slurm_config()
-    # config.mem_per_task_MB="1M"
+#     config = get_default_slurm_config()
+#     # config.mem_per_task_MB="1M"
 
-    with SlurmSSHRunner(
-        fractal_ssh=fractal_ssh,
-        root_dir_local=tmp777_path / "server",
-        root_dir_remote=tmp777_path / "user",
-        poll_interval=1,
-    ) as runner:
-        result, exception = runner.submit(
-            base_command="python3 -c 'list(range(1_000_000_000))'",
-            workflow_task_order=0,
-            workflow_task_id=wftask_id,
-            task_name="fake-task-name",
-            parameters=dict(zarr_urls=ZARR_URLS),
-            task_files=get_dummy_task_files(
-                tmp777_path,
-                component="0",
-                is_slurm=True,
-            ),
-            task_type="non_parallel",
-            history_unit_id=history_unit_id,
-            config=config,
-            user_id=valid_user_id,
-        )
+#     with SlurmSSHRunner(
+#         fractal_ssh=fractal_ssh,
+#         root_dir_local=tmp777_path / "server",
+#         root_dir_remote=tmp777_path / "user",
+#         poll_interval=1,
+#     ) as runner:
+#         result, exception = runner.submit(
+#             base_command="python3 -c 'list(range(1_000_000_000))'",
+#             workflow_task_order=0,
+#             workflow_task_id=wftask_id,
+#             task_name="fake-task-name",
+#             parameters=dict(zarr_urls=ZARR_URLS),
+#             task_files=get_dummy_task_files(
+#                 tmp777_path,
+#                 component="0",
+#                 is_slurm=True,
+#             ),
+#             task_type="non_parallel",
+#             history_unit_id=history_unit_id,
+#             config=config,
+#             user_id=valid_user_id,
+#         )
 
-    assert result is None
-    assert exception is not None
+#     assert result is None
+#     assert exception is not None
 
-    unit = await db.get(HistoryUnit, history_unit_id)
-    assert unit.status == HistoryUnitStatus.FAILED
+#     unit = await db.get(HistoryUnit, history_unit_id)
+#     assert unit.status == HistoryUnitStatus.FAILED
 
-    job = await db.get(JobV2, job_id)
-    assert job is not None
+#     job = await db.get(JobV2, job_id)
+#     assert job is not None
 
-    debug(job)
-    assert False
+#     debug(job)
+#     assert False
