@@ -295,15 +295,15 @@ async def delete_task_group(
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # Validate user settings (backend-specific)
-        user = await db.get(UserOAuth, task_group.user_id)
-        user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        task_owner = await db.get(UserOAuth, task_group.user_id)
+        task_owner_settings = await validate_user_settings(
+            user=task_owner, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
         )
         # Use appropriate FractalSSH object
         ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
+            user=task_owner_settings.ssh_username,
+            host=task_owner_settings.ssh_host,
+            key_path=task_owner_settings.ssh_private_key_path,
         )
 
         background_tasks.add_task(
@@ -311,7 +311,7 @@ async def delete_task_group(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
+            tasks_base_dir=task_owner_settings.ssh_tasks_dir,
         )
     else:
         background_tasks.add_task(
