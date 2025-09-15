@@ -79,9 +79,9 @@ def delete_ssh(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    logger.info(f"Now removing {task_group.path}.")
                     db.delete(task_group)
                     db.commit()
+                    logger.debug("Task group removed from database..")
 
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                         logger.debug(
