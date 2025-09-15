@@ -580,30 +580,45 @@ async def test_lifecycle_actions_with_submitted_jobs(
 
 
 @pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.container
 async def test_admin_delete_task_group_api(
-    app,
     client,
     MockCurrentUser,
-    db,
-    task_factory_v2,
+    testdata_path,
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
+    app,
+    tmp777_path,
+    request,
+    current_py_version,
+    task_factory_v2,
 ):
-    """
-    This tests _only_ the API of the admin's `delete` endpoint.
-    """
-    override_settings_factory(
+    overrides = dict(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_TASKS_DIR=tmp777_path,
     )
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Setup remote Python interpreter
+        current_py_version_underscore = current_py_version.replace(".", "_")
+        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+        python_value = (
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
+        overrides[python_key] = python_value
+    override_settings_factory(**overrides)
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        app.state.fractal_ssh_list = MockFractalSSHList()
+        app.state.fractal_ssh_list = request.getfixturevalue(
+            "fractal_ssh_list"
+        )
+        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
+        ssh_keys = request.getfixturevalue("ssh_keys")
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+            ssh_host=slurmlogin_ip,
+            ssh_username="test01",
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         )
     else:
         user_settings_dict = {}
