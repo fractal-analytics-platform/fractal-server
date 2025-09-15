@@ -626,3 +626,14 @@ async def test_admin_delete_task_group_api(
             f"{PREFIX}/task-group/{task_group['id']}/delete/"
         )
         assert res.status_code == 202
+        activity = res.json()
+        activity_id = activity["id"]
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+
+        res = await client.get(f"{PREFIX}/task-group/activity/?action=delete")
+        assert len(res.json()) == 1
+        activity = res.json()[0]
+        assert activity[0]["id"] == activity_id
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
