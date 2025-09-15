@@ -256,13 +256,12 @@ def execute_tasks_v2(
             }
             num_tasks = 0
 
-        if runner.executor_error_log:
-            # Store the SLURM error in the job database
-            with next(get_sync_db()) as db:
-                job_db = db.get(JobV2, job_id)
-                job_db.executor_error_log = runner.executor_error_log
-                db.merge(job_db)
-                db.commit()
+        # Store the SLURM error in the job database
+        with next(get_sync_db()) as db:
+            job_db = db.get(JobV2, job_id)
+            job_db.executor_error_log = runner.executor_error_log
+            db.merge(job_db)
+            db.commit()
 
         # POST TASK EXECUTION
         try:
