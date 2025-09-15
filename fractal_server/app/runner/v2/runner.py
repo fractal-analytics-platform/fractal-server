@@ -256,13 +256,6 @@ def execute_tasks_v2(
             }
             num_tasks = 0
 
-        # Store the SLURM error in the job database
-        with next(get_sync_db()) as db:
-            job_db = db.get(JobV2, job_id)
-            job_db.executor_error_log = runner.executor_error_log
-            db.merge(job_db)
-            db.commit()
-
         # POST TASK EXECUTION
         try:
             non_failed_task_outputs = [
@@ -442,6 +435,16 @@ def execute_tasks_v2(
 
             db.commit()
             db.close()  # NOTE: this is needed, but the reason is unclear
+
+            # Store the SLURM error in the job database
+            job_db = db.get(JobV2, job_id)
+            job_db.executor_error_log = runner.executor_error_log
+            logger.debug(
+                f"Setting JobV2[{job_id}].executor_error_log "
+                f"to '{job_db.executor_error_log}'."
+            )
+            db.merge(job_db)
+            db.commit()
 
             # Create accounting record
             record = AccountingRecord(
