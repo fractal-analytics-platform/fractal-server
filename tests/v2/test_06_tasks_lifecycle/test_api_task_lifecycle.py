@@ -417,6 +417,7 @@ async def test_lifecycle(
         # STEP 5: Delete task group
         # Assert that we must DELETE the task group before collect again
 
+        # Collection fails
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -432,14 +433,14 @@ async def test_lifecycle(
 
         task_group_path = Path(task_group.path)
         assert task_group_path.exists()
-
+        # We delete the task group
         res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
         debug(res.json())
         assert res.status_code == 202
         activity = res.json()
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
-
+        # `task_group.path` does not exist anymore
         assert not Path(task_group.path).exists()
 
         res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
@@ -447,6 +448,8 @@ async def test_lifecycle(
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.OK
 
+        # We call the collect endpoint again, mocking the backgroud tasks
+        # (for speeding up the test)
         def dummy_collect(*args, **kwargs):
             pass
 
@@ -460,7 +463,7 @@ async def test_lifecycle(
         task_group = await db.get(TaskGroupV2, task_group_id)
         task_group_path = Path(task_group.path)
 
-        # New deletion must fail because the collection was mocked
+        # New deletion must fail (because the collection was mocked)
         res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
         activity = res.json()
@@ -470,6 +473,7 @@ async def test_lifecycle(
         activity = res.json()
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.FAILED
+        assert "No such file or directory" in activity["log"]
 
 
 async def test_fail_due_to_ongoing_activities(
