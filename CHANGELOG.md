@@ -3,7 +3,7 @@
 # 2.15.10 (unreleased)
 
 * Runner:
-    * Record SLURM-job stderr in `JobV2.executor_error_log` (\#2750).
+    * Record SLURM-job stderr in `JobV2.executor_error_log` (\#2750, \#2771).
 * Task life cycle:
     * Support both pre-pinning and post-pinning of dependencies (\#2761).
     * Drop `FRACTAL_MAX_PIP_VERSION` configuration variable (\#2766).
