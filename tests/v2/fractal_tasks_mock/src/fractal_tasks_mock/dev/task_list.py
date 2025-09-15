@@ -1,5 +1,6 @@
 from fractal_task_tools.task_models import CompoundTask
 from fractal_task_tools.task_models import ConverterCompoundTask
+from fractal_task_tools.task_models import ConverterNonParallelTask
 from fractal_task_tools.task_models import NonParallelTask
 from fractal_task_tools.task_models import ParallelTask
 
@@ -109,6 +110,10 @@ TASK_LIST = [
         name="generic_task_compound",
         executable_init="generic_compound_init.py",
         executable="generic_compound_compute.py",
+    ),
+    ConverterNonParallelTask(
+        name="out_of_memory",
+        executable="out_of_memory.py",
     ),
 ]
 
