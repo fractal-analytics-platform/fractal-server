@@ -1,18 +1,18 @@
 import pytest
 
 
-@pytest.fixture
-def intermediate(testdata_path):
+@pytest.fixture(scope="session")
+async def async_fixture():
     pass
 
 
 @pytest.fixture
-def syncfixture(intermediate):
-    yield "This is the sync fixture"
+def sync_fixture(async_fixture):
+    pass
 
 
 async def test_2775(
     request,
-    # testdata_path,   # CHANGE THIS TO CHANGE BEHAVIOR
+    async_fixture,  # uncomment to make test pass
 ):
-    print(request.getfixturevalue("syncfixture"))
+    print(request.getfixturevalue("sync_fixture"))
