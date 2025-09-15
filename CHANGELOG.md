@@ -10,6 +10,8 @@
     * Make TaskGroup deletion a lifecycle operation (\#2759).
 * Testing:
     * Add `out_of_memory` mock task (\#2770).
+    * Make fixtures sync when possible (\#2776).
+    * Bump pytest-related dependencies (\#2776).
 
 # 2.15.9
 
