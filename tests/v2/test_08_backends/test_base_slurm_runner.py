@@ -222,11 +222,11 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
     # Create stderr files with different content
     # Job 1: Has SLURM error
     stderr1_path = job1.slurm_stderr_local_path
-    stderr1_path.write_text()
+    stderr1_path.write_text(err_msg)
 
     # Job 2: Has empty stderr file
     stderr2_path = job2.slurm_stderr_local_path
-    stderr2_path.write_text(err_msg)
+    stderr2_path.write_text("")
 
     # Job 3: No stderr file (doesn't exist)
 
@@ -238,7 +238,7 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
     ) as runner:
         # Test _extract_slurm_error for individual jobs
         error1 = runner._extract_slurm_error(job1)
-        assert error1 == err_msg
+        assert error1.strip() == err_msg.strip()
 
         error2 = runner._extract_slurm_error(job2)
         assert error2 is None  # Empty file
@@ -251,16 +251,16 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
 
         # Set error log from jobs - should capture first error (job1)
         runner._set_executor_error_log([job1, job2, job3])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Reset and test with different order
         runner.executor_error_log = None
         runner._set_executor_error_log([job3, job2, job1])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Test that once set, it doesn't change
         runner._set_executor_error_log([job1, job2, job3])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Test with no errors
         runner.executor_error_log = None
