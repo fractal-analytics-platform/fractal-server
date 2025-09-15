@@ -44,7 +44,9 @@ def get_activity_and_task_group(
 
     # Log some info about task group
     logger = get_logger(logger_name=logger_name)
-    for key, value in task_group.model_dump(exclude={"env_info"}).items():
+    for key, value in sorted(
+        task_group.model_dump(exclude={"env_info"}).items()
+    ):
         logger.debug(f"task_group.{key}: {value}")
 
     return True, task_group, activity
