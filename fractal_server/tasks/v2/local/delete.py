@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
@@ -46,16 +47,22 @@ def delete_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
+                logger.info(f"Now removing {task_group.path}.")
                 db.delete(task_group)
                 db.commit()
+
                 if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                     logger.debug(f"Removing {task_group.path=}.")
                     shutil.rmtree(task_group.path)
                     logger.debug(f"{task_group.path=} removed.")
 
                 activity.status = TaskGroupActivityStatusV2.OK
+                activity.log = get_current_log(log_file_path)
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
+
+                logger.debug("END")
+
             except Exception as delete_e:
                 fail_and_cleanup(
                     task_group=task_group,
@@ -65,5 +72,5 @@ def delete_local(
                     exception=delete_e,
                     db=db,
                 )
-        logger.debug("END")
-        return
+            finally:
+                reset_logger_handlers(logger)

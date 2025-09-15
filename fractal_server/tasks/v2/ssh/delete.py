@@ -75,27 +75,14 @@ def delete_ssh(
                     if not ssh_ok:
                         return
 
-                    # Check that the (remote) task_group path does exist
-                    if not fractal_ssh.remote_exists(task_group.path):
-                        error_msg = f"{task_group.path} does not exist."
-                        logger.error(error_msg)
-                        fail_and_cleanup(
-                            task_group=task_group,
-                            task_group_activity=activity,
-                            logger_name=LOGGER_NAME,
-                            log_file_path=log_file_path,
-                            exception=FileNotFoundError(error_msg),
-                            db=db,
-                        )
-                        return
-
                     activity.status = TaskGroupActivityStatusV2.ONGOING
+                    activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    # Proceed with removal
                     logger.info(f"Now removing {task_group.path}.")
                     db.delete(task_group)
                     db.commit()
+
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                         logger.debug(
                             f"Removing remote {task_group.path=} "
@@ -113,7 +100,6 @@ def delete_ssh(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     logger.debug("END")
-                    reset_logger_handlers(logger)
 
                 except Exception as e:
                     fail_and_cleanup(
@@ -124,3 +110,6 @@ def delete_ssh(
                         exception=e,
                         db=db,
                     )
+
+                finally:
+                    reset_logger_handlers(logger)

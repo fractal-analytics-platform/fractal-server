@@ -423,11 +423,6 @@ async def test_lifecycle(
 
         # STEP 5: Delete task group
         # Assert that we must DELETE the task group before collect again
-        def dummy_collect(*args, **kwargs):
-            pass
-
-        monkeypatch.setattr(task_collection, "collect_local", dummy_collect)
-        monkeypatch.setattr(task_collection, "collect_ssh", dummy_collect)
 
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 422
@@ -442,9 +437,11 @@ async def test_lifecycle(
             f"with status '{TaskGroupActivityStatusV2.OK}'."
         )
 
-        assert Path(task_group.path).exists()
+        task_group_path = Path(task_group.path)
+        assert task_group_path.exists()
 
         res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        debug(res.json())
         assert res.status_code == 202
         activity = res.json()
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
@@ -457,8 +454,29 @@ async def test_lifecycle(
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.OK
 
+        def dummy_collect(*args, **kwargs):
+            pass
+
+        monkeypatch.setattr(task_collection, "collect_local", dummy_collect)
+        monkeypatch.setattr(task_collection, "collect_ssh", dummy_collect)
+
         res = await client.post("api/v2/task/collect/pip/", files=files)
         assert res.status_code == 202
+
+        task_group_id = res.json()["taskgroupv2_id"]
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        task_group_path = Path(task_group.path)
+
+        # New deletion must fail because the collection was mocked
+        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        assert res.status_code == 202
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.FAILED
 
 
 async def test_fail_due_to_ongoing_activities(
