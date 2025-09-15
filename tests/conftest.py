@@ -25,7 +25,7 @@ def check_basetemp(tpath: Path):
 
 
 @pytest.fixture(scope="session")
-async def testdata_path() -> Path:
+def testdata_path() -> Path:
     TEST_DIR = Path(__file__).parent
     return TEST_DIR / "data/"
 
