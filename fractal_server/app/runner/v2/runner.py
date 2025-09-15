@@ -194,6 +194,16 @@ def execute_tasks_v2(
             db.refresh(history_run)
             history_run_id = history_run.id
 
+            # Refresh `job.executor_error_log`, to avoid a spurious value left
+            # over from a previous task
+            job_db = db.get(JobV2, job_id)
+            job_db.executor_error_log = None
+            logger.debug(
+                f"Resetting `JobV2[{job_id}].executor_error_log` to None."
+            )
+            db.merge(job_db)
+            db.commit()
+
         # TASK EXECUTION (V2)
         try:
             if task.type in [
