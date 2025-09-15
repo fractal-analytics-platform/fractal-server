@@ -13,6 +13,9 @@ from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     check_no_ongoing_activity,
 )
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
+    check_no_related_workflowtask,
+)
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     check_no_submitted_job,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
@@ -31,8 +34,10 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
+from fractal_server.tasks.v2.local import delete_local
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import delete_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.utils import get_timestamp
 
@@ -254,6 +259,68 @@ async def reactivate_task_group(
         )
     logger.debug(
         "Admin task group reactivation endpoint: start reactivate "
+        "and return task_group_activity"
+    )
+    response.status_code = status.HTTP_202_ACCEPTED
+    return task_group_activity
+
+
+@router.post("/{task_group_id}/delete", status_code=202)
+async def delete_task_group(
+    task_group_id: int,
+    background_tasks: BackgroundTasks,
+    response: Response,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+):
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+    await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
+    await check_no_submitted_job(task_group_id=task_group.id, db=db)
+    await check_no_related_workflowtask(task_group=task_group, db=db)
+
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatusV2.PENDING,
+        action=TaskGroupActivityActionV2.DELETE,
+        pkg_name=task_group.pkg_name,
+        version=(task_group.version or "N/A"),
+        timestamp_started=get_timestamp(),
+    )
+    db.add(task_group_activity)
+    await db.commit()
+
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Validate user settings (backend-specific)
+        user = await db.get(UserOAuth, task_group.user_id)
+        user_settings = await validate_user_settings(
+            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        )
+        # Use appropriate FractalSSH object
+        ssh_config = SSHConfig(
+            user=user_settings.ssh_username,
+            host=user_settings.ssh_host,
+            key_path=user_settings.ssh_private_key_path,
+        )
+
+        background_tasks.add_task(
+            delete_ssh,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            ssh_config=ssh_config,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
+        )
+    else:
+        background_tasks.add_task(
+            delete_local,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+        )
+    logger.debug(
+        "Admin task group deletion endpoint: start deletion "
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
