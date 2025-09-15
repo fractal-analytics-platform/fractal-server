@@ -211,8 +211,15 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         workdir_remote=tmp_path / "remote/job3",
         tasks=[],
     )
+    job4 = SlurmJob(
+        slurm_job_id="711",
+        prefix="job4",
+        workdir_local=tmp_path / "job4",
+        workdir_remote=tmp_path / "remote/job4",
+        tasks=[],
+    )
 
-    for job in [job1, job2, job3]:
+    for job in [job1, job2, job3, job4]:
         job.workdir_local.mkdir(parents=True, exist_ok=True)
 
     err_msg = (
@@ -230,6 +237,9 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
 
     # Job 3: No stderr file (doesn't exist)
 
+    # Job 4: Exception (it is a directory)
+    job4.slurm_stderr_local_path.mkdir()
+
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
@@ -245,6 +255,9 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
 
         error3 = runner._extract_slurm_error(job3)
         assert error3 is None  # File doesn't exist
+
+        error4 = runner._extract_slurm_error(job4)
+        assert error4 is None  # Exception while reading
 
         # Test _set_executor_error_log with multiple jobs
         assert runner.executor_error_log is None
