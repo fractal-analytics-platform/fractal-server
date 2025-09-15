@@ -577,3 +577,52 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         assert res.status_code == 422
         assert "submitted jobs use its tasks" in res.json()["detail"]
+
+
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+async def test_admin_delete_task_group_api(
+    app,
+    client,
+    MockCurrentUser,
+    db,
+    task_factory_v2,
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
+):
+    """
+    This tests _only_ the API of the admin's `delete` endpoint.
+    """
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
+
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = MockFractalSSHList()
+        user_settings_dict = dict(
+            ssh_host="ssh_host",
+            ssh_username="ssh_username",
+            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_tasks_dir="/invalid/ssh_tasks_dir",
+            ssh_jobs_dir="/invalid/ssh_jobs_dir",
+        )
+    else:
+        user_settings_dict = {}
+
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+        task = await task_factory_v2(
+            user_id=user.id,
+            name="AaAa",
+        )
+        res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
+        task_group = res.json()
+
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True},
+    ):
+        res = await client.get(f"{PREFIX}/task-group/")
+        assert len(res.json()) == 1
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group['id']}/delete/"
+        )
+        assert res.status_code == 202
