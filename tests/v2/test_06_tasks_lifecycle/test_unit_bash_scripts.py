@@ -75,14 +75,14 @@ def test_template_2(
         "v2/fractal_tasks_valid/valid_tasks/dist/"
         "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    pinned_pkg_list = "pydantic==2.8.2 devtools==0.12.2"
     execute_command_sync(
         command=f"python{current_py_version} -m venv {venv_path}"
     )
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
+        ("__PINNED_PACKAGE_LIST_PRE__", "pydantic==2.8.2"),
+        ("__PINNED_PACKAGE_LIST_POST__", "devtools==0.12.2"),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
@@ -93,21 +93,10 @@ def test_template_2(
         script_path=script_path.as_posix(),
     )
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
-    success_lines = iter(
-        line
-        for line in stdout.splitlines()
-        if (
-            line.startswith("Successfully installed")
-            and "pip" not in line
-            and "setuptools" not in line
-        )
-    )
-    success_line_1 = next(success_lines)
-    assert success_line_1 == "Successfully installed fractal-tasks-mock-0.0.1"
-    success_line_2 = next(success_lines)
-    debug(success_line_2)
-    for pinned_pkg in pinned_pkg_list.split(" "):
-        assert pinned_pkg.replace("==", "-") in success_line_2
+    debug(stdout)
+    assert "pydantic-2.8.2" in stdout
+    assert "Successfully installed fractal-tasks-mock-0.0.1" in stdout
+    assert "devtools-0.12.2" in stdout
 
     # Case 2: successfull `pip show`
     replacements = [
@@ -125,14 +114,15 @@ def test_template_2(
 
     # Case 3: Failed `pip install`, due to invalid `pinned_pkg_list`
     venv_path_bad = path / "bad_venv"
-    pinned_pkg_list = "non_existing_package==1.2.3"
+    pinned_pkg_list_post = "non_existing_package==1.2.3"
     execute_command_sync(
         command=f"python{current_py_version} -m venv {venv_path_bad}"
     )
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path_bad.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PINNED_PACKAGE_LIST__", pinned_pkg_list),
+        ("__PINNED_PACKAGE_LIST_PRE__", ""),
+        ("__PINNED_PACKAGE_LIST_POST__", pinned_pkg_list_post),
         ("__FRACTAL_MAX_PIP_VERSION__", "25"),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
     ]
@@ -146,7 +136,7 @@ def test_template_2(
         execute_command_sync(command=f"bash {script_path.as_posix()}")
     ERROR_MSG = (
         "Could not find a version that satisfies the requirement "
-        f"{pinned_pkg_list}"
+        f"{pinned_pkg_list_post}"
     )
     assert ERROR_MSG in str(e_info.value)
 
@@ -163,7 +153,8 @@ def test_template_2(
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-        ("__PINNED_PACKAGE_LIST__", ""),
+        ("__PINNED_PACKAGE_LIST_PRE__", ""),
+        ("__PINNED_PACKAGE_LIST_POST__", ""),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
     ]
     script_path = tmp_path / "2_bad_whl.sh"
@@ -236,7 +227,8 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__PACKAGE_ENV_DIR__", venv_path_1.as_posix()),
             ("__INSTALL_STRING__", "devtools"),
             ("__FRACTAL_MAX_PIP_VERSION__", "99"),
-            ("__PINNED_PACKAGE_LIST__", ""),
+            ("__PINNED_PACKAGE_LIST_PRE__", ""),
+            ("__PINNED_PACKAGE_LIST_POST__", ""),
             ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
         ],
         script_dir=tmp_path,
