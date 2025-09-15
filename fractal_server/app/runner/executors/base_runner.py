@@ -39,6 +39,8 @@ class BaseRunner:
     Base class for Fractal runners.
     """
 
+    executor_error_log: str | None = None
+
     def submit(
         self,
         base_command: str,

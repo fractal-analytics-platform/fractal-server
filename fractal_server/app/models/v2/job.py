@@ -55,6 +55,7 @@ class JobV2(SQLModel, table=True):
     )
     status: str = JobStatusTypeV2.SUBMITTED
     log: str | None = None
+    executor_error_log: str | None = None
 
     attribute_filters: AttributeFilters = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
