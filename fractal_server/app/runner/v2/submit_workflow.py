@@ -343,5 +343,7 @@ def submit_workflow(
 
     finally:
         reset_logger_handlers(logger)
+        # refetch, in case it is not already available
+        job = db_sync.get(JobV2, job_id)
         db_sync.close()
         _zip_folder_to_file_and_remove(folder=job.working_dir)
