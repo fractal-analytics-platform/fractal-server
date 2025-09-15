@@ -11,8 +11,6 @@ from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
-CURRENT_FRACTAL_MAX_PIP_VERSION = "24.0"
-
 
 def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
     """
@@ -59,7 +57,6 @@ async def test_task_collection_ssh_from_pypi(
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
         PY_KEY: f"/.venv{current_py_version}/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
-        "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }
     override_settings_factory(**settings_overrides)
 
@@ -229,7 +226,6 @@ async def test_task_collection_ssh_failure(
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
-        "FRACTAL_MAX_PIP_VERSION": CURRENT_FRACTAL_MAX_PIP_VERSION,
     }
     override_settings_factory(**settings_overrides)
 
