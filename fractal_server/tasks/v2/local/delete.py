@@ -49,7 +49,7 @@ def delete_local(
 
                 db.commit()
                 db.delete(task_group)
-                logger.debug("Task group removed from database..")
+                logger.debug("Task group removed from database.")
 
                 if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                     logger.debug(f"Removing {task_group.path=}.")
