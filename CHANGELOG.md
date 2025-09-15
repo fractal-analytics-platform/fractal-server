@@ -2,6 +2,8 @@
 
 # 2.15.10 (unreleased)
 
+* Runner:
+    * Record SLURM-job stderr in `JobV2.executor_error_log` (\#2750).
 * Task life cycle:
     * Support both pre-pinning and post-pinning of dependencies (\#2761).
 
