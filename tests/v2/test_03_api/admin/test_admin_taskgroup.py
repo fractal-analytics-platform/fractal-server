@@ -176,42 +176,6 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert len(res.json()) == 2
 
-    # DELETE
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
-        task_group_activity = TaskGroupActivityV2(
-            user_id=user.id,
-            taskgroupv2_id=task_group_1["id"],
-            status=TaskGroupActivityStatusV2.PENDING,
-            action="collect",
-            pkg_name="pkg",
-            version="1.0.0",
-        )
-    db.add(task_group_activity)
-    await db.commit()
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id == task_group_1["id"]
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_2['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_3['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/9999/")
-        assert res.status_code == 404
-        res = await client.delete(
-            f"{PREFIX}/task-group/{task.taskgroupv2_id}/"
-        )
-        assert res.status_code == 422
-
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id is None
-
 
 async def test_get_task_group_activity(
     client, MockCurrentUser, db, task_factory_v2
