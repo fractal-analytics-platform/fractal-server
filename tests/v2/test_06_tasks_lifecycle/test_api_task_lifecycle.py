@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+import fractal_server.app.routes.api.v2.task_collection as task_collection
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -266,8 +267,12 @@ async def test_lifecycle(
     tmp777_path: Path,
     request,
     current_py_version,
+    monkeypatch,
 ):
-    overrides = dict(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    overrides = dict(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_TASKS_DIR=tmp777_path,
+    )
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # Setup remote Python interpreter
         current_py_version_underscore = current_py_version.replace(".", "_")
@@ -305,10 +310,11 @@ async def test_lifecycle(
     shutil.copy(old_archive_path, archive_path)
     with open(archive_path, "rb") as f:
         files = {"file": (archive_path.name, f.read(), "application/zip")}
+
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True),
         user_settings_dict=user_settings_dict,
-    ):
+    ) as user:
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
@@ -323,16 +329,16 @@ async def test_lifecycle(
         task_group_id = activity["taskgroupv2_id"]
         res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
-        task_group_activity = res.json()
-        assert task_group_activity["status"] == "OK"
-        assert task_group_activity["timestamp_ended"] is not None
+        task_group_activity_collection = res.json()
+        assert task_group_activity_collection["status"] == "OK"
+        assert task_group_activity_collection["timestamp_ended"] is not None
 
-        log = task_group_activity["log"]
+        log = task_group_activity_collection["log"]
         assert log is not None
         assert log.count("\n") > 0
         assert log.count("\\n") == 0
 
-        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        task_groupv2_id = task_group_activity_collection["taskgroupv2_id"]
         # Check env_info attribute in TaskGroupV2
         db.expunge_all()
         task_group = await db.get(TaskGroupV2, task_groupv2_id)
@@ -407,6 +413,67 @@ async def test_lifecycle(
         assert Path(task_group.path).exists()
         assert not Path(task_group.venv_path).exists()
         assert Path(task_group.archive_path).exists()
+
+        # STEP 5: Delete task group
+        # Assert that we must DELETE the task group before collect again
+
+        # Collection fails
+        res = await client.post("api/v2/task/collect/pip/", files=files)
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"User '{user.email}' already owns a task group with "
+            f"name='{task_group.pkg_name}' "
+            f"and version='{task_group.version}'.\n"
+            "Note: There exists another task-group collection "
+            f"(activity ID={task_group_activity_collection['id']}) "
+            "for this task group "
+            f"(ID={task_group_activity_collection['taskgroupv2_id']}), "
+            f"with status '{TaskGroupActivityStatusV2.OK}'."
+        )
+
+        task_group_path = Path(task_group.path)
+        assert task_group_path.exists()
+        # We delete the task group
+        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        debug(res.json())
+        assert res.status_code == 202
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        # `task_group.path` does not exist anymore
+        assert not Path(task_group.path).exists()
+
+        res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
+
+        # We call the collect endpoint again, mocking the backgroud tasks
+        # (for speeding up the test)
+        def dummy_collect(*args, **kwargs):
+            pass
+
+        monkeypatch.setattr(task_collection, "collect_local", dummy_collect)
+        monkeypatch.setattr(task_collection, "collect_ssh", dummy_collect)
+
+        res = await client.post("api/v2/task/collect/pip/", files=files)
+        assert res.status_code == 202
+
+        task_group_id = res.json()["taskgroupv2_id"]
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        task_group_path = Path(task_group.path)
+
+        # New deletion must fail (because the collection was mocked)
+        res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
+        assert res.status_code == 202
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
+        activity = res.json()
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.FAILED
+        assert "No such file or directory" in activity["log"]
 
 
 async def test_fail_due_to_ongoing_activities(

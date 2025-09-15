@@ -7,6 +7,7 @@
 * Task life cycle:
     * Support both pre-pinning and post-pinning of dependencies (\#2761).
     * Drop `FRACTAL_MAX_PIP_VERSION` configuration variable (\#2766).
+    * Make TaskGroup deletion a lifecycle operation (\#2759).
 * Testing:
     * Add `out_of_memory` mock task (\#2770).
 

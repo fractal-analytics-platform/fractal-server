@@ -8,6 +8,7 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -202,4 +203,25 @@ async def check_no_submitted_job(
                 f"Cannot act on task group because {num_submitted_jobs} "
                 "submitted jobs use its tasks."
             ),
+        )
+
+
+async def check_no_related_workflowtask(
+    *,
+    task_group: TaskGroupV2,
+    db: AsyncSession,
+) -> None:
+    """
+    Raises an HTTPException if any of the tasks in the TaskGroup are referenced
+    by an existing WorkflowTask.
+    """
+    stm = select(WorkflowTaskV2).where(
+        WorkflowTaskV2.task_id.in_([task.id for task in task_group.task_list])
+    )
+    res = await db.execute(stm)
+    bad_wftask = res.scalars().first()
+    if bad_wftask is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"TaskV2 {bad_wftask.task_id} is still in use",
         )

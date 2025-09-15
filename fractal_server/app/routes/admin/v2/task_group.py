@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Response
 from fastapi import status
 from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
@@ -13,7 +12,6 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -161,33 +159,3 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return task_group
-
-
-@router.delete("/{task_group_id}/", status_code=204)
-async def delete_task_group(
-    task_group_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-):
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"TaskGroupV2 {task_group_id} not found",
-        )
-
-    stm = select(WorkflowTaskV2).where(
-        WorkflowTaskV2.task_id.in_({task.id for task in task_group.task_list})
-    )
-    res = await db.execute(stm)
-    workflow_tasks = res.scalars().all()
-    if workflow_tasks != []:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"TaskV2 {workflow_tasks[0].task_id} is still in use",
-        )
-
-    await db.delete(task_group)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

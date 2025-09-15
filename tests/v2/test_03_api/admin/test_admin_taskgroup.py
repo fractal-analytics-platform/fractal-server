@@ -176,42 +176,6 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert len(res.json()) == 2
 
-    # DELETE
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await workflowtask_factory_v2(workflow_id=workflow.id, task_id=task.id)
-        task_group_activity = TaskGroupActivityV2(
-            user_id=user.id,
-            taskgroupv2_id=task_group_1["id"],
-            status=TaskGroupActivityStatusV2.PENDING,
-            action="collect",
-            pkg_name="pkg",
-            version="1.0.0",
-        )
-    db.add(task_group_activity)
-    await db.commit()
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id == task_group_1["id"]
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_1['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_2['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/{task_group_3['id']}/")
-        assert res.status_code == 204
-        res = await client.delete(f"{PREFIX}/task-group/9999/")
-        assert res.status_code == 404
-        res = await client.delete(
-            f"{PREFIX}/task-group/{task.taskgroupv2_id}/"
-        )
-        assert res.status_code == 422
-
-    await db.refresh(task_group_activity)
-    assert task_group_activity.taskgroupv2_id is None
-
 
 async def test_get_task_group_activity(
     client, MockCurrentUser, db, task_factory_v2
@@ -613,3 +577,78 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         assert res.status_code == 422
         assert "submitted jobs use its tasks" in res.json()["detail"]
+
+
+@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.container
+async def test_admin_delete_task_group_api(
+    client,
+    MockCurrentUser,
+    testdata_path,  # FIXME see issue 2775
+    FRACTAL_RUNNER_BACKEND,
+    override_settings_factory,
+    app,
+    tmp777_path,
+    request,
+    current_py_version,
+    task_factory_v2,
+):
+    overrides = dict(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_TASKS_DIR=tmp777_path,
+    )
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # Setup remote Python interpreter
+        current_py_version_underscore = current_py_version.replace(".", "_")
+        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+        python_value = (
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        )
+        overrides[python_key] = python_value
+    override_settings_factory(**overrides)
+
+    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        app.state.fractal_ssh_list = request.getfixturevalue(
+            "fractal_ssh_list"
+        )
+        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
+        ssh_keys = request.getfixturevalue("ssh_keys")
+        user_settings_dict = dict(
+            ssh_host=slurmlogin_ip,
+            ssh_username="test01",
+            ssh_private_key_path=ssh_keys["private"],
+            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+        )
+    else:
+        user_settings_dict = {}
+
+    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+        task = await task_factory_v2(
+            user_id=user.id,
+            name="AaAa",
+        )
+        res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
+        task_group = res.json()
+
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True},
+    ):
+        res = await client.get(f"{PREFIX}/task-group/")
+        assert len(res.json()) == 1
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group['id']}/delete/"
+        )
+        assert res.status_code == 202
+        activity = res.json()
+        activity_id = activity["id"]
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+
+        res = await client.get(f"{PREFIX}/task-group/activity/?action=delete")
+        assert len(res.json()) == 1
+        activity = res.json()[0]
+        assert activity["id"] == activity_id
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK

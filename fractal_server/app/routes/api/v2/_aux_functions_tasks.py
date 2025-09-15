@@ -243,7 +243,7 @@ async def _get_collection_task_group_activity_status_message(
         )
     elif len(task_group_activity_list) == 1:
         msg = (
-            "\nNote:"
+            "\nNote: "
             "There exists another task-group collection "
             f"(activity ID={task_group_activity_list[0].id}) for "
             f"this task group (ID={task_group_id}), with status "

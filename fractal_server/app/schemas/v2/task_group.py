@@ -31,6 +31,7 @@ class TaskGroupActivityActionV2(StrEnum):
     COLLECT = "collect"
     DEACTIVATE = "deactivate"
     REACTIVATE = "reactivate"
+    DELETE = "delete"
 
 
 class TaskGroupCreateV2(BaseModel):
