@@ -81,7 +81,7 @@ def delete_ssh(
 
                     db.delete(task_group)
                     db.commit()
-                    logger.debug("Task group removed from database..")
+                    logger.debug("Task group removed from database.")
 
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                         logger.debug(
