@@ -22,6 +22,7 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.exceptions import JobExecutionError
@@ -210,8 +211,8 @@ def execute_tasks_v2(
                     get_runner_config=get_runner_config,
                     history_run_id=history_run_id,
                     dataset_id=dataset.id,
-                    user_id=user_id,
                     task_type=task.type,
+                    user_id=user_id,
                 )
             elif task.type == TaskType.PARALLEL:
                 outcomes_dict, num_tasks = run_v2_task_parallel(
@@ -254,6 +255,13 @@ def execute_tasks_v2(
                 )
             }
             num_tasks = 0
+
+        # Store the SLURM error in the job database
+        with next(get_sync_db()) as db:
+            job_db = db.get(JobV2, job_id)
+            job_db.executor_error_log = runner.executor_error_log
+            db.merge(job_db)
+            db.commit()
 
         # POST TASK EXECUTION
         try:
