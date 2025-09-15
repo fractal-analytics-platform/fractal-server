@@ -51,6 +51,7 @@ def fail_job(
     if emit_log:
         logger.error(log_msg)
     reset_logger_handlers(logger)
+    job = db.get(JobV2, job.id)  # refetch, in case it was updated
     job.status = JobStatusTypeV2.FAILED
     job.end_timestamp = get_timestamp()
     job.log = log_msg
@@ -302,6 +303,7 @@ def submit_workflow(
         logger.debug(f'END workflow "{workflow.name}"')
 
         # Update job DB entry
+        job = db_sync.get(JobV2, job_id)  # refetch, in case it was updated
         job.status = JobStatusTypeV2.DONE
         job.end_timestamp = get_timestamp()
         with log_file_path.open("r") as f:
