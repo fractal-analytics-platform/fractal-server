@@ -1,8 +1,8 @@
-"""add executor error log
+"""Add executor error log
 
-Revision ID: a2be871f3ced
-Revises: b3ffb095f973
-Create Date: 2025-09-09 10:09:35.208673
+Revision ID: 981d588fe248
+Revises: 0f5f85bb2ae7
+Create Date: 2025-09-15 08:31:10.363449
 
 """
 import sqlalchemy as sa
@@ -11,8 +11,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "a2be871f3ced"
-down_revision = "b3ffb095f973"
+revision = "981d588fe248"
+down_revision = "0f5f85bb2ae7"
 branch_labels = None
 depends_on = None
 

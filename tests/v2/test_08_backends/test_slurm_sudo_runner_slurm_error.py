@@ -21,17 +21,16 @@ async def test_executor_error(
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
     class SudoSlurmRunnerMod(SudoSlurmRunner):
-        # Inject a failing command in the SLURM submission script
         def _prepare_single_slurm_job(self, *args, **kwargs) -> str:
+            # Inject a failing command in the SLURM submission script, so that
+            # the SLURM-job stder file gets filled
             submit_command = super()._prepare_single_slurm_job(*args, **kwargs)
             script_path = submit_command.split(" ")[-1]
             with open(script_path) as f:
-                script_contents = f.read()
-            script_contents = script_contents.replace(
-                "pwd", "ls --fake-option"
-            )
+                contents = f.read()
+            contents = contents.replace("pwd", "ls --fake-option")
             with open(script_path, "w") as f:
-                f.write(script_contents)
+                f.write(contents)
             return submit_command
 
     with SudoSlurmRunnerMod(

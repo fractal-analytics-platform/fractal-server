@@ -48,7 +48,8 @@ class TaskGroupCreateV2(BaseModel):
     archive_path: AbsolutePathStr = None
     pip_extras: NonEmptyStr = None
     env_info: str | None = None
-    pinned_package_versions: DictStrStr = Field(default_factory=dict)
+    pinned_package_versions_pre: DictStrStr = Field(default_factory=dict)
+    pinned_package_versions_post: DictStrStr = Field(default_factory=dict)
 
 
 class TaskGroupCreateV2Strict(TaskGroupCreateV2):
@@ -78,7 +79,8 @@ class TaskGroupReadV2(BaseModel):
     venv_path: str | None = None
     archive_path: str | None = None
     pip_extras: str | None = None
-    pinned_package_versions: dict[str, str] = Field(default_factory=dict)
+    pinned_package_versions_pre: dict[str, str] = Field(default_factory=dict)
+    pinned_package_versions_post: dict[str, str] = Field(default_factory=dict)
 
     venv_size_in_kB: int | None = None
     venv_file_number: int | None = None

@@ -211,8 +211,15 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         workdir_remote=tmp_path / "remote/job3",
         tasks=[],
     )
+    job4 = SlurmJob(
+        slurm_job_id="711",
+        prefix="job4",
+        workdir_local=tmp_path / "job4",
+        workdir_remote=tmp_path / "remote/job4",
+        tasks=[],
+    )
 
-    for job in [job1, job2, job3]:
+    for job in [job1, job2, job3, job4]:
         job.workdir_local.mkdir(parents=True, exist_ok=True)
 
     err_msg = (
@@ -222,13 +229,16 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
     # Create stderr files with different content
     # Job 1: Has SLURM error
     stderr1_path = job1.slurm_stderr_local_path
-    stderr1_path.write_text()
+    stderr1_path.write_text(err_msg)
 
     # Job 2: Has empty stderr file
     stderr2_path = job2.slurm_stderr_local_path
-    stderr2_path.write_text(err_msg)
+    stderr2_path.write_text("")
 
     # Job 3: No stderr file (doesn't exist)
+
+    # Job 4: Exception (it is a directory)
+    job4.slurm_stderr_local_path.mkdir()
 
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
@@ -238,7 +248,7 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
     ) as runner:
         # Test _extract_slurm_error for individual jobs
         error1 = runner._extract_slurm_error(job1)
-        assert error1 == err_msg
+        assert error1.strip() == err_msg.strip()
 
         error2 = runner._extract_slurm_error(job2)
         assert error2 is None  # Empty file
@@ -246,21 +256,24 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         error3 = runner._extract_slurm_error(job3)
         assert error3 is None  # File doesn't exist
 
+        error4 = runner._extract_slurm_error(job4)
+        assert error4 is None  # Exception while reading
+
         # Test _set_executor_error_log with multiple jobs
         assert runner.executor_error_log is None
 
         # Set error log from jobs - should capture first error (job1)
         runner._set_executor_error_log([job1, job2, job3])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Reset and test with different order
         runner.executor_error_log = None
         runner._set_executor_error_log([job3, job2, job1])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Test that once set, it doesn't change
         runner._set_executor_error_log([job1, job2, job3])
-        assert runner.executor_error_log == err_msg
+        assert runner.executor_error_log.strip() == err_msg.strip()
 
         # Test with no errors
         runner.executor_error_log = None

@@ -519,7 +519,13 @@ class BaseSlurmRunner(BaseRunner):
 
     def _extract_slurm_error(self, slurm_job: SlurmJob) -> str | None:
         """
-        Extract SLURM stderr content from the stderr file."""
+        Extract stderr of SLURM job, or `None`.
+
+        Note: this method reads the _local_ stderr file, and then it should
+        always be called _after_ fetching remote artifacts (e.g. in an SSH
+        deployment).
+        """
+
         stderr_path = slurm_job.slurm_stderr_local_path
 
         if not stderr_path.exists():
@@ -530,7 +536,6 @@ class BaseSlurmRunner(BaseRunner):
                 stderr_content = f.read().strip()
             if stderr_content:
                 return stderr_content
-
         except Exception as e:
             logger.error(f"Failed to read SLURM stderr file: {e}")
 
@@ -540,14 +545,16 @@ class BaseSlurmRunner(BaseRunner):
         """
         If `executor_error_log` is unset, update it based on a list of jobs.
 
-        Note that this must be executed **after** `_fetch_artifacts`.
-        Note: this method only captures the first error.
+        Notes:
+        1. This method must be executed **after** `_fetch_artifacts`.
+        2. This method only captures the first error it finds.
         """
         if self.executor_error_log is not None:
+            # `executor_error_log` is already set, exit
             return
         for slurm_job in slurm_jobs:
             slurm_error = self._extract_slurm_error(slurm_job)
-            if slurm_error:
+            if slurm_error is not None:
                 logger.warning(f"SLURM error detected: {slurm_error}")
                 self.executor_error_log = slurm_error
                 return
@@ -608,7 +615,9 @@ class BaseSlurmRunner(BaseRunner):
     ) -> tuple[Any, Exception]:
         logger.debug("[submit] START")
 
+        # Always refresh `executor_error_log` before starting a task
         self.executor_error_log = None
+
         config = self._enrich_slurm_config(config)
 
         try:
@@ -764,7 +773,10 @@ class BaseSlurmRunner(BaseRunner):
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
         """
+
+        # Always refresh `executor_error_log` before starting a task
         self.executor_error_log = None
+
         config = self._enrich_slurm_config(config)
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
