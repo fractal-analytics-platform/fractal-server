@@ -292,7 +292,7 @@ def submit_workflow(
 
         # Update job DB entry
         with next(DB.get_sync_db()) as db_sync:
-            job = db_sync.get(JobV2, job_id)  # refetch, in case it was updated
+            job = db_sync.get(JobV2, job_id)
             job.status = JobStatusTypeV2.DONE
             job.end_timestamp = get_timestamp()
             with log_file_path.open("r") as f:
@@ -305,6 +305,7 @@ def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
         with next(DB.get_sync_db()) as db_sync:
+            job = db_sync.get(JobV2, job_id)
             fail_job(
                 db=db_sync,
                 job=job,
@@ -321,6 +322,7 @@ def submit_workflow(
 
         current_traceback = traceback.format_exc()
         with next(DB.get_sync_db()) as db_sync:
+            job = db_sync.get(JobV2, job_id)
             fail_job(
                 db=db_sync,
                 job=job,
