@@ -59,10 +59,10 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"
-pytest = "8.1.*"
+pytest = "8.4.*"
 httpx = ">=0.28.0,<0.29.0"
 devtools = "^0.12"
-pytest-asyncio = "^0.23"
+pytest-asyncio = "1.2.*"
 bumpver = ">=2024.0"
 pre-commit = "4.2.0"
 coverage = {extras = ["toml"], version = "7.5.*"}
