@@ -79,6 +79,7 @@ class JobReadV2(BaseModel):
     end_timestamp: AwareDatetime | None = None
     status: str
     log: str | None = None
+    executor_error_log: str | None = None
     working_dir: str | None = None
     working_dir_user: str | None = None
     first_task_index: int | None = None
