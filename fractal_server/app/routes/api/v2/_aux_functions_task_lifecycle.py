@@ -219,9 +219,9 @@ async def check_no_related_workflowtask(
         WorkflowTaskV2.task_id.in_([task.id for task in task_group.task_list])
     )
     res = await db.execute(stm)
-    workflow_tasks = res.first()
-    if workflow_tasks is not None:
+    bad_wftask = res.first()
+    if bad_wftask is not None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"TaskV2 {workflow_tasks.task_id} is still in use",
+            detail=f"TaskV2 {bad_wftask.task_id} is still in use",
         )
