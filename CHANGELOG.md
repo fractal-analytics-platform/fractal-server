@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.15.10 (unreleased)
+# 2.16.0
 
 * Runner:
     * Record SLURM-job stderr in `JobV2.executor_error_log` (\#2750, \#2771, \#2773).
