@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 from copy import copy
 from copy import deepcopy
@@ -38,6 +37,7 @@ from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import merge_type_filters
+from fractal_server.logger import get_logger
 from fractal_server.types import AttributeFilters
 
 
@@ -103,7 +103,7 @@ def execute_tasks_v2(
     job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFilters,
 ) -> None:
-    logger = logging.getLogger(logger_name)
+    logger = get_logger(logger_name=logger_name)
 
     if not workflow_dir_local.exists():
         logger.warning(
@@ -198,9 +198,6 @@ def execute_tasks_v2(
             # over from a previous task
             job_db = db.get(JobV2, job_id)
             job_db.executor_error_log = None
-            logger.debug(
-                f"Resetting `JobV2[{job_id}].executor_error_log` to None."
-            )
             db.merge(job_db)
             db.commit()
 
@@ -449,10 +446,6 @@ def execute_tasks_v2(
             # Store the SLURM error in the job database
             job_db = db.get(JobV2, job_id)
             job_db.executor_error_log = runner.executor_error_log
-            logger.debug(
-                f"Setting JobV2[{job_id}].executor_error_log "
-                f"to '{job_db.executor_error_log}'."
-            )
             db.merge(job_db)
             db.commit()
 
