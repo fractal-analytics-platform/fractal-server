@@ -8,6 +8,7 @@ from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
+from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 from ._utils import edit_pyproject_toml_in_place_ssh
 from fractal_server.app.db import get_sync_db
@@ -22,6 +23,7 @@ from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
+from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
@@ -201,13 +203,26 @@ def collect_ssh_pixi(
                         pyproject_toml_path=pyproject_toml_path,
                     )
 
-                    stdout = _customize_and_run_template(
+                    remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
                         login_shell=True,
                         **common_args,
                     )
-                    logger.debug(f"STDOUT: {stdout}")
+                    logger.debug(
+                        "Installation script written to "
+                        f"{remote_script2_path=}."
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    run_script_on_remote_slurm(
+                        script_path=remote_script2_path,
+                        slurm_config=settings.pixi.SLURM_CONFIG,
+                        fractal_ssh=fractal_ssh,
+                        logger_name=LOGGER_NAME,
+                    )
+
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
