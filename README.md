@@ -107,7 +107,7 @@
 | fractal\_server/app/runner/v2/db\_tools.py                                      |       41 |        2 |       10 |        2 |     92% |    27, 41 |
 | fractal\_server/app/runner/v2/deduplicate\_list.py                              |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/merge\_outputs.py                                 |       14 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/runner/v2/runner.py                                         |      190 |        2 |       40 |        2 |     98% |  259, 310 |
+| fractal\_server/app/runner/v2/runner.py                                         |      188 |        2 |       40 |        2 |     98% |  256, 307 |
 | fractal\_server/app/runner/v2/runner\_functions.py                              |      186 |       10 |       48 |        7 |     92% |113, 151, 174->178, 181-182, 352-357, 421->425, 571-576 |
 | fractal\_server/app/runner/v2/submit\_workflow.py                               |      158 |       10 |       30 |        4 |     93% |114-119, 127->129, 129->133, 186-202, 267 |
 | fractal\_server/app/runner/v2/task\_interface.py                                |       40 |        0 |        4 |        0 |    100% |           |
@@ -179,7 +179,7 @@
 | fractal\_server/urls.py                                                         |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                        |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                   |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                       **TOTAL** | **9522** |  **261** | **1758** |  **102** | **96%** |           |
+|                                                                       **TOTAL** | **9520** |  **261** | **1758** |  **102** | **96%** |           |
 
 
 ## Setup coverage badge
