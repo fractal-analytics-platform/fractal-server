@@ -43,13 +43,28 @@ def test_run_squeue_failure():
 
 @pytest.mark.container
 @pytest.mark.ssh
-def test_verify_success_file_exists(fractal_ssh: FractalSSH):
+def test_verify_success_file_exists(
+    fractal_ssh: FractalSSH,
+    tmp777_path: Path,
+):
+    # Stderr file missing
+    stderr_remote = (tmp777_path / "stderr").as_posix()
     with pytest.raises(RuntimeError, match="missing"):
         _verify_success_file_exists(
             fractal_ssh=fractal_ssh,
             success_file_remote="/missing-success-file",
             logger_name="my-logger",
-            stderr_remote="/missing-stderr",
+            stderr_remote=stderr_remote,
+        )
+
+    # Stderr file exists
+    Path(stderr_remote).touch()
+    with pytest.raises(RuntimeError, match="missing"):
+        _verify_success_file_exists(
+            fractal_ssh=fractal_ssh,
+            success_file_remote="/missing-success-file",
+            logger_name="my-logger",
+            stderr_remote=stderr_remote,
         )
 
 
