@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
@@ -572,6 +573,7 @@ def test_pixi_config(tmp_path):
         "PIXI_CONCURRENT_DOWNLOADS": 4,
         "DEFAULT_ENVIRONMENT": "default",
         "DEFAULT_PLATFORM": "linux-64",
+        "SLURM_CONFIG": None,
     }
     pixi_config_file = tmp_path / "pixi_config.json"
     with pixi_config_file.open("w") as f:
@@ -624,3 +626,34 @@ def test_pixi_config(tmp_path):
         json.dump(pixi_config, f)
     with pytest.raises(ValidationError):
         Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+
+
+def test_pixi_slurm_config():
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="10K",
+    )
+    with pytest.raises(
+        ValueError,
+        match="units suffix",
+    ):
+        PixiSLURMConfig(
+            partition="fake",
+            time="100",
+            cpus=1,
+            mem="1000",
+        )
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="1000M",
+    )
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="10G",
+    )
