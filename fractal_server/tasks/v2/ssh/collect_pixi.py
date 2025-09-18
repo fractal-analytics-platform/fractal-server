@@ -206,7 +206,6 @@ def collect_ssh_pixi(
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
-                        login_shell=True,
                         **common_args,
                     )
                     logger.debug(
@@ -221,6 +220,7 @@ def collect_ssh_pixi(
                         slurm_config=settings.pixi.SLURM_CONFIG,
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
+                        prefix=common_args["prefix"],
                     )
 
                     activity.log = get_current_log(log_file_path)

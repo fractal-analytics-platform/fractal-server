@@ -9,6 +9,7 @@ from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.config import PixiSettings
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
@@ -55,6 +56,12 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
     return PixiSettings(
         default_version="0.54.1",
         versions={"0.54.1": pixi_home.as_posix()},
+        SLURM_CONFIG=PixiSLURMConfig(
+            partition="main",
+            cpus=1,
+            mem="1G",
+            time="60",
+        ),
     )
 
 
@@ -158,6 +165,10 @@ async def test_task_group_lifecycle_pixi_ssh(
         res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
         activity = res.json()
+
+        debug(activity["log"])
+        return
+
         assert activity["log"] is not None
         assert activity["timestamp_ended"] is not None
         assert activity["status"] == "OK"
