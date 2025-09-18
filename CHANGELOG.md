@@ -4,6 +4,7 @@
 
 * Runner:
     * Drop top-level executor-error-related logs (\#2783).
+    * Drop obsolete `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable (\#2785).
 
 # 2.16.0
 
