@@ -18,16 +18,19 @@ import sys
 from os import environ
 from os import getenv
 from pathlib import Path
+from typing import Annotated
 from typing import Literal
 from typing import TypeVar
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic import PositiveInt
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -36,6 +39,7 @@ from sqlalchemy.engine import URL
 import fractal_server
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
+from fractal_server.types import NonEmptyStr
 
 
 class MailSettings(BaseModel):
@@ -62,6 +66,47 @@ class MailSettings(BaseModel):
     instance_name: str
     use_starttls: bool
     use_login: bool
+
+
+def _check_pixi_slurm_memory(mem: str) -> str:
+    if mem[-1] not in ["K", "M", "G", "T"]:
+        raise ValueError(
+            f"Invalid memory requirement {mem=} for `pixi`, "
+            "please set a K/M/G/T units suffix."
+        )
+    return mem
+
+
+class PixiSLURMConfig(BaseModel):
+    """
+    Parameters that are passed directly to a `sbatch` command.
+
+    See https://slurm.schedmd.com/sbatch.html.
+    """
+
+    partition: NonEmptyStr
+    """
+    `-p, --partition=<partition_names>`
+    """
+    cpus: PositiveInt
+    """
+    `-c, --cpus-per-task=<ncpus>
+    """
+    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
+    """
+    `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
+    From `sbatch` docs: Specify the real memory required per node. Default
+    units are megabytes. Different units can be specified using the suffix
+    [K|M|G|T].
+    """
+    time: NonEmptyStr
+    """
+    `-t, --time=<time>`.
+    From `sbatch` docs: "A time limit of zero requests that no time limit be
+    imposed. Acceptable time formats include "minutes", "minutes:seconds",
+    "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
+    "days-hours:minutes:seconds".
+    """
 
 
 class PixiSettings(BaseModel):
@@ -130,9 +175,15 @@ class PixiSettings(BaseModel):
     """
     DEFAULT_ENVIRONMENT: str = "default"
     """
+    Default pixi environment name.
     """
     DEFAULT_PLATFORM: str = "linux-64"
     """
+    Default platform for pixi.
+    """
+    SLURM_CONFIG: PixiSLURMConfig | None = None
+    """
+    Required when using pixi in a SSH/SLURM deployment.
     """
 
     @model_validator(mode="after")
@@ -783,6 +834,10 @@ class Settings(BaseSettings):
             if self.FRACTAL_SLURM_WORKER_PYTHON is None:
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
+                )
+            if self.pixi and self.pixi.SLURM_CONFIG is None:
+                raise FractalConfigurationError(
+                    "Pixi config must include SLURM_CONFIG."
                 )
 
             from fractal_server.app.runner.executors.slurm_common._slurm_config import (  # noqa: E501

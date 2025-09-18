@@ -17,29 +17,26 @@ from fractal_server.tasks.v2.utils_templates import customize_template
 logger = set_logger(__name__)
 
 
-def _customize_and_run_template(
+def _customize_and_send_template(
     *,
     template_filename: str,
     replacements: set[tuple[str, str]],
     script_dir_local: str,
+    script_dir_remote: str,
     prefix: str,
     fractal_ssh: FractalSSH,
-    script_dir_remote: str,
     logger_name: str,
-    login_shell: bool = False,
 ) -> str:
     """
-    Customize one of the template bash scripts, transfer it to the remote host
-    via SFTP and then run it via SSH.
+    Customize a template bash scripts and transfer it to the remote host.
 
     Args:
         template_filename: Filename of the template file (ends with ".sh").
         replacements: Dictionary of replacements.
         script_dir_local: Local folder where the script will be placed.
+        script_dir_remote: Remote scripts directory
         prefix: Prefix for the script filename.
         fractal_ssh: FractalSSH object
-        script_dir_remote: Remote scripts directory
-        login_shell: If `True`, use `bash --login` for remote script execution.
     """
     logger = get_logger(logger_name=logger_name)
     logger.debug(f"_customize_and_run_template {template_filename} - START")
@@ -67,10 +64,46 @@ def _customize_and_run_template(
         local=script_path_local,
         remote=script_path_remote,
     )
+    return script_path_remote
+
+
+def _customize_and_run_template(
+    *,
+    template_filename: str,
+    replacements: set[tuple[str, str]],
+    script_dir_local: str,
+    script_dir_remote: str,
+    prefix: str,
+    fractal_ssh: FractalSSH,
+    logger_name: str,
+) -> str:
+    """
+    Customize one of the template bash scripts, transfer it to the remote host
+    via SFTP and then run it via SSH.
+
+    Args:
+        template_filename: Filename of the template file (ends with ".sh").
+        replacements: Dictionary of replacements.
+        script_dir_remote: Remote scripts directory
+        script_dir_local: Local folder where the script will be placed.
+        prefix: Prefix for the script filename.
+        fractal_ssh: FractalSSH object
+    """
+    logger = get_logger(logger_name=logger_name)
+    logger.debug(f"_customize_and_run_template {template_filename} - START")
+
+    script_path_remote = _customize_and_send_template(
+        template_filename=template_filename,
+        replacements=replacements,
+        script_dir_local=script_dir_local,
+        script_dir_remote=script_dir_remote,
+        prefix=prefix,
+        fractal_ssh=fractal_ssh,
+        logger_name=logger_name,
+    )
 
     # Execute script remotely
-    bash = "bash --login" if login_shell else "bash"
-    cmd = f"{bash} {script_path_remote}"
+    cmd = f"bash {script_path_remote}"
     logger.debug(f"Now run '{cmd}' over SSH.")
     stdout = fractal_ssh.run_command(cmd=cmd)
 

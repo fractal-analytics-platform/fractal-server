@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
@@ -552,6 +553,17 @@ def test_python_interpreters():
             settings = Settings(**attrs)
         assert f"Non-absolute value {key}=" in str(e.value)
 
+    # Missing FRACTAL_SLURM_WORKER_PYTHON for SSH backend
+    settings = Settings(
+        FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
+        FRACTAL_RUNNER_BACKEND="slurm_ssh",
+    )
+    with pytest.raises(
+        FractalConfigurationError,
+        match="Must set FRACTAL_SLURM_WORKER_PYTHON",
+    ):
+        settings.check_runner()
+
 
 def test_pixi_config(tmp_path):
     # Without Pixi config
@@ -572,6 +584,7 @@ def test_pixi_config(tmp_path):
         "PIXI_CONCURRENT_DOWNLOADS": 4,
         "DEFAULT_ENVIRONMENT": "default",
         "DEFAULT_PLATFORM": "linux-64",
+        "SLURM_CONFIG": None,
     }
     pixi_config_file = tmp_path / "pixi_config.json"
     with pixi_config_file.open("w") as f:
@@ -624,3 +637,56 @@ def test_pixi_config(tmp_path):
         json.dump(pixi_config, f)
     with pytest.raises(ValidationError):
         Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+
+    # Missing SLURM_CONFIG
+    pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.41.0": "/common/path/pixi/0.41.0/",
+        },
+    }
+    pixi_config_file = tmp_path / "pixi_config.json"
+    with pixi_config_file.open("w") as f:
+        json.dump(pixi_config, f)
+    settings = Settings(
+        FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
+        FRACTAL_RUNNER_BACKEND="slurm_ssh",
+        FRACTAL_SLURM_WORKER_PYTHON="/fake",
+        FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix(),
+    )
+    with pytest.raises(
+        FractalConfigurationError,
+        match="Pixi config must include SLURM_CONFIG",
+    ):
+        settings.check_runner()
+
+
+def test_pixi_slurm_config():
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="10K",
+    )
+    with pytest.raises(
+        ValueError,
+        match="units suffix",
+    ):
+        PixiSLURMConfig(
+            partition="fake",
+            time="100",
+            cpus=1,
+            mem="1000",
+        )
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="1000M",
+    )
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem="10G",
+    )
