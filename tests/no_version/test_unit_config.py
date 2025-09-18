@@ -553,6 +553,18 @@ def test_python_interpreters():
             settings = Settings(**attrs)
         assert f"Non-absolute value {key}=" in str(e.value)
 
+    # Missing FRACTAL_SLURM_WORKER_PYTHON for SSH backend
+    settings = Settings(
+        FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
+        FRACTAL_RUNNER_BACKEND="slurm_ssh",
+        # FRACTAL_SLURM_WORKER_PYTHON=None,
+    )
+    with pytest.raises(
+        FractalConfigurationError,
+        match="Must set FRACTAL_SLURM_WORKER_PYTHON",
+    ):
+        settings.check_runner()
+
 
 def test_pixi_config(tmp_path):
     # Without Pixi config
@@ -640,11 +652,12 @@ def test_pixi_config(tmp_path):
     settings = Settings(
         FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
+        FRACTAL_SLURM_WORKER_PYTHON="/fake",
         FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix(),
     )
     with pytest.raises(
         FractalConfigurationError,
-        match="Must set FRACTAL_SLURM_WORKER_PYTHON",
+        match="Pixi config must include SLURM_CONFIG",
     ):
         settings.check_runner()
 
