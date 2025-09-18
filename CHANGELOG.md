@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.16.2 (unreleased)
+# 2.16.2
 
 * Task life cycle:
     * Move `pixi install` execution to SLURM jobs, for SSH/SLURM deployment (\#2784).
