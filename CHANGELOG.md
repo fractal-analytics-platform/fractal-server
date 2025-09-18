@@ -5,7 +5,8 @@
 * Runner:
     * Drop top-level executor-error-related logs (\#2783).
 * Task life cycle:
-    * Move SSH/SLURM pixi task collection to a SLURM job (\#2784).
+    * Move `pixi install` execution to SLURM jobs, for SSH/SLURM deployment (\#2784).
+    * Add `SLURM_CONFIG` to `PixiSettings` (\#2784).
 
 # 2.16.0
 

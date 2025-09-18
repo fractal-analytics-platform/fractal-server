@@ -203,6 +203,7 @@ def collect_ssh_pixi(
                         pyproject_toml_path=pyproject_toml_path,
                     )
 
+                    # Run script 2 - run pixi-install command
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
@@ -222,10 +223,10 @@ def collect_ssh_pixi(
                         logger_name=LOGGER_NAME,
                         prefix=common_args["prefix"],
                     )
-
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    # Run script 3 - post-install
                     stdout = _customize_and_run_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
