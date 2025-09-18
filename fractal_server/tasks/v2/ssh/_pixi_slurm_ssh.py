@@ -70,8 +70,8 @@ def _run_squeue(
         state: The SLURM-job state.
     """
     try:
-        stdout = fractal_ssh.run_command(cmd=squeue_cmd)
-        state = stdout.strip().split()[1]
+        cmd_stdout = fractal_ssh.run_command(cmd=squeue_cmd)
+        state = cmd_stdout.strip().split()[1]
         return state
     except Exception as e:
         logger = get_logger(logger_name=logger_name)
@@ -84,6 +84,7 @@ def _verify_success_file_exists(
     fractal_ssh: FractalSSH,
     success_file_remote: str,
     logger_name: str,
+    stderr_remote: str,
 ) -> None:
     """
     Fail if the success sentinel file does not exist remotely.
@@ -92,6 +93,9 @@ def _verify_success_file_exists(
         logger = get_logger(logger_name=logger_name)
         error_msg = f"{success_file_remote=} missing."
         logger.info(error_msg)
+        if fractal_ssh.remote_exists(stderr_remote):
+            stderr = fractal_ssh.read_remote_text_file(stderr_remote)
+        logger.info(f"SLURM-job stderr:\n{stderr}")
         raise RuntimeError(error_msg)
 
 
@@ -196,6 +200,7 @@ def run_script_on_remote_slurm(
         fractal_ssh=fractal_ssh,
         logger_name=logger_name,
         success_file_remote=success_file_remote,
+        stderr_remote=stderr_remote,
     )
 
     logger.info("SLURM-job execution completed successfully, continue.")
