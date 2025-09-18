@@ -32,11 +32,3 @@ def test_pixi_slurm_config():
         cpus=1,
         mem="10G",
     )
-
-
-# def test_pixi_settings():
-#     PixiSettings(
-#         versions={"1": "/fake/1"},
-#         default_version="1",
-#         SLURM_CONFIG=
-#     )
