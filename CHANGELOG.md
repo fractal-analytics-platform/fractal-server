@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.16.1 (unreleased)
+
+* Runner:
+    * Drop top-level executor-error-related logs (\#2783).
+
 # 2.16.0
 
 * Runner:
