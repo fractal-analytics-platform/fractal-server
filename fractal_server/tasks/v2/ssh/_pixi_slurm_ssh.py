@@ -88,6 +88,12 @@ def _verify_success_file_exists(
 ) -> None:
     """
     Fail if the success sentinel file does not exist remotely.
+
+    Note: the `FractalSSH` methods in this function may fail, and such failures
+    are not handled in this function. Any such failure, however, will lead to
+    a "failed" task-group lifecycle activity (because it will raise an
+    exception from within `run_script_on_remote_slurm`, which will then be
+    handled at the calling-function level.
     """
     if not fractal_ssh.remote_exists(path=success_file_remote):
         logger = get_logger(logger_name=logger_name)
