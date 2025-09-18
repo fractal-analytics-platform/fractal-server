@@ -557,7 +557,6 @@ def test_python_interpreters():
     settings = Settings(
         FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        # FRACTAL_SLURM_WORKER_PYTHON=None,
     )
     with pytest.raises(
         FractalConfigurationError,
