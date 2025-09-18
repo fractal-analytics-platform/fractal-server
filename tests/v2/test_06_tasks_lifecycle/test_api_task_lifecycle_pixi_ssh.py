@@ -165,10 +165,6 @@ async def test_task_group_lifecycle_pixi_ssh(
         res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
         activity = res.json()
-
-        debug(activity["log"])
-        return
-
         assert activity["log"] is not None
         assert activity["timestamp_ended"] is not None
         assert activity["status"] == "OK"
