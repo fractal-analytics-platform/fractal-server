@@ -38,7 +38,12 @@ def _log_change_of_job_state(
     logger_name: str,
 ) -> None:
     """
-    FIXME docstring
+    Emit a log for state changes.
+
+    Args:
+        old_state:
+        new_state:
+        logger_name:
     """
     if new_state != old_state:
         logger = get_logger(logger_name=logger_name)
@@ -54,7 +59,15 @@ def _run_squeue(
     logger_name: str,
 ) -> str:
     """
-    FIXME docstring
+    Run a `squeue` command and handle exceptions.
+
+    Args:
+        fractal_ssh:
+        logger_name:
+        squeue_cmd:
+
+    Return:
+        state: The SLURM-job state.
     """
     try:
         stdout = fractal_ssh.run_command(cmd=squeue_cmd)
@@ -66,12 +79,15 @@ def _run_squeue(
         return FRACTAL_SQUEUE_ERROR_STATE
 
 
-def _assert_success_file_exists(
+def _verify_success_file_exists(
     *,
     fractal_ssh: FractalSSH,
     success_file_remote: str,
     logger_name: str,
 ) -> None:
+    """
+    Fail if the success sentinel file does not exist remotely.
+    """
     if not fractal_ssh.remote_exists(path=success_file_remote):
         logger = get_logger(logger_name=logger_name)
         error_msg = f"{success_file_remote=} missing."
@@ -178,7 +194,7 @@ def run_script_on_remote_slurm(
         old_state = new_state
         time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL)
 
-    _assert_success_file_exists(
+    _verify_success_file_exists(
         fractal_ssh=fractal_ssh,
         logger_name=logger_name,
         success_file_remote=success_file_remote,
