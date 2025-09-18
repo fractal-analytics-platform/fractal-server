@@ -143,6 +143,6 @@ def prepare_tasks_metadata(
     return task_list
 
 
-def get_current_log(logger_file_path: str) -> str:
+def get_current_log(logger_file_path: str | Path) -> str:
     with open(logger_file_path) as f:
         return f.read()

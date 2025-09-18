@@ -2,12 +2,18 @@ import os
 import time
 from pathlib import Path
 
+from sqlalchemy.orm import Session
+
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.config import get_settings
 from fractal_server.config import PixiSLURMConfig
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import get_current_log
 
+FRACTAL_SQUEUE_ERROR_STATE = "__FRACTAL_SQUEUE_ERROR__"
 
 # https://slurm.schedmd.com/squeue.html#lbAG
 STATES_FINISHED = {
@@ -21,7 +27,56 @@ STATES_FINISHED = {
     "PREEMPTED",
     "SPECIAL_EXIT",
     "TIMEOUT",
+    FRACTAL_SQUEUE_ERROR_STATE,
 }
+
+
+def _log_change_of_job_state(
+    *,
+    old_state: str | None,
+    new_state: str,
+    logger_name: str,
+) -> None:
+    """
+    FIXME docstring
+    """
+    if new_state != old_state:
+        logger = get_logger(logger_name=logger_name)
+        logger.debug(
+            f"SLURM-job state changed from {old_state=} to {new_state=}."
+        )
+
+
+def _run_squeue(
+    *,
+    fractal_ssh: FractalSSH,
+    squeue_cmd: str,
+    logger_name: str,
+) -> str:
+    """
+    FIXME docstring
+    """
+    try:
+        stdout = fractal_ssh.run_command(cmd=squeue_cmd)
+        state = stdout.strip().split()[1]
+        return state
+    except Exception as e:
+        logger = get_logger(logger_name=logger_name)
+        logger.info(f"`squeue` command failed (original error: {e})")
+        return FRACTAL_SQUEUE_ERROR_STATE
+
+
+def _assert_success_file_exists(
+    *,
+    fractal_ssh: FractalSSH,
+    success_file_remote: str,
+    logger_name: str,
+) -> None:
+    if not fractal_ssh.remote_exists(path=success_file_remote):
+        logger = get_logger(logger_name=logger_name)
+        error_msg = f"{success_file_remote=} missing."
+        logger.info(error_msg)
+        raise RuntimeError(error_msg)
 
 
 def run_script_on_remote_slurm(
@@ -30,10 +85,14 @@ def run_script_on_remote_slurm(
     slurm_config: PixiSLURMConfig,
     fractal_ssh: FractalSSH,
     logger_name: str,
+    log_file_path: Path,
     prefix: str,
+    db: Session,
+    activity: TaskGroupActivityV2,
 ):
     """
     FIXME
+
 
 
     NOTE: This is called from within a try/except, thus we can use exceptions
@@ -70,46 +129,61 @@ def run_script_on_remote_slurm(
         path=submission_script_remote,
         content=script_contents,
     )
+    logger.debug(f"Written {submission_script_remote=}.")
+
+    activity.log = get_current_log(log_file_path)
+    activity = add_commit_refresh(obj=activity, db=db)
 
     # (2) Submit SLURM job
+    logger.debug("Now submit SLURM job.")
     sbatch_cmd = f"sbatch --parsable {submission_script_remote} "
     try:
         stdout = fractal_ssh.run_command(cmd=sbatch_cmd)
+        job_id = int(stdout)
+        logger.debug(f"SLURM-job submission successful ({job_id=}).")
     except Exception as e:
         logger.error(
-            f"Submission of {submission_script_remote} failed. "
-            f"Original error: {str(e)}"
+            (
+                f"Submission of {submission_script_remote} failed. "
+                f"Original error: {str(e)}"
+            )
         )
         raise e
-    logger.debug(f"Now submit job {submission_script_remote} to SLURM.")
-    job_id = int(stdout)
-    logger.debug(f"SLURM-job submission successful ({job_id=}).")
+    finally:
+        activity.log = get_current_log(log_file_path)
+        activity = add_commit_refresh(obj=activity, db=db)
 
     # (3) Monitor job
     squeue_cmd = (
         f"squeue --noheader --format='%i %T' --states=all --jobs={job_id}"
     )
+    logger.debug(f"Start monitoring job with {squeue_cmd=}.")
+    old_state = None
     while True:
-        try:
-            stdout = fractal_ssh.run_command(cmd=squeue_cmd)
-        except Exception as e:
-            # FIXME: review this logic
-            logger.info(
-                f"`squeue` command failed (original error: {e}), "
-                "consider the job as complete."
-            )
+        new_state = _run_squeue(
+            fractal_ssh=fractal_ssh,
+            squeue_cmd=squeue_cmd,
+            logger_name=logger_name,
+        )
+        _log_change_of_job_state(
+            old_state=old_state,
+            new_state=new_state,
+            logger_name=logger_name,
+        )
+        activity.log = get_current_log(log_file_path)
+        activity = add_commit_refresh(obj=activity, db=db)
+        if new_state in STATES_FINISHED:
+            logger.debug(f"Exit retrieval loop (state={new_state}).")
             break
-        state = stdout.strip().split()[1]
-        logger.debug(f"Status of SLURM job {job_id}: {state}")
-        if state in STATES_FINISHED:
-            logger.debug(f"Exit retrieval loop ({state=}).")
-            break
+        old_state = new_state
         time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL)
 
-    if fractal_ssh.remote_exists(path=success_file_remote):
-        logger.info(f"{success_file_remote=} exists.")
-    else:
-        raise RuntimeError(
-            "SLURM job did not complete correctly "
-            f"({success_file_remote=} missing)."
-        )
+    _assert_success_file_exists(
+        fractal_ssh=fractal_ssh,
+        logger_name=logger_name,
+        success_file_remote=success_file_remote,
+    )
+
+    logger.info("SLURM-job execution completed successfully, continue.")
+    activity.log = get_current_log(log_file_path)
+    activity = add_commit_refresh(obj=activity, db=db)

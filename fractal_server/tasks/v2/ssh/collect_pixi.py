@@ -222,6 +222,8 @@ def collect_ssh_pixi(
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                         prefix=common_args["prefix"],
+                        db=db,
+                        activity=activity,
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
