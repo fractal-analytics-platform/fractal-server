@@ -107,9 +107,7 @@ def run_script_on_remote_slurm(
     activity: TaskGroupActivityV2,
 ):
     """
-    FIXME
-
-
+    Run a `pixi install` script as a SLURM job.
 
     NOTE: This is called from within a try/except, thus we can use exceptions
     as a mechanism to propagate failure/errors.
