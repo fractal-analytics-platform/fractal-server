@@ -605,12 +605,6 @@ class Settings(BaseSettings):
     still running on SLURM.
     """
 
-    FRACTAL_SLURM_SBATCH_SLEEP: float = 0
-    """
-    Interval to wait (in seconds) between two subsequent `sbatch` calls, when
-    running a task that produces multiple SLURM jobs.
-    """
-
     FRACTAL_PIP_CACHE_DIR: AbsolutePathStr | None = None
     """
     Absolute path to the cache directory for `pip`; if unset,

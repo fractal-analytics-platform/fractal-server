@@ -1,12 +1,16 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.16.1 (unreleased)
+# 2.16.2 (unreleased)
 
-* Runner:
-    * Drop top-level executor-error-related logs (\#2783).
 * Task life cycle:
     * Move `pixi install` execution to SLURM jobs, for SSH/SLURM deployment (\#2784).
     * Add `SLURM_CONFIG` to `PixiSettings` (\#2784).
+
+# 2.16.1
+
+* Runner:
+    * Drop top-level executor-error-related logs (\#2783).
+    * Drop obsolete `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable (\#2785).
 
 # 2.16.0
 
