@@ -101,7 +101,7 @@ def _verify_success_file_exists(
         logger.info(error_msg)
         if fractal_ssh.remote_exists(stderr_remote):
             stderr = fractal_ssh.read_remote_text_file(stderr_remote)
-        logger.info(f"SLURM-job stderr:\n{stderr}")
+            logger.info(f"SLURM-job stderr:\n{stderr}")
         raise RuntimeError(error_msg)
 
 
