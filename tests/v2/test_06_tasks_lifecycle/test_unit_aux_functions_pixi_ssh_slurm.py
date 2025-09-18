@@ -47,8 +47,9 @@ def test_verify_success_file_exists(fractal_ssh: FractalSSH):
     with pytest.raises(RuntimeError, match="missing"):
         _verify_success_file_exists(
             fractal_ssh=fractal_ssh,
-            success_file_remote="/missing",
+            success_file_remote="/missing-success-file",
             logger_name="my-logger",
+            stderr_remote="/missing-stderr",
         )
 
 
