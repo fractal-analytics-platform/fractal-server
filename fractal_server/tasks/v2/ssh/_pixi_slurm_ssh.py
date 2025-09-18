@@ -150,7 +150,7 @@ def run_script_on_remote_slurm(
 
     # (2) Submit SLURM job
     logger.debug("Now submit SLURM job.")
-    sbatch_cmd = f"sbatch --parsable {submission_script_remote} "
+    sbatch_cmd = f"sbatch --parsable {submission_script_remote}"
     try:
         stdout = fractal_ssh.run_command(cmd=sbatch_cmd)
         job_id = int(stdout)

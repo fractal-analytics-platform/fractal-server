@@ -1,7 +1,9 @@
 import logging
+from pathlib import Path
 
 import pytest
 
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _log_change_of_job_state,
@@ -12,6 +14,9 @@ from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
 )
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     FRACTAL_SQUEUE_ERROR_STATE,
+)
+from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
+    run_script_on_remote_slurm,
 )
 
 
@@ -44,4 +49,53 @@ def test_verify_success_file_exists(fractal_ssh: FractalSSH):
             fractal_ssh=fractal_ssh,
             success_file_remote="/missing",
             logger_name="my-logger",
+        )
+
+
+def test_sbatch_failure(
+    tmp777_path: Path,
+    monkeypatch,
+):
+    class MockFractalSSH(FractalSSH):
+        def write_remote_file(self, *args, **kwargs):
+            pass
+
+        def run_command(self, cmd, *args, **kwargs):
+            raise ValueError(f"Fake failure of {cmd}")
+
+    import fractal_server.tasks.v2.ssh._pixi_slurm_ssh
+
+    class MockActivity:
+        log: str = "log"
+
+    def _get_MockActivity(*args, **kwargs) -> MockActivity:
+        return MockActivity()
+
+    monkeypatch.setattr(
+        fractal_server.tasks.v2.ssh._pixi_slurm_ssh,
+        "add_commit_refresh",
+        _get_MockActivity,
+    )
+
+    script_path = (tmp777_path / "script.sh").as_posix()
+    log_file_path = tmp777_path / "logs"
+    log_file_path.touch()
+    with pytest.raises(
+        ValueError,
+        match="sbatch",
+    ):
+        run_script_on_remote_slurm(
+            script_path=script_path,
+            slurm_config=PixiSLURMConfig(
+                mem="1G",
+                cpus=1,
+                partition="main",
+                time="10",
+            ),
+            fractal_ssh=MockFractalSSH(connection=None),
+            logger_name="my-logger",
+            log_file_path=log_file_path,
+            prefix="prefix",
+            activity=MockActivity(),
+            db=None,
         )
