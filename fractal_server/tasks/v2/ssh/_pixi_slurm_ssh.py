@@ -32,6 +32,9 @@ STATES_FINISHED = {
 
 
 def _get_workdir_remote(script_paths: list[str]) -> str:
+    """
+    Check that there is one and only one `workdir`, and return it.
+    """
     workdirs = [
         Path(script_path).parent.as_posix() for script_path in script_paths
     ]
