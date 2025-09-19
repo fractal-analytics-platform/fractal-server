@@ -203,47 +203,34 @@ def collect_ssh_pixi(
                         pyproject_toml_path=pyproject_toml_path,
                     )
 
-                    # Run script 2 - run pixi-install command
+                    # Prepare scripts 2 and 3
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
                         **common_args,
                     )
-                    logger.debug(
-                        "Installation script written to "
-                        f"{remote_script2_path=}."
-                    )
-                    activity.log = get_current_log(log_file_path)
-                    activity = add_commit_refresh(obj=activity, db=db)
-
-                    run_script_on_remote_slurm(
-                        script_path=remote_script2_path,
-                        slurm_config=settings.pixi.SLURM_CONFIG,
-                        fractal_ssh=fractal_ssh,
-                        logger_name=LOGGER_NAME,
-                        prefix=common_args["prefix"],
-                        db=db,
-                        activity=activity,
-                        log_file_path=log_file_path,
-                    )
-                    activity.log = get_current_log(log_file_path)
-                    activity = add_commit_refresh(obj=activity, db=db)
-
-                    # Run script 3 - post-install
                     remote_script3_path = _customize_and_send_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
                         **common_args,
                     )
                     logger.debug(
+                        "Post-installation script written to "
+                        f"{remote_script3_path=}."
+                    )
+                    logger.debug(
                         "Installation script written to "
                         f"{remote_script2_path=}."
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
+                    # Run scripts 2 and 3
                     stdout = run_script_on_remote_slurm(
-                        script_path=remote_script3_path,
+                        script_paths=[
+                            remote_script2_path,
+                            remote_script3_path,
+                        ],
                         slurm_config=settings.pixi.SLURM_CONFIG,
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
@@ -252,7 +239,6 @@ def collect_ssh_pixi(
                         activity=activity,
                         log_file_path=log_file_path,
                     )
-                    logger.debug(f"STDOUT: {stdout}")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 

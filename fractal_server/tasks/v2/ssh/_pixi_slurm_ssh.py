@@ -31,6 +31,14 @@ STATES_FINISHED = {
 }
 
 
+def _get_workdir_remote(script_paths: list[str]) -> str:
+    workdirs = [
+        Path(script_path).parent.as_posix() for script_path in script_paths
+    ]
+    if not len(set(workdirs)) == 1:
+        raise ValueError(f"Invalid {script_paths=}.")
+
+
 def _read_file_if_exists(
     *,
     fractal_ssh: FractalSSH,
@@ -124,7 +132,7 @@ def _verify_success_file_exists(
 
 def run_script_on_remote_slurm(
     *,
-    script_path: str,
+    script_paths: list[str],
     slurm_config: PixiSLURMConfig,
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -144,7 +152,7 @@ def run_script_on_remote_slurm(
     settings = Inject(get_settings)
 
     # (1) Prepare remote submission script
-    workdir_remote = Path(script_path).parent.as_posix()
+    workdir_remote = _get_workdir_remote(script_paths)
     submission_script_remote = os.path.join(
         workdir_remote, f"{prefix}-submit.sh"
     )
@@ -161,10 +169,11 @@ def run_script_on_remote_slurm(
         f"#SBATCH --out={stdout_remote}",
         f"#SBATCH -D {workdir_remote}",
         "",
-        f"bash {script_path}",
-        f"touch {success_file_remote}",
-        "",
     ]
+    for script_path in script_paths:
+        script_lines.append(f"bash {script_path}")
+    script_lines.append(f"touch {success_file_remote}")
+
     script_contents = "\n".join(script_lines)
     fractal_ssh.write_remote_file(
         path=submission_script_remote,
