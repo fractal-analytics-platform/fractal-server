@@ -230,10 +230,27 @@ def collect_ssh_pixi(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Run script 3 - post-install
-                    stdout = _customize_and_run_template(
+                    remote_script3_path = _customize_and_send_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
                         **common_args,
+                    )
+                    logger.debug(
+                        "Installation script written to "
+                        f"{remote_script2_path=}."
+                    )
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    stdout = run_script_on_remote_slurm(
+                        script_path=remote_script3_path,
+                        slurm_config=settings.pixi.SLURM_CONFIG,
+                        fractal_ssh=fractal_ssh,
+                        logger_name=LOGGER_NAME,
+                        prefix=common_args["prefix"],
+                        db=db,
+                        activity=activity,
+                        log_file_path=log_file_path,
                     )
                     logger.debug(f"STDOUT: {stdout}")
                     activity.log = get_current_log(log_file_path)

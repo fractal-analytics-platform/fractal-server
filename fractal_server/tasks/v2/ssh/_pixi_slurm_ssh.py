@@ -31,6 +31,20 @@ STATES_FINISHED = {
 }
 
 
+def _read_file_if_exists(
+    *,
+    fractal_ssh: FractalSSH,
+    path: str,
+) -> str:
+    """
+    Read a remote file if it exists, or return an empty string.
+    """
+    if fractal_ssh.remote_exists(path=path):
+        return fractal_ssh.read_remote_text_file(path)
+    else:
+        return ""
+
+
 def _log_change_of_job_state(
     *,
     old_state: str | None,
@@ -99,8 +113,11 @@ def _verify_success_file_exists(
         logger = get_logger(logger_name=logger_name)
         error_msg = f"{success_file_remote=} missing."
         logger.info(error_msg)
-        if fractal_ssh.remote_exists(stderr_remote):
-            stderr = fractal_ssh.read_remote_text_file(stderr_remote)
+
+        stderr = _read_file_if_exists(
+            fractal_ssh=fractal_ssh, path=stderr_remote
+        )
+        if stderr:
             logger.info(f"SLURM-job stderr:\n{stderr}")
         raise RuntimeError(error_msg)
 
@@ -209,6 +226,13 @@ def run_script_on_remote_slurm(
         stderr_remote=stderr_remote,
     )
 
+    stdout = _read_file_if_exists(
+        fractal_ssh=fractal_ssh,
+        path=stdout_remote,
+    )
+
     logger.info("SLURM-job execution completed successfully, continue.")
     activity.log = get_current_log(log_file_path)
     activity = add_commit_refresh(obj=activity, db=db)
+
+    return stdout
