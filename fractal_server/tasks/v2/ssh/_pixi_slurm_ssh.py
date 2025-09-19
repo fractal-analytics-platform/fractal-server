@@ -37,6 +37,7 @@ def _get_workdir_remote(script_paths: list[str]) -> str:
     ]
     if not len(set(workdirs)) == 1:
         raise ValueError(f"Invalid {script_paths=}.")
+    return workdirs[0]
 
 
 def _read_file_if_exists(
