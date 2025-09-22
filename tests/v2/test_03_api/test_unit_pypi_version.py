@@ -6,10 +6,24 @@ from httpx import TimeoutException
 
 import fractal_server.app.routes.api.v2._aux_functions_task_lifecycle
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
+    _find_latest_version_or_422,
+)
+from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
 
 PKG = "fractal-tasks-core"
+
+
+def test_find_latest_version_or_422():
+    latest = _find_latest_version_or_422(["1.2.3", "3.4.5", "6.7a0"])
+    debug(latest)
+    assert latest == "6.7a0"
+    with pytest.raises(
+        HTTPException, match="Cannot find latest version"
+    ) as exc_info:
+        _find_latest_version_or_422(["1.2.3", "3.4.5", "aaa"])
+    debug(exc_info.value)
 
 
 async def test_get_package_version_from_pypi():
