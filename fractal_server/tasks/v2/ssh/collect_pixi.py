@@ -230,6 +230,7 @@ def collect_ssh_pixi(
                         script_paths=[
                             remote_script2_path,
                             remote_script3_path,
+                            f"chmod -R 755 {source_dir}",
                         ],
                         slurm_config=settings.pixi.SLURM_CONFIG,
                         fractal_ssh=fractal_ssh,
@@ -250,8 +251,6 @@ def collect_ssh_pixi(
                     project_python_wrapper = parsed_output[
                         "project_python_wrapper"
                     ]
-
-                    fractal_ssh.run_command(cmd=f"chmod -R 755 {source_dir}")
 
                     # Read and validate remote manifest file
                     manifest_path_remote = (
