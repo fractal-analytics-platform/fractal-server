@@ -157,7 +157,7 @@ async def set_user_groups(
     default_group_id = await _get_default_usergroup_id(db=db)
     if default_group_id not in target_group_ids:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot remove user from "
                 f"'{FRACTAL_DEFAULT_GROUP_NAME}' group.",

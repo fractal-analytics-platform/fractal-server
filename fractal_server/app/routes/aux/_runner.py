@@ -15,7 +15,7 @@ def _backend_supports_shutdown(backend: str) -> bool:
 def _check_shutdown_is_supported():
     """
     Raises:
-        HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY):
+        HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT):
             If FRACTAL_RUNNER_BACKEND is the thread-based 'local' backend.
     """
     settings = Inject(get_settings)
@@ -23,7 +23,7 @@ def _check_shutdown_is_supported():
 
     if not _backend_supports_shutdown(backend):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Stopping a job execution is not implemented for "
                 f"FRACTAL_RUNNER_BACKEND={backend}."

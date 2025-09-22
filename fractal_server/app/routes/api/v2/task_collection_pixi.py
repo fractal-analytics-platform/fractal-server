@@ -54,13 +54,13 @@ logger = set_logger(__name__)
 def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
     if not filename.endswith(".tar.gz"):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"{filename=} does not end with '.tar.gz'.",
         )
     filename_splitted = filename.split("-")
     if len(filename_splitted) != 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Invalid filename: '{filename}' must contain a single `-` "
                 "character, separating the package name from the version "
@@ -93,7 +93,7 @@ async def collect_task_pixi(
     # Check if Pixi is available
     if settings.pixi is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Pixi task collection is not available.",
         )
     # Check if provided Pixi version is available. Use default if not provided
@@ -102,7 +102,7 @@ async def collect_task_pixi(
     else:
         if pixi_version not in settings.pixi.versions:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Pixi version {pixi_version} is not available. Available "
                     f"versions: {list(settings.pixi.versions.keys())}"
@@ -165,7 +165,7 @@ async def collect_task_pixi(
     if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
         if Path(task_group_path).exists():
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"{task_group_path} already exists.",
             )
 

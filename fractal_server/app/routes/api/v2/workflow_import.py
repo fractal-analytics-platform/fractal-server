@@ -248,7 +248,7 @@ async def import_workflow(
             )
         if task_id is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Could not find a task matching with {wf_task.task}.",
             )
         new_wf_task = WorkflowTaskCreateV2(

@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Task life cycle:
+    * Switch to PyPI Index API for finding latest package versions (\#2790).
+* API:
+    * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
+* Dependencies:
+    * Bump `fastapi` version (\#2790).
+
 # 2.16.3
 
 * Task life cycle:

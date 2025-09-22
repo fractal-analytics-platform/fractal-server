@@ -119,7 +119,7 @@ async def _verify_workflow_and_dataset_access(
     )
     if workflow.project_id != project_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Workflow does not belong to expected project.",
         )
     dataset = await _get_dataset_or_404(
@@ -128,7 +128,7 @@ async def _verify_workflow_and_dataset_access(
     )
     if dataset.project_id != project_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Dataset does not belong to expected project.",
         )
 

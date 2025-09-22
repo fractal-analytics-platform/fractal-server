@@ -182,7 +182,7 @@ async def _get_task_read_access(
     if require_active:
         if not task_group.active:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Error: task {task_id} ({task.name}) is not active.",
             )
     return task
@@ -206,7 +206,7 @@ async def _get_valid_user_group_id(
     """
     if (user_group_id is not None) and (private is True):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Cannot set both {user_group_id=} and {private=}",
         )
     elif private is True:
@@ -278,7 +278,7 @@ async def _verify_non_duplication_user_constraint(
             )
             logger.error(f"UnreachableBranchError: {error_msg}")
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Invalid state: {error_msg}\n"
                     "This should have not happened: please contact an admin."
@@ -288,7 +288,7 @@ async def _verify_non_duplication_user_constraint(
             duplicate[0].id, db
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"User '{user.email}' already owns a task group "
                 f"with name='{pkg_name}' and {version=}.{state_msg}"
@@ -323,7 +323,7 @@ async def _verify_non_duplication_group_constraint(
             )
             logger.error(error_msg)
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Invalid state:\n{error_msg}"
                     "This should have not happened: please contact an admin."
@@ -333,7 +333,7 @@ async def _verify_non_duplication_group_constraint(
             duplicate[0].id, db
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"UserGroup {user_group.name} already owns a task group "
                 f"with {pkg_name=} and {version=}.{state_msg}"
@@ -355,7 +355,7 @@ async def _verify_non_duplication_group_path(
     duplicate_ids = res.scalars().all()
     if duplicate_ids:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Other TaskGroups already have {path=}: "
                 f"{sorted(duplicate_ids)}."
@@ -398,6 +398,6 @@ def _check_type_filters_compatibility(
         )
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
         )

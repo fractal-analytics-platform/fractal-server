@@ -112,12 +112,12 @@ async def patch_task(
     # Forbid changes that set a previously unset command
     if db_task.type == TaskType.NON_PARALLEL and "command_parallel" in update:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot set an unset `command_parallel`.",
         )
     if db_task.type == TaskType.PARALLEL and "command_non_parallel" in update:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot set an unset `command_non_parallel`.",
         )
 
@@ -157,7 +157,7 @@ async def create_task(
         or task.meta_non_parallel is not None
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot set `TaskV2.args_schema_non_parallel` or "
                 "`TaskV2.args_schema_non_parallel` if TaskV2 is parallel"
@@ -167,7 +167,7 @@ async def create_task(
         task.args_schema_parallel is not None or task.meta_parallel is not None
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot set `TaskV2.args_schema_parallel` or "
                 "`TaskV2.args_schema_parallel` if TaskV2 is non_parallel"

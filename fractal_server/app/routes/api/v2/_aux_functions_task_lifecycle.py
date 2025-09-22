@@ -2,6 +2,8 @@ from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
 from httpx import TimeoutException
+from packaging.version import InvalidVersion
+from packaging.version import Version
 from sqlmodel import func
 from sqlmodel import select
 
@@ -15,9 +17,31 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.logger import set_logger
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
+
+# See https://packaging.python.org/en/latest/specifications/simple-repository-api/#content-types  # noqa
+PYPI_JSON_HEADERS = {"Accept": "application/vnd.pypi.simple.v1+json"}
 
 
 logger = set_logger(__name__)
+
+
+def _find_latest_version_or_422(versions: list[str]) -> str:
+    """
+    > For PEP 440 versions, this is easy enough for the client to do (using
+    > the `packaging` library [...]. For non-standard versions, there is no
+    > well-defined ordering, and clients will need to decide on what rule is
+    > appropriate for their needs.
+    (https://peps.python.org/pep-0700/#why-not-provide-a-latest-version-value)
+    """
+    try:
+        latest = max(versions, key=lambda v_str: Version(v_str))
+        return latest
+    except InvalidVersion as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Cannot find latest version (original error: {str(e)}).",
+        )
 
 
 async def get_package_version_from_pypi(
@@ -41,14 +65,14 @@ async def get_package_version_from_pypi(
             Could be a correct version (`1.3.0`), an incomplete one
             (`1.3`) or `None`.
     """
-
-    url = f"https://pypi.org/pypi/{name}/json"
+    normalized_name = normalize_package_name(name)
+    url = f"https://pypi.org/simple/{normalized_name}/"
     hint = f"Hint: specify the required version for '{name}'."
 
     # Make request to PyPI
     try:
         async with AsyncClient(timeout=5.0) as client:
-            res = await client.get(url)
+            res = await client.get(url, headers=PYPI_JSON_HEADERS)
     except TimeoutException as e:
         error_msg = (
             f"A TimeoutException occurred while getting {url}.\n"
@@ -56,7 +80,7 @@ async def get_package_version_from_pypi(
         )
         logger.warning(error_msg)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
     except BaseException as e:
@@ -66,14 +90,14 @@ async def get_package_version_from_pypi(
         )
         logger.warning(error_msg)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
 
     # Parse response
     if res.status_code != 200:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Could not get {url} (status_code {res.status_code})."
                 f"\n{hint}"
@@ -81,15 +105,15 @@ async def get_package_version_from_pypi(
         )
     try:
         response_data = res.json()
-        latest_version = response_data["info"]["version"]
-        available_releases = response_data["releases"].keys()
+        available_releases = response_data["versions"]
+        latest_version = _find_latest_version_or_422(available_releases)
     except KeyError as e:
         logger.warning(
             f"A KeyError occurred while getting {url}. "
             f"Original error: {str(e)}."
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"A KeyError error occurred while getting {url}.\n{hint}",
         )
 
@@ -118,7 +142,7 @@ async def get_package_version_from_pypi(
             if len(matching_versions) == 0:
                 logger.info(f"No version starting with {version} found.")
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
                         f"No version starting with {version} found.\n"
                         f"{hint}"
@@ -167,7 +191,7 @@ async def check_no_ongoing_activity(
             f"timestamp_started={activity.timestamp_started}."
         )
     raise HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         detail=msg,
     )
 
@@ -198,7 +222,7 @@ async def check_no_submitted_job(
     num_submitted_jobs = res.scalar()
     if num_submitted_jobs > 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot act on task group because {num_submitted_jobs} "
                 "submitted jobs use its tasks."
@@ -222,6 +246,6 @@ async def check_no_related_workflowtask(
     bad_wftask = res.scalars().first()
     if bad_wftask is not None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"TaskV2 {bad_wftask.task_id} is still in use",
         )

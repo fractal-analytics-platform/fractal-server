@@ -145,7 +145,7 @@ def parse_request_data(
 
     except (ValidationError, json.JSONDecodeError) as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid request-body\n{str(e)}",
         )
 
@@ -193,7 +193,7 @@ async def collect_tasks_pip(
         )
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Python version {task_group_attrs['python_version']} is "
                 "not available for Fractal task collection."
@@ -229,7 +229,7 @@ async def collect_tasks_pip(
             )
         except ValueError as e:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Invalid wheel-file name {wheel_filename}. "
                     f"Original error: {str(e)}",
@@ -283,7 +283,7 @@ async def collect_tasks_pip(
         TaskGroupCreateV2Strict(**task_group_attrs)
     except ValidationError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid task-group object. Original error: {e}",
         )
 
@@ -313,7 +313,7 @@ async def collect_tasks_pip(
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"{task_group_path} already exists.",
             )
 

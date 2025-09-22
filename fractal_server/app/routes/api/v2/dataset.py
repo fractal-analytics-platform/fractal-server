@@ -47,7 +47,7 @@ async def create_dataset(
     if dataset.zarr_dir is None:
         if user.settings.project_dir is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Both 'dataset.zarr_dir' and 'user.settings.project_dir' "
                     "are null"
@@ -158,7 +158,7 @@ async def update_dataset(
 
     if (dataset_update.zarr_dir is not None) and (len(db_dataset.images) != 0):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot modify `zarr_dir` because the dataset has a non-empty "
                 "image list."
@@ -203,7 +203,7 @@ async def delete_dataset(
     if jobs:
         string_ids = str([job.id for job in jobs])[1:-1]
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot delete dataset {dataset.id} because it "
                 f"is linked to active job(s) {string_ids}."
@@ -287,7 +287,7 @@ async def import_dataset(
     for image in dataset.images:
         if not image.zarr_url.startswith(dataset.zarr_dir):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Cannot import dataset: zarr_url {image.zarr_url} is not "
                     f"relative to zarr_dir={dataset.zarr_dir}."
