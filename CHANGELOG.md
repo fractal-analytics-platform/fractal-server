@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
+
 # 2.16.3
 
 * Task life cycle:
