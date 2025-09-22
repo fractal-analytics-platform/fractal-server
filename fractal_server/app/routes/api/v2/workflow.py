@@ -151,7 +151,7 @@ async def update_workflow(
                 workflow_id=workflow_id, db=db
             ):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
                         "Cannot re-order WorkflowTasks while a Job is running "
                         "for this Workflow."
@@ -166,7 +166,7 @@ async def update_workflow(
                 current_workflowtask_ids
             ):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
                         "`reordered_workflowtask_ids` must be a permutation of"
                         f" {current_workflowtask_ids} (given {value})"
@@ -225,7 +225,7 @@ async def delete_workflow(
     if jobs:
         string_ids = str([job.id for job in jobs])[1:-1]
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot delete workflow {workflow.id} because it "
                 f"is linked to active job(s) {string_ids}."
@@ -320,7 +320,7 @@ async def get_workflow_type_filters(
     num_tasks = len(workflow.task_list)
     if num_tasks == 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Workflow has no tasks.",
         )
 

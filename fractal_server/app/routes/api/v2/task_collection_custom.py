@@ -60,7 +60,7 @@ async def collect_task_custom(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         if task_collect.package_root is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
     else:
@@ -68,7 +68,7 @@ async def collect_task_custom(
             task_collect.python_interpreter, os.X_OK
         ) or not os.access(task_collect.python_interpreter, os.R_OK):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"{task_collect.python_interpreter=} "
                     "is not accessible to the Fractal user "
@@ -77,13 +77,13 @@ async def collect_task_custom(
             )
         if not Path(task_collect.python_interpreter).is_file():
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"{task_collect.python_interpreter=} is not a file.",
             )
         if task_collect.package_root is not None:
             if not os.access(task_collect.package_root, os.R_OK):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
                         f"{task_collect.package_root=} "
                         "is not accessible to the Fractal user."
@@ -91,7 +91,7 @@ async def collect_task_custom(
                 )
             if not Path(task_collect.package_root).is_dir():
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"{task_collect.package_root=} is not a directory.",
                 )
 
@@ -125,7 +125,7 @@ async def collect_task_custom(
             or ("\n" in res.stdout.strip("\n"))
         ):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Cannot determine 'package_root'.\n"
                     f"Original output: {res.stdout}\n"

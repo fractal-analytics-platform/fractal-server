@@ -105,7 +105,7 @@ async def _get_workflow_check_owner(
         )
     if workflow.project_id != project.id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(f"Invalid {project_id=} for {workflow_id=}."),
         )
 
@@ -159,7 +159,7 @@ async def _get_workflow_task_check_owner(
     # If WorkflowTask is not part of the expected Workflow, exit
     if workflow_id != workflow_task.workflow_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid {workflow_id=} for {workflow_task_id=}",
         )
 
@@ -192,7 +192,7 @@ async def _check_workflow_exists(
     res = await db.execute(stm)
     if res.scalars().all():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Workflow with {name=} and {project_id=} already exists.",
         )
 
@@ -224,7 +224,7 @@ async def _check_project_exists(
     res = await db.execute(stm)
     if res.scalars().all():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Project name ({project_name}) already in use",
         )
 
@@ -268,7 +268,7 @@ async def _get_dataset_check_owner(
         )
     if dataset.project_id != project_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
 
@@ -313,7 +313,7 @@ async def _get_job_check_owner(
         )
     if job.project_id != project_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid {project_id=} for {job_id=}",
         )
     return dict(job=job, project=project)
@@ -535,6 +535,6 @@ async def _get_submitted_job_or_none(
         )
         logger.error(f"{error_msg} Original error: {str(e)}.")
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )

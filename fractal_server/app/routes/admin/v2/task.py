@@ -99,7 +99,7 @@ async def query_tasks(
     if len(task_list) > max_number_of_results:
         await db.close()
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Too many Tasks ({len(task_list)} > {max_number_of_results})."
                 " Please add more query filters."

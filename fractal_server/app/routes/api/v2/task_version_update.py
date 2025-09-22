@@ -201,7 +201,7 @@ async def replace_workflowtask(
         new_type=new_task.type,
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot change task type from "
                 f"{workflow_task.task_type} to {new_task.type}."
@@ -213,7 +213,7 @@ async def replace_workflowtask(
         and new_task.type == TaskType.PARALLEL
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot set 'args_non_parallel' for parallel task.",
         )
     if (
@@ -221,7 +221,7 @@ async def replace_workflowtask(
         and new_task.type == TaskType.NON_PARALLEL
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot set 'args_parallel' for non-parallel task.",
         )
     _check_type_filters_compatibility(

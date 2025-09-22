@@ -84,7 +84,7 @@ async def apply_workflow(
     num_tasks = len(workflow.task_list)
     if num_tasks == 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Workflow {workflow_id} has empty task list",
         )
 
@@ -99,7 +99,7 @@ async def apply_workflow(
         job_create.last_task_index = last_task_index
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Invalid values for first_task_index or last_task_index "
                 f"(with {num_tasks=}).\n"
@@ -136,7 +136,7 @@ async def apply_workflow(
     res = await db.execute(stm)
     if res.scalars().all():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Dataset {dataset_id} is already in use "
                 "in submitted job(s)."
@@ -146,7 +146,7 @@ async def apply_workflow(
     if job_create.slurm_account is not None:
         if job_create.slurm_account not in user_settings.slurm_accounts:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"SLURM account '{job_create.slurm_account}' is not "
                     "among those available to the current user"
@@ -172,7 +172,7 @@ async def apply_workflow(
                 f"Original error: '{str(e)}'."
             )
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Error in setting up the SSH connection.",
             )
     else:

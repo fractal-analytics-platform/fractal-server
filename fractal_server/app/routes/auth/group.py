@@ -144,7 +144,7 @@ async def delete_single_group(
 
     if group.name == FRACTAL_DEFAULT_GROUP_NAME:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot delete default UserGroup "
                 f"'{FRACTAL_DEFAULT_GROUP_NAME}'."
@@ -223,7 +223,7 @@ async def remove_user_from_group(
     default_user_group_id = await _get_default_usergroup_id(db=db)
     if default_user_group_id == group_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
                 "group.",

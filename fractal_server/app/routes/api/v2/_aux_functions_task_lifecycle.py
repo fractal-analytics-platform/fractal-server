@@ -56,7 +56,7 @@ async def get_package_version_from_pypi(
         )
         logger.warning(error_msg)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
     except BaseException as e:
@@ -66,14 +66,14 @@ async def get_package_version_from_pypi(
         )
         logger.warning(error_msg)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
 
     # Parse response
     if res.status_code != 200:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Could not get {url} (status_code {res.status_code})."
                 f"\n{hint}"
@@ -89,7 +89,7 @@ async def get_package_version_from_pypi(
             f"Original error: {str(e)}."
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"A KeyError error occurred while getting {url}.\n{hint}",
         )
 
@@ -118,7 +118,7 @@ async def get_package_version_from_pypi(
             if len(matching_versions) == 0:
                 logger.info(f"No version starting with {version} found.")
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
                         f"No version starting with {version} found.\n"
                         f"{hint}"
@@ -167,7 +167,7 @@ async def check_no_ongoing_activity(
             f"timestamp_started={activity.timestamp_started}."
         )
     raise HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         detail=msg,
     )
 
@@ -198,7 +198,7 @@ async def check_no_submitted_job(
     num_submitted_jobs = res.scalar()
     if num_submitted_jobs > 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot act on task group because {num_submitted_jobs} "
                 "submitted jobs use its tasks."
@@ -222,6 +222,6 @@ async def check_no_related_workflowtask(
     bad_wftask = res.scalars().first()
     if bad_wftask is not None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"TaskV2 {bad_wftask.task_id} is still in use",
         )

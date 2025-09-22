@@ -67,7 +67,7 @@ async def deactivate_task_group(
     # Check that task-group is active
     if not task_group.active:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot deactivate a task group with {task_group.active=}."
             ),
@@ -173,7 +173,7 @@ async def reactivate_task_group(
     # Check that task-group is not active
     if task_group.active:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot reactivate a task group with {task_group.active=}."
             ),
@@ -210,7 +210,7 @@ async def reactivate_task_group(
 
     if task_group.env_info is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot reactivate a task group with "
                 f"{task_group.env_info=}."

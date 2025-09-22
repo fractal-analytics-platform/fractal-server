@@ -55,7 +55,7 @@ async def create_workflowtask(
             or wftask.args_non_parallel is not None
         ):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
                     "`WorkflowTask.args_non_parallel` if the associated Task "
@@ -68,7 +68,7 @@ async def create_workflowtask(
             or wftask.args_parallel is not None
         ):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Cannot set `WorkflowTaskV2.meta_parallel` or "
                     "`WorkflowTask.args_parallel` if the associated Task "
@@ -150,7 +150,7 @@ async def update_workflowtask(
         or workflow_task_update.meta_non_parallel is not None
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot patch `WorkflowTaskV2.args_non_parallel` or "
                 "`WorkflowTask.meta_non_parallel` if the associated Task is "
@@ -165,7 +165,7 @@ async def update_workflowtask(
         or workflow_task_update.meta_parallel is not None
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot patch `WorkflowTaskV2.args_parallel` or "
                 "`WorkflowTask.meta_parallel` if the associated Task is "
@@ -191,7 +191,7 @@ async def update_workflowtask(
             setattr(db_wf_task, key, value)
         else:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"patch_workflow_task endpoint cannot set {key=}",
             )
 
@@ -227,7 +227,7 @@ async def delete_workflowtask(
 
     if await _workflow_has_submitted_job(workflow_id=workflow_id, db=db):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot delete a WorkflowTask while a Job is running for this "
                 "Workflow."

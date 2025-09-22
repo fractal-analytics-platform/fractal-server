@@ -72,7 +72,7 @@ async def get_workflowtask_status(
     else:
         string_ids = str([job.id for job in running_jobs])[1:-1]
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot get WorkflowTaskV2 statuses as DatasetV2 {dataset.id}"
                 f" is linked to multiple active jobs: {string_ids}."

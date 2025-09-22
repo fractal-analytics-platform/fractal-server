@@ -24,7 +24,7 @@ def verify_user_has_settings(user: UserOAuth) -> None:
     """
     if user.user_settings_id is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Error: user '{user.email}' has no settings.",
         )
 
@@ -66,7 +66,7 @@ async def validate_user_settings(
         )
         logger.warning(error_msg)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
 

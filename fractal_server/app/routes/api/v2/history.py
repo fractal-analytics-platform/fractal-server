@@ -51,7 +51,7 @@ def check_historyrun_related_to_dataset_and_wftask(
         or history_run.workflowtask_id != workflowtask_id
     ):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Invalid query parameters: HistoryRun[{history_run.id}] is "
                 f"not related to {dataset_id=} and {workflowtask_id=}."
@@ -480,7 +480,7 @@ async def get_history_unit_log(
 
     if history_unit.history_run_id != history_run_id:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Invalid query parameters: HistoryUnit[{history_unit_id}] "
                 f"is not related to HistoryRun[{history_run_id}]"

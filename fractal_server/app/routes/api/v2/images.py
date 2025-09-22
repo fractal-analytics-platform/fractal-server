@@ -70,7 +70,7 @@ async def post_new_image(
 
     if not new_image.zarr_url.startswith(dataset.zarr_dir):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot create image with zarr_url which is not relative to "
                 f"{dataset.zarr_dir}."
@@ -78,7 +78,7 @@ async def post_new_image(
         )
     elif new_image.zarr_url == dataset.zarr_dir:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "`SingleImage.zarr_url` cannot be equal to `Dataset.zarr_dir`:"
                 f" {dataset.zarr_dir}"
@@ -87,7 +87,7 @@ async def post_new_image(
 
     if new_image.zarr_url in dataset.image_zarr_urls:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Image with zarr_url '{new_image.zarr_url}' "
                 f"already in DatasetV2 {dataset_id}",
