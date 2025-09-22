@@ -16,14 +16,32 @@ PKG = "fractal-tasks-core"
 
 
 def test_find_latest_version_or_422():
+    # Sorting, case 1
     latest = _find_latest_version_or_422(["1.2.3", "3.4.5", "6.7a0"])
-    debug(latest)
     assert latest == "6.7a0"
-    with pytest.raises(
-        HTTPException, match="Cannot find latest version"
-    ) as exc_info:
+    # Sorting, case 2
+    sorted_versions = [
+        "0.1.dev27+g1458b59",
+        "0.1.2",
+        "0.2.0a0",
+        "0.10.0a",
+        "0.10.0a2",
+        "0.10.0alpha3",
+        "0.10.0b4",
+        "0.10.0beta5",
+        "0.10.0c0",
+        "0.10.0",
+        "1.0.0rc4.dev7",
+        "1.0.0",
+        "2",
+    ]
+    for ind, expected_latest in enumerate(sorted_versions):
+        current_list = sorted_versions[: ind + 1]
+        actual_latest = _find_latest_version_or_422(current_list)
+        assert actual_latest == expected_latest
+    # Failure
+    with pytest.raises(HTTPException, match="Cannot find latest version"):
         _find_latest_version_or_422(["1.2.3", "3.4.5", "aaa"])
-    debug(exc_info.value)
 
 
 async def test_get_package_version_from_pypi():

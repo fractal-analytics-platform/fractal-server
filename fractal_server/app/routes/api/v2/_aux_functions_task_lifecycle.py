@@ -35,9 +35,7 @@ def _find_latest_version_or_422(versions: list[str]) -> str:
     (https://peps.python.org/pep-0700/#why-not-provide-a-latest-version-value)
     """
     try:
-        latest = str(
-            max(Version(version_string) for version_string in versions)
-        )
+        latest = max(versions, key=lambda v_str: Version(v_str))
         return latest
     except InvalidVersion as e:
         raise HTTPException(
