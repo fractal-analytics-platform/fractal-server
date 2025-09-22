@@ -34,9 +34,13 @@ STATES_FINISHED = {
 def _get_workdir_remote(script_paths: list[str]) -> str:
     """
     Check that there is one and only one `workdir`, and return it.
+
+    Note: The `is_absolute` check is to filter out a `chmod` command.
     """
     workdirs = [
-        Path(script_path).parent.as_posix() for script_path in script_paths
+        Path(script_path).parent.as_posix()
+        for script_path in script_paths
+        if Path(script_path).is_absolute()
     ]
     if not len(set(workdirs)) == 1:
         raise ValueError(f"Invalid {script_paths=}.")
