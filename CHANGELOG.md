@@ -11,6 +11,8 @@
 * Task life cycle:
     * Move `pixi install` execution to SLURM jobs, for SSH/SLURM deployment (\#2784).
     * Add `SLURM_CONFIG` to `PixiSettings` (\#2784).
+* Dependencies:
+    * Bump `cryptography` (\#2788).
 
 # 2.16.1
 
