@@ -8,6 +8,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _log_change_of_job_state,
 )
+from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import _read_file_if_exists
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import _run_squeue
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _verify_success_file_exists,
@@ -56,6 +57,13 @@ def test_verify_success_file_exists(
             logger_name="my-logger",
             stderr_remote=stderr_remote,
         )
+    assert (
+        _read_file_if_exists(
+            fractal_ssh=fractal_ssh,
+            path=stderr_remote,
+        )
+        == ""
+    )
 
     # Stderr file exists
     Path(stderr_remote).touch()
@@ -101,7 +109,7 @@ def test_sbatch_failure(
         match="sbatch",
     ):
         run_script_on_remote_slurm(
-            script_path=script_path,
+            script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
                 mem="1G",
                 cpus=1,

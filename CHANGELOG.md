@@ -1,12 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.16.3
+
+* Task life cycle:
+    * Move post-pixi-installation logic into the same SLURM job as `pixi install`, for SSH/SLURM deployment (\#2787).
+* Dependencies:
+    * Bump `cryptography` (\#2788).
+
 # 2.16.2
 
 * Task life cycle:
     * Move `pixi install` execution to SLURM jobs, for SSH/SLURM deployment (\#2784).
     * Add `SLURM_CONFIG` to `PixiSettings` (\#2784).
-* Dependencies:
-    * Bump `cryptography` (\#2788).
 
 # 2.16.1
 

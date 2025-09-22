@@ -203,11 +203,20 @@ def collect_ssh_pixi(
                         pyproject_toml_path=pyproject_toml_path,
                     )
 
-                    # Run script 2 - run pixi-install command
+                    # Prepare scripts 2 and 3
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
                         **common_args,
+                    )
+                    remote_script3_path = _customize_and_send_template(
+                        template_filename="pixi_3_post_install.sh",
+                        replacements=replacements,
+                        **common_args,
+                    )
+                    logger.debug(
+                        "Post-installation script written to "
+                        f"{remote_script3_path=}."
                     )
                     logger.debug(
                         "Installation script written to "
@@ -216,8 +225,13 @@ def collect_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    run_script_on_remote_slurm(
-                        script_path=remote_script2_path,
+                    # Run scripts 2 and 3
+                    stdout = run_script_on_remote_slurm(
+                        script_paths=[
+                            remote_script2_path,
+                            remote_script3_path,
+                            f"chmod -R 755 {source_dir}",
+                        ],
                         slurm_config=settings.pixi.SLURM_CONFIG,
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
@@ -229,16 +243,6 @@ def collect_ssh_pixi(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    # Run script 3 - post-install
-                    stdout = _customize_and_run_template(
-                        template_filename="pixi_3_post_install.sh",
-                        replacements=replacements,
-                        **common_args,
-                    )
-                    logger.debug(f"STDOUT: {stdout}")
-                    activity.log = get_current_log(log_file_path)
-                    activity = add_commit_refresh(obj=activity, db=db)
-
                     # Parse stdout
                     parsed_output = parse_collect_stdout(stdout)
                     package_root_remote = parsed_output["package_root"]
@@ -247,8 +251,6 @@ def collect_ssh_pixi(
                     project_python_wrapper = parsed_output[
                         "project_python_wrapper"
                     ]
-
-                    fractal_ssh.run_command(cmd=f"chmod -R 755 {source_dir}")
 
                     # Read and validate remote manifest file
                     manifest_path_remote = (

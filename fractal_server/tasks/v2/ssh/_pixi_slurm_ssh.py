@@ -31,6 +31,36 @@ STATES_FINISHED = {
 }
 
 
+def _get_workdir_remote(script_paths: list[str]) -> str:
+    """
+    Check that there is one and only one `workdir`, and return it.
+
+    Note: The `is_absolute` check is to filter out a `chmod` command.
+    """
+    workdirs = [
+        Path(script_path).parent.as_posix()
+        for script_path in script_paths
+        if Path(script_path).is_absolute()
+    ]
+    if not len(set(workdirs)) == 1:
+        raise ValueError(f"Invalid {script_paths=}.")
+    return workdirs[0]
+
+
+def _read_file_if_exists(
+    *,
+    fractal_ssh: FractalSSH,
+    path: str,
+) -> str:
+    """
+    Read a remote file if it exists, or return an empty string.
+    """
+    if fractal_ssh.remote_exists(path=path):
+        return fractal_ssh.read_remote_text_file(path)
+    else:
+        return ""
+
+
 def _log_change_of_job_state(
     *,
     old_state: str | None,
@@ -99,15 +129,18 @@ def _verify_success_file_exists(
         logger = get_logger(logger_name=logger_name)
         error_msg = f"{success_file_remote=} missing."
         logger.info(error_msg)
-        if fractal_ssh.remote_exists(stderr_remote):
-            stderr = fractal_ssh.read_remote_text_file(stderr_remote)
+
+        stderr = _read_file_if_exists(
+            fractal_ssh=fractal_ssh, path=stderr_remote
+        )
+        if stderr:
             logger.info(f"SLURM-job stderr:\n{stderr}")
         raise RuntimeError(error_msg)
 
 
 def run_script_on_remote_slurm(
     *,
-    script_path: str,
+    script_paths: list[str],
     slurm_config: PixiSLURMConfig,
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -127,7 +160,7 @@ def run_script_on_remote_slurm(
     settings = Inject(get_settings)
 
     # (1) Prepare remote submission script
-    workdir_remote = Path(script_path).parent.as_posix()
+    workdir_remote = _get_workdir_remote(script_paths)
     submission_script_remote = os.path.join(
         workdir_remote, f"{prefix}-submit.sh"
     )
@@ -144,10 +177,11 @@ def run_script_on_remote_slurm(
         f"#SBATCH --out={stdout_remote}",
         f"#SBATCH -D {workdir_remote}",
         "",
-        f"bash {script_path}",
-        f"touch {success_file_remote}",
-        "",
     ]
+    for script_path in script_paths:
+        script_lines.append(f"bash {script_path}")
+    script_lines.append(f"touch {success_file_remote}")
+
     script_contents = "\n".join(script_lines)
     fractal_ssh.write_remote_file(
         path=submission_script_remote,
@@ -209,6 +243,13 @@ def run_script_on_remote_slurm(
         stderr_remote=stderr_remote,
     )
 
+    stdout = _read_file_if_exists(
+        fractal_ssh=fractal_ssh,
+        path=stdout_remote,
+    )
+
     logger.info("SLURM-job execution completed successfully, continue.")
     activity.log = get_current_log(log_file_path)
     activity = add_commit_refresh(obj=activity, db=db)
+
+    return stdout
