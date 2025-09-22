@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-22 12:04 +0000
+            created at 2025-09-22 13:53 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -285,7 +285,7 @@
     <p class="par par2 ru2 show_par"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">        <span class="nam">new_type</span><span class="op">=</span><span class="nam">new_task</span><span class="op">.</span><span class="nam">type</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="par par2 ru2 show_par"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t203" href="#t203">203</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t205" href="#t205">205</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t206" href="#t206">206</a></span><span class="t">                <span class="str">"Cannot change task type from "</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t207" href="#t207">207</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">workflow_task</span><span class="op">.</span><span class="nam">task_type</span><span class="op">}</span><span class="fst"> to </span><span class="op">{</span><span class="nam">new_task</span><span class="op">.</span><span class="nam">type</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
@@ -297,7 +297,7 @@
     <p class="run run2"><span class="n"><a id="t213" href="#t213">213</a></span><span class="t">        <span class="key">and</span> <span class="nam">new_task</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="nam">TaskType</span><span class="op">.</span><span class="nam">PARALLEL</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t214" href="#t214">214</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t215" href="#t215">215</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t216" href="#t216">216</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t216" href="#t216">216</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t217" href="#t217">217</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="str">"Cannot set 'args_non_parallel' for parallel task."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t218" href="#t218">218</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t219" href="#t219">219</a></span><span class="t">    <span class="key">if</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -305,7 +305,7 @@
     <p class="run run2"><span class="n"><a id="t221" href="#t221">221</a></span><span class="t">        <span class="key">and</span> <span class="nam">new_task</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="nam">TaskType</span><span class="op">.</span><span class="nam">NON_PARALLEL</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t222" href="#t222">222</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t224" href="#t224">224</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t225" href="#t225">225</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="str">"Cannot set 'args_parallel' for non-parallel task."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t">    <span class="nam">_check_type_filters_compatibility</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -343,7 +343,7 @@
             <a class="nav" href="z_09e701d32150411b_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-22 12:04 +0000
+            created at 2025-09-22 13:53 +0000
         </p>
     </div>
 </footer>
