@@ -8,6 +8,7 @@
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Dependencies:
     * Bump `fastapi` version (\#2790).
+    * Bump `uvicorn-worker` version (\#2792).
 
 # 2.16.3
 
