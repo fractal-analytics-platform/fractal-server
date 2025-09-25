@@ -256,6 +256,10 @@ async def test_dummy_remove_images(
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
 ):
+    """
+    NOTE: this test is relevant for
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2427.
+    """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_remove_images"].id
 
