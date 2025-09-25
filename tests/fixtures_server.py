@@ -41,8 +41,8 @@ def get_patched_settings(temp_path: Path):
         POSTGRES_USER="postgres",
         POSTGRES_PASSWORD=SecretStr("postgres"),
         POSTGRES_DB="fractal_test",
-        FRACTAL_TASKS_DIR=temp_path / "fractal_tasks_dir",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=temp_path / "artifacts",
+        FRACTAL_TASKS_DIR=temp_path / "tasks",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=temp_path / "jobs",
         FRACTAL_API_MAX_JOB_LIST_LENGTH=1,
         FRACTAL_GRACEFUL_SHUTDOWN_TIME=1,
         FRACTAL_SLURM_WORKER_PYTHON=PYTHON_BIN,
@@ -60,11 +60,12 @@ def get_patched_settings(temp_path: Path):
     return settings
 
 
-@pytest.fixture(scope="session", autouse=True)
-def override_settings(tmp777_session_path):
-    tmp_path = tmp777_session_path("server_folder")
+@pytest.fixture(scope="function", autouse=True)
+def override_settings(tmp777_path: Path):
+    backend_dir = tmp777_path.with_name(tmp777_path.name + "-backend")
+    backend_dir.mkdir(mode=0o777)
 
-    settings = get_patched_settings(tmp_path)
+    settings = get_patched_settings(backend_dir)
 
     def _get_settings():
         return settings
