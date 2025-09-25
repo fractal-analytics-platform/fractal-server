@@ -6,6 +6,8 @@
     * Switch to PyPI Index API for finding latest package versions (\#2790).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
+* Testing:
+    * Use function-scoped base folder for backend (\#2793).
 * Dependencies:
     * Bump `fastapi` version (\#2790).
     * Bump `uvicorn-worker` and `sqlmodel` versions (\#2792).
