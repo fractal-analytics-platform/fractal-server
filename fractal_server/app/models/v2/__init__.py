@@ -5,11 +5,11 @@ from ..linkuserproject import LinkUserProjectV2
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2
-from .fake import FakeTable
 from .history import HistoryImageCache
 from .history import HistoryRun
 from .history import HistoryUnit
 from .job import JobV2
+from .my_table import MyTable
 from .project import ProjectV2
 from .task import TaskV2
 from .task_group import TaskGroupActivityV2
@@ -22,7 +22,7 @@ __all__ = [
     "AccountingRecordSlurm",
     "LinkUserProjectV2",
     "DatasetV2",
-    "FakeTable",
+    "MyTable",
     "JobV2",
     "ProjectV2",
     "TaskGroupV2",

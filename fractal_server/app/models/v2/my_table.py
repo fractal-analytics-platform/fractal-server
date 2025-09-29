@@ -1,19 +1,19 @@
-from sqlalchemy import text
+from sqlalchemy import column
 from sqlmodel import Field
 from sqlmodel import Index
 from sqlmodel import SQLModel
 
 
-class FakeTable(SQLModel, table=True):
+class MyTable(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     a: int
     b: bool
 
     __table_args__ = (
         Index(
-            "fancy_name",
+            "custom_index_name",
             "a",
             unique=True,
-            postgresql_where=text("b IS TRUE"),
+            postgresql_where=column("b").is_(True),
         ),
     )
