@@ -383,12 +383,13 @@ async def test_verify_project_access(db):
     # Assertions
     for project_id in [project1.id, project2.id]:
         for access_type in ["read", "write", "execute"]:
-            await _verify_project_access(
+            p = await _verify_project_access(
                 project_id=project_id,
                 user_id=user1.id,
                 access_type=access_type,
                 db=db,
             )
+            assert p.id == project_id
 
     # USER2:
     # - has read permission on project1
@@ -416,12 +417,13 @@ async def test_verify_project_access(db):
     await db.commit()
 
     # Assertions
-    await _verify_project_access(
+    p = await _verify_project_access(
         project_id=project1.id,
         user_id=user2.id,
         access_type="read",
         db=db,
     )
+    assert p.id == project1.id
     for project_id, access_type in [
         (project1.id, "write"),
         (project1.id, "execute"),
@@ -468,12 +470,13 @@ async def test_verify_project_access(db):
         (project1.id, "write"),
         (project2.id, "read"),
     ]:
-        await _verify_project_access(
+        p = await _verify_project_access(
             project_id=project_id,
             user_id=user3.id,
             access_type=access_type,
             db=db,
         )
+        assert p.id == project_id
     for project_id, access_type in [
         (project1.id, "execute"),
         (project2.id, "write"),
@@ -520,12 +523,13 @@ async def test_verify_project_access(db):
         (project2.id, "read"),
         (project2.id, "write"),
     ]:
-        await _verify_project_access(
+        p = await _verify_project_access(
             project_id=project_id,
             user_id=user4.id,
             access_type=access_type,
             db=db,
         )
+        assert p.id == project_id
     with pytest.raises(HTTPException):
         await _verify_project_access(
             project_id=project2.id,
