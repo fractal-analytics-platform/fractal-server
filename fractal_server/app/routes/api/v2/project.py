@@ -16,8 +16,8 @@ from ....schemas.v2 import ProjectCreateV2
 from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
+from ._aux_functions import _verify_project_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
@@ -25,17 +25,39 @@ router = APIRouter()
 
 
 @router.get("/project/", response_model=list[ProjectReadV2])
-async def get_list_project(
+async def get_list_owned_project(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectV2]:
     """
-    Return list of projects user is member of
+    Return list of owned projects
     """
     stm = (
         select(ProjectV2)
         .join(LinkUserProjectV2)
         .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+    )
+    res = await db.execute(stm)
+    project_list = res.scalars().all()
+    await db.close()
+    return project_list
+
+
+@router.get("/project/shared/", response_model=list[ProjectReadV2])
+async def get_list_shared_project(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProjectV2]:
+    """
+    Return list of projects shared with the user
+    """
+    stm = (
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner.is_(False))
+        .where(LinkUserProjectV2.is_verified.is_(True))
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -59,11 +81,22 @@ async def create_project(
     )
 
     db_project = ProjectV2(**project.model_dump())
-    db_project.user_list.append(user)
-
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
+
+    link = LinkUserProjectV2(
+        project_id=db_project.id,
+        user_id=user.id,
+        # owner has all permissions
+        is_owner=True,
+        is_verified=True,
+        can_write=True,
+        can_execute=True,
+    )
+    db.add(link)
+    await db.commit()
+
     await db.close()
 
     return db_project
@@ -78,8 +111,9 @@ async def read_project(
     """
     Return info on an existing project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+
+    project = await _verify_project_access(
+        project_id=project_id, user_id=user.id, access_type="read", db=db
     )
     await db.close()
     return project
@@ -92,8 +126,8 @@ async def update_project(
     user: UserOAuth = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _verify_project_access(
+        project_id=project_id, user_id=user.id, access_type="write", db=db
     )
 
     # Check that there is no project with the same user and name
@@ -121,8 +155,8 @@ async def delete_project(
     Delete project
     """
 
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _verify_project_access(
+        project_id=project_id, user_id=user.id, access_type="write", db=db
     )
     logger = set_logger(__name__)
 

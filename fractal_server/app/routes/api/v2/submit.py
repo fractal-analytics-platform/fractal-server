@@ -12,6 +12,7 @@ from sqlmodel import select
 
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _verify_project_access
 from ._aux_functions import clean_app_job_list_v2
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.db import AsyncSession
@@ -69,13 +70,16 @@ async def apply_workflow(
         )
         request.app.state.jobsV2 = new_jobs_list
 
+    project = await _verify_project_access(
+        project_id=project_id, user_id=user.id, access_type="execute", db=db
+    )
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
         db=db,
     )
-    project = output["project"]
     dataset = output["dataset"]
 
     workflow = await _get_workflow_check_owner(
