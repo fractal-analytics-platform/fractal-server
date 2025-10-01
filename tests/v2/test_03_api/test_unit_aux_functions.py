@@ -1,6 +1,9 @@
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models import LinkUserProjectV2
+from fractal_server.app.models import ProjectV2
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.api.v2._aux_functions import (
     _check_workflow_exists,
 )
@@ -28,6 +31,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _verify_project_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -336,3 +342,184 @@ async def test_get_submitted_jobs_statement():
     from sqlmodel.sql.expression import SelectOfScalar
 
     assert type(stm) is SelectOfScalar
+
+
+async def test_verify_project_access(db):
+    user1 = UserOAuth(email="x1@y.z", hashed_password="pass1")
+    user2 = UserOAuth(email="x2@y.z", hashed_password="pass2")
+    user3 = UserOAuth(email="x3@y.z", hashed_password="pass3")
+    user4 = UserOAuth(email="x4@y.z", hashed_password="pass4")
+
+    project1 = ProjectV2(name="p1")
+    project2 = ProjectV2(name="p2")
+
+    db.add_all([user1, user2, user3, user4, project1, project2])
+    await db.commit()
+
+    # USER1 is owner of both projects
+    for project_id in [project1.id, project2.id]:
+        db.add(
+            LinkUserProjectV2(
+                user_id=user1.id,
+                project_id=project_id,
+                is_owner=True,
+                is_verified=True,
+                can_write=True,
+                can_execute=True,
+            )
+        )
+    await db.commit()
+
+    # Assertions
+    for project_id in [project1.id, project2.id]:
+        for access_type in ["read", "write", "execute"]:
+            await _verify_project_access(
+                project_id=project_id,
+                user_id=user1.id,
+                access_type=access_type,
+                db=db,
+            )
+
+    # USER2:
+    # - has read permission on project1
+    # - is not verified on project2
+    db.add(
+        LinkUserProjectV2(
+            user_id=user2.id,
+            project_id=project1.id,
+            is_owner=False,
+            is_verified=True,
+            can_write=False,
+            can_execute=False,
+        )
+    )
+    db.add(
+        LinkUserProjectV2(
+            user_id=user2.id,
+            project_id=project2.id,
+            is_owner=False,
+            is_verified=False,
+            can_write=False,
+            can_execute=False,
+        )
+    )
+    await db.commit()
+
+    # Assertions
+    await _verify_project_access(
+        project_id=project1.id,
+        user_id=user2.id,
+        access_type="read",
+        db=db,
+    )
+    for project_id, access_type in [
+        (project1.id, "write"),
+        (project1.id, "execute"),
+        (project2.id, "read"),
+        (project2.id, "write"),
+        (project2.id, "execute"),
+    ]:
+        with pytest.raises(HTTPException):
+            await _verify_project_access(
+                project_id=project_id,
+                user_id=user2.id,
+                access_type=access_type,
+                db=db,
+            )
+
+    # USER3:
+    # - has write permission on project1
+    # - has read permission on project2
+    db.add(
+        LinkUserProjectV2(
+            user_id=user3.id,
+            project_id=project1.id,
+            is_owner=False,
+            is_verified=True,
+            can_write=True,
+            can_execute=False,
+        )
+    )
+    db.add(
+        LinkUserProjectV2(
+            user_id=user3.id,
+            project_id=project2.id,
+            is_owner=False,
+            is_verified=True,
+            can_write=False,
+            can_execute=False,
+        )
+    )
+    await db.commit()
+
+    # Assertions
+    for project_id, access_type in [
+        (project1.id, "read"),
+        (project1.id, "write"),
+        (project2.id, "read"),
+    ]:
+        await _verify_project_access(
+            project_id=project_id,
+            user_id=user3.id,
+            access_type=access_type,
+            db=db,
+        )
+    for project_id, access_type in [
+        (project1.id, "execute"),
+        (project2.id, "write"),
+        (project2.id, "execute"),
+    ]:
+        with pytest.raises(HTTPException):
+            await _verify_project_access(
+                project_id=project_id,
+                user_id=user3.id,
+                access_type=access_type,
+                db=db,
+            )
+
+    # USER4:
+    # - has execute permission on project1
+    # - has write permission on project2
+    db.add(
+        LinkUserProjectV2(
+            user_id=user4.id,
+            project_id=project1.id,
+            is_owner=False,
+            is_verified=True,
+            can_write=True,
+            can_execute=True,
+        )
+    )
+    db.add(
+        LinkUserProjectV2(
+            user_id=user4.id,
+            project_id=project2.id,
+            is_owner=False,
+            is_verified=True,
+            can_write=True,
+            can_execute=False,
+        )
+    )
+    await db.commit()
+
+    # Assertions
+    for project_id, access_type in [
+        (project1.id, "read"),
+        (project1.id, "write"),
+        (project1.id, "execute"),
+        (project2.id, "read"),
+        (project2.id, "write"),
+    ]:
+        await _verify_project_access(
+            project_id=project_id,
+            user_id=user4.id,
+            access_type=access_type,
+            db=db,
+        )
+    with pytest.raises(HTTPException):
+        await _verify_project_access(
+            project_id=project2.id,
+            user_id=user4.id,
+            access_type="execute",
+            db=db,
+        )

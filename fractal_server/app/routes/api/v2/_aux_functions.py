@@ -25,6 +25,46 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
+async def _verify_project_access(
+    project_id: int,
+    user_id: int,
+    access_type: Literal["read", "write", "execute"],
+    db: AsyncSession,
+) -> ProjectV2:
+    if access_type == "read":
+        condition = LinkUserProjectV2.is_verified.is_(True)
+    elif access_type == "write":
+        condition = LinkUserProjectV2.can_write.is_(True)
+    elif access_type == "execute":
+        condition = LinkUserProjectV2.can_execute.is_(True)
+    else:
+        raise ValueError(f"Unknown {access_type=}")
+
+    stmt = (
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(
+            LinkUserProjectV2.project_id == project_id,
+            LinkUserProjectV2.user_id == user_id,
+            condition,
+        )
+    )
+
+    result = await db.execute(stmt)
+    project = result.scalar_one_or_none()
+
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"User {user_id} does not have '{access_type}' "
+                f"access to Project {project_id}"
+            ),
+        )
+
+    return project
+
+
 async def _get_project_check_owner(
     *,
     project_id: int,
