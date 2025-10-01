@@ -345,6 +345,16 @@ async def test_get_submitted_jobs_statement():
 
 
 async def test_verify_project_access(db):
+    # ValueError
+    with pytest.raises(ValueError):
+        await _verify_project_access(
+            project_id=0,
+            user_id=0,
+            access_type="not valid",
+            db=db,
+        )
+
+    # SETUP
     user1 = UserOAuth(email="x1@y.z", hashed_password="pass1")
     user2 = UserOAuth(email="x2@y.z", hashed_password="pass2")
     user3 = UserOAuth(email="x3@y.z", hashed_password="pass3")
