@@ -9,15 +9,18 @@ from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models import LinkUserGroup
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
 from ....schemas.v2 import ProjectCreateV2
+from ....schemas.v2 import ProjectInvitation
 from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _verify_project_access
+from ._aux_functions import _verify_project_owner
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
 
@@ -185,3 +188,97 @@ async def delete_project(
     reset_logger_handlers(logger)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/project/{project_id}/share/invite-users/", status_code=201)
+async def invite_users(
+    project_id: int,
+    invite: ProjectInvitation,
+    can_write: bool = False,
+    can_execute: bool = False,
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    await _verify_project_owner(
+        project_id=project_id, user_id=current_user.id, db=db
+    )
+
+    if current_user.email in invite.email_list:
+        raise HTTPException(status_code=422, detail="Cannot invite yourself")
+
+    res = await db.execute(
+        select(UserOAuth).where(UserOAuth.email.in_(invite.email_list))
+    )
+    invited_users = res.scalars().all()
+
+    # Handle not all users exist
+    if len(invite.email_list) != len(invited_users):
+        raise HTTPException(status_code=500, detail="FIXME")
+
+    invited_users_ids = {u.email: u.id for u in invited_users}
+
+    # Handle some user is already linked
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .join(UserOAuth)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.user_id == UserOAuth.id)
+        .where(UserOAuth.email.in_(invite.email_list))
+    )
+    existing_links = res.scalars().all()
+    if existing_links:
+        raise HTTPException(status_code=500, detail="FIXME")
+
+    db.add_all(
+        [
+            LinkUserProjectV2(
+                project_id=project_id,
+                user_id=invited_users_ids[email],
+                is_owner=False,
+                is_verified=False,
+                can_write=can_write,
+                can_execute=can_execute,
+            )
+            for email in invite.email_list
+        ]
+    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.post("/project/{project_id}/share/invite-user-group/", status_code=201)
+async def invite_user_group(
+    project_id: int,
+    user_group_id: int,
+    can_write: bool = False,
+    can_execute: bool = False,
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    user_membership = await db.get(
+        LinkUserGroup, (user_group_id, current_user.id)
+    )
+    if user_membership is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"You are not a member of group {user_group_id}",
+        )
+
+    res = await db.execute(
+        select(UserOAuth.email)
+        .join(LinkUserGroup)
+        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .where(LinkUserGroup.group_id == user_group_id)
+    )
+    email_list = res.scalas().all()
+    email_list.remove(current_user.email)
+
+    return await invite_users(
+        project_id=project_id,
+        invite=ProjectInvitation(email_list=email_list),
+        can_write=can_write,
+        can_execute=can_execute,
+        current_user=current_user,
+        db=db,
+    )

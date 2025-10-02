@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import EmailStr
+from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
@@ -28,3 +30,8 @@ class ProjectUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
+
+
+class ProjectInvitation(BaseModel):
+    # FIXME: use custom validated type?
+    email_list: list[EmailStr] = Field(..., min_length=1)

@@ -71,6 +71,33 @@ async def _verify_project_access(
     return project
 
 
+async def _verify_project_owner(
+    project_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> ProjectV2:
+    stmt = (
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(
+            LinkUserProjectV2.project_id == project_id,
+            LinkUserProjectV2.user_id == user_id,
+            LinkUserProjectV2.is_owner.is_(True),
+        )
+    )
+
+    result = await db.execute(stmt)
+    project = result.scalar_one_or_none()
+
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user_id} is not owner of Project {project_id}",
+        )
+
+    return project
+
+
 async def _get_project_check_owner(
     *,
     project_id: int,
