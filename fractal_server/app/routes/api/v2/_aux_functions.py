@@ -54,6 +54,12 @@ async def _verify_project_access(
     project = result.scalar_one_or_none()
 
     if project is None:
+        p = await db.get(ProjectV2, project_id)
+        if p is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project {project_id} not found.",
+            )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
