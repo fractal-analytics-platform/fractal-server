@@ -48,56 +48,6 @@ async def get_list_owned_project(
     return project_list
 
 
-@router.get("/project/shared/", response_model=list[ProjectReadV2])
-async def get_list_shared_project(
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectV2]:
-    """
-    Return list of projects shared with the user
-    """
-    stm = (
-        select(ProjectV2)
-        .join(LinkUserProjectV2)
-        .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_owner.is_(False))
-        .where(LinkUserProjectV2.is_verified.is_(True))
-    )
-    res = await db.execute(stm)
-    project_list = res.scalars().all()
-    await db.close()
-    return project_list
-
-
-@router.get(
-    "/project/shared/pending/", response_model=list[ProjectInvitationRead]
-)
-async def get_list_pending_invitations(
-    user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-):
-    res = await db.execute(
-        select(
-            ProjectV2,
-            LinkUserProjectV2.can_write,
-            LinkUserProjectV2.can_execute,
-        )
-        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
-        .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_verified.is_(False))
-    )
-    pending_invitations = res.all()
-
-    return [
-        ProjectInvitationRead(
-            project=project,
-            can_write=can_write,
-            can_execute=can_execute,
-        )
-        for project, can_write, can_execute in pending_invitations
-    ]
-
-
 @router.post("/project/", response_model=ProjectReadV2, status_code=201)
 async def create_project(
     project: ProjectCreateV2,
@@ -133,6 +83,56 @@ async def create_project(
     await db.close()
 
     return db_project
+
+
+@router.get("/project/share/", response_model=list[ProjectReadV2])
+async def get_list_shared_project(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProjectV2]:
+    """
+    Return list of projects shared with the user
+    """
+    stm = (
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner.is_(False))
+        .where(LinkUserProjectV2.is_verified.is_(True))
+    )
+    res = await db.execute(stm)
+    project_list = res.scalars().all()
+    await db.close()
+    return project_list
+
+
+@router.get(
+    "/project/share/pending/", response_model=list[ProjectInvitationRead]
+)
+async def get_list_pending_invitations(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    res = await db.execute(
+        select(
+            ProjectV2,
+            LinkUserProjectV2.can_write,
+            LinkUserProjectV2.can_execute,
+        )
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_verified.is_(False))
+    )
+    pending_invitations = res.all()
+
+    return [
+        ProjectInvitationRead(
+            project=project,
+            can_write=can_write,
+            can_execute=can_execute,
+        )
+        for project, can_write, can_execute in pending_invitations
+    ]
 
 
 @router.get("/project/{project_id}/", response_model=ProjectReadV2)
@@ -312,3 +312,87 @@ async def invite_user_group(
         current_user=current_user,
         db=db,
     )
+
+
+@router.patch("/project/{project_id}/share/accept/", status_code=200)
+async def accept_project_invitation(
+    project_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    invitation = await db.get(LinkUserProjectV2, (project_id, user.id))
+
+    if invitation is None:
+        raise HTTPException(status_code=422, detail="No invitation to accept")
+
+    if invitation.is_verified is True:
+        raise HTTPException(
+            status_code=422, detail="Invitation already accepted"
+        )
+
+    invitation.is_verified = True
+    db.add(invitation)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.delete("/project/{project_id}/share/remove/", status_code=204)
+async def remove_project_sharing(
+    project_id: int,
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Both to reject a pending invitation and to terminate a project sharing
+    """
+    invitation = await db.get(LinkUserProjectV2, (project_id, user.id))
+
+    if invitation is None:
+        raise HTTPException(status_code=422, detail="No invitation to remove")
+
+    if invitation.is_owner:
+        raise HTTPException(
+            status_code=422,
+            detail="This endpoint cannot be used by the project owner",
+        )
+
+    await db.delete(invitation)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/project/{project_id}/share/revoke/", status_code=204)
+async def revoke_project_sharing(
+    project_id: int,
+    revoke: ProjectInvitation,
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    await _verify_project_owner(
+        project_id=project_id, user_id=current_user.id, db=db
+    )
+
+    if current_user.email in revoke.email_list:
+        raise HTTPException(
+            status_code=422, detail="Cannot use this endpoint on yourself"
+        )
+
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .join(UserOAuth)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.user_id == UserOAuth.id)
+        .where(UserOAuth.email.in_(revoke.email_list))
+    )
+    existing_links = res.scalars().all()
+
+    if len(existing_links) != len(revoke.email_list):
+        raise HTTPException(status_code=500, detail="FIXME")
+
+    for link in existing_links:
+        await db.delete(link)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
