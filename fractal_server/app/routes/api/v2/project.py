@@ -15,6 +15,7 @@ from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
 from ....schemas.v2 import ProjectCreateV2
 from ....schemas.v2 import ProjectInvitation
+from ....schemas.v2 import ProjectInvitationRead
 from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
 from ._aux_functions import _check_project_exists
@@ -66,6 +67,35 @@ async def get_list_shared_project(
     project_list = res.scalars().all()
     await db.close()
     return project_list
+
+
+@router.get(
+    "/project/shared/pending/", response_model=list[ProjectInvitationRead]
+)
+async def get_list_pending_invitations(
+    user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    res = await db.execute(
+        select(
+            ProjectV2,
+            LinkUserProjectV2.can_write,
+            LinkUserProjectV2.can_execute,
+        )
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_verified.is_(False))
+    )
+    pending_invitations = res.all()
+
+    return [
+        ProjectInvitationRead(
+            project=project,
+            can_write=can_write,
+            can_execute=can_execute,
+        )
+        for project, can_write, can_execute in pending_invitations
+    ]
 
 
 @router.post("/project/", response_model=ProjectReadV2, status_code=201)

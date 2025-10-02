@@ -35,3 +35,9 @@ class ProjectUpdateV2(BaseModel):
 class ProjectInvitation(BaseModel):
     # FIXME: use custom validated type?
     email_list: list[EmailStr] = Field(..., min_length=1)
+
+
+class ProjectInvitationRead(BaseModel):
+    project: ProjectReadV2
+    can_write: bool
+    can_execute: bool
