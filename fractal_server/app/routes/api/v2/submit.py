@@ -219,16 +219,15 @@ async def apply_workflow(
         f"_{timestamp_string}"
     )
 
-    cache_dir = (
-        Path(user_settings.project_dir) / ".fractal_cache"
-        if user_settings.project_dir is not None
-        else None
-    )
-
     # Define user-side job directory
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif FRACTAL_RUNNER_BACKEND == "slurm":
+        cache_dir = (
+            Path(user_settings.project_dir) / ".fractal_cache"
+            if user_settings.project_dir is not None
+            else None
+        )
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (

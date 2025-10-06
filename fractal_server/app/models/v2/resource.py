@@ -47,6 +47,11 @@ class Resource(SQLModel, table=True):
     check not (type is local and job_slurm_python_worker is None)
     """
 
+    job_poll_interval: int = 5
+    """
+    FRACTAL_SLURM_POLL_INTERVAL_zzz
+    """
+
     # task_settings
     tasks_local_folder: str
     """

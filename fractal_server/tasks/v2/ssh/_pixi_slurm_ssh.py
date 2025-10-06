@@ -234,7 +234,7 @@ def run_script_on_remote_slurm(
             logger.debug(f"Exit retrieval loop (state={new_state}).")
             break
         old_state = new_state
-        time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL)
+        time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL_zzz)
 
     _verify_success_file_exists(
         fractal_ssh=fractal_ssh,

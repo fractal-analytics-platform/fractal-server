@@ -601,7 +601,7 @@ class Settings(BaseSettings):
                     values[key] = None
         return values
 
-    FRACTAL_SLURM_POLL_INTERVAL: int = 5
+    FRACTAL_SLURM_POLL_INTERVAL_zzz: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM.

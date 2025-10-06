@@ -101,7 +101,7 @@ class BaseSlurmRunner(BaseRunner):
         settings = Inject(get_settings)
 
         self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
+            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL_zzz
         )
         self.poll_interval_internal = self.poll_interval / 10.0
 
