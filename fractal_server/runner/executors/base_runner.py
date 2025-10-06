@@ -1,9 +1,9 @@
 from enum import StrEnum
 from typing import Any
 
-from fractal_server.app.runner.task_files import TaskFiles
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.task_files import TaskFiles
 
 
 class SubmitTaskType(StrEnum):

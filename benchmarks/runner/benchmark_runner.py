@@ -14,8 +14,8 @@ import tests.v2.fractal_tasks_mock.dist as dist
 from benchmarks.runner.mocks import DatasetV2Mock
 from benchmarks.runner.mocks import TaskV2Mock
 from benchmarks.runner.mocks import WorkflowTaskV2Mock
-from fractal_server.app.runner.v2._local import LocalRunner
-from fractal_server.app.runner.v2.runner import execute_tasks_v2
+from fractal_server.runner.v2._local import LocalRunner
+from fractal_server.runner.v2.runner import execute_tasks_v2
 
 
 def _run_cmd(cmd: str) -> str:

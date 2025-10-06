@@ -1,7 +1,7 @@
 import pytest
 
 from .aux_unit_runner import get_dummy_task_files
-from fractal_server.app.runner.executors.base_runner import BaseRunner
+from fractal_server.runner.executors.base_runner import BaseRunner
 
 
 def test_NotImplementedError_methods():

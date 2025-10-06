@@ -4,10 +4,10 @@ from time import perf_counter
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
-from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
+from fractal_server.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.runner.v2.task_interface import InitArgsModel
 
 
 def benchmark(func):

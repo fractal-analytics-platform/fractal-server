@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryImageCache
-from fractal_server.app.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.images.status_tools import _prepare_query
 from fractal_server.images.status_tools import enrich_images_unsorted_sync
+from fractal_server.runner.v2.db_tools import bulk_upsert_image_cache_fast
 
 REPETITIONS = 20
 DATASET_ID = 2

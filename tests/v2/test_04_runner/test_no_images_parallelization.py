@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from .execute_tasks_v2 import execute_tasks_v2_mod
-from fractal_server.app.runner.executors.local.runner import LocalRunner
+from fractal_server.runner.executors.local.runner import LocalRunner
 
 
 @pytest.fixture()

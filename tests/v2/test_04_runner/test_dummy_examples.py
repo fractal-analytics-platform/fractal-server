@@ -12,11 +12,11 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.local.runner import LocalRunner
 from fractal_server.urls import normalize_url
 
 
@@ -721,14 +721,14 @@ async def test_dummy_invalid_output_non_parallel(
         status="done",
     )
 
-    import fractal_server.app.runner.v2.runner_functions
-    from fractal_server.app.runner.exceptions import TaskOutputValidationError
+    import fractal_server.runner.v2.runner_functions
+    from fractal_server.runner.exceptions import TaskOutputValidationError
 
     def patched_cast(*args, **kwargs):
         raise TaskOutputValidationError()
 
     monkeypatch.setattr(
-        fractal_server.app.runner.v2.runner_functions,
+        fractal_server.runner.v2.runner_functions,
         "_cast_and_validate_TaskOutput",
         patched_cast,
     )
@@ -797,9 +797,9 @@ async def test_dummy_invalid_output_parallel(
         status="done",
     )
 
-    import fractal_server.app.runner.v2.runner_functions
-    from fractal_server.app.runner.exceptions import TaskOutputValidationError
-    from fractal_server.app.runner.v2.runner_functions import SubmissionOutcome
+    import fractal_server.runner.v2.runner_functions
+    from fractal_server.runner.exceptions import TaskOutputValidationError
+    from fractal_server.runner.v2.runner_functions import SubmissionOutcome
 
     def patched_task_output(*args, **kwargs):
         debug("XXX")
@@ -808,7 +808,7 @@ async def test_dummy_invalid_output_parallel(
         )
 
     monkeypatch.setattr(
-        fractal_server.app.runner.v2.runner_functions,
+        fractal_server.runner.v2.runner_functions,
         "_process_task_output",
         patched_task_output,
     )

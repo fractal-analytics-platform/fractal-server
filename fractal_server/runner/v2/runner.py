@@ -24,9 +24,6 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.base_runner import BaseRunner
-from fractal_server.app.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
@@ -38,6 +35,9 @@ from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import get_logger
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.base_runner import BaseRunner
+from fractal_server.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.types import AttributeFilters
 
 

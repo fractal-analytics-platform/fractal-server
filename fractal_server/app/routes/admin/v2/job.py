@@ -19,11 +19,11 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import JobUpdateV2
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 

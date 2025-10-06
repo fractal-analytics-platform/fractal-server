@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from fractal_server.app.runner.components import _index_to_component
+from fractal_server.runner.components import _index_to_component
 from fractal_server.string_tools import sanitize_string
 
 SUBMIT_PREFIX = "non_par"
