@@ -62,8 +62,8 @@ class Resource(SQLModel, table=True):
       "default_version": "3.10",
       "versions:{
         "3.10": "/somewhere/venv-3.10/bin/python",
-        "3.11": "/somewhere/venv-3.10/bin/python",
-        "3.12": "/somewhere/venv-3.10/bin/python",
+        "3.11": "/somewhere/venv-3.11/bin/python",
+        "3.12": "/somewhere/venv-3.12/bin/python",
        }
     }
     """
