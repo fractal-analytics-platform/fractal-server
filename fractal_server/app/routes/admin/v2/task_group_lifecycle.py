@@ -7,6 +7,8 @@ from fastapi import status
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
@@ -22,6 +24,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_group_or_404,
 )
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.aux import validate_user_profile
 from fractal_server.app.routes.aux.validate_user_settings import (
     validate_user_settings,
 )
@@ -29,10 +32,8 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import delete_local
 from fractal_server.tasks.v2.local import reactivate_local
@@ -114,13 +115,20 @@ async def deactivate_task_group(
     db.add(task_group_activity)
     await db.commit()
 
+    user = await db.get(UserOAuth, task_group.user_id)
+
+    # Get validated resource and profile
+    user_profile: tuple[Resource, Profile] = await validate_user_profile(
+        user, db
+    )
+    resource = user_profile[0]
+
     # Submit background task
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)
         user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+            user=user, backend=resource.type, db=db
         )
         # User appropriate FractalSSH object
         ssh_config = SSHConfig(
@@ -141,6 +149,7 @@ async def deactivate_task_group(
             deactivate_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
         )
 
     logger.debug(
@@ -229,13 +238,18 @@ async def reactivate_task_group(
     db.add(task_group_activity)
     await db.commit()
 
+    # Get validated resource and profile
+    user = await db.get(UserOAuth, task_group.user_id)
+    user_profile: tuple[Resource, Profile] = await validate_user_profile(
+        user, db
+    )
+    resource = user_profile[0]
+
     # Submit background task
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)
-        user = await db.get(UserOAuth, task_group.user_id)
         user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+            user=user, backend=resource.type, db=db
         )
         # Use appropriate FractalSSH object
         ssh_config = SSHConfig(
@@ -292,12 +306,17 @@ async def delete_task_group(
     db.add(task_group_activity)
     await db.commit()
 
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    # Get validated resource and profile
+    task_owner = await db.get(UserOAuth, task_group.user_id)
+    user_profile: tuple[Resource, Profile] = await validate_user_profile(
+        task_owner, db
+    )
+    resource = user_profile[0]
+
+    if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)
-        task_owner = await db.get(UserOAuth, task_group.user_id)
         task_owner_settings = await validate_user_settings(
-            user=task_owner, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+            user=task_owner, backend=resource.type, db=db
         )
         # Use appropriate FractalSSH object
         ssh_config = SSHConfig(

@@ -157,6 +157,7 @@ async def deactivate_task_group(
             deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
         )
 
     logger.debug(
