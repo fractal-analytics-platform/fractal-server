@@ -29,14 +29,17 @@ async def validate_user_profile(
 ) -> tuple[Resource, Profile]:
     """
     Validate profile and resource associated to a given user.
+
+    Note: this only returns non-db-bound objects.
     """
     await user_has_profile_or_422(user=user)
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
         # FIXME: these are mocks!
-        from typing import Literal
-        from pydantic import BaseModel, model_validator, Self
+        # FIXME: Move them somewhere else, and actually implement them.
+        from typing import Literal, Self
+        from pydantic import BaseModel, model_validator
         from fractal_server.types import NonEmptyStr
 
         class ResourceValidationModel(BaseModel):
@@ -59,6 +62,10 @@ async def validate_user_profile(
             **profile.model_dump(),
             resource_type=resource.resource_type,
         )
+
+        db.expunge(resource)
+        db.expunge(profile)
+
         return resource, profile
 
     except ValidationError as e:
