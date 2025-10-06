@@ -11,11 +11,11 @@ from fractal_server.app.models.v2.job import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.main import lifespan
+from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.syringe import Inject
 

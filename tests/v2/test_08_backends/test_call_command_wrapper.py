@@ -1,7 +1,7 @@
 import pytest
 
-from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.call_command_wrapper import (
+from fractal_server.runner.exceptions import TaskExecutionError
+from fractal_server.runner.executors.call_command_wrapper import (
     call_command_wrapper,
 )
 

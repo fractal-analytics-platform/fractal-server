@@ -11,11 +11,11 @@ from .aux_unit_runner import ZARR_URLS
 from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm_sudo.runner import (
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
-from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files

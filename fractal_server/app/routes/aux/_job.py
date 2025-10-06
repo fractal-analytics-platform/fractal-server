@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ...models.v2 import JobV2
-from ...runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 
 
 def _write_shutdown_file(*, job: JobV2):

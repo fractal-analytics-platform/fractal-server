@@ -9,12 +9,12 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.app.runner.v2.submit_workflow import _backends
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
+from fractal_server.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.runner.v2.submit_workflow import _backends
 
 PREFIX = "/api/v2"
 backends_available = list(_backends.keys())

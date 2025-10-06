@@ -11,26 +11,26 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session as DBSyncSession
 
-from ....config import get_settings
-from ....logger import get_logger
-from ....logger import reset_logger_handlers
-from ....logger import set_logger
-from ....ssh._fabric import FractalSSH
-from ....syringe import Inject
-from ....utils import get_timestamp
-from ....zip_tools import _zip_folder_to_file_and_remove
-from ...db import DB
-from ...models.v2 import DatasetV2
-from ...models.v2 import JobV2
-from ...models.v2 import WorkflowV2
-from ...schemas.v2 import JobStatusTypeV2
+from ...config import get_settings
+from ...logger import get_logger
+from ...logger import reset_logger_handlers
+from ...logger import set_logger
+from ...ssh._fabric import FractalSSH
+from ...syringe import Inject
+from ...utils import get_timestamp
+from ...zip_tools import _zip_folder_to_file_and_remove
 from ..exceptions import JobExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from fractal_server import __VERSION__
+from fractal_server.app.db import DB
 from fractal_server.app.models import UserSettings
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 
 _backends = {}

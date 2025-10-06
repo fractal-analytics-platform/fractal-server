@@ -7,7 +7,7 @@ from pathlib import Path
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 @contextmanager
@@ -528,7 +528,7 @@ async def failing_workflow_UnknownError(
         EXPECTED_STATUSES[str(workflow_task_id)] = "failed"
 
         # Artificially introduce failure
-        import fractal_server.app.runner.v2.runner
+        import fractal_server.runner.v2.runner
 
         ERROR_MSG = "This is the RuntimeError message."
 
@@ -536,7 +536,7 @@ async def failing_workflow_UnknownError(
             raise RuntimeError(ERROR_MSG)
 
         monkeypatch.setattr(
-            fractal_server.app.runner.v2.runner,
+            fractal_server.runner.v2.runner,
             "run_v2_task_non_parallel",
             _raise_RuntimeError,
         )

@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.app.runner.executors.slurm_sudo.runner import (
+from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
 from tests.fixtures_slurm import SLURM_USER

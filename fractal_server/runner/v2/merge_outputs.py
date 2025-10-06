@@ -1,5 +1,5 @@
-from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
-from fractal_server.app.runner.v2.task_interface import TaskOutput
+from fractal_server.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.runner.v2.task_interface import TaskOutput
 
 
 def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
