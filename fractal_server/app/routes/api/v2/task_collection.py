@@ -14,10 +14,8 @@ from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
 
-from .....config import get_settings
 from .....logger import reset_logger_handlers
 from .....logger import set_logger
-from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import TaskGroupV2
@@ -33,6 +31,8 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -169,11 +169,12 @@ async def collect_tasks_pip(
     """
     Task-collection endpoint
     """
-    # Get settings
-    settings = Inject(get_settings)
 
     # Get validate resource and profile
-    resource, _ = await validate_user_profile(user, db)
+    user_profile: tuple[Resource, Profile] = await validate_user_profile(
+        user, db
+    )
+    resource = user_profile[0]
 
     # Get some validated request data
     task_collect = request_data.task_collect
@@ -186,9 +187,9 @@ async def collect_tasks_pip(
 
     # Set/check python version
     if task_collect.python_version is None:
-        task_group_attrs[
-            "python_version"
-        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
+        task_group_attrs["python_version"] = resource.tasks_python_config[
+            "default_version"
+        ]
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:
@@ -265,14 +266,14 @@ async def collect_tasks_pip(
 
     # Validate user settings (backend-specific)
     user_settings = await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        user=user, backend=resource.resource_type, db=db
     )
 
     # Set path and venv_path
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.resource_type == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR_zzz.as_posix()
+        base_tasks_path = resource.tasks_local_folder
     task_group_path = (
         Path(base_tasks_path)
         / str(user.id)
@@ -313,7 +314,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+    if resource.resource_type != "slurm_ssh":
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -346,7 +347,7 @@ async def collect_tasks_pip(
 
     # FIXME: call validate_user_profile and discard its output
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.resource_type == "slurm_ssh":
         # SSH task collection
         # Use appropriate FractalSSH object
         ssh_config = SSHConfig(

@@ -114,12 +114,13 @@ def collect_local(
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates
+                python_bin = get_python_interpreter_v2(
+                    python_version=task_group.python_version,
+                    resource=resource,
+                )
                 replacements = get_collection_replacements(
                     task_group=task_group,
-                    python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version,
-                        resource=resource,
-                    ),
+                    python_bin=python_bin,
                     resource=resource,
                 )
 
