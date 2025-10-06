@@ -344,6 +344,8 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
+    # FIXME: call validate_user_profile and discard its output
+
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # SSH task collection
         # Use appropriate FractalSSH object
