@@ -7,7 +7,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.config import PixiSettings
+from fractal_server.config import PixiSettings_zzz
 from fractal_server.tasks.v2.local import collect_local_pixi
 
 
@@ -17,7 +17,7 @@ async def test_collect_local_pixi_path_exists(
     db,
     first_user,
 ):
-    pixi = PixiSettings(
+    pixi = PixiSettings_zzz(
         default_version="x",
         versions={"x": "/fake/x"},
     )

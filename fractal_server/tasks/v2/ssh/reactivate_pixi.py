@@ -107,7 +107,9 @@ def reactivate_ssh_pixi(
                     replacements = {
                         (
                             "__PIXI_HOME__",
-                            settings.pixi.versions[task_group.pixi_version],
+                            settings.pixi_zzz.versions[
+                                task_group.pixi_version
+                            ],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
@@ -119,15 +121,15 @@ def reactivate_ssh_pixi(
                         ("__FROZEN_OPTION__", "--frozen"),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            str(settings.pixi.TOKIO_WORKER_THREADS),
+                            str(settings.pixi_zzz.TOKIO_WORKER_THREADS),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
+                            str(settings.pixi_zzz.PIXI_CONCURRENT_SOLVES),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
+                            str(settings.pixi_zzz.PIXI_CONCURRENT_DOWNLOADS),
                         ),
                     }
 
@@ -217,7 +219,7 @@ def reactivate_ssh_pixi(
                             remote_script3_path,
                             f"chmod -R 755 {source_dir}",
                         ],
-                        slurm_config=settings.pixi.SLURM_CONFIG,
+                        slurm_config=settings.pixi_zzz.SLURM_CONFIG,
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                         prefix=common_args["prefix"],

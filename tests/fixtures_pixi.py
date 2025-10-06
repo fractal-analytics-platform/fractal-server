@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pytest import TempdirFactory
 
-from fractal_server.config import PixiSettings
+from fractal_server.config import PixiSettings_zzz
 
 
 def run_cmd(cmd: str):
@@ -33,7 +33,7 @@ def pixi_pkg_targz(testdata_path: Path) -> Path:
 @pytest.fixture(scope="session")
 def pixi(
     tmpdir_factory: TempdirFactory,
-) -> PixiSettings:
+) -> PixiSettings_zzz:
     """
     Session scoped fixture that installs pixi 0.54.1.
     """
@@ -57,7 +57,7 @@ def pixi(
     run_cmd(cmd)
     logging.info(f"END   running {cmd=}")
 
-    return PixiSettings(
+    return PixiSettings_zzz(
         default_version="0.54.1",
         versions={"0.54.1": pixi_home},
     )

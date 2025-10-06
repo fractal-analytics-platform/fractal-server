@@ -91,21 +91,21 @@ async def collect_task_pixi(
 ) -> TaskGroupActivityV2Read:
     settings = Inject(get_settings)
     # Check if Pixi is available
-    if settings.pixi is None:
+    if settings.pixi_zzz is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Pixi task collection is not available.",
         )
     # Check if provided Pixi version is available. Use default if not provided
     if pixi_version is None:
-        pixi_version = settings.pixi.default_version
+        pixi_version = settings.pixi_zzz.default_version
     else:
-        if pixi_version not in settings.pixi.versions:
+        if pixi_version not in settings.pixi_zzz.versions:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     f"Pixi version {pixi_version} is not available. Available "
-                    f"versions: {list(settings.pixi.versions.keys())}"
+                    f"versions: {list(settings.pixi_zzz.versions.keys())}"
                 ),
             )
 

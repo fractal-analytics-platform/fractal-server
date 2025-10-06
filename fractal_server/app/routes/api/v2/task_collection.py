@@ -188,7 +188,7 @@ async def collect_tasks_pip(
     if task_collect.python_version is None:
         task_group_attrs[
             "python_version"
-        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:

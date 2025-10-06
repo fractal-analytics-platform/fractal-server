@@ -114,7 +114,7 @@ async def test_task_collection_from_pypi_api_only(
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
         python_version=PYTHON_VERSION,
@@ -168,7 +168,7 @@ async def test_task_collection_from_pypi(
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
         python_version=PYTHON_VERSION,

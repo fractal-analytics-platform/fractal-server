@@ -8,8 +8,8 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
-from fractal_server.config import PixiSettings
-from fractal_server.config import PixiSLURMConfig
+from fractal_server.config import PixiSettings_zzz
+from fractal_server.config import PixiSLURMConfig_zzz
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
@@ -26,7 +26,7 @@ def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
 
 
 @pytest.fixture(scope="function")
-def pixi_ssh(tmp777_path: Path) -> PixiSettings:
+def pixi_ssh(tmp777_path: Path) -> PixiSettings_zzz:
     """
     Similar to the `pixi` fixture, but it uses a 777 pixi folder, which
     is also writeable from within SSH remote-host container.
@@ -53,10 +53,10 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
     )
     logging.info(f"END   running {cmd=}")
 
-    return PixiSettings(
+    return PixiSettings_zzz(
         default_version="0.54.1",
         versions={"0.54.1": pixi_home.as_posix()},
-        SLURM_CONFIG=PixiSLURMConfig(
+        SLURM_CONFIG=PixiSLURMConfig_zzz(
             partition="main",
             cpus=1,
             mem="1G",
@@ -78,7 +78,7 @@ async def test_task_group_lifecycle_pixi_ssh(
     fractal_ssh_list: FractalSSHList,
     slurmlogin_ip,
     ssh_keys,
-    pixi_ssh: PixiSettings,
+    pixi_ssh: PixiSettings_zzz,
     pixi_pkg_targz: Path,
 ):
     credentials = dict(

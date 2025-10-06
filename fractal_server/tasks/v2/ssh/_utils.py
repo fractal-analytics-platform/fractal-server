@@ -188,8 +188,8 @@ def edit_pyproject_toml_in_place_ssh(
     settings = Inject(get_settings)
     new_pyproject_contents = simplify_pyproject_toml(
         original_toml_string=pyproject_contents,
-        pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
-        pixi_platform=settings.pixi.DEFAULT_PLATFORM,
+        pixi_environment=settings.pixi_zzz.DEFAULT_ENVIRONMENT,
+        pixi_platform=settings.pixi_zzz.DEFAULT_PLATFORM,
     )
     # Write new `pyproject.toml`
     fractal_ssh.write_remote_file(

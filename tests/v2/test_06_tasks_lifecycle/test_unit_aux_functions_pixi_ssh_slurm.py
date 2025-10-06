@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from fractal_server.config import PixiSLURMConfig
+from fractal_server.config import PixiSLURMConfig_zzz
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _log_change_of_job_state,
@@ -110,7 +110,7 @@ def test_sbatch_failure(
     ):
         run_script_on_remote_slurm(
             script_paths=[script_path],
-            slurm_config=PixiSLURMConfig(
+            slurm_config=PixiSLURMConfig_zzz(
                 mem="1G",
                 cpus=1,
                 partition="main",

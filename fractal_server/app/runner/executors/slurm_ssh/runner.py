@@ -51,7 +51,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
-            python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON,
+            python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON_zzz,
             slurm_account=slurm_account,
         )
 

@@ -73,7 +73,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
             user_cache_dir=user_cache_dir,
             poll_interval=poll_interval,
             python_worker_interpreter=(
-                settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
+                settings.FRACTAL_SLURM_WORKER_PYTHON_zzz or sys.executable
             ),
             slurm_account=slurm_account,
         )

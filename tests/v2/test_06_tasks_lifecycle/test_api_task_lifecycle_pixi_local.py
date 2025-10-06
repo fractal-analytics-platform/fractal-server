@@ -5,7 +5,7 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
-from fractal_server.config import PixiSettings
+from fractal_server.config import PixiSettings_zzz
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
@@ -29,7 +29,7 @@ async def test_api_failures(
 ):
     override_settings_factory(
         FRACTAL_PIXI_CONFIG_FILE="/fake/pixi/pixi.json",
-        pixi=PixiSettings(
+        pixi=PixiSettings_zzz(
             default_version="1.0.0",
             versions={
                 "1.0.0": "/fake/pixi/1.0.0",
@@ -89,7 +89,7 @@ async def test_pixi_collection_path_already_exists(
     override_settings_factory,
     client,
     MockCurrentUser,
-    pixi: PixiSettings,
+    pixi: PixiSettings_zzz,
     pixi_pkg_targz: Path,
     tmp_path: Path,
 ):
@@ -134,7 +134,7 @@ async def test_task_group_lifecycle_pixi_local(
     override_settings_factory,
     client,
     MockCurrentUser,
-    pixi: PixiSettings,
+    pixi: PixiSettings_zzz,
     pixi_pkg_targz: Path,
     tmp_path: Path,
     db,
