@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import ValidationError
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
@@ -25,41 +26,45 @@ async def validate_user_profile(
     *,
     user: UserOAuth,
     db: AsyncSession,
-) -> None:
+) -> tuple[Resource, Profile]:
     """
     Validate profile and resource associated to a given user.
     """
     await user_has_profile_or_422(user=user)
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
-    print(profile, resource)  # FIXME
-    if False:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=("invalid profile or resource - FIXME"),
-        )
-    # validate profile&resource with some pydantic schema, which depends on
-    # the resource.type
-
-
-"""
-EXAMPLE
-
-
-    if backend == "slurm_ssh":
-        UserSettingsValidationModel = SlurmSshUserSettings
-    elif backend == "slurm":
-        UserSettingsValidationModel = SlurmSudoUserSettings
-    else:
-        # For other backends, we don't validate anything
-        return user_settings
-
     try:
-        UserSettingsValidationModel(**user_settings.model_dump())
+        # FIXME: these are mocks!
+        from typing import Literal
+        from pydantic import BaseModel, model_validator, Self
+        from fractal_server.types import NonEmptyStr
+
+        class ResourceValidationModel(BaseModel):
+            resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
+
+        class ProfileValidationModel(BaseModel):
+            resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
+            username: NonEmptyStr | None = None
+
+            @model_validator(mode="after")
+            def validate_username(self) -> Self:
+                if self.resource_type != "local" and self.username is None:
+                    raise ValueError("username is required")
+                return self
+
+        # FIXME - end mocks
+
+        ResourceValidationModel(**resource.model_dump())
+        ProfileValidationModel(
+            **profile.model_dump(),
+            resource_type=resource.resource_type,
+        )
+        return resource, profile
+
     except ValidationError as e:
         error_msg = (
-            "User settings are not valid for "
-            f"FRACTAL_RUNNER_BACKEND='{backend}'. "
+            "User resource/profile are not valid for "
+            f"resource type '{resource.resource_type}'. "
             f"Original error: {str(e)}"
         )
         logger.warning(error_msg)
@@ -67,6 +72,3 @@ EXAMPLE
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
-
-    return user_settings
-"""
