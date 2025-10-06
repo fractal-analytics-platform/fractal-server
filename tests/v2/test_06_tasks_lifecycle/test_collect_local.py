@@ -153,7 +153,7 @@ async def test_invalid_wheel(
     THEN the expected log is shown
     """
 
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
+    override_settings_factory(FRACTAL_TASKS_DIR_zzz=tmp_path)
 
     pkgnames_logs = [
         ("invalid_manifest", "manifest_version"),

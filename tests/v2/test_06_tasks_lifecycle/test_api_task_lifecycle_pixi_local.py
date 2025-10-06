@@ -28,7 +28,7 @@ async def test_api_failures(
     tmp_path: Path,
 ):
     override_settings_factory(
-        FRACTAL_PIXI_CONFIG_FILE="/fake/pixi/pixi.json",
+        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/pixi/pixi.json",
         pixi=PixiSettings(
             default_version="1.0.0",
             versions={
@@ -94,8 +94,8 @@ async def test_pixi_collection_path_already_exists(
     tmp_path: Path,
 ):
     override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
+        FRACTAL_TASKS_DIR_zzz=tmp_path,
+        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
         pixi=pixi,
     )
 
@@ -112,7 +112,7 @@ async def test_pixi_collection_path_already_exists(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         task_group_path = (
-            Path(settings.FRACTAL_TASKS_DIR.as_posix())
+            Path(settings.FRACTAL_TASKS_DIR_zzz.as_posix())
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"
@@ -140,8 +140,8 @@ async def test_task_group_lifecycle_pixi_local(
     db,
 ):
     override_settings_factory(
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
-        FRACTAL_TASKS_DIR=tmp_path,
+        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
+        FRACTAL_TASKS_DIR_zzz=tmp_path,
         pixi=pixi,
     )
 

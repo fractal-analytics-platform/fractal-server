@@ -130,7 +130,7 @@ async def collect_task_pixi(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+        base_tasks_path = settings.FRACTAL_TASKS_DIR_zzz.as_posix()
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()

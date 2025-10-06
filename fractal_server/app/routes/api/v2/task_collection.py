@@ -188,7 +188,7 @@ async def collect_tasks_pip(
     if task_collect.python_version is None:
         task_group_attrs[
             "python_version"
-        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:
@@ -272,7 +272,7 @@ async def collect_tasks_pip(
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+        base_tasks_path = settings.FRACTAL_TASKS_DIR_zzz.as_posix()
     task_group_path = (
         Path(base_tasks_path)
         / str(user.id)

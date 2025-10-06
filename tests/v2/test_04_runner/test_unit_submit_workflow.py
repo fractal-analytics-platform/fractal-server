@@ -106,7 +106,7 @@ async def test_mkdir_error(
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm",
-        FRACTAL_SLURM_WORKER_PYTHON=None,
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=None,
     )
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         project = await project_factory_v2(user)

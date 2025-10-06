@@ -36,7 +36,7 @@ async def test_folder_already_exists(
     tmp_path: Path,
     testdata_path: Path,
 ):
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
+    override_settings_factory(FRACTAL_TASKS_DIR_zzz=tmp_path)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Create the folder in advance
         expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
@@ -64,7 +64,7 @@ async def test_invalid_python_version(
     override_settings_factory,
 ):
     override_settings_factory(
-        FRACTAL_TASKS_PYTHON_3_9=None,
+        FRACTAL_TASKS_PYTHON_3_9_zzz=None,
     )
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
@@ -176,7 +176,7 @@ async def test_failure_cleanup(
     """
 
     override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
+        FRACTAL_TASKS_DIR_zzz=tmp_path,
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
     )
 

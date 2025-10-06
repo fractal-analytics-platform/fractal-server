@@ -53,12 +53,13 @@ async def test_full_workflow_slurm(
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=tmp777_path / "artifacts",
+        FRACTAL_TASKS_DIR_zzz=tmp_path_factory.getbasetemp()
+        / "FRACTAL_TASKS_DIR_zzz",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -107,12 +108,13 @@ async def test_full_workflow_TaskExecutionError_slurm(
     Run a workflow made of three tasks, two successful tasks and one
     that raises an error.
     """
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=tmp777_path / "artifacts",
+        FRACTAL_TASKS_DIR_zzz=tmp_path_factory.getbasetemp()
+        / "FRACTAL_TASKS_DIR_zzz",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -155,8 +157,8 @@ async def test_non_executable_task_command_slurm(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=tmp777_path / "artifacts",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -202,8 +204,8 @@ async def test_failing_workflow_UnknownError_slurm(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=tmp777_path / "artifacts",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")

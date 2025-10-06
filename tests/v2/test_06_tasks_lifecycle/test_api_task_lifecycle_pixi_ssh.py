@@ -98,7 +98,7 @@ async def test_task_group_lifecycle_pixi_ssh(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_PIXI_CONFIG_FILE="fake",
+        FRACTAL_PIXI_CONFIG_FILE_zzz="fake",
         pixi=pixi_ssh,
     )
 

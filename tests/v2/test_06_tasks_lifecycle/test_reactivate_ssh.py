@@ -87,7 +87,7 @@ async def test_reactivate_ssh_fail(
 
     # Setup remote Python interpreter
     current_py_version_underscore = current_py_version.replace(".", "_")
-    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
     value = f"/.venv{current_py_version}/bin/python{current_py_version}"
     override_settings_factory(**{key: value})
 

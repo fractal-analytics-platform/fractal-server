@@ -41,7 +41,7 @@ async def test_submit_success(
     valid_user_id,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
     )
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
@@ -113,7 +113,7 @@ async def test_submit_fail(
     valid_user_id,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
     )
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
@@ -173,7 +173,7 @@ async def test_multisubmit_parallel(
     valid_user_id,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
     )
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
@@ -235,7 +235,7 @@ async def test_multisubmit_compound(
     valid_user_id,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
     )
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit

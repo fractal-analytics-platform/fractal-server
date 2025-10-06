@@ -37,7 +37,7 @@ class SlurmConfigError(ValueError):
 
 class _SlurmConfigSet(BaseModel):
     """
-    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` for the default/gpu
+    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE_zzz` for the default/gpu
     SLURM config. Only used as part of `SlurmConfigFile`.
 
     Attributes:
@@ -71,7 +71,7 @@ class _SlurmConfigSet(BaseModel):
 
 class _BatchingConfigSet(BaseModel):
     """
-    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` to configure the
+    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE_zzz` to configure the
     batching strategy (that is, how to combine several tasks in a single SLURM
     job). Only used as part of `SlurmConfigFile`.
 
@@ -98,7 +98,7 @@ class _BatchingConfigSet(BaseModel):
 
 class SlurmConfigFile(BaseModel):
     """
-    Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE`
+    Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE_zzz`
 
     This must be a JSON file, and a valid example is
     ```JSON
@@ -162,7 +162,7 @@ def load_slurm_config_file(
 
     if not config_path:
         settings = Inject(get_settings)
-        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
+        config_path = settings.FRACTAL_SLURM_CONFIG_FILE_zzz
 
     # Load file
     logger.debug(f"[get_slurm_config] Now loading {config_path=}")
@@ -210,7 +210,7 @@ class SlurmConfig(BaseModel):
     **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`,
     and they are not meant to be initialized by the user; the same holds for
     `SlurmConfig` attributes (e.g. `mem_per_task_MB`), which are not meant to
-    be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on the
+    be part of the `FRACTAL_SLURM_CONFIG_FILE_zzz` JSON file (details on the
     expected file content are defined in
     [`SlurmConfigFile`](#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
 

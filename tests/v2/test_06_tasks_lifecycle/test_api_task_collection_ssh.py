@@ -52,9 +52,9 @@ async def test_task_collection_ssh_from_pypi(
 
     # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
     settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
         PY_KEY: f"/.venv{current_py_version}/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
     }
@@ -221,9 +221,9 @@ async def test_task_collection_ssh_failure(
 
     # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
     settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
     }
@@ -316,9 +316,9 @@ async def test_task_collection_ssh_failure_no_connection(
 
     # Override settings with Python/SSH configurations
     current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
     settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION": current_py_version,
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
         PY_KEY: f"/usr/bin/python{current_py_version}",
         "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
     }

@@ -19,8 +19,8 @@ def set_test_db(tmp_path):
 
     # General config
     config_lines = [
-        f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
-        f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
+        f"FRACTAL_TASKS_DIR_zzz={cwd}/FRACTAL_TASKS_DIR_zzz",
+        f"FRACTAL_RUNNER_WORKING_BASE_DIR_zzz={cwd}/artifacts",
         "JWT_SECRET_KEY=secret",
         "FRACTAL_LOGGING_LEVEL=10",
         "POSTGRES_USER=postgres",

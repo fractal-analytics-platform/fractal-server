@@ -32,13 +32,13 @@ async def test_task_collection_from_wheel_non_canonical(
     non-canonical name.
     """
 
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
 
     # Prepare absolute path to wheel file
@@ -103,18 +103,18 @@ async def test_task_collection_from_pypi_api_only(
         fake_collect_local,
     )
 
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
         python_version=PYTHON_VERSION,
@@ -157,18 +157,18 @@ async def test_task_collection_from_pypi(
     tmp_path: Path,
     current_py_version,
 ):
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=current_py_version,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
     settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
         python_version=PYTHON_VERSION,
@@ -220,10 +220,11 @@ async def test_task_collection_failure_due_to_existing_path(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         path = (
-            settings.FRACTAL_TASKS_DIR / f"{user.id}/testing-tasks-mock/0.1.3/"
+            settings.FRACTAL_TASKS_DIR_zzz
+            / f"{user.id}/testing-tasks-mock/0.1.3/"
         ).as_posix()
         venv_path = (
-            settings.FRACTAL_TASKS_DIR
+            settings.FRACTAL_TASKS_DIR_zzz
             / f"{user.id}/testing-tasks-mock/0.1.3/venv/"
         ).as_posix()
 

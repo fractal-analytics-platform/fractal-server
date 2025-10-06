@@ -31,7 +31,7 @@ class Resource(SQLModel, table=True):
 
     job_local_folder: str
     """
-    # FRACTAL_RUNNER_WORKING_BASE_DIR
+    # FRACTAL_RUNNER_WORKING_BASE_DIR_zzz
     # """
 
     job_remote_folder: str | None = None
@@ -39,18 +39,18 @@ class Resource(SQLModel, table=True):
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
-    FRACTAL_LOCAL_CONFIG_FILE and FRACTAL_SLURM_CONFIG_FILE content
+    FRACTAL_LOCAL_CONFIG_FILE_zzz and FRACTAL_SLURM_CONFIG_FILE_zzz content
     """
     job_slurm_python_worker: str | None = None
     """
-    FRACTAL_SLURM_WORKER_PYTHON
+    FRACTAL_SLURM_WORKER_PYTHON_zzz
     check not (resource_type is local and job_slurm_python_worker is None)
     """
 
     # task_settings
     tasks_local_folder: str
     """
-    FRACTAL_TASKS_DIR
+    FRACTAL_TASKS_DIR_zzz
     """
 
     tasks_python_config: dict[str, Any] = Field(
@@ -74,7 +74,7 @@ class Resource(SQLModel, table=True):
 
     tasks_pip_cache_dir: str | None = None
     """
-    FRACTAL_PIP_CACHE_DIR + PIP_CACHE_DIR_ARG
+    FRACTAL_PIP_CACHE_DIR_zzz + PIP_CACHE_DIR_ARG
     """
 
     @property

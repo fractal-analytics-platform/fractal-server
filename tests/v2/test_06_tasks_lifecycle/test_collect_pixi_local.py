@@ -22,8 +22,8 @@ async def test_collect_local_pixi_path_exists(
         versions={"x": "/fake/x"},
     )
     override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
+        FRACTAL_TASKS_DIR_zzz=tmp_path,
+        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
         pixi=pixi,
     )
 

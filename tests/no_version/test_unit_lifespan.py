@@ -169,8 +169,8 @@ async def test_lifespan_slurm_ssh(
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON="/not/relevant",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_SLURM_WORKER_PYTHON_zzz="/not/relevant",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
     app = FastAPI()
     async with lifespan(app):

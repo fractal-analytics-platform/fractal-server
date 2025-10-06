@@ -116,8 +116,8 @@ async def test_submit_job_ssh_connection_failure(
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/usr/bin/python{current_py_version}",
+        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
 
     async with MockCurrentUser(

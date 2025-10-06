@@ -6,8 +6,8 @@ Some are optional and sensible defaults are provided.
 >
 > ```
 > JWT_SECRET_KEY
-> FRACTAL_TASKS_DIR
-> FRACTAL_RUNNER_WORKING_BASE_DIR
+> FRACTAL_TASKS_DIR_zzz
+> FRACTAL_RUNNER_WORKING_BASE_DIR_zzz
 > POSTGRES_DB
 > ```
 

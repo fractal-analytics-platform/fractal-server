@@ -40,8 +40,8 @@ jobs:
         export POSTGRES_PASSWORD=postgres
         export POSTGRES_USER=postgres
         export POSTGRES_HOST=localhost
-        export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
-        export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
+        export FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=/tmp/artifacts
+        export FRACTAL_TASKS_DIR_zzz=/tmp/FRACTAL_TASKS_DIR_zzz
         export JWT_SECRET_KEY=secret
         export JWT_EXPIRE_SECONDS=84600
         cd benchmarks/

@@ -271,12 +271,14 @@ async def test_lifecycle(
 ):
     overrides = dict(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR=tmp777_path,
+        FRACTAL_TASKS_DIR_zzz=tmp777_path,
     )
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         # Setup remote Python interpreter
         current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
+        python_key = (
+            f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
+        )
         python_value = (
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         )

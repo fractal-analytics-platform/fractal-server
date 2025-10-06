@@ -15,7 +15,7 @@ async def test_check_fractal_server_versions_executable(
     monkeypatch,
 ):
     override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=(
+        FRACTAL_SLURM_WORKER_PYTHON_zzz=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         )
     )

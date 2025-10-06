@@ -106,7 +106,7 @@ class PixiSettings(BaseModel):
     default values may be omitted).
 
     The path to this JSON file must then be provided to Fractal via the
-    environment variable `FRACTAL_PIXI_CONFIG_FILE`.
+    environment variable `FRACTAL_PIXI_CONFIG_FILE_zzz`.
     """
 
     versions: DictStrStr

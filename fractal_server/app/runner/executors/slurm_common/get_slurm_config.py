@@ -38,7 +38,7 @@ def get_slurm_config_internal(
             prepared.
         config_path:
             Path of a Fractal SLURM configuration file; if `None`, use
-            `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
+            `FRACTAL_SLURM_CONFIG_FILE_zzz` variable from settings.
         which_type:
             Determines whether to use `meta_parallel` or `meta_non_parallel`.
 
