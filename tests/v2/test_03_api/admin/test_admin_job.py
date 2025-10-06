@@ -15,9 +15,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 PREFIX = "/admin/v2"

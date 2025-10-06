@@ -3,7 +3,7 @@ from devtools import debug
 from fabric import Connection
 
 from .aux_unit_runner import *  # noqa
-from fractal_server.app.runner.executors.slurm_ssh.runner import SlurmSSHRunner
+from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 

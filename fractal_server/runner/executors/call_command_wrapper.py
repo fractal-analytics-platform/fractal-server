@@ -3,7 +3,7 @@ import shlex
 import shutil
 import subprocess  # nosec
 
-from fractal_server.app.runner.exceptions import TaskExecutionError
+from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.string_tools import validate_cmd
 
 

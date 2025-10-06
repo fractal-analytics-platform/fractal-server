@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from fractal_server import __VERSION__
-from fractal_server.app.runner.executors.slurm_common.remote import worker
+from fractal_server.runner.executors.slurm_common.remote import worker
 
 
 def test_slurm_remote(tmp_path: Path):

@@ -7,9 +7,9 @@ from .aux_unit_runner import ZARR_URLS
 from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.local.runner import LocalRunner
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.runner.exceptions import TaskExecutionError
+from fractal_server.runner.executors.local.runner import LocalRunner
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 
@@ -128,7 +128,7 @@ async def test_submit_inner_failure(
     def mock_validate_params(*args, **kwargs):
         raise ValueError(ERROR_MSG)
 
-    from fractal_server.app.runner.executors.local.runner import BaseRunner
+    from fractal_server.runner.executors.local.runner import BaseRunner
 
     monkeypatch.setattr(
         BaseRunner, "validate_submit_parameters", mock_validate_params
@@ -302,7 +302,7 @@ async def test_multisubmit_parallel_fail(
     def _fake_submit(*args, **kwargs):
         raise ValueError("Error")
 
-    from fractal_server.app.runner.executors.local.runner import (
+    from fractal_server.runner.executors.local.runner import (
         ThreadPoolExecutor,
     )
 
@@ -351,7 +351,7 @@ async def test_multisubmit_inner_failure(
     def mock_validate_params(*args, **kwargs):
         raise ValueError(ERROR_MSG)
 
-    from fractal_server.app.runner.executors.local.runner import BaseRunner
+    from fractal_server.runner.executors.local.runner import BaseRunner
 
     monkeypatch.setattr(
         BaseRunner, "validate_multisubmit_parameters", mock_validate_params

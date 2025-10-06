@@ -10,9 +10,9 @@ from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
-from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)

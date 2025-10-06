@@ -5,8 +5,8 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import ValidationError
 
-from ....images import SingleImageTaskOutput
-from fractal_server.app.runner.exceptions import TaskOutputValidationError
+from fractal_server.images import SingleImageTaskOutput
+from fractal_server.runner.exceptions import TaskOutputValidationError
 from fractal_server.types import ZarrUrlStr
 
 

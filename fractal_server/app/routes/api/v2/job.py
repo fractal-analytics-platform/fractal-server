@@ -15,7 +15,6 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
-from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
 from ...aux._job import _write_shutdown_file
@@ -25,6 +24,7 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 # https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread

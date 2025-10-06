@@ -1,4 +1,4 @@
-from fractal_server.app.runner.executors.slurm_common._batching import (
+from fractal_server.runner.executors.slurm_common._batching import (
     heuristics,
 )
 
