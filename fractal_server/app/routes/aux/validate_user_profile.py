@@ -6,6 +6,12 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.schemas.v2 import ValidProfileLocal
+from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
+from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
+from fractal_server.app.schemas.v2 import ValidResourceLocal
+from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
+from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -36,32 +42,15 @@ async def validate_user_profile(
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
-        # FIXME: these are mocks!
-        # FIXME: Move them somewhere else, and actually implement them.
-        from typing import Literal, Self
-        from pydantic import BaseModel, model_validator
-        from fractal_server.types import NonEmptyStr
-
-        class ResourceValidationModel(BaseModel):
-            resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
-
-        class ProfileValidationModel(BaseModel):
-            resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
-            username: NonEmptyStr | None = None
-
-            @model_validator(mode="after")
-            def validate_username(self) -> Self:
-                if self.resource_type != "local" and self.username is None:
-                    raise ValueError("username is required")
-                return self
-
-        # FIXME - end mocks
-
-        ResourceValidationModel(**resource.model_dump())
-        ProfileValidationModel(
-            **profile.model_dump(),
-            resource_type=resource.resource_type,
-        )
+        if resource.resource_type == "local":
+            ValidResourceLocal(**resource.model_dump())
+            ValidProfileLocal(**profile.model_dump())
+        elif resource.resource_type == "slurm_sudo":
+            ValidResourceSlurmSudo(**resource.model_dump())
+            ValidProfileSlurmSudo(**profile.model_dump())
+        elif resource.resource_type == "slurm_ssh":
+            ValidResourceSlurmSSH(**resource.model_dump())
+            ValidProfileSlurmSSH(**profile.model_dump())
 
         db.expunge(resource)
         db.expunge(profile)

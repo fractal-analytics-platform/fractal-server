@@ -25,6 +25,12 @@ from .manifest import TaskManifestV2  # noqa F401
 from .project import ProjectCreateV2  # noqa F401
 from .project import ProjectReadV2  # noqa F401
 from .project import ProjectUpdateV2  # noqa F401
+from .resource import ValidProfileLocal  # noqa F401
+from .resource import ValidProfileSlurmSSH  # noqa F401
+from .resource import ValidProfileSlurmSudo  # noqa F401
+from .resource import ValidResourceLocal  # noqa F401
+from .resource import ValidResourceSlurmSSH  # noqa F401
+from .resource import ValidResourceSlurmSudo  # noqa F401
 from .status_legacy import WorkflowTaskStatusTypeV2  # noqa F401
 from .task import TaskCreateV2  # noqa F401
 from .task import TaskExportV2  # noqa F401

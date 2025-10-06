@@ -47,4 +47,5 @@ async def test_validate_user_profile_local(
         user_kwargs=dict(profile_id=local_resource_profile_db[1].id)
     ) as user:
         debug(user)
-        await validate_user_profile(user=user, db=db)
+        res, prof = await validate_user_profile(user=user, db=db)
+        debug(res)
