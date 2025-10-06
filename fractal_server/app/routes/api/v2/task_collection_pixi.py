@@ -12,6 +12,8 @@ from fastapi import UploadFile
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -28,6 +30,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.routes.aux.validate_user_settings import (
     validate_user_settings,
 )
@@ -36,10 +41,8 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SSHConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
@@ -89,23 +92,29 @@ async def collect_task_pixi(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
-    settings = Inject(get_settings)
+    # Get validated resource and profile
+    user_profile: tuple[Resource, Profile] = await validate_user_profile(
+        user, db
+    )
+    resource = user_profile[0]
+
     # Check if Pixi is available
-    if settings.pixi is None:
+    if not resource.tasks_pixi_config:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Pixi task collection is not available.",
         )
     # Check if provided Pixi version is available. Use default if not provided
     if pixi_version is None:
-        pixi_version = settings.pixi.default_version
+        pixi_version = resource.tasks_pixi_config["default_version"]
     else:
-        if pixi_version not in settings.pixi.versions:
+        if pixi_version not in resource.tasks_pixi_config["versions"]:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
-                    f"Pixi version {pixi_version} is not available. Available "
-                    f"versions: {list(settings.pixi.versions.keys())}"
+                    f"Pixi version '{pixi_version}' is not available. "
+                    "Available versions: "
+                    f"{list(resource.tasks_pixi_config['versions'].keys())}"
                 ),
             )
 
@@ -124,13 +133,13 @@ async def collect_task_pixi(
     )
 
     user_settings = await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+        user=user, backend=resource.resource_type, db=db
     )
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.resource_type == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR_zzz.as_posix()
+        base_tasks_path = resource.tasks_local_folder
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
@@ -162,7 +171,7 @@ async def collect_task_pixi(
         db=db,
     )
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+    if resource.resource_type != "slurm_ssh":
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -187,7 +196,7 @@ async def collect_task_pixi(
     await db.commit()
     await db.refresh(task_group_activity)
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.resource_type == "slurm_ssh":
         ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,

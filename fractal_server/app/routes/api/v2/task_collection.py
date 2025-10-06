@@ -170,7 +170,7 @@ async def collect_tasks_pip(
     Task-collection endpoint
     """
 
-    # Get validate resource and profile
+    # Get validated resource and profile
     user_profile: tuple[Resource, Profile] = await validate_user_profile(
         user, db
     )
