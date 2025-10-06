@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.config import get_settings
-from fractal_server.config import PixiSLURMConfig_zzz
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
@@ -141,7 +141,7 @@ def _verify_success_file_exists(
 def run_script_on_remote_slurm(
     *,
     script_paths: list[str],
-    slurm_config: PixiSLURMConfig_zzz,
+    slurm_config: PixiSLURMConfig,
     fractal_ssh: FractalSSH,
     logger_name: str,
     log_file_path: Path,

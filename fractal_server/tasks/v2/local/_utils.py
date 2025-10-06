@@ -94,8 +94,8 @@ def edit_pyproject_toml_in_place_local(
     settings = Inject(get_settings)
     new_pyproject_contents = simplify_pyproject_toml(
         original_toml_string=pyproject_contents,
-        pixi_environment=settings.pixi_zzz.DEFAULT_ENVIRONMENT,
-        pixi_platform=settings.pixi_zzz.DEFAULT_PLATFORM,
+        pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
+        pixi_platform=settings.pixi.DEFAULT_PLATFORM,
     )
     # Write new `pyproject.toml`
     with pyproject_toml_path.open("w") as f:

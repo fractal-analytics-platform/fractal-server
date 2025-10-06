@@ -68,7 +68,7 @@ class MailSettings(BaseModel):
     use_login: bool
 
 
-def _check_pixi_slurm_memory_zzz(mem: str) -> str:
+def _check_pixi_slurm_memory(mem: str) -> str:
     if mem[-1] not in ["K", "M", "G", "T"]:
         raise ValueError(
             f"Invalid memory requirement {mem=} for `pixi`, "
@@ -77,7 +77,7 @@ def _check_pixi_slurm_memory_zzz(mem: str) -> str:
     return mem
 
 
-class PixiSLURMConfig_zzz(BaseModel):
+class PixiSLURMConfig(BaseModel):
     """
     Parameters that are passed directly to a `sbatch` command.
 
@@ -92,7 +92,7 @@ class PixiSLURMConfig_zzz(BaseModel):
     """
     `-c, --cpus-per-task=<ncpus>
     """
-    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory_zzz)]
+    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
     """
     `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
     From `sbatch` docs: Specify the real memory required per node. Default
@@ -109,7 +109,7 @@ class PixiSLURMConfig_zzz(BaseModel):
     """
 
 
-class PixiSettings_zzz(BaseModel):
+class PixiSettings(BaseModel):
     """
     Configuration for Pixi Task collection.
 
@@ -181,7 +181,7 @@ class PixiSettings_zzz(BaseModel):
     """
     Default platform for pixi.
     """
-    SLURM_CONFIG: PixiSLURMConfig_zzz | None = None
+    SLURM_CONFIG: PixiSLURMConfig | None = None
     """
     Required when using pixi in a SSH/SLURM deployment.
     """
@@ -421,21 +421,21 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR_zzz: Path | None = None
+    FRACTAL_TASKS_DIR: Path | None = None
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR_zzz: Path | None = None
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Path | None = None
     """
     Base directory for job files (either an absolute path or a path relative to
     current working directory).
     """
 
     @field_validator(
-        "FRACTAL_TASKS_DIR_zzz",
-        "FRACTAL_RUNNER_WORKING_BASE_DIR_zzz",
+        "FRACTAL_TASKS_DIR",
+        "FRACTAL_RUNNER_WORKING_BASE_DIR",
         mode="after",
     )
     @classmethod
@@ -465,7 +465,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE_zzz: Path | None = None
+    FRACTAL_LOCAL_CONFIG_FILE: Path | None = None
     """
     Path of JSON file with configuration for the local backend.
     """
@@ -481,18 +481,18 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_SLURM_CONFIG_FILE_zzz: Path | None = None
+    FRACTAL_SLURM_CONFIG_FILE: Path | None = None
     """
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_SLURM_WORKER_PYTHON_zzz: AbsolutePathStr | None = None
+    FRACTAL_SLURM_WORKER_PYTHON: AbsolutePathStr | None = None
     """
     Absolute path to Python interpreter that will run the jobs on the SLURM
     nodes. If not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz: None | (
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: None | (
         Literal["3.9", "3.10", "3.11", "3.12", "3.13"]
     ) = None
     """
@@ -501,7 +501,7 @@ class Settings(BaseSettings):
     `FRACTAL_TASKS_PYTHON_3_10`) to be set.
     """
 
-    FRACTAL_TASKS_PYTHON_3_9_zzz: str | None = None
+    FRACTAL_TASKS_PYTHON_3_9: str | None = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
     environments tasks. Note that this interpreter must have the `venv` module
@@ -510,29 +510,29 @@ class Settings(BaseSettings):
     unset, `sys.executable` is used as a default.
     """
 
-    FRACTAL_TASKS_PYTHON_3_10_zzz: str | None = None
+    FRACTAL_TASKS_PYTHON_3_10: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
     """
 
-    FRACTAL_TASKS_PYTHON_3_11_zzz: str | None = None
+    FRACTAL_TASKS_PYTHON_3_11: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
     """
 
-    FRACTAL_TASKS_PYTHON_3_12_zzz: str | None = None
+    FRACTAL_TASKS_PYTHON_3_12: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
-    FRACTAL_TASKS_PYTHON_3_13_zzz: str | None = None
+    FRACTAL_TASKS_PYTHON_3_13: str | None = None
     """
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.13.
     """
 
     @model_validator(mode="before")
     @classmethod
-    def check_tasks_python_zzz(cls, values):
+    def check_tasks_python(cls, values):
         """
         Perform multiple checks of the Python-interpreter variables.
 
@@ -605,22 +605,22 @@ class Settings(BaseSettings):
     still running on SLURM.
     """
 
-    FRACTAL_PIP_CACHE_DIR_zzz: AbsolutePathStr | None = None
+    FRACTAL_PIP_CACHE_DIR: AbsolutePathStr | None = None
     """
     Absolute path to the cache directory for `pip`; if unset,
     `--no-cache-dir` is used.
     """
 
     @property
-    def PIP_CACHE_DIR_ARG_zzz(self) -> str:
+    def PIP_CACHE_DIR_ARG(self) -> str:
         """
         Option for `pip install`, based on `FRACTAL_PIP_CACHE_DIR` value.
 
         If `FRACTAL_PIP_CACHE_DIR` is set, then return
         `--cache-dir /somewhere`; else return `--no-cache-dir`.
         """
-        if self.FRACTAL_PIP_CACHE_DIR_zzz is not None:
-            return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR_zzz}"
+        if self.FRACTAL_PIP_CACHE_DIR is not None:
+            return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR}"
         else:
             return "--no-cache-dir"
 
@@ -654,18 +654,18 @@ class Settings(BaseSettings):
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders".
     """
 
-    FRACTAL_PIXI_CONFIG_FILE_zzz: Path | None = None
+    FRACTAL_PIXI_CONFIG_FILE: Path | None = None
     """
     Path to the Pixi configuration JSON file that will populate `PixiSettings`.
     """
 
-    pixi_zzz: PixiSettings_zzz | None = None
+    pixi: PixiSettings | None = None
 
     @model_validator(mode="after")
-    def populate_pixi_settings_zzz(self):
-        if self.FRACTAL_PIXI_CONFIG_FILE_zzz is not None:
-            with self.FRACTAL_PIXI_CONFIG_FILE_zzz.open("r") as f:
-                self.pixi_zzz = PixiSettings_zzz(**json.load(f))
+    def populate_pixi_settings(self):
+        if self.FRACTAL_PIXI_CONFIG_FILE is not None:
+            with self.FRACTAL_PIXI_CONFIG_FILE.open("r") as f:
+                self.pixi = PixiSettings(**json.load(f))
         return self
 
     ###########################################################################
@@ -798,8 +798,8 @@ class Settings(BaseSettings):
         if not self.POSTGRES_DB:
             raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
-    def check_runner_zzz(self) -> None:
-        if not self.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz:
+    def check_runner(self) -> None:
+        if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
             raise FractalConfigurationError(
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
             )
@@ -831,11 +831,11 @@ class Settings(BaseSettings):
                         f"{info} but `squeue` command not found."
                     )
         elif self.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            if self.FRACTAL_SLURM_WORKER_PYTHON_zzz is None:
+            if self.FRACTAL_SLURM_WORKER_PYTHON is None:
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
                 )
-            if self.pixi_zzz and self.pixi_zzz.SLURM_CONFIG is None:
+            if self.pixi and self.pixi.SLURM_CONFIG is None:
                 raise FractalConfigurationError(
                     "Pixi config must include SLURM_CONFIG."
                 )
@@ -861,11 +861,11 @@ class Settings(BaseSettings):
                         f"{info} but `ssh` command not found."
                     )
         else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
-            if self.FRACTAL_LOCAL_CONFIG_FILE_zzz:
-                if not self.FRACTAL_LOCAL_CONFIG_FILE_zzz.exists():
+            if self.FRACTAL_LOCAL_CONFIG_FILE:
+                if not self.FRACTAL_LOCAL_CONFIG_FILE.exists():
                     raise FractalConfigurationError(
                         f"{info} but FRACTAL_LOCAL_CONFIG_FILE="
-                        f"{self.FRACTAL_LOCAL_CONFIG_FILE_zzz} not found."
+                        f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
                     )
 
     def check(self):
@@ -878,7 +878,7 @@ class Settings(BaseSettings):
         if not self.JWT_SECRET_KEY:
             raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
 
-        if not self.FRACTAL_TASKS_DIR_zzz:
+        if not self.FRACTAL_TASKS_DIR:
             raise FractalConfigurationError("FRACTAL_TASKS_DIR cannot be None")
 
         # FRACTAL_VIEWER_BASE_FOLDER is required when
@@ -899,7 +899,7 @@ class Settings(BaseSettings):
                 )
 
         self.check_db()
-        self.check_runner_zzz()
+        self.check_runner()
 
 
 def get_settings(settings=Settings()) -> Settings:

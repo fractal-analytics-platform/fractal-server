@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
-from fractal_server.config import PixiSLURMConfig_zzz
+from fractal_server.config import PixiSLURMConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
@@ -230,11 +230,11 @@ def test_settings_check_wrong_python():
         Settings(
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="/tmp",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
             FRACTAL_TASKS_PYTHON_3_12=None,
-            FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz="3.12",
+            FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
         )
     expected_msg = (
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.12 "
@@ -250,7 +250,7 @@ def test_make_FRACTAL_TASKS_DIR_absolute():
     settings = Settings(
         JWT_SECRET_KEY="secret",
         POSTGRES_DB="db-name",
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="/tmp",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
         FRACTAL_TASKS_DIR="relative-path",
     )
     debug(settings.FRACTAL_TASKS_DIR)
@@ -264,11 +264,11 @@ def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
     settings = Settings(
         JWT_SECRET_KEY="secret",
         POSTGRES_DB="db-name",
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="relative-path",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
         FRACTAL_TASKS_DIR="/tmp",
     )
-    debug(settings.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz)
-    assert settings.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz.is_absolute()
+    debug(settings.FRACTAL_RUNNER_WORKING_BASE_DIR)
+    assert settings.FRACTAL_RUNNER_WORKING_BASE_DIR.is_absolute()
 
 
 def test_FRACTAL_PIP_CACHE_DIR():
@@ -282,9 +282,9 @@ def test_FRACTAL_PIP_CACHE_DIR():
         Settings(
             JWT_SECRET_KEY="secret",
             POSTGRES_DB="db-name",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="relative-path",
-            FRACTAL_PIP_CACHE_DIR_zzz=SOME_DIR,
-        ).PIP_CACHE_DIR_ARG_zzz
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+            FRACTAL_PIP_CACHE_DIR=SOME_DIR,
+        ).PIP_CACHE_DIR_ARG
         == f"--cache-dir {SOME_DIR}"
     )
 
@@ -292,8 +292,8 @@ def test_FRACTAL_PIP_CACHE_DIR():
         Settings(
             JWT_SECRET_KEY="secret",
             POSTGRES_DB="db-name",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="relative-path",
-        ).PIP_CACHE_DIR_ARG_zzz
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+        ).PIP_CACHE_DIR_ARG
         == "--no-cache-dir"
     )
 
@@ -301,8 +301,8 @@ def test_FRACTAL_PIP_CACHE_DIR():
         Settings(
             JWT_SECRET_KEY="secret",
             POSTGRES_DB="db-name",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="relative-path",
-            FRACTAL_PIP_CACHE_DIR_zzz="~/CACHE_DIR",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
+            FRACTAL_PIP_CACHE_DIR="~/CACHE_DIR",
         )
 
 
@@ -341,7 +341,7 @@ def test_collect_oauth_clients(monkeypatch):
     settings = Settings(
         JWT_SECRET_KEY="secret",
         FRACTAL_TASKS_DIR="/tmp",
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="/tmp",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
         FRACTAL_RUNNER_BACKEND="local",
         POSTGRES_DB="db-name",
     )
@@ -354,7 +354,7 @@ def test_collect_oauth_clients(monkeypatch):
         settings = Settings(
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="/tmp",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
         )
@@ -374,7 +374,7 @@ def test_collect_oauth_clients(monkeypatch):
         settings = Settings(
             JWT_SECRET_KEY="secret",
             FRACTAL_TASKS_DIR="/tmp",
-            FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="/tmp",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
             FRACTAL_RUNNER_BACKEND="local",
             POSTGRES_DB="db-name",
         )
@@ -509,13 +509,13 @@ def test_python_interpreters():
 
     # Successful branch 1: default version unset, and only one Python is set
     settings = Settings(
-        FRACTAL_TASKS_PYTHON_3_9_zzz="/some/python3.9",
+        FRACTAL_TASKS_PYTHON_3_9="/some/python3.9",
         FRACTAL_TASKS_PYTHON_3_10="/some/python3.10",
-        FRACTAL_TASKS_PYTHON_3_11_zzz="/some/python3.11",
+        FRACTAL_TASKS_PYTHON_3_11="/some/python3.11",
         FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
         **common_attributes,
     )
-    version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
+    version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     assert version is not None
     version = version.replace(".", "_")
     actual_python = getattr(settings, f"FRACTAL_TASKS_PYTHON_{version}")
@@ -527,22 +527,20 @@ def test_python_interpreters():
 
     # Successful branch 2: full configuration given
     settings = Settings(
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz="3.11",
-        FRACTAL_TASKS_PYTHON_3_11_zzz="/some/python3.11",
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.11",
+        FRACTAL_TASKS_PYTHON_3_11="/some/python3.11",
         FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
         **common_attributes,
     )
-    assert settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz is not None
-    assert settings.FRACTAL_TASKS_PYTHON_3_9_zzz is None
+    assert settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION is not None
+    assert settings.FRACTAL_TASKS_PYTHON_3_9 is None
     assert settings.FRACTAL_TASKS_PYTHON_3_10 is None
-    assert settings.FRACTAL_TASKS_PYTHON_3_11_zzz == "/some/python3.11"
+    assert settings.FRACTAL_TASKS_PYTHON_3_11 == "/some/python3.11"
     assert settings.FRACTAL_TASKS_PYTHON_3_12 == "/some/python3.12"
 
     # Non-absolute paths
     with pytest.raises(ValidationError) as e:
-        Settings(
-            FRACTAL_SLURM_WORKER_PYTHON_zzz="python3.10", **common_attributes
-        )
+        Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
     assert "String must be an absolute path" in str(e.value)
 
     for version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
@@ -557,21 +555,21 @@ def test_python_interpreters():
 
     # Missing FRACTAL_SLURM_WORKER_PYTHON for SSH backend
     settings = Settings(
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="fake",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
     )
     with pytest.raises(
         FractalConfigurationError,
         match="Must set FRACTAL_SLURM_WORKER_PYTHON",
     ):
-        settings.check_runner_zzz()
+        settings.check_runner()
 
 
 def test_pixi_config(tmp_path):
     # Without Pixi config
     settings = Settings()
-    assert settings.FRACTAL_PIXI_CONFIG_FILE_zzz is None
-    assert settings.pixi_zzz is None
+    assert settings.FRACTAL_PIXI_CONFIG_FILE is None
+    assert settings.pixi is None
 
     # Valid Pixi config
     pixi_config = {
@@ -591,11 +589,9 @@ def test_pixi_config(tmp_path):
     pixi_config_file = tmp_path / "pixi_config.json"
     with pixi_config_file.open("w") as f:
         json.dump(pixi_config, f)
-    settings = Settings(
-        FRACTAL_PIXI_CONFIG_FILE_zzz=pixi_config_file.as_posix()
-    )
-    assert settings.FRACTAL_PIXI_CONFIG_FILE_zzz == pixi_config_file
-    assert settings.pixi_zzz.model_dump() == pixi_config
+    settings = Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
+    assert settings.FRACTAL_PIXI_CONFIG_FILE == pixi_config_file
+    assert settings.pixi.model_dump() == pixi_config
 
     # Invalid Pixi config 1
     pixi_config = {
@@ -610,7 +606,7 @@ def test_pixi_config(tmp_path):
     with pixi_config_file.open("w") as f:
         json.dump(pixi_config, f)
     with pytest.raises(ValidationError):
-        Settings(FRACTAL_PIXI_CONFIG_FILE_zzz=pixi_config_file.as_posix())
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
 
     # Invalid Pixi config 2
     pixi_config = {
@@ -625,7 +621,7 @@ def test_pixi_config(tmp_path):
     with pixi_config_file.open("w") as f:
         json.dump(pixi_config, f)
     with pytest.raises(ValidationError):
-        Settings(FRACTAL_PIXI_CONFIG_FILE_zzz=pixi_config_file.as_posix())
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
 
     # Invalid Pixi config 3
     pixi_config = {
@@ -640,7 +636,7 @@ def test_pixi_config(tmp_path):
     with pixi_config_file.open("w") as f:
         json.dump(pixi_config, f)
     with pytest.raises(ValidationError):
-        Settings(FRACTAL_PIXI_CONFIG_FILE_zzz=pixi_config_file.as_posix())
+        Settings(FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix())
 
     # Missing SLURM_CONFIG
     pixi_config = {
@@ -653,20 +649,20 @@ def test_pixi_config(tmp_path):
     with pixi_config_file.open("w") as f:
         json.dump(pixi_config, f)
     settings = Settings(
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz="fake",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="fake",
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON_zzz="/fake",
-        FRACTAL_PIXI_CONFIG_FILE_zzz=pixi_config_file.as_posix(),
+        FRACTAL_SLURM_WORKER_PYTHON="/fake",
+        FRACTAL_PIXI_CONFIG_FILE=pixi_config_file.as_posix(),
     )
     with pytest.raises(
         FractalConfigurationError,
         match="Pixi config must include SLURM_CONFIG",
     ):
-        settings.check_runner_zzz()
+        settings.check_runner()
 
 
 def test_pixi_slurm_config():
-    PixiSLURMConfig_zzz(
+    PixiSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
@@ -676,19 +672,19 @@ def test_pixi_slurm_config():
         ValueError,
         match="units suffix",
     ):
-        PixiSLURMConfig_zzz(
+        PixiSLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
             mem="1000",
         )
-    PixiSLURMConfig_zzz(
+    PixiSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
         mem="1000M",
     )
-    PixiSLURMConfig_zzz(
+    PixiSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,

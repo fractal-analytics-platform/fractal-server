@@ -90,9 +90,7 @@ def collect_local_pixi(
                     replacements={
                         (
                             "__PIXI_HOME__",
-                            settings.pixi_zzz.versions[
-                                task_group.pixi_version
-                            ],
+                            settings.pixi.versions[task_group.pixi_version],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", archive_path),
@@ -104,15 +102,15 @@ def collect_local_pixi(
                         ("__FROZEN_OPTION__", ""),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            str(settings.pixi_zzz.TOKIO_WORKER_THREADS),
+                            str(settings.pixi.TOKIO_WORKER_THREADS),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            str(settings.pixi_zzz.PIXI_CONCURRENT_SOLVES),
+                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            str(settings.pixi_zzz.PIXI_CONCURRENT_DOWNLOADS),
+                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
                         ),
                     },
                     script_dir=Path(

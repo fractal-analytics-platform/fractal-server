@@ -42,10 +42,10 @@ def get_patched_settings(temp_path: Path):
         POSTGRES_PASSWORD=SecretStr("postgres"),
         POSTGRES_DB="fractal_test",
         FRACTAL_TASKS_DIR=temp_path / "tasks",
-        FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=temp_path / "jobs",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=temp_path / "jobs",
         FRACTAL_API_MAX_JOB_LIST_LENGTH=1,
         FRACTAL_GRACEFUL_SHUTDOWN_TIME=1,
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=PYTHON_BIN,
+        FRACTAL_SLURM_WORKER_PYTHON=PYTHON_BIN,
         FRACTAL_SLURM_CONFIG_FILE=temp_path / "slurm_config.json",
         FRACTAL_SLURM_POLL_INTERVAL=1,
         FRACTAL_LOGGING_LEVEL=logging.DEBUG,
@@ -54,10 +54,8 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_TASKS_DIR.chmod(0o755)
 
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz.mkdir(
-        parents=True, exist_ok=True
-    )
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz.chmod(0o755)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
 
     return settings
 
