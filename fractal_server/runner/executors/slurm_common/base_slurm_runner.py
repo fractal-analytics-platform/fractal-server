@@ -16,21 +16,21 @@ from ._job_states import STATES_FINISHED
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.base_runner import BaseRunner
-from fractal_server.app.runner.executors.base_runner import MultisubmitTaskType
-from fractal_server.app.runner.executors.base_runner import SubmitTaskType
-from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
-from fractal_server.app.runner.task_files import TaskFiles
-from fractal_server.app.runner.v2.db_tools import (
-    bulk_update_status_of_history_unit,
-)
-from fractal_server.app.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.exceptions import TaskExecutionError
+from fractal_server.runner.executors.base_runner import BaseRunner
+from fractal_server.runner.executors.base_runner import MultisubmitTaskType
+from fractal_server.runner.executors.base_runner import SubmitTaskType
+from fractal_server.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.runner.task_files import TaskFiles
+from fractal_server.runner.v2.db_tools import (
+    bulk_update_status_of_history_unit,
+)
+from fractal_server.runner.v2.db_tools import update_status_of_history_unit
 from fractal_server.syringe import Inject
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
@@ -326,7 +326,7 @@ class BaseSlurmRunner(BaseRunner):
             output_file = task.output_file_remote
             cmdlines.append(
                 f"{self.python_worker_interpreter}"
-                " -m fractal_server.app.runner."
+                " -m fractal_server.runner."
                 "executors.slurm_common.remote "
                 f"--input-file {input_file} "
                 f"--output-file {output_file}"
@@ -1008,7 +1008,7 @@ class BaseSlurmRunner(BaseRunner):
         # Fetch remote fractal-server version
         cmd = (
             f"{self.python_worker_interpreter} "
-            "-m fractal_server.app.runner.versions"
+            "-m fractal_server.runner.versions"
         )
         stdout = self._run_remote_cmd(cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]

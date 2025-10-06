@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from fractal_server.app.runner.task_files import TaskFiles
+from fractal_server.runner.task_files import TaskFiles
 
 
 class SlurmTask(BaseModel):

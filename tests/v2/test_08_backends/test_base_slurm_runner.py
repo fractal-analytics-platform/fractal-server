@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm_common.base_slurm_runner import (  # noqa
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.slurm_common.base_slurm_runner import (  # noqa
     BaseSlurmRunner,
 )
-from fractal_server.app.runner.executors.slurm_common.slurm_job_task_models import (  # noqa
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (  # noqa
     SlurmJob,
 )
 

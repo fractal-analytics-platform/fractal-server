@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from fractal_server.app.models.v2 import AccountingRecordSlurm
-from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
+from fractal_server.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
 from tests.fixtures_slurm import SLURM_USER

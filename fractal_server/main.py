@@ -21,12 +21,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .app.routes.aux._runner import _backend_supports_shutdown
-from .app.runner.shutdown import cleanup_after_shutdown
 from .config import get_settings
 from .logger import config_uvicorn_loggers
 from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
+from .runner.shutdown import cleanup_after_shutdown
 from .syringe import Inject
 from fractal_server import __VERSION__
 

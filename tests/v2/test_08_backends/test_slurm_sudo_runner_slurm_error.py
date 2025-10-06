@@ -2,7 +2,7 @@ import pytest
 from devtools import debug
 
 from .aux_unit_runner import *  # noqa
-from fractal_server.app.runner.executors.slurm_sudo.runner import (
+from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
 from tests.fixtures_slurm import SLURM_USER

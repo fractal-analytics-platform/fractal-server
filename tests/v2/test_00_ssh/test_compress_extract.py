@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from fractal_server.app.runner.executors.slurm_ssh.run_subprocess import (
+from fractal_server.runner.executors.slurm_ssh.run_subprocess import (
     run_subprocess,
 )
-from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+from fractal_server.runner.executors.slurm_ssh.tar_commands import (
     get_tar_compression_cmd,
 )
-from fractal_server.app.runner.executors.slurm_ssh.tar_commands import (
+from fractal_server.runner.executors.slurm_ssh.tar_commands import (
     get_tar_extraction_cmd,
 )
 
