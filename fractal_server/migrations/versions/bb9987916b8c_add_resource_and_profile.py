@@ -1,8 +1,8 @@
 """Add resource and profile
 
-Revision ID: 6350945ec2ed
+Revision ID: bb9987916b8c
 Revises: 981d588fe248
-Create Date: 2025-10-06 10:44:16.784085
+Create Date: 2025-10-06 16:27:20.920786
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "6350945ec2ed"
+revision = "bb9987916b8c"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -49,6 +49,7 @@ def upgrade() -> None:
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
+        sa.Column("job_poll_interval", sa.Integer(), nullable=False),
         sa.Column(
             "tasks_local_folder",
             sqlmodel.sql.sqltypes.AutoString(),
