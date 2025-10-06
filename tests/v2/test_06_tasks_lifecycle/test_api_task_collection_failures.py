@@ -10,7 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 PREFIX = "api/v2/task"
 
 
-async def test_non_verified_user(client, MockCurrentUser, testdata_path):
+async def test_(client, MockCurrentUser, testdata_path):
     # Task collection triggered by non-verified user
     archive_path = (
         testdata_path.parent

@@ -53,6 +53,7 @@ from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
 from .fixtures_pixi import *  # noqa F403
+from .fixtures_computational_settings import *  # noqa F403
 
 
 def _get_threads():
