@@ -171,7 +171,7 @@ async def collect_task_pixi(
         db=db,
     )
 
-    if resource.resource_type != "slurm_ssh":
+    if resource.type != "slurm_ssh":
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -196,7 +196,7 @@ async def collect_task_pixi(
     await db.commit()
     await db.refresh(task_group_activity)
 
-    if resource.resource_type == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         ssh_config = SSHConfig(
             user=user_settings.ssh_username,
             host=user_settings.ssh_host,
