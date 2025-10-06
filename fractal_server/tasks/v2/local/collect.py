@@ -7,6 +7,8 @@ from tempfile import TemporaryDirectory
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -40,7 +42,8 @@ def collect_local(
     task_group_activity_id: int,
     task_group_id: int,
     wheel_file: FractalUploadedFile | None = None,
-    profile_id: int,
+    resource: Resource,  # FIXME: verify that this was already `db.expunge`-d
+    profile: Profile,  # FIXME: verify that this was already `db.expunge`-d
 ) -> None:
     """
     Collect a task package.
@@ -70,21 +73,12 @@ def collect_local(
 
         logger.info("START")
         with next(get_sync_db()) as db:
-            (
-                db_objects_ok,
-                task_group,
-                activity,
-                resource,
-                profile,
-            ) = get_activity_and_task_group(
+            db_objects_ok, task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
-                profile_id=profile_id,
                 db=db,
                 logger_name=LOGGER_NAME,
             )
-            # add db.expunge(resource)
-            # add db.expunge(profile)
             if not db_objects_ok:
                 return
 

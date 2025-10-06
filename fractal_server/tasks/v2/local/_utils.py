@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from ..utils_pixi import simplify_pyproject_toml
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -8,7 +9,6 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import execute_command_sync
-
 
 logger = set_logger(__name__)
 
@@ -78,7 +78,10 @@ def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
                 )
 
 
-def edit_pyproject_toml_in_place_local(pyproject_toml_path: Path) -> None:
+def edit_pyproject_toml_in_place_local(
+    pyproject_toml_path: Path,
+    resource: Resource,
+) -> None:
     """
     Wrapper of `simplify_pyproject_toml`, with I/O.
     """

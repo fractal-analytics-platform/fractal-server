@@ -31,7 +31,6 @@ def get_activity_and_task_group(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    profile_id: int,
     db: DBSyncSession,
     logger_name: str,
 ) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2, Resource, Profile]:
@@ -43,7 +42,7 @@ def get_activity_and_task_group(
             f"{task_group_id=} and {task_group_activity_id=}:\n"
             f"{task_group=}\n{activity=}. Exit."
         )
-        return False, None, None, None, None
+        return False, None, None
 
     # Log some info about task group
     logger = get_logger(logger_name=logger_name)
@@ -52,13 +51,7 @@ def get_activity_and_task_group(
     ):
         logger.debug(f"task_group.{key}: {value}")
 
-    profile = db.get(Profile, profile_id)
-    if profile is None:
-        logging.error("Exit.")  # FIXME
-        return False, None, None
-    resource = db.get(Resource, profile.resource_id)
-
-    return True, task_group, activity, resource, profile
+    return True, task_group, activity
 
 
 def fail_and_cleanup(
