@@ -53,17 +53,16 @@ class SudoSlurmRunner(BaseSlurmRunner):
         user_cache_dir: str | None = None,
         poll_interval: int | None = None,
         resource: Resource,
-        profile: Profile,
         # Specific
+        profile: Profile,
         slurm_account: str | None = None,
-        slurm_user: str,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
         different SLURM jobs/tasks.
         """
 
-        self.slurm_user = slurm_user
+        self.slurm_user = profile.username
 
         super().__init__(
             slurm_runner_type="sudo",

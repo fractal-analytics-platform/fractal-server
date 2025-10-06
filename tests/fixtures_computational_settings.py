@@ -6,6 +6,11 @@ import pytest
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.schemas.v2 import ValidProfileLocal
+from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
+from fractal_server.app.schemas.v2 import ValidResourceLocal
+from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
+from tests.fixtures_slurm import SLURM_USER
 
 
 @pytest.fixture(scope="function")
@@ -32,6 +37,8 @@ def local_resource_profile_objects(
     prof = Profile(
         resource_id=123456789,
     )
+    ValidResourceLocal(**res.model_dump())  # FIXME: remove
+    ValidProfileLocal(**prof.model_dump())  # FIXME: remove
     return res, prof
 
 
@@ -58,5 +65,53 @@ def local_resource_profile_db(
         db_sync.refresh(prof)
 
         db_sync.expunge_all()
+
+    return res, prof
+
+
+@pytest.fixture(scope="function")
+def slurm_sudo_resource_profile_objects(
+    tmp777_path: Path,
+    current_py_version: str,
+) -> tuple[Resource, Profile]:
+    """
+    This fixture does not act on the db.
+    """
+    res = Resource(
+        name="SLURM cluster A",
+        type="slurm_sudo",
+        job_local_folder=(tmp777_path / "local-jobs").as_posix(),
+        tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
+        job_slurm_python_worker=f"/.venv{current_py_version}/bin/python{current_py_version}",
+        job_runner_config={
+            "default_slurm_config": {
+                "partition": "main",
+                "cpus_per_task": 1,
+                "mem": "100M",
+            },
+            "gpu_slurm_config": {},
+            "batching_config": {
+                "target_cpus_per_job": 1,
+                "max_cpus_per_job": 1,
+                "target_mem_per_job": 200,
+                "max_mem_per_job": 500,
+                "target_num_jobs": 2,
+                "max_num_jobs": 4,
+            },
+        },
+        tasks_python_config={
+            "default_version": current_py_version,
+            "versions": {
+                v: f"/.venv{v}/bin/python{v}" for v in ("3.10", "3.11", "3.12")
+            },
+        },
+        tasks_pixi_config={},
+    )
+    prof = Profile(
+        resource_id=123456789,
+        username=SLURM_USER,
+    )
+    ValidResourceSlurmSudo(**res.model_dump())  # FIXME: remove
+    ValidProfileSlurmSudo(**prof.model_dump())  # FIXME: remove
 
     return res, prof
