@@ -4,8 +4,6 @@ from typing import TypeVar
 
 from sqlalchemy.orm import Session as DBSyncSession
 
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -33,7 +31,7 @@ def get_activity_and_task_group(
     task_group_id: int,
     db: DBSyncSession,
     logger_name: str,
-) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2, Resource, Profile]:
+) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2]:
     task_group = db.get(TaskGroupV2, task_group_id)
     activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     if activity is None or task_group is None:
