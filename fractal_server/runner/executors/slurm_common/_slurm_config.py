@@ -96,7 +96,7 @@ class _BatchingConfigSet(BaseModel):
     max_num_jobs: int
 
 
-class SlurmConfigFile(BaseModel):
+class SlurmConfigFile_zzz(BaseModel):
     """
     Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE_zzz`
 
@@ -149,9 +149,9 @@ class SlurmConfigFile(BaseModel):
     user_local_exports: dict[str, str] | None = None
 
 
-def load_slurm_config_file(
+def load_slurm_config_file_zzz(
     config_path: Path | None = None,
-) -> SlurmConfigFile:
+) -> SlurmConfigFile_zzz:
     """
     Load a SLURM configuration file and validate its content with
     `SlurmConfigFile`.
@@ -179,7 +179,7 @@ def load_slurm_config_file(
     logger.debug(f"[load_slurm_config_file] Now validating {config_path=}")
     logger.debug(f"[load_slurm_config_file] {slurm_env=}")
     try:
-        obj = SlurmConfigFile(**slurm_env)
+        obj = SlurmConfigFile_zzz(**slurm_env)
     except ValidationError as e:
         raise SlurmConfigError(
             f"Error while loading {config_path=}. "

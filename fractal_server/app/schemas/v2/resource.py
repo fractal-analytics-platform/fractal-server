@@ -3,10 +3,11 @@ from typing import Literal
 from typing import Self
 
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic import ValidationError
 
+from fractal_server.runner.config import JobRunnerConfigLocal
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.tasks.config import TaskPythonSettings
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.types import AbsolutePathStr
@@ -40,27 +41,6 @@ class _ValidResourceBase(BaseModel):
                     "`tasks_pixi_config` must include `SLURM_CONFIG`."
                 )
         return self
-
-
-class JobRunnerConfigLocal(BaseModel):
-    """
-    Specifications of the local-backend configuration
-
-    Attributes:
-        parallel_tasks_per_job:
-            Maximum number of tasks to be run in parallel as part of a call to
-            `FractalThreadPoolExecutor.map`; if `None`, then all tasks will
-            start at the same time.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-    parallel_tasks_per_job: int | None = None
-
-
-class JobRunnerConfigSLURM(BaseModel):
-    """
-    Specifications of the SLURM-backend configuration - FIXME
-    """
 
 
 class ValidResourceLocal(_ValidResourceBase):
