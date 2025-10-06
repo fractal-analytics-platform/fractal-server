@@ -167,7 +167,7 @@ This release fixes the reason for yanking 2.15.0.
     * Fix use of `worker_init/extra_lines` for multi-image job execution (\#2660).
     * Support SLURM configuration options `nodelist` and `exclude` (\#2660).
 * App configuration:
-    * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE_zzz` and new attribute `Settings.pixi` (\#2627, \#2650).
+    * Introduce new configuration variable `FRACTAL_PIXI_CONFIG_FILE` and new attribute `Settings.pixi` (\#2627, \#2650).
 
 
 # 2.14.16
@@ -429,7 +429,7 @@ With this release we switch to Pydantic v2.
 * Task lifecycle:
     * Reset logger handlers upon success of a background lifecycle operation, to avoid open file descriptors (\#2256).
 * Runner
-    * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON_zzz` config variable, if set (\#2240).
+    * Sudo/SLURM executor checks the fractal-server version using `FRACTAL_SLURM_WORKER_PYTHON` config variable, if set (\#2240).
     * Add `uname -n` to SLURM submission scripts (\#2247).
     * Handle `_COMPONENT_KEY_`-related errors in sudo/SLURM executor, to simplify testing (\#2245).
     * Drop obsolete `SlurmJob.workflow_task_file_prefix` for both SSH/sudo executors (\#2245).
@@ -535,7 +535,7 @@ Note: this version fixes a bug introduced in version 2.10.1.
 # 2.10.2
 
 * App:
-    * Add `FRACTAL_PIP_CACHE_DIR_zzz` configuration variable (\#2141).
+    * Add `FRACTAL_PIP_CACHE_DIR` configuration variable (\#2141).
 * Tasks life cycle:
     * Prevent deactivation of task groups with `"github.com"` in pip-freeze information (\#2144).
 * Runner:
@@ -1041,16 +1041,16 @@ This release includes two important updates:
 Re: task-collection configuration, we now support two main use cases:
 
 1. When running a production instance (including on a SLURM cluster), you
-   should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=3.10`, and make sure
-   that `FRACTAL_TASKS_PYTHON_3_10_zzz=/some/python` is an absolute path. Optionally,
-   you can define other variables like `FRACTAL_TASKS_PYTHON_3_9_zzz`,
-   `FRACTAL_TASKS_PYTHON_3_11_zzz` or `FRACTAL_TASKS_PYTHON_3_12_zzz`.
+   should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure
+   that `FRACTAL_TASKS_PYTHON_3_10=/some/python` is an absolute path. Optionally,
+   you can define other variables like `FRACTAL_TASKS_PYTHON_3_9`,
+   `FRACTAL_TASKS_PYTHON_3_11` or `FRACTAL_TASKS_PYTHON_3_12`.
 
-2. If you leave `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz` unset, then only the
+2. If you leave `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` unset, then only the
    Python interpreter that is currently running `fractal-server` can be used
    for task collection.
 
-> WARNING: If you don't set `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz`, then you
+> WARNING: If you don't set `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION`, then you
 > will only have a single Python interpreter available for tasks (namely the
 > one running `fractal-server`).
 
@@ -1134,7 +1134,7 @@ not joined when a Fractal job ends.
     * Add missing join for `wait_thread` upon `FractalSlurmExecutor` exit (\#1511).
     * Replace `startup`/`shutdown` events with `lifespan` event (\#1501).
 * API:
-    * Remove `Path.resolve` from the submit-job endpoints and add validator for `Settings.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz` (\#1497).
+    * Remove `Path.resolve` from the submit-job endpoints and add validator for `Settings.FRACTAL_RUNNER_WORKING_BASE_DIR` (\#1497).
 * Testing:
     * Improve dockerfiles for SLURM (\#1495, \#1496).
     * Set short timeout for `docker compose down` (\#1500).
@@ -1552,7 +1552,7 @@ Warning: updating to this version requires changes to the configuration variable
     * Remove `DEPLOYMENT_TYPE` variable and update `alive` endpoint (\#875);
     * Introduce `Settings.check_db` method, and call it during inline/offline migrations (\#855);
     * Introduce `Settings.check_runner` method (\#875);
-    * Fail if `FRACTAL_BACKEND_RUNNER` is `"local"` and `FRACTAL_LOCAL_CONFIG_FILE_zzz` is set but missing on-disk (\#875);
+    * Fail if `FRACTAL_BACKEND_RUNNER` is `"local"` and `FRACTAL_LOCAL_CONFIG_FILE` is set but missing on-disk (\#875);
     * Clean up `Settings.check` method and improve its coverage (\#875);
 * Package, repository, documentation:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
@@ -1589,7 +1589,7 @@ Warning: updating to this version requires changes to the configuration variable
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
 * Store a copy of the `Workflow` into the optional column `ApplyWorkflow.workflow_dump` at the time of submission (\#804, \#834).
 * Prevent execution of multiple jobs with the same output dataset (\#801).
-* Transform non-absolute `FRACTAL_TASKS_DIR_zzz` into absolute paths, relative to the current working directory (\#825).
+* Transform non-absolute `FRACTAL_TASKS_DIR` into absolute paths, relative to the current working directory (\#825).
 * Error handling:
     * Raise an appropriate error if a task command is not executable (\#800).
     * Improve handling of errors raised in `get_slurm_config` (\#800).
@@ -1746,7 +1746,7 @@ Warning: updating to this version requires changes to the configuration variable
 * Fix redundant task-error logs in slurm backend (\#552).
 * Improve handling of task-collection errors (\#559).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
-* Fail if `FRACTAL_SLURM_WORKER_PYTHON_zzz` has different versions of `fractal-server` or `cloudpickle` (\#533).
+* Fail if `FRACTAL_SLURM_WORKER_PYTHON` has different versions of `fractal-server` or `cloudpickle` (\#533).
 
 # 1.0.8
 
