@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
@@ -18,7 +19,7 @@ class Resource(SQLModel, table=True):
     FRACTAL_RUNNER_BACKEND
     """
     name: str
-    name_readable: str
+    # name_readable: str # FIXME
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
@@ -34,7 +35,7 @@ class Resource(SQLModel, table=True):
     # """
 
     job_remote_folder: str | None = None
-    job_runner_config: dict[str, str] = Field(
+    job_runner_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
@@ -52,14 +53,22 @@ class Resource(SQLModel, table=True):
     FRACTAL_TASKS_DIR
     """
 
-    tasks_python_default_version: str
-    tasks_python_3_9: str | None = None
-    tasks_python_3_10: str | None = None
-    tasks_python_3_11: str | None = None
-    tasks_python_3_12: str | None = None
-    tasks_python_3_13: str | None = None
+    tasks_python_config: dict[str, Any] = Field(
+        sa_column=Column(JSONB, nullable=False, server_default="{}")
+    )
+    """
+    Example:
+    {
+      "default_version": "3.10",
+      "versions:{
+        "3.10": "/somewhere/venv-3.10/bin/python",
+        "3.11": "/somewhere/venv-3.10/bin/python",
+        "3.12": "/somewhere/venv-3.10/bin/python",
+       }
+    }
+    """
 
-    tasks_pixi_config: dict[str, str] = Field(
+    tasks_pixi_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
 
