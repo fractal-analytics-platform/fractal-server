@@ -1,9 +1,8 @@
 from pathlib import Path
 
+from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -84,16 +83,14 @@ def parse_script_pip_show_stdout(stdout: str) -> dict[str, str]:
 
 
 def get_collection_replacements(
-    *, task_group: TaskGroupV2, python_bin: str
+    *, task_group: TaskGroupV2, python_bin: str, resource: Resource
 ) -> dict[str, str]:
-    settings = Inject(get_settings)
-
     replacements = [
         ("__PACKAGE_NAME__", task_group.pkg_name),
         ("__PACKAGE_ENV_DIR__", task_group.venv_path),
         ("__PYTHON__", python_bin),
         ("__INSTALL_STRING__", task_group.pip_install_string),
-        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
         (
             "__PINNED_PACKAGE_LIST_PRE__",
             task_group.pinned_package_versions_pre_string,
@@ -104,6 +101,6 @@ def get_collection_replacements(
         ),
     ]
     logger.info(
-        f"Cache-dir argument for `pip install`: {settings.PIP_CACHE_DIR_ARG}"
+        f"Cache-dir argument for `pip install`: {resource.pip_cache_dir_arg}"
     )
     return replacements

@@ -7,7 +7,6 @@ from tempfile import TemporaryDirectory
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
@@ -41,9 +40,8 @@ def collect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
     wheel_file: FractalUploadedFile | None = None,
-    resource: Resource,  # FIXME: verify that this was already `db.expunge`-d
-    profile: Profile,  # FIXME: verify that this was already `db.expunge`-d
 ) -> None:
     """
     Collect a task package.
@@ -59,6 +57,7 @@ def collect_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        resource: Resource
         wheel_file:
     """
 
@@ -118,8 +117,10 @@ def collect_local(
                 replacements = get_collection_replacements(
                     task_group=task_group,
                     python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version
+                        python_version=task_group.python_version,
+                        resource=resource,
                     ),
+                    resource=resource,
                 )
 
                 # Prepare common arguments for `_customize_and_run_template``

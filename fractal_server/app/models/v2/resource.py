@@ -76,3 +76,15 @@ class Resource(SQLModel, table=True):
     """
     FRACTAL_PIP_CACHE_DIR + PIP_CACHE_DIR_ARG
     """
+
+    @property
+    def pip_cache_dir_arg(self) -> str:
+        """
+        Option for `pip install`, based on `tasks_pip_cache_dir` value.
+        If `tasks_pip_cache_dir` is set, then return
+        `--cache-dir /somewhere`; else return `--no-cache-dir`.
+        """
+        if self.tasks_pip_cache_dir is not None:
+            return f"--cache-dir {self.tasks_pip_cache_dir}"
+        else:
+            return "--no-cache-dir"

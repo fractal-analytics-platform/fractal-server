@@ -26,6 +26,7 @@ from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
+from ...aux.validate_user_profile import validate_user_profile
 from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -170,6 +171,9 @@ async def collect_tasks_pip(
     """
     # Get settings
     settings = Inject(get_settings)
+
+    # Get validate resource and profile
+    resource, _ = await validate_user_profile(user, db)
 
     # Get some validated request data
     task_collect = request_data.task_collect
@@ -365,6 +369,7 @@ async def collect_tasks_pip(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
             wheel_file=wheel_file,
         )
     logger.debug(
