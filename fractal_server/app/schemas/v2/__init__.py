@@ -22,12 +22,12 @@ from .job import JobStatusTypeV2  # noqa F401
 from .job import JobUpdateV2  # noqa F401
 from .manifest import ManifestV2  # noqa F401
 from .manifest import TaskManifestV2  # noqa F401
+from .profile import ValidProfileLocal  # noqa F401
+from .profile import ValidProfileSlurmSSH  # noqa F401
+from .profile import ValidProfileSlurmSudo  # noqa F401
 from .project import ProjectCreateV2  # noqa F401
 from .project import ProjectReadV2  # noqa F401
 from .project import ProjectUpdateV2  # noqa F401
-from .resource import ValidProfileLocal  # noqa F401
-from .resource import ValidProfileSlurmSSH  # noqa F401
-from .resource import ValidProfileSlurmSudo  # noqa F401
 from .resource import ValidResourceLocal  # noqa F401
 from .resource import ValidResourceSlurmSSH  # noqa F401
 from .resource import ValidResourceSlurmSudo  # noqa F401
