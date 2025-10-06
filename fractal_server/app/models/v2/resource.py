@@ -13,8 +13,8 @@ from fractal_server.utils import get_timestamp
 class Resource(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    resource_type: str  # + CHECK (slurm_sudo, slurm_ssh, local)
-    # FIXME resource_type must have a single value for all rows
+    type: str  # + CHECK (slurm_sudo, slurm_ssh, local)
+    # FIXME resource.type must have a single value for all rows
     """
     FRACTAL_RUNNER_BACKEND
     """
@@ -44,7 +44,7 @@ class Resource(SQLModel, table=True):
     job_slurm_python_worker: str | None = None
     """
     FRACTAL_SLURM_WORKER_PYTHON_zzz
-    check not (resource_type is local and job_slurm_python_worker is None)
+    check not (type is local and job_slurm_python_worker is None)
     """
 
     # task_settings

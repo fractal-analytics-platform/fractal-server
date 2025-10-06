@@ -809,7 +809,7 @@ class Settings(BaseSettings):
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             from fractal_server.runner.executors.slurm_common._slurm_config import (  # noqa: E501
-                load_slurm_config_file,
+                load_slurm_config_file_zzz,
             )
 
             if not self.FRACTAL_SLURM_CONFIG_FILE_zzz:
@@ -823,7 +823,7 @@ class Settings(BaseSettings):
                         f"{self.FRACTAL_SLURM_CONFIG_FILE_zzz} not found."
                     )
 
-                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
+                load_slurm_config_file_zzz(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
                 if not shutil.which("sbatch"):
                     raise FractalConfigurationError(
                         f"{info} but `sbatch` command not found."
@@ -843,7 +843,7 @@ class Settings(BaseSettings):
                 )
 
             from fractal_server.runner.executors.slurm_common._slurm_config import (  # noqa: E501
-                load_slurm_config_file,
+                load_slurm_config_file_zzz,
             )
 
             if not self.FRACTAL_SLURM_CONFIG_FILE_zzz:
@@ -857,7 +857,7 @@ class Settings(BaseSettings):
                         f"{self.FRACTAL_SLURM_CONFIG_FILE_zzz} not found."
                     )
 
-                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
+                load_slurm_config_file_zzz(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
                 if not shutil.which("ssh"):
                     raise FractalConfigurationError(
                         f"{info} but `ssh` command not found."

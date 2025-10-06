@@ -266,11 +266,11 @@ async def collect_tasks_pip(
 
     # Validate user settings (backend-specific)
     user_settings = await validate_user_settings(
-        user=user, backend=resource.resource_type, db=db
+        user=user, backend=resource.type, db=db
     )
 
     # Set path and venv_path
-    if resource.resource_type == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
         base_tasks_path = resource.tasks_local_folder
@@ -314,7 +314,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if resource.resource_type != "slurm_ssh":
+    if resource.type != "slurm_ssh":
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -347,7 +347,7 @@ async def collect_tasks_pip(
 
     # FIXME: call validate_user_profile and discard its output
 
-    if resource.resource_type == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         # SSH task collection
         # Use appropriate FractalSSH object
         ssh_config = SSHConfig(

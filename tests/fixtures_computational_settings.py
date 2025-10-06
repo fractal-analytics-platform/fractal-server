@@ -18,7 +18,7 @@ def local_resource_profile_objects(
     """
     res = Resource(
         name="local resource 1",
-        resource_type="local",
+        type="local",
         job_local_folder=(tmp777_path / "jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "tasks").as_posix(),
         job_runner_config={"parallel_tasks_per_job": 1},

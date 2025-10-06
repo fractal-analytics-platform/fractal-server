@@ -42,13 +42,13 @@ async def validate_user_profile(
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
-        if resource.resource_type == "local":
+        if resource.type == "local":
             ValidResourceLocal(**resource.model_dump())
             ValidProfileLocal(**profile.model_dump())
-        elif resource.resource_type == "slurm_sudo":
+        elif resource.type == "slurm_sudo":
             ValidResourceSlurmSudo(**resource.model_dump())
             ValidProfileSlurmSudo(**profile.model_dump())
-        elif resource.resource_type == "slurm_ssh":
+        elif resource.type == "slurm_ssh":
             ValidResourceSlurmSSH(**resource.model_dump())
             ValidProfileSlurmSSH(**profile.model_dump())
 
@@ -60,7 +60,7 @@ async def validate_user_profile(
     except ValidationError as e:
         error_msg = (
             "User resource/profile are not valid for "
-            f"resource type '{resource.resource_type}'. "
+            f"resource type '{resource.type}'. "
             f"Original error: {str(e)}"
         )
         logger.warning(error_msg)

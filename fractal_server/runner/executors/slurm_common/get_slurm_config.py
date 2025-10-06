@@ -3,7 +3,7 @@ from typing import Literal
 
 from ._batching import heuristics
 from ._slurm_config import _parse_mem_value
-from ._slurm_config import load_slurm_config_file
+from ._slurm_config import load_slurm_config_file_zzz
 from ._slurm_config import logger
 from ._slurm_config import SlurmConfig
 from ._slurm_config import SlurmConfigError
@@ -61,7 +61,7 @@ def get_slurm_config_internal(
     )
 
     # Incorporate slurm_env.default_slurm_config
-    slurm_env = load_slurm_config_file(config_path=config_path)
+    slurm_env = load_slurm_config_file_zzz(config_path=config_path)
     slurm_dict = slurm_env.default_slurm_config.model_dump(
         exclude_unset=True, exclude={"mem"}
     )
