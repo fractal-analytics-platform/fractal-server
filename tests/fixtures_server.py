@@ -47,7 +47,7 @@ def get_patched_settings(temp_path: Path):
         FRACTAL_GRACEFUL_SHUTDOWN_TIME=1,
         FRACTAL_SLURM_WORKER_PYTHON_zzz=PYTHON_BIN,
         FRACTAL_SLURM_CONFIG_FILE_zzz=temp_path / "slurm_config.json",
-        FRACTAL_SLURM_POLL_INTERVAL=1,
+        FRACTAL_SLURM_POLL_INTERVAL_zzz=1,
         FRACTAL_LOGGING_LEVEL=logging.DEBUG,
     )
 
