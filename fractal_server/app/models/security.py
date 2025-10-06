@@ -100,6 +100,7 @@ class UserOAuth(SQLModel, table=True):
     user_settings_id: int | None = Field(
         foreign_key="user_settings.id", default=None
     )
+    profile_id: int | None = Field(foreign_key="profile.id", default=None)
     settings: UserSettings | None = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
     )
