@@ -81,27 +81,6 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
     job_runner_config: JobRunnerConfigSLURM
 
 
-class ProfileValidationModel(BaseModel):  # FIXME: Move to another module
-    resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
-
-
-class _ValidProfileBase(BaseModel):
-    pass
-
-
-class ValidProfileLocal(_ValidProfileBase):
-    pass
-
-
-class ValidProfileSlurmSudo(_ValidProfileBase):
-    username: NonEmptyStr
-
-
-class ValidProfileSlurmSSH(_ValidProfileBase):
-    username: NonEmptyStr
-    ssh_key_path: AbsolutePathStr
-
-
 class ResourceCreate(BaseModel):
     pass
 
