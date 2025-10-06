@@ -22,9 +22,7 @@ def upgrade() -> None:
     op.create_table(
         "resource",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "resource_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False

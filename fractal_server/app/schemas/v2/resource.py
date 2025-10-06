@@ -15,7 +15,7 @@ from fractal_server.types import NonEmptyStr
 
 
 class _ValidResourceBase(BaseModel):
-    resource_type: Literal["slurm_sudo", "slurm_ssh", "local"]
+    type: Literal["slurm_sudo", "slurm_ssh", "local"]
 
     # Tasks
     tasks_python_config: dict[NonEmptyStr, Any]
@@ -33,10 +33,7 @@ class _ValidResourceBase(BaseModel):
             TaskPythonSettings(**self.tasks_python_config)
         if self.tasks_pixi_config != {}:
             pixi_settings = TasksPixiSettings(**self.tasks_pixi_config)
-            if (
-                self.resource_type == "slurm_ssh"
-                and pixi_settings.SLURM_CONFIG is None
-            ):
+            if self.type == "slurm_ssh" and pixi_settings.SLURM_CONFIG is None:
                 raise ValidationError(
                     "`tasks_pixi_config` must include `SLURM_CONFIG`."
                 )
@@ -48,13 +45,13 @@ class ValidResourceLocal(_ValidResourceBase):
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
-    resource_type: Literal["slurm_sudo"]
+    type: Literal["slurm_sudo"]
     job_slurm_python_worker: AbsolutePathStr
     job_runner_config: JobRunnerConfigSLURM
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
-    resource_type: Literal["slurm_ssh"]
+    type: Literal["slurm_ssh"]
     hostname: NonEmptyStr
     job_slurm_python_worker: AbsolutePathStr
     job_remote_folder: NonEmptyStr
