@@ -40,6 +40,7 @@ def collect_local(
     task_group_activity_id: int,
     task_group_id: int,
     wheel_file: FractalUploadedFile | None = None,
+    profile_id: int,
 ) -> None:
     """
     Collect a task package.
@@ -69,12 +70,21 @@ def collect_local(
 
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
+            (
+                db_objects_ok,
+                task_group,
+                activity,
+                resource,
+                profile,
+            ) = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
+                profile_id=profile_id,
                 db=db,
                 logger_name=LOGGER_NAME,
             )
+            # add db.expunge(resource)
+            # add db.expunge(profile)
             if not db_objects_ok:
                 return
 

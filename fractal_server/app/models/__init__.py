@@ -5,6 +5,8 @@ will not be picked up by alembic.
 """
 from .linkusergroup import LinkUserGroup  # noqa: F401
 from .linkuserproject import LinkUserProjectV2  # noqa: F401
+from .profile import Profile  # noqa: F401
+from .resource import Resource  # noqa: F401
 from .security import *  # noqa
 from .user_settings import UserSettings  # noqa
 from .v2 import *  # noqa

@@ -4,6 +4,8 @@ from typing import TypeVar
 
 from sqlalchemy.orm import Session as DBSyncSession
 
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -29,9 +31,10 @@ def get_activity_and_task_group(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    profile_id: int,
     db: DBSyncSession,
     logger_name: str,
-) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2]:
+) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2, Resource, Profile]:
     task_group = db.get(TaskGroupV2, task_group_id)
     activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     if activity is None or task_group is None:
@@ -40,7 +43,7 @@ def get_activity_and_task_group(
             f"{task_group_id=} and {task_group_activity_id=}:\n"
             f"{task_group=}\n{activity=}. Exit."
         )
-        return False, None, None
+        return False, None, None, None, None
 
     # Log some info about task group
     logger = get_logger(logger_name=logger_name)
@@ -49,7 +52,13 @@ def get_activity_and_task_group(
     ):
         logger.debug(f"task_group.{key}: {value}")
 
-    return True, task_group, activity
+    profile = db.get(Profile, profile_id)
+    if profile is None:
+        logging.error("Exit.")  # FIXME
+        return False, None, None
+    resource = db.get(Resource, profile.resource_id)
+
+    return True, task_group, activity, resource, profile
 
 
 def fail_and_cleanup(
