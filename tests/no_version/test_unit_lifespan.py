@@ -13,7 +13,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
-from fractal_server.config import get_settings
+from fractal_server.config import get_init_data_settings
 from fractal_server.main import lifespan
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.ssh._fabric import FractalSSHList
@@ -22,7 +22,6 @@ from fractal_server.syringe import Inject
 
 async def test_app_with_lifespan(
     db,
-    monkeypatch,
     override_settings_factory,
     task_factory_v2,
     project_factory_v2,
@@ -31,22 +30,19 @@ async def test_app_with_lifespan(
     job_factory_v2,
     tmp_path,
 ):
-    monkeypatch.setattr(
-        "fractal_server.config.Settings.check_runner", lambda x: x
-    )
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
 
     # create first user
-    settings = Inject(get_settings)
+    init_data_settings = Inject(get_init_data_settings)
 
     _create_first_group()
     await _create_first_user(
-        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value(),
-        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+        email=init_data_settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+        password=init_data_settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value(),
+        username=init_data_settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
         is_superuser=True,
         is_verified=True,
     )
@@ -100,13 +96,9 @@ async def test_app_with_lifespan(
 
 async def test_lifespan_shutdown_empty_jobs_list(
     override_settings_factory,
-    monkeypatch,
     caplog,
     db,
 ):
-    monkeypatch.setattr(
-        "fractal_server.config.Settings.check_runner", lambda x: x
-    )
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     caplog.set_level(logging.INFO)
     app = FastAPI()
@@ -126,10 +118,6 @@ async def test_lifespan_shutdown_raise_error(
     caplog,
     db,
 ):
-    monkeypatch.setattr(
-        "fractal_server.config.Settings.check_runner", lambda x: x
-    )
-
     # mock function to trigger except
 
     async def raise_error(*, jobsV2: list[int], logger_name: str):
@@ -163,15 +151,9 @@ async def test_lifespan_slurm_ssh(
     override_settings_factory,
     slurmlogin_ip,
     ssh_keys: dict[str, str],
-    tmp777_path,
-    testdata_path,
     db,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON_zzz="/not/relevant",
-        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     app = FastAPI()
     async with lifespan(app):
         assert len(app.state.jobsV2) == 0
