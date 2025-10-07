@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
@@ -41,6 +42,7 @@ def collect_local(
     task_group_activity_id: int,
     task_group_id: int,
     resource: Resource,
+    profile: Profile,
     wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """

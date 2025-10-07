@@ -171,11 +171,10 @@ async def collect_tasks_pip(
     """
 
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
     )
-    resource = user_profile[0]
-
     # Get some validated request data
     task_collect = request_data.task_collect
 
@@ -345,25 +344,21 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
-    # FIXME: call validate_user_profile and discard its output
-
     if resource.type == "slurm_ssh":
         # SSH task collection
-        # Use appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
         background_tasks.add_task(
             collect_ssh,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
+            tasks_base_dir=user_settings.ssh_tasks_dir,  # FIXME
             wheel_file=wheel_file,
+            resource=resource,
+            profile=profile,
         )
+
+        # FIXME: we likely have to move ssh_tasks_dir to profile, and then
+        # the two branches have an identical call signature and we can merge
+        # them into one
 
     else:
         # Local task collection
@@ -372,8 +367,9 @@ async def collect_tasks_pip(
             collect_local,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            resource=resource,
             wheel_file=wheel_file,
+            resource=resource,
+            profile=profile,
         )
     logger.debug(
         "Task-collection endpoint: start background collection "
