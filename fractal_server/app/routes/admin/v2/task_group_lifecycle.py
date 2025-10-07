@@ -24,7 +24,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_group_or_404,
 )
 from fractal_server.app.routes.auth import current_active_superuser
-from fractal_server.app.routes.aux import validate_user_profile
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.routes.aux.validate_user_settings import (
     validate_user_settings,
 )
@@ -119,7 +121,7 @@ async def deactivate_task_group(
 
     # Get validated resource and profile
     user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
+        user=user, db=db
     )
     resource = user_profile[0]
 
