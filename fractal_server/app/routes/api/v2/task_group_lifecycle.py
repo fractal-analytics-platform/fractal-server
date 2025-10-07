@@ -15,7 +15,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
-from fractal_server.app.routes.aux import validate_user_profile
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
