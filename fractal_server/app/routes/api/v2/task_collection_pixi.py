@@ -133,10 +133,10 @@ async def collect_task_pixi(
     )
 
     user_settings = await validate_user_settings(
-        user=user, backend=resource.resource_type, db=db
+        user=user, backend=resource.type, db=db
     )
 
-    if resource.resource_type == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         base_tasks_path = user_settings.ssh_tasks_dir
     else:
         base_tasks_path = resource.tasks_local_folder

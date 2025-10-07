@@ -9,14 +9,13 @@ from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
 from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
@@ -36,10 +35,9 @@ def collect_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
     tar_gz_file: FractalUploadedFile,
 ) -> None:
-    settings = Inject(get_settings)
-
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
     with TemporaryDirectory() as tmpdir:
@@ -90,7 +88,9 @@ def collect_local_pixi(
                     replacements={
                         (
                             "__PIXI_HOME__",
-                            settings.pixi.versions[task_group.pixi_version],
+                            resource.tasks_pixi_config["versions"][
+                                task_group.pixi_version
+                            ],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", archive_path),
@@ -102,15 +102,19 @@ def collect_local_pixi(
                         ("__FROZEN_OPTION__", ""),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            str(settings.pixi.TOKIO_WORKER_THREADS),
+                            resource.tasks_pixi_config["TOKIO_WORKER_THREADS"],
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
+                            resource.tasks_pixi_config[
+                                "PIXI_CONCURRENT_SOLVES"
+                            ],
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
+                            resource.tasks_pixi_config[
+                                "PIXI_CONCURRENT_DOWNLOADS"
+                            ],
                         ),
                     },
                     script_dir=Path(
