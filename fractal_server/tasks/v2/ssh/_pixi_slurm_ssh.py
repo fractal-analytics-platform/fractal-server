@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.config import get_settings
-from fractal_server.config import PixiSLURMConfig
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.syringe import Inject
+from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 
