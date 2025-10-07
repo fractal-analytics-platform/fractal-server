@@ -31,8 +31,6 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -40,7 +38,6 @@ from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -270,7 +267,7 @@ async def collect_tasks_pip(
 
     # Set path and venv_path
     if resource.type == "slurm_ssh":
-        base_tasks_path = user_settings.ssh_tasks_dir
+        base_tasks_path = user_settings.ssh_tasks_dir  # FIXME move to profile
     else:
         base_tasks_path = resource.tasks_local_folder
     task_group_path = (
@@ -345,32 +342,25 @@ async def collect_tasks_pip(
     # END of SSH/non-SSH common part
 
     if resource.type == "slurm_ssh":
-        # SSH task collection
-        background_tasks.add_task(
-            collect_ssh,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=user_settings.ssh_tasks_dir,  # FIXME
-            wheel_file=wheel_file,
-            resource=resource,
-            profile=profile,
-        )
-
+        collect_function = collect_ssh
+        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)  # FIXME
         # FIXME: we likely have to move ssh_tasks_dir to profile, and then
         # the two branches have an identical call signature and we can merge
         # them into one
-
     else:
-        # Local task collection
+        collect_function = collect_local
+        extra_args = {}
 
-        background_tasks.add_task(
-            collect_local,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            wheel_file=wheel_file,
-            resource=resource,
-            profile=profile,
-        )
+    background_tasks.add_task(
+        collect_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        wheel_file=wheel_file,
+        resource=resource,
+        profile=profile,
+        **extra_args,  # FIXME remove
+    )
+
     logger.debug(
         "Task-collection endpoint: start background collection "
         "and return task_group_activity"

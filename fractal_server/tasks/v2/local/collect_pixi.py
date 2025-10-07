@@ -9,6 +9,7 @@ from ..utils_pixi import parse_collect_stdout
 from ..utils_pixi import SOURCE_DIR_NAME
 from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -33,10 +34,11 @@ from fractal_server.utils import get_timestamp
 
 def collect_local_pixi(
     *,
-    task_group_activity_id: int,
     task_group_id: int,
-    resource: Resource,
+    task_group_activity_id: int,
     tar_gz_file: FractalUploadedFile,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 

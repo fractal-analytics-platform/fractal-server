@@ -40,7 +40,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
@@ -192,28 +191,21 @@ async def collect_task_pixi(
     await db.refresh(task_group_activity)
 
     if resource.type == "slurm_ssh":
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
-        background_tasks.add_task(
-            collect_ssh_pixi,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-            resource=resource,
-            tar_gz_file=tar_gz_file,
-        )
+        collect_function = collect_ssh_pixi
+        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)
     else:
-        background_tasks.add_task(
-            collect_local_pixi,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            tar_gz_file=tar_gz_file,
-        )
+        collect_function = collect_local_pixi
+        extra_args = {}
+
+    background_tasks.add_task(
+        collect_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        tar_gz_file=tar_gz_file,
+        resource=resource,
+        profile=profile,
+        **extra_args,
+    )
     logger.info(
         "Task-collection endpoint: start background collection "
         "and return task_group_activity. "

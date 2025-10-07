@@ -6,6 +6,8 @@ from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import reset_logger_handlers
@@ -21,8 +23,9 @@ def delete_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_config: SSHConfig,
     tasks_base_dir: str,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Delete a task group.
@@ -59,7 +62,11 @@ def delete_ssh(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:

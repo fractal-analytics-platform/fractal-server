@@ -22,7 +22,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import delete_local
@@ -124,45 +123,31 @@ async def deactivate_task_group(
         user_settings = await validate_user_settings(
             user=user, backend=resource.type, db=db
         )
-
-        # User appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
-            background_tasks.add_task(
-                deactivate_ssh_pixi,
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-                ssh_config=ssh_config,
-                tasks_base_dir=user_settings.ssh_tasks_dir,
-            )
+            deactivate_function = deactivate_ssh_pixi
         else:
-            background_tasks.add_task(
-                deactivate_ssh,
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-                ssh_config=ssh_config,
-                tasks_base_dir=user_settings.ssh_tasks_dir,
-                resource=resource,
-            )
+            deactivate_function = deactivate_ssh
+        background_tasks.add_task(
+            deactivate_function,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            tasks_base_dir=user_settings.ssh_tasks_dir,
+            resource=resource,
+            profile=profile,
+        )
 
     else:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
-            background_tasks.add_task(
-                deactivate_local_pixi,
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-            )
+            deactivate_function = deactivate_local_pixi
         else:
-            background_tasks.add_task(
-                deactivate_local,
-                task_group_id=task_group.id,
-                task_group_activity_id=task_group_activity.id,
-                resource=resource,
-            )
+            deactivate_function = deactivate_local
+        background_tasks.add_task(
+            deactivate_function,
+            task_group_id=task_group.id,
+            task_group_activity_id=task_group_activity.id,
+            resource=resource,
+            profile=profile,
+        )
 
     logger.debug(
         "Task group deactivation endpoint: start deactivate "
@@ -263,12 +248,6 @@ async def reactivate_task_group(
         )
 
         # Use appropriate SSH credentials
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
         else:
@@ -277,9 +256,9 @@ async def reactivate_task_group(
             reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
             resource=resource,
+            profile=profile,
         )
 
     else:
@@ -339,30 +318,24 @@ async def delete_task_group(
     await db.commit()
 
     if resource.type == "slurm_ssh":
+        delete_function = delete_ssh
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
             user=user, backend=resource.type, db=db
         )
-        # User appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
-        background_tasks.add_task(
-            delete_ssh,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-        )
+        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)
     else:
-        background_tasks.add_task(
-            delete_local,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-        )
+        delete_function = delete_local
+        extra_args = {}
+
+    background_tasks.add_task(
+        delete_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
+        **extra_args,
+    )
 
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity

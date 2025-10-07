@@ -10,6 +10,7 @@ from ._utils import _copy_wheel_file_ssh
 from ._utils import _customize_and_run_template
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
@@ -29,9 +30,9 @@ def deactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_config: SSHConfig,
     tasks_base_dir: str,
     resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Deactivate a task group venv.
@@ -68,7 +69,11 @@ def deactivate_ssh(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    user=profile.username,
+                    host=resource.host,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:
