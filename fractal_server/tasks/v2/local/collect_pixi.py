@@ -102,19 +102,27 @@ def collect_local_pixi(
                         ("__FROZEN_OPTION__", ""),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            resource.tasks_pixi_config["TOKIO_WORKER_THREADS"],
+                            str(
+                                resource.tasks_pixi_config[
+                                    "TOKIO_WORKER_THREADS"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            resource.tasks_pixi_config[
-                                "PIXI_CONCURRENT_SOLVES"
-                            ],
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_SOLVES"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            resource.tasks_pixi_config[
-                                "PIXI_CONCURRENT_DOWNLOADS"
-                            ],
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_DOWNLOADS"
+                                ]
+                            ),
                         ),
                     },
                     script_dir=Path(

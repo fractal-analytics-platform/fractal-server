@@ -150,15 +150,18 @@ async def deactivate_task_group(
 
     else:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
-            deactivate_function = deactivate_local_pixi
+            background_tasks.add_task(
+                deactivate_local_pixi,
+                task_group_id=task_group.id,
+                task_group_activity_id=task_group_activity.id,
+            )
         else:
-            deactivate_function = deactivate_local
-        background_tasks.add_task(
-            deactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            resource=resource,
-        )
+            background_tasks.add_task(
+                deactivate_local,
+                task_group_id=task_group.id,
+                task_group_activity_id=task_group_activity.id,
+                resource=resource,
+            )
 
     logger.debug(
         "Task group deactivation endpoint: start deactivate "
@@ -289,6 +292,7 @@ async def reactivate_task_group(
             reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
         )
     logger.debug(
         "Task group reactivation endpoint: start reactivate "
