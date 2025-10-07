@@ -116,16 +116,10 @@ async def test_submit_job_ssh_connection_failure(
     workflow_factory_v2,
     task_factory_v2,
     override_settings_factory,
-    current_py_version,
-    testdata_path,
-    ssh_keys,
     tmp777_path,
     slurm_ssh_resource_profile_fake_db,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/usr/bin/python{current_py_version}",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     resource, prof = slurm_ssh_resource_profile_fake_db[:]
 
     async with MockCurrentUser(
