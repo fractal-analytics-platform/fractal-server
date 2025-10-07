@@ -243,7 +243,7 @@ async def reactivate_task_group(
     # Get validated resource and profile
     user = await db.get(UserOAuth, task_group.user_id)
     user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
+        user=user, db=db
     )
     resource = user_profile[0]
 
@@ -311,7 +311,7 @@ async def delete_task_group(
     # Get validated resource and profile
     task_owner = await db.get(UserOAuth, task_group.user_id)
     user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        task_owner, db
+        user=task_owner, db=db
     )
     resource = user_profile[0]
 
