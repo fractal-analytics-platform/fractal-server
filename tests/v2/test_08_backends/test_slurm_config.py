@@ -9,11 +9,11 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
-from fractal_server.runner.executors.slurm_common._slurm_config import (
-    SlurmConfigError,
-)
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
-    get_slurm_config_internal,
+    _get_slurm_config_internal,
+)
+from fractal_server.runner.executors.slurm_common.slurm_config import (
+    SlurmConfigError,
 )
 
 
@@ -148,7 +148,7 @@ def test_get_slurm_config_internal(tmp_path: Path):
     )
 
     # Call get_slurm_config_internal
-    slurm_config = get_slurm_config_internal(
+    slurm_config = _get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -201,7 +201,7 @@ def test_get_slurm_config_internal_fail(tmp_path):
     config_path_valid = tmp_path / "slurm_config_valid.json"
     with config_path_valid.open("w") as f:
         json.dump(slurm_config, f)
-    get_slurm_config_internal(
+    _get_slurm_config_internal(
         wftask=WorkflowTaskV2Mock(
             task=TaskV2Mock(),
             task_id=TaskV2Mock().id,
@@ -219,7 +219,7 @@ def test_get_slurm_config_internal_fail(tmp_path):
     with pytest.raises(
         SlurmConfigError, match="Extra inputs are not permitted"
     ) as e:
-        get_slurm_config_internal(
+        _get_slurm_config_internal(
             wftask=WorkflowTaskV2Mock(
                 task=TaskV2Mock(),
                 task_id=TaskV2Mock().id,
@@ -293,7 +293,7 @@ def test_get_slurm_config_internal_internal_wftask_meta_none(tmp_path):
     debug(mywftask)
 
     # Call get_slurm_config_internal
-    slurm_config = get_slurm_config_internal(
+    slurm_config = _get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -356,7 +356,7 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
     mywftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
-    slurm_config = get_slurm_config_internal(
+    slurm_config = _get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
@@ -370,7 +370,7 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
         task=TaskV2Mock(),
         task_id=TaskV2Mock().id,
     )
-    slurm_config = get_slurm_config_internal(
+    slurm_config = _get_slurm_config_internal(
         wftask=mywftask,
         config_path=config_path,
         which_type="non_parallel",
