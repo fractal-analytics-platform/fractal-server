@@ -20,7 +20,9 @@ async def test_fail_submit_workflows_wrong_IDs(
     job_factory_v2,
     tmp_path,
     db,
+    local_resource_profile_objects,
 ):
+    res, prof = local_resource_profile_objects[:]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
@@ -36,6 +38,8 @@ async def test_fail_submit_workflows_wrong_IDs(
             job_id=9999999,
             user_id=user.id,
             user_settings=UserSettings(),
+            resource=res,
+            profile=prof,
         )
 
         job = await job_factory_v2(
@@ -51,48 +55,11 @@ async def test_fail_submit_workflows_wrong_IDs(
             job_id=job.id,
             user_id=user.id,
             user_settings=UserSettings(),
+            resource=res,
+            profile=prof,
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV2.FAILED
-
-
-async def test_fail_submit_workflows_wrong_backend(
-    MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
-    tmp_path,
-    db,
-    override_settings_factory,
-):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="invalid")
-
-    async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
-        job = await job_factory_v2(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            working_dir=tmp_path.as_posix(),
-        )
-
-        submit_workflow(
-            workflow_id=workflow.id,
-            dataset_id=dataset.id,
-            job_id=job.id,
-            user_id=user.id,
-            user_settings=UserSettings(),
-        )
-        await db.refresh(job)
-        assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
 
 
 async def test_mkdir_error(
@@ -159,12 +126,14 @@ async def test_submit_workflow_failure(
     job_factory_v2,
     MockCurrentUser,
     db,
+    local_resource_profile_objects,
 ):
     """
     WHEN calling `submit_workflow`
     IF `working_dir` already exists
     THEN the job entry in the db is updated
     """
+    res, prof = local_resource_profile_objects[:]
 
     working_dir = tmp_path / "job_dir"
     working_dir.mkdir()
@@ -193,6 +162,8 @@ async def test_submit_workflow_failure(
             job_id=job.id,
             user_id=user.id,
             user_settings=UserSettings(),
+            resource=res,
+            profile=prof,
         )
 
     job = await db.get(JobV2, job.id)
