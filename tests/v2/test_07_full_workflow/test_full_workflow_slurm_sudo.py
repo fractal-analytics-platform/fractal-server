@@ -20,7 +20,7 @@ from tests.v2.test_07_full_workflow.common_functions import (
 )
 
 
-FRACTAL_RUNNER_BACKEND = "slurm"
+FRACTAL_RUNNER_BACKEND = "slurm_sudo"
 
 
 def _reset_permissions_for_user_folder(folder):

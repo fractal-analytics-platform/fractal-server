@@ -142,22 +142,22 @@ async def test_validate_user_settings(db):
         await validate_user_settings(
             user=user_with_invalid_settings, backend="slurm_ssh", db=db
         )
-    # User with empty settings: backend="slurm"
+    # User with empty settings: backend="slurm_sudo"
     with pytest.raises(
         HTTPException, match="validation errors for SlurmSudoUserSettings"
     ):
         await validate_user_settings(
-            user=user_with_invalid_settings, backend="slurm", db=db
+            user=user_with_invalid_settings, backend="slurm_sudo", db=db
         )
 
     # User with valid SSH settings: backend="slurm_ssh"
     await validate_user_settings(
         user=user_with_valid_ssh_settings, backend="slurm_ssh", db=db
     )
-    # User with valid SSH settings: backend="slurm"
+    # User with valid SSH settings: backend="slurm_sudo"
     with pytest.raises(
         HTTPException, match="validation errors for SlurmSudoUserSettings"
     ):
         await validate_user_settings(
-            user=user_with_valid_ssh_settings, backend="slurm", db=db
+            user=user_with_valid_ssh_settings, backend="slurm_sudo", db=db
         )

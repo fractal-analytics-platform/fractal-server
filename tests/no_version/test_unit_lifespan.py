@@ -34,7 +34,7 @@ async def test_app_with_lifespan(
     monkeypatch.setattr(
         "fractal_server.config.Settings.check_runner", lambda x: x
     )
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
@@ -107,7 +107,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
     monkeypatch.setattr(
         "fractal_server.config.Settings.check_runner", lambda x: x
     )
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
@@ -139,7 +139,7 @@ async def test_lifespan_shutdown_raise_error(
         "fractal_server.main.cleanup_after_shutdown", raise_error
     )
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
