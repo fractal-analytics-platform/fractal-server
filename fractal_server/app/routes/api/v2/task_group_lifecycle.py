@@ -56,7 +56,7 @@ async def deactivate_task_group(
     """
 
     # Get validated resource and profile
-    resource, profile = await validate_user_profile(user, db)
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -172,7 +172,7 @@ async def reactivate_task_group(
     Deactivate task-group venv
     """
     # Get validated resource and profile
-    resource, profile = await validate_user_profile(user, db)
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -295,7 +295,7 @@ async def delete_task_group(
     Deletion of task-group from db and file system
     """
     # Get validated resource and profile
-    resource, profile = await validate_user_profile(user, db)
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,

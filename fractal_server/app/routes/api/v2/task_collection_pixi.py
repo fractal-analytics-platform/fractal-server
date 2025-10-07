@@ -90,7 +90,7 @@ async def collect_task_pixi(
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     # Get validated resource and profile
-    resource, profile = await validate_user_profile(user, db)
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Check if Pixi is available
     if not resource.tasks_pixi_config:

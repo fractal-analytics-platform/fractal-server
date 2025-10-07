@@ -47,7 +47,7 @@ async def collect_task_custom(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
     # Get validated resource and profile
-    resource, profile = await validate_user_profile(user, db)
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
