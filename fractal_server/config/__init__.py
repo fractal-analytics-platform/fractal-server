@@ -1,5 +1,6 @@
 from ._database import DatabaseSettings
 from ._email import EmailSettings
+from ._email import PublicEmailSettings  # noqa F401
 from ._init_data import InitDataSettings
 from ._main import Settings
 
