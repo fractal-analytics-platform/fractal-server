@@ -5,11 +5,13 @@ from pathlib import Path
 from typing import Any
 
 from ..call_command_wrapper import call_command_wrapper
-from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.base_runner import MultisubmitTaskType
@@ -56,15 +58,19 @@ def run_single_task(
 class LocalRunner(BaseRunner):
     executor: ThreadPoolExecutor
     root_dir_local: Path
+    shared_config: JobRunnerConfigLocal
 
     def __init__(
         self,
         root_dir_local: Path,
+        resource: Resource,
+        profile: Profile,
     ):
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
         logger.debug("Create LocalRunner")
+        self.shared_config = JobRunnerConfigLocal(resource.job_runner_config)
 
     def __enter__(self):
         logger.debug("Enter LocalRunner")
@@ -87,7 +93,7 @@ class LocalRunner(BaseRunner):
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
-        config: LocalBackendConfig,
+        config: JobRunnerConfigLocal,
         task_type: SubmitTaskType,
         user_id: int,
     ) -> tuple[Any, Exception]:
@@ -154,7 +160,7 @@ class LocalRunner(BaseRunner):
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: MultisubmitTaskType,
-        config: LocalBackendConfig,
+        config: JobRunnerConfigLocal,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """

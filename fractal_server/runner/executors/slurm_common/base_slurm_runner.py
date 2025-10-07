@@ -9,16 +9,15 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._job_states import STATES_FINISHED
+from .slurm_config import SlurmConfig
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import TaskExecutionError
@@ -31,7 +30,6 @@ from fractal_server.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
-from fractal_server.syringe import Inject
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
@@ -80,14 +78,15 @@ class BaseSlurmRunner(BaseRunner):
 
     def __init__(
         self,
+        *,
         root_dir_local: Path,
         root_dir_remote: Path,
         slurm_runner_type: Literal["ssh", "sudo"],
         python_worker_interpreter: str,
+        poll_interval: int,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,
-        poll_interval: int | None = None,
-        slurm_account: str | None = None,
+        user_cache_dir: str | None = None,  # FIXME: drop?
+        slurm_account: str | None = None,  # FIXME: drop?
     ):
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
@@ -98,11 +97,7 @@ class BaseSlurmRunner(BaseRunner):
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
 
-        settings = Inject(get_settings)
-
-        self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL_zzz
-        )
+        self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
 
         self.check_fractal_server_versions()

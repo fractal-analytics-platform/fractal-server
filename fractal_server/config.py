@@ -808,7 +808,7 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            from fractal_server.runner.executors.slurm_common._slurm_config import (  # noqa: E501
+            from fractal_server.runner.executors.slurm_common.slurm_config import (  # noqa: E501
                 load_slurm_config_file_zzz,
             )
 
@@ -842,7 +842,7 @@ class Settings(BaseSettings):
                     "Pixi config must include SLURM_CONFIG."
                 )
 
-            from fractal_server.runner.executors.slurm_common._slurm_config import (  # noqa: E501
+            from fractal_server.runner.executors.slurm_common.slurm_config import (  # noqa: E501
                 load_slurm_config_file_zzz,
             )
 
