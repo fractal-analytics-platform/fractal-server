@@ -4,12 +4,9 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic.types import PositiveInt
 
-from fractal_server.logger import set_logger
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
-
-logger = set_logger(__name__)
 
 
 class SlurmConfigError(ValueError):

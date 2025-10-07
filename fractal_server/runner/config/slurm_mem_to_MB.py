@@ -1,5 +1,7 @@
-from fractal_server.runner.config._slurm import logger
+from fractal_server.logger import set_logger
 from fractal_server.runner.config._slurm import SlurmConfigError
+
+logger = set_logger(__name__)
 
 
 def slurm_mem_to_MB(raw_mem: str | int) -> int:
