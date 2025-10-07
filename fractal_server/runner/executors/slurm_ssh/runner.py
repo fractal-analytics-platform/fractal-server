@@ -9,6 +9,7 @@ from .tar_commands import get_tar_extraction_cmd
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
@@ -38,11 +39,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
         different SLURM jobs/tasks.
         """
         self.fractal_ssh = fractal_ssh
+        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
         logger.warning(self.fractal_ssh)
 
         # Check SSH connection and try to recover from a closed-socket error
         self.fractal_ssh.check_connection()
-
         super().__init__(
             slurm_runner_type="ssh",
             root_dir_local=root_dir_local,

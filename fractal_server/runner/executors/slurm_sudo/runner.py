@@ -12,6 +12,7 @@ from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
 
 logger = set_logger(__name__)
@@ -42,6 +43,7 @@ def _subprocess_run_or_raise(
 class SudoSlurmRunner(BaseSlurmRunner):
     slurm_user: str
     slurm_account: str | None = None
+    shared_config: JobRunnerConfigSLURM
 
     def __init__(
         self,
@@ -62,6 +64,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
 
         self.slurm_user = profile.username
+        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
 
         super().__init__(
             slurm_runner_type="sudo",

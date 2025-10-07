@@ -19,6 +19,7 @@ from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
@@ -75,6 +76,7 @@ class BaseSlurmRunner(BaseRunner):
     python_worker_interpreter: str
     slurm_runner_type: Literal["ssh", "sudo"]
     slurm_account: str | None = None
+    shared_config: JobRunnerConfigSLURM
 
     def __init__(
         self,
