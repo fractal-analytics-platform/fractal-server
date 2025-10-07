@@ -45,8 +45,15 @@ async def test_submit_job_failures(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project1 = await project_factory_v2(user)
         project2 = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
@@ -159,8 +166,15 @@ async def test_submit_incompatible_filters(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         task = await task_factory_v2(user_id=user.id, input_types={"a": True})
 
         project = await project_factory_v2(user)
@@ -207,13 +221,19 @@ async def test_submit_jobs_with_same_dataset(
     task_factory_v2,
     tmp_path,
     MockCurrentUser,
+    local_resource_profile_db,
 ):
     """
     Test behavior for when another job with the same output_dataset_id already
     exists.
     """
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset1 = await dataset_factory_v2(
             project_id=project.id, name="dataset1"
@@ -270,68 +290,6 @@ async def test_submit_jobs_with_same_dataset(
         )
 
 
-async def test_project_apply_missing_user_attributes(
-    db,
-    client,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    override_settings_factory,
-):
-    """
-    When using the slurm backend, some user.settings attributes are required.
-    If they are missing, the apply endpoint fails with a 422 error.
-    """
-
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
-
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict=dict(something="else"),
-    ) as user:
-        # Create project, datasets, workflow, task, workflowtask
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id, name="ds")
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
-        )
-
-        # Call apply endpoint
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
-            json={},
-        )
-        debug(res.json())
-        assert res.status_code == 422
-        assert "User settings are not valid" in res.json()["detail"]
-        assert (
-            "validation error for SlurmSudoUserSettings"
-            in res.json()["detail"]
-        )
-
-        user.settings.project_dir = "/tmp"
-        user.settings.slurm_user = None
-        await db.commit()
-
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
-            json={},
-        )
-        debug(res.json())
-        assert res.status_code == 422
-        assert "User settings are not valid" in res.json()["detail"]
-        assert (
-            "validation error for SlurmSudoUserSettings"
-            in res.json()["detail"]
-        )
-
-
 async def test_project_apply_workflow_subset(
     db,
     client,
@@ -340,8 +298,15 @@ async def test_project_apply_workflow_subset(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset1 = await dataset_factory_v2(
             project_id=project.id, name="ds1", type="type1"
@@ -466,8 +431,15 @@ async def test_project_apply_slurm_account(
     task_factory_v2,
     client,
     db,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="ds1", type="type1"
@@ -500,7 +472,7 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True},
+        user_kwargs={"is_verified": True, "profile_id": prof.id},
         user_settings_dict={"slurm_accounts": SLURM_LIST},
     ) as user2:
         project = await project_factory_v2(user2)
@@ -562,13 +534,19 @@ async def test_get_jobs(
     task_factory_v2,
     tmp_path,
     MockCurrentUser,
+    local_resource_profile_db,
 ):
     """
     Test behavior for when another job with the same output_dataset_id already
     exists.
     """
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="dataset1"
@@ -707,8 +685,15 @@ async def test_update_timestamp_taskgroup(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="dataset"
@@ -747,8 +732,15 @@ async def test_get_latest_jobs(
     task_factory_v2,
     tmp_path,
     MockCurrentUser,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db[:]
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="dataset"
