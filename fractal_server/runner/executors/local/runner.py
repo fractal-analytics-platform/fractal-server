@@ -70,7 +70,7 @@ class LocalRunner(BaseRunner):
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
         logger.debug("Create LocalRunner")
-        self.shared_config = JobRunnerConfigLocal(resource.job_runner_config)
+        self.shared_config = JobRunnerConfigLocal(**resource.job_runner_config)
 
     def __enter__(self):
         logger.debug("Enter LocalRunner")
