@@ -1,7 +1,6 @@
 import logging
 from os import environ
 from os import getenv
-from pathlib import Path
 from typing import Literal
 from typing import TypeVar
 
@@ -13,9 +12,10 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from ._settings_config import SETTINGS_CONFIG_DICT
+from fractal_server.types import AbsolutePathStr
 
 
-class FractalConfigurationError(RuntimeError):
+class FractalConfigurationError(ValueError):
     pass
 
 
@@ -191,7 +191,7 @@ class Settings(BaseSettings):
        viewer paths. Useful when vizarr viewer is not used.
     """
 
-    FRACTAL_VIEWER_BASE_FOLDER: str | None = None
+    FRACTAL_VIEWER_BASE_FOLDER: AbsolutePathStr | None = None
     """
     Base path to Zarr files that will be served by fractal-vizarr-viewer;
     This variable is required and used only when
@@ -214,9 +214,4 @@ class Settings(BaseSettings):
                     "FRACTAL_VIEWER_BASE_FOLDER is required when "
                     "FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "
                     "users-folders"
-                )
-            if not Path(viewer_base_folder).is_absolute():
-                raise FractalConfigurationError(
-                    f"Non-absolute value for "
-                    f"FRACTAL_VIEWER_BASE_FOLDER={viewer_base_folder}"
                 )
