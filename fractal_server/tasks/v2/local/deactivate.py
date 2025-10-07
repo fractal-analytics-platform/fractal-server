@@ -37,6 +37,7 @@ def deactivate_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        resource:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
