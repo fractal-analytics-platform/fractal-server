@@ -1,3 +1,5 @@
+import sys
+
 from devtools import debug
 
 from fractal_server.app.models import UserSettings
@@ -102,12 +104,15 @@ async def test_mkdir_error(
     db,
     tmp_path,
     MockCurrentUser,
-    override_settings_factory,
+    slurm_sudo_resource_profile_objects,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=None,
-    )
+    res, prof = slurm_sudo_resource_profile_objects[:]
+
+    # Edit resource&profile so that we don't need to spin up containers to
+    # reach the error branch
+    res.job_slurm_python_worker = sys.executable
+    prof.username = None
+
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id, name="ds")
@@ -134,6 +139,8 @@ async def test_mkdir_error(
             user_cache_dir=(tmp_path / "xxx").as_posix(),
             user_settings=UserSettings(),
             slurm_user="fake",
+            resource=res,
+            profile=prof,
         )
 
         await db.close()
