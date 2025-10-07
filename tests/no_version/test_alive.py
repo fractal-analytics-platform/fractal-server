@@ -1,15 +1,10 @@
-from pathlib import Path
-
-from devtools import debug
-
+from fractal_server.config import get_db_settings
+from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
 
 async def test_alive(client, override_settings):
-    settings = Inject(get_settings)
-    debug(settings)
-
     res = await client.get("/api/alive/")
     data = res.json()
     assert res.status_code == 200
@@ -17,32 +12,31 @@ async def test_alive(client, override_settings):
 
 
 async def test_settings_endpoint(client, MockCurrentUser):
-    settings = Inject(get_settings).model_dump()
-    for k, v in settings.items():
-        if isinstance(v, Path):
-            settings[k] = v.as_posix()  # the client returns strings, not Paths
+    # Unauthorized
 
-    res = await client.get("/api/settings/")
+    res = await client.get("/api/settings/app/")
     assert res.status_code == 401
-
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
-        res = await client.get("/api/settings/")
+        res = await client.get("/api/settings/app/")
         assert res.status_code == 401
 
+    # Success
+
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.get("/api/settings/")
+        res = await client.get("/api/settings/app/")
         assert res.status_code == 200
+        endpoint_settings = res.json()
+        settings = Inject(get_settings)
+        assert settings.model_dump().keys() == endpoint_settings.keys()
 
-    endpoint_settings = res.json()
+        res = await client.get("/api/settings/database/")
+        assert res.status_code == 200
+        endpoint_settings = res.json()
+        settings = Inject(get_db_settings)
+        assert settings.model_dump().keys() == endpoint_settings.keys()
 
-    assert settings.keys() == endpoint_settings.keys()
-
-    obfuscated = []
-    for k, v in endpoint_settings.items():
-        if "***" not in str(v):
-            assert v == settings[k]
-        else:
-            obfuscated.append(k)
-    assert "JWT_SECRET_KEY" in obfuscated
-    assert "POSTGRES_PASSWORD" in obfuscated
-    assert "FRACTAL_DEFAULT_ADMIN_PASSWORD" in obfuscated
+        res = await client.get("/api/settings/email/")
+        assert res.status_code == 200
+        endpoint_settings = res.json()
+        settings = Inject(get_email_settings)
+        assert settings.model_dump().keys() == endpoint_settings.keys()
