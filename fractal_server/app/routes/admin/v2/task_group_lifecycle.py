@@ -7,8 +7,6 @@ from fastapi import status
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
@@ -120,10 +118,7 @@ async def deactivate_task_group(
     user = await db.get(UserOAuth, task_group.user_id)
 
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user=user, db=db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
     if resource.type == "slurm_ssh":
@@ -242,10 +237,7 @@ async def reactivate_task_group(
 
     # Get validated resource and profile
     user = await db.get(UserOAuth, task_group.user_id)
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user=user, db=db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
     if resource.type == "slurm_ssh":
@@ -310,10 +302,7 @@ async def delete_task_group(
 
     # Get validated resource and profile
     task_owner = await db.get(UserOAuth, task_group.user_id)
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user=task_owner, db=db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user=task_owner, db=db)
 
     if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)

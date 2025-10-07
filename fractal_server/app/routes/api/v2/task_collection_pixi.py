@@ -12,8 +12,6 @@ from fastapi import UploadFile
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -93,10 +91,7 @@ async def collect_task_pixi(
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user, db)
 
     # Check if Pixi is available
     if not resource.tasks_pixi_config:

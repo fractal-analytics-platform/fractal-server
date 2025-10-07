@@ -12,8 +12,6 @@ from ._aux_functions_task_lifecycle import check_no_submitted_job
 from ._aux_functions_tasks import _get_task_group_full_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
@@ -59,10 +57,7 @@ async def deactivate_task_group(
     """
 
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user, db)
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -192,10 +187,7 @@ async def reactivate_task_group(
     Deactivate task-group venv
     """
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user, db)
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -324,10 +316,7 @@ async def delete_task_group(
     Deletion of task-group from db and file system
     """
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user, db)
 
     task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,

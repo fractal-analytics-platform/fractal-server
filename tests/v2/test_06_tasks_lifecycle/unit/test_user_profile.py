@@ -49,3 +49,4 @@ async def test_validate_user_profile_local(
         debug(user)
         res, prof = await validate_user_profile(user=user, db=db)
         debug(res)
+        debug(prof)

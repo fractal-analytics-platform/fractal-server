@@ -14,8 +14,6 @@ from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
@@ -49,10 +47,7 @@ async def collect_task_custom(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
     # Get validated resource and profile
-    user_profile: tuple[Resource, Profile] = await validate_user_profile(
-        user, db
-    )
-    resource = user_profile[0]
+    resource, profile = await validate_user_profile(user, db)
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
