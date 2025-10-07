@@ -13,13 +13,14 @@ from fractal_server.utils import get_timestamp
 class Resource(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    type: str  # + CHECK (slurm_sudo, slurm_ssh, local)
-    # FIXME resource.type must have a single value for all rows
+    type: str
+    # FIXME: resource.type must have a single value for all rows
+    # FIXME: resource.type must be one of (slurm_sudo, slurm_ssh, local)
     """
     FRACTAL_RUNNER_BACKEND
     """
     name: str
-    # name_readable: str # FIXME
+    # FIXME: add unique index
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,

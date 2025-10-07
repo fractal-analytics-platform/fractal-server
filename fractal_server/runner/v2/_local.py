@@ -5,6 +5,8 @@ from ..executors.local.runner import LocalRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.types import AttributeFilters
 
@@ -22,10 +24,14 @@ def process_workflow(
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
+    resource: Resource,
+    profile: Profile,
     **kwargs,
 ) -> None:
     """
     Run a workflow through
+    FIXME
+
 
     Args:
         workflow:
@@ -69,7 +75,11 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    with LocalRunner(root_dir_local=workflow_dir_local) as runner:
+    with LocalRunner(
+        root_dir_local=workflow_dir_local,
+        resource=resource,
+        profile=profile,
+    ) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)
