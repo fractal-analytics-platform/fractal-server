@@ -137,16 +137,22 @@ async def deactivate_task_group(
             key_path=user_settings.ssh_private_key_path,
         )
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
-            deactivate_function = deactivate_ssh_pixi
+            background_tasks.add_task(
+                deactivate_ssh_pixi,
+                task_group_id=task_group.id,
+                task_group_activity_id=task_group_activity.id,
+                ssh_config=ssh_config,
+                tasks_base_dir=user_settings.ssh_tasks_dir,
+            )
         else:
-            deactivate_function = deactivate_ssh
-        background_tasks.add_task(
-            deactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-        )
+            background_tasks.add_task(
+                deactivate_ssh,
+                task_group_id=task_group.id,
+                task_group_activity_id=task_group_activity.id,
+                ssh_config=ssh_config,
+                tasks_base_dir=user_settings.ssh_tasks_dir,
+                resource=resource,
+            )
 
     else:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:

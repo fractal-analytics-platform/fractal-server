@@ -10,6 +10,7 @@ from ._utils import _copy_wheel_file_ssh
 from ._utils import _customize_and_run_template
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -30,6 +31,7 @@ def deactivate_ssh(
     task_group_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
+    resource: Resource,
 ) -> None:
     """
     Deactivate a task group venv.
@@ -110,6 +112,7 @@ def deactivate_ssh(
                         replacements = get_collection_replacements(
                             task_group=task_group,
                             python_bin="/not/applicable",
+                            resource=resource,
                         )
 
                         # Define script_dir_remote and create it if missing
