@@ -120,19 +120,23 @@ async def test_submit_job_ssh_connection_failure(
     testdata_path,
     ssh_keys,
     tmp777_path,
+    slurm_ssh_resource_profile_fake_db,
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm_ssh",
         FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/usr/bin/python{current_py_version}",
-        FRACTAL_SLURM_CONFIG_FILE_zzz=testdata_path / "slurm_config.json",
     )
+    resource, prof = slurm_ssh_resource_profile_fake_db[:]
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        ),
         user_settings_dict=dict(
-            ssh_host="localhost",
-            ssh_username="SLURM_USER",
-            ssh_private_key_path=ssh_keys["private"],
+            ssh_host=resource.host,
+            ssh_username=prof.ssh_key_path,
+            ssh_private_key_path=prof.ssh_key_path,
             ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         ),
