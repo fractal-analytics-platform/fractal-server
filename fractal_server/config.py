@@ -16,8 +16,6 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
-import fractal_server
-
 
 class MailSettings(BaseModel):
     """
@@ -105,10 +103,6 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(case_sensitive=True)
-
-    PROJECT_NAME: str = "Fractal Server"
-    PROJECT_VERSION: str = fractal_server.__VERSION__
-
     ###########################################################################
     # AUTH
     ###########################################################################
