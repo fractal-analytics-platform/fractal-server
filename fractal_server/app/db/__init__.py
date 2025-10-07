@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
-from ...config import get_settings
-from ...logger import set_logger
-from ...syringe import Inject
+from fractal_server.config import get_db_settings
+from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
@@ -42,12 +42,11 @@ class DB:
 
     @classmethod
     def set_async_db(cls):
-        settings = Inject(get_settings)
-        settings.check_db()
+        db_settings = Inject(get_db_settings)
 
         cls._engine_async = create_async_engine(
-            settings.DATABASE_ASYNC_URL,
-            echo=settings.DB_ECHO,
+            db_settings.DATABASE_URL,
+            echo=db_settings.DB_ECHO,
             future=True,
             pool_pre_ping=True,
         )
@@ -60,12 +59,11 @@ class DB:
 
     @classmethod
     def set_sync_db(cls):
-        settings = Inject(get_settings)
-        settings.check_db()
+        db_settings = Inject(get_db_settings)
 
         cls._engine_sync = create_engine(
-            settings.DATABASE_SYNC_URL,
-            echo=settings.DB_ECHO,
+            db_settings.DATABASE_URL,
+            echo=db_settings.DB_ECHO,
             future=True,
             pool_pre_ping=True,
         )

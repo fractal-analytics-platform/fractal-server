@@ -96,15 +96,14 @@ def set_db(skip_init_data: bool = False):
     from fractal_server.app.security import _create_first_user
     from fractal_server.app.security import _create_first_group
     from fractal_server.syringe import Inject
-    from fractal_server.config import get_settings
+    from fractal_server.config import get_db_settings
 
     import alembic.config
     from pathlib import Path
     import fractal_server
 
-    # Check settings
-    settings = Inject(get_settings)
-    settings.check_db()
+    # Validate DB settings
+    Inject(get_db_settings)
 
     # Perform migrations
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
@@ -116,17 +115,21 @@ def set_db(skip_init_data: bool = False):
     if skip_init_data:
         return
 
+    from fractal_server.config import get_init_data_settings
+
+    init_data_settings = Inject(get_init_data_settings)
+
     # Create default group and user
     print()
     _create_first_group()
     print()
     asyncio.run(
         _create_first_user(
-            email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+            email=init_data_settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
             password=(
-                settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value()
+                init_data_settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value()
             ),
-            username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+            username=init_data_settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
             is_superuser=True,
             is_verified=True,
         )

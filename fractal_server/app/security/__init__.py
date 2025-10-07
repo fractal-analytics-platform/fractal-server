@@ -58,7 +58,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.security.signup_email import mail_new_oauth_signup
-from fractal_server.config import get_settings
+from fractal_server.config import get_email_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
@@ -248,20 +248,17 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             )
 
             # Send mail section
-            settings = Inject(get_settings)
+            email_settings = Inject(get_email_settings)
 
-            if (
-                this_user.oauth_accounts
-                and settings.email_settings is not None
-            ):
+            if this_user.oauth_accounts and email_settings.public is not None:
                 try:
                     logger.info(
                         "START sending email about new signup to "
-                        f"{settings.email_settings.recipients}."
+                        f"{email_settings.public.recipients}."
                     )
                     mail_new_oauth_signup(
                         msg=f"New user registered: '{this_user.email}'.",
-                        email_settings=settings.email_settings,
+                        email_settings=email_settings.public,
                     )
                     logger.info("END sending email about new signup.")
                 except Exception as e:

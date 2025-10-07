@@ -4,10 +4,10 @@ from email.utils import formataddr
 
 from cryptography.fernet import Fernet
 
-from fractal_server.config import MailSettings
+from fractal_server.config import PublicEmailSettings
 
 
-def mail_new_oauth_signup(msg: str, email_settings: MailSettings):
+def mail_new_oauth_signup(msg: str, email_settings: PublicEmailSettings):
     """
     Send an email using the specified settings to notify a new OAuth signup.
     """

@@ -1,27 +1,13 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-# Tommaso Comaprin <tommaso.comparin@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
-"""
-# Application factory
-
-This module sets up the FastAPI application that serves the Fractal Server.
-"""
 import os
 from contextlib import asynccontextmanager
+from itertools import chain
 
 from fastapi import FastAPI
 
 from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.shutdown import cleanup_after_shutdown
+from .config import get_db_settings
+from .config import get_email_settings
 from .config import get_settings
 from .logger import config_uvicorn_loggers
 from .logger import get_logger
@@ -64,10 +50,16 @@ def check_settings() -> None:
     """
     settings = Inject(get_settings)
     settings.check()
+    db_settings = Inject(get_db_settings)
+    email_settings = Inject(get_email_settings)
 
     logger = set_logger("fractal_server_settings")
     logger.debug("Fractal Settings:")
-    for key, value in settings.model_dump().items():
+    for key, value in chain(
+        db_settings.model_dump().items(),
+        settings.model_dump().items(),
+        email_settings.model_dump().items(),
+    ):
         if any(s in key.upper() for s in ["PASSWORD", "SECRET", "KEY"]):
             value = "*****"
         logger.debug(f"  {key}: {value}")
