@@ -52,7 +52,7 @@ class ValidResourceSlurmSudo(_ValidResourceBase):
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
     type: Literal["slurm_ssh"]
-    hostname: NonEmptyStr
+    host: NonEmptyStr
     job_slurm_python_worker: AbsolutePathStr
     job_remote_folder: NonEmptyStr
     job_runner_config: JobRunnerConfigSLURM
