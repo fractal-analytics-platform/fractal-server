@@ -9,6 +9,7 @@ from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
@@ -30,6 +31,7 @@ def reactivate_ssh(
     task_group_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
+    resource: Resource,
 ) -> None:
     """
     Reactivate a task group venv.
@@ -102,11 +104,14 @@ def reactivate_ssh(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Prepare replacements for templates
+                    python_bin = get_python_interpreter_v2(
+                        python_version=task_group.python_version,
+                        resource=resource,
+                    )
                     replacements = get_collection_replacements(
                         task_group=task_group,
-                        python_bin=get_python_interpreter_v2(
-                            python_version=task_group.python_version
-                        ),
+                        python_bin=python_bin,
+                        resource=resource,
                     )
 
                     # Prepare replacements for templates

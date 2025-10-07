@@ -209,6 +209,7 @@ async def collect_task_pixi(
             task_group_activity_id=task_group_activity.id,
             ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
+            resource=resource,
             tar_gz_file=tar_gz_file,
         )
     else:

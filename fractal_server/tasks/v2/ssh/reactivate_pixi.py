@@ -9,14 +9,13 @@ from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 from ._utils import edit_pyproject_toml_in_place_ssh
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
@@ -32,6 +31,7 @@ def reactivate_ssh_pixi(
     task_group_id: int,
     ssh_config: SSHConfig,
     tasks_base_dir: str,
+    resource: Resource,
 ) -> None:
     """
     Reactivate a task group venv.
@@ -103,11 +103,12 @@ def reactivate_ssh_pixi(
                         )
                         return
 
-                    settings = Inject(get_settings)
                     replacements = {
                         (
                             "__PIXI_HOME__",
-                            settings.pixi.versions[task_group.pixi_version],
+                            resource.tasks_pixi_config["versions"][
+                                task_group.pixi_version
+                            ],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
@@ -119,15 +120,27 @@ def reactivate_ssh_pixi(
                         ("__FROZEN_OPTION__", "--frozen"),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            str(settings.pixi.TOKIO_WORKER_THREADS),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "TOKIO_WORKER_THREADS"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_SOLVES"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_DOWNLOADS"
+                                ]
+                            ),
                         ),
                     }
 
@@ -217,7 +230,9 @@ def reactivate_ssh_pixi(
                             remote_script3_path,
                             f"chmod -R 755 {source_dir}",
                         ],
-                        slurm_config=settings.pixi.SLURM_CONFIG,
+                        slurm_config=resource.tasks_pixi_config[
+                            "SLURM_CONFIG"
+                        ],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                         prefix=common_args["prefix"],
