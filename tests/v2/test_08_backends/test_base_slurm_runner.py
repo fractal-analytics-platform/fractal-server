@@ -72,6 +72,7 @@ async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
         root_dir_remote=tmp_path / "user",
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        poll_interval=0,
     ) as runner:
         runner.validate_slurm_jobs_workdirs(jobs_ok)
         with pytest.raises(ValueError, match="Non-unique"):
