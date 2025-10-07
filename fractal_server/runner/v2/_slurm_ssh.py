@@ -23,6 +23,8 @@ from ..executors.slurm_ssh.runner import SlurmSSHRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.logger import set_logger
 from fractal_server.types import AttributeFilters
@@ -43,9 +45,11 @@ def process_workflow(
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
+    resource: Resource,
+    profile: Profile,
     # SLURM-ssh-specific
     fractal_ssh: FractalSSH,
-    slurm_account: str | None = None,
+    slurm_account: str | None = None,  # FIXME: drop this?
     worker_init: str | None = None,
 ) -> None:
     """
@@ -67,7 +71,9 @@ def process_workflow(
         fractal_ssh=fractal_ssh,
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
-        slurm_account=slurm_account,
+        slurm_account=slurm_account,  # FIXME: drop this?
+        resource=resource,
+        profile=profile,
         common_script_lines=worker_init,
     ) as runner:
         execute_tasks_v2(

@@ -53,8 +53,8 @@ class SudoSlurmRunner(BaseSlurmRunner):
         resource: Resource,
         # Specific
         profile: Profile,
-        user_cache_dir: str | None = None,
-        slurm_account: str | None = None,
+        user_cache_dir: str | None = None,  # FIXME: drop?
+        slurm_account: str | None = None,  # FIXME: drop?
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for

@@ -22,6 +22,8 @@ from ..executors.slurm_sudo.runner import SudoSlurmRunner
 from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.types import AttributeFilters
 
@@ -41,9 +43,11 @@ def process_workflow(
     user_id: int,
     # SLURM-sudo-specific
     user_cache_dir: str | None = None,
-    slurm_user: str | None = None,
-    slurm_account: str | None = None,
+    slurm_user: str | None = None,  # FIXME: drop this
+    slurm_account: str | None = None,  # FIXME drop this
     worker_init: str | None = None,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Process workflow (SLURM backend public interface).
@@ -66,12 +70,13 @@ def process_workflow(
         worker_init = worker_init.split("\n")
 
     with SudoSlurmRunner(
-        slurm_user=slurm_user,
-        user_cache_dir=user_cache_dir,
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
-        slurm_account=slurm_account,
+        resource=resource,
+        profile=profile,
+        user_cache_dir=user_cache_dir,  # FIXME: drop
+        slurm_account=slurm_account,  # FIXME: Drop
     ) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
