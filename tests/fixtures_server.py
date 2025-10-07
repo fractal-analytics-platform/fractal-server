@@ -18,13 +18,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import DatabaseSettings
+from fractal_server.config import get_db_settings
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
@@ -68,15 +69,26 @@ def override_settings(tmp777_path: Path):
     backend_dir.mkdir(mode=0o777)
 
     settings = get_patched_settings(backend_dir)
+    db_settings = DatabaseSettings(
+        POSTGRES_USER="postgres",
+        POSTGRES_PASSWORD=SecretStr("postgres"),
+        POSTGRES_DB="fractal_test",
+    )
 
     def _get_settings():
         return settings
 
+    def _get_db_settings():
+        return db_settings
+
     Inject.override(get_settings, _get_settings)
+    Inject.override(get_db_settings, _get_db_settings)
+
     try:
         yield settings
     finally:
         Inject.pop(get_settings)
+        Inject.pop(get_db_settings)
 
 
 @pytest.fixture(scope="function")
@@ -137,6 +149,8 @@ async def db_create_tables(override_settings):
 
 @pytest.fixture
 async def db(db_create_tables):
+    from fractal_server.app.db import get_async_db
+
     async for session in get_async_db():
         yield session
 
