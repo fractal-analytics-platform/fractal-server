@@ -222,6 +222,7 @@ async def apply_workflow(
     # Define user-side job directory
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+        cache_dir = None
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         cache_dir = (
             Path(user_settings.project_dir) / ".fractal_cache"
@@ -233,6 +234,7 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = (
             Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
         )
+        cache_dir = None
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
