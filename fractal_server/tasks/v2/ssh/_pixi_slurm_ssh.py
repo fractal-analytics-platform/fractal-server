@@ -5,10 +5,8 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.syringe import Inject
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -148,6 +146,7 @@ def run_script_on_remote_slurm(
     prefix: str,
     db: Session,
     activity: TaskGroupActivityV2,
+    poll_interval: int,
 ):
     """
     Run a `pixi install` script as a SLURM job.
@@ -157,7 +156,6 @@ def run_script_on_remote_slurm(
     """
 
     logger = get_logger(logger_name=logger_name)
-    settings = Inject(get_settings)
 
     # (1) Prepare remote submission script
     workdir_remote = _get_workdir_remote(script_paths)
@@ -234,7 +232,7 @@ def run_script_on_remote_slurm(
             logger.debug(f"Exit retrieval loop (state={new_state}).")
             break
         old_state = new_state
-        time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL_zzz)
+        time.sleep(poll_interval)
 
     _verify_success_file_exists(
         fractal_ssh=fractal_ssh,

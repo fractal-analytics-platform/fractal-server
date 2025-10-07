@@ -122,4 +122,5 @@ def test_sbatch_failure(
             prefix="prefix",
             activity=MockActivity(),
             db=None,
+            poll_interval=1,
         )
