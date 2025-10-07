@@ -33,6 +33,7 @@ def local_resource_profile_objects(
                 current_py_version: sys.executable,
             },
         },
+        tasks_pixi_config={},
     )
     prof = Profile(
         resource_id=123456789,
