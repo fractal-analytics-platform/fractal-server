@@ -58,7 +58,7 @@ def _get_slurm_config_internal(
         f"[get_slurm_config] WorkflowTask meta attribute: {wftask_meta=}"
     )
 
-    # Incorporate slurm_env.default_slurm_config
+    # Start from `shared_config`
     slurm_dict = shared_config.default_slurm_config.model_dump(
         exclude_unset=True, exclude={"mem"}
     )

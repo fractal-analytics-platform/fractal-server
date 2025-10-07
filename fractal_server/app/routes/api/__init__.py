@@ -4,22 +4,18 @@
 from fastapi import APIRouter
 from fastapi import Depends
 
+import fractal_server
 from ....config import get_settings
 from ....syringe import Inject
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_superuser
-
 
 router_api = APIRouter()
 
 
 @router_api.get("/alive/")
 async def alive():
-    settings = Inject(get_settings)
-    return dict(
-        alive=True,
-        version=settings.PROJECT_VERSION,
-    )
+    return dict(alive=True, version=fractal_server.__VERSION__)
 
 
 @router_api.get("/settings/")

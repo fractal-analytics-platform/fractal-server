@@ -1,45 +1,20 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
-import json
 import logging
-import shutil
-import sys
 from os import environ
 from os import getenv
 from pathlib import Path
-from typing import Annotated
 from typing import Literal
 from typing import TypeVar
 
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
-from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import PositiveInt
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
-
-import fractal_server
-from fractal_server.types import AbsolutePathStr
-from fractal_server.types import DictStrStr
-from fractal_server.types import NonEmptyStr
 
 
 class MailSettings(BaseModel):
@@ -66,147 +41,6 @@ class MailSettings(BaseModel):
     instance_name: str
     use_starttls: bool
     use_login: bool
-
-
-def _check_pixi_slurm_memory(mem: str) -> str:
-    if mem[-1] not in ["K", "M", "G", "T"]:
-        raise ValueError(
-            f"Invalid memory requirement {mem=} for `pixi`, "
-            "please set a K/M/G/T units suffix."
-        )
-    return mem
-
-
-class PixiSLURMConfig(BaseModel):
-    """
-    Parameters that are passed directly to a `sbatch` command.
-
-    See https://slurm.schedmd.com/sbatch.html.
-    """
-
-    partition: NonEmptyStr
-    """
-    `-p, --partition=<partition_names>`
-    """
-    cpus: PositiveInt
-    """
-    `-c, --cpus-per-task=<ncpus>
-    """
-    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
-    """
-    `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
-    From `sbatch` docs: Specify the real memory required per node. Default
-    units are megabytes. Different units can be specified using the suffix
-    [K|M|G|T].
-    """
-    time: NonEmptyStr
-    """
-    `-t, --time=<time>`.
-    From `sbatch` docs: "A time limit of zero requests that no time limit be
-    imposed. Acceptable time formats include "minutes", "minutes:seconds",
-    "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
-    "days-hours:minutes:seconds".
-    """
-
-
-class PixiSettings(BaseModel):
-    """
-    Configuration for Pixi Task collection.
-
-    In order to use Pixi for Task collection, you must have one or more Pixi
-    binaries in your machine
-    (see
-    [example/get_pixi.sh](https://github.com/fractal-analytics-platform/fractal-server/blob/main/example/get_pixi.sh)
-    for installation example).
-
-    To let Fractal Server use these binaries for Task collection, a JSON file
-    must be prepared with the data to populate `PixiSettings` (arguments with
-    default values may be omitted).
-
-    The path to this JSON file must then be provided to Fractal via the
-    environment variable `FRACTAL_PIXI_CONFIG_FILE_zzz`.
-    """
-
-    versions: DictStrStr
-    """
-    A dictionary with Pixi versions as keys and paths to the corresponding
-    folder as values.
-
-    E.g. let's assume that you have Pixi v0.47.0 at
-    `/pixi-path/0.47.0/bin/pixi` and Pixi v0.48.2 at
-    `/pixi-path/0.48.2/bin/pixi`, then
-    ```json
-    "versions": {
-        "0.47.0": "/pixi-path/0.47.0",
-        "0.48.2": "/pixi-path/0.48.2"
-    }
-    ```
-    """
-    default_version: str
-    """
-    Default Pixi version to be used for Task collection.
-
-    Must be a key of the `versions` dictionary.
-    """
-    PIXI_CONCURRENT_SOLVES: int = 4
-    """
-    Value of
-    [`--concurrent-solves`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-solves)
-    for `pixi install`.
-    """
-    PIXI_CONCURRENT_DOWNLOADS: int = 4
-    """
-    Value of
-    [`--concurrent-downloads`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-downloads)
-    for `pixi install`.
-    """
-    TOKIO_WORKER_THREADS: int = 2
-    """
-    From
-    [Tokio documentation](
-    https://docs.rs/tokio/latest/tokio/#cpu-bound-tasks-and-blocking-code
-    )
-    :
-
-        The core threads are where all asynchronous code runs,
-        and Tokio will by default spawn one for each CPU core.
-        You can use the environment variable `TOKIO_WORKER_THREADS` to override
-        the default value.
-    """
-    DEFAULT_ENVIRONMENT: str = "default"
-    """
-    Default pixi environment name.
-    """
-    DEFAULT_PLATFORM: str = "linux-64"
-    """
-    Default platform for pixi.
-    """
-    SLURM_CONFIG: PixiSLURMConfig | None = None
-    """
-    Required when using pixi in a SSH/SLURM deployment.
-    """
-
-    @model_validator(mode="after")
-    def check_pixi_settings(self):
-        if self.default_version not in self.versions:
-            raise ValueError(
-                f"Default version '{self.default_version}' not in "
-                f"available version {list(self.versions.keys())}."
-            )
-
-        pixi_base_dir = Path(self.versions[self.default_version]).parent
-
-        for key, value in self.versions.items():
-            pixi_path = Path(value)
-
-            if pixi_path.parent != pixi_base_dir:
-                raise ValueError(
-                    f"{pixi_path=} is not located within the {pixi_base_dir=}."
-                )
-            if pixi_path.name != key:
-                raise ValueError(f"{pixi_path.name=} is not equal to {key=}")
-
-        return self
 
 
 class FractalConfigurationError(RuntimeError):
@@ -269,10 +103,6 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(case_sensitive=True)
-
-    PROJECT_NAME: str = "Fractal Server"
-    PROJECT_VERSION: str = fractal_server.__VERSION__
-
     ###########################################################################
     # AUTH
     ###########################################################################
@@ -421,37 +251,9 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR_zzz: Path | None = None
-    """
-    Directory under which all the tasks will be saved (either an absolute path
-    or a path relative to current working directory).
-    """
-
-    FRACTAL_RUNNER_WORKING_BASE_DIR_zzz: Path | None = None
-    """
-    Base directory for job files (either an absolute path or a path relative to
-    current working directory).
-    """
-
-    @field_validator(
-        "FRACTAL_TASKS_DIR_zzz",
-        "FRACTAL_RUNNER_WORKING_BASE_DIR_zzz",
-        mode="after",
-    )
-    @classmethod
-    def make_paths_absolute(cls, path: Path | None) -> Path | None:
-        if path is None or path.is_absolute():
-            return path
-        else:
-            logging.warning(
-                f"'{path}' is not an absolute path; "
-                f"converting it to '{path.resolve()}'"
-            )
-            return path.resolve()
-
     FRACTAL_RUNNER_BACKEND: Literal[
         "local",
-        "slurm",
+        "slurm_sudo",
         "slurm_ssh",
     ] = "local"
     """
@@ -465,11 +267,6 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE_zzz: Path | None = None
-    """
-    Path of JSON file with configuration for the local backend.
-    """
-
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
     """
     Number of ids that can be stored in the `jobsV2` attribute of
@@ -480,151 +277,6 @@ class Settings(BaseSettings):
     """
     Waiting time for the shutdown phase of executors
     """
-
-    FRACTAL_SLURM_CONFIG_FILE_zzz: Path | None = None
-    """
-    Path of JSON file with configuration for the SLURM backend.
-    """
-
-    FRACTAL_SLURM_WORKER_PYTHON_zzz: AbsolutePathStr | None = None
-    """
-    Absolute path to Python interpreter that will run the jobs on the SLURM
-    nodes. If not specified, the same interpreter that runs the server is used.
-    """
-
-    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz: None | (
-        Literal["3.9", "3.10", "3.11", "3.12", "3.13"]
-    ) = None
-    """
-    Default Python version to be used for task collection. Defaults to the
-    current version. Requires the corresponding variable (e.g
-    `FRACTAL_TASKS_PYTHON_3_10_zzz`) to be set.
-    """
-
-    FRACTAL_TASKS_PYTHON_3_9_zzz: str | None = None
-    """
-    Absolute path to the Python 3.9 interpreter that serves as base for virtual
-    environments tasks. Note that this interpreter must have the `venv` module
-    installed. If set, this must be an absolute path. If the version specified
-    in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz` is `"3.9"` and this attribute is
-    unset, `sys.executable` is used as a default.
-    """
-
-    FRACTAL_TASKS_PYTHON_3_10_zzz: str | None = None
-    """
-    Same as `FRACTAL_TASKS_PYTHON_3_9_zzz`, for Python 3.10.
-    """
-
-    FRACTAL_TASKS_PYTHON_3_11_zzz: str | None = None
-    """
-    Same as `FRACTAL_TASKS_PYTHON_3_9_zzz`, for Python 3.11.
-    """
-
-    FRACTAL_TASKS_PYTHON_3_12_zzz: str | None = None
-    """
-    Same as `FRACTAL_TASKS_PYTHON_3_9_zzz`, for Python 3.12.
-    """
-
-    FRACTAL_TASKS_PYTHON_3_13_zzz: str | None = None
-    """
-    Same as `FRACTAL_TASKS_PYTHON_3_9_zzz`, for Python 3.13.
-    """
-
-    @model_validator(mode="before")
-    @classmethod
-    def check_tasks_python_zzz(cls, values):
-        """
-        Perform multiple checks of the Python-interpreter variables.
-
-        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
-            if set.
-        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz` is unset, use
-            `sys.executable` and set the corresponding
-            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
-        """
-        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
-        for version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
-            key = f"FRACTAL_TASKS_PYTHON_{version}_zzz"
-            value = values.get(key)
-            if value is not None and not Path(value).is_absolute():
-                raise FractalConfigurationError(
-                    f"Non-absolute value {key}={value}"
-                )
-
-        default_version = values.get(
-            "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz"
-        )
-
-        if default_version is not None:
-            # "production/slurm" branch
-            # If a default version is set, then the corresponding interpreter
-            # must also be set
-            default_version_undescore = default_version.replace(".", "_")
-            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}_zzz"
-            value = values.get(key)
-            if value is None:
-                msg = (
-                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz={default_version} "
-                    f"but {key}={value}."
-                )
-                logging.error(msg)
-                raise FractalConfigurationError(msg)
-
-        else:
-            # If no default version is set, then only `sys.executable` is made
-            # available
-            _info = sys.version_info
-            current_version = f"{_info.major}_{_info.minor}"
-            current_version_dot = f"{_info.major}.{_info.minor}"
-            values[
-                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz"
-            ] = current_version_dot
-            logging.info(
-                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz to "
-                f"{current_version_dot}"
-            )
-
-            # Unset all existing interpreters variable
-            for _version in ["3_9", "3_10", "3_11", "3_12", "3_13"]:
-                key = f"FRACTAL_TASKS_PYTHON_{_version}_zzz"
-                if _version == current_version:
-                    values[key] = sys.executable
-                    logging.info(f"Setting {key} to {sys.executable}.")
-                else:
-                    value = values.get(key)
-                    if value is not None:
-                        logging.info(
-                            f"Setting {key} to None (given: {value}), "
-                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz was "
-                            "not set."
-                        )
-                    values[key] = None
-        return values
-
-    FRACTAL_SLURM_POLL_INTERVAL_zzz: int = 5
-    """
-    Interval to wait (in seconds) before checking whether unfinished job are
-    still running on SLURM.
-    """
-
-    FRACTAL_PIP_CACHE_DIR_zzz: AbsolutePathStr | None = None
-    """
-    Absolute path to the cache directory for `pip`; if unset,
-    `--no-cache-dir` is used.
-    """
-
-    @property
-    def PIP_CACHE_DIR_ARG(self) -> str:
-        """
-        Option for `pip install`, based on `FRACTAL_PIP_CACHE_DIR_zzz` value.
-
-        If `FRACTAL_PIP_CACHE_DIR_zzz` is set, then return
-        `--cache-dir /somewhere`; else return `--no-cache-dir`.
-        """
-        if self.FRACTAL_PIP_CACHE_DIR_zzz is not None:
-            return f"--cache-dir {self.FRACTAL_PIP_CACHE_DIR_zzz}"
-        else:
-            return "--no-cache-dir"
 
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME: Literal[
         "viewer-paths", "users-folders", "none"
@@ -655,20 +307,6 @@ class Settings(BaseSettings):
     This variable is required and used only when
     FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders".
     """
-
-    FRACTAL_PIXI_CONFIG_FILE_zzz: Path | None = None
-    """
-    Path to the Pixi configuration JSON file that will populate `PixiSettings`.
-    """
-
-    pixi: PixiSettings | None = None
-
-    @model_validator(mode="after")
-    def populate_pixi_settings(self):
-        if self.FRACTAL_PIXI_CONFIG_FILE_zzz is not None:
-            with self.FRACTAL_PIXI_CONFIG_FILE_zzz.open("r") as f:
-                self.pixi = PixiSettings(**json.load(f))
-        return self
 
     ###########################################################################
     # SMTP SERVICE
@@ -800,76 +438,6 @@ class Settings(BaseSettings):
         if not self.POSTGRES_DB:
             raise FractalConfigurationError("POSTGRES_DB cannot be None.")
 
-    def check_runner(self) -> None:
-        if not self.FRACTAL_RUNNER_WORKING_BASE_DIR_zzz:
-            raise FractalConfigurationError(
-                "FRACTAL_RUNNER_WORKING_BASE_DIR_zzz cannot be None."
-            )
-
-        info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-        if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            from fractal_server.runner.executors.slurm_common.slurm_config import (  # noqa: E501
-                load_slurm_config_file_zzz,
-            )
-
-            if not self.FRACTAL_SLURM_CONFIG_FILE_zzz:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_CONFIG_FILE_zzz when {info}"
-                )
-            else:
-                if not self.FRACTAL_SLURM_CONFIG_FILE_zzz.exists():
-                    raise FractalConfigurationError(
-                        f"{info} but FRACTAL_SLURM_CONFIG_FILE_zzz="
-                        f"{self.FRACTAL_SLURM_CONFIG_FILE_zzz} not found."
-                    )
-
-                load_slurm_config_file_zzz(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
-                if not shutil.which("sbatch"):
-                    raise FractalConfigurationError(
-                        f"{info} but `sbatch` command not found."
-                    )
-                if not shutil.which("squeue"):
-                    raise FractalConfigurationError(
-                        f"{info} but `squeue` command not found."
-                    )
-        elif self.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            if self.FRACTAL_SLURM_WORKER_PYTHON_zzz is None:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_WORKER_PYTHON_zzz when {info}"
-                )
-            if self.pixi and self.pixi.SLURM_CONFIG is None:
-                raise FractalConfigurationError(
-                    "Pixi config must include SLURM_CONFIG."
-                )
-
-            from fractal_server.runner.executors.slurm_common.slurm_config import (  # noqa: E501
-                load_slurm_config_file_zzz,
-            )
-
-            if not self.FRACTAL_SLURM_CONFIG_FILE_zzz:
-                raise FractalConfigurationError(
-                    f"Must set FRACTAL_SLURM_CONFIG_FILE_zzz when {info}"
-                )
-            else:
-                if not self.FRACTAL_SLURM_CONFIG_FILE_zzz.exists():
-                    raise FractalConfigurationError(
-                        f"{info} but FRACTAL_SLURM_CONFIG_FILE_zzz="
-                        f"{self.FRACTAL_SLURM_CONFIG_FILE_zzz} not found."
-                    )
-
-                load_slurm_config_file_zzz(self.FRACTAL_SLURM_CONFIG_FILE_zzz)
-                if not shutil.which("ssh"):
-                    raise FractalConfigurationError(
-                        f"{info} but `ssh` command not found."
-                    )
-        else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
-            if self.FRACTAL_LOCAL_CONFIG_FILE_zzz:
-                if not self.FRACTAL_LOCAL_CONFIG_FILE_zzz.exists():
-                    raise FractalConfigurationError(
-                        f"{info} but FRACTAL_LOCAL_CONFIG_FILE_zzz="
-                        f"{self.FRACTAL_LOCAL_CONFIG_FILE_zzz} not found."
-                    )
-
     def check(self):
         """
         Make sure that required variables are set
@@ -879,11 +447,6 @@ class Settings(BaseSettings):
 
         if not self.JWT_SECRET_KEY:
             raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
-
-        if not self.FRACTAL_TASKS_DIR_zzz:
-            raise FractalConfigurationError(
-                "FRACTAL_TASKS_DIR_zzz cannot be None"
-            )
 
         # FRACTAL_VIEWER_BASE_FOLDER is required when
         # FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "users-folders"
@@ -903,7 +466,6 @@ class Settings(BaseSettings):
                 )
 
         self.check_db()
-        self.check_runner()
 
 
 def get_settings(settings=Settings()) -> Settings:

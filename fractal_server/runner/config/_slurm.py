@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic.types import PositiveInt
@@ -9,7 +10,9 @@ from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-MemMBType = Annotated[PositiveInt | NonEmptyStr, slurm_mem_to_MB]
+MemMBType = Annotated[
+    PositiveInt | NonEmptyStr, AfterValidator(slurm_mem_to_MB)
+]
 
 
 class _SlurmConfigSet(BaseModel):

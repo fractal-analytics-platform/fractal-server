@@ -1,69 +1,25 @@
-import json
-from pathlib import Path
 from typing import Any
 
-import pytest
-from devtools import debug
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
-from fractal_server.runner.exceptions import SlurmConfigError
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     _get_slurm_config_internal,
 )
 
 
-class TaskV2Mock(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    id: int = 1
-    name: str = "name_t2"
-    source: str = "source_t2"
-    input_types: dict[str, bool] = Field(default_factory=dict)
-    output_types: dict[str, bool] = Field(default_factory=dict)
-
-    command_non_parallel: str | None = "cmd_t2_non_parallel"
-    command_parallel: str | None = None
-    meta_parallel: dict[str, Any] | None = Field(default_factory=dict)
-    meta_non_parallel: dict[str, Any] | None = Field(default_factory=dict)
-    type: str | None = None
+class MockTaskV2(BaseModel):
+    name: str = "task-name"
 
 
 class WorkflowTaskV2Mock(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    args_non_parallel: dict[str, Any] = Field(default_factory=dict)
-    args_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any] = Field(default_factory=dict)
+    task: MockTaskV2 = Field(default_factory=MockTaskV2)
     meta_parallel: dict[str, Any] | None = Field(None)
     meta_non_parallel: dict[str, Any] | None = Field(None)
-    task: TaskV2Mock
-    type_filters: dict[str, bool] = Field(default_factory=dict)
-    order: int = 0
-    id: int = 1
-    workflow_id: int = 0
-    task_id: int
-
-    @model_validator(mode="before")
-    @classmethod
-    def merge_meta(cls, values):
-        task_meta_parallel = values["task"].meta_parallel
-        if task_meta_parallel:
-            values["meta_parallel"] = {
-                **task_meta_parallel,
-                **values["meta_parallel"],
-            }
-        task_meta_non_parallel = values["task"].meta_non_parallel
-        if task_meta_non_parallel:
-            values["meta_non_parallel"] = {
-                **task_meta_non_parallel,
-                **values["meta_non_parallel"],
-            }
-        return values
 
 
-def test_get_slurm_config_internal(tmp_path: Path):
+def test_get_slurm_config_internal():
     """
     Testing that:
     1. WorkflowTask.meta overrides WorkflowTask.Task.meta
@@ -80,20 +36,20 @@ def test_get_slurm_config_internal(tmp_path: Path):
     DEFAULT_EXTRA_LINES = ["#SBATCH --option=value", "export VAR1=VALUE1"]
     USER_LOCAL_EXPORTS = {"SOME_CACHE_DIR": "SOME_CACHE_DIR"}
 
-    original_slurm_config = {
-        "default_slurm_config": {
+    shared_slurm_config = JobRunnerConfigSLURM(
+        default_slurm_config={
             "partition": "main",
             "mem": "1G",
             "account": DEFAULT_ACCOUNT,
             "extra_lines": DEFAULT_EXTRA_LINES,
         },
-        "gpu_slurm_config": {
+        gpu_slurm_config={
             "partition": GPU_PARTITION,
             "mem": "1G",
             "gres": GPU_DEFAULT_GRES,
             "constraint": GPU_DEFAULT_CONSTRAINT,
         },
-        "batching_config": {
+        batching_config={
             "target_cpus_per_job": 10,
             "max_cpus_per_job": 12,
             "target_mem_per_job": 10,
@@ -101,31 +57,11 @@ def test_get_slurm_config_internal(tmp_path: Path):
             "target_num_jobs": 5,
             "max_num_jobs": 10,
         },
-        "user_local_exports": USER_LOCAL_EXPORTS,
-    }
-
-    config_path = tmp_path / "slurm_config.json"
-    with config_path.open("w") as f:
-        json.dump(original_slurm_config, f)
-
-    # Create Task
-    CPUS_PER_TASK = 1
-    MEM = 1
-    CUSTOM_GRES = "my-custom-gres-from-task"
-    meta_non_parallel = dict(
-        cpus_per_task=CPUS_PER_TASK,
-        mem=MEM,
-        needs_gpu=False,
-        gres=CUSTOM_GRES,
-        extra_lines=["a", "b", "c", "d"],
-    )
-    mytask = TaskV2Mock(
-        name="My beautiful task",
-        command_non_parallel="python something.py",
-        meta_non_parallel=meta_non_parallel,
+        user_local_exports=USER_LOCAL_EXPORTS,
     )
 
     # Create WorkflowTask
+    CUSTOM_GRES = "my-custom-gres-from-task"
     CPUS_PER_TASK_OVERRIDE = 2
     CUSTOM_CONSTRAINT = "my-custom-constraint-from-wftask"
     CUSTOM_EXTRA_LINES = ["export VAR1=VALUE1", "export VAR2=VALUE2"]
@@ -135,30 +71,26 @@ def test_get_slurm_config_internal(tmp_path: Path):
         cpus_per_task=CPUS_PER_TASK_OVERRIDE,
         mem=MEM_OVERRIDE,
         needs_gpu=True,
+        gres=CUSTOM_GRES,
         constraint=CUSTOM_CONSTRAINT,
         extra_lines=CUSTOM_EXTRA_LINES,
     )
-    mywftask = WorkflowTaskV2Mock(
-        task=mytask,
-        task_id=mytask.id,
-        args_non_parallel=dict(message="test"),
-        meta_non_parallel=meta_non_parallel,
-    )
+    mywftask = WorkflowTaskV2Mock(meta_non_parallel=meta_non_parallel)
 
     # Call get_slurm_config_internal
     slurm_config = _get_slurm_config_internal(
+        shared_config=shared_slurm_config,
         wftask=mywftask,
-        config_path=config_path,
         which_type="non_parallel",
     )
 
-    # Check that WorkflowTask.meta takes priority over WorkflowTask.Task.meta
+    # Check that WorkflowTask.meta takes priority over `shared_config`
     assert slurm_config.cpus_per_task == CPUS_PER_TASK_OVERRIDE
     assert slurm_config.mem_per_task_MB == MEM_OVERRIDE_MB
     assert slurm_config.partition == GPU_PARTITION
 
-    # Check that both WorkflowTask.meta and WorkflowTask.Task.meta take
-    # priority over the "if_needs_gpu" key-value pair in slurm_config.json
+    # Check that both WorkflowTask.meta takes priority over the
+    # "if_needs_gpu" key-value pair `shared_config`
     assert slurm_config.gres == CUSTOM_GRES
     assert slurm_config.constraint == CUSTOM_CONSTRAINT
 
@@ -167,7 +99,8 @@ def test_get_slurm_config_internal(tmp_path: Path):
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
     assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
-    # Check that extra_lines from WorkflowTask.meta and config_path
+
+    # Check that extra_lines from WorkflowTask.meta and `shared_config`
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
@@ -175,150 +108,7 @@ def test_get_slurm_config_internal(tmp_path: Path):
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
 
 
-def test_get_slurm_config_internal_fail(tmp_path):
-    slurm_config = {
-        "default_slurm_config": {
-            "partition": "main",
-            "cpus_per_task": 1,
-            "mem": "1G",
-        },
-        "gpu_slurm_config": {
-            "partition": "main",
-        },
-        "batching_config": {
-            "target_cpus_per_job": 10,
-            "max_cpus_per_job": 12,
-            "target_mem_per_job": 10,
-            "max_mem_per_job": 12,
-            "target_num_jobs": 5,
-            "max_num_jobs": 10,
-        },
-    }
-
-    # Valid
-    config_path_valid = tmp_path / "slurm_config_valid.json"
-    with config_path_valid.open("w") as f:
-        json.dump(slurm_config, f)
-    _get_slurm_config_internal(
-        wftask=WorkflowTaskV2Mock(
-            task=TaskV2Mock(),
-            task_id=TaskV2Mock().id,
-            meta_non_parallel={},
-        ),
-        config_path=config_path_valid,
-        which_type="non_parallel",
-    )
-
-    # Invalid
-    slurm_config["INVALID_KEY"] = "something"
-    config_path_invalid = tmp_path / "slurm_config_invalid.json"
-    with config_path_invalid.open("w") as f:
-        json.dump(slurm_config, f)
-    with pytest.raises(
-        SlurmConfigError, match="Extra inputs are not permitted"
-    ) as e:
-        _get_slurm_config_internal(
-            wftask=WorkflowTaskV2Mock(
-                task=TaskV2Mock(),
-                task_id=TaskV2Mock().id,
-                meta_non_parallel={},
-            ),
-            config_path=config_path_invalid,
-            which_type="non_parallel",
-        )
-    debug(e.value)
-
-
-def test_get_slurm_config_internal_internal_wftask_meta_none(tmp_path):
-    """
-    Similar to test_get_slurm_config_internal, but wftask has meta=None.
-    """
-
-    # Write gloabl variables into JSON config file
-    GPU_PARTITION = "gpu-partition"
-    GPU_DEFAULT_GRES = "gpu-default-gres"
-    GPU_DEFAULT_CONSTRAINT = "gpu-default-constraint"
-    DEFAULT_ACCOUNT = "default-account"
-    DEFAULT_EXTRA_LINES = ["#SBATCH --option=value", "export VAR1=VALUE1"]
-    USER_LOCAL_EXPORTS = {"SOME_CACHE_DIR": "SOME_CACHE_DIR"}
-
-    slurm_config = {
-        "default_slurm_config": {
-            "partition": "main",
-            "mem": "1G",
-            "account": DEFAULT_ACCOUNT,
-            "extra_lines": DEFAULT_EXTRA_LINES,
-        },
-        "gpu_slurm_config": {
-            "partition": GPU_PARTITION,
-            "mem": "1G",
-            "gres": GPU_DEFAULT_GRES,
-            "constraint": GPU_DEFAULT_CONSTRAINT,
-        },
-        "batching_config": {
-            "target_cpus_per_job": 10,
-            "max_cpus_per_job": 12,
-            "target_mem_per_job": 10,
-            "max_mem_per_job": 12,
-            "target_num_jobs": 5,
-            "max_num_jobs": 10,
-        },
-        "user_local_exports": USER_LOCAL_EXPORTS,
-    }
-    config_path = tmp_path / "slurm_config.json"
-    with config_path.open("w") as f:
-        json.dump(slurm_config, f)
-
-    # Create WorkflowTask
-    CPUS_PER_TASK_OVERRIDE = 2
-    CUSTOM_CONSTRAINT = "my-custom-constraint-from-wftask"
-    CUSTOM_EXTRA_LINES = ["export VAR1=VALUE1", "export VAR2=VALUE2"]
-    MEM_OVERRIDE = "1G"
-    MEM_OVERRIDE_MB = 1000
-    meta_non_parallel = dict(
-        cpus_per_task=CPUS_PER_TASK_OVERRIDE,
-        mem=MEM_OVERRIDE,
-        needs_gpu=True,
-        constraint=CUSTOM_CONSTRAINT,
-        extra_lines=CUSTOM_EXTRA_LINES,
-    )
-    mywftask = WorkflowTaskV2Mock(
-        task=TaskV2Mock(meta_non_parallel=None),
-        task_id=TaskV2Mock(meta_non_parallel=None).id,
-        args_non_parallel=dict(message="test"),
-        meta_non_parallel=meta_non_parallel,
-    )
-    debug(mywftask)
-
-    # Call get_slurm_config_internal
-    slurm_config = _get_slurm_config_internal(
-        wftask=mywftask,
-        config_path=config_path,
-        which_type="non_parallel",
-    )
-    debug(slurm_config)
-
-    # Check that WorkflowTask.meta takes priority over WorkflowTask.Task.meta
-    assert slurm_config.cpus_per_task == CPUS_PER_TASK_OVERRIDE
-    assert slurm_config.mem_per_task_MB == MEM_OVERRIDE_MB
-    assert slurm_config.partition == GPU_PARTITION
-    # Check that both WorkflowTask.meta and WorkflowTask.Task.meta take
-    # priority over the "if_needs_gpu" key-value pair in slurm_config.json
-    assert slurm_config.constraint == CUSTOM_CONSTRAINT
-    # Check that some optional attributes are set/unset correctly
-    assert slurm_config.job_name
-    assert " " not in slurm_config.job_name
-    assert slurm_config.account == DEFAULT_ACCOUNT
-    assert "time" not in slurm_config.model_dump(exclude_unset=True).keys()
-    # Check that extra_lines from WorkflowTask.meta and config_path
-    # are combined together, and that repeated elements were removed
-    assert len(slurm_config.extra_lines) == 3
-    assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
-    # Check value of user_local_exports
-    assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
-
-
-def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
+def test_get_slurm_config_internal_gpu_options():
     """
     Test that GPU-related options are only read when `needs_gpu=True`.
     """
@@ -328,18 +118,18 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
     GPU_MEM_PER_TASK_MB = 20000
     GPUS = "1"
 
-    slurm_config_dict = {
-        "default_slurm_config": {
+    shared_slurm_config = JobRunnerConfigSLURM(
+        default_slurm_config={
             "partition": STANDARD_PARTITION,
             "mem": "1G",
             "cpus_per_task": 1,
         },
-        "gpu_slurm_config": {
+        gpu_slurm_config={
             "partition": GPU_PARTITION,
             "mem": GPU_MEM,
             "gpus": GPUS,
         },
-        "batching_config": {
+        batching_config={
             "target_cpus_per_job": 10,
             "max_cpus_per_job": 12,
             "target_mem_per_job": 10,
@@ -347,30 +137,23 @@ def test_get_slurm_config_internal_gpu_options(tmp_path: Path):
             "target_num_jobs": 5,
             "max_num_jobs": 10,
         },
-    }
-    config_path = tmp_path / "slurm_config.json"
-    with config_path.open("w") as f:
-        json.dump(slurm_config_dict, f)
+    )
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
-    mywftask = WorkflowTaskV2Mock(task=TaskV2Mock(), task_id=TaskV2Mock().id)
+    mywftask = WorkflowTaskV2Mock()
     slurm_config = _get_slurm_config_internal(
+        shared_config=shared_slurm_config,
         wftask=mywftask,
-        config_path=config_path,
         which_type="non_parallel",
     )
     assert slurm_config.partition == STANDARD_PARTITION
     assert slurm_config.gpus is None
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
-    mywftask = WorkflowTaskV2Mock(
-        meta_non_parallel=dict(needs_gpu=True),
-        task=TaskV2Mock(),
-        task_id=TaskV2Mock().id,
-    )
+    mywftask = WorkflowTaskV2Mock(meta_non_parallel=dict(needs_gpu=True))
     slurm_config = _get_slurm_config_internal(
+        shared_config=shared_slurm_config,
         wftask=mywftask,
-        config_path=config_path,
         which_type="non_parallel",
     )
     assert slurm_config.partition == GPU_PARTITION
