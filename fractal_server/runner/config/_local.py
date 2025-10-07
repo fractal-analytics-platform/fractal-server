@@ -15,3 +15,7 @@ class JobRunnerConfigLocal(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     parallel_tasks_per_job: int | None = None
+
+    @property
+    def batch_size(self) -> int:
+        return self.parallel_tasks_per_job or 1

@@ -12,6 +12,7 @@ from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
 
 logger = set_logger(__name__)
@@ -54,7 +55,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         # Specific
         profile: Profile,
         user_cache_dir: str | None = None,  # FIXME: drop?
-        slurm_account: str | None = None,  # FIXME: drop?
+        slurm_account: str | None = None,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -62,13 +63,14 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
 
         self.slurm_user = profile.username
+        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
 
         super().__init__(
             slurm_runner_type="sudo",
             root_dir_local=root_dir_local,
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
-            user_cache_dir=user_cache_dir,
+            user_cache_dir=user_cache_dir,  # FIXME: drop?
             poll_interval=resource.job_poll_interval,
             python_worker_interpreter=resource.job_slurm_python_worker,
             slurm_account=slurm_account,

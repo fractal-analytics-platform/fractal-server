@@ -20,7 +20,12 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigLocal
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.executors.base_runner import BaseRunner
+from fractal_server.runner.executors.slurm_common.slurm_config import (
+    SlurmConfig,
+)
 from fractal_server.runner.task_files import enrich_task_files_multisubmit
 from fractal_server.runner.task_files import SUBMIT_PREFIX
 from fractal_server.runner.task_files import TaskFiles
@@ -59,6 +64,16 @@ class InitSubmissionOutcome(BaseModel):
 
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
+
+GetRunnerConfigType = Callable[
+    [
+        JobRunnerConfigLocal | JobRunnerConfigSLURM,
+        WorkflowTaskV2,
+        Literal["non_parallel", "parallel"],
+        int,
+    ],
+    JobRunnerConfigLocal | SlurmConfig,
+]
 
 
 def _process_task_output(
@@ -126,15 +141,7 @@ def run_v2_task_non_parallel(
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
     runner: BaseRunner,
-    get_runner_config: Callable[
-        [
-            WorkflowTaskV2,
-            Literal["non_parallel", "parallel"],
-            Path | None,
-            int,
-        ],
-        Any,
-    ],
+    get_runner_config: GetRunnerConfigType,
     dataset_id: int,
     history_run_id: int,
     task_type: Literal[TaskType.NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL],
@@ -163,8 +170,10 @@ def run_v2_task_non_parallel(
     )
 
     runner_config = get_runner_config(
+        runner.shared_config,
         wftask=wftask,
         which_type="non_parallel",
+        tot_tasks=1,
     )
 
     function_kwargs = {
@@ -251,15 +260,7 @@ def run_v2_task_parallel(
     runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    get_runner_config: Callable[
-        [
-            WorkflowTaskV2,
-            Literal["non_parallel", "parallel"],
-            Path | None,
-            int,
-        ],
-        Any,
-    ],
+    get_runner_config: GetRunnerConfigType,
     dataset_id: int,
     history_run_id: int,
     user_id: int,
@@ -278,6 +279,7 @@ def run_v2_task_parallel(
     )
 
     runner_config = get_runner_config(
+        runner.shared_config,
         wftask=wftask,
         which_type="parallel",
         tot_tasks=len(images),
@@ -382,15 +384,7 @@ def run_v2_task_compound(
     runner: BaseRunner,
     workflow_dir_local: Path,
     workflow_dir_remote: Path,
-    get_runner_config: Callable[
-        [
-            WorkflowTaskV2,
-            Literal["non_parallel", "parallel"],
-            Path | None,
-            int,
-        ],
-        Any,
-    ],
+    get_runner_config: GetRunnerConfigType,
     dataset_id: int,
     history_run_id: int,
     task_type: Literal[TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND],
@@ -407,9 +401,12 @@ def run_v2_task_compound(
     )
 
     runner_config_init = get_runner_config(
+        runner.shared_config,
         wftask=wftask,
         which_type="non_parallel",
+        tot_tasks=1,
     )
+
     # 3/A: non-parallel init task
     function_kwargs = {
         "zarr_dir": zarr_dir,
@@ -505,6 +502,7 @@ def run_v2_task_compound(
         return init_outcome, num_tasks
 
     runner_config_compute = get_runner_config(
+        runner.shared_config,
         wftask=wftask,
         which_type="parallel",
         tot_tasks=len(parallelization_list),

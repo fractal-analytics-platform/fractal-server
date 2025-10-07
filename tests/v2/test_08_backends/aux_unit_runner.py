@@ -6,9 +6,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.runner.executors.local.get_local_config import (
-    LocalBackendConfig,
-)
+from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.task_files import TaskFiles
 
 ZARR_URLS = ["/a", "/b", "/c", "/d"]
@@ -154,4 +152,4 @@ def get_default_local_backend_config():
     """
     Return a default `LocalBackendConfig` configuration object
     """
-    return LocalBackendConfig(parallel_tasks_per_job=None)
+    return JobRunnerConfigLocal(parallel_tasks_per_job=None)

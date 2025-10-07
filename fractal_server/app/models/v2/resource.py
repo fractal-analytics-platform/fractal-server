@@ -14,8 +14,9 @@ class Resource(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     type: str
-    # FIXME: resource.type must have a single value for all rows
-    # FIXME: resource.type must be one of (slurm_sudo, slurm_ssh, local)
+    # FIXME: db check: resource.type must be one of (slurm_sudo, slurm_ssh, local)
+    # FIXME: runtime check: resource.type must be identical to settings.FRACTAL_RUNNER_BACKEND
+    # FIXME: runtime check: resource.type must have a single value for all rows (obsolete, due to previous check)
     """
     FRACTAL_RUNNER_BACKEND
     """

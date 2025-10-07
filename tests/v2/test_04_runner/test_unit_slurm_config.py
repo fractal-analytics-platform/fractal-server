@@ -4,11 +4,9 @@ import pytest
 from devtools import debug
 from pydantic import BaseModel
 
-from fractal_server.runner.executors.slurm_common._slurm_config import (
-    SlurmConfigError,
-)
+from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
-    get_slurm_config_internal,
+    _get_slurm_config_internal,
 )
 
 
@@ -101,7 +99,7 @@ def test_get_slurm_config(tmp_path, fail):
 
     # Call get_slurm_config
     try:
-        slurm_config = get_slurm_config_internal(
+        slurm_config = _get_slurm_config_internal(
             wftask=mywftask,
             which_type=mywftask.task.type,
             config_path=config_path,
@@ -199,7 +197,7 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     debug(mywftask)
 
     # Call get_slurm_config
-    slurm_config = get_slurm_config_internal(
+    slurm_config = _get_slurm_config_internal(
         wftask=mywftask,
         which_type="parallel",
         config_path=config_path,

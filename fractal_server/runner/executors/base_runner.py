@@ -3,6 +3,8 @@ from typing import Any
 
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigLocal
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.task_files import TaskFiles
 
 
@@ -39,6 +41,8 @@ class BaseRunner:
     Base class for Fractal runners.
     """
 
+    shared_config: JobRunnerConfigLocal | JobRunnerConfigSLURM
+
     executor_error_log: str | None = None
 
     def submit(
@@ -51,11 +55,12 @@ class BaseRunner:
         history_unit_id: int,
         task_type: TaskType,
         task_files: TaskFiles,
-        config: Any,
         user_id: int,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.
+
+        FIXME (zzz): docstring
 
         Args:
             base_command:
