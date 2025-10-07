@@ -50,11 +50,10 @@ class SudoSlurmRunner(BaseSlurmRunner):
         root_dir_local: Path,
         root_dir_remote: Path,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,
-        poll_interval: int | None = None,
         resource: Resource,
         # Specific
         profile: Profile,
+        user_cache_dir: str | None = None,
         slurm_account: str | None = None,
     ) -> None:
         """
@@ -70,7 +69,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
-            poll_interval=poll_interval,
+            poll_interval=resource.job_poll_interval,
             python_worker_interpreter=resource.job_slurm_python_worker,
             slurm_account=slurm_account,
         )
