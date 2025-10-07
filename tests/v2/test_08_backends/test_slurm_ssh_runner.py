@@ -6,6 +6,8 @@ from devtools import debug
 from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
 from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -35,14 +37,11 @@ async def test_submit_success(
     tmp777_path,
     fractal_ssh,
     history_mock_for_submit,
-    override_settings_factory,
     task_type: str,
-    current_py_version: str,
     valid_user_id,
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
+    res, prof = slurm_ssh_resource_profile_objects[:]
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
@@ -55,7 +54,8 @@ async def test_submit_success(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=res,
+        profile=prof,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -107,14 +107,11 @@ async def test_submit_fail(
     tmp777_path,
     fractal_ssh,
     history_mock_for_submit,
-    override_settings_factory,
     task_type: str,
-    current_py_version: str,
     valid_user_id,
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
+    res, prof = slurm_ssh_resource_profile_objects[:]
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
@@ -127,7 +124,8 @@ async def test_submit_fail(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=res,
+        profile=prof,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -168,13 +166,10 @@ async def test_multisubmit_parallel(
     tmp777_path,
     fractal_ssh,
     history_mock_for_multisubmit,
-    override_settings_factory,
-    current_py_version: str,
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
     valid_user_id,
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
+    res, prof = slurm_ssh_resource_profile_objects[:]
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -182,7 +177,8 @@ async def test_multisubmit_parallel(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=res,
+        profile=prof,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -230,13 +226,10 @@ async def test_multisubmit_compound(
     tmp777_path,
     fractal_ssh,
     history_mock_for_multisubmit,
-    override_settings_factory,
-    current_py_version: str,
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
     valid_user_id,
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON_zzz=f"/.venv{current_py_version}/bin/python{current_py_version}"  # noqa
-    )
+    res, prof = slurm_ssh_resource_profile_objects[:]
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -244,7 +237,8 @@ async def test_multisubmit_compound(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=res,
+        profile=prof,
     ) as runner:
         list_task_files = [
             get_dummy_task_files(
@@ -299,18 +293,24 @@ async def test_multisubmit_compound(
 
 @pytest.mark.ssh
 @pytest.mark.container
-def test_send_many_job_inputs_failure(tmp777_path: Path, fractal_ssh):
+def test_send_many_job_inputs_failure(
+    tmp777_path: Path,
+    fractal_ssh,
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+):
     root_dir_local = tmp777_path / "local"
     root_dir_local.mkdir(parents=True)
     root_dir_remote = tmp777_path / "remote"
     dummy_file = root_dir_local / "foo.txt"
     dummy_file.touch()
+    res, prof = slurm_ssh_resource_profile_objects[:]
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
         root_dir_remote=root_dir_remote,
-        poll_interval=0,
+        resource=res,
+        profile=prof,
     ) as runner:
         # Set connection to None, so that all SSH-related `fractal_ssh`
         # methods will fail
