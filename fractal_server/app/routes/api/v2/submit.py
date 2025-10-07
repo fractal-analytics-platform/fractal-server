@@ -10,6 +10,7 @@ from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
@@ -122,6 +123,11 @@ async def apply_workflow(
         )
         used_task_group_ids.add(task.taskgroupv2_id)
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
     # Validate user settings
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     user_settings = await validate_user_settings(
@@ -159,9 +165,9 @@ async def apply_workflow(
     # User appropriate FractalSSH object
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         ssh_config = dict(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
+            user=profile.username,
+            host=resource.host,
+            key_path=profile.ssh_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         try:
@@ -256,6 +262,8 @@ async def apply_workflow(
         slurm_user=user_settings.slurm_user,
         user_cache_dir=cache_dir.as_posix() if cache_dir else None,
         fractal_ssh=fractal_ssh,
+        resource=resource,
+        profile=profile,
     )
     request.app.state.jobsV2.append(job.id)
     logger.info(
