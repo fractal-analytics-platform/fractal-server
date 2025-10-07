@@ -6,11 +6,8 @@ from .slurm_config import SlurmConfig
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
+from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.string_tools import interpret_as_bool
-
-
-class SlurmConfigError(ValueError):
-    pass
 
 
 def _get_slurm_config_internal(

@@ -9,14 +9,6 @@ from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-class SlurmConfigError(ValueError):
-    """
-    Slurm configuration error
-    """
-
-    pass
-
-
 MemMBType = Annotated[PositiveInt | NonEmptyStr, slurm_mem_to_MB]
 
 

@@ -9,11 +9,9 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     _get_slurm_config_internal,
-)
-from fractal_server.runner.executors.slurm_common.slurm_config import (
-    SlurmConfigError,
 )
 
 
