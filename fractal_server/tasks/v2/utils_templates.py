@@ -90,7 +90,7 @@ def get_collection_replacements(
         ("__PACKAGE_ENV_DIR__", task_group.venv_path),
         ("__PYTHON__", python_bin),
         ("__INSTALL_STRING__", task_group.pip_install_string),
-        ("__FRACTAL_PIP_CACHE_DIR_zzz_ARG__", resource.pip_cache_dir_arg),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
         (
             "__PINNED_PACKAGE_LIST_PRE__",
             task_group.pinned_package_versions_pre_string,
