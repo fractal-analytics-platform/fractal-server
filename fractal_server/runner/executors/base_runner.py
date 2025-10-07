@@ -56,6 +56,7 @@ class BaseRunner:
         task_type: TaskType,
         task_files: TaskFiles,
         user_id: int,
+        config: Any,
     ) -> tuple[Any, BaseException]:
         """
         Run a single fractal task.

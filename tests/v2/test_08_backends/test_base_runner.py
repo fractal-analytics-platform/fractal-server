@@ -16,8 +16,8 @@ def test_NotImplementedError_methods():
             history_unit_id=None,
             task_type=None,
             task_files=None,
-            config=None,
             user_id=None,
+            config=None,
         )
     with pytest.raises(NotImplementedError):
         runner.multisubmit(
