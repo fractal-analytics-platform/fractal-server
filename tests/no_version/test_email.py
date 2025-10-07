@@ -3,12 +3,12 @@ import contextlib
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.security import get_user_manager
-from fractal_server.config import MailSettings
+from fractal_server.config._email import PublicEmailSettings
 
 
 async def test_server_not_available(override_settings_factory, db, caplog):
     override_settings_factory(
-        email_settings=MailSettings(
+        email_settings=PublicEmailSettings(
             sender="fractal@fractal.fractal",
             recipients=["test@example.org"],
             smtp_server="localhost",

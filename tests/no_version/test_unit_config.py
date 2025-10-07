@@ -6,11 +6,11 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
-from fractal_server.config import FractalConfigurationError
-from fractal_server.config import OAuthClientConfig
-from fractal_server.config import PixiSLURMConfig
 from fractal_server.config import Settings
+from fractal_server.config._main import FractalConfigurationError
+from fractal_server.config._main import OAuthClientConfig
 from fractal_server.syringe import Inject
+from fractal_server.tasks.config import PixiSLURMConfig
 
 
 def test_settings_injection(override_settings):
