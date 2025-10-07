@@ -1,8 +1,8 @@
 """Add resource and profile
 
-Revision ID: bb9987916b8c
+Revision ID: 60771b110f78
 Revises: 981d588fe248
-Create Date: 2025-10-06 16:27:20.920786
+Create Date: 2025-10-07 13:58:07.665814
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "bb9987916b8c"
+revision = "60771b110f78"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
