@@ -62,7 +62,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    if resource.resource_type == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         if task_collect.package_root is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
