@@ -305,8 +305,10 @@ async def delete_task_group(
 
     background_tasks.add_task(
         delete_function,
-        task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        task_group_id=task_group.id,
+        resource=resource,
+        profile=profile,
         **extra_args,
     )
     logger.debug(
