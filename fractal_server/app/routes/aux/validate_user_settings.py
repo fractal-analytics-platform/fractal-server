@@ -50,7 +50,7 @@ async def validate_user_settings(
 
     if backend == "slurm_ssh":
         UserSettingsValidationModel = SlurmSshUserSettings
-    elif backend == "slurm":
+    elif backend == "slurm_sudo":
         UserSettingsValidationModel = SlurmSudoUserSettings
     else:
         # For other backends, we don't validate anything

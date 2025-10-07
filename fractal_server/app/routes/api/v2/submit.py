@@ -229,7 +229,7 @@ async def apply_workflow(
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         cache_dir = None
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
+    elif FRACTAL_RUNNER_BACKEND == "slurm_sudo":
         cache_dir = (
             Path(user_settings.project_dir) / ".fractal_cache"
             if user_settings.project_dir is not None
