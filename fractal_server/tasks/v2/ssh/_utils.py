@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from ..utils_background import fail_and_cleanup
 from ..utils_pixi import simplify_pyproject_toml
@@ -142,7 +142,7 @@ def check_ssh_or_fail_and_cleanup(
     task_group_activity: TaskGroupActivityV2,
     logger_name: str,
     log_file_path: Path,
-    db: AsyncSession,
+    db: Session,
 ) -> bool:
     """
     Check SSH connection.
