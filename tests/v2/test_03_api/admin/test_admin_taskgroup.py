@@ -420,6 +420,8 @@ async def test_reactivate_task_group_api(
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
+    local_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
     """
     This tests _only_ the API of the admin `reactivate` endpoint.
@@ -430,6 +432,7 @@ async def test_reactivate_task_group_api(
     )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        resource, profile = slurm_ssh_resource_profile_fake_db[:]
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
             ssh_host="ssh_host",
@@ -439,9 +442,13 @@ async def test_reactivate_task_group_api(
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db[:]
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
 
