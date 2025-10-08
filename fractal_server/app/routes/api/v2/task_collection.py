@@ -190,7 +190,8 @@ async def collect_tasks_pip(
         task_group_attrs["python_version"] = task_collect.python_version
     try:
         get_python_interpreter_v2(
-            python_version=task_group_attrs["python_version"]
+            python_version=task_group_attrs["python_version"],
+            resource=resource,
         )
     except ValueError:
         raise HTTPException(

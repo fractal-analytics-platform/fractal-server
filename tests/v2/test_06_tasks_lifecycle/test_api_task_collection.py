@@ -26,20 +26,22 @@ async def test_task_collection_from_wheel_non_canonical(
     tmp_path: Path,
     testdata_path: Path,
     current_py_version: str,
+    local_resource_profile_db,
 ):
     """
     Same as test_task_collection_from_wheel, but package has a
     non-canonical name.
     """
 
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
         FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
+
+    resource, profile = local_resource_profile_db
 
     # Prepare absolute path to wheel file
     archive_path = (
@@ -55,7 +57,9 @@ async def test_task_collection_from_wheel_non_canonical(
     payload["python_version"] = current_py_version
     debug(payload)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/", data=payload, files=files
@@ -103,7 +107,7 @@ async def test_task_collection_from_pypi_api_only(
         fake_collect_local,
     )
 
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
@@ -157,7 +161,7 @@ async def test_task_collection_from_pypi(
     tmp_path: Path,
     current_py_version,
 ):
-    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR_zzz` to avoid sharing state.
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
     # task-collection logs are included
     override_settings_factory(
