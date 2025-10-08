@@ -33,6 +33,7 @@ def override_settings_factory():
     Returns a function that can be used to override settings.
     """
 
+    # FIXME: this should only count dependencies for `get_settings`
     original_num_dependencies = len(Inject._dependencies)
 
     def _overrride_settings(**kwargs):
@@ -67,6 +68,7 @@ def override_email_settings_factory():
     Returns a function that can be used to override email settings.
     """
 
+    # FIXME: this should only count dependencies for `get_email_settings`
     original_num_dependencies = len(Inject._dependencies)
 
     def _overrride_email_settings(**kwargs):
