@@ -33,6 +33,25 @@ SLURM_CONFIG = {
 }
 
 
+def _add_resource_profile_to_db(
+    *,
+    res: Resource,
+    prof: Profile,
+) -> tuple[Resource, Profile]:
+    with next(get_sync_db()) as db_sync:
+        db_sync.add(res)
+        db_sync.commit()
+        db_sync.refresh(res)
+        db_sync.expunge(res)
+
+        prof.resource_id = res.id
+        db_sync.add(prof)
+        db_sync.commit()
+        db_sync.refresh(prof)
+        db_sync.expunge(prof)
+    return res, prof
+
+
 @pytest.fixture(scope="function")
 def local_resource_profile_objects(
     tmp777_path: Path,
@@ -60,28 +79,6 @@ def local_resource_profile_objects(
     )
     ValidResourceLocal(**res.model_dump())  # FIXME: remove
     ValidProfileLocal(**prof.model_dump())  # FIXME: remove
-    return res, prof
-
-
-@pytest.fixture(scope="function")
-def local_resource_profile_db(
-    local_resource_profile_objects: tuple[Resource, Profile],
-) -> tuple[Resource, Profile]:
-    res, prof = local_resource_profile_objects
-    with next(get_sync_db()) as db_sync:
-        # Create resource
-        db_sync.add(res)
-        db_sync.commit()
-        db_sync.refresh(res)
-        db_sync.expunge(res)
-
-        # Create profile
-        prof.resource_id = res.id
-        db_sync.add(prof)
-        db_sync.commit()
-        db_sync.refresh(prof)
-        db_sync.expunge(prof)
-
     return res, prof
 
 
@@ -117,11 +114,6 @@ def slurm_sudo_resource_profile_objects(
     ValidProfileSlurmSudo(**prof.model_dump())  # FIXME: remove
 
     return res, prof
-
-
-@pytest.fixture(scope="function")
-def slurm_sudo_resouce_profile_db():
-    raise NotImplementedError()
 
 
 @pytest.fixture(scope="function")
@@ -179,11 +171,6 @@ def slurm_ssh_resource_profile_objects(
 
 
 @pytest.fixture(scope="function")
-def slurm_ssh_resouce_profile_db():
-    raise NotImplementedError()
-
-
-@pytest.fixture(scope="function")
 def slurm_ssh_resource_profile_fake_objects(
     tmp777_path: Path,
     current_py_version: str,
@@ -221,23 +208,32 @@ def slurm_ssh_resource_profile_fake_objects(
 
 
 @pytest.fixture(scope="function")
+def local_resource_profile_db(
+    local_resource_profile_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    res, prof = local_resource_profile_objects
+    return _add_resource_profile_to_db(res=res, prof=prof)
+
+
+@pytest.fixture(scope="function")
+def slurm_sudo_resouce_profile_db(
+    slurm_sudo_resource_profile_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    res, prof = slurm_sudo_resource_profile_objects[:]
+    return _add_resource_profile_to_db(res=res, prof=prof)
+
+
+@pytest.fixture(scope="function")
+def slurm_ssh_resouce_profile_db(
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    res, prof = slurm_ssh_resource_profile_objects[:]
+    return _add_resource_profile_to_db(res=res, prof=prof)
+
+
+@pytest.fixture(scope="function")
 def slurm_ssh_resource_profile_fake_db(
     slurm_ssh_resource_profile_fake_objects: tuple[Resource, Profile],
 ) -> tuple[Resource, Profile]:
     res, prof = slurm_ssh_resource_profile_fake_objects[:]
-
-    with next(get_sync_db()) as db_sync:
-        # Create resource
-        db_sync.add(res)
-        db_sync.commit()
-        db_sync.refresh(res)
-        db_sync.expunge(res)
-
-        # Create profile
-        prof.resource_id = res.id
-        db_sync.add(prof)
-        db_sync.commit()
-        db_sync.refresh(prof)
-        db_sync.expunge(prof)
-
-    return res, prof
+    return _add_resource_profile_to_db(res=res, prof=prof)
