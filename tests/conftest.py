@@ -2,13 +2,9 @@ import logging
 import sys
 import threading
 import time
-from os import environ
 from pathlib import Path
 
 import pytest
-
-
-environ["PYTHONASYNCIODEBUG"] = "1"
 
 
 def check_basetemp(tpath: Path):
