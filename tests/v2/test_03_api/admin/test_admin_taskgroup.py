@@ -333,7 +333,7 @@ async def test_admin_deactivate_task_group_api(
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
-        resource, profile = local_resource_profile_db[:]
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
     async with MockCurrentUser(
@@ -442,7 +442,7 @@ async def test_reactivate_task_group_api(
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
-        resource, profile = local_resource_profile_db[:]
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
     async with MockCurrentUser(
@@ -622,7 +622,7 @@ async def test_admin_delete_task_group_api(
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         )
     else:
-        resource, profile = local_resource_profile_db[:]
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
     async with MockCurrentUser(

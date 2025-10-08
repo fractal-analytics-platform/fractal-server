@@ -25,7 +25,7 @@ async def test_clean_app_job_list_v2(
     # Set this to 0 so that the endpoint also calls the clean-up function
     override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
 
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
 
     async with MockCurrentUser(
         user_kwargs=dict(
