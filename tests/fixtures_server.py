@@ -20,6 +20,8 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import EmailSettings
+from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
@@ -57,6 +59,40 @@ def override_settings_factory():
         # and `_new_settings Settings(...)` fails.
         if original_num_dependencies < len(Inject._dependencies):
             Inject.pop(get_settings)
+
+
+@pytest.fixture(scope="function")
+def override_email_settings_factory():
+    """
+    Returns a function that can be used to override email settings.
+    """
+
+    original_num_dependencies = len(Inject._dependencies)
+
+    def _overrride_email_settings(**kwargs):
+        # Extract original settings (needed to restore them later)
+        _original_settings = Inject(get_email_settings)
+
+        # Create and validate new `Settings` object
+        _data = _original_settings.model_dump()
+        _data.update(kwargs)
+        _new_settings = EmailSettings(**_data)
+
+        # Override `get_settings`
+        def _patched_get_email_settings():
+            return _new_settings
+
+        Inject.override(get_email_settings, _patched_get_email_settings)
+
+    try:
+        yield _overrride_email_settings
+
+    finally:
+        # If some override actually took place, `pop` it. An example of an
+        # override not taking place is when the test provides invalid data,
+        # and `_new_settings Settings(...)` fails.
+        if original_num_dependencies < len(Inject._dependencies):
+            Inject.pop(get_email_settings)
 
 
 @pytest.fixture(scope="function")

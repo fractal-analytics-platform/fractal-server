@@ -6,9 +6,11 @@ from fractal_server.app.security import get_user_manager
 from fractal_server.config._email import PublicEmailSettings
 
 
-async def test_server_not_available(override_settings_factory, db, caplog):
-    override_settings_factory(
-        email_settings=PublicEmailSettings(
+async def test_server_not_available(
+    override_email_settings_factory, db, caplog
+):
+    override_email_settings_factory(
+        public=PublicEmailSettings(
             sender="fractal@fractal.fractal",
             recipients=["test@example.org"],
             smtp_server="localhost",
