@@ -120,6 +120,11 @@ def slurm_sudo_resource_profile_objects(
 
 
 @pytest.fixture(scope="function")
+def slurm_sudo_resouce_profile_db():
+    raise NotImplementedError()
+
+
+@pytest.fixture(scope="function")
 def slurm_ssh_resource_profile_objects(
     tmp777_path: Path,
     current_py_version: str,
@@ -174,12 +179,17 @@ def slurm_ssh_resource_profile_objects(
 
 
 @pytest.fixture(scope="function")
+def slurm_ssh_resouce_profile_db():
+    raise NotImplementedError()
+
+
+@pytest.fixture(scope="function")
 def slurm_ssh_resource_profile_fake_objects(
     tmp777_path: Path,
     current_py_version: str,
 ) -> tuple[Resource, Profile]:
     """
-    This fixture does not act on the db.
+    This fixture does not require an active SSH service on a container.
     """
     res = Resource(
         name="SLURM cluster A",
