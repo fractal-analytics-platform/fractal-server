@@ -15,12 +15,13 @@ async def test_loss_of_access_to_task(
     dataset_factory_v2,
     db,
     client,
+    local_resource_profile_db,
 ):
     """
     Test the loss-of-access-to-task scenario described in
     https://github.com/fractal-analytics-platform/fractal-server/issues/1840
     """
-
+    resource, profile = local_resource_profile_db[:]
     for i, remove in enumerate(["user_from_group", "group"]):
         # Create two users and a group
         attrs = dict(
@@ -28,6 +29,7 @@ async def test_loss_of_access_to_task(
             is_active=True,
             is_superuser=False,
             is_verified=True,
+            profile_id=profile.id,
         )
         user_A = UserOAuth(email=f"a{i}@a.a", **attrs)
         user_B = UserOAuth(email=f"b{i}@b.b", **attrs)
@@ -59,7 +61,6 @@ async def test_loss_of_access_to_task(
             task_group_kwargs=dict(user_group_id=team_group.id),
             name=f"iteration-{i}-B",
         )
-
         async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
             # Prepare all objects
             project = await project_factory_v2(user)
