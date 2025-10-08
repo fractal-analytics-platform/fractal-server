@@ -80,7 +80,7 @@ def override_settings_factory():
 
 
 @pytest.fixture
-async def db_create_tables(override_settings_FIXME):
+async def db_create_tables():
     from fractal_server.app.db import DB
     from sqlmodel import SQLModel
 
@@ -123,7 +123,7 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-def app(override_settings_FIXME) -> Generator[FastAPI, Any]:
+def app() -> Generator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobsV2 = []
     app.state.fractal_ssh_list = None
@@ -131,7 +131,7 @@ def app(override_settings_FIXME) -> Generator[FastAPI, Any]:
 
 
 @pytest.fixture
-def register_routers(app, override_settings_FIXME):
+def register_routers(app):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
