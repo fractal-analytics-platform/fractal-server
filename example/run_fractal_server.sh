@@ -1,8 +1,11 @@
 #!/bin/bash
 
+set -e
+
 # Create and init db
 createdb fractal-example-test
 poetry run fractalctl set-db
+poetry run fractalctl init-db-data
 
 # Start the server
 poetry run gunicorn fractal_server.main:app \
