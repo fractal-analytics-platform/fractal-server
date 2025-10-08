@@ -242,7 +242,7 @@ class BaseSlurmRunner(BaseRunner):
             A new, up-to-date, `SlurmConfig` object.
         """
 
-        new_slurm_config = slurm_config.model_copy()
+        new_slurm_config = slurm_config.model_copy(deep=True)
 
         # Include SLURM account in `slurm_config`.
         if self.slurm_account is not None:
