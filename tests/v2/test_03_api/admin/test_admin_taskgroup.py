@@ -602,22 +602,10 @@ async def test_admin_delete_task_group_api(
     request,
     current_py_version,
     task_factory_v2,
+    slurm_ssh_resource_profile_fake_db,
+    local_resource_profile_db,
 ):
-    overrides = dict(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR_zzz=tmp777_path,
-    )
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # Setup remote Python interpreter
-        current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = (
-            f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-        )
-        python_value = (
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-        overrides[python_key] = python_value
-    override_settings_factory(**overrides)
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = request.getfixturevalue(
@@ -625,6 +613,7 @@ async def test_admin_delete_task_group_api(
         )
         slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
         ssh_keys = request.getfixturevalue("ssh_keys")
+        resource, profile = slurm_ssh_resource_profile_fake_db[:]
         user_settings_dict = dict(
             ssh_host=slurmlogin_ip,
             ssh_username="test01",
@@ -633,9 +622,13 @@ async def test_admin_delete_task_group_api(
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         )
     else:
+        resource, profile = local_resource_profile_db[:]
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         task = await task_factory_v2(
             user_id=user.id,
             name="AaAa",
