@@ -42,13 +42,11 @@ async def test_full_workflow_slurm(
     db,
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    tmp_path_factory,
     fractal_tasks_mock_db,  # FIXME
     slurm_sudo_resource_profile_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
@@ -89,13 +87,11 @@ async def test_full_workflow_slurm(
 async def test_full_workflow_TaskExecutionError_slurm(
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    tmp_path_factory,
     fractal_tasks_mock_db,
     slurm_sudo_resource_profile_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
@@ -105,7 +101,6 @@ async def test_full_workflow_TaskExecutionError_slurm(
     Run a workflow made of three tasks, two successful tasks and one
     that raises an error.
     """
-    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
     resource, profile = slurm_sudo_resource_profile_db[:]
 
@@ -177,7 +172,6 @@ async def test_non_executable_task_command_slurm(
 async def test_failing_workflow_UnknownError_slurm(
     client,
     MockCurrentUser,
-    testdata_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
