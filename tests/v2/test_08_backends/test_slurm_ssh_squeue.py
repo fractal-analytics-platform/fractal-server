@@ -13,14 +13,17 @@ from fractal_server.ssh._fabric import FractalSSHCommandError
 async def test_run_squeue(
     tmp777_path,
     fractal_ssh: FractalSSH,
+    slurm_ssh_resouce_profile_db,
 ):
     fractal_ssh.default_lock_timeout = 1.0
+    resource, profile = slurm_ssh_resouce_profile_db[:]
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
         # Start a long SLURM job
         stdout = fractal_ssh.run_command(
