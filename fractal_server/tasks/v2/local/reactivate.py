@@ -9,6 +9,7 @@ from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -28,6 +29,7 @@ def reactivate_local(
     task_group_activity_id: int,
     task_group_id: int,
     resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Reactivate a task group venv.
