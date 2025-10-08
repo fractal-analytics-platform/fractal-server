@@ -17,11 +17,16 @@ router_api = APIRouter()
 
 @router_api.get("/alive/")
 async def alive():
-    return dict(alive=True, version=fractal_server.__VERSION__)
+    return dict(
+        alive=True,
+        version=fractal_server.__VERSION__,
+    )
 
 
 @router_api.get("/settings/app/")
-async def view_settings(user: UserOAuth = Depends(current_active_superuser)):
+async def view_settings(
+    user: UserOAuth = Depends(current_active_superuser),
+):
     settings = Inject(get_settings)
     return settings.model_dump()
 
