@@ -5,7 +5,6 @@ from .aux_unit_runner import *  # noqa
 from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
-from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -17,8 +16,10 @@ async def test_executor_error(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
+    resource, profile = slurm_sudo_resource_profile_objects[:]
 
     class SudoSlurmRunnerMod(SudoSlurmRunner):
         def _prepare_single_slurm_job(self, *args, **kwargs) -> str:
@@ -34,10 +35,10 @@ async def test_executor_error(
             return submit_command
 
     with SudoSlurmRunnerMod(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
         runner.submit(
             base_command="true",
