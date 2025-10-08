@@ -47,7 +47,7 @@ async def test_submit_job_failures(
     task_factory_v2,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -166,7 +166,7 @@ async def test_submit_incompatible_filters(
     task_factory_v2,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -225,7 +225,7 @@ async def test_submit_jobs_with_same_dataset(
     Test behavior for when another job with the same output_dataset_id already
     exists.
     """
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -298,7 +298,7 @@ async def test_project_apply_workflow_subset(
     task_factory_v2,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -431,7 +431,7 @@ async def test_project_apply_slurm_account(
     db,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -538,7 +538,7 @@ async def test_get_jobs(
     Test behavior for when another job with the same output_dataset_id already
     exists.
     """
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -685,7 +685,7 @@ async def test_update_timestamp_taskgroup(
     task_factory_v2,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
@@ -732,7 +732,7 @@ async def test_get_latest_jobs(
     MockCurrentUser,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db[:]
+    res, prof = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,

@@ -21,7 +21,7 @@ async def test_loss_of_access_to_task(
     Test the loss-of-access-to-task scenario described in
     https://github.com/fractal-analytics-platform/fractal-server/issues/1840
     """
-    resource, profile = local_resource_profile_db[:]
+    resource, profile = local_resource_profile_db
     for i, remove in enumerate(["user_from_group", "group"]):
         # Create two users and a group
         attrs = dict(

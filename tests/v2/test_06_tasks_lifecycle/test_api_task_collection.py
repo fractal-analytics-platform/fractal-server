@@ -96,6 +96,7 @@ async def test_task_collection_from_pypi_api_only(
     current_py_version,
     package_version,
     monkeypatch,
+    local_resource_profile_db,
 ):
     import fractal_server.app.routes.api.v2.task_collection  # noqa
 
@@ -113,15 +114,12 @@ async def test_task_collection_from_pypi_api_only(
     override_settings_factory(
         FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
-    settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
-        python_version=PYTHON_VERSION,
+        python_version=current_py_version,
     )
     if package_version is None:
         EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
@@ -134,8 +132,10 @@ async def test_task_collection_from_pypi_api_only(
 
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/?private=true",
