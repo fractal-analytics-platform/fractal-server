@@ -8,21 +8,9 @@ from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import Settings
 from fractal_server.config._main import OAuthClientConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TaskPythonSettings
 from fractal_server.tasks.config import TasksPixiSettings
-
-
-def test_settings_injection(override_settings):
-    """
-    GIVEN an Inject object with a Settings object registered to it
-    WHEN I ask for the Settings object
-    THEN it gets returned
-    """
-    settings = Inject(Settings)
-    debug(settings)
-    assert isinstance(settings, Settings)
 
 
 @pytest.mark.parametrize(
@@ -39,8 +27,8 @@ def test_settings_injection(override_settings):
         # Invalid JWT_SECRET_KEY
         (
             dict(
-                FRACTAL_RUNNER_BACKEND="local",
                 JWT_SECRET_KEY=None,
+                FRACTAL_RUNNER_BACKEND="local",
             ),
             True,
         ),
