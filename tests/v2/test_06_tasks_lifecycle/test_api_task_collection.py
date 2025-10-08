@@ -11,8 +11,6 @@ from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 PREFIX = "api/v2/task"
@@ -160,6 +158,7 @@ async def test_task_collection_from_pypi(
     override_settings_factory,
     tmp_path: Path,
     current_py_version,
+    local_resource_profile_db,
 ):
     # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
     # Note 2: Set logging level to CRITICAL, and then make sure that
@@ -167,15 +166,12 @@ async def test_task_collection_from_pypi(
     override_settings_factory(
         FRACTAL_TASKS_DIR_zzz=(tmp_path / "FRACTAL_TASKS_DIR_zzz"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz=current_py_version,
     )
-    settings = Inject(get_settings)
 
     # Prepare and validate payload
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz
     payload = dict(
         package="testing-tasks-mock",
-        python_version=PYTHON_VERSION,
+        python_version=current_py_version,
     )
     EXPECTED_PACKAGE_VERSION = await get_package_version_from_pypi(
         payload["package"]
@@ -185,7 +181,10 @@ async def test_task_collection_from_pypi(
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/?private=true",
@@ -218,17 +217,18 @@ async def test_task_collection_from_pypi(
 
 
 async def test_task_collection_failure_due_to_existing_path(
-    db, client, MockCurrentUser
+    db, client, MockCurrentUser, local_resource_profile_db
 ):
-    settings = Inject(get_settings)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         path = (
-            settings.FRACTAL_TASKS_DIR_zzz
+            Path(resource.tasks_local_folder)
             / f"{user.id}/testing-tasks-mock/0.1.3/"
         ).as_posix()
         venv_path = (
-            settings.FRACTAL_TASKS_DIR_zzz
+            Path(resource.tasks_local_folder)
             / f"{user.id}/testing-tasks-mock/0.1.3/venv/"
         ).as_posix()
 
@@ -257,8 +257,9 @@ async def test_task_collection_failure_due_to_existing_path(
 
 
 async def test_contact_an_admin_message(
-    MockCurrentUser, client, db, default_user_group
+    MockCurrentUser, client, db, default_user_group, local_resource_profile_db
 ):
+    resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
     # default UserGroup (this is NOT ALLOWED using the API).
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as userA:
@@ -274,7 +275,9 @@ async def test_contact_an_admin_message(
             )
         await db.commit()
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as userB:
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as userB:
         # Fail inside `_verify_non_duplication_group_constraint`.
         res = await client.post(
             f"{PREFIX}/collect/pip/",
