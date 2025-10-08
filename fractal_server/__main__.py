@@ -129,6 +129,10 @@ def init_db_data(
     from fractal_server.app.security import _create_first_group
     from fractal_server.syringe import Inject
     from fractal_server.config import get_init_data_settings
+    from fractal_server.app.db import get_sync_db
+    from sqlalchemy import select
+    from fractal_server.app.models.security import UserOAuth
+    from fractal_server.app.models import Resource, Profile
 
     init_data_settings = Inject(get_init_data_settings)
 
@@ -150,7 +154,41 @@ def init_db_data(
     print()
 
     # Create first resource
-    # FIXME not implemented yet
+    with next(get_sync_db()) as db:
+        if resource_json_file is not None:
+            with open(resource_json_file) as f:
+                resource_data = json.load(f)
+        else:
+            resource_data = {
+                "name": "Local resource",
+                "type": "local",
+                "job_local_folder": "data-jobs",
+                "tasks_local_folder": "data-tasks",
+            }
+        resource = Resource(**resource_data)
+        db.add(resource)
+        db.commit()
+        db.refresh(resource)
+        if profile_json_file is not None:
+            with open(profile_json_file) as f:
+                profile_data = json.load(f)
+        else:
+            profile_data = {}
+        profile_data["resource_id"] = resource.id
+        profile = Profile(**profile_data)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+
+        res = db.execute(select(UserOAuth))
+        users = res.unique().scalars().all()
+        for user in users:
+            user.profile_id = profile.id
+            db.add(user)
+        db.commit()
+        db.expunge_all()
+
+    # FIXME not tested yet
 
 
 def update_db_data():
