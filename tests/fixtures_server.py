@@ -26,8 +26,9 @@ from fractal_server.syringe import Inject
 
 
 @pytest.fixture(scope="function", autouse=True)
-def override_settings():
-    # FIXME: is this really needed?
+def override_settings_FIXME():
+    # FIXME: is this really needed? Apparently yes, for how
+    # override_settings_factory works. But likely we should get rid of this one after refactoring the other.
 
     settings = get_settings().model_copy()
     db_settings = get_db_settings().model_copy()
@@ -79,7 +80,7 @@ def override_settings_factory():
 
 
 @pytest.fixture
-async def db_create_tables(override_settings):
+async def db_create_tables(override_settings_FIXME):
     from fractal_server.app.db import DB
     from sqlmodel import SQLModel
 
@@ -122,7 +123,7 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-def app(override_settings) -> Generator[FastAPI, Any]:
+def app(override_settings_FIXME) -> Generator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobsV2 = []
     app.state.fractal_ssh_list = None
@@ -130,7 +131,7 @@ def app(override_settings) -> Generator[FastAPI, Any]:
 
 
 @pytest.fixture
-def register_routers(app, override_settings):
+def register_routers(app, override_settings_FIXME):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
