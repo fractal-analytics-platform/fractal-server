@@ -1,7 +1,7 @@
 from fractal_server.app.models import Resource
 
 
-def get_python_interpreter_v2(
+def get_python_interpreter(
     python_version: str,
     resource: Resource,
 ) -> str:

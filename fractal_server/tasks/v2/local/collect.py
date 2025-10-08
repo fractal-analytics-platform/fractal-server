@@ -27,7 +27,7 @@ from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
@@ -116,7 +116,7 @@ def collect_local(
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                 # Prepare replacements for templates
-                python_bin = get_python_interpreter_v2(
+                python_bin = get_python_interpreter(
                     python_version=task_group.python_version,
                     resource=resource,
                 )

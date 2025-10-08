@@ -220,7 +220,7 @@ def local_resource_profile_db(
 
 
 @pytest.fixture(scope="function")
-def slurm_sudo_resouce_profile_db(
+def slurm_sudo_resource_profile_db(
     db_sync: Session,
     slurm_sudo_resource_profile_objects: tuple[Resource, Profile],
 ) -> tuple[Resource, Profile]:
@@ -233,7 +233,7 @@ def slurm_sudo_resouce_profile_db(
 
 
 @pytest.fixture(scope="function")
-def slurm_ssh_resouce_profile_db(
+def slurm_ssh_resource_profile_db(
     db_sync: Session,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
 ) -> tuple[Resource, Profile]:

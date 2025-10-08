@@ -33,10 +33,11 @@ from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-_backends = {}
-_backends["local"] = local_process_workflow
-_backends["slurm_sudo"] = slurm_sudo_process_workflow
-_backends["slurm_ssh"] = slurm_ssh_process_workflow
+_backends = dict(
+    local=local_process_workflow,
+    slurm_sudo=slurm_sudo_process_workflow,
+    slurm_ssh=slurm_ssh_process_workflow,
+)
 
 
 def fail_job(

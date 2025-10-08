@@ -28,7 +28,6 @@ async def test_full_workflow_local(
     fractal_tasks_mock_db,
     local_resource_profile_db,
 ):
-    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
@@ -58,7 +57,6 @@ async def test_full_workflow_TaskExecutionError(
     that raises an error.
     """
 
-    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
@@ -171,17 +169,14 @@ async def test_non_python_task_local(
 async def test_failing_workflow_post_task_execution(
     client,
     MockCurrentUser,
-    tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    tmp_path_factory,
     tmp_path,
     fractal_tasks_mock_db,
     local_resource_profile_db,
 ):
-    # Use a session-scoped FRACTAL_TASKS_DIR_zzz folder
     override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
 
     await failing_workflow_post_task_execution(
