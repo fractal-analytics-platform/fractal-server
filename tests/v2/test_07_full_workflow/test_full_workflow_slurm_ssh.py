@@ -67,6 +67,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     task_factory_v2,
     slurm_ssh_resource_profile_db,
     override_settings_factory,
+    db,
 ):
     """
     Setup faulty SSH connection (with wrong path to key file) and observe
@@ -75,7 +76,11 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     resource, profile = slurm_ssh_resource_profile_db[:]
+
     profile.ssh_key_path = "/invalid/path"
+    db.add(profile)
+    await db.commit()
+    await db.refresh(profile)
 
     user_settings_dict = dict(
         ssh_host=resource.host,
@@ -100,9 +105,6 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         tmp777_path=tmp777_path,
         this_should_fail=True,
     )
-    assert (
-        "No such file or directory: "
-        f"'{user_settings_dict['ssh_private_key_path']}'" in job_logs
-    )
+    assert f"No such file or directory: '{profile.ssh_key_path}'" in job_logs
 
     app.state.fractal_ssh_list.close_all()
