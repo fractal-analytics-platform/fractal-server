@@ -39,14 +39,12 @@ async def test_deactivate_task_group_api(
     task_factory_v2,
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
+    slurm_ssh_resource_profile_db,
+    local_resource_profile_db,
 ):
     """
     This tests _only_ the API of the `deactivate` endpoint.
     """
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
 
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
@@ -55,17 +53,22 @@ async def test_deactivate_task_group_api(
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = MockFractalSSHList()
+        resource, profile = slurm_ssh_resource_profile_db
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path,
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id,
@@ -147,15 +150,12 @@ async def test_reactivate_task_group_api(
     task_factory_v2,
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
+    slurm_ssh_resource_profile_db,
+    local_resource_profile_db,
 ):
     """
     This tests _only_ the API of the `reactivate` endpoint.
     """
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
 
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
@@ -163,17 +163,22 @@ async def test_reactivate_task_group_api(
         )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        resource, profile = slurm_ssh_resource_profile_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path + "invalid",
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task2")
         task_other = await task_factory_v2(

@@ -75,7 +75,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
-    resource, profile = slurm_ssh_resource_profile_db[:]
+    resource, profile = slurm_ssh_resource_profile_db
 
     profile.ssh_key_path = "/invalid/path"
     db.add(profile)

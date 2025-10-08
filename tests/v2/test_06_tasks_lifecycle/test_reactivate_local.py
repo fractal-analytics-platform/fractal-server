@@ -11,7 +11,9 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import reactivate_local
 
 
-async def test_reactivate_local_venv_exists(tmp_path, db, first_user):
+async def test_reactivate_local_venv_exists(
+    tmp_path, db, first_user, local_resource_profile_db
+):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -40,10 +42,13 @@ async def test_reactivate_local_venv_exists(tmp_path, db, first_user):
     db.expunge(task_group_activity)
     # create venv_path
     Path(task_group.venv_path).mkdir()
+    resource, profile = local_resource_profile_db
     # background task
     reactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that reactivate failed
@@ -63,6 +68,7 @@ async def test_reactivate_local_fail(
     current_py_version,
     monkeypatch,
     make_rmtree_fail: bool,
+    local_resource_profile_db,
 ):
     """
     Make reactivation fail (due to wrong pip-freeze data), in two cases:
@@ -118,11 +124,15 @@ async def test_reactivate_local_fail(
     # Create path
     Path(task_group.path).mkdir()
 
+    resource, profile = local_resource_profile_db
+
     # Run background task
     try:
         reactivate_local(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
+            profile=profile,
         )
     except RuntimeError as e:
         print(

@@ -35,9 +35,12 @@ async def test_folder_already_exists(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
-    override_settings_factory(FRACTAL_TASKS_DIR_zzz=tmp_path)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         # Create the folder in advance
         expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
         expected_path.mkdir(parents=True, exist_ok=True)

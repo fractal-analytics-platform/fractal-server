@@ -304,25 +304,15 @@ async def test_task_collection_ssh_failure_no_connection(
     app,
     client,
     MockCurrentUser,
-    override_settings_factory,
     current_py_version: str,
+    slurm_ssh_resource_profile_db,
 ):
     """
     Test exception handling for when SSH connection is not available.
     """
-
+    resource, profile = slurm_ssh_resource_profile_db
     # Assign empty FractalSSH object to app state
     app.state.fractal_ssh_list = FractalSSHList()
-
-    # Override settings with Python/SSH configurations
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-    settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
-        PY_KEY: f"/usr/bin/python{current_py_version}",
-        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
-    }
-    override_settings_factory(**settings_overrides)
 
     user_settings_dict = dict(
         ssh_host="fake",
@@ -333,7 +323,7 @@ async def test_task_collection_ssh_failure_no_connection(
     )
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(is_verified=True, profile_id=profile.id),
         user_settings_dict=user_settings_dict,
     ):
         # Trigger task collection

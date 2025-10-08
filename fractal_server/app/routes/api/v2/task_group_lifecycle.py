@@ -273,6 +273,7 @@ async def reactivate_task_group(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
             resource=resource,
+            profile=profile,
         )
     logger.debug(
         "Task group reactivation endpoint: start reactivate "

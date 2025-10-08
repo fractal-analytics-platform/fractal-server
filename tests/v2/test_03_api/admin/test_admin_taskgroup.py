@@ -427,17 +427,13 @@ async def test_reactivate_task_group_api(
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
-
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        resource, profile = slurm_ssh_resource_profile_fake_db[:]
+        resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path + "invalid",
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
