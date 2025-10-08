@@ -18,7 +18,7 @@ from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
@@ -82,7 +82,7 @@ def reactivate_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Prepare replacements for templates
-                python_bin = get_python_interpreter_v2(
+                python_bin = get_python_interpreter(
                     python_version=task_group.python_version,
                     resource=resource,
                 )

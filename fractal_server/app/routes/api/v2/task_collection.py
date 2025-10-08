@@ -45,7 +45,7 @@ from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 
 
@@ -189,7 +189,7 @@ async def collect_tasks_pip(
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:
-        get_python_interpreter_v2(
+        get_python_interpreter(
             python_version=task_group_attrs["python_version"]
         )
     except ValueError:

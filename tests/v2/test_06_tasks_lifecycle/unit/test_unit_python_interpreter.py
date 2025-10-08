@@ -1,7 +1,7 @@
 import pytest
 
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 
 
@@ -21,22 +21,22 @@ async def test_get_python_interpreter_v2(
 
     # Failures for invalid versions
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(python_version=None)
+        get_python_interpreter(python_version=None)
     assert "Invalid python_version=None" in str(e.value)
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(python_version=123)
+        get_python_interpreter(python_version=123)
     assert "Invalid python_version=" in str(e.value)
 
     # Failures for requiring missing Python version
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(python_version="3.10")
+        get_python_interpreter(python_version="3.10")
     assert "but FRACTAL_TASKS_PYTHON_3_10_zzz=None" in str(e.value)
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(python_version="3.11")
+        get_python_interpreter(python_version="3.11")
     assert "but FRACTAL_TASKS_PYTHON_3_11_zzz=None" in str(e.value)
 
     # Success
-    python39 = get_python_interpreter_v2("3.9")
+    python39 = get_python_interpreter("3.9")
     assert python39 == MOCK_PYTHON_3_9
-    python312 = get_python_interpreter_v2("3.12")
+    python312 = get_python_interpreter("3.12")
     assert python312 == MOCK_PYTHON_3_12

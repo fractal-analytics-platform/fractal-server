@@ -23,7 +23,7 @@ from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
@@ -152,7 +152,7 @@ def collect_ssh(
                         task_group.archive_path = archive_path
                         task_group = add_commit_refresh(obj=task_group, db=db)
 
-                    python_bin = get_python_interpreter_v2(
+                    python_bin = get_python_interpreter(
                         python_version=task_group.python_version,
                         resource=resource,
                     )
