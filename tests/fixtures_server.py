@@ -20,66 +20,46 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
-from fractal_server.config import get_db_settings
 from fractal_server.config import get_settings
+from fractal_server.config import Settings
 from fractal_server.syringe import Inject
-
-
-@pytest.fixture(scope="function", autouse=True)
-def override_settings_FIXME():
-    # FIXME: is this really needed? Apparently yes, for how
-    # override_settings_factory works. But likely we should get rid of this one after refactoring the other.
-
-    settings = get_settings().model_copy()
-    db_settings = get_db_settings().model_copy()
-
-    def _get_settings():
-        return settings
-
-    def _get_db_settings():
-        return db_settings
-
-    Inject.override(get_settings, _get_settings)
-    Inject.override(get_db_settings, _get_db_settings)
-
-    try:
-        yield
-
-    finally:
-        Inject.pop(get_settings)
-        Inject.pop(get_db_settings)
 
 
 @pytest.fixture(scope="function")
 def override_settings_factory():
-    from fractal_server.config import Settings
+    """
+    Returns a function that can be used to override settings.
+    """
 
-    # NOTE: using a mutable variable so that we can modify it from within the
-    # inner function
-    get_settings_orig = []
+    original_num_dependencies = len(Inject._dependencies)
 
-    def _overrride_settings_factory(**kwargs):
-        # NOTE: extract patched settings *before* popping out the patch!
-        settings = Settings(
-            **Inject(get_settings).model_dump(exclude_unset=True)
-        )
-        get_settings_orig.append(Inject.pop(get_settings))
-        for k, v in kwargs.items():
-            setattr(settings, k, v)
+    def _overrride_settings(**kwargs):
+        # Extract original settings (needed to restore them later)
+        _original_settings = Inject(get_settings)
 
-        def _get_settings():
-            return settings
+        # Create and validate new `Settings` object
+        _data = _original_settings.model_dump()
+        _data.update(kwargs)
+        _new_settings = Settings(**_data)
 
-        Inject.override(get_settings, _get_settings)
+        # Override `get_settings`
+        def _patched_get_settings():
+            return _new_settings
+
+        Inject.override(get_settings, _patched_get_settings)
 
     try:
-        yield _overrride_settings_factory
+        yield _overrride_settings
+
     finally:
-        if get_settings_orig:
-            Inject.override(get_settings, get_settings_orig[0])
+        # If some override actually took place, `pop` it. An example of an
+        # override not taking place is when the test provides invalid data,
+        # and `_new_settings Settings(...)` fails.
+        if original_num_dependencies < len(Inject._dependencies):
+            Inject.pop(get_settings)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def db_create_tables():
     from fractal_server.app.db import DB
     from sqlmodel import SQLModel
