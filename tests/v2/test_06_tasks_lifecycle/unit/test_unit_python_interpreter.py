@@ -7,7 +7,7 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 
 
-async def test_get_python_interpreter_v2(
+async def test_get_python_interpreter(
     local_resource_profile_objects: tuple[Resource, Profile],
 ):
     resource, profile = local_resource_profile_objects[:]
