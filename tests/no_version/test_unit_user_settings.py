@@ -144,7 +144,7 @@ async def test_validate_user_settings(db):
         )
     # User with empty settings: backend="slurm_sudo"
     with pytest.raises(
-        HTTPException, match="validation errors for SlurmSudoUserSettings"
+        HTTPException, match="validation error for SlurmSudoUserSettings"
     ):
         await validate_user_settings(
             user=user_with_invalid_settings, backend="slurm_sudo", db=db
@@ -156,7 +156,7 @@ async def test_validate_user_settings(db):
     )
     # User with valid SSH settings: backend="slurm_sudo"
     with pytest.raises(
-        HTTPException, match="validation errors for SlurmSudoUserSettings"
+        HTTPException, match="validation error for SlurmSudoUserSettings"
     ):
         await validate_user_settings(
             user=user_with_valid_ssh_settings, backend="slurm_sudo", db=db
