@@ -7,7 +7,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.local import collect_local_pixi
 
 
@@ -16,16 +15,15 @@ async def test_collect_local_pixi_path_exists(
     tmp_path: Path,
     db,
     first_user,
+    local_resource_profile_db,
 ):
-    pixi = TasksPixiSettings(
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = dict(
         default_version="x",
         versions={"x": "/fake/x"},
     )
-    override_settings_factory(
-        FRACTAL_TASKS_DIR_zzz=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
-        pixi=pixi,
-    )
+    db.add(resource)
+    await db.commit()
 
     # Prepare db objects
     path = tmp_path / "something"
@@ -36,7 +34,7 @@ async def test_collect_local_pixi_path_exists(
         origin="pixi",
         path=path.as_posix(),
         user_id=first_user.id,
-        pixi_version=pixi.default_version,
+        pixi_version="x",
     )
     db.add(task_group)
     await db.commit()
@@ -63,6 +61,8 @@ async def test_collect_local_pixi_path_exists(
             contents=b"fake",
             filename="fake",
         ),
+        resource=resource,
+        profile=profile,
     )
     # Verify that collection failed
     task_group_activity_v2 = await db.get(

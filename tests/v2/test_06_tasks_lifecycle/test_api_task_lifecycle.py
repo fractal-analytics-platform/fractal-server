@@ -484,17 +484,16 @@ async def test_lifecycle(
 
 
 async def test_fail_due_to_ongoing_activities(
-    client,
-    MockCurrentUser,
-    db,
-    task_factory_v2,
+    client, MockCurrentUser, db, task_factory_v2, local_resource_profile_db
 ):
     """
     Test that deactivate/reactivate endpoints fail if other
     activities for the same task group are ongoing.
     """
-
-    async with MockCurrentUser() as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user:
         # Create mock objects
         task = await task_factory_v2(user_id=user.id, name="task")
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
@@ -541,8 +540,12 @@ async def test_lifecycle_actions_with_submitted_jobs(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser() as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(
             user_id=user.id,

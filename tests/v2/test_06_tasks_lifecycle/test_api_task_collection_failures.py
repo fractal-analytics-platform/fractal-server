@@ -64,13 +64,12 @@ async def test_folder_already_exists(
 async def test_invalid_python_version(
     client,
     MockCurrentUser,
-    override_settings_factory,
+    local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_TASKS_PYTHON_3_9_zzz=None,
-    )
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(package="invalid-task-package", python_version="3.9"),
@@ -84,6 +83,7 @@ async def test_wheel_collection_failures(
     client,
     MockCurrentUser,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
     archive_path = (
         testdata_path.parent
@@ -97,7 +97,10 @@ async def test_wheel_collection_failures(
         "file": (archive_path.name, wheel_file_content, "application/zip")
     }
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data={},

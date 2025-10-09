@@ -4,14 +4,17 @@ from pathlib import Path
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
-async def test_pixi_not_available(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+async def test_pixi_not_available(
+    client, MockCurrentUser, local_resource_profile_db
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={"pixi_version": "9.9.9"},
@@ -92,13 +95,9 @@ async def test_pixi_collection_path_already_exists(
     pixi: TasksPixiSettings,
     pixi_pkg_targz: Path,
     tmp_path: Path,
+    local_resource_profile_db,
+    db,
 ):
-    override_settings_factory(
-        FRACTAL_TASKS_DIR_zzz=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
-        pixi=pixi,
-    )
-
     with pixi_pkg_targz.open("rb") as f:
         files = {
             "file": (
@@ -108,11 +107,15 @@ async def test_pixi_collection_path_already_exists(
             )
         }
 
-    settings = Inject(get_settings)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = pixi.model_dump()
+    db.add(resource)
+    await db.commit()
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         task_group_path = (
-            Path(settings.FRACTAL_TASKS_DIR_zzz.as_posix())
+            Path(Path(resource.tasks_local_folder).as_posix())
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"

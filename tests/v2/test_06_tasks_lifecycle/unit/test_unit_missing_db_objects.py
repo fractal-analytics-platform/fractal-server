@@ -1,4 +1,3 @@
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local import collect_local
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.local import deactivate_local
@@ -13,10 +12,17 @@ from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 
 
-def test_unit_missing_objects(db, caplog):
+def test_unit_missing_objects(
+    db,
+    caplog,
+    local_resource_profile_objects,
+    slurm_ssh_resource_profile_objects,
+):
     """
     Test a branch which is in principle unreachable.
     """
+    resource, profile = local_resource_profile_objects
+
     for function in [
         collect_local,
         deactivate_local,
@@ -32,19 +38,27 @@ def test_unit_missing_objects(db, caplog):
                 task_group_activity_id=9999,
                 task_group_id=9999,
                 wheel_file=None,
+                resource=resource,
+                profile=profile,
             )
         elif function == collect_local_pixi:
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
                 tar_gz_file=None,
+                resource=resource,
+                profile=profile,
             )
         else:
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
+                resource=resource,
+                profile=profile,
             )
         assert "Cannot find database rows" in caplog.text
+
+    resource, profile = slurm_ssh_resource_profile_objects
 
     for function in [
         collect_ssh,
@@ -60,35 +74,26 @@ def test_unit_missing_objects(db, caplog):
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                ssh_config=SSHConfig(
-                    host="fake",
-                    user="fake",
-                    key_path="fake",
-                ),
                 tasks_base_dir="/invalid",
                 wheel_file=None,
+                resource=resource,
+                profile=profile,
             )
         elif function == collect_ssh_pixi:
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                ssh_config=SSHConfig(
-                    host="fake",
-                    user="fake",
-                    key_path="fake",
-                ),
                 tasks_base_dir="/invalid",
                 tar_gz_file=None,
+                resource=resource,
+                profile=profile,
             )
         else:
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                ssh_config=SSHConfig(
-                    host="fake",
-                    user="fake",
-                    key_path="fake",
-                ),
                 tasks_base_dir="/invalid",
+                resource=resource,
+                profile=profile,
             )
         assert "Cannot find database rows" in caplog.text
