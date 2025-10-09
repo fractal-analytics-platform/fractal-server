@@ -126,5 +126,3 @@ class UserGroup(SQLModel, table=True):
     viewer_paths: list[str] = Field(
         sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
-
-    x: int
