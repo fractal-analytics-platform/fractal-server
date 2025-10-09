@@ -42,7 +42,10 @@ async def test_folder_already_exists(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ) as user:
         # Create the folder in advance
-        expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
+        expected_path = (
+            Path(resource.tasks_local_folder)
+            / f"{user.id}/fractal-tasks-mock/0.0.1"
+        )
         expected_path.mkdir(parents=True, exist_ok=True)
         assert expected_path.exists()
         archive_path = (
@@ -176,20 +179,22 @@ async def test_failure_cleanup(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
     """
     Verify that a failed collection cleans up its folder and TaskGroupV2.
     """
 
-    override_settings_factory(
-        FRACTAL_TASKS_DIR_zzz=tmp_path,
-        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-    )
+    override_settings_factory(FRACTAL_LOGGING_LEVEL=logging.CRITICAL)
+
+    resource, profile = local_resource_profile_db
 
     # Valid part of the payload
     payload = dict(package_extras="my_extra")
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         archive_path = (
             testdata_path.parent
             / "v2/fractal_tasks_mock/dist"

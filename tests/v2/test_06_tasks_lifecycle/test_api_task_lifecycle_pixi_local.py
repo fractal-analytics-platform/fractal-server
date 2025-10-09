@@ -134,19 +134,17 @@ async def test_pixi_collection_path_already_exists(
 
 
 async def test_task_group_lifecycle_pixi_local(
-    override_settings_factory,
     client,
     MockCurrentUser,
     pixi: TasksPixiSettings,
     pixi_pkg_targz: Path,
-    tmp_path: Path,
     db,
+    local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_PIXI_CONFIG_FILE_zzz="/fake/file",
-        FRACTAL_TASKS_DIR_zzz=tmp_path,
-        pixi=pixi,
-    )
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = pixi.model_dump()
+    db.add(resource)
+    await db.commit()
 
     with pixi_pkg_targz.open("rb") as f:
         files = {
@@ -157,7 +155,9 @@ async def test_task_group_lifecycle_pixi_local(
             )
         }
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         # Successful collection
         res = await client.post(
             "api/v2/task/collect/pixi/",
