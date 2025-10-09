@@ -17,21 +17,19 @@ VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 write_log "Python interpreter: $VENVPYTHON"
 echo
 
-# FIXME: only run pip-show once!
-
 # Extract information about paths
 # WARNING: this block will fail for paths which include whitespace characters
 write_log "START pip show"
-$VENVPYTHON -m pip show ${PACKAGE_NAME}
+PIP_SHOW_OUTPUT=$($VENVPYTHON -m pip show ${PACKAGE_NAME})
 write_log "END   pip show"
 echo
-PACKAGE_NAME=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_NAME=$(echo "$PIP_SHOW_OUTPUT" | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package name: $PACKAGE_NAME"
 echo
-PACKAGE_VERSION=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_VERSION=$(echo "$PIP_SHOW_OUTPUT" | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package version: $PACKAGE_VERSION"
 echo
-PACKAGE_PARENT_FOLDER=$($VENVPYTHON -m pip show "$PACKAGE_NAME" | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_PARENT_FOLDER=$(echo "$PIP_SHOW_OUTPUT" | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package parent folder: $PACKAGE_PARENT_FOLDER"
 echo
 MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show "$PACKAGE_NAME" --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
