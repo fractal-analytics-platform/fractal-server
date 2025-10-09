@@ -114,13 +114,10 @@ async def db_create_tables():
 
     engine = DB.engine_sync()
     engine_async = DB.engine_async()
+
     metadata = SQLModel.metadata
-
-    from devtools import debug
-
-    debug(vars(metadata))
-
     metadata.create_all(engine)
+
     yield
 
     metadata.drop_all(engine)
