@@ -305,12 +305,12 @@ async def test_task_collection_ssh_failure_no_connection(
     client,
     MockCurrentUser,
     current_py_version: str,
-    slurm_ssh_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
     """
     Test exception handling for when SSH connection is not available.
     """
-    resource, profile = slurm_ssh_resource_profile_db
+    resource, profile = slurm_ssh_resource_profile_fake_db
     # Assign empty FractalSSH object to app state
     app.state.fractal_ssh_list = FractalSSHList()
 

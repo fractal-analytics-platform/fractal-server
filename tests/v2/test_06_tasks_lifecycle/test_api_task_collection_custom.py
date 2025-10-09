@@ -118,7 +118,7 @@ async def test_task_collection_custom_fail_with_ssh(
     MockCurrentUser,
     override_settings_factory,
     testdata_path,
-    slurm_ssh_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     manifest_file = (
@@ -130,7 +130,7 @@ async def test_task_collection_custom_fail_with_ssh(
     with open(manifest_file) as f:
         manifest_dict = json.load(f)
 
-    resource, profile = slurm_ssh_resource_profile_db
+    resource, profile = slurm_ssh_resource_profile_fake_db
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ):

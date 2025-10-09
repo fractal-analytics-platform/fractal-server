@@ -38,8 +38,7 @@ async def test_deactivate_task_group_api(
     db,
     task_factory_v2,
     FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
-    slurm_ssh_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
     local_resource_profile_db,
 ):
     """
@@ -53,7 +52,7 @@ async def test_deactivate_task_group_api(
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = MockFractalSSHList()
-        resource, profile = slurm_ssh_resource_profile_db
+        resource, profile = slurm_ssh_resource_profile_fake_db
         user_settings_dict = dict(
             ssh_host=resource.host,
             ssh_username=profile.username,
@@ -150,7 +149,7 @@ async def test_reactivate_task_group_api(
     task_factory_v2,
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
-    slurm_ssh_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
     local_resource_profile_db,
 ):
     """
@@ -163,7 +162,7 @@ async def test_reactivate_task_group_api(
         )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        resource, profile = slurm_ssh_resource_profile_db
+        resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
             ssh_host=resource.host,

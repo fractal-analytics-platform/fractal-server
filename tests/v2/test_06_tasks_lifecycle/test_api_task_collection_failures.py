@@ -32,8 +32,6 @@ async def test_(client, MockCurrentUser, testdata_path):
 async def test_folder_already_exists(
     MockCurrentUser,
     client,
-    override_settings_factory,
-    tmp_path: Path,
     testdata_path: Path,
     local_resource_profile_db,
 ):
