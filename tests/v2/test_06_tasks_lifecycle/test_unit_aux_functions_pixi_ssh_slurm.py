@@ -115,7 +115,7 @@ def test_sbatch_failure(
                 cpus=1,
                 partition="main",
                 time="10",
-            ),
+            ).model_dump(),
             fractal_ssh=MockFractalSSH(connection=None),
             logger_name="my-logger",
             log_file_path=log_file_path,
