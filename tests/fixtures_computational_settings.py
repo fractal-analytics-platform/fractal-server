@@ -76,8 +76,8 @@ def local_resource_profile_objects(
     prof = Profile(
         resource_id=123456789,
     )
-    ValidResourceLocal(**res.model_dump())  # FIXME: remove
-    ValidProfileLocal(**prof.model_dump())  # FIXME: remove
+    ValidResourceLocal(**res.model_dump())
+    ValidProfileLocal(**prof.model_dump())
     return res, prof
 
 
@@ -109,8 +109,8 @@ def slurm_sudo_resource_profile_objects(
         resource_id=123456789,
         username=SLURM_USER,
     )
-    ValidResourceSlurmSudo(**res.model_dump())  # FIXME: remove
-    ValidProfileSlurmSudo(**prof.model_dump())  # FIXME: remove
+    ValidResourceSlurmSudo(**res.model_dump())
+    ValidProfileSlurmSudo(**prof.model_dump())
 
     return res, prof
 
@@ -163,8 +163,8 @@ def slurm_ssh_resource_profile_objects(
         username=SLURM_USER,
         ssh_key_path=ssh_keys["private"],
     )
-    ValidResourceSlurmSSH(**res.model_dump())  # FIXME: remove
-    ValidProfileSlurmSSH(**prof.model_dump())  # FIXME: remove
+    ValidResourceSlurmSSH(**res.model_dump())
+    ValidProfileSlurmSSH(**prof.model_dump())
 
     return res, prof
 
@@ -200,8 +200,8 @@ def slurm_ssh_resource_profile_fake_objects(
         username=SLURM_USER,
         ssh_key_path="/fake",
     )
-    ValidResourceSlurmSSH(**res.model_dump())  # FIXME: remove
-    ValidProfileSlurmSSH(**prof.model_dump())  # FIXME: remove
+    ValidResourceSlurmSSH(**res.model_dump())
+    ValidProfileSlurmSSH(**prof.model_dump())
 
     return res, prof
 

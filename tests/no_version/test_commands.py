@@ -3,15 +3,9 @@ import shlex
 import signal
 import subprocess
 import time
-from pathlib import Path
 
 import pytest
 from devtools import debug
-
-import fractal_server
-
-
-FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 
 commands = [
@@ -32,7 +26,6 @@ def test_startup_commands(cmd, db_create_tables):
     p = subprocess.Popen(
         shlex.split(f"poetry run {cmd}"),
         start_new_session=True,
-        cwd=FRACTAL_SERVER_DIR,  # FIXME drop
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
@@ -60,20 +53,17 @@ def test_email_settings():
         shlex.split(cmd),
         encoding="utf-8",
         capture_output=True,
-        cwd=FRACTAL_SERVER_DIR,  # FIXME: Drop
     )
     assert not res.stdout
     assert "usage" in res.stderr
 
     cmd = (
-        'printf "mypassword\n" | '
-        "poetry run fractalctl encrypt-email-password"
+        'printf "mypassword\n" | poetry run fractalctl encrypt-email-password'
     )
     res = subprocess.run(
         cmd,
         encoding="utf-8",
         capture_output=True,
-        cwd=FRACTAL_SERVER_DIR,
         shell=True,
     )
     assert "FRACTAL_EMAIL_PASSWORD" in res.stdout

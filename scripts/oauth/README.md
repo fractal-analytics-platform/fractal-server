@@ -5,8 +5,6 @@ docker run -p 5556:5556 ghcr.io/fractal-analytics-platform/oauth:0.1
 
 Terminal 2
 ```
-export FRACTAL_TASKS_DIR_zzz=/dev/fractal/task
-export FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=/dev/fractal/base_dir
 export FRACTAL_RUNNER_BACKEND=local
 export JWT_SECRET_KEY=jwt_secret_key
 export JWT_EXPIRE_SECONDS=1000

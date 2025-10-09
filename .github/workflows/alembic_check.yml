@@ -40,7 +40,7 @@ jobs:
 
       - name: Test with pytest
         env:
-          JWT_SECRET_KEY: FIXME-to-remove
+          JWT_SECRET_KEY: some_secret
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test

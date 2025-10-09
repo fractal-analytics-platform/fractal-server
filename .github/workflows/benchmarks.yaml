@@ -40,11 +40,10 @@ jobs:
         export POSTGRES_PASSWORD=postgres
         export POSTGRES_USER=postgres
         export POSTGRES_HOST=localhost
-        export FRACTAL_RUNNER_WORKING_BASE_DIR_zzz=/tmp/artifacts
-        export FRACTAL_TASKS_DIR_zzz=/tmp/FRACTAL_TASKS_DIR_zzz
         export JWT_SECRET_KEY=secret
         export JWT_EXPIRE_SECONDS=84600
         cd benchmarks/
+        poetry run fractalctl init-db-data
         poetry run fractalctl set-db
         poetry run python populate_db/populate_db_script.py
         poetry run sh serve.sh

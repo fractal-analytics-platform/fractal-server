@@ -5,7 +5,6 @@ LOG*
 logs
 logs*
 *.db
-FRACTAL_TASKS_DIR_zzz
 .fractal_server.env
 tmp
 OLD
