@@ -140,7 +140,9 @@ def reactivate_local_pixi(
 
                 # Simplify `pyproject.toml`
                 pyproject_toml_path = Path(source_dir, "pyproject.toml")
-                edit_pyproject_toml_in_place_local(pyproject_toml_path)
+                edit_pyproject_toml_in_place_local(
+                    pyproject_toml_path, resource=resource
+                )
 
                 # Write pixi.lock into `source_dir`
                 logger.debug(f"start - writing {source_dir}/pixi.lock")

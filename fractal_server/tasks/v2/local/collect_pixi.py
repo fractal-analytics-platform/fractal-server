@@ -152,7 +152,9 @@ def collect_local_pixi(
                 # Simplify `pyproject.toml`
                 source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
                 pyproject_toml_path = Path(source_dir, "pyproject.toml")
-                edit_pyproject_toml_in_place_local(pyproject_toml_path)
+                edit_pyproject_toml_in_place_local(
+                    pyproject_toml_path, resource=resource
+                )
 
                 # Run script 2
                 _customize_and_run_template(
