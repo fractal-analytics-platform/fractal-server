@@ -8,7 +8,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 
 
@@ -19,7 +18,7 @@ async def test_reactivate_ssh_venv_exists(
     first_user,
     ssh_alive,
     fractal_ssh: FractalSSH,
-    ssh_config_dict: dict,
+    slurm_ssh_resource_profile_db,
 ):
     path = tmp777_path / "package"
     task_group = TaskGroupV2(
@@ -49,12 +48,15 @@ async def test_reactivate_ssh_venv_exists(
     # create venv_path
     fractal_ssh.mkdir(folder=task_group.venv_path)
 
+    resource, profile = slurm_ssh_resource_profile_db
+
     # background task
     reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
         tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that reactivate failed
@@ -75,9 +77,9 @@ async def test_reactivate_ssh_fail(
     monkeypatch,
     make_rmtree_fail: bool,
     fractal_ssh: FractalSSH,
-    ssh_config_dict: dict,
     override_settings_factory,
     current_py_version,
+    slurm_ssh_resource_profile_db,
 ):
     """
     Make reactivation fail (due to wrong pip-freeze data), in two cases:
@@ -137,13 +139,16 @@ async def test_reactivate_ssh_fail(
     # Create path
     fractal_ssh.mkdir(folder=task_group.path)
 
+    resource, profile = slurm_ssh_resource_profile_db
+
     # Run background task
     try:
         reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=SSHConfig(**ssh_config_dict),
             tasks_base_dir=tmp777_path.as_posix(),
+            resource=resource,
+            profile=profile,
         )
     except RuntimeError as e:
         print(
