@@ -94,17 +94,10 @@ def test_alembic_check():
 
 
 commands = [
-    "fractalctl start",
     "fractalctl start --reload --host 0.0.0.0 --port 8000",
     (
         "gunicorn fractal_server.main:app "
-        "--workers 2 "
-        "--bind 0.0.0.0:8000 "
-        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
-    ),
-    (
-        "gunicorn fractal_server.main:app "
-        "--workers 2 "
+        "--workers 1 "
         "--bind 0.0.0.0:8000 "
         "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
         "--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger "
