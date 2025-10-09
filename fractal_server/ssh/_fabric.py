@@ -655,7 +655,7 @@ class FractalSSHList:
         self._timeout = timeout
         self._logger_name = logger_name
         set_logger(self._logger_name)
-        self._pid = os.getpgid()
+        self._pid = os.getpid()
 
     @property
     def logger(self) -> logging.Logger:
