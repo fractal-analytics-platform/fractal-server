@@ -14,10 +14,37 @@ import fractal_server
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 
-def test_alembic_check(set_test_db):
+def test_alembic_check():
     """
     Run `poetry run alembic check` to see whether new migrations are needed
     """
+    # General config
+    config_lines = [
+        "JWT_SECRET_KEY=secret",
+        "FRACTAL_LOGGING_LEVEL=10",
+        "POSTGRES_USER=postgres",
+        "POSTGRES_PASSWORD=postgres",
+        "POSTGRES_DB=fractal_test",
+    ]
+
+    # Write config to file
+    config = "\n".join(config_lines + ["\n"])
+    with (FRACTAL_SERVER_DIR / ".fractal_server.env").open("w") as f:
+        f.write(config)
+
+    # Initialize db
+    cmd = "poetry run fractalctl set-db"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+    )
+    debug(res.stdout)
+    debug(res.stderr)
+    debug(res.returncode)
+    assert res.returncode == 0
 
     # Run check
     cmd = "poetry run alembic check"
@@ -38,6 +65,32 @@ def test_alembic_check(set_test_db):
             f"Original stderr: {res.stderr}\n"
         )
     assert "No new upgrade operations detected" in res.stdout
+
+    cmd = "dropdb fractal_test"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+    )
+    debug(res.stdout)
+    debug(res.stderr)
+    debug(res.returncode)
+    assert res.returncode == 0
+
+    cmd = "createdb fractal_test"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+    )
+    debug(res.stdout)
+    debug(res.stderr)
+    debug(res.returncode)
+    assert res.returncode == 0
 
 
 commands = [
@@ -60,7 +113,7 @@ commands = [
 
 
 @pytest.mark.parametrize("cmd", commands)
-def test_startup_commands(cmd, set_test_db):
+def test_startup_commands(cmd, db_create_tables):
     debug(cmd)
     p = subprocess.Popen(
         shlex.split(f"poetry run {cmd}"),
