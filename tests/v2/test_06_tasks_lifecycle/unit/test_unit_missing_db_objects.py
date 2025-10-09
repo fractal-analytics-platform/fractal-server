@@ -16,7 +16,7 @@ def test_unit_missing_objects(
     db,
     caplog,
     local_resource_profile_objects,
-    slurm_ssh_resource_profile_objects,
+    slurm_ssh_resource_profile_fake_db,
 ):
     """
     Test a branch which is in principle unreachable.
@@ -58,7 +58,7 @@ def test_unit_missing_objects(
             )
         assert "Cannot find database rows" in caplog.text
 
-    resource, profile = slurm_ssh_resource_profile_objects
+    resource, profile = slurm_ssh_resource_profile_fake_db
 
     for function in [
         collect_ssh,
