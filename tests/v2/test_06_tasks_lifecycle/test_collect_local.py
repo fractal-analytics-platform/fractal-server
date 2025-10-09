@@ -140,7 +140,6 @@ async def test_collect_pip_local_fail_rmtree(
 
 async def test_invalid_wheel(
     MockCurrentUser,
-    override_settings_factory,
     tmp_path: Path,
     current_py_version,
     testdata_path: Path,
@@ -152,8 +151,6 @@ async def test_invalid_wheel(
     WHEN the 'collect_local' function is called
     THEN the expected log is shown
     """
-
-    override_settings_factory(FRACTAL_TASKS_DIR_zzz=tmp_path)
 
     pkgnames_logs = [
         ("invalid_manifest", "manifest_version"),

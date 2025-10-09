@@ -77,7 +77,6 @@ async def test_reactivate_ssh_fail(
     monkeypatch,
     make_rmtree_fail: bool,
     fractal_ssh: FractalSSH,
-    override_settings_factory,
     current_py_version,
     slurm_ssh_resource_profile_db,
 ):
@@ -86,12 +85,6 @@ async def test_reactivate_ssh_fail(
     1. The removal of the venv path works.
     2. The removal of the venv path fails.
     """
-
-    # Setup remote Python interpreter
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-    value = f"/.venv{current_py_version}/bin/python{current_py_version}"
-    override_settings_factory(**{key: value})
 
     if make_rmtree_fail:
         import fractal_server.tasks.v2.ssh._utils
