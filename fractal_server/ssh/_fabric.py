@@ -119,7 +119,7 @@ def _acquire_lock_with_timeout(
         lock_waiting_time = t_lock_acquisition - t_lock_request
         lock_holding_time = t_lock_release - t_lock_acquisition
         ssh_logger.info(
-            f"{pid} {lock_waiting_time:.6e} {lock_holding_time:.6f} {lock_was_acquired} {label.replace(' ', '_')}"  # noqa
+            f"{pid} {lock_waiting_time:.6e} {lock_holding_time:.6e} {lock_was_acquired} {label.replace(' ', '_')}"  # noqa
         )
 
 
