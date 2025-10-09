@@ -29,6 +29,7 @@ def test_acquire_lock():
                 lock=fake_fractal_ssh._lock,
                 timeout=0.1,
                 label="fail",
+                pid=12345,
             ):
                 pass
         print(e)
