@@ -99,6 +99,7 @@ def override_email_settings_factory():
 
 @pytest.fixture(scope="function")
 async def db_create_tables():
+    import fractal_server.app.models
     from fractal_server.app.db import DB
     from sqlmodel import SQLModel
 
