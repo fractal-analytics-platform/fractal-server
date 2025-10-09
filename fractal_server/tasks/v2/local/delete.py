@@ -3,6 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import reset_logger_handlers
@@ -21,6 +23,8 @@ def delete_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 

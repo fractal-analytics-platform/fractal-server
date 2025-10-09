@@ -1,7 +1,6 @@
 import pytest
 
 from fractal_server.ssh._fabric import FractalSSHList
-from tests.fixtures_slurm import SLURM_USER
 from tests.v2.test_07_full_workflow.common_functions import (
     workflow_with_non_python_task,
 )
@@ -22,25 +21,16 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    ssh_alive,
-    slurmlogin_ip,
-    monkeypatch,
-    ssh_keys: dict[str, str],
+    slurm_ssh_resource_profile_db,
     override_settings_factory,
-    current_py_version: str,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON=(
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        ),
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    resource, profile = slurm_ssh_resource_profile_db[:]
 
     user_settings_dict = dict(
-        ssh_host=slurmlogin_ip,
-        ssh_username=SLURM_USER,
-        ssh_private_key_path=ssh_keys["private"],
+        ssh_host=resource.host,
+        ssh_username=profile.username,
+        ssh_private_key_path=profile.ssh_key_path,
         ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
         ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
     )
@@ -49,6 +39,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
 
     await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
+        additional_user_kwargs=dict(profile_id=profile.id),
         user_settings_dict=user_settings_dict,
         client=client,
         testdata_path=testdata_path,
@@ -74,27 +65,27 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    ssh_alive,
-    slurmlogin_ip,
-    monkeypatch,
+    slurm_ssh_resource_profile_db,
     override_settings_factory,
-    current_py_version: str,
+    db,
 ):
     """
     Setup faulty SSH connection (with wrong path to key file) and observe
     first failure point.
     """
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_SLURM_WORKER_PYTHON=f"/usr/bin/python{current_py_version}",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    resource, profile = slurm_ssh_resource_profile_db
+
+    profile.ssh_key_path = "/invalid/path"
+    db.add(profile)
+    await db.commit()
+    await db.refresh(profile)
 
     user_settings_dict = dict(
-        ssh_host=slurmlogin_ip,
-        ssh_username=SLURM_USER,
-        ssh_private_key_path="/invalid/path",
+        ssh_host=resource.host,
+        ssh_username=profile.username,
+        ssh_private_key_path=profile.ssh_key_path,
         ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
         ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
     )
@@ -104,6 +95,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     job_logs = await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
         client=client,
+        additional_user_kwargs=dict(profile_id=profile.id),
         user_settings_dict=user_settings_dict,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -113,9 +105,6 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         tmp777_path=tmp777_path,
         this_should_fail=True,
     )
-    assert (
-        "No such file or directory: "
-        f"'{user_settings_dict['ssh_private_key_path']}'" in job_logs
-    )
+    assert f"No such file or directory: '{profile.ssh_key_path}'" in job_logs
 
     app.state.fractal_ssh_list.close_all()

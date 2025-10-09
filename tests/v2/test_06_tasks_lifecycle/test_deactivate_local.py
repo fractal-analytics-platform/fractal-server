@@ -12,7 +12,9 @@ from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.utils import execute_command_sync
 
 
-async def test_deactivate_fail_no_venv_path(tmp_path, db, first_user):
+async def test_deactivate_fail_no_venv_path(
+    tmp_path, db, first_user, local_resource_profile_db
+):
     path = tmp_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -38,10 +40,15 @@ async def test_deactivate_fail_no_venv_path(tmp_path, db, first_user):
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
+
+    resource, profile = local_resource_profile_db
+
     # background task
     deactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed
@@ -54,10 +61,7 @@ async def test_deactivate_fail_no_venv_path(tmp_path, db, first_user):
 
 
 async def test_deactivate_local_fail(
-    tmp_path,
-    db,
-    first_user,
-    monkeypatch,
+    tmp_path, db, first_user, monkeypatch, local_resource_profile_db
 ):
     FAKE_ERROR_MSG = "this is some fake error message"
 
@@ -101,10 +105,14 @@ async def test_deactivate_local_fail(
     path.mkdir()
     venv_path.mkdir()
 
+    resource, profile = local_resource_profile_db
+
     # background task
     deactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed
@@ -113,7 +121,9 @@ async def test_deactivate_local_fail(
     assert FAKE_ERROR_MSG in activity.log
 
 
-async def test_deactivate_wheel_no_archive_path(tmp_path, db, first_user):
+async def test_deactivate_wheel_no_archive_path(
+    tmp_path, db, first_user, local_resource_profile_db
+):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -145,10 +155,15 @@ async def test_deactivate_wheel_no_archive_path(tmp_path, db, first_user):
     # create path and venv_path
     Path(task_group.path).mkdir()
     Path(task_group.venv_path).mkdir()
+
+    resource, profile = local_resource_profile_db
+
     # background task
     deactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
     )
     # Verify that deactivate failed
     task_group_activity_v2 = await db.get(
@@ -166,6 +181,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     first_user,
     current_py_version,
     testdata_path,
+    local_resource_profile_db,
 ):
     # STEP 1: collect a package
     path = tmp_path / "fractal-tasks-mock-path"
@@ -204,10 +220,14 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     await db.refresh(activity_collect)
     db.expunge_all()
 
+    resource, profile = local_resource_profile_db
+
     collect_local(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
         wheel_file=None,
+        resource=resource,
+        profile=profile,
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
@@ -244,6 +264,8 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     deactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=activity_deactivate.id,
+        resource=resource,
+        profile=profile,
     )
 
     # Check outcome
@@ -260,6 +282,7 @@ async def test_deactivate_local_github_dependency(
     tmp_path,
     db,
     first_user,
+    local_resource_profile_db,
 ):
     path = tmp_path / "something"
     venv_path = path / "venv"
@@ -297,9 +320,13 @@ async def test_deactivate_local_github_dependency(
     path.mkdir()
     venv_path.mkdir()
 
+    resource, profile = local_resource_profile_db
+
     deactivate_local(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed

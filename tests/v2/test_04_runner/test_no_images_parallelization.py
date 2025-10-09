@@ -8,9 +8,17 @@ from fractal_server.runner.executors.local.runner import LocalRunner
 
 
 @pytest.fixture()
-def local_runner(tmp_path):
+def local_runner(
+    tmp_path,
+    local_resource_profile_objects,
+):
     root_dir_local = tmp_path / "job"
-    with LocalRunner(root_dir_local=root_dir_local) as r:
+    resource, profile = local_resource_profile_objects[:]
+    with LocalRunner(
+        root_dir_local=root_dir_local,
+        resource=resource,
+        profile=profile,
+    ) as r:
         yield r
 
 

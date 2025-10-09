@@ -7,6 +7,8 @@ from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -19,6 +21,8 @@ def deactivate_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Deactivate a pixi task group venv.

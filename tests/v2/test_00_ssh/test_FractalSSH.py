@@ -73,7 +73,7 @@ def test_fail_and_raise(tmp_path: Path, caplog):
 
 @pytest.mark.container
 @pytest.mark.ssh
-def test_run_command(fractal_ssh: FractalSSH):
+def test_run_command(fractal_ssh: FractalSSH, ssh_username):
     """
     Basic working of `run_command` method.
     """
@@ -83,7 +83,7 @@ def test_run_command(fractal_ssh: FractalSSH):
         cmd="whoami",
         lock_timeout=1.0,
     )
-    assert stdout.strip("\n") == "fractal"
+    assert stdout.strip("\n") == ssh_username
 
     # When the remotely-executed command fails, a RuntimeError is raised.
     with pytest.raises(
@@ -123,7 +123,7 @@ def test_run_command_concurrency(fractal_ssh: FractalSSH):
 
 @pytest.mark.container
 @pytest.mark.ssh
-def test_run_command_retries(fractal_ssh: FractalSSH):
+def test_run_command_retries(fractal_ssh: FractalSSH, ssh_username):
     """
     Test the multiple-attempts logic of `run_command`.
     """
@@ -157,7 +157,7 @@ def test_run_command_retries(fractal_ssh: FractalSSH):
     # `please_raise`)
     mocked_fractal_ssh.please_raise = True
     stdout = mocked_fractal_ssh.run_command(cmd="whoami")
-    assert stdout.strip() == "fractal"
+    assert stdout.strip() == ssh_username
 
 
 @pytest.mark.container

@@ -240,14 +240,20 @@ def fractal_ssh_list(
     collection.close_all()
 
 
+@pytest.fixture(scope="session")
+def ssh_username() -> str:
+    return "test01"
+
+
 @pytest.fixture
 def ssh_config_dict(
     slurmlogin_ip: str,
     ssh_keys: dict[str, str],
+    ssh_username: str,
 ) -> dict[str, str | dict[str, str]]:
     return dict(
         host=slurmlogin_ip,
-        user="fractal",
+        user=ssh_username,
         key_path=ssh_keys["private"],
     )
 

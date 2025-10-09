@@ -51,8 +51,6 @@ jobs:
 
         - name: Run Fractal
           env:
-            FRACTAL_TASKS_DIR: /dev/fractal/task
-            FRACTAL_RUNNER_WORKING_BASE_DIR: /dev/fractal/base_dir
             FRACTAL_RUNNER_BACKEND: local
             JWT_SECRET_KEY: jwt_secret_key
             JWT_EXPIRE_SECONDS: 1000

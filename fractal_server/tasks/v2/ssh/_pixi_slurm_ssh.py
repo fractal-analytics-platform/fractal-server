@@ -1,15 +1,14 @@
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.orm import Session
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.config import get_settings
-from fractal_server.config import PixiSLURMConfig
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.syringe import Inject
+from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 
@@ -141,13 +140,14 @@ def _verify_success_file_exists(
 def run_script_on_remote_slurm(
     *,
     script_paths: list[str],
-    slurm_config: PixiSLURMConfig,
+    slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
     log_file_path: Path,
     prefix: str,
     db: Session,
     activity: TaskGroupActivityV2,
+    poll_interval: int,
 ):
     """
     Run a `pixi install` script as a SLURM job.
@@ -156,8 +156,9 @@ def run_script_on_remote_slurm(
     as a mechanism to propagate failure/errors.
     """
 
+    slurm_config_obj = PixiSLURMConfig(**slurm_config)
+
     logger = get_logger(logger_name=logger_name)
-    settings = Inject(get_settings)
 
     # (1) Prepare remote submission script
     workdir_remote = _get_workdir_remote(script_paths)
@@ -169,10 +170,10 @@ def run_script_on_remote_slurm(
     success_file_remote = os.path.join(workdir_remote, f"{prefix}-success.txt")
     script_lines = [
         "#!/bin/bash",
-        f"#SBATCH --partition={slurm_config.partition}",
-        f"#SBATCH --cpus-per-task={slurm_config.cpus}",
-        f"#SBATCH --mem={slurm_config.mem}",
-        f"#SBATCH --time={slurm_config.time}",
+        f"#SBATCH --partition={slurm_config_obj.partition}",
+        f"#SBATCH --cpus-per-task={slurm_config_obj.cpus}",
+        f"#SBATCH --mem={slurm_config_obj.mem}",
+        f"#SBATCH --time={slurm_config_obj.time}",
         f"#SBATCH --err={stderr_remote}",
         f"#SBATCH --out={stdout_remote}",
         f"#SBATCH -D {workdir_remote}",
@@ -234,7 +235,7 @@ def run_script_on_remote_slurm(
             logger.debug(f"Exit retrieval loop (state={new_state}).")
             break
         old_state = new_state
-        time.sleep(settings.FRACTAL_SLURM_POLL_INTERVAL)
+        time.sleep(poll_interval)
 
     _verify_success_file_exists(
         fractal_ssh=fractal_ssh,

@@ -50,11 +50,23 @@ set_db_parser = subparsers.add_parser(
         "Initialise/upgrade database schemas and create first group&user."
     ),
 )
-set_db_parser.add_argument(
-    "--skip-init-data",
-    action="store_true",
-    help="If set, do not try creating first group and user.",
-    default=False,
+
+# fractalctl init-db-data
+init_db_data_parser = subparsers.add_parser(
+    "init-db-data",
+    description="Populate database with initial data.",
+)
+init_db_data_parser.add_argument(
+    "--resource-json-file",
+    type=str,
+    help="JSON file with a serialized first resource.",
+    required=False,
+)
+init_db_data_parser.add_argument(
+    "--profile-json-file",
+    type=str,
+    help="JSON file with a serialized first profile.",
+    required=False,
 )
 
 # fractalctl update-db-data
@@ -83,28 +95,22 @@ def save_openapi(dest="openapi.json"):
         json.dump(openapi_schema, f)
 
 
-def set_db(skip_init_data: bool = False):
+def set_db():
     """
-    Upgrade database schema *and* create first group/user
+    Upgrade database schemas.
 
     Call alembic to upgrade to the latest migration.
     Ref: https://stackoverflow.com/a/56683030/283972
-
-    Arguments:
-        skip_init_data: If `True`, skip creation of first group and user.
     """
-    from fractal_server.app.security import _create_first_user
-    from fractal_server.app.security import _create_first_group
     from fractal_server.syringe import Inject
-    from fractal_server.config import get_settings
+    from fractal_server.config import get_db_settings
 
     import alembic.config
     from pathlib import Path
     import fractal_server
 
-    # Check settings
-    settings = Inject(get_settings)
-    settings.check_db()
+    # Validate DB settings
+    Inject(get_db_settings)
 
     # Perform migrations
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
@@ -113,8 +119,22 @@ def set_db(skip_init_data: bool = False):
     alembic.config.main(argv=alembic_args)
     print("END: alembic.config")
 
-    if skip_init_data:
-        return
+
+def init_db_data(
+    *,
+    resource_json_file: str | None,
+    profile_json_file: str | None,
+) -> None:
+    from fractal_server.app.security import _create_first_user
+    from fractal_server.app.security import _create_first_group
+    from fractal_server.syringe import Inject
+    from fractal_server.config import get_init_data_settings
+    from fractal_server.app.db import get_sync_db
+    from sqlalchemy import select
+    from fractal_server.app.models.security import UserOAuth
+    from fractal_server.app.models import Resource, Profile
+
+    init_data_settings = Inject(get_init_data_settings)
 
     # Create default group and user
     print()
@@ -122,16 +142,53 @@ def set_db(skip_init_data: bool = False):
     print()
     asyncio.run(
         _create_first_user(
-            email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+            email=init_data_settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
             password=(
-                settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value()
+                init_data_settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value()
             ),
-            username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+            username=init_data_settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
             is_superuser=True,
             is_verified=True,
         )
     )
     print()
+
+    # Create first resource
+    with next(get_sync_db()) as db:
+        if resource_json_file is not None:
+            with open(resource_json_file) as f:
+                resource_data = json.load(f)
+        else:
+            resource_data = {
+                "name": "Local resource",
+                "type": "local",
+                "job_local_folder": "data-jobs",
+                "tasks_local_folder": "data-tasks",
+            }
+        resource = Resource(**resource_data)
+        db.add(resource)
+        db.commit()
+        db.refresh(resource)
+        if profile_json_file is not None:
+            with open(profile_json_file) as f:
+                profile_data = json.load(f)
+        else:
+            profile_data = {}
+        profile_data["resource_id"] = resource.id
+        profile = Profile(**profile_data)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+
+        res = db.execute(select(UserOAuth))
+        users = res.unique().scalars().all()
+        for user in users:
+            user.profile_id = profile.id
+            db.add(user)
+        db.commit()
+        db.expunge_all()
+
+    # FIXME not tested yet
 
 
 def update_db_data():
@@ -219,7 +276,12 @@ def run():
     if args.cmd == "openapi":
         save_openapi(dest=args.openapi_file)
     elif args.cmd == "set-db":
-        set_db(skip_init_data=args.skip_init_data)
+        set_db()
+    elif args.cmd == "init-db-data":
+        init_db_data(
+            resource_json_file=args.resource_json_file,
+            profile_json_file=args.profile_json_file,
+        )
     elif args.cmd == "update-db-data":
         update_db_data()
     elif args.cmd == "start":

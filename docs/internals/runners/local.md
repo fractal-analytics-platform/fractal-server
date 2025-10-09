@@ -15,7 +15,7 @@ The different sources for `parallel_tasks_per_job` are:
 
 1. If the `WorkflowTask.meta` field has a `parallel_tasks_per_job` key, the corresponding value takes highest priority;
 2. Next priority goes to a `parallel_tasks_per_job` entry in `WorkflowTask.task.meta`;
-3. Next priority goes to the configuration in `FRACTAL_LOCAL_CONFIG_FILE`, a JSON file that may contain a definition of a
+3. Next priority goes to the configuration in `FRACTAL_LOCAL_CONFIG_FILE_zzz`, a JSON file that may contain a definition of a
    `LocalBackendConfig` object like
 ```JSON
 {

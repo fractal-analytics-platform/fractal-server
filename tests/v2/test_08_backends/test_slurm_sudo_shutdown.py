@@ -16,7 +16,6 @@ from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
-from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -64,14 +63,16 @@ async def test_submit_shutdown(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
+    resource, profile = slurm_sudo_resource_profile_objects[:]
 
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
 
         def main_thread():
@@ -121,14 +122,16 @@ async def test_multisubmit_shutdown(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
+    resource, profile = slurm_sudo_resource_profile_objects[:]
 
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
 
         def main_thread():
@@ -188,14 +191,16 @@ async def test_shutdown_before_submit(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
+    resource, profile = slurm_sudo_resource_profile_objects[:]
 
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
         # Write shudown file
         runner.shutdown_file.touch()
@@ -238,14 +243,16 @@ async def test_shutdown_before_multisubmit(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
+    resource, profile = slurm_sudo_resource_profile_objects[:]
 
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
     ) as runner:
         # Write shutdown file right away
         runner.shutdown_file.touch()
@@ -275,7 +282,9 @@ async def test_shutdown_before_multisubmit(
             ],
             list_task_files=[
                 get_dummy_task_files(
-                    tmp777_path, component=str(ind), is_slurm=True
+                    tmp777_path,
+                    component=str(ind),
+                    is_slurm=True,
                 )
                 for ind in range(len(ZARR_URLS))
             ],

@@ -16,7 +16,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from tests.fixtures_slurm import SLURM_USER
 
 settings = Inject(get_settings)
 
@@ -38,15 +37,12 @@ async def test_deactivate_task_group_api(
     db,
     task_factory_v2,
     FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
+    slurm_ssh_resource_profile_fake_db,
+    local_resource_profile_db,
 ):
     """
     This tests _only_ the API of the `deactivate` endpoint.
     """
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
 
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
@@ -55,17 +51,22 @@ async def test_deactivate_task_group_api(
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         app.state.fractal_ssh_list = MockFractalSSHList()
+        resource, profile = slurm_ssh_resource_profile_fake_db
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path,
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id,
@@ -147,15 +148,12 @@ async def test_reactivate_task_group_api(
     task_factory_v2,
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
+    slurm_ssh_resource_profile_fake_db,
+    local_resource_profile_db,
 ):
     """
     This tests _only_ the API of the `reactivate` endpoint.
     """
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
 
     async with MockCurrentUser() as different_user:
         non_accessible_task = await task_factory_v2(
@@ -163,17 +161,22 @@ async def test_reactivate_task_group_api(
         )
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path + "invalid",
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task2")
         task_other = await task_factory_v2(
@@ -266,37 +269,27 @@ async def test_lifecycle(
     app,
     tmp777_path: Path,
     request,
-    current_py_version,
     monkeypatch,
+    local_resource_profile_db,
+    slurm_ssh_resource_profile_db,
 ):
-    overrides = dict(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR=tmp777_path,
-    )
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # Setup remote Python interpreter
-        current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
-        python_value = (
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-        overrides[python_key] = python_value
-    override_settings_factory(**overrides)
+    # FIXME: Extract function that runs the whole tests, apart from the (tiny)
+    # if/else for backend. Run two tests, so that the correct fixture and
+    # marker are used. No getfixturevalue should remain.
+
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        resource, profile = slurm_ssh_resource_profile_db
         app.state.fractal_ssh_list = request.getfixturevalue(
             "fractal_ssh_list"
         )
-        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
-        ssh_keys = request.getfixturevalue("ssh_keys")
         user_settings_dict = dict(
-            ssh_host=slurmlogin_ip,
-            ssh_username=SLURM_USER,
-            ssh_private_key_path=ssh_keys["private"],
             ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
     # Absolute path to wheel file (use a path in tmp77_path, so that it is
@@ -312,7 +305,10 @@ async def test_lifecycle(
         files = {"file": (archive_path.name, f.read(), "application/zip")}
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        ),
         user_settings_dict=user_settings_dict,
     ) as user:
         # STEP 1: Task collection
@@ -477,17 +473,16 @@ async def test_lifecycle(
 
 
 async def test_fail_due_to_ongoing_activities(
-    client,
-    MockCurrentUser,
-    db,
-    task_factory_v2,
+    client, MockCurrentUser, db, task_factory_v2, local_resource_profile_db
 ):
     """
     Test that deactivate/reactivate endpoints fail if other
     activities for the same task group are ongoing.
     """
-
-    async with MockCurrentUser() as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user:
         # Create mock objects
         task = await task_factory_v2(user_id=user.id, name="task")
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
@@ -534,8 +529,12 @@ async def test_lifecycle_actions_with_submitted_jobs(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser() as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(
             user_id=user.id,

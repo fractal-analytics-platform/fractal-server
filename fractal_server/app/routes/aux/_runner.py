@@ -6,7 +6,7 @@ from ....syringe import Inject
 
 
 def _backend_supports_shutdown(backend: str) -> bool:
-    if backend in ["slurm", "slurm_ssh"]:
+    if backend in ["slurm_sudo", "slurm_ssh"]:
         return True
     else:
         return False

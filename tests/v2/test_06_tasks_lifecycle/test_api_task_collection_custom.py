@@ -13,14 +13,18 @@ async def test_task_collection_custom(
     MockCurrentUser,
     fractal_tasks_mock_collection,
     tmp_path,
+    local_resource_profile_db,
 ):
     package_name = "fractal_tasks_mock"
     python_bin = fractal_tasks_mock_collection["python_bin"].as_posix()
     manifest = fractal_tasks_mock_collection["manifest"]
 
+    resource, profile = local_resource_profile_db
     # ---
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         payload_name = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
@@ -114,6 +118,7 @@ async def test_task_collection_custom_fail_with_ssh(
     MockCurrentUser,
     override_settings_factory,
     testdata_path,
+    slurm_ssh_resource_profile_fake_db,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     manifest_file = (
@@ -125,7 +130,10 @@ async def test_task_collection_custom_fail_with_ssh(
     with open(manifest_file) as f:
         manifest_dict = json.load(f)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = slurm_ssh_resource_profile_fake_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             f"{PREFIX}/collect/custom/",
             json=TaskCollectCustomV2(

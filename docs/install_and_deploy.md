@@ -26,8 +26,6 @@ An example of such file is
 ```
 JWT_SECRET_KEY=XXX
 FRACTAL_RUNNER_BACKEND=local
-FRACTAL_TASKS_DIR=/some/path/for/task/environments
-FRACTAL_RUNNER_WORKING_BASE_DIR=/some/path/for/job/folders
 POSTGRES_DB=fractal-database-name
 ```
 

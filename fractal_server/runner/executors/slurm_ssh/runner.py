@@ -6,13 +6,13 @@ from ..slurm_common.slurm_job_task_models import SlurmJob
 from .run_subprocess import run_subprocess
 from .tar_commands import get_tar_compression_cmd
 from .tar_commands import get_tar_extraction_cmd
-from fractal_server.config import get_settings
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
-from fractal_server.syringe import Inject
-
 
 logger = set_logger(__name__)
 
@@ -27,10 +27,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
         root_dir_local: Path,
         root_dir_remote: Path,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,
-        poll_interval: int | None = None,
+        resource: Resource,
         # Specific
         slurm_account: str | None = None,
+        profile: Profile,
+        user_cache_dir: str | None = None,
         fractal_ssh: FractalSSH,
     ) -> None:
         """
@@ -38,20 +39,19 @@ class SlurmSSHRunner(BaseSlurmRunner):
         different SLURM jobs/tasks.
         """
         self.fractal_ssh = fractal_ssh
+        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
         logger.warning(self.fractal_ssh)
 
         # Check SSH connection and try to recover from a closed-socket error
         self.fractal_ssh.check_connection()
-
-        settings = Inject(get_settings)
         super().__init__(
             slurm_runner_type="ssh",
             root_dir_local=root_dir_local,
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
-            poll_interval=poll_interval,
-            python_worker_interpreter=settings.FRACTAL_SLURM_WORKER_PYTHON,
+            poll_interval=resource.job_poll_interval,
+            python_worker_interpreter=resource.job_slurm_python_worker,
             slurm_account=slurm_account,
         )
 

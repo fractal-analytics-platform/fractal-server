@@ -9,6 +9,8 @@ from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
@@ -16,7 +18,7 @@ from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
@@ -26,6 +28,8 @@ def reactivate_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Reactivate a task group venv.
@@ -36,6 +40,7 @@ def reactivate_local(
     Arguments:
         task_group_id:
         task_group_activity_id:
+        resource:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -77,11 +82,14 @@ def reactivate_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Prepare replacements for templates
+                python_bin = get_python_interpreter(
+                    python_version=task_group.python_version,
+                    resource=resource,
+                )
                 replacements = get_collection_replacements(
                     task_group=task_group,
-                    python_bin=get_python_interpreter_v2(
-                        python_version=task_group.python_version
-                    ),
+                    python_bin=python_bin,
+                    resource=resource,
                 )
                 with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
                     f.write(task_group.env_info)

@@ -8,7 +8,6 @@ from .aux_unit_runner import ZARR_URLS
 from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
-from tests.fixtures_slurm import SLURM_USER
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -20,6 +19,7 @@ async def test_submit_with_slurm_account_and_worker_init(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
+    slurm_sudo_resource_profile_objects,
 ):
     """
     Test that SLURM account and `worker_init` are set in submission script.
@@ -28,12 +28,13 @@ async def test_submit_with_slurm_account_and_worker_init(
     SLURM_ACCOUNT = "something-random"
     COMMON_SCRIPT_LINES = ["export MYVAR1=VALUE1", "export MYVAR2=Value2"]
 
+    resource, profile = slurm_sudo_resource_profile_objects[:]
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
-        poll_interval=0,
+        resource=resource,
+        profile=profile,
         slurm_account=SLURM_ACCOUNT,
         common_script_lines=COMMON_SCRIPT_LINES,
     ) as runner:

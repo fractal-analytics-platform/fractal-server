@@ -395,7 +395,7 @@ async def test_stop_job_local(
         assert res.status_code == 422
 
 
-@pytest.mark.parametrize("backend", ["slurm", "slurm_ssh"])
+@pytest.mark.parametrize("backend", ["slurm_sudo", "slurm_ssh"])
 async def test_stop_job_slurm(
     backend,
     MockCurrentUser,

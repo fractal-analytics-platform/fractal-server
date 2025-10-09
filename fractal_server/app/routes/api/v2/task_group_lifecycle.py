@@ -15,15 +15,15 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import SSHConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import delete_local
@@ -56,6 +56,10 @@ async def deactivate_task_group(
     """
     Deactivate task-group venv
     """
+
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
+
     # Check access
     task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,
@@ -116,18 +120,10 @@ async def deactivate_task_group(
     await db.commit()
 
     # Submit background task
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
-        )
-
-        # User appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
+            user=user, backend=resource.type, db=db
         )
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             deactivate_function = deactivate_ssh_pixi
@@ -137,8 +133,9 @@ async def deactivate_task_group(
             deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
+            resource=resource,
+            profile=profile,
         )
 
     else:
@@ -150,6 +147,8 @@ async def deactivate_task_group(
             deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
+            profile=profile,
         )
 
     logger.debug(
@@ -174,6 +173,8 @@ async def reactivate_task_group(
     """
     Deactivate task-group venv
     """
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Check access
     task_group = await _get_task_group_full_access(
@@ -242,20 +243,13 @@ async def reactivate_task_group(
     await db.commit()
 
     # Submit background task
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+            user=user, backend=resource.type, db=db
         )
 
         # Use appropriate SSH credentials
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
         else:
@@ -264,8 +258,9 @@ async def reactivate_task_group(
             reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
             tasks_base_dir=user_settings.ssh_tasks_dir,
+            resource=resource,
+            profile=profile,
         )
 
     else:
@@ -277,6 +272,8 @@ async def reactivate_task_group(
             reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
+            resource=resource,
+            profile=profile,
         )
     logger.debug(
         "Task group reactivation endpoint: start reactivate "
@@ -300,6 +297,8 @@ async def delete_task_group(
     """
     Deletion of task-group from db and file system
     """
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     task_group = await _get_task_group_full_access(
         task_group_id=task_group_id,
@@ -321,32 +320,25 @@ async def delete_task_group(
     db.add(task_group_activity)
     await db.commit()
 
-    settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
+        delete_function = delete_ssh
         # Validate user settings (backend-specific)
         user_settings = await validate_user_settings(
-            user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
+            user=user, backend=resource.type, db=db
         )
-        # User appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
-        background_tasks.add_task(
-            delete_ssh,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-        )
+        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)
     else:
-        background_tasks.add_task(
-            delete_local,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-        )
+        delete_function = delete_local
+        extra_args = {}
+
+    background_tasks.add_task(
+        delete_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
+        **extra_args,
+    )
 
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity
