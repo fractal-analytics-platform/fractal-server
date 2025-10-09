@@ -107,19 +107,19 @@ def _acquire_lock_with_timeout(
         logger.info(f"Lock for '{label}' was acquired - {elapsed=:.4f} s")
         yield result
     finally:
-        t_lock_release = time.perf_counter()
         if result:
             lock.release()
             logger.info(f"Lock for '{label}' was released.")
-            lock_was_acquired = True
+            t_lock_release = time.perf_counter()
+            lock_was_acquired = 1
         else:
+            t_lock_release = time.perf_counter()
             t_lock_acquisition = t_lock_release
-            lock_was_acquired = False
+            lock_was_acquired = 0
         lock_waiting_time = t_lock_acquisition - t_lock_request
         lock_holding_time = t_lock_release - t_lock_acquisition
         ssh_logger.info(
-            f"{pid} {lock_waiting_time:.7f} {lock_holding_time:.7f} "
-            f"{lock_was_acquired} {label}"
+            f"{pid} {lock_waiting_time:.6e} {lock_holding_time:.6f} {lock_was_acquired} {label.replace(' ', '_')}"  # noqa
         )
 
 
