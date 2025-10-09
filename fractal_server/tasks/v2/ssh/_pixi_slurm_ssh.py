@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -139,7 +140,7 @@ def _verify_success_file_exists(
 def run_script_on_remote_slurm(
     *,
     script_paths: list[str],
-    slurm_config: PixiSLURMConfig,
+    slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
     log_file_path: Path,
@@ -155,6 +156,8 @@ def run_script_on_remote_slurm(
     as a mechanism to propagate failure/errors.
     """
 
+    slurm_config_obj = PixiSLURMConfig(**slurm_config)
+
     logger = get_logger(logger_name=logger_name)
 
     # (1) Prepare remote submission script
@@ -167,10 +170,10 @@ def run_script_on_remote_slurm(
     success_file_remote = os.path.join(workdir_remote, f"{prefix}-success.txt")
     script_lines = [
         "#!/bin/bash",
-        f"#SBATCH --partition={slurm_config.partition}",
-        f"#SBATCH --cpus-per-task={slurm_config.cpus}",
-        f"#SBATCH --mem={slurm_config.mem}",
-        f"#SBATCH --time={slurm_config.time}",
+        f"#SBATCH --partition={slurm_config_obj.partition}",
+        f"#SBATCH --cpus-per-task={slurm_config_obj.cpus}",
+        f"#SBATCH --mem={slurm_config_obj.mem}",
+        f"#SBATCH --time={slurm_config_obj.time}",
         f"#SBATCH --err={stderr_remote}",
         f"#SBATCH --out={stdout_remote}",
         f"#SBATCH -D {workdir_remote}",

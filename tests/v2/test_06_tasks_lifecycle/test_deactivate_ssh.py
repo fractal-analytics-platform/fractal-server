@@ -77,6 +77,8 @@ async def test_deactivate_ssh_fail(
 ):
     FAKE_ERROR_MSG = "this is some fake error message"
 
+    resource, profile = slurm_ssh_resource_profile_db
+
     def fail_function(*args, **kwargs):
         raise RuntimeError(FAKE_ERROR_MSG)
 
@@ -116,8 +118,6 @@ async def test_deactivate_ssh_fail(
 
     fractal_ssh.mkdir(folder=path)
     fractal_ssh.mkdir(folder=venv_path)
-
-    resource, profile = slurm_ssh_resource_profile_db
 
     # background task
     deactivate_ssh(

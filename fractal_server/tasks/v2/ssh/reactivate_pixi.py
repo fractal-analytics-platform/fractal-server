@@ -190,6 +190,7 @@ def reactivate_ssh_pixi(
                     edit_pyproject_toml_in_place_ssh(
                         fractal_ssh=fractal_ssh,
                         pyproject_toml_path=pyproject_toml_path,
+                        resource=resource,
                     )
                     # Write pixi.lock into `source_dir`
                     pixi_lock_local = Path(tmpdir, "pixi.lock").as_posix()

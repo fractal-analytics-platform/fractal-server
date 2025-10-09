@@ -121,6 +121,7 @@ def slurm_ssh_resource_profile_objects(
     current_py_version: str,
     ssh_keys: dict[str, str],
     slurmlogin_ip: str,
+    ssh_username: str,
 ) -> tuple[Resource, Profile]:
     """
     This fixture does not act on the db.
@@ -160,7 +161,7 @@ def slurm_ssh_resource_profile_objects(
     )
     prof = Profile(
         resource_id=123456789,
-        username=SLURM_USER,
+        username=ssh_username,
         ssh_key_path=ssh_keys["private"],
     )
     ValidResourceSlurmSSH(**res.model_dump())
@@ -173,6 +174,7 @@ def slurm_ssh_resource_profile_objects(
 def slurm_ssh_resource_profile_fake_objects(
     tmp777_path: Path,
     current_py_version: str,
+    ssh_username: str,
 ) -> tuple[Resource, Profile]:
     """
     This fixture does not require an active SSH service on a container.
@@ -197,7 +199,7 @@ def slurm_ssh_resource_profile_fake_objects(
     )
     prof = Profile(
         resource_id=123456789,
-        username=SLURM_USER,
+        username=ssh_username,
         ssh_key_path="/fake",
     )
     ValidResourceSlurmSSH(**res.model_dump())

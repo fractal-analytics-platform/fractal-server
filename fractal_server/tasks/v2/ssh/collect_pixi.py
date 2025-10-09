@@ -219,6 +219,7 @@ def collect_ssh_pixi(
                     edit_pyproject_toml_in_place_ssh(
                         fractal_ssh=fractal_ssh,
                         pyproject_toml_path=pyproject_toml_path,
+                        resource=resource,
                     )
 
                     # Prepare scripts 2 and 3

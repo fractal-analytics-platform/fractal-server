@@ -16,7 +16,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from tests.fixtures_slurm import SLURM_USER
 
 settings = Inject(get_settings)
 
@@ -270,39 +269,27 @@ async def test_lifecycle(
     app,
     tmp777_path: Path,
     request,
-    current_py_version,
     monkeypatch,
+    local_resource_profile_db,
+    slurm_ssh_resource_profile_db,
 ):
-    overrides = dict(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR_zzz=tmp777_path,
-    )
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # Setup remote Python interpreter
-        current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = (
-            f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-        )
-        python_value = (
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-        overrides[python_key] = python_value
-    override_settings_factory(**overrides)
+    # FIXME: Extract function that runs the whole tests, apart from the (tiny)
+    # if/else for backend. Run two tests, so that the correct fixture and
+    # marker are used. No getfixturevalue should remain.
+
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
     if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        resource, profile = slurm_ssh_resource_profile_db
         app.state.fractal_ssh_list = request.getfixturevalue(
             "fractal_ssh_list"
         )
-        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
-        ssh_keys = request.getfixturevalue("ssh_keys")
         user_settings_dict = dict(
-            ssh_host=slurmlogin_ip,
-            ssh_username=SLURM_USER,
-            ssh_private_key_path=ssh_keys["private"],
             ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
     # Absolute path to wheel file (use a path in tmp77_path, so that it is
@@ -318,7 +305,10 @@ async def test_lifecycle(
         files = {"file": (archive_path.name, f.read(), "application/zip")}
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        ),
         user_settings_dict=user_settings_dict,
     ) as user:
         # STEP 1: Task collection

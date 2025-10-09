@@ -7,7 +7,6 @@ from devtools import debug
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
-from tests.fixtures_slurm import SLURM_USER
 
 PREFIX = "api/v2/task"
 
@@ -32,13 +31,13 @@ async def test_task_collection_ssh_from_pypi(
     tmp777_path: Path,
     fractal_ssh_list: FractalSSHList,
     current_py_version: str,
-    slurmlogin_ip,
-    ssh_keys,
+    slurm_ssh_resource_profile_db,
 ):
+    resource, profile = slurm_ssh_resource_profile_db
     credentials = dict(
-        host=slurmlogin_ip,
-        user=SLURM_USER,
-        key_path=ssh_keys["private"],
+        host=resource.host,
+        user=profile.username,
+        key_path=profile.ssh_key_path,
     )
 
     assert not fractal_ssh_list.contains(**credentials)
@@ -51,25 +50,18 @@ async def test_task_collection_ssh_from_pypi(
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-    settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
-        PY_KEY: f"/.venv{current_py_version}/bin/python{current_py_version}",
-        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
-    }
-    override_settings_factory(**settings_overrides)
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
 
     user_settings_dict = dict(
-        ssh_host=slurmlogin_ip,
-        ssh_username=SLURM_USER,
-        ssh_private_key_path=ssh_keys["private"],
         ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        ),
         user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
@@ -194,20 +186,19 @@ async def test_task_collection_ssh_failure(
     tmp777_path: Path,
     fractal_ssh_list: FractalSSHList,
     current_py_version: str,
-    slurmlogin_ip,
-    ssh_keys,
     testdata_path,
     monkeypatch,
+    slurm_ssh_resource_profile_db,
 ):
     """
     Test exception handling, including the case where `remove_folder` fails
     _during_ exception handling.
     """
-
+    resource, profile = slurm_ssh_resource_profile_db
     credentials = dict(
-        host=slurmlogin_ip,
-        user=SLURM_USER,
-        key_path=ssh_keys["private"],
+        host=resource.host,
+        user=profile.username,
+        key_path=profile.ssh_key_path,
     )
 
     assert not fractal_ssh_list.contains(**credentials)
@@ -220,19 +211,9 @@ async def test_task_collection_ssh_failure(
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    PY_KEY = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}_zzz"
-    settings_overrides = {
-        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION_zzz": current_py_version,
-        PY_KEY: f"/usr/bin/python{current_py_version}",
-        "FRACTAL_RUNNER_BACKEND": "slurm_ssh",
-    }
-    override_settings_factory(**settings_overrides)
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
 
     user_settings_dict = dict(
-        ssh_host=slurmlogin_ip,
-        ssh_username=SLURM_USER,
-        ssh_private_key_path=ssh_keys["private"],
         ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
         ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
     )
@@ -256,7 +237,10 @@ async def test_task_collection_ssh_failure(
         }
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        ),
         user_settings_dict=user_settings_dict,
     ):
         # Patch ssh.remove_folder
