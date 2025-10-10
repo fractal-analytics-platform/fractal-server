@@ -166,6 +166,8 @@ def slurm_ssh_resource_profile_objects(
         resource_id=123456789,
         username=ssh_username,
         ssh_key_path=ssh_keys["private"],
+        jobs_remote_dir=(tmp777_path / "remote-jobs").as_posix(),
+        tasks_remote_dir=(tmp777_path / "remote-tasks").as_posix(),
     )
     ValidResourceSlurmSSH(**res.model_dump())
     ValidProfileSlurmSSH(**prof.model_dump())
