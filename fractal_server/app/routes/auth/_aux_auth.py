@@ -22,7 +22,7 @@ async def _get_single_user_with_groups(
     """
     Enrich a user object by filling its `group_ids_names` attribute.
 
-    Arguments:
+    Args:
         user: The current `UserOAuth` object
         db: Async db session
 
@@ -75,7 +75,7 @@ async def _get_single_usergroup_with_user_ids(
     """
     Get a group, and construct its `user_ids` list.
 
-    Arguments:
+    Args:
         group_id:
         db:
 
@@ -98,7 +98,7 @@ async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:
     """
     Get a user from db, or raise a 404 HTTP exception if missing.
 
-    Arguments:
+    Args:
         user_id: ID of the user
         db: Async db session
     """

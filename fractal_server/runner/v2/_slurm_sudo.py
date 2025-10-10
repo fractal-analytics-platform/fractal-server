@@ -43,7 +43,6 @@ def process_workflow(
     user_id: int,
     # SLURM-sudo-specific
     user_cache_dir: str | None = None,
-    slurm_user: str | None = None,  # FIXME: drop this
     slurm_account: str | None = None,  # FIXME drop this
     worker_init: str | None = None,
     resource: Resource,
@@ -60,11 +59,6 @@ def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-
-    if not slurm_user:
-        raise RuntimeError(
-            "slurm_user argument is required, for slurm backend"
-        )
 
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")

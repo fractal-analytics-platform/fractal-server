@@ -19,7 +19,7 @@ def verify_user_has_settings(user: UserOAuth) -> None:
     NOTE: This check will become useless when we make the foreign-key column
     required, but for the moment (as of v2.6.0) we have to keep it in place.
 
-    Arguments:
+    Args:
         user: The user to be checked.
     """
     if user.user_settings_id is None:
@@ -35,7 +35,7 @@ async def validate_user_settings(
     """
     Get a UserSettings object and validate it based on a given Fractal backend.
 
-    Arguments:
+    Args:
         user: The user whose settings we should validate.
         backend: The value of `FRACTAL_RUNNER_BACKEND`
         db: An async DB session

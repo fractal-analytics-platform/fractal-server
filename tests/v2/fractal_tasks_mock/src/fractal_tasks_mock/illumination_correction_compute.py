@@ -15,7 +15,7 @@ def illumination_correction_compute(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: description
         init_args: description
     """

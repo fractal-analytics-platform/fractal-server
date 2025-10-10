@@ -21,7 +21,7 @@ def calculate_registration_init(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         ref_acquisition: Reference-cycle acquisition number

@@ -14,7 +14,7 @@ def dummy_remove_images(
     """
     Remove images
 
-    Arguments:
+    Args:
         zarr_urls: description
         more_zarr_urls: Other paths that should be removed
     """

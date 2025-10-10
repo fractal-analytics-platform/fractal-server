@@ -32,7 +32,7 @@ async def get_history_unit_or_404(
     """
     Get an existing HistoryUnit  or raise a 404.
 
-    Arguments:
+    Args:
         history_unit_id: The `HistoryUnit` id
         db: An asynchronous db session
     """
@@ -51,7 +51,7 @@ async def get_history_run_or_404(
     """
     Get an existing HistoryRun  or raise a 404.
 
-    Arguments:
+    Args:
         history_run_id:
         db:
     """

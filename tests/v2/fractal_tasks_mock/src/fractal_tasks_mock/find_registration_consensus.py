@@ -14,7 +14,7 @@ def find_registration_consensus(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
     """
