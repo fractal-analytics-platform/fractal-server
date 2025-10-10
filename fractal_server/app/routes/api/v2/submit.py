@@ -259,7 +259,6 @@ async def apply_workflow(
         user_id=user.id,
         user_settings=user_settings,
         worker_init=job.worker_init,
-        slurm_user=user_settings.slurm_user,
         user_cache_dir=cache_dir.as_posix() if cache_dir else None,
         fractal_ssh=fractal_ssh,
         resource=resource,
