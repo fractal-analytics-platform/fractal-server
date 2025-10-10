@@ -30,7 +30,6 @@ def reactivate_ssh_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    tasks_base_dir: str,
     resource: Resource,
     profile: Profile,
 ) -> None:
@@ -43,9 +42,8 @@ def reactivate_ssh_pixi(
     Args:
         task_group_id:
         task_group_activity_id:
-        ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`.
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -265,7 +263,7 @@ def reactivate_ssh_pixi(
                         logger.info(f"Now delete folder {source_dir}")
                         fractal_ssh.remove_folder(
                             folder=source_dir,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(f"Deleted folder {source_dir}")
                     except Exception as rm_e:
