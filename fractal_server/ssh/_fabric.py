@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -15,9 +16,13 @@ from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 from pydantic import BaseModel
 
+from ..logger import close_logger
 from ..logger import get_logger
 from ..logger import set_logger
 from fractal_server.string_tools import validate_cmd
+
+
+SSH_MONITORING_LOGGER_NAME = "ssh-log"
 
 
 class FractalSSHTimeoutError(RuntimeError):
@@ -40,9 +45,6 @@ class SSHConfig(BaseModel):
     host: str
     user: str
     key_path: str
-
-
-logger = set_logger(__name__)
 
 
 def retry_if_socket_error(func):
@@ -76,7 +78,8 @@ def _acquire_lock_with_timeout(
     lock: Lock,
     label: str,
     timeout: float,
-    logger_name: str = __name__,
+    pid: int,
+    logger_name: str,
 ) -> Generator[Literal[True], Any, None]:
     """
     Given a `threading.Lock` object, try to acquire it within a given timeout.
@@ -88,8 +91,9 @@ def _acquire_lock_with_timeout(
         logger_name:
     """
     logger = get_logger(logger_name)
+    ssh_logger = get_logger(SSH_MONITORING_LOGGER_NAME)
     logger.info(f"Trying to acquire lock for '{label}', with {timeout=}")
-    t_start_lock_acquire = time.perf_counter()
+    t_lock_request = time.perf_counter()
     result = lock.acquire(timeout=timeout)
     try:
         if not result:
@@ -98,14 +102,25 @@ def _acquire_lock_with_timeout(
                 f"Failed to acquire lock for '{label}' within "
                 f"{timeout} seconds"
             )
-        t_end_lock_acquire = time.perf_counter()
-        elapsed = t_end_lock_acquire - t_start_lock_acquire
+        t_lock_acquisition = time.perf_counter()
+        elapsed = t_lock_acquisition - t_lock_request
         logger.info(f"Lock for '{label}' was acquired - {elapsed=:.4f} s")
         yield result
     finally:
         if result:
             lock.release()
             logger.info(f"Lock for '{label}' was released.")
+            t_lock_release = time.perf_counter()
+            lock_was_acquired = 1
+        else:
+            t_lock_release = time.perf_counter()
+            t_lock_acquisition = t_lock_release
+            lock_was_acquired = 0
+        lock_waiting_time = t_lock_acquisition - t_lock_request
+        lock_holding_time = t_lock_release - t_lock_acquisition
+        ssh_logger.info(
+            f"{pid} {lock_waiting_time:.6e} {lock_holding_time:.6e} {lock_was_acquired} {label.replace(' ', '_')}"  # noqa
+        )
 
 
 class FractalSSH:
@@ -130,11 +145,12 @@ class FractalSSH:
     sftp_get_prefetch: bool
     sftp_get_max_requests: int
     logger_name: str
+    _pid: int
 
     def __init__(
         self,
         connection: Connection,
-        default_timeout: float = 250,
+        default_timeout: float = 500.0,
         sftp_get_prefetch: bool = False,
         sftp_get_max_requests: int = 64,
         logger_name: str = __name__,
@@ -146,6 +162,8 @@ class FractalSSH:
         self.sftp_get_max_requests = sftp_get_max_requests
         self.logger_name = logger_name
         set_logger(self.logger_name)
+        set_logger(SSH_MONITORING_LOGGER_NAME)
+        self._pid = os.getpid()
 
     @property
     def is_connected(self) -> bool:
@@ -197,6 +215,8 @@ class FractalSSH:
             lock=self._lock,
             label=label,
             timeout=actual_lock_timeout,
+            pid=self._pid,
+            logger_name=self.logger_name,
         ):
             return self._connection.run(*args, **kwargs)
 
@@ -212,8 +232,10 @@ class FractalSSH:
         self.logger.info(f"START reading remote JSON file {filepath}.")
         with _acquire_lock_with_timeout(
             lock=self._lock,
-            label="read_remote_json_file",
             timeout=self.default_lock_timeout,
+            logger_name=self.logger_name,
+            pid=self._pid,
+            label=f"read_remote_json_file({filepath})",
         ):
             try:
                 with self._sftp_unsafe().open(filepath, "r") as f:
@@ -239,8 +261,10 @@ class FractalSSH:
         self.logger.info(f"START reading remote text file {filepath}.")
         with _acquire_lock_with_timeout(
             lock=self._lock,
-            label="read_remote_text_file",
+            label=f"read_remote_text_file({filepath})",
             timeout=self.default_lock_timeout,
+            pid=self._pid,
+            logger_name=self.logger_name,
         ):
             try:
                 with self._sftp_unsafe().open(filepath, "r") as f:
@@ -298,9 +322,10 @@ class FractalSSH:
             self.close()
             with _acquire_lock_with_timeout(
                 lock=self._lock,
-                label="_connection.open",
+                label="FractalSSH._connection.{open,open_sftp}()",
                 timeout=self.default_lock_timeout,
                 logger_name=self.logger_name,
+                pid=self._pid,
             ):
                 self._connection.open()
                 self._connection.client.open_sftp()
@@ -324,12 +349,16 @@ class FractalSSH:
         """
         with _acquire_lock_with_timeout(
             lock=self._lock,
-            label="_connection.close",
+            label="FractalSSH._connection.close()",
             timeout=self.default_lock_timeout,
+            pid=self._pid,
+            logger_name=self.logger_name,
         ):
             self._connection.close()
             if self._connection.client is not None:
                 self._connection.client.close()
+        close_logger(get_logger(self.logger_name))
+        close_logger(get_logger(SSH_MONITORING_LOGGER_NAME))
 
     @retry_if_socket_error
     def run_command(
@@ -364,14 +393,14 @@ class FractalSSH:
             # Case 1: Command runs successfully
             res = self._run(
                 cmd,
-                label=f"run {cmd}",
+                label=cmd,
                 lock_timeout=actual_lock_timeout,
                 hide=True,
                 in_stream=False,
             )
             t_1 = time.perf_counter()
             self.logger.info(
-                f"END   running '{cmd}' over SSH, " f"elapsed={t_1 - t_0:.3f}"
+                f"END   running '{cmd}' over SSH, elapsed={t_1 - t_0:.3f}"
             )
             self.logger.debug("STDOUT:")
             self.logger.debug(res.stdout)
@@ -423,8 +452,10 @@ class FractalSSH:
                 actual_lock_timeout = lock_timeout
             with _acquire_lock_with_timeout(
                 lock=self._lock,
-                label=f"send_file {local=} {remote=}",
+                label=f"send_file({local},{remote})",
                 timeout=actual_lock_timeout,
+                pid=self._pid,
+                logger_name=self.logger_name,
             ):
                 self._sftp_unsafe().put(local, remote)
             self.logger.info(
@@ -463,8 +494,10 @@ class FractalSSH:
                 actual_lock_timeout = lock_timeout
             with _acquire_lock_with_timeout(
                 lock=self._lock,
-                label=f"fetch_file {local=} {remote=}",
+                label=f"fetch_file({local},{remote})",
                 timeout=actual_lock_timeout,
+                pid=self._pid,
+                logger_name=self.logger_name,
             ):
                 self._sftp_unsafe().get(
                     remote,
@@ -554,8 +587,10 @@ class FractalSSH:
             actual_lock_timeout = lock_timeout
         with _acquire_lock_with_timeout(
             lock=self._lock,
-            label=f"write_remote_file {path=}",
+            label=f"write_remote_file({path})",
             timeout=actual_lock_timeout,
+            pid=self._pid,
+            logger_name=self.logger_name,
         ):
             try:
                 with self._sftp_unsafe().open(filename=path, mode="w") as f:
@@ -576,8 +611,10 @@ class FractalSSH:
         self.logger.info(f"START remote_file_exists {path}")
         with _acquire_lock_with_timeout(
             lock=self._lock,
-            label=f"remote_file_exists {path=}",
+            label=f"remote_file_exists({path})",
             timeout=self.default_lock_timeout,
+            pid=self._pid,
+            logger_name=self.logger_name,
         ):
             try:
                 self._sftp_unsafe().stat(path)
@@ -613,6 +650,7 @@ class FractalSSHList:
     _lock: Lock
     _timeout: float
     _logger_name: str
+    _pid: int
 
     def __init__(
         self,
@@ -625,6 +663,7 @@ class FractalSSHList:
         self._timeout = timeout
         self._logger_name = logger_name
         set_logger(self._logger_name)
+        self._pid = os.getpid()
 
     @property
     def logger(self) -> logging.Logger:
@@ -677,6 +716,8 @@ class FractalSSHList:
                 lock=self._lock,
                 label="FractalSSHList.get",
                 timeout=self._timeout,
+                pid=self._pid,
+                logger_name=self._logger_name,
             ):
                 self._data[key] = FractalSSH(connection=connection)
                 return self._data[key]
@@ -721,6 +762,8 @@ class FractalSSHList:
             lock=self._lock,
             timeout=self._timeout,
             label="FractalSSHList.remove",
+            pid=self._pid,
+            logger_name=self._logger_name,
         ):
             self.logger.info(
                 f"Removing FractalSSH object for {user}@{host} "

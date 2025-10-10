@@ -1,9 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.16.4
 
 * Task life cycle:
     * Switch to PyPI Index API for finding latest package versions (\#2790).
+* SSH:
+    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#XXX).
+    * Introduce structured logs for SSH-lock dynamics (\#XXX).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Internal:
