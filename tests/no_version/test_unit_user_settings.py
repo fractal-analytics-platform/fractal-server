@@ -109,13 +109,7 @@ async def test_validate_user_settings(db):
     await db.commit()
     await db.refresh(user_with_invalid_settings)
 
-    valid_settings = UserSettings(
-        ssh_host="x",
-        ssh_jobs_dir="/x",
-        ssh_private_key_path="/x",
-        ssh_tasks_dir="/x",
-        ssh_username="x",
-    )
+    valid_settings = UserSettings()
     user_with_valid_ssh_settings = UserOAuth(
         email="c@c.c",
         **common_attributes,

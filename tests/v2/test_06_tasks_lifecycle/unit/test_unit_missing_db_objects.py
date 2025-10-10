@@ -74,7 +74,6 @@ def test_unit_missing_objects(
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                tasks_base_dir="/invalid",
                 wheel_file=None,
                 resource=resource,
                 profile=profile,
@@ -83,7 +82,6 @@ def test_unit_missing_objects(
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                tasks_base_dir="/invalid",
                 tar_gz_file=None,
                 resource=resource,
                 profile=profile,
@@ -92,7 +90,6 @@ def test_unit_missing_objects(
             function(
                 task_group_activity_id=9999,
                 task_group_id=9999,
-                tasks_base_dir="/invalid",
                 resource=resource,
                 profile=profile,
             )
