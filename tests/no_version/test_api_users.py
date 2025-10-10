@@ -433,7 +433,6 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
         ssh_host="127.0.0.1",
         ssh_username="fractal",
         ssh_private_key_path="/tmp/fractal",
-        ssh_tasks_dir="/tmp/tasks",
         # missing "ssh_jobs_dir"
         slurm_user="fractal",
         slurm_accounts=["foo", "bar"],

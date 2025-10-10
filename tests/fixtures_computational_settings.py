@@ -206,7 +206,9 @@ def slurm_ssh_resource_profile_fake_objects(
     prof = Profile(
         resource_id=123456789,
         username=ssh_username,
-        ssh_key_path="/fake",
+        ssh_key_path="/fake/key",
+        jobs_remote_dir="/fake/jobs",
+        tasks_remote_dir="/fake/tasks",
     )
     ValidResourceSlurmSSH(**res.model_dump())
     ValidProfileSlurmSSH(**prof.model_dump())
