@@ -13,7 +13,7 @@ class SlurmSshUserSettings(BaseModel):
             List of SLURM accounts, to be used upon Fractal job submission.
     """
 
-    ssh_jobs_dir: str
+    project_dir: str
     slurm_accounts: list[str]
 
 
