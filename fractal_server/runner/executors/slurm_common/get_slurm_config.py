@@ -16,33 +16,27 @@ def _get_slurm_config_internal(
     which_type: Literal["non_parallel", "parallel"],
 ) -> SlurmConfig:
     """
-    Prepare a `SlurmConfig` configuration object
 
-    The argument `which_type` determines whether we use `wftask.meta_parallel`
-    or `wftask.meta_non_parallel`. In the following description, let us assume
-    that `which_type="parallel"`.
+    Prepare a specific `SlurmConfig` configuration.
 
-    FIXME (zzz): Docstring
+    The base configuration is the runner-level `shared_config` object, based
+    on `resource.job_runner_config` (note that GPU-specific properties take
+    priority, when `needs_gpu=True`). We then incorporate attributes from
+    `wftask.meta_{non_parallel,parallel}` - with higher priority.
 
-    The sources for `SlurmConfig` attributes, in increasing priority order, are
-
-    1. The general content of the Fractal SLURM configuration file.
-    2. The GPU-specific content of the Fractal SLURM configuration file, if
-        appropriate.
-    3. Properties in `wftask.meta_parallel` (which typically include those in
-       `wftask.task.meta_parallel`). Note that `wftask.meta_parallel` may be
-       `None`.
-
-    Arguments:
+    Args:
+        shared_config:
+            Configuration object based on `resource.job_runner_config`.
         wftask:
-            WorkflowTask for which the SLURM configuration is is to be
-            prepared.
+            WorkflowTaskV2 for which the backend configuration should
+            be prepared.
         which_type:
-            Determines whether to use `meta_parallel` or `meta_non_parallel`.
+            Whether we should look at the non-parallel or parallel part
+            of `wftask`.
+        tot_tasks: Not used here, only present as a common interface.
 
     Returns:
-        slurm_config:
-            The SlurmConfig object
+        A ready-to-use `SlurmConfig` object.
     """
 
     if which_type == "non_parallel":

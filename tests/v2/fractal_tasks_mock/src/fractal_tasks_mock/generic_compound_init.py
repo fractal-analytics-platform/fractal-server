@@ -11,7 +11,7 @@ def generic_compound_init(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         argument: description

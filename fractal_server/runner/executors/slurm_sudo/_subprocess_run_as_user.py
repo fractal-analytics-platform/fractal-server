@@ -33,7 +33,7 @@ def _run_command_as_user(
     """
     Use `sudo -u` to impersonate another user and run a command
 
-    Arguments:
+    Args:
         cmd: Command to be run
         user: User to be impersonated
         check: If `True`, check that `returncode=0` and fail otherwise.
@@ -71,7 +71,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
     """
     Create a folder as a different user
 
-    Arguments:
+    Args:
         folder: Absolute path to the folder
         user: User to be impersonated
 

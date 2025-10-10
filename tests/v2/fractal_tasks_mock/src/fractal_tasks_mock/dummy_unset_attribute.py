@@ -13,7 +13,7 @@ def dummy_unset_attribute(
     """
     Unset an attribute for several images
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         attribute: The attribute that should be unset for all input images.

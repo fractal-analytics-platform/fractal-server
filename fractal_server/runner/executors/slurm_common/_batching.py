@@ -36,7 +36,7 @@ def _estimate_parallel_tasks_per_job(
     assumes that further checks will be performed on the output of the current
     function, as is the case in the `heuristics` function below.
 
-    Arguments:
+    Args:
         cpus_per_task: Number of CPUs needed for one task.
         mem_per_task: Memory (in MB) needed for one task.
         max_cpus_per_job: Maximum number of CPUs available for one job.
@@ -91,7 +91,7 @@ def heuristics(
        introduce in-job queues to satisfy the hard constraint on the maximum
        number of jobs.
 
-    Arguments:
+    Args:
         tot_tasks:
             Total number of elements to be processed (e.g. number of images in
             a OME-NGFF array).

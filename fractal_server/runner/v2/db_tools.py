@@ -88,7 +88,7 @@ def bulk_upsert_image_cache_fast(
     NOTE: we tried to replace `index_elements` with
     `constraint="pk_historyimagecache"`, but it did not work as expected.
 
-    Arguments:
+    Args:
         list_upsert_objects:
             List of dictionaries for objects to be upsert-ed.
         db: A sync database session

@@ -49,7 +49,7 @@ def collect_ssh_pixi(
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         ssh_config:

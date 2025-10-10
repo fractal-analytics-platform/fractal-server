@@ -13,7 +13,7 @@ def illumination_correction_init(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         overwrite_input: Whether to overwrite the current image

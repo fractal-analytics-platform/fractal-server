@@ -13,7 +13,7 @@ def calculate_registration_compute(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         path: description
         init_args: description
     """

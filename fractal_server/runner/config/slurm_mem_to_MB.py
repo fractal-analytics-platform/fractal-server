@@ -13,7 +13,7 @@ def slurm_mem_to_MB(raw_mem: str | int) -> int:
     Supported units are `"M", "G", "T"`, with `"M"` being the default; some
     parsing examples are: `"10M" -> 10000`, `"3G" -> 3000000`.
 
-    Arguments:
+    Args:
         raw_mem:
             A string (e.g. `"100M"`) or an integer (in MB).
 

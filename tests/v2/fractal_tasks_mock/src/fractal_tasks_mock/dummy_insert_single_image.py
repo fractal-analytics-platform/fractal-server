@@ -21,7 +21,7 @@ def dummy_insert_single_image(
     """
     Remove images
 
-    Arguments:
+    Args:
         zarr_urls: description
         fail: If `True`, make new_zarr_url not relative to zarr_dir
         fail_2: If `True`, make new_zarr_url equal to zarr_dir
