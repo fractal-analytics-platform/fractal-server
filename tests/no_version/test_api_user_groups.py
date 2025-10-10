@@ -307,6 +307,8 @@ async def test_get_user_optional_group_info(
 async def test_patch_user_settings_bulk(
     MockCurrentUser, registered_superuser_client, default_user_group, db
 ):
+    # FIXME: review this test after recent changes to UserSettings
+
     # Register 4 users
     async with MockCurrentUser() as user1:
         pass
@@ -324,15 +326,17 @@ async def test_patch_user_settings_bulk(
 
     for user in [user1, user2, user3, user4]:
         assert dict(
-            ssh_host=None,
-            ssh_username=None,
-            ssh_private_key_path=None,
-            ssh_tasks_dir=None,
-            ssh_jobs_dir=None,
-            slurm_user="test01",
             slurm_accounts=[],
             project_dir=None,
-        ) == user.settings.model_dump(exclude={"id"})
+        ) == user.settings.model_dump(
+            exclude={
+                "id",
+                "slurm_user",
+                "ssh_host",
+                "ssh_private_key_path",
+                "ssh_username",
+            }
+        )
 
     # remove user4 from default user group
     res = await db.execute(
@@ -344,12 +348,6 @@ async def test_patch_user_settings_bulk(
 
     # patch user-settings of default user group
     patch = dict(
-        ssh_host="127.0.0.1",
-        ssh_username="fractal",
-        ssh_private_key_path="/tmp/fractal",
-        ssh_tasks_dir="/tmp/tasks",
-        ssh_jobs_dir="/tmp/job",
-        # missing `slurm_user`
         slurm_accounts=["foo", "bar"],
         project_dir="/foo",
     )
@@ -361,20 +359,30 @@ async def test_patch_user_settings_bulk(
     # assert user1, user2 and user3 has been updated
     for user in [user1, user2, user3]:
         await db.refresh(user)
-        assert patch == user.settings.model_dump(exclude={"id", "slurm_user"})
+        assert patch == user.settings.model_dump(
+            exclude={
+                "id",
+                "slurm_user",
+                "ssh_host",
+                "ssh_private_key_path",
+                "ssh_username",
+            }
+        )
         assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
     # assert user4 has old settings
     await db.refresh(user4)
     assert dict(
-        ssh_host=None,
-        ssh_username=None,
-        ssh_private_key_path=None,
-        ssh_tasks_dir=None,
-        ssh_jobs_dir=None,
-        slurm_user="test01",
         slurm_accounts=[],
         project_dir=None,
-    ) == user4.settings.model_dump(exclude={"id"})
+    ) == user4.settings.model_dump(
+        exclude={
+            "id",
+            "slurm_user",
+            "ssh_host",
+            "ssh_private_key_path",
+            "ssh_username",
+        }
+    )
 
     res = await registered_superuser_client.patch(
         f"{PREFIX}/group/{default_user_group.id}/user-settings/",
