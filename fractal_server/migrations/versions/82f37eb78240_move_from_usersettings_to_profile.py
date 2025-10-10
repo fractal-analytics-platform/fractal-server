@@ -22,14 +22,14 @@ def upgrade() -> None:
     with op.batch_alter_table("profile", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "remote_jobs_dir",
+                "jobs_remote_dir",
                 sqlmodel.sql.sqltypes.AutoString(),
                 nullable=True,
             )
         )
         batch_op.add_column(
             sa.Column(
-                "remote_tasks_dir",
+                "tasks_remote_dir",
                 sqlmodel.sql.sqltypes.AutoString(),
                 nullable=True,
             )
@@ -63,7 +63,7 @@ def downgrade() -> None:
         )
 
     with op.batch_alter_table("profile", schema=None) as batch_op:
-        batch_op.drop_column("remote_tasks_dir")
-        batch_op.drop_column("remote_jobs_dir")
+        batch_op.drop_column("tasks_remote_dir")
+        batch_op.drop_column("jobs_remote_dir")
 
     # ### end Alembic commands ###
