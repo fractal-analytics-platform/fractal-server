@@ -238,7 +238,7 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
-            Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
+            Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
         )
         cache_dir = None
 

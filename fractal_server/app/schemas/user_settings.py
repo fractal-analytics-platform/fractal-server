@@ -24,7 +24,6 @@ class UserSettingsRead(BaseModel):
     ssh_host: str | None = None
     ssh_username: str | None = None
     ssh_private_key_path: str | None = None
-    ssh_jobs_dir: str | None = None
     slurm_user: str | None = None
     slurm_accounts: list[str]
     project_dir: str | None = None
@@ -47,7 +46,6 @@ class UserSettingsUpdate(BaseModel):
     ssh_host: NonEmptyStr | None = None
     ssh_username: NonEmptyStr | None = None
     ssh_private_key_path: AbsolutePathStr | None = None
-    ssh_jobs_dir: AbsolutePathStr | None = None
     slurm_user: NonEmptyStr | None = None
     slurm_accounts: ListUniqueNonEmptyString | None = None
     project_dir: AbsolutePathStr | None = None

@@ -183,7 +183,7 @@ def submit_workflow(
             elif resource.type == "slurm_ssh":
                 WORKFLOW_DIR_LOCAL.mkdir(parents=True)
                 WORKFLOW_DIR_REMOTE = (
-                    Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
+                    Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
                 )
             else:
                 # FIXME: Set a CHECK constraint at the db level, and drop this

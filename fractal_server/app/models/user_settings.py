@@ -15,7 +15,6 @@ class UserSettings(SQLModel, table=True):
         ssh_host: SSH-reachable host where a SLURM client is available.
         ssh_username: User on `ssh_host`.
         ssh_private_key_path: Path of private SSH key for `ssh_username`.
-        ssh_jobs_dir: Jobs base folder on `ssh_host`.
         slurm_user: Local user, to be impersonated via `sudo -u`
         project_dir: Folder where `slurm_user` can write.
     """
