@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.16.5
+
+* Dependencies:
+    * Bump `fastapi`, `sqlmodel`, `pydantic`, `uvicorn`, `pydantic-settings` versions (\#2827).
+
 # 2.16.4
 
 * Task life cycle:
