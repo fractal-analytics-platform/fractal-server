@@ -19,3 +19,5 @@ class ValidProfileSlurmSudo(_ValidProfileBase):
 class ValidProfileSlurmSSH(_ValidProfileBase):
     username: NonEmptyStr
     ssh_key_path: AbsolutePathStr
+    jobs_remote_dir: AbsolutePathStr
+    tasks_remote_dir: AbsolutePathStr

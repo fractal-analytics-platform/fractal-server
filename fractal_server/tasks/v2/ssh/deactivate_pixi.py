@@ -33,9 +33,10 @@ def deactivate_ssh_pixi(
     handled.
 
     Args:
-        task_group_id:
         task_group_activity_id:
-        ssh_config:
+        task_group_id:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"

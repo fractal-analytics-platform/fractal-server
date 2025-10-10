@@ -42,9 +42,8 @@ def reactivate_ssh_pixi(
     Args:
         task_group_id:
         task_group_activity_id:
-        ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`.
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"

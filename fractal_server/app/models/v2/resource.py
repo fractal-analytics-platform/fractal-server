@@ -42,12 +42,6 @@ class Resource(SQLModel, table=True):
     Base local folder for job subfolders (containing artifacts and logs).
     """
 
-    job_remote_folder: str | None = None
-    """
-    Base remote folder for job subfolders (containing artifacts and logs).
-    FIXME: remove this and move it into profile.
-    """
-
     job_runner_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
