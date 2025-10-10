@@ -64,7 +64,7 @@ def local_resource_profile_objects(
         type="local",
         jobs_local_dir=(tmp777_path / "jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "tasks").as_posix(),
-        job_runner_config={"parallel_tasks_per_job": 1},
+        jobs_runner_config={"parallel_tasks_per_job": 1},
         tasks_python_config={
             "default_version": current_py_version,
             "versions": {
@@ -94,10 +94,10 @@ def slurm_sudo_resource_profile_objects(
         type="slurm_sudo",
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
-        job_slurm_python_worker=(
+        jobs_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
-        job_runner_config=SLURM_CONFIG,
+        jobs_runner_config=SLURM_CONFIG,
         tasks_python_config={
             "default_version": current_py_version,
             "versions": {
@@ -105,7 +105,7 @@ def slurm_sudo_resource_profile_objects(
             },
         },
         tasks_pixi_config={},
-        job_poll_interval=0,
+        jobs_poll_interval=0,
     )
     prof = Profile(
         resource_id=123456789,
@@ -134,10 +134,10 @@ def slurm_ssh_resource_profile_objects(
         host=slurmlogin_ip,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
-        job_slurm_python_worker=(
+        jobs_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
-        job_runner_config={
+        jobs_runner_config={
             "default_slurm_config": {
                 "partition": "main",
                 "cpus_per_task": 1,
@@ -160,7 +160,7 @@ def slurm_ssh_resource_profile_objects(
             },
         },
         tasks_pixi_config={},
-        job_poll_interval=0,
+        jobs_poll_interval=0,
     )
     prof = Profile(
         resource_id=123456789,
@@ -190,10 +190,10 @@ def slurm_ssh_resource_profile_fake_objects(
         host="localhost",
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
-        job_slurm_python_worker=(
+        jobs_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
-        job_runner_config=SLURM_CONFIG,
+        jobs_runner_config=SLURM_CONFIG,
         tasks_python_config={
             "default_version": current_py_version,
             "versions": {
@@ -201,7 +201,7 @@ def slurm_ssh_resource_profile_fake_objects(
             },
         },
         tasks_pixi_config={},
-        job_poll_interval=0,
+        jobs_poll_interval=0,
     )
     prof = Profile(
         resource_id=123456789,

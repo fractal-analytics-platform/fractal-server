@@ -63,7 +63,9 @@ class SudoSlurmRunner(BaseSlurmRunner):
         """
 
         self.slurm_user = profile.username
-        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
+        self.shared_config = JobRunnerConfigSLURM(
+            **resource.jobs_runner_config
+        )
 
         super().__init__(
             slurm_runner_type="sudo",
@@ -71,8 +73,8 @@ class SudoSlurmRunner(BaseSlurmRunner):
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,  # FIXME: drop?
-            poll_interval=resource.job_poll_interval,
-            python_worker_interpreter=resource.job_slurm_python_worker,
+            poll_interval=resource.jobs_poll_interval,
+            python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,
         )
 

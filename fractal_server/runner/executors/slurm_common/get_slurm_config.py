@@ -20,13 +20,13 @@ def _get_slurm_config_internal(
     Prepare a specific `SlurmConfig` configuration.
 
     The base configuration is the runner-level `shared_config` object, based
-    on `resource.job_runner_config` (note that GPU-specific properties take
+    on `resource.jobs_runner_config` (note that GPU-specific properties take
     priority, when `needs_gpu=True`). We then incorporate attributes from
     `wftask.meta_{non_parallel,parallel}` - with higher priority.
 
     Args:
         shared_config:
-            Configuration object based on `resource.job_runner_config`.
+            Configuration object based on `resource.jobs_runner_config`.
         wftask:
             WorkflowTaskV2 for which the backend configuration should
             be prepared.

@@ -34,17 +34,17 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column(
-            "job_runner_config",
+            "jobs_runner_config",
             postgresql.JSONB(astext_type=sa.Text()),
             server_default="{}",
             nullable=False,
         ),
         sa.Column(
-            "job_slurm_python_worker",
+            "jobs_slurm_python_worker",
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
-        sa.Column("job_poll_interval", sa.Integer(), nullable=False),
+        sa.Column("jobs_poll_interval", sa.Integer(), nullable=False),
         sa.Column(
             "tasks_local_dir",
             sqlmodel.sql.sqltypes.AutoString(),

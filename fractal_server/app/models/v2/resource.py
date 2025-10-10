@@ -42,20 +42,20 @@ class Resource(SQLModel, table=True):
     Base local folder for job subfolders (containing artifacts and logs).
     """
 
-    job_runner_config: dict[str, Any] = Field(
+    jobs_runner_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
     FIXME: point to appropriate schemas
     """
 
-    job_slurm_python_worker: str | None = None
+    jobs_slurm_python_worker: str | None = None
     """
     On SLURM deloyments, this is the Python interpreter that runs the
     `fractal-server` worker from within the SLURM jobs.
     """
 
-    job_poll_interval: int = 5
+    jobs_poll_interval: int = 5
     """
     On SLURM deployments, the interval to wait before new `squeue` calls.
     """
