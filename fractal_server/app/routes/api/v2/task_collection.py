@@ -338,9 +338,7 @@ async def collect_tasks_pip(
 
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh
-        extra_args = dict(
-            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id}
-        )
+        extra_args = dict(tasks_base_dir=base_tasks_path)
     else:
         collect_function = collect_local
         extra_args = {}
