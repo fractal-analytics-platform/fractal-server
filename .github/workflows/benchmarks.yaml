@@ -23,12 +23,12 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==2.1.3
+       run: pipx install poetry==2.2.1
 
-     - name: Set up Python 3.11
+     - name: Set up Python 3.12
        uses: actions/setup-python@v5
        with:
-        python-version: "3.11"
+        python-version: "3.12"
         cache: "poetry"
 
      - name: Install dependencies
@@ -43,8 +43,8 @@ jobs:
         export JWT_SECRET_KEY=secret
         export JWT_EXPIRE_SECONDS=84600
         cd benchmarks/
-        poetry run fractalctl init-db-data
         poetry run fractalctl set-db
+        poetry run fractalctl init-db-data
         poetry run python populate_db/populate_db_script.py
         poetry run sh serve.sh
 
@@ -95,12 +95,12 @@ jobs:
           sudo --login -u postgres createdb fractal_test
 
      - name: Install poetry
-       run: pipx install poetry==2.1.3
+       run: pipx install poetry==2.2.1
 
-     - name: Set up Python 3.11
+     - name: Set up Python 3.12
        uses: actions/setup-python@v5
        with:
-        python-version: "3.11"
+        python-version: "3.12"
         cache: "poetry"
 
      - name: Install dependencies

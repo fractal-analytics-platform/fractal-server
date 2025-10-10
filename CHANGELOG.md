@@ -2,8 +2,26 @@
 
 # Unreleased
 
+* Models:
+    * Fix use of custom `AttributeFilters` type in SQLModel model (\#2830).
+* Dependencies:
+    * Bump `pydantic` to 2.12.0 (\#2830).
+    * Bump `poetry` to 2.2.1 in GitHub actions (\#2830).
+* Testing:
+    * Add pre-commit rule to prevent custom types is models (\#2830).
+
+# 2.16.5
+
+* Dependencies:
+    * Bump `fastapi`, `sqlmodel`, `uvicorn`, `pydantic-settings` versions (\#2827).
+
+# 2.16.4
+
 * Task life cycle:
     * Switch to PyPI Index API for finding latest package versions (\#2790).
+* SSH:
+    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#XXX).
+    * Introduce structured logs for SSH-lock dynamics (\#XXX).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Internal:

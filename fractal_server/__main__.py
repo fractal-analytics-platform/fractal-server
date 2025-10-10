@@ -183,6 +183,7 @@ def init_db_data(
         res = db.execute(select(UserOAuth))
         users = res.unique().scalars().all()
         for user in users:
+            print(f"Now setting profile_id={profile.id} for {user.email}.")
             user.profile_id = profile.id
             db.add(user)
         db.commit()

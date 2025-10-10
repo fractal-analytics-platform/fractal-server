@@ -129,6 +129,8 @@ class FractalClient:
         )
         self.detail(res)
 
+        # FIXME: add user to profile (API not available yet)
+
         return UserRead(**response_json(res))
 
     def add_project(self, project: ProjectCreateV2):
