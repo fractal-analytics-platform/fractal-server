@@ -1,5 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Models:
+    * Fix use of custom `AttributeFilters` type in SQLModel model (\#2830).
+* Dependencies:
+    * Bump `pydantic` to 2.12.0 (\#2830).
+    * Bump `poetry` to 2.2.1 in GitHub actions (\#2830).
+* Testing:
+    * Add pre-commit rule to prevent custom types is models (\#2830).
+
 # 2.16.5
 
 * Dependencies:

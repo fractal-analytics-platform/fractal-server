@@ -10,7 +10,7 @@ Fractal uses [poetry](https://python-poetry.org/docs) to manage the development 
 
 A simple way to install `poetry` is
 ```console
-pipx install poetry==2.1.3`
+pipx install poetry==2.2.1`
 ```
 while other options are described [here](https://python-poetry.org/docs#installing-with-the-official-installer).
 
