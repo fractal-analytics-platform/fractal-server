@@ -27,20 +27,11 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
     resource, profile = slurm_ssh_resource_profile_db[:]
 
-    user_settings_dict = dict(
-        ssh_host=resource.host,
-        ssh_username=profile.username,
-        ssh_private_key_path=profile.ssh_key_path,
-        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-    )
-
     app.state.fractal_ssh_list = FractalSSHList()
 
     await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
         additional_user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
         client=client,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -82,21 +73,12 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     await db.commit()
     await db.refresh(profile)
 
-    user_settings_dict = dict(
-        ssh_host=resource.host,
-        ssh_username=profile.username,
-        ssh_private_key_path=profile.ssh_key_path,
-        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-    )
-
     app.state.fractal_ssh_list = FractalSSHList()
 
     job_logs = await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
         client=client,
         additional_user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
