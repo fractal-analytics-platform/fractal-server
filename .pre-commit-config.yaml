@@ -31,6 +31,12 @@ repos:
       entry: bash -c 'for file in "$@"; do if grep -n "devtools" "$file"; then echo "$file" && exit 1; fi; done' --
       language: system
       files: fractal_server/
+    - id: grep-for-fractal-types-in-models
+      name: Check for custom types in SQLModel models
+      entry: bash -c 'for file in "$@"; do if grep -n "fractal_server.types" "$file"; then echo "$file" && exit 1; fi; done' --
+      language: system
+      files: fractal_server/app/models/
+
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
