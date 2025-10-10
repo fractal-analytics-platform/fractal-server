@@ -3,7 +3,7 @@
 # 2.16.5
 
 * Dependencies:
-    * Bump `fastapi`, `sqlmodel`, `pydantic`, `uvicorn`, `pydantic-settings` versions (\#2827).
+    * Bump `fastapi`, `sqlmodel`, `uvicorn`, `pydantic-settings` versions (\#2827).
 
 # 2.16.4
 
