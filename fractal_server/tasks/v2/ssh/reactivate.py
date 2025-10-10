@@ -30,7 +30,6 @@ def reactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    tasks_base_dir: str,
     resource: Resource,
     profile: Profile,
 ) -> None:
@@ -44,8 +43,6 @@ def reactivate_ssh(
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`.
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -190,7 +187,7 @@ def reactivate_ssh(
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.venv_path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:

@@ -185,12 +185,8 @@ async def collect_task_pixi(
 
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh_pixi
-        extra_args = dict(
-            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id}
-        )
     else:
         collect_function = collect_local_pixi
-        extra_args = {}
 
     background_tasks.add_task(
         collect_function,
@@ -199,7 +195,6 @@ async def collect_task_pixi(
         tar_gz_file=tar_gz_file,
         resource=resource,
         profile=profile,
-        **extra_args,
     )
     logger.info(
         "Task-collection endpoint: start background collection "

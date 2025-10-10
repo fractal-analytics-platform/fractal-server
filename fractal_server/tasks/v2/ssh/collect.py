@@ -37,7 +37,6 @@ def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
-    tasks_base_dir: str,
     resource: Resource,
     profile: Profile,
     wheel_file: FractalUploadedFile | None = None,
@@ -57,8 +56,6 @@ def collect_ssh(
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`
         resource:
         wheel_file:
     """
@@ -311,7 +308,7 @@ def collect_ssh(
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(
                             f"Deleted remoted folder {task_group.path}"

@@ -338,10 +338,8 @@ async def collect_tasks_pip(
 
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh
-        extra_args = dict(tasks_base_dir=base_tasks_path)
     else:
         collect_function = collect_local
-        extra_args = {}
 
     background_tasks.add_task(
         collect_function,
@@ -350,7 +348,6 @@ async def collect_tasks_pip(
         wheel_file=wheel_file,
         resource=resource,
         profile=profile,
-        **extra_args,  # FIXME remove
     )
 
     logger.debug(

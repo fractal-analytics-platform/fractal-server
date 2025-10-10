@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
@@ -126,27 +124,18 @@ async def deactivate_task_group(
             deactivate_function = deactivate_ssh_pixi
         else:
             deactivate_function = deactivate_ssh
-        background_tasks.add_task(
-            deactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id},
-            resource=resource,
-            profile=profile,
-        )
-
     else:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             deactivate_function = deactivate_local_pixi
         else:
             deactivate_function = deactivate_local
-        background_tasks.add_task(
-            deactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            resource=resource,
-            profile=profile,
-        )
+    background_tasks.add_task(
+        deactivate_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
+    )
 
     logger.debug(
         "Task group deactivation endpoint: start deactivate "
@@ -241,32 +230,22 @@ async def reactivate_task_group(
 
     # Submit background task
     if resource.type == "slurm_ssh":
-        # Use appropriate SSH credentials
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
         else:
             reactivate_function = reactivate_ssh
-        background_tasks.add_task(
-            reactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id},
-            resource=resource,
-            profile=profile,
-        )
-
     else:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_local_pixi
         else:
             reactivate_function = reactivate_local
-        background_tasks.add_task(
-            reactivate_function,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            resource=resource,
-            profile=profile,
-        )
+    background_tasks.add_task(
+        reactivate_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        resource=resource,
+        profile=profile,
+    )
     logger.debug(
         "Task group reactivation endpoint: start reactivate "
         "and return task_group_activity"
@@ -314,12 +293,8 @@ async def delete_task_group(
 
     if resource.type == "slurm_ssh":
         delete_function = delete_ssh
-        extra_args = dict(
-            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id}
-        )
     else:
         delete_function = delete_local
-        extra_args = {}
 
     background_tasks.add_task(
         delete_function,
@@ -327,7 +302,6 @@ async def delete_task_group(
         task_group_activity_id=task_group_activity.id,
         resource=resource,
         profile=profile,
-        **extra_args,
     )
 
     response.status_code = status.HTTP_202_ACCEPTED
