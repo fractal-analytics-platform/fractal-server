@@ -13,7 +13,7 @@ def cellpose_segmentation(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: description
     """
 

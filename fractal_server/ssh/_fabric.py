@@ -84,7 +84,7 @@ def _acquire_lock_with_timeout(
     """
     Given a `threading.Lock` object, try to acquire it within a given timeout.
 
-    Arguments:
+    Args:
         lock:
         label:
         timeout:
@@ -177,7 +177,7 @@ class FractalSSH:
         """
         Log and re-raise an exception from a FractalSSH method.
 
-        Arguments:
+        Args:
             message: Additional message to be logged.
             e: Original exception
         """
@@ -686,7 +686,7 @@ class FractalSSHList:
 
         Note: Changing `_data` requires acquiring `_lock`.
 
-        Arguments:
+        Args:
             host:
             user:
             key_path:
@@ -732,7 +732,7 @@ class FractalSSHList:
         """
         Return whether a given key is present in the collection.
 
-        Arguments:
+        Args:
             host:
             user:
             key_path:
@@ -752,7 +752,7 @@ class FractalSSHList:
 
         Note: Changing `_data` requires acquiring `_lock`.
 
-        Arguments:
+        Args:
             host:
             user:
             key_path:
@@ -780,7 +780,7 @@ class FractalSSHList:
         """
         Close all `FractalSSH` objects in the collection.
 
-        Arguments:
+        Args:
             timeout:
                 Timeout for `FractalSSH._lock` acquisition, to be obtained
                 before closing.

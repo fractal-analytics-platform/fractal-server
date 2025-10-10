@@ -15,7 +15,7 @@ def create_db_tasks_and_update_task_group_sync(
     """
     Create a `TaskGroupV2` with N `TaskV2`s, and insert them into the database.
 
-    Arguments:
+    Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
         task_list: List of `TaskCreateV2` objects to be inserted into the db.
         db: Synchronous database session
@@ -42,7 +42,7 @@ async def create_db_tasks_and_update_task_group_async(
     """
     Create a `TaskGroupV2` with N `TaskV2`s, and insert them into the database.
 
-    Arguments:
+    Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
         task_list: List of `TaskCreateV2` objects to be inserted into the db.
         db: Synchronous database session

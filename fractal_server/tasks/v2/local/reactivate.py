@@ -37,7 +37,7 @@ def reactivate_local(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         resource:

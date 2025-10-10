@@ -303,7 +303,7 @@ async def _create_first_user(
     See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
     12.1/cookbook/create-user-programmatically)
 
-    Arguments:
+    Args:
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser

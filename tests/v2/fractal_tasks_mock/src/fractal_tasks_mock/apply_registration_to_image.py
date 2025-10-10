@@ -14,7 +14,7 @@ def apply_registration_to_image(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: description
         overwrite_input: whether to overwrite the existing image
     """

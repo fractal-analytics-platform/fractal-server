@@ -105,7 +105,6 @@ async def test_mkdir_error(
             user_id=user.id,
             user_cache_dir=(tmp_path / "xxx").as_posix(),
             user_settings=UserSettings(),
-            slurm_user="fake",
             resource=res,
             profile=prof,
         )

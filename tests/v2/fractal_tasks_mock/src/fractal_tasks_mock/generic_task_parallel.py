@@ -14,7 +14,7 @@ def generic_task_parallel(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_dir: description
     """
 
