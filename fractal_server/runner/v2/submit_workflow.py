@@ -68,21 +68,18 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    user_settings: UserSettings,
+    user_settings: UserSettings,  # FIXME: Drop this
     worker_init: str | None = None,
-    slurm_user: str | None = None,  # FIXME: drop
-    user_cache_dir: str | None = None,  # FIXME: drop?
-    fractal_ssh: FractalSSH | None = None,
+    user_cache_dir: str | None = None,  # FIXME: review this
     resource: Resource,
     profile: Profile,
+    fractal_ssh: FractalSSH | None = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
 
     This function wraps the process_workflow one, which is different for each
     backend (e.g. local or slurm backend).
-
-    FIXME (zzz): docstring
 
     Args:
         workflow_id:
@@ -99,11 +96,13 @@ def submit_workflow(
             each task.
         user_cache_dir:
             Cache directory (namely a path where the user can write); for the
-            slurm backend, this is used as a base directory for
-            `job.working_dir_user`.
-        slurm_user:
-            The username to impersonate for the workflow execution, for the
-            slurm backend.
+            slurm backend, this is used as a base directory for FIXME.
+        resource:
+            Computational resource to be used for this job (e.g. a SLURM
+            cluster).
+        profile:
+           Computational profile to be used for this job.
+        fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
     """
     # Declare runner backend and set `process_workflow` function
     logger_name = f"WF{workflow_id}_job{job_id}"
@@ -235,7 +234,6 @@ def submit_workflow(
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {resource.type}")
         if resource.type == "slurm_sudo":
-            logger.debug(f"slurm_user: {slurm_user}")
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         elif resource.type == "slurm_ssh":
@@ -258,7 +256,6 @@ def submit_workflow(
         elif resource.type == "slurm_sudo":
             process_workflow = slurm_sudo_process_workflow
             backend_specific_kwargs = dict(
-                slurm_user=slurm_user,
                 slurm_account=job.slurm_account,
                 user_cache_dir=user_cache_dir,
             )
