@@ -14,24 +14,25 @@ def get_local_backend_config(
     tot_tasks: int = 1,
 ) -> JobRunnerConfigLocal:
     """
-    Prepare a specific `LocalBackendConfig` configuration object
+    Prepare a specific `LocalBackendConfig` configuration.
 
-    The sources for `parallel_tasks_per_job` attributes, starting from the
-    highest-priority one, are
+    The base configuration is the runner-level `shared_config` object, based
+    on `resource.job_runner_config`. We then incorporate attributes from
+    `wftask.meta_{non_parallel,parallel}` - with higher priority.
 
-    1. Properties in `wftask.meta_parallel` or `wftask.meta_non_parallel`
-       (depending on `which_type`);
-    2. The runner-level `shared_config` object.
-
-    # FIXME (zzz): docstring & arguments
-
-    Arguments:
+    Args:
+        shared_config:
+            Configuration object based on `resource.job_runner_config`.
         wftask:
             WorkflowTaskV2 for which the backend configuration should
             be prepared.
+        which_type:
+            Whether we should look at the non-parallel or parallel part
+            of `wftask`.
+        tot_tasks: Not used here, only present as a common interface.
 
     Returns:
-        A local-backend configuration object
+        A ready-to-use local-backend configuration object.
     """
 
     if which_type == "non_parallel":

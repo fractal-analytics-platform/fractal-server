@@ -15,7 +15,7 @@ def create_cellvoyager_ome_zarr(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         image_dir: Image where the raw images are

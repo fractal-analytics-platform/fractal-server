@@ -16,7 +16,7 @@ def find_image_by_zarr_url(
     """
     Return a copy of the image with a given zarr_url, and its positional index.
 
-    Arguments:
+    Args:
         images: List of images.
         zarr_url: Path that the returned image must have.
 
@@ -40,7 +40,7 @@ def match_filter(
     """
     Find whether an image matches a filter set.
 
-    Arguments:
+    Args:
         image: A single image.
         type_filters:
         attribute_filters:
@@ -70,7 +70,7 @@ def filter_image_list(
     """
     Compute a sublist with images that match a filter set.
 
-    Arguments:
+    Args:
         images: A list of images.
         type_filters:
         attribute_filters:

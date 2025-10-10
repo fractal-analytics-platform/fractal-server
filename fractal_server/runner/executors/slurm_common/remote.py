@@ -23,7 +23,7 @@ def worker(
     """
     Execute a job, possibly on a remote node.
 
-    Arguments:
+    Args:
         in_fname: Absolute path to the input file (must be readable).
         out_fname: Absolute path of the output file (must be writeable).
     """

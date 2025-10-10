@@ -33,7 +33,7 @@ def deactivate_ssh_pixi(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         ssh_config:

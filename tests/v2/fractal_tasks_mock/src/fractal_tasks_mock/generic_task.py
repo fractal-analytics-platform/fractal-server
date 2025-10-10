@@ -17,7 +17,7 @@ def generic_task(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_urls: description
         zarr_dir: description
         sleep_time: Time to sleep, in seconds

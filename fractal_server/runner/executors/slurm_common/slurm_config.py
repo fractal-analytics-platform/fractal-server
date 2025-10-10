@@ -120,7 +120,7 @@ class SlurmConfig(BaseModel):
         2. Lines starting with `self.prefix`;
         3. Other lines.
 
-        Arguments:
+        Args:
             script_lines:
         """
 
@@ -142,7 +142,7 @@ class SlurmConfig(BaseModel):
         Compile `SlurmConfig` object into the preamble of a SLURM submission
         script.
 
-        Arguments:
+        Args:
             remote_export_dir:
                 Base directory for exports defined in
                 `self.user_local_exports`.

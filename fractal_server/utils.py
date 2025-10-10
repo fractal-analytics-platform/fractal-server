@@ -41,7 +41,7 @@ def execute_command_sync(
     If the command returns a return code different from zero, a `RuntimeError`
     is raised.
 
-    Arguments:
+    Args:
         command: Command to be executed.
         logger_name: Name of the logger.
         allow_char: Argument propagated to `validate_cmd`.
