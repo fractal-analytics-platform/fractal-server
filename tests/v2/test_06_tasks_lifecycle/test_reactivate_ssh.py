@@ -11,6 +11,18 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 
 
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    import logging
+
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    if fractal_ssh.remote_exists(remote_folder):
+        fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
+
+
 @pytest.mark.container
 async def test_reactivate_ssh_venv_exists(
     tmp777_path,
@@ -64,6 +76,11 @@ async def test_reactivate_ssh_venv_exists(
     debug(task_group_activity_v2)
     assert task_group_activity_v2.status == "failed"
     assert "already exists" in task_group_activity_v2.log
+
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
 
 
 @pytest.mark.parametrize("make_rmtree_fail", [False, True])
@@ -162,3 +179,8 @@ async def test_reactivate_ssh_fail(
         assert fractal_ssh.remote_exists(task_group.venv_path)
     else:
         assert not fractal_ssh.remote_exists(task_group.venv_path)
+
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
