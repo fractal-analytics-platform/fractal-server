@@ -134,7 +134,6 @@ def slurm_ssh_resource_profile_objects(
         host=slurmlogin_ip,
         job_local_folder=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
-        job_remote_folder=(tmp777_path / "remote-jobs").as_posix(),
         job_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
@@ -189,7 +188,6 @@ def slurm_ssh_resource_profile_fake_objects(
         host="localhost",
         job_local_folder=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
-        job_remote_folder=(tmp777_path / "remote-jobs").as_posix(),
         job_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),

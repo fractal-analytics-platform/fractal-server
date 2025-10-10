@@ -34,11 +34,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column(
-            "job_remote_folder",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=True,
-        ),
-        sa.Column(
             "job_runner_config",
             postgresql.JSONB(astext_type=sa.Text()),
             server_default="{}",
