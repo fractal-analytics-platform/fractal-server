@@ -233,14 +233,13 @@ def submit_workflow(
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {resource.type}")
-        if resource.type == "slurm_sudo":
+        logger.debug(f"Computational resource: {resource.name}")
+        if resource.type in ["slurm_sudo", "slurm_ssh"]:
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
-        elif resource.type == "slurm_ssh":
-            logger.debug(f"ssh_user: {user_settings.ssh_username}")
-            logger.debug(f"base dir: {profile.tasks_remote_dir}/{user_id}")
-            logger.debug(f"slurm_account: {job.slurm_account}")
-            logger.debug(f"worker_init: {worker_init}")
+        if resource.type == "slurm_ssh":
+            logger.debug(f"ssh_user: {profile.username}")
+            logger.debug(f"Remote jobs dir: {profile.jobs_remote_dir}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
