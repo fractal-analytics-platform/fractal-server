@@ -141,7 +141,7 @@
 | fractal\_server/runner/v2/submit\_workflow.py                                |      158 |       10 |       30 |        4 |     93% |114-119, 127->129, 129->133, 186-202, 267 |
 | fractal\_server/runner/v2/task\_interface.py                                 |       40 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/ssh/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/ssh/\_fabric.py                                              |      306 |        2 |       40 |        2 |     99% |194->196, 288-289, 331->exit |
+| fractal\_server/ssh/\_fabric.py                                              |      324 |        2 |       40 |        2 |     99% |212->214, 312-313, 358->360 |
 | fractal\_server/string\_tools.py                                             |       27 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                   |       28 |        2 |        2 |        0 |     93% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                        |        0 |        0 |        0 |        0 |    100% |           |
@@ -180,7 +180,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9650** |  **262** | **1776** |  **103** | **96%** |           |
+|                                                                    **TOTAL** | **9668** |  **262** | **1776** |  **103** | **96%** |           |
 
 
 ## Setup coverage badge
