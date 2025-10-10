@@ -8,9 +8,8 @@ from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ....utils import get_timestamp
-from ...schemas.v2 import JobStatusTypeV2
-from fractal_server.types import AttributeFilters
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.utils import get_timestamp
 
 
 class JobV2(SQLModel, table=True):
@@ -57,7 +56,7 @@ class JobV2(SQLModel, table=True):
     log: str | None = None
     executor_error_log: str | None = None
 
-    attribute_filters: AttributeFilters = Field(
+    attribute_filters: dict[str, list[int | float | str | bool]] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     type_filters: dict[str, bool] = Field(
