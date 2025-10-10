@@ -28,7 +28,8 @@ jobs:
 
       - name: extract openapi schema
         env:
-          JWT_SECRET_KEY: 1234
+          JWT_SECRET_KEY: fake
+          POSTGRES_DB: fake
           OAUTH_OAUTH2EXAMPLE_CLIENT_ID: oidc_example_client_id
           OAUTH_OAUTH2EXAMPLE_CLIENT_SECRET: oicd_example_client_secret
           OAUTH_OAUTH2EXAMPLE_OIDC_CONFIGURATION_ENDPOINT: https://accounts.google.com/.well-known/openid-configuration
