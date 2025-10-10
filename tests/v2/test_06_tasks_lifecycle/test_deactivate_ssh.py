@@ -52,7 +52,6 @@ async def test_deactivate_fail_no_venv_path(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
@@ -123,7 +122,6 @@ async def test_deactivate_ssh_fail(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
@@ -176,7 +174,6 @@ async def test_deactivate_wheel_no_archive_path(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
@@ -247,7 +244,6 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     collect_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         wheel_file=FractalUploadedFile(
             contents=wheel_buffer,
             filename=Path(archive_path).name,
@@ -290,7 +286,6 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_deactivate.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
@@ -351,7 +346,6 @@ async def test_deactivate_ssh_github_dependency(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
