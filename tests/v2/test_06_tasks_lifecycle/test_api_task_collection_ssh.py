@@ -302,8 +302,6 @@ async def test_task_collection_ssh_failure_no_connection(
         ssh_host="fake",
         ssh_username="fake",
         ssh_private_key_path="fake",
-        ssh_tasks_dir="/fake",
-        ssh_jobs_dir="/fake",
     )
 
     async with MockCurrentUser(
