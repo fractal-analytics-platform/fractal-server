@@ -54,7 +54,6 @@ async def test_reactivate_ssh_venv_exists(
     reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        tasks_base_dir=tmp777_path.as_posix(),
         resource=resource,
         profile=profile,
     )
@@ -139,7 +138,6 @@ async def test_reactivate_ssh_fail(
         reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=tmp777_path.as_posix(),
             resource=resource,
             profile=profile,
         )
