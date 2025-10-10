@@ -14,50 +14,62 @@ class Resource(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     type: str
-    # FIXME: db check: resource.type must be one of (slurm_sudo, slurm_ssh, local)
-    # FIXME: runtime check: resource.type must be identical to settings.FRACTAL_RUNNER_BACKEND
-    # FIXME: runtime check: resource.type must have a single value for all rows (obsolete, due to previous check)
     """
-    FRACTAL_RUNNER_BACKEND
+    One of `local`, `slurm_sudo` or `slurm_ssh` - matching with
+    `settings.FRACTAL_RUNNER_BACKEND`.
     """
+
     name: str
-    # FIXME: add unique index
+    """
+    Resource name.
+    """
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    host: str | None = None
+    """
+    Creation timestamp.
+    """
 
-    # runner_settings
+    host: str | None = None
+    """
+    Address for ssh connections, when `type="slurm_ssh"`.
+    """
 
     job_local_folder: str
     """
-    # FRACTAL_RUNNER_WORKING_BASE_DIR_zzz
-    # """
+    Base local folder for job subfolders (containing artifacts and logs).
+    """
 
     job_remote_folder: str | None = None
+    """
+    Base remote folder for job subfolders (containing artifacts and logs).
+    FIXME: remove this and move it into profile.
+    """
+
     job_runner_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
-    FRACTAL_LOCAL_CONFIG_FILE_zzz and FRACTAL_SLURM_CONFIG_FILE_zzz content
+    FIXME: point to appropriate schemas
     """
+
     job_slurm_python_worker: str | None = None
     """
-    FRACTAL_SLURM_WORKER_PYTHON_zzz
-    check not (type is local and job_slurm_python_worker is None)
+    On SLURM deloyments, this is the Python interpreter that runs the
+    `fractal-server` worker from within the SLURM jobs.
     """
 
     job_poll_interval: int = 5
     """
-    FRACTAL_SLURM_POLL_INTERVAL_zzz
+    On SLURM deployments, the interval to wait before new `squeue` calls.
     """
 
     # task_settings
     tasks_local_folder: str
     """
-    FRACTAL_TASKS_DIR_zzz
+    Base local folder for task-package subfolders.
     """
 
     tasks_python_config: dict[str, Any] = Field(
@@ -78,10 +90,13 @@ class Resource(SQLModel, table=True):
     tasks_pixi_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
+    """
+    FIXME: describe
+    """
 
     tasks_pip_cache_dir: str | None = None
     """
-    FRACTAL_PIP_CACHE_DIR_zzz + PIP_CACHE_DIR_ARG
+    FIXME: describe
     """
 
     @property

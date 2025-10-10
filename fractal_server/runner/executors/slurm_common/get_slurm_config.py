@@ -136,7 +136,7 @@ def _get_slurm_config_internal(
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
         logger.debug(
-            f"[get_slurm_config] Removing repeated elements from {extra_lines=}."
+            f"[get_slurm_config] Removing repeated elements in {extra_lines=}."
         )
         extra_lines = list(set(extra_lines))
     slurm_dict["extra_lines"] = extra_lines
@@ -155,7 +155,7 @@ def _get_slurm_config_internal(
 
     # Put everything together
     logger.debug(
-        f"[get_slurm_config] Now create a SlurmConfig object based on {slurm_dict=}"
+        f"[get_slurm_config] Create SlurmConfig object based on {slurm_dict=}"
     )
     slurm_config = SlurmConfig(**slurm_dict)
 
