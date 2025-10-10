@@ -100,7 +100,9 @@ async def test_reactivate_ssh_fail(
     resource, profile = slurm_ssh_resource_profile_db
 
     # Prepare task group that will make `pip install` fail
-    path = Path(profile.task) / f"make-rmtree-fail-{make_rmtree_fail}"
+    path = (
+        Path(profile.tasks_remote_dir) / f"make-rmtree-fail-{make_rmtree_fail}"
+    )
     task_group = TaskGroupV2(
         pkg_name="invalid-package-name",
         version="11.11.11",
