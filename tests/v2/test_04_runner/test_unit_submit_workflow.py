@@ -77,7 +77,7 @@ async def test_mkdir_error(
 
     # Edit resource&profile so that we don't need to spin up containers to
     # reach the error branch
-    res.job_slurm_python_worker = sys.executable
+    res.jobs_slurm_python_worker = sys.executable
     prof.username = None
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:

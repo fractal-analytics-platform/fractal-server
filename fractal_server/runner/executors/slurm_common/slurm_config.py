@@ -19,7 +19,7 @@ class SlurmConfig(BaseModel):
     **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`,
     and they are not meant to be initialized by the user; the same holds for
     `SlurmConfig` attributes (e.g. `mem_per_task_MB`), which are not meant to
-    be part of the superuser-defined `resource.job_runner_config` JSON field.
+    be part of the superuser-defined `resource.jobs_runner_config` JSON field.
 
     Part of the attributes map directly to some of the SLURM attributes (see
     https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes

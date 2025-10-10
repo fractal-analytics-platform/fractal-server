@@ -28,7 +28,6 @@ async def test_task_collection_ssh_from_pypi(
     client,
     MockCurrentUser,
     override_settings_factory,
-    tmp777_path: Path,
     fractal_ssh_list: FractalSSHList,
     current_py_version: str,
     slurm_ssh_resource_profile_db,
@@ -43,26 +42,17 @@ async def test_task_collection_ssh_from_pypi(
     assert not fractal_ssh_list.contains(**credentials)
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
-    # Define and create remote working directory
-    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
-
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
 
-    user_settings_dict = dict(
-        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
-        ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
-    )
-
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
             profile_id=profile.id,
         ),
-        user_settings_dict=user_settings_dict,
     ) as user:
         # SUCCESSFUL COLLECTION
         package_version = "0.1.3"
@@ -137,7 +127,7 @@ async def test_task_collection_ssh_from_pypi(
         # BACKGROUND FAILURE 1: existing folder
         package_version = "0.1.2"
         remote_folder = (
-            Path(REMOTE_TASKS_BASE_DIR)
+            Path(profile.tasks_remote_dir)
             / str(user.id)
             / "testing-tasks-mock"
             / f"{package_version}"
@@ -169,10 +159,10 @@ async def test_task_collection_ssh_from_pypi(
         # Cleanup: remove folder
         fractal_ssh.remove_folder(
             folder=remote_folder,
-            safe_root=REMOTE_TASKS_BASE_DIR,
+            safe_root=profile.tasks_remote_dir,
         )
 
-    _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+    _reset_permissions(profile.tasks_remote_dir, fractal_ssh)
 
 
 @pytest.mark.container
@@ -204,19 +194,11 @@ async def test_task_collection_ssh_failure(
     assert not fractal_ssh_list.contains(**credentials)
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
-    # Define and create remote working directory
-    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
-
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
-
-    user_settings_dict = dict(
-        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
-        ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
-    )
 
     # Prepare payload that leads to a failed collection
     local_archive_path = (
@@ -240,8 +222,7 @@ async def test_task_collection_ssh_failure(
         user_kwargs=dict(
             is_verified=True,
             profile_id=profile.id,
-        ),
-        user_settings_dict=user_settings_dict,
+        )
     ):
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.ssh._utils
@@ -280,7 +261,7 @@ async def test_task_collection_ssh_failure(
         assert "Removing folder failed" in task_group_activity["log"]
         assert ERROR_MSG_2 in task_group_activity["log"]
 
-    _reset_permissions(REMOTE_TASKS_BASE_DIR, fractal_ssh)
+    _reset_permissions(profile.tasks_remote_dir, fractal_ssh)
 
 
 async def test_task_collection_ssh_failure_no_connection(
@@ -302,8 +283,6 @@ async def test_task_collection_ssh_failure_no_connection(
         ssh_host="fake",
         ssh_username="fake",
         ssh_private_key_path="fake",
-        ssh_tasks_dir="/fake",
-        ssh_jobs_dir="/fake",
     )
 
     async with MockCurrentUser(

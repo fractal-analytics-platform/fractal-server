@@ -20,12 +20,12 @@ class _ValidResourceBase(BaseModel):
     # Tasks
     tasks_python_config: dict[NonEmptyStr, Any]
     tasks_pixi_config: dict[NonEmptyStr, Any]
-    tasks_local_folder: AbsolutePathStr
+    tasks_local_dir: AbsolutePathStr
     tasks_pip_cache_dir: AbsolutePathStr | None
 
     # Jobs
-    job_local_folder: AbsolutePathStr
-    job_runner_config: dict[NonEmptyStr, Any]
+    jobs_local_dir: AbsolutePathStr
+    jobs_runner_config: dict[NonEmptyStr, Any]
 
     @model_validator(mode="after")
     def _tasks_configurations(self) -> Self:
@@ -41,21 +41,20 @@ class _ValidResourceBase(BaseModel):
 
 
 class ValidResourceLocal(_ValidResourceBase):
-    job_runner_config: JobRunnerConfigLocal
+    jobs_runner_config: JobRunnerConfigLocal
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
     type: Literal["slurm_sudo"]
-    job_slurm_python_worker: AbsolutePathStr
-    job_runner_config: JobRunnerConfigSLURM
+    jobs_slurm_python_worker: AbsolutePathStr
+    jobs_runner_config: JobRunnerConfigSLURM
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
     type: Literal["slurm_ssh"]
     host: NonEmptyStr
-    job_slurm_python_worker: AbsolutePathStr
-    job_remote_folder: NonEmptyStr
-    job_runner_config: JobRunnerConfigSLURM
+    jobs_slurm_python_worker: AbsolutePathStr
+    jobs_runner_config: JobRunnerConfigSLURM
 
 
 class ResourceCreate(BaseModel):

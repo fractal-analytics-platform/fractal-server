@@ -8,3 +8,6 @@ class Profile(SQLModel, table=True):
 
     username: str | None = None
     ssh_key_path: str | None = None
+
+    jobs_remote_dir: str | None = None
+    tasks_remote_dir: str | None = None

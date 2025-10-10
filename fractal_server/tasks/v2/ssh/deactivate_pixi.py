@@ -23,7 +23,6 @@ def deactivate_ssh_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    tasks_base_dir: str,
     resource: Resource,
     profile: Profile,
 ) -> None:
@@ -34,12 +33,10 @@ def deactivate_ssh_pixi(
     handled.
 
     Args:
-        task_group_id:
         task_group_activity_id:
-        ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
+        task_group_id:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -108,7 +105,7 @@ def deactivate_ssh_pixi(
                     logger.info(f"Now removing {source_dir}.")
                     fractal_ssh.remove_folder(
                         folder=source_dir,
-                        safe_root=tasks_base_dir,
+                        safe_root=profile.tasks_remote_dir,
                     )
                     logger.info(f"All good, {source_dir} removed.")
                     activity.status = TaskGroupActivityStatusV2.OK

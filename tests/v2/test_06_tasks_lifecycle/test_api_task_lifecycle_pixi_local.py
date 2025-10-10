@@ -111,7 +111,7 @@ async def test_pixi_collection_path_already_exists(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ) as user:
         task_group_path = (
-            Path(Path(resource.tasks_local_folder).as_posix())
+            Path(Path(resource.tasks_local_dir).as_posix())
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"

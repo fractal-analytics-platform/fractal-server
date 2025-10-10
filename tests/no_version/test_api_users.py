@@ -408,6 +408,8 @@ async def test_oauth_accounts_list(
 
 
 async def test_get_and_patch_user_settings(registered_superuser_client):
+    # FIXME: Review this test after completing UserSettings updates.
+
     # Register new user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")
@@ -430,12 +432,6 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
 
     # Path user settings
     patch = dict(
-        ssh_host="127.0.0.1",
-        ssh_username="fractal",
-        ssh_private_key_path="/tmp/fractal",
-        ssh_tasks_dir="/tmp/tasks",
-        # missing "ssh_jobs_dir"
-        slurm_user="fractal",
         slurm_accounts=["foo", "bar"],
     )
     res = await registered_superuser_client.patch(

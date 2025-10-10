@@ -72,7 +72,6 @@ async def test_unit_invalid_ssh(
         function(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            tasks_base_dir="/invalid",
             resource=resource,
             profile=profile,
             **custom_args,

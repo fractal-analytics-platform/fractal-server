@@ -17,12 +17,12 @@ def get_local_backend_config(
     Prepare a specific `LocalBackendConfig` configuration.
 
     The base configuration is the runner-level `shared_config` object, based
-    on `resource.job_runner_config`. We then incorporate attributes from
+    on `resource.jobs_runner_config`. We then incorporate attributes from
     `wftask.meta_{non_parallel,parallel}` - with higher priority.
 
     Args:
         shared_config:
-            Configuration object based on `resource.job_runner_config`.
+            Configuration object based on `resource.jobs_runner_config`.
         wftask:
             WorkflowTaskV2 for which the backend configuration should
             be prepared.

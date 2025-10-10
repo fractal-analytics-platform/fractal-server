@@ -129,9 +129,8 @@ async def apply_workflow(
         db=db,
     )
     # Validate user settings
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     user_settings = await validate_user_settings(
-        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
+        user=user, backend=resource.type, db=db
     )
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
@@ -163,7 +162,7 @@ async def apply_workflow(
             job_create.slurm_account = user_settings.slurm_accounts[0]
 
     # User appropriate FractalSSH object
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == "slurm_ssh":
         ssh_config = dict(
             user=profile.username,
             host=resource.host,
@@ -220,25 +219,25 @@ async def apply_workflow(
 
     # Define server-side job directory
     timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR_LOCAL = Path(resource.job_local_folder) / (
+    WORKFLOW_DIR_LOCAL = Path(resource.jobs_local_dir) / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )
 
     # Define user-side job directory
-    if FRACTAL_RUNNER_BACKEND == "local":
+    if resource.type == "local":
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         cache_dir = None
-    elif FRACTAL_RUNNER_BACKEND == "slurm_sudo":
+    elif resource.type == "slurm_sudo":
         cache_dir = (
             Path(user_settings.project_dir) / ".fractal_cache"
             if user_settings.project_dir is not None
             else None
         )
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
-    elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    elif resource.type == "slurm_ssh":
         WORKFLOW_DIR_REMOTE = (
-            Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
+            Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
         )
         cache_dir = None
 

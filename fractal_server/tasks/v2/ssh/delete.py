@@ -25,7 +25,6 @@ def delete_ssh(
     task_group_id: int,
     resource: Resource,
     profile: Profile,
-    tasks_base_dir: str,
 ) -> None:
     """
     Delete a task group.
@@ -37,9 +36,6 @@ def delete_ssh(
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -93,11 +89,11 @@ def delete_ssh(
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                         logger.debug(
                             f"Removing remote {task_group.path=} "
-                            f"(with {tasks_base_dir=})."
+                            f"(with {profile.tasks_remote_dir=})."
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.debug(f"Remote {task_group.path=} removed.")
 

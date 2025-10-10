@@ -35,7 +35,6 @@ def collect_ssh_pixi(
     task_group_id: int,
     task_group_activity_id: int,
     tar_gz_file: FractalUploadedFile,
-    tasks_base_dir: str,
     resource: Resource,
     profile: Profile,
 ) -> None:
@@ -54,9 +53,6 @@ def collect_ssh_pixi(
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
         tar_gz_file:
     """
 
@@ -260,7 +256,7 @@ def collect_ssh_pixi(
                         db=db,
                         activity=activity,
                         log_file_path=log_file_path,
-                        poll_interval=resource.job_poll_interval,
+                        poll_interval=resource.jobs_poll_interval,
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
@@ -346,7 +342,7 @@ def collect_ssh_pixi(
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(
                             f"Deleted remoted folder {task_group.path}"

@@ -299,7 +299,7 @@ async def test_multisubmit_in_chunks(
     local_resource_profile_objects: tuple[Resource, Profile],
 ):
     res, prof = local_resource_profile_objects[:]
-    res.job_runner_config["parallel_tasks_per_job"] = parallel_tasks_per_job
+    res.jobs_runner_config["parallel_tasks_per_job"] = parallel_tasks_per_job
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -319,7 +319,7 @@ async def test_multisubmit_in_chunks(
                 for ind in range(len(ZARR_URLS))
             ],
             task_type="parallel",
-            config=JobRunnerConfigLocal(**res.job_runner_config),
+            config=JobRunnerConfigLocal(**res.jobs_runner_config),
             history_unit_ids=history_unit_ids,
             user_id=None,
         )

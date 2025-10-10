@@ -41,7 +41,7 @@ async def test_folder_already_exists(
     ) as user:
         # Create the folder in advance
         expected_path = (
-            Path(resource.tasks_local_folder)
+            Path(resource.tasks_local_dir)
             / f"{user.id}/fractal-tasks-mock/0.0.1"
         )
         expected_path.mkdir(parents=True, exist_ok=True)

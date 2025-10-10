@@ -93,19 +93,11 @@ async def test_task_group_lifecycle_pixi_ssh(
 
     assert not fractal_ssh_list.contains(**credentials)
 
-    # Define and create remote working directory
-    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
-
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
-
-    user_settings_dict = dict(
-        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
-        ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
-    )
 
     with pixi_pkg_targz.open("rb") as f:
         files = {
@@ -121,11 +113,10 @@ async def test_task_group_lifecycle_pixi_ssh(
             is_verified=True,
             profile_id=profile.id,
         ),
-        user_settings_dict=user_settings_dict,
     ) as user:
         # 1 / Failed collection - remote folder already exists
         task_group_path = (
-            Path(REMOTE_TASKS_BASE_DIR)
+            Path(profile.tasks_remote_dir)
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"
@@ -149,7 +140,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert "already exists" in activity["log"]
         fractal_ssh.remove_folder(
             folder=task_group_path,
-            safe_root=REMOTE_TASKS_BASE_DIR,
+            safe_root=profile.tasks_remote_dir,
         )
 
         # 2 / Successful collection

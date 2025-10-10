@@ -39,7 +39,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
         different SLURM jobs/tasks.
         """
         self.fractal_ssh = fractal_ssh
-        self.shared_config = JobRunnerConfigSLURM(**resource.job_runner_config)
+        self.shared_config = JobRunnerConfigSLURM(
+            **resource.jobs_runner_config
+        )
         logger.warning(self.fractal_ssh)
 
         # Check SSH connection and try to recover from a closed-socket error
@@ -50,8 +52,8 @@ class SlurmSSHRunner(BaseSlurmRunner):
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
-            poll_interval=resource.job_poll_interval,
-            python_worker_interpreter=resource.job_slurm_python_worker,
+            poll_interval=resource.jobs_poll_interval,
+            python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,
         )
 

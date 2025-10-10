@@ -128,8 +128,6 @@ def test_user_settings_update():
         "ssh_host",
         "ssh_username",
         "ssh_private_key_path",
-        "ssh_tasks_dir",
-        "ssh_jobs_dir",
         "slurm_user",
     ]
     for key in nullable_attributes:
