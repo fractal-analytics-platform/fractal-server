@@ -115,12 +115,10 @@ async def test_submit_job_ssh_connection_failure(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
-    override_settings_factory,
     tmp777_path,
     slurm_ssh_resource_profile_fake_db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
-    resource, prof = slurm_ssh_resource_profile_fake_db[:]
+    resource, prof = slurm_ssh_resource_profile_fake_db
 
     async with MockCurrentUser(
         user_kwargs=dict(
@@ -133,6 +131,7 @@ async def test_submit_job_ssh_connection_failure(
             ssh_private_key_path=prof.ssh_key_path,
             ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
             ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+            project_dir=(tmp777_path / "project").as_posix(),
         ),
     ) as user:
         project = await project_factory_v2(user)
