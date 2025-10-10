@@ -62,8 +62,8 @@ def local_resource_profile_objects(
     res = Resource(
         name="local resource 1",
         type="local",
-        job_local_folder=(tmp777_path / "jobs").as_posix(),
-        tasks_local_folder=(tmp777_path / "tasks").as_posix(),
+        jobs_local_dir=(tmp777_path / "jobs").as_posix(),
+        tasks_local_dir=(tmp777_path / "tasks").as_posix(),
         job_runner_config={"parallel_tasks_per_job": 1},
         tasks_python_config={
             "default_version": current_py_version,
@@ -92,8 +92,8 @@ def slurm_sudo_resource_profile_objects(
     res = Resource(
         name="SLURM cluster A",
         type="slurm_sudo",
-        job_local_folder=(tmp777_path / "local-jobs").as_posix(),
-        tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
+        jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
+        tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         job_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
@@ -132,8 +132,8 @@ def slurm_ssh_resource_profile_objects(
         name="SLURM cluster A",
         type="slurm_ssh",
         host=slurmlogin_ip,
-        job_local_folder=(tmp777_path / "local-jobs").as_posix(),
-        tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
+        jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
+        tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         job_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
@@ -188,8 +188,8 @@ def slurm_ssh_resource_profile_fake_objects(
         name="SLURM cluster A",
         type="slurm_ssh",
         host="localhost",
-        job_local_folder=(tmp777_path / "local-jobs").as_posix(),
-        tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
+        jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
+        tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         job_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),

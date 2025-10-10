@@ -37,7 +37,7 @@ class Resource(SQLModel, table=True):
     Address for ssh connections, when `type="slurm_ssh"`.
     """
 
-    job_local_folder: str
+    jobs_local_dir: str
     """
     Base local folder for job subfolders (containing artifacts and logs).
     """
@@ -61,7 +61,7 @@ class Resource(SQLModel, table=True):
     """
 
     # task_settings
-    tasks_local_folder: str
+    tasks_local_dir: str
     """
     Base local folder for task-package subfolders.
     """

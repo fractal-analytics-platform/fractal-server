@@ -20,11 +20,11 @@ class _ValidResourceBase(BaseModel):
     # Tasks
     tasks_python_config: dict[NonEmptyStr, Any]
     tasks_pixi_config: dict[NonEmptyStr, Any]
-    tasks_local_folder: AbsolutePathStr
+    tasks_local_dir: AbsolutePathStr
     tasks_pip_cache_dir: AbsolutePathStr | None
 
     # Jobs
-    job_local_folder: AbsolutePathStr
+    jobs_local_dir: AbsolutePathStr
     job_runner_config: dict[NonEmptyStr, Any]
 
     @model_validator(mode="after")

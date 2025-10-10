@@ -264,7 +264,7 @@ async def collect_tasks_pip(
     if resource.type == "slurm_ssh":
         base_tasks_path = profile.tasks_remote_dir
     else:
-        base_tasks_path = resource.tasks_local_folder
+        base_tasks_path = resource.tasks_local_dir
     task_group_path = (
         Path(base_tasks_path)
         / str(user.id)

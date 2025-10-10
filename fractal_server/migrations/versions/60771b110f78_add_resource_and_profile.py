@@ -29,7 +29,7 @@ def upgrade() -> None:
         ),
         sa.Column("host", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column(
-            "job_local_folder",
+            "jobs_local_dir",
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=False,
         ),
@@ -46,7 +46,7 @@ def upgrade() -> None:
         ),
         sa.Column("job_poll_interval", sa.Integer(), nullable=False),
         sa.Column(
-            "tasks_local_folder",
+            "tasks_local_dir",
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=False,
         ),

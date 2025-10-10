@@ -219,7 +219,7 @@ async def apply_workflow(
 
     # Define server-side job directory
     timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR_LOCAL = Path(resource.job_local_folder) / (
+    WORKFLOW_DIR_LOCAL = Path(resource.jobs_local_dir) / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )

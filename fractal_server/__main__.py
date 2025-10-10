@@ -162,8 +162,8 @@ def init_db_data(
             resource_data = {
                 "name": "Local resource",
                 "type": "local",
-                "job_local_folder": "data-jobs",
-                "tasks_local_folder": "data-tasks",
+                "jobs_local_dir": "data-jobs",
+                "tasks_local_dir": "data-tasks",
             }
         resource = Resource(**resource_data)
         db.add(resource)
