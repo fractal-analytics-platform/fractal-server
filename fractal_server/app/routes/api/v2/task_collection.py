@@ -25,7 +25,6 @@ from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
 from ...aux.validate_user_profile import validate_user_profile
-from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -261,14 +260,9 @@ async def collect_tasks_pip(
     # Set user_group_id
     task_group_attrs["user_group_id"] = user_group_id
 
-    # Validate user settings (backend-specific)
-    user_settings = await validate_user_settings(
-        user=user, backend=resource.type, db=db
-    )
-
     # Set path and venv_path
     if resource.type == "slurm_ssh":
-        base_tasks_path = user_settings.ssh_tasks_dir  # FIXME move to profile
+        base_tasks_path = f"{profile.remote_tasks_dir}/{user.id}"
     else:
         base_tasks_path = resource.tasks_local_folder
     task_group_path = (
@@ -344,10 +338,9 @@ async def collect_tasks_pip(
 
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh
-        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)  # FIXME
-        # FIXME: we likely have to move ssh_tasks_dir to profile, and then
-        # the two branches have an identical call signature and we can merge
-        # them into one
+        extra_args = dict(
+            tasks_base_dir=f"{profile.remote_tasks_dir}/{user.id}"
+        )
     else:
         collect_function = collect_local
         extra_args = {}

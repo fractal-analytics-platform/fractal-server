@@ -8,13 +8,11 @@ class SlurmSshUserSettings(BaseModel):
     execution when using the Slurm-SSH runner.
 
     Attributes:
-        ssh_tasks_dir: Task-venvs base folder on `ssh_host`.
         ssh_jobs_dir: Jobs base folder on `ssh_host`.
         slurm_accounts:
             List of SLURM accounts, to be used upon Fractal job submission.
     """
 
-    ssh_tasks_dir: str
     ssh_jobs_dir: str
     slurm_accounts: list[str]
 

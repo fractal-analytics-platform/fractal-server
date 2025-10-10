@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
-from ...aux.validate_user_settings import validate_user_settings
 from ._aux_functions_task_lifecycle import check_no_ongoing_activity
 from ._aux_functions_task_lifecycle import check_no_related_workflowtask
 from ._aux_functions_task_lifecycle import check_no_submitted_job
@@ -121,10 +120,6 @@ async def deactivate_task_group(
 
     # Submit background task
     if resource.type == "slurm_ssh":
-        # Validate user settings (backend-specific)
-        user_settings = await validate_user_settings(
-            user=user, backend=resource.type, db=db
-        )
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             deactivate_function = deactivate_ssh_pixi
         else:
@@ -133,7 +128,7 @@ async def deactivate_task_group(
             deactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
+            tasks_base_dir=f"{profile.remote_tasks_dir}/{user.id}",
             resource=resource,
             profile=profile,
         )
@@ -244,11 +239,6 @@ async def reactivate_task_group(
 
     # Submit background task
     if resource.type == "slurm_ssh":
-        # Validate user settings (backend-specific)
-        user_settings = await validate_user_settings(
-            user=user, backend=resource.type, db=db
-        )
-
         # Use appropriate SSH credentials
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
@@ -258,7 +248,7 @@ async def reactivate_task_group(
             reactivate_function,
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
+            tasks_base_dir=f"{profile.remote_tasks_dir}/{user.id}",
             resource=resource,
             profile=profile,
         )
@@ -322,11 +312,9 @@ async def delete_task_group(
 
     if resource.type == "slurm_ssh":
         delete_function = delete_ssh
-        # Validate user settings (backend-specific)
-        user_settings = await validate_user_settings(
-            user=user, backend=resource.type, db=db
+        extra_args = dict(
+            tasks_base_dir=f"{profile.remote_tasks_dir}/{user.id}"
         )
-        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)
     else:
         delete_function = delete_local
         extra_args = {}

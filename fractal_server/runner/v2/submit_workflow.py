@@ -240,7 +240,7 @@ def submit_workflow(
             logger.debug(f"worker_init: {worker_init}")
         elif resource.type == "slurm_ssh":
             logger.debug(f"ssh_user: {user_settings.ssh_username}")
-            logger.debug(f"base dir: {user_settings.ssh_tasks_dir}")
+            logger.debug(f"base dir: {profile.remote_tasks_dir}/{user_id}")
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")

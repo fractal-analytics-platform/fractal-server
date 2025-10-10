@@ -55,8 +55,7 @@ def collect_ssh_pixi(
         task_group_activity_id:
         ssh_config:
         tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
+            Only used as a `safe_root` in `remove_dir`.
         tar_gz_file:
     """
 

@@ -31,9 +31,6 @@ from fractal_server.app.routes.auth import current_active_verified_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.routes.aux.validate_user_settings import (
-    validate_user_settings,
-)
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -126,12 +123,8 @@ async def collect_task_pixi(
         db=db,
     )
 
-    user_settings = await validate_user_settings(
-        user=user, backend=resource.type, db=db
-    )
-
     if resource.type == "slurm_ssh":
-        base_tasks_path = user_settings.ssh_tasks_dir
+        base_tasks_path = f"{profile.remote_tasks_dir}/{user.id}"
     else:
         base_tasks_path = resource.tasks_local_folder
     task_group_path = (
@@ -192,7 +185,9 @@ async def collect_task_pixi(
 
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh_pixi
-        extra_args = dict(tasks_base_dir=user_settings.ssh_tasks_dir)
+        extra_args = dict(
+            tasks_base_dir=f"{profile.remote_tasks_dir}/{user.id}"
+        )
     else:
         collect_function = collect_local_pixi
         extra_args = {}
