@@ -94,7 +94,9 @@ def slurm_sudo_resource_profile_objects(
         type="slurm_sudo",
         job_local_folder=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
-        job_slurm_python_worker=f"/.venv{current_py_version}/bin/python{current_py_version}",
+        job_slurm_python_worker=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        ),
         job_runner_config=SLURM_CONFIG,
         tasks_python_config={
             "default_version": current_py_version,
@@ -133,7 +135,9 @@ def slurm_ssh_resource_profile_objects(
         job_local_folder=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
         job_remote_folder=(tmp777_path / "remote-jobs").as_posix(),
-        job_slurm_python_worker=f"/.venv{current_py_version}/bin/python{current_py_version}",
+        job_slurm_python_worker=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        ),
         job_runner_config={
             "default_slurm_config": {
                 "partition": "main",
@@ -186,7 +190,9 @@ def slurm_ssh_resource_profile_fake_objects(
         job_local_folder=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_folder=(tmp777_path / "local-tasks").as_posix(),
         job_remote_folder=(tmp777_path / "remote-jobs").as_posix(),
-        job_slurm_python_worker=f"/.venv{current_py_version}/bin/python{current_py_version}",
+        job_slurm_python_worker=(
+            f"/.venv{current_py_version}/bin/python{current_py_version}"
+        ),
         job_runner_config=SLURM_CONFIG,
         tasks_python_config={
             "default_version": current_py_version,

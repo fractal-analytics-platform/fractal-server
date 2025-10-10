@@ -373,7 +373,7 @@ async def test_multisubmit_parallel_fail(
             ],
             task_type="parallel",
             history_unit_ids=history_unit_ids,
-            config=get_default_local_backend_config(),  # FIXME drop this aux function?
+            config=get_default_local_backend_config(),
             user_id=None,
         )
     debug(results)
