@@ -124,7 +124,7 @@ async def collect_task_pixi(
     )
 
     if resource.type == "slurm_ssh":
-        base_tasks_path = f"{profile.tasks_remote_dir}/{user.id}"
+        base_tasks_path = Path(profile.tasks_remote_dir) / {user.id}
     else:
         base_tasks_path = resource.tasks_local_folder
     task_group_path = (
@@ -186,7 +186,7 @@ async def collect_task_pixi(
     if resource.type == "slurm_ssh":
         collect_function = collect_ssh_pixi
         extra_args = dict(
-            tasks_base_dir=f"{profile.tasks_remote_dir}/{user.id}"
+            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id}
         )
     else:
         collect_function = collect_local_pixi

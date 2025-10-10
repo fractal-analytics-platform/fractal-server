@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
@@ -124,7 +126,7 @@ async def deactivate_task_group(
             task_group_activity_id=task_group_activity.id,
             resource=resource,
             profile=profile,
-            tasks_base_dir=f"{profile.tasks_remote_dir}/{user.id}",
+            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id},
         )
     else:
         background_tasks.add_task(
@@ -229,7 +231,7 @@ async def reactivate_task_group(
     if resource.type == "slurm_ssh":
         reactivate_function = reactivate_ssh
         extra_args = dict(
-            tasks_base_dir=f"{profile.tasks_remote_dir}/{user.id}"
+            tasks_base_dir=Path(profile.tasks_remote_dir) / {user.id}
         )
     else:
         reactivate_function = reactivate_local
@@ -286,7 +288,7 @@ async def delete_task_group(
     if resource.type == "slurm_ssh":
         delete_function = delete_ssh
         extra_args = dict(
-            tasks_base_dir=f"{profile.tasks_remote_dir}/{task_owner.id}"
+            tasks_base_dir=Path(profile.tasks_remote_dir) / {task_owner.id}
         )
     else:
         delete_function = delete_local
