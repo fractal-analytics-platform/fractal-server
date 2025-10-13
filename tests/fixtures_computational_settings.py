@@ -50,6 +50,7 @@ def _add_resource_profile_to_db(
     db_sync.commit()
     db_sync.refresh(prof)
     db_sync.expunge(prof)
+
     return res, prof
 
 
@@ -139,22 +140,7 @@ def slurm_ssh_resource_profile_objects(
         jobs_slurm_python_worker=(
             f"/.venv{current_py_version}/bin/python{current_py_version}"
         ),
-        jobs_runner_config={
-            "default_slurm_config": {
-                "partition": "main",
-                "cpus_per_task": 1,
-                "mem": "100M",
-            },
-            "gpu_slurm_config": {},
-            "batching_config": {
-                "target_cpus_per_job": 1,
-                "max_cpus_per_job": 1,
-                "target_mem_per_job": 200,
-                "max_mem_per_job": 500,
-                "target_num_jobs": 2,
-                "max_num_jobs": 4,
-            },
-        },
+        jobs_runner_config=SLURM_CONFIG,
         tasks_python_config={
             "default_version": current_py_version,
             "versions": {
