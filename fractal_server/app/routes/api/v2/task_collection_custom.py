@@ -155,7 +155,6 @@ async def collect_task_custom(
         pkg_name=task_collect.label,
         user_id=user.id,
         user_group_id=user_group_id,
-        resource_id=resource_id,
         version=task_collect.version,
     )
     TaskGroupCreateV2(**task_group_attrs)
@@ -174,7 +173,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)

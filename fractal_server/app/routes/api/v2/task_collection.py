@@ -183,7 +183,6 @@ async def collect_tasks_pip(
     # Initialize task-group attributes
     task_group_attrs = dict(
         user_id=user.id,
-        resource_id=resource_id,
         origin=request_data.origin,
     )
 
@@ -321,7 +320,7 @@ async def collect_tasks_pip(
             )
 
     # Create TaskGroupV2 object
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
