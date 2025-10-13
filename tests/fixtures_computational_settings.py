@@ -93,7 +93,7 @@ def slurm_sudo_resource_profile_objects(
     """
     res = Resource(
         name="SLURM cluster A",
-        type="slurm_sudo",
+        type=ResourceType.SLURM_SUDO,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         jobs_slurm_python_worker=(

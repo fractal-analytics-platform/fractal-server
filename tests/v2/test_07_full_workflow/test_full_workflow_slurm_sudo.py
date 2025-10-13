@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from fractal_server.app.models.v2 import AccountingRecordSlurm
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
 )
@@ -20,7 +21,7 @@ from tests.v2.test_07_full_workflow.common_functions import (
 )
 
 
-FRACTAL_RUNNER_BACKEND = "slurm_sudo"
+FRACTAL_RUNNER_BACKEND = ResourceType.SLURM_SUDO
 
 
 def _reset_permissions_for_user_folder(folder):
@@ -52,7 +53,7 @@ async def test_full_workflow_slurm(
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -101,7 +102,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     Run a workflow made of three tasks, two successful tasks and one
     that raises an error.
     """
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -144,7 +145,7 @@ async def test_non_executable_task_command_slurm(
     not executable).
     """
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
@@ -189,7 +190,7 @@ async def test_failing_workflow_UnknownError_slurm(
     to a monkey-patched function in the runner).
     """
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")

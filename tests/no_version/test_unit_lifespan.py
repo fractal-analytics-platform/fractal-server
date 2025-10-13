@@ -31,7 +31,7 @@ async def test_app_with_lifespan(
     job_factory_v2,
     tmp_path,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
@@ -100,7 +100,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
     caplog,
     db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
@@ -128,7 +128,7 @@ async def test_lifespan_shutdown_raise_error(
         "fractal_server.main.cleanup_after_shutdown", raise_error
     )
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_sudo")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
