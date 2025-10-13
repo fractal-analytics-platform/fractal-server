@@ -134,6 +134,13 @@ def init_db_data(
     from fractal_server.app.models.security import UserOAuth
     from fractal_server.app.models import Resource, Profile
 
+    from fractal_server.app.schemas.v2 import ValidProfileLocal
+    from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
+    from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
+    from fractal_server.app.schemas.v2 import ValidResourceLocal
+    from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
+    from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
+
     init_data_settings = Inject(get_init_data_settings)
 
     # Create default group and user
