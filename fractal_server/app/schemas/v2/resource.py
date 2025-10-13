@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Any
 from typing import Literal
 from typing import Self
@@ -14,8 +15,14 @@ from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
 
 
+class ResourceType(StrEnum):
+    SLURM_SUDO = "slurm_sudo"
+    SLURM_SSH = "slurm_ssh"
+    LOCAL = "local"
+
+
 class _ValidResourceBase(BaseModel):
-    type: Literal["slurm_sudo", "slurm_ssh", "local"]
+    type: ResourceType
 
     # Tasks
     tasks_python_config: dict[NonEmptyStr, Any]
@@ -33,7 +40,10 @@ class _ValidResourceBase(BaseModel):
             TaskPythonSettings(**self.tasks_python_config)
         if self.tasks_pixi_config != {}:
             pixi_settings = TasksPixiSettings(**self.tasks_pixi_config)
-            if self.type == "slurm_ssh" and pixi_settings.SLURM_CONFIG is None:
+            if (
+                self.type == ResourceType.SLURM_SSH
+                and pixi_settings.SLURM_CONFIG is None
+            ):
                 raise ValidationError(
                     "`tasks_pixi_config` must include `SLURM_CONFIG`."
                 )
@@ -45,13 +55,13 @@ class ValidResourceLocal(_ValidResourceBase):
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
-    type: Literal["slurm_sudo"]
+    type: Literal[ResourceType.SLURM_SUDO.value]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
-    type: Literal["slurm_ssh"]
+    type: Literal[ResourceType.SLURM_SSH.value]
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM

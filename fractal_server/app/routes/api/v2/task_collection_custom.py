@@ -17,6 +17,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
@@ -57,7 +58,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         if task_collect.package_root is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

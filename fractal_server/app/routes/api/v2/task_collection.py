@@ -33,6 +33,7 @@ from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
@@ -261,7 +262,7 @@ async def collect_tasks_pip(
     task_group_attrs["user_group_id"] = user_group_id
 
     # Set path and venv_path
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         base_tasks_path = profile.tasks_remote_dir
     else:
         base_tasks_path = resource.tasks_local_dir
@@ -305,7 +306,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if resource.type != "slurm_ssh":
+    if resource.type != ResourceType.SLURM_SSH:
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -336,7 +337,7 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         collect_function = collect_ssh
     else:
         collect_function = collect_local
