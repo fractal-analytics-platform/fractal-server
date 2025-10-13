@@ -116,6 +116,6 @@ class Resource(SQLModel, table=True):
         # If `type` is not "local", `jobs_slurm_python_worker` must be set
         CheckConstraint(
             "(type = 'local') OR (jobs_slurm_python_worker IS NOT NULL)",
-            name="ck_resource_python_worker_set",
+            name="ck_resource_jobs_slurm_python_worker_set",
         ),
     )
