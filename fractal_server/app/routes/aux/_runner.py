@@ -3,10 +3,11 @@ from fastapi import status
 
 from ....config import get_settings
 from ....syringe import Inject
+from fractal_server.app.schemas.v2 import ResourceType
 
 
 def _backend_supports_shutdown(backend: str) -> bool:
-    if backend in ["slurm_sudo", "slurm_ssh"]:
+    if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
         return True
     else:
         return False

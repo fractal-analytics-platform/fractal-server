@@ -11,6 +11,7 @@ from fractal_server.app.models.v2.job import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_init_data_settings
@@ -153,7 +154,7 @@ async def test_lifespan_slurm_ssh(
     ssh_keys: dict[str, str],
     db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     app = FastAPI()
     async with lifespan(app):
         assert len(app.state.jobsV2) == 0

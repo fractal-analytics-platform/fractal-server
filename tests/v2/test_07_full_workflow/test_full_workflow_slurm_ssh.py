@@ -1,12 +1,10 @@
 import pytest
 
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSHList
 from tests.v2.test_07_full_workflow.common_functions import (
     workflow_with_non_python_task,
 )
-
-
-FRACTAL_RUNNER_BACKEND = "slurm_ssh"
 
 
 @pytest.mark.container
@@ -24,7 +22,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     slurm_ssh_resource_profile_db,
     override_settings_factory,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     resource, profile = slurm_ssh_resource_profile_db[:]
 
     app.state.fractal_ssh_list = FractalSSHList()
@@ -69,7 +67,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
     first failure point.
     """
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     resource, profile = slurm_ssh_resource_profile_db
 
     profile.ssh_key_path = "/invalid/path"

@@ -329,7 +329,7 @@ async def test_admin_deactivate_task_group_api(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
     )
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db[:]
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
@@ -408,7 +408,7 @@ async def test_admin_deactivate_task_group_api(
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
         assert res.status == "failed"
-        if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
             assert "Cannot establish SSH connection" in res.log
         else:
             assert "does not exist" in res.log
@@ -433,7 +433,7 @@ async def test_reactivate_task_group_api(
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(

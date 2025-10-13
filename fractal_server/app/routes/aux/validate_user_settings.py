@@ -5,9 +5,11 @@ from pydantic import ValidationError
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.user_settings import SlurmSshUserSettings
 from fractal_server.app.user_settings import SlurmSudoUserSettings
 from fractal_server.logger import set_logger
+
 
 logger = set_logger(__name__)
 
@@ -48,9 +50,9 @@ async def validate_user_settings(
 
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
-    if backend == "slurm_ssh":
+    if backend == ResourceType.SLURM_SSH:
         UserSettingsValidationModel = SlurmSshUserSettings
-    elif backend == "slurm_sudo":
+    elif backend == ResourceType.SLURM_SUDO:
         UserSettingsValidationModel = SlurmSudoUserSettings
     else:
         # For other backends, we don't validate anything

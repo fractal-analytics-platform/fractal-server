@@ -2,6 +2,7 @@ import json
 import sys
 
 from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 
 
@@ -120,7 +121,7 @@ async def test_task_collection_custom_fail_with_ssh(
     testdata_path,
     slurm_ssh_resource_profile_fake_db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     manifest_file = (
         testdata_path.parent
         / "v2/fractal_tasks_mock"
