@@ -544,18 +544,23 @@ async def _get_submitted_job_or_none(
 
 
 async def _get_resource_and_profile_ids(
-    *, user_id: int, db: AsyncSession
+    *,
+    user_id: int,
+    db: AsyncSession,
 ) -> tuple[int, int] | tuple[None, None]:
-    user = await db.get(UserOAuth, user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found.",
-        )
-    if user.profile_id is None:
-        return None, None
-
-    profile = await db.get(Profile, user.profile_id)
-    resource = await db.get(Resource, profile.resource_id)
-
-    return resource.id, profile.id
+    """
+    Get `(resource_id, profile_id)` pair for a given user, or `(None,None)`.
+    """
+    stm = (
+        select(Resource.id, Profile.id)
+        .join(UserOAuth)
+        .where(Resource.id == Profile.resource_id)
+        .where(Profile.id == UserOAuth.profile_id)
+        .where(UserOAuth.id == user_id)
+    )
+    res = await db.execute(stm)
+    data = res.one_or_none()
+    if data is None:
+        return (None, None)
+    else:
+        return tuple(data)
