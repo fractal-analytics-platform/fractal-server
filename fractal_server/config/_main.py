@@ -12,7 +12,6 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from ._settings_config import SETTINGS_CONFIG_DICT
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.types import AbsolutePathStr
 
 
@@ -142,7 +141,10 @@ class Settings(BaseSettings):
     # FRACTAL SPECIFIC
     ###########################################################################
 
-    FRACTAL_RUNNER_BACKEND: ResourceType = ResourceType.LOCAL
+    # FIXME use ResourceType
+    FRACTAL_RUNNER_BACKEND: Literal[
+        "local", "slurm_ssh", "slurm_sudo"
+    ] = "local"
     """
     Select which runner backend to use.
     """
