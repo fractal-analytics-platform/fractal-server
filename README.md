@@ -16,7 +16,7 @@
 | fractal\_server/app/models/v2/accounting.py                                  |       19 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/dataset.py                                     |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/history.py                                     |       34 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/v2/job.py                                         |       34 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/v2/job.py                                         |       33 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/project.py                                     |       14 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/task.py                                        |       28 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/task\_group.py                                 |       72 |        0 |       10 |        0 |    100% |           |
@@ -180,7 +180,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9668** |  **262** | **1776** |  **103** | **96%** |           |
+|                                                                    **TOTAL** | **9667** |  **262** | **1776** |  **103** | **96%** |           |
 
 
 ## Setup coverage badge
