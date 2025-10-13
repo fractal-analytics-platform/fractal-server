@@ -6,6 +6,7 @@ from typing import Self
 from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
+from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
@@ -58,6 +59,7 @@ class ValidResourceSlurmSudo(_ValidResourceBase):
     type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
+    jobs_poll_interval: int
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
@@ -65,15 +67,85 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
+    jobs_poll_interval: int
 
 
 class ResourceCreate(BaseModel):
-    pass
+    type: ResourceType
+
+    name: NonEmptyStr
+    host: NonEmptyStr | None = None
+
+    jobs_local_dir: NonEmptyStr
+    jobs_runner_config: dict[str, Any]
+    jobs_slurm_python_worker: AbsolutePathStr | None = None
+    jobs_poll_interval: int | None = None
+
+    tasks_local_dir: AbsolutePathStr
+    tasks_python_config: dict[str, Any]
+    tasks_pixi_config: dict[str, Any]
+    tasks_pip_cache_dir: AbsolutePathStr | None = None
+
+    @model_validator(mode="after")
+    def _validate_resource(self):
+        data = self.model_dump()
+        match self.type:
+            case ResourceType.LOCAL:
+                ValidResourceLocal(**data)
+            case ResourceType.SLURM_SUDO:
+                ValidResourceSlurmSudo(**data)
+            case ResourceType.SLURM_SSH:
+                ValidResourceSlurmSSH(**data)
+
+        return self
 
 
 class ResourceUpdate(BaseModel):
-    pass
+    type: ResourceType
+
+    name: NonEmptyStr
+    host: NonEmptyStr | None = None
+
+    jobs_local_dir: NonEmptyStr
+    jobs_runner_config: dict[str, Any]
+    jobs_slurm_python_worker: AbsolutePathStr | None = None
+    jobs_poll_interval: int | None = None
+
+    tasks_local_dir: AbsolutePathStr
+    tasks_python_config: dict[str, Any]
+    tasks_pixi_config: dict[str, Any]
+    tasks_pip_cache_dir: AbsolutePathStr | None = None
+
+    @model_validator(mode="after")
+    def _validate_resource(self):
+        data = self.model_dump()
+        match self.type:
+            case ResourceType.LOCAL:
+                ValidResourceLocal(**data)
+            case ResourceType.SLURM_SUDO:
+                ValidResourceSlurmSudo(**data)
+            case ResourceType.SLURM_SSH:
+                ValidResourceSlurmSSH(**data)
+
+        return self
 
 
 class ResourceRead(BaseModel):
-    pass
+    id: int
+
+    type: ResourceType
+
+    name: str
+    timestamp_created: AwareDatetime
+
+    host: str | None = None
+
+    jobs_local_dir: str
+    jobs_runner_config: dict[str, Any]
+    jobs_slurm_python_worker: str | None = None
+    jobs_poll_interval: int
+
+    tasks_local_dir: str
+    tasks_python_config: dict[str, Any]
+    tasks_pixi_config: dict[str, Any]
+    tasks_pip_cache_dir: str | None = None

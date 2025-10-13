@@ -56,7 +56,7 @@ class Resource(SQLModel, table=True):
     `fractal-server` worker from within the SLURM jobs.
     """
 
-    jobs_poll_interval: int = 5
+    jobs_poll_interval: int | None = None
     """
     On SLURM deployments, the interval to wait before new `squeue` calls.
     """
