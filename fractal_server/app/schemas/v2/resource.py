@@ -55,13 +55,13 @@ class ValidResourceLocal(_ValidResourceBase):
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
-    type: Literal[ResourceType.SLURM_SUDO.value]
+    type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
-    type: Literal[ResourceType.SLURM_SSH.value]
+    type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
