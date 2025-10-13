@@ -11,7 +11,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
-from ....db import AsyncSession
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
@@ -20,6 +19,10 @@ from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import JobStatusTypeV2
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
+from fractal_server.app.models import UserOAuth
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -538,3 +541,21 @@ async def _get_submitted_job_or_none(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
+
+
+async def _get_resource_and_profile_ids(
+    *, user_id: int, db: AsyncSession
+) -> tuple[int, int] | tuple[None, None]:
+    user = await db.get(UserOAuth, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {user_id} not found.",
+        )
+    if user.profile_id is None:
+        return None, None
+
+    profile = await db.get(Profile, user.profile_id)
+    resource = await db.get(Resource, profile.resource_id)
+
+    return resource.id, profile.id

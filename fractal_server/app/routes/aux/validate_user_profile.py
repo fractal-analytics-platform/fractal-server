@@ -69,21 +69,3 @@ async def validate_user_profile(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=error_msg,
         )
-
-
-async def get_resource_and_profile_ids(
-    *, user_id: int, db: AsyncSession
-) -> tuple[int, int] | tuple[None, None]:
-    user = await db.get(UserOAuth, user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found.",
-        )
-    if user.profile_id is None:
-        return None, None
-
-    profile = await db.get(Profile, user.profile_id)
-    resource = await db.get(Resource, profile.resource_id)
-
-    return resource.id, profile.id
