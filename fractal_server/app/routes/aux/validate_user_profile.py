@@ -73,7 +73,7 @@ async def validate_user_profile(
 
 async def get_resource_and_profile_ids(
     *, user_id: int, db: AsyncSession
-) -> tuple[int | None, int | None]:
+) -> tuple[int, int] | tuple[None, None]:
     user = await db.get(UserOAuth, user_id)
     if user is None:
         raise HTTPException(
