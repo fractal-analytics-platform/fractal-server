@@ -7,6 +7,7 @@ from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.aux.validate_user_settings import (
     validate_user_settings,
 )
+from fractal_server.app.schemas.v2 import ResourceType
 
 
 async def test_unit_link_user_to_settings(db):
@@ -122,29 +123,37 @@ async def test_validate_user_settings(db):
     # User with no settings
     with pytest.raises(HTTPException, match="has no settings"):
         await validate_user_settings(
-            user=user_without_settings, backend="slurm_ssh", db=db
+            user=user_without_settings, backend=ResourceType.SLURM_SSH, db=db
         )
 
     # User with empty settings: backend="local"
     await validate_user_settings(
-        user=user_with_invalid_settings, backend="local", db=db
+        user=user_with_invalid_settings, backend=ResourceType.LOCAL, db=db
     )
     # User with empty settings: backend="slurm_ssh"
     with pytest.raises(HTTPException, match="SlurmSshUserSettings"):
         await validate_user_settings(
-            user=user_with_invalid_settings, backend="slurm_ssh", db=db
+            user=user_with_invalid_settings,
+            backend=ResourceType.SLURM_SSH,
+            db=db,
         )
     # User with empty settings: backend="slurm_sudo"
     with pytest.raises(HTTPException, match="SlurmSudoUserSettings"):
         await validate_user_settings(
-            user=user_with_invalid_settings, backend="slurm_sudo", db=db
+            user=user_with_invalid_settings,
+            backend=ResourceType.SLURM_SUDO,
+            db=db,
         )
 
     # User with valid SSH settings: backend="slurm_ssh"
     await validate_user_settings(
-        user=user_with_valid_ssh_settings, backend="slurm_ssh", db=db
+        user=user_with_valid_ssh_settings,
+        backend=ResourceType.SLURM_SSH,
+        db=db,
     )
     # User with valid SSH settings: backend="slurm_sudo"
     await validate_user_settings(
-        user=user_with_valid_ssh_settings, backend="slurm_sudo", db=db
+        user=user_with_valid_ssh_settings,
+        backend=ResourceType.SLURM_SUDO,
+        db=db,
     )

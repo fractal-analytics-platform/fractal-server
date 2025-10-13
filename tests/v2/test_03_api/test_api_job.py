@@ -9,6 +9,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
@@ -403,7 +404,9 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDumpV2(
-            **json.loads(project.model_dump_json(exclude={"user_list"}))
+            **json.loads(
+                project.model_dump_json(exclude={"user_list", "resource_id"})
+            )
         ).model_dump()
         expected_workflow_dump = WorkflowDumpV2(
             **json.loads(wf.model_dump_json(exclude={"task_list"}))
@@ -664,7 +667,7 @@ async def test_stop_job(
         res = await client.get(
             f"{PREFIX}/project/{project.id}/job/{job.id}/stop/"
         )
-        if backend in ["slurm_sudo", "slurm_ssh"]:
+        if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
             assert res.status_code == 202
 
             shutdown_file = tmp_path / SHUTDOWN_FILENAME

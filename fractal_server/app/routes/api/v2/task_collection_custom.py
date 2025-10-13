@@ -10,6 +10,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...aux.validate_user_profile import validate_user_profile
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -17,6 +18,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
@@ -57,7 +59,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         if task_collect.package_root is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -143,6 +145,10 @@ async def collect_task_custom(
         package_version=task_collect.version,
     )
 
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
+
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin=TaskGroupV2OriginEnum.OTHER,
@@ -167,7 +173,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)

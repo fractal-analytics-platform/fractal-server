@@ -17,6 +17,7 @@ from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -119,7 +120,7 @@ async def deactivate_task_group(
     await db.commit()
 
     # Submit background task
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             deactivate_function = deactivate_ssh_pixi
         else:
@@ -229,7 +230,7 @@ async def reactivate_task_group(
     await db.commit()
 
     # Submit background task
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         if task_group.origin == TaskGroupV2OriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
         else:
@@ -291,7 +292,7 @@ async def delete_task_group(
     db.add(task_group_activity)
     await db.commit()
 
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         delete_function = delete_ssh
     else:
         delete_function = delete_local

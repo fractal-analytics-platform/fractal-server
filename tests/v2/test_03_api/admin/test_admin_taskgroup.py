@@ -11,8 +11,10 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+
 
 PREFIX = "/admin/v2"
 
@@ -306,7 +308,9 @@ class MockFractalSSHList:
         return None
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
+)
 async def test_admin_deactivate_task_group_api(
     app,
     client,
@@ -325,7 +329,7 @@ async def test_admin_deactivate_task_group_api(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
     )
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db[:]
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
@@ -404,13 +408,15 @@ async def test_admin_deactivate_task_group_api(
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
         assert res.status == "failed"
-        if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
             assert "Cannot establish SSH connection" in res.log
         else:
             assert "does not exist" in res.log
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
+)
 async def test_reactivate_task_group_api(
     app,
     client,
@@ -427,7 +433,7 @@ async def test_reactivate_task_group_api(
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
