@@ -7,6 +7,7 @@ from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.aux.validate_user_settings import (
     validate_user_settings,
 )
+from fractal_server.app.schemas.v2 import ResourceType
 
 
 async def test_unit_link_user_to_settings(db):
@@ -127,7 +128,7 @@ async def test_validate_user_settings(db):
 
     # User with empty settings: backend="local"
     await validate_user_settings(
-        user=user_with_invalid_settings, backend="local", db=db
+        user=user_with_invalid_settings, backend=ResourceType.LOCAL, db=db
     )
     # User with empty settings: backend="slurm_ssh"
     with pytest.raises(HTTPException, match="SlurmSshUserSettings"):

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import ValidProfileLocal
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
@@ -61,7 +62,7 @@ def local_resource_profile_objects(
     """
     res = Resource(
         name="local resource 1",
-        type="local",
+        type=ResourceType.LOCAL,
         jobs_local_dir=(tmp777_path / "jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "tasks").as_posix(),
         jobs_runner_config={"parallel_tasks_per_job": 1},
