@@ -23,4 +23,4 @@ router_admin_v2.include_router(
     task_group_lifecycle_router, prefix="/task-group"
 )
 router_admin_v2.include_router(impersonate_router, prefix="/impersonate")
-router_admin_v2.include_router(resource_router, "/resource")
+router_admin_v2.include_router(resource_router, prefix="/resource")
