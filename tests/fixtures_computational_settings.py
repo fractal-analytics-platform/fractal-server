@@ -75,6 +75,7 @@ def local_resource_profile_objects(
             },
         },
         tasks_pixi_config={},
+        jobs_poll_interval=0,
     )
     prof = Profile(
         resource_id=123456789,
