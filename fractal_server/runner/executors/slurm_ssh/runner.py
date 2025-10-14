@@ -31,7 +31,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         # Specific
         slurm_account: str | None = None,
         profile: Profile,
-        user_cache_dir: str | None = None,
+        user_cache_dir: str,
         fractal_ssh: FractalSSH,
     ) -> None:
         """

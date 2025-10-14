@@ -87,7 +87,7 @@ class BaseSlurmRunner(BaseRunner):
         python_worker_interpreter: str,
         poll_interval: int,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,  # FIXME: drop?
+        user_cache_dir: str,
         slurm_account: str | None = None,  # FIXME: drop?
     ):
         self.slurm_runner_type = slurm_runner_type

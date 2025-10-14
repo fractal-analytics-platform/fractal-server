@@ -26,11 +26,13 @@ def process_workflow(
     user_id: int,
     resource: Resource,
     profile: Profile,
+    user_cache_dir: str,
     **kwargs,
 ) -> None:
     """
     Run a workflow through
-    FIXME
+
+    FIXME docstring
 
 
     Args:

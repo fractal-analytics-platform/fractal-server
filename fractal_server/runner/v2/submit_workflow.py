@@ -16,7 +16,6 @@ from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import Profile
@@ -69,9 +68,8 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    user_settings: UserSettings,  # FIXME: Drop this
     worker_init: str | None = None,
-    user_cache_dir: str | None = None,  # FIXME: review this
+    user_cache_dir: str,
     resource: Resource,
     profile: Profile,
     fractal_ssh: FractalSSH | None = None,
@@ -257,13 +255,12 @@ def submit_workflow(
             process_workflow = slurm_sudo_process_workflow
             backend_specific_kwargs = dict(
                 slurm_account=job.slurm_account,
-                user_cache_dir=user_cache_dir,
             )
         elif resource.type == ResourceType.SLURM_SSH:
             process_workflow = slurm_ssh_process_workflow
             backend_specific_kwargs = dict(
-                fractal_ssh=fractal_ssh,
                 slurm_account=job.slurm_account,
+                fractal_ssh=fractal_ssh,
             )
         else:
             # FIXME: Set a CHECK constraint at the db level, and drop this
@@ -285,6 +282,7 @@ def submit_workflow(
             job_type_filters=job.type_filters,
             resource=resource,
             profile=profile,
+            user_cache_dir=user_cache_dir,
             **backend_specific_kwargs,
         )
 

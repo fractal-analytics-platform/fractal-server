@@ -32,7 +32,7 @@ class PixiSLURMConfig(BaseModel):
     """
     cpus: PositiveInt
     """
-    `-c, --cpus-per-task=<ncpus>
+    `-c, --cpus-per-task=<ncpus>`
     """
     mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
     """

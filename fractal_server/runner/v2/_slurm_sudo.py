@@ -41,8 +41,8 @@ def process_workflow(
     job_attribute_filters: AttributeFilters,
     job_type_filters: dict[str, bool],
     user_id: int,
+    user_cache_dir: str,
     # SLURM-sudo-specific
-    user_cache_dir: str | None = None,
     slurm_account: str | None = None,  # FIXME drop this
     worker_init: str | None = None,
     resource: Resource,
@@ -69,7 +69,7 @@ def process_workflow(
         common_script_lines=worker_init,
         resource=resource,
         profile=profile,
-        user_cache_dir=user_cache_dir,  # FIXME: drop
+        user_cache_dir=user_cache_dir,
         slurm_account=slurm_account,  # FIXME: Drop
     ) as runner:
         execute_tasks_v2(
@@ -85,5 +85,5 @@ def process_workflow(
             get_runner_config=get_slurm_config,
             job_attribute_filters=job_attribute_filters,
             job_type_filters=job_type_filters,
-            user_id=user_id,
+            _id=user_id,
         )

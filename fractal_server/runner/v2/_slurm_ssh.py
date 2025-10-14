@@ -47,6 +47,7 @@ def process_workflow(
     user_id: int,
     resource: Resource,
     profile: Profile,
+    user_cache_dir: str,
     # SLURM-ssh-specific
     fractal_ssh: FractalSSH,
     slurm_account: str | None = None,  # FIXME: drop this?
@@ -75,6 +76,7 @@ def process_workflow(
         resource=resource,
         profile=profile,
         common_script_lines=worker_init,
+        user_cache_dir=user_cache_dir,
     ) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[

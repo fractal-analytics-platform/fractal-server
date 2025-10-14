@@ -39,6 +39,7 @@ from fractal_server.runner.set_start_and_last_task_index import (
 from fractal_server.runner.v2.submit_workflow import submit_workflow
 from fractal_server.syringe import Inject
 
+__FRACTAL_CACHE_DIR__ = ".fractal_cache"
 
 router = APIRouter()
 logger = set_logger(__name__)
@@ -225,22 +226,21 @@ async def apply_workflow(
         f"_{timestamp_string}"
     )
 
+    # FIXME: setting `cache_dir` requires non-nullable `project_dir`
+    cache_dir = Path(
+        user_settings.project_dir,
+        __FRACTAL_CACHE_DIR__,
+    ).as_posix()
+
     # Define user-side job directory
     if resource.type == ResourceType.LOCAL:
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        cache_dir = None
     elif resource.type == ResourceType.SLURM_SUDO:
-        cache_dir = (
-            Path(user_settings.project_dir) / ".fractal_cache"
-            if user_settings.project_dir is not None
-            else None
-        )
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif resource.type == ResourceType.SLURM_SSH:
         WORKFLOW_DIR_REMOTE = (
             Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
         )
-        cache_dir = None
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
@@ -257,9 +257,8 @@ async def apply_workflow(
         dataset_id=dataset.id,
         job_id=job.id,
         user_id=user.id,
-        user_settings=user_settings,
         worker_init=job.worker_init,
-        user_cache_dir=cache_dir.as_posix() if cache_dir else None,
+        user_cache_dir=cache_dir,
         fractal_ssh=fractal_ssh,
         resource=resource,
         profile=profile,
