@@ -71,12 +71,14 @@ class ValidResourceLocal(_ValidResourceBase):
     type: Literal[ResourceType.LOCAL]
     jobs_runner_config: JobRunnerConfigLocal
     jobs_slurm_python_worker: None = None
+    host: None = None
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
     type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
+    host: None = None
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
@@ -129,7 +131,7 @@ class ResourceUpdate(BaseModel):
 class ResourceRead(BaseModel):
     id: int
 
-    type: ResourceType
+    type: str
 
     name: str
     timestamp_created: AwareDatetime

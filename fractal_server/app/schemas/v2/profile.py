@@ -22,19 +22,21 @@ def validate_profile(
             ValidProfileSlurmSSH(**profile_data)
 
 
-class _ValidProfileBase(BaseModel):
-    pass
+class ValidProfileLocal(BaseModel):
+    username: None = None
+    ssh_key_path: None = None
+    jobs_remote_dir: None = None
+    tasks_remote_dir: None = None
 
 
-class ValidProfileLocal(_ValidProfileBase):
-    pass
-
-
-class ValidProfileSlurmSudo(_ValidProfileBase):
+class ValidProfileSlurmSudo(BaseModel):
     username: NonEmptyStr
+    ssh_key_path: None = None
+    jobs_remote_dir: None = None
+    tasks_remote_dir: None = None
 
 
-class ValidProfileSlurmSSH(_ValidProfileBase):
+class ValidProfileSlurmSSH(BaseModel):
     username: NonEmptyStr
     ssh_key_path: AbsolutePathStr
     jobs_remote_dir: AbsolutePathStr
