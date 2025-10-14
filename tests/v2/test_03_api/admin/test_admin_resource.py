@@ -1,3 +1,16 @@
+import pytest
+
+from fractal_server.app.schemas.v2.resource import validate_resource
+
+
+def test_validate_resource():
+    with pytest.raises(
+        ValueError,
+        match="Missing `type` key",
+    ):
+        validate_resource({})
+
+
 async def test_resource_api(
     db,
     client,
