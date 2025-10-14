@@ -5,8 +5,10 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
+
 
 PREFIX = "api/v2/task"
 
@@ -46,7 +48,7 @@ async def test_task_collection_ssh_from_pypi(
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
 
     async with MockCurrentUser(
         user_kwargs=dict(
@@ -198,7 +200,7 @@ async def test_task_collection_ssh_failure(
     app.state.fractal_ssh_list = fractal_ssh_list
 
     # Override settings with Python/SSH configurations
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
 
     # Prepare payload that leads to a failed collection
     local_archive_path = (

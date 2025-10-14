@@ -1,3 +1,4 @@
+from fractal_server.app.schemas.v2 import ResourceType
 from tests.v2.test_07_full_workflow.common_functions import (
     failing_workflow_post_task_execution,
 )
@@ -15,7 +16,8 @@ from tests.v2.test_07_full_workflow.common_functions import (
     workflow_with_non_python_task,
 )
 
-FRACTAL_RUNNER_BACKEND = "local"
+
+FRACTAL_RUNNER_BACKEND = ResourceType.LOCAL
 
 
 async def test_full_workflow_local(
@@ -28,7 +30,7 @@ async def test_full_workflow_local(
     fractal_tasks_mock_db,
     local_resource_profile_db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -57,7 +59,7 @@ async def test_full_workflow_TaskExecutionError(
     that raises an error.
     """
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -86,7 +88,7 @@ async def test_non_executable_task_command_local(
     Execute a workflow with a task which has an invalid `command` (i.e. it is
     not executable).
     """
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
         client=client,
@@ -117,7 +119,7 @@ async def test_failing_workflow_UnknownError_local(
     to a monkey-patched function in the runner).
     """
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
         client=client,
@@ -177,7 +179,7 @@ async def test_failing_workflow_post_task_execution(
     fractal_tasks_mock_db,
     local_resource_profile_db,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
     await failing_workflow_post_task_execution(
         MockCurrentUser=MockCurrentUser,

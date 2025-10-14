@@ -161,7 +161,7 @@ async def job_factory_v2(db: AsyncSession):
                 workflow.model_dump_json(exclude={"task_list"})
             ),
             project_dump=json.loads(
-                project.model_dump_json(exclude={"user_list"})
+                project.model_dump_json(exclude={"user_list", "resource_id"})
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,

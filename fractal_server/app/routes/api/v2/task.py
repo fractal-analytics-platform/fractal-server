@@ -9,6 +9,7 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -187,9 +188,13 @@ async def create_task(
         user_group_id=user_group_id,
         version=db_task.version,
     )
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
     db_task_group = TaskGroupV2(
         user_id=user.id,
         user_group_id=user_group_id,
+        resource_id=resource_id,
         active=True,
         task_list=[db_task],
         origin=TaskGroupV2OriginEnum.OTHER,

@@ -25,6 +25,7 @@ from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
 from ...aux.validate_user_profile import validate_user_profile
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -33,6 +34,7 @@ from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
@@ -174,6 +176,10 @@ async def collect_tasks_pip(
     # Get some validated request data
     task_collect = request_data.task_collect
 
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
+
     # Initialize task-group attributes
     task_group_attrs = dict(
         user_id=user.id,
@@ -261,7 +267,7 @@ async def collect_tasks_pip(
     task_group_attrs["user_group_id"] = user_group_id
 
     # Set path and venv_path
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         base_tasks_path = profile.tasks_remote_dir
     else:
         base_tasks_path = resource.tasks_local_dir
@@ -305,7 +311,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if resource.type != "slurm_ssh":
+    if resource.type != ResourceType.SLURM_SSH:
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -314,7 +320,7 @@ async def collect_tasks_pip(
             )
 
     # Create TaskGroupV2 object
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
@@ -336,7 +342,7 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         collect_function = collect_ssh
     else:
         collect_function = collect_local

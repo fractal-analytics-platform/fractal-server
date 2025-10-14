@@ -4,6 +4,7 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import Settings
@@ -20,7 +21,7 @@ from fractal_server.tasks.config import TasksPixiSettings
         (
             dict(
                 JWT_SECRET_KEY="secret",
-                FRACTAL_RUNNER_BACKEND="local",
+                FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
             ),
             False,
         ),
@@ -28,7 +29,7 @@ from fractal_server.tasks.config import TasksPixiSettings
         (
             dict(
                 JWT_SECRET_KEY=None,
-                FRACTAL_RUNNER_BACKEND="local",
+                FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
             ),
             True,
         ),
@@ -127,7 +128,7 @@ def test_OAuthClientConfig():
 def test_collect_oauth_clients(monkeypatch):
     settings = Settings(
         JWT_SECRET_KEY="secret",
-        FRACTAL_RUNNER_BACKEND="local",
+        FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
     )
     debug(settings.OAUTH_CLIENTS_CONFIG)
     assert settings.OAUTH_CLIENTS_CONFIG == []
@@ -137,7 +138,7 @@ def test_collect_oauth_clients(monkeypatch):
         m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "456")
         settings = Settings(
             JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND="local",
+            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 1
@@ -154,7 +155,7 @@ def test_collect_oauth_clients(monkeypatch):
         )
         settings = Settings(
             JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND="local",
+            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
