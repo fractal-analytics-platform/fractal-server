@@ -22,6 +22,8 @@ from .job import JobStatusTypeV2  # noqa F401
 from .job import JobUpdateV2  # noqa F401
 from .manifest import ManifestV2  # noqa F401
 from .manifest import TaskManifestV2  # noqa F401
+from .profile import ProfileCreate  # noqa F401
+from .profile import ProfileRead  # noqa F401
 from .profile import ValidProfileLocal  # noqa F401
 from .profile import ValidProfileSlurmSSH  # noqa F401
 from .profile import ValidProfileSlurmSudo  # noqa F401

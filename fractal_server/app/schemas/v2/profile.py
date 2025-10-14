@@ -21,3 +21,26 @@ class ValidProfileSlurmSSH(_ValidProfileBase):
     ssh_key_path: AbsolutePathStr
     jobs_remote_dir: AbsolutePathStr
     tasks_remote_dir: AbsolutePathStr
+
+
+class ProfileCreate(BaseModel):
+    username: str | None = None
+    ssh_key_path: str | None = None
+    jobs_remote_dir: str | None = None
+    tasks_remote_dir: str | None = None
+
+
+class ProfileRead(BaseModel):
+    id: int
+    resource_id: int
+    username: str | None = None
+    ssh_key_path: str | None = None
+    jobs_remote_dir: str | None = None
+    tasks_remote_dir: str | None = None
+
+
+class ProfileUpdate(BaseModel):
+    username: str | None = None
+    ssh_key_path: str | None = None
+    jobs_remote_dir: str | None = None
+    tasks_remote_dir: str | None = None
