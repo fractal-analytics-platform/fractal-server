@@ -79,13 +79,19 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.json()["oauth_accounts"] == []
 
 
-async def test_edit_users_as_superuser(registered_superuser_client):
+async def test_edit_users_as_superuser(
+    registered_superuser_client, local_resource_profile_db
+):
+    _, profile = local_resource_profile_db
+
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
+
+    assert pre_patch_user["profile_id"] is None
 
     # Fail because invalid password
     res = await registered_superuser_client.patch(
@@ -102,6 +108,13 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     debug(res.json())
     assert "The password is too short" in str(res.json()["detail"])
 
+    # Fail because invalid profile_id
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(profile_id=9999),
+    )
+    assert res.status_code == 404
+
     # succeed
     update = dict(
         email="patch@fractal.xy",
@@ -109,6 +122,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         is_superuser=True,
         is_verified=True,
         username="user_patch",
+        profile_id=profile.id,
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
@@ -388,7 +402,7 @@ async def test_oauth_accounts_list(
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 
-    # test PATCH /auth/users/{user_id}
+    # test PATCH /auth/users/{user_id}/
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{u1.id}/", json=dict(password="password")
     )
