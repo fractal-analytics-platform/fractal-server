@@ -59,6 +59,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_active: bool = None
     is_superuser: bool = None
     is_verified: bool = None
+    profile_id: int | None = None
 
 
 class UserUpdateStrict(BaseModel):
