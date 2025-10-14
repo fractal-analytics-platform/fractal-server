@@ -92,6 +92,15 @@ async def test_resource_api(
             res.json()["detail"]
         )
 
+        # PATCH one resource / failure due to non-unique name
+        NEW_NAME = "something else"
+        res = await client.patch(
+            f"/admin/v2/resource/{resource_id}/",
+            json=dict(name=local_resource_profile_db[0].name),
+        )
+        assert res.status_code == 422
+        assert "already in use" in str(res.json()["detail"])
+
         # PATCH one resource / success
         NEW_NAME = "something else"
         res = await client.patch(

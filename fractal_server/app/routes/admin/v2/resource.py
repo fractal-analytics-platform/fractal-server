@@ -114,8 +114,29 @@ async def patch_resource(
     resource = await get_resource(
         resource_id=resource_id, superuser=superuser, db=db
     )
+
+    # Handle non-unique resource names
+    if (
+        resource_update.name is not None
+        and resource_update.name != resource.name
+    ):
+        res = await db.execute(
+            select(Resource).where(Resource.name == resource_update.name)
+        )
+        if res.scalars().one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    f"Resource name '{resource_update.name}' "
+                    "already in use."
+                ),
+            )
+
+    # Prepare new db object
     for key, value in resource_update.model_dump(exclude_unset=True).items():
         setattr(resource, key, value)
+
+    # Validate new db object
     try:
         validate_resource(resource.model_dump())
     except ValidationError as e:
@@ -129,7 +150,6 @@ async def patch_resource(
 
     await db.commit()
     await db.refresh(resource)
-
     return resource
 
 
