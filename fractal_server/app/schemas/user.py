@@ -42,6 +42,7 @@ class UserRead(schemas.BaseUser[int]):
     username: str | None = None
     group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
+    profile_id: int | None = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
