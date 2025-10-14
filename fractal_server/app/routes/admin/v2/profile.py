@@ -177,6 +177,21 @@ async def delete_profile(
         profile_id=profile_id,
         db=db,
     )
+
+    # Fail if at least one UserOAuth is associated with the Profile.
+    res = await db.execute(
+        select(UserOAuth).where(UserOAuth.profile_id == profile.id).limit(1)
+    )
+    associated_users = res.scalars().one_or_none
+    if associated_users is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Cannot delete Profile while it's associated with an UserOAuth"
+            ),
+        )
+
+    # Delete
     await db.delete(profile)
     await db.commit()
 

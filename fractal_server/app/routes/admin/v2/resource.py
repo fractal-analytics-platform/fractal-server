@@ -10,6 +10,7 @@ from ._aux_functions import _get_resource_or_404
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ResourceCreate
@@ -156,6 +157,21 @@ async def delete_resource(
     Delete single `Resource`.
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
+
+    # Fail if at least one Profile is associated with the Resource.
+    res = await db.execute(
+        select(Profile).where(Profile.resource_id == resource_id).limit(1)
+    )
+    associated_profiles = res.scalars().one_or_none
+    if associated_profiles is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Cannot delete Resource while it's associated with a Profile"
+            ),
+        )
+
+    # Delete
     await db.delete(resource)
     await db.commit()
 
