@@ -162,7 +162,7 @@ async def delete_resource(
     res = await db.execute(
         select(Profile).where(Profile.resource_id == resource_id).limit(1)
     )
-    associated_profiles = res.scalars().one_or_none
+    associated_profiles = res.scalars().one_or_none()
     if associated_profiles is not None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
