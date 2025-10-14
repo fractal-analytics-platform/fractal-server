@@ -106,7 +106,10 @@ async def post_profile(
     """
     resource = await _get_resource(resource_id=resource_id, db=db)
 
-    profile = Profile(**profile_create.model_dump())
+    profile = Profile(
+        resource_id=resource_id,
+        **profile_create.model_dump(),
+    )
 
     try:
         match resource.type:
