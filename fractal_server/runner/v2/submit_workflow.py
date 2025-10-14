@@ -167,22 +167,13 @@ def submit_workflow(
             return
 
         try:
-            # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
-            if resource.type == ResourceType.LOCAL:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            # Create local working directory
+            if resource.type in [ResourceType.LOCAL, ResourceType.SLURM_SSH]:
+                Path(job.working_dir).mkdir(parents=True)
             elif resource.type == ResourceType.SLURM_SUDO:
                 original_umask = os.umask(0)
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
+                Path(job.working_dir).mkdir(parents=True, mode=0o755)
                 os.umask(original_umask)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            elif resource.type == ResourceType.SLURM_SSH:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
-                )
             else:
                 # FIXME: Set a CHECK constraint at the db level, and drop this
                 # (unreachable) branch
@@ -272,8 +263,8 @@ def submit_workflow(
             dataset=dataset,
             job_id=job_id,
             user_id=user_id,
-            workflow_dir_local=WORKFLOW_DIR_LOCAL,
-            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
+            workflow_dir_local=Path(job.working_dir),
+            workflow_dir_remote=Path(job.working_dir_user),
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,

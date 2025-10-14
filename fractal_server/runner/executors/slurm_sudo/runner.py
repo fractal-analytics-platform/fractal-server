@@ -54,7 +54,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         resource: Resource,
         # Specific
         profile: Profile,
-        user_cache_dir: str | None = None,  # FIXME: drop?
+        user_cache_dir: str,
         slurm_account: str | None = None,
     ) -> None:
         """
@@ -72,7 +72,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
             root_dir_local=root_dir_local,
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
-            user_cache_dir=user_cache_dir,  # FIXME: drop?
+            user_cache_dir=user_cache_dir,
             poll_interval=resource.jobs_poll_interval,
             python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,

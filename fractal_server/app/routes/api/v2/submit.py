@@ -227,19 +227,19 @@ async def apply_workflow(
     )
 
     # FIXME: setting `cache_dir` requires non-nullable `project_dir`
-    cache_dir = Path(
-        user_settings.project_dir,
-        __FRACTAL_CACHE_DIR__,
+    user_cache_dir = Path(
+        user_settings.project_dir, __FRACTAL_CACHE_DIR__
     ).as_posix()
 
     # Define user-side job directory
     if resource.type == ResourceType.LOCAL:
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
     elif resource.type == ResourceType.SLURM_SUDO:
-        WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
+        WORKFLOW_DIR_REMOTE = user_cache_dir / WORKFLOW_DIR_LOCAL.name
     elif resource.type == ResourceType.SLURM_SSH:
-        WORKFLOW_DIR_REMOTE = (
-            Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
+        WORKFLOW_DIR_REMOTE = Path(
+            profile.jobs_remote_dir,
+            WORKFLOW_DIR_LOCAL.name,
         )
 
     # Update job folders in the db
@@ -258,7 +258,7 @@ async def apply_workflow(
         job_id=job.id,
         user_id=user.id,
         worker_init=job.worker_init,
-        user_cache_dir=cache_dir,
+        user_cache_dir=user_cache_dir,
         fractal_ssh=fractal_ssh,
         resource=resource,
         profile=profile,
