@@ -81,3 +81,19 @@ async def test_profile_api(
         assert "PATCH would lead to invalid profile" in str(
             res.json()["detail"]
         )
+
+        # DELETE one profile
+        res = await client.delete(
+            (
+                f"/admin/v2/resource/{slurm_ssh_res_id}/"
+                f"profile/{slurm_ssh_prof_id}/"
+            ),
+        )
+        assert res.status_code == 204
+        res = await client.get(
+            (
+                f"/admin/v2/resource/{slurm_ssh_res_id}/"
+                f"profile/{slurm_ssh_prof_id}/"
+            ),
+        )
+        assert res.status_code == 404
