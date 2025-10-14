@@ -11,6 +11,7 @@ async def test_resource_constraints(db):
         name="foo",
         jobs_local_dir="/jobs_local_dir",
         tasks_local_dir="/tasks_local_dir",
+        jobs_poll_interval=1,
     )
     db.add(r1)
     await db.commit()
@@ -21,6 +22,7 @@ async def test_resource_constraints(db):
         name="foo",
         jobs_local_dir="/jobs_local_dir2",
         tasks_local_dir="/tasks_local_dir2",
+        jobs_poll_interval=1,
     )
     db.add(r2)
     with pytest.raises(IntegrityError) as e:
@@ -32,6 +34,7 @@ async def test_resource_constraints(db):
         name="foo2",
         jobs_local_dir="/jobs_local_dir2",
         tasks_local_dir="/tasks_local_dir2",
+        jobs_poll_interval=1,
     )
     db.add(r2)
     await db.commit()
@@ -42,6 +45,7 @@ async def test_resource_constraints(db):
         name="foo3",
         jobs_local_dir="/jobs_local_dir3",
         tasks_local_dir="/tasks_local_dir3",
+        jobs_poll_interval=1,
     )
     db.add(r3)
     with pytest.raises(IntegrityError) as e:
@@ -55,6 +59,7 @@ async def test_resource_constraints(db):
         name="foo4",
         jobs_local_dir="/jobs_local_dir4",
         tasks_local_dir="/tasks_local_dir4",
+        jobs_poll_interval=1,
     )
     db.add(r4)
     with pytest.raises(IntegrityError) as e:
@@ -67,6 +72,7 @@ async def test_resource_constraints(db):
         name="foo4",
         jobs_local_dir="/jobs_local_dir4",
         tasks_local_dir="/tasks_local_dir4",
+        jobs_poll_interval=1,
     )
     db.add(r4)
     await db.commit()
