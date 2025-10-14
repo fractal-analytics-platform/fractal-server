@@ -6,6 +6,7 @@ from fastapi import status
 from pydantic import ValidationError
 from sqlmodel import select
 
+from ._aux_functions import _get_resource_or_404
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -46,13 +47,7 @@ async def get_resource(
     """
     Query single `Resource`.
     """
-    resource = await db.get(Resource, resource_id)
-
-    if resource is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job {resource_id} not found",
-        )
+    resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
     return resource
 
@@ -111,9 +106,7 @@ async def patch_resource(
     Patch single `Resource`.
     """
 
-    resource = await get_resource(
-        resource_id=resource_id, superuser=superuser, db=db
-    )
+    resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
     # Handle non-unique resource names
     if (
@@ -162,9 +155,7 @@ async def delete_resource(
     """
     Delete single `Resource`.
     """
-    resource = await get_resource(
-        resource_id=resource_id, superuser=superuser, db=db
-    )
+    resource = await _get_resource_or_404(resource_id=resource_id, db=db)
     await db.delete(resource)
     await db.commit()
 
