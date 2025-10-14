@@ -23,6 +23,20 @@ class ResourceType(StrEnum):
     LOCAL = "local"
 
 
+def validate_resource(resource_data: dict[str, Any]) -> None:
+    try:
+        resource_type = resource_data["type"]
+    except KeyError:
+        raise ValueError("Missing `type` key.")
+    match resource_type:
+        case ResourceType.LOCAL:
+            ValidResourceLocal(**resource_data)
+        case ResourceType.SLURM_SUDO:
+            ValidResourceSlurmSudo(**resource_data)
+        case ResourceType.SLURM_SSH:
+            ValidResourceSlurmSSH(**resource_data)
+
+
 class _ValidResourceBase(BaseModel):
     type: ResourceType
 
