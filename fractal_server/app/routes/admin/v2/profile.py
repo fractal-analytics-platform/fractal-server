@@ -20,6 +20,18 @@ from fractal_server.app.schemas.v2.profile import validate_profile
 router = APIRouter()
 
 
+async def _check_name_is_free(*, name: str, db: AsyncSession) -> None:
+    res = await db.execute(
+        select(Profile).where(Profile.name == name).limit(1)
+    )
+    namesake = res.scalars().first()
+    if namesake is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Profile with name '{name}' already exists.",
+        )
+
+
 @router.get(
     "/{resource_id}/profile/",
     response_model=list[ProfileRead],
@@ -79,6 +91,8 @@ async def post_profile(
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
+    await _check_name_is_free(name=profile_create.name, db=db)
+
     profile = Profile(
         resource_id=resource_id,
         **profile_create.model_dump(),
@@ -125,6 +139,7 @@ async def patch_profile(
         profile_id=profile_id,
         db=db,
     )
+    await _check_name_is_free(name=profile_update.name, db=db)
 
     for key, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(profile, key, value)

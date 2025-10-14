@@ -45,14 +45,16 @@ class ValidProfileSlurmSSH(BaseModel):
 
 class ProfileCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    username: str | None = None
-    ssh_key_path: str | None = None
-    jobs_remote_dir: str | None = None
-    tasks_remote_dir: str | None = None
+    name: NonEmptyStr
+    username: NonEmptyStr | None = None
+    ssh_key_path: NonEmptyStr | None = None
+    jobs_remote_dir: NonEmptyStr | None = None
+    tasks_remote_dir: NonEmptyStr | None = None
 
 
 class ProfileRead(BaseModel):
     id: int
+    name: str
     resource_id: int
     username: str | None = None
     ssh_key_path: str | None = None
@@ -62,7 +64,8 @@ class ProfileRead(BaseModel):
 
 class ProfileUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    username: str | None = None
-    ssh_key_path: str | None = None
-    jobs_remote_dir: str | None = None
-    tasks_remote_dir: str | None = None
+    name: NonEmptyStr | None = None
+    username: NonEmptyStr | None = None
+    ssh_key_path: NonEmptyStr | None = None
+    jobs_remote_dir: NonEmptyStr | None = None
+    tasks_remote_dir: NonEmptyStr | None = None
