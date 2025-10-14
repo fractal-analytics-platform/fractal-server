@@ -65,6 +65,7 @@ async def post_resource(
     Create new `Resource`.
     """
 
+    # Handle case where type!=FRACTAL_RUNNER_BACKEND
     settings = Inject(get_settings)
     if settings.FRACTAL_RUNNER_BACKEND != resource_create.type:
         raise HTTPException(
@@ -73,6 +74,16 @@ async def post_resource(
                 f"{settings.FRACTAL_RUNNER_BACKEND=} != "
                 f"{resource_create.type=}"
             ),
+        )
+
+    # Handle non-unique resource names
+    res = await db.execute(
+        select(Resource).where(Resource.name == resource_create.name)
+    )
+    if res.scalars().one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Resource name '{resource_create.name}' already in use.",
         )
 
     resource = Resource(**resource_create.model_dump())
