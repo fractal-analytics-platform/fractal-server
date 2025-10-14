@@ -68,6 +68,7 @@ class _ValidResourceBase(BaseModel):
 
 
 class ValidResourceLocal(_ValidResourceBase):
+    type: Literal[ResourceType.LOCAL]
     jobs_runner_config: JobRunnerConfigLocal
     jobs_slurm_python_worker: None = None
 
