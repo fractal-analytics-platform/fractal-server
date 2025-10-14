@@ -87,6 +87,8 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
 
 
 class ResourceCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: ResourceType
 
     name: NonEmptyStr
