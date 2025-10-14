@@ -1,6 +1,7 @@
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 from .resource import ResourceType
 from fractal_server.types import AbsolutePathStr
@@ -41,6 +42,7 @@ class ValidProfileSlurmSSH(_ValidProfileBase):
 
 
 class ProfileCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     username: str | None = None
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None
@@ -57,6 +59,7 @@ class ProfileRead(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     username: str | None = None
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None
