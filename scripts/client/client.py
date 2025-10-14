@@ -136,7 +136,6 @@ class FractalClient:
             endpoint="admin/v2/resource/",
             method="GET",
         )
-        self.detail(res)
         resources = res.json()
         if not resources:
             raise ValueError(f"Found {resources=}")
@@ -145,7 +144,6 @@ class FractalClient:
             endpoint=f"admin/v2/resource/{resource['id']}/profile/",
             method="GET",
         )
-        self.detail(res)
         profiles = res.json()
         if not profiles:
             raise ValueError(f"Found {profiles=}")
