@@ -165,6 +165,7 @@ def init_db_data(
                 "type": ResourceType.LOCAL,
                 "jobs_local_dir": "data-jobs",
                 "tasks_local_dir": "data-tasks",
+                "jobs_poll_interval": 0,
             }
         resource = Resource(**resource_data)
         db.add(resource)
