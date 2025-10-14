@@ -59,16 +59,16 @@ init_db_data_parser = subparsers.add_parser(
     description="Populate database with initial data.",
 )
 init_db_data_parser.add_argument(
-    "--resource-json-file",
+    "--resource",
     type=str,
-    help="JSON file with a serialized first resource.",
-    required=False,
+    help=("Either `default` or path to the JSON file of the first resource."),
+    required=True,
 )
 init_db_data_parser.add_argument(
-    "--profile-json-file",
+    "--profile",
     type=str,
-    help="JSON file with a serialized first profile.",
-    required=False,
+    help=("Either `default` or path to the JSON file of the first profile.",),
+    required=True,
 )
 
 # fractalctl update-db-data
@@ -124,8 +124,8 @@ def set_db():
 
 def init_db_data(
     *,
-    resource_json_file: str | None,
-    profile_json_file: str | None,
+    resource: str,
+    profile: str,
 ) -> None:
     from fractal_server.app.security import _create_first_user
     from fractal_server.app.security import _create_first_group
@@ -157,10 +157,7 @@ def init_db_data(
 
     # Create first resource
     with next(get_sync_db()) as db:
-        if resource_json_file is not None:
-            with open(resource_json_file) as f:
-                resource_data = json.load(f)
-        else:
+        if resource == "default":
             resource_data = {
                 "name": "Local resource",
                 "type": ResourceType.LOCAL,
@@ -168,15 +165,18 @@ def init_db_data(
                 "tasks_local_dir": (Path.cwd() / "data-tasks").as_posix(),
                 "jobs_poll_interval": 0,
             }
+        else:
+            with open(resource) as f:
+                resource_data = json.load(f)
         resource = Resource(**resource_data)
         db.add(resource)
         db.commit()
         db.refresh(resource)
-        if profile_json_file is not None:
-            with open(profile_json_file) as f:
-                profile_data = json.load(f)
-        else:
+        if profile == "default":
             profile_data = {}
+        else:
+            with open(profile) as f:
+                profile_data = json.load(f)
         profile_data["resource_id"] = resource.id
         profile = Profile(**profile_data)
         db.add(profile)
@@ -283,8 +283,8 @@ def run():
         set_db()
     elif args.cmd == "init-db-data":
         init_db_data(
-            resource_json_file=args.resource_json_file,
-            profile_json_file=args.profile_json_file,
+            resource=args.resource,
+            profile=args.profile,
         )
     elif args.cmd == "update-db-data":
         update_db_data()
