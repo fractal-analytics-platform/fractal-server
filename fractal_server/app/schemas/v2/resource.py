@@ -49,6 +49,7 @@ class _ValidResourceBase(BaseModel):
     # Jobs
     jobs_local_dir: AbsolutePathStr
     jobs_runner_config: dict[NonEmptyStr, Any]
+    jobs_poll_interval: int
 
     @model_validator(mode="after")
     def _tasks_configurations(self) -> Self:
@@ -75,7 +76,6 @@ class ValidResourceSlurmSudo(_ValidResourceBase):
     type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
-    jobs_poll_interval: int
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
@@ -83,7 +83,6 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
-    jobs_poll_interval: int
 
 
 class ResourceCreate(BaseModel):
@@ -95,7 +94,7 @@ class ResourceCreate(BaseModel):
     jobs_local_dir: NonEmptyStr
     jobs_runner_config: dict[str, Any]
     jobs_slurm_python_worker: AbsolutePathStr | None = None
-    jobs_poll_interval: int | None = None
+    jobs_poll_interval: int = 5
 
     tasks_local_dir: AbsolutePathStr
     tasks_python_config: dict[str, Any]
@@ -117,10 +116,10 @@ class ResourceUpdate(BaseModel):
     tasks_local_dir: AbsolutePathStr = None
     tasks_python_config: dict[str, Any] = None
     tasks_pixi_config: dict[str, Any] = None
+    jobs_poll_interval: int = None
     # Nullable db columns
     host: NonEmptyStr | None = None
     jobs_slurm_python_worker: AbsolutePathStr | None = None
-    jobs_poll_interval: int | None = None
     tasks_pip_cache_dir: AbsolutePathStr | None = None
 
 
@@ -132,14 +131,14 @@ class ResourceRead(BaseModel):
     name: str
     timestamp_created: AwareDatetime
 
-    host: str | None = None
+    host: str | None
 
     jobs_local_dir: str
     jobs_runner_config: dict[str, Any]
-    jobs_slurm_python_worker: str | None = None
+    jobs_slurm_python_worker: str | None
     jobs_poll_interval: int
 
     tasks_local_dir: str
     tasks_python_config: dict[str, Any]
     tasks_pixi_config: dict[str, Any]
-    tasks_pip_cache_dir: str | None = None
+    tasks_pip_cache_dir: str | None
