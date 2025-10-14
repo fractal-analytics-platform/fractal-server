@@ -82,6 +82,7 @@ class UserCreate(schemas.BaseUserCreate):
     """
 
     username: NonEmptyStr = None
+    profile_id: int | None = None
 
 
 class UserUpdateGroups(BaseModel):

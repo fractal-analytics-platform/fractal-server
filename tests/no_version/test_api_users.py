@@ -7,7 +7,9 @@ from fractal_server.app.models.security import UserOAuth
 PREFIX = "/auth"
 
 
-async def test_register_user(registered_client, registered_superuser_client):
+async def test_register_user(
+    registered_client, registered_superuser_client, local_resource_profile_db
+):
     """
     Test that user registration is only allowed to a superuser
     """
@@ -29,6 +31,33 @@ async def test_register_user(registered_client, registered_superuser_client):
     assert res.status_code == 201
     assert res.json()["email"] == EMAIL
     assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] is None
+
+    # Superuser: ALLOWED
+    EMAIL = "asd2@asd.asd"
+    payload_register2 = dict(email=EMAIL, password="12345")
+
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register2
+    )
+    debug(res.json())
+    assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] is None
+
+    _, profile = local_resource_profile_db
+    EMAIL = "asd3@asd.asd"
+    payload_register3 = dict(
+        email=EMAIL, password="12345", profile_id=profile.id
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register3
+    )
+    assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] == profile.id
 
 
 async def test_list_users(registered_client, registered_superuser_client):
