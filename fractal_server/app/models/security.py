@@ -75,6 +75,8 @@ class UserOAuth(SQLModel, table=True):
         is_verified:
         username:
         oauth_accounts:
+        user_settings_id:
+        profile_id:
         settings:
     """
 

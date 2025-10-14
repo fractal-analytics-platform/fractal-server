@@ -24,6 +24,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas import UserSettingsRead
 from fractal_server.app.schemas import UserSettingsUpdate
@@ -66,6 +67,14 @@ async def patch_user(
 
     # Check that user exists
     user_to_patch = await _user_or_404(user_id, db)
+
+    if user_update.profile_id is not None:
+        profile = await db.get(Profile, user_update.profile_id)
+        if profile is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Profile {user_update.profile_id} not found.",
+            )
 
     # Modify user attributes
     try:
