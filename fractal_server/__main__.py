@@ -2,6 +2,7 @@ import argparse as ap
 import asyncio
 import json
 import sys
+from pathlib import Path
 
 import uvicorn
 
@@ -163,8 +164,8 @@ def init_db_data(
             resource_data = {
                 "name": "Local resource",
                 "type": ResourceType.LOCAL,
-                "jobs_local_dir": "data-jobs",
-                "tasks_local_dir": "data-tasks",
+                "jobs_local_dir": (Path.cwd() / "data-jobs").as_posix(),
+                "tasks_local_dir": (Path.cwd() / "data-tasks").as_posix(),
                 "jobs_poll_interval": 0,
             }
         resource = Resource(**resource_data)
