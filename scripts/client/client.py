@@ -132,17 +132,19 @@ class FractalClient:
         return UserRead(**response_json(res))
 
     def associate_user_with_profile(self, user_id: int):
-        resources = self.make_request(
+        res = self.make_request(
             endpoint="admin/v2/resource/",
             method="GET",
         )
+        resources = res.json()
         if not resources:
             raise ValueError(f"Found {resources=}")
         resource = resources[0]
-        profiles = self.make_request(
+        res = self.make_request(
             endpoint=f"admin/v2/resource/{resource.id}/",
             method="GET",
         )
+        profiles = res.json()
         if not profiles:
             raise ValueError(f"Found {profiles=}")
         profile = profiles[0]
