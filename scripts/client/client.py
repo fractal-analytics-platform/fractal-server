@@ -141,7 +141,7 @@ class FractalClient:
             raise ValueError(f"Found {resources=}")
         resource = resources[0]
         res = self.make_request(
-            endpoint=f"admin/v2/resource/{resource.id}/",
+            endpoint=f"admin/v2/resource/{resource['id']}/",
             method="GET",
         )
         profiles = res.json()
@@ -151,7 +151,7 @@ class FractalClient:
         res = self.make_request(
             endpoint=f"auth/users/{user_id}/",
             method="PATCH",
-            data=dict(profile_id=profile.id),
+            data=dict(profile_id=profile["id"]),
         )
         self.detail(res)
 
