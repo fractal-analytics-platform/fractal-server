@@ -172,7 +172,7 @@ async def patch_profile(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                "PATCH would lead to invalid resource. Original error: "
+                "PATCH would lead to invalid profile. Original error: "
                 f"{str(e)}."
             ),
         )
