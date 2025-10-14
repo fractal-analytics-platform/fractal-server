@@ -67,7 +67,7 @@ init_db_data_parser.add_argument(
 init_db_data_parser.add_argument(
     "--profile",
     type=str,
-    help=("Either `default` or path to the JSON file of the first profile.",),
+    help=("Either `default` or path to the JSON file of the first profile."),
     required=True,
 )
 
