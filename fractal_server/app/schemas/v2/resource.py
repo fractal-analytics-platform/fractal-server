@@ -4,6 +4,7 @@ from typing import Literal
 from typing import Self
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic import ValidationError
 from pydantic.types import AwareDatetime
@@ -53,6 +54,7 @@ class _ValidResourceBase(BaseModel):
 
 class ValidResourceLocal(_ValidResourceBase):
     jobs_runner_config: JobRunnerConfigLocal
+    jobs_slurm_python_worker: None = None
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
@@ -101,33 +103,18 @@ class ResourceCreate(BaseModel):
 
 
 class ResourceUpdate(BaseModel):
-    type: ResourceType
-
-    name: NonEmptyStr
+    model_config = ConfigDict(extra="forbid")
+    # Non-nullable db columns
+    name: NonEmptyStr = None
+    jobs_local_dir: NonEmptyStr = None
+    tasks_local_dir: AbsolutePathStr = None
+    tasks_python_config: dict[str, Any] = None
+    tasks_pixi_config: dict[str, Any] = None
+    # Nullable db columns
     host: NonEmptyStr | None = None
-
-    jobs_local_dir: NonEmptyStr
-    jobs_runner_config: dict[str, Any]
     jobs_slurm_python_worker: AbsolutePathStr | None = None
     jobs_poll_interval: int | None = None
-
-    tasks_local_dir: AbsolutePathStr
-    tasks_python_config: dict[str, Any]
-    tasks_pixi_config: dict[str, Any]
     tasks_pip_cache_dir: AbsolutePathStr | None = None
-
-    @model_validator(mode="after")
-    def _validate_resource(self):
-        data = self.model_dump()
-        match self.type:
-            case ResourceType.LOCAL:
-                ValidResourceLocal(**data)
-            case ResourceType.SLURM_SUDO:
-                ValidResourceSlurmSudo(**data)
-            case ResourceType.SLURM_SSH:
-                ValidResourceSlurmSSH(**data)
-
-        return self
 
 
 class ResourceRead(BaseModel):

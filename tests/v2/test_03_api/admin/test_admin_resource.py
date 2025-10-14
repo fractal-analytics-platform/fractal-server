@@ -65,3 +65,38 @@ async def test_resource_api(
         # GET one resource / failure
         res = await client.get("/admin/v2/resource/9999/")
         assert res.status_code == 404
+
+        # PATCH one resource / failure due to extra
+        res = await client.patch(
+            f"/admin/v2/resource/{resource_id}/",
+            json=dict(invalid_extra_key="value"),
+        )
+        assert res.status_code == 422
+        assert "Extra inputs are not permitted" in str(res.json()["detail"])
+
+        # PATCH one resource / failure due to invalid request body
+        res = await client.patch(
+            f"/admin/v2/resource/{resource_id}/",
+            json=dict(name=""),
+        )
+        assert res.status_code == 422
+        assert "string_too_short" in str(res.json()["detail"])
+
+        # PATCH one resource / failure due to invalid fields
+        res = await client.patch(
+            f"/admin/v2/resource/{resource_id}/",
+            json=dict(tasks_python_config=dict(invalid="value")),
+        )
+        assert res.status_code == 422
+        assert "PATCH would lead to invalid resource" in str(
+            res.json()["detail"]
+        )
+
+        # PATCH one resource / success
+        NEW_NAME = "something else"
+        res = await client.patch(
+            f"/admin/v2/resource/{resource_id}/",
+            json=dict(name=NEW_NAME),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == NEW_NAME
