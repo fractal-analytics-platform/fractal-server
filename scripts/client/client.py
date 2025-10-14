@@ -129,9 +129,29 @@ class FractalClient:
         )
         self.detail(res)
 
-        # FIXME: add user to profile (API not available yet)
-
         return UserRead(**response_json(res))
+
+    def associate_user_with_profile(self, user_id: int):
+        resources = self.make_request(
+            endpoint="admin/v2/resource/",
+            method="GET",
+        )
+        if not resources:
+            raise ValueError(f"Found {resources=}")
+        resource = resources[0]
+        profiles = self.make_request(
+            endpoint=f"admin/v2/resource/{resource.id}/",
+            method="GET",
+        )
+        if not profiles:
+            raise ValueError(f"Found {profiles=}")
+        profile = profiles[0]
+        res = self.make_request(
+            endpoint=f"auth/users/{user_id}/",
+            method="PATCH",
+            data=dict(profile_id=profile.id),
+        )
+        self.detail(res)
 
     def add_project(self, project: ProjectCreateV2):
         res = self.make_request(
