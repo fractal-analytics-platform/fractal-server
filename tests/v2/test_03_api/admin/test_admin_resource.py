@@ -33,7 +33,7 @@ async def test_resource_api(
         res = await client.post(
             "/admin/v2/resource/",
             json=local_resource_profile_db[0].model_dump(
-                exclude={"timestamp_created"},
+                exclude={"timestamp_created", "id"},
             ),
         )
         assert res.status_code == 422
