@@ -15,10 +15,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
-from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import ValidProfileLocal
-from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
-from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
+from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
 
@@ -88,13 +85,10 @@ async def post_profile(
     )
 
     try:
-        match resource.type:
-            case ResourceType.LOCAL:
-                ValidProfileLocal(**profile.model_dump())
-            case ResourceType.SLURM_SUDO:
-                ValidProfileSlurmSudo(**profile.model_dump())
-            case ResourceType.SLURM_SSH:
-                ValidProfileSlurmSSH(**profile.model_dump())
+        validate_profile(
+            resource_type=resource.type,
+            profile_data=profile.model_dump(),
+        )
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -135,14 +129,9 @@ async def patch_profile(
     for key, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(profile, key, value)
     try:
-        _data = profile.model_dump()
-        match resource.type:
-            case ResourceType.LOCAL:
-                ValidProfileLocal(**_data)
-            case ResourceType.SLURM_SUDO:
-                ValidProfileSlurmSudo(**_data)
-            case ResourceType.SLURM_SSH:
-                ValidProfileSlurmSSH(**_data)
+        validate_profile(
+            resource_type=resource.type, profile_data=profile.model_dump()
+        )
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
