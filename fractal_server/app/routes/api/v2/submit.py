@@ -230,11 +230,7 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         cache_dir = None
     elif resource.type == ResourceType.SLURM_SUDO:
-        cache_dir = (
-            Path(user_settings.project_dir) / ".fractal_cache"
-            if user_settings.project_dir is not None
-            else None
-        )
+        cache_dir = Path(user_settings.project_dir) / ".fractal_cache"
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
     elif resource.type == ResourceType.SLURM_SSH:
         WORKFLOW_DIR_REMOTE = (
