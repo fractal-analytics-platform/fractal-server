@@ -13,11 +13,8 @@ from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ResourceCreate
 from fractal_server.app.schemas.v2 import ResourceRead
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import ResourceUpdate
-from fractal_server.app.schemas.v2 import ValidResourceLocal
-from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
-from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
+from fractal_server.app.schemas.v2.resource import validate_resource
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -120,14 +117,7 @@ async def patch_resource(
     for key, value in resource_update.model_dump(exclude_unset=True).items():
         setattr(resource, key, value)
     try:
-        _data = resource.model_dump()
-        match resource.type:
-            case ResourceType.LOCAL:
-                ValidResourceLocal(**_data)
-            case ResourceType.SLURM_SUDO:
-                ValidResourceSlurmSudo(**_data)
-            case ResourceType.SLURM_SSH:
-                ValidResourceSlurmSSH(**_data)
+        validate_resource(resource.model_dump())
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

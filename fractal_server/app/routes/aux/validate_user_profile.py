@@ -6,13 +6,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import ValidProfileLocal
-from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
-from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
-from fractal_server.app.schemas.v2 import ValidResourceLocal
-from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
-from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
+from fractal_server.app.schemas.v2.profile import validate_profile
+from fractal_server.app.schemas.v2.resource import validate_resource
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -43,16 +38,11 @@ async def validate_user_profile(
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
-        if resource.type == ResourceType.LOCAL:
-            ValidResourceLocal(**resource.model_dump())
-            ValidProfileLocal(**profile.model_dump())
-        elif resource.type == ResourceType.SLURM_SUDO:
-            ValidResourceSlurmSudo(**resource.model_dump())
-            ValidProfileSlurmSudo(**profile.model_dump())
-        elif resource.type == ResourceType.SLURM_SSH:
-            ValidResourceSlurmSSH(**resource.model_dump())
-            ValidProfileSlurmSSH(**profile.model_dump())
-
+        validate_resource(resource.model_dump())
+        validate_profile(
+            resource_type=resource.type,
+            profile_data=profile.model_dump(),
+        )
         db.expunge(resource)
         db.expunge(profile)
 

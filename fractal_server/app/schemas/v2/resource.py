@@ -103,16 +103,9 @@ class ResourceCreate(BaseModel):
     tasks_pip_cache_dir: AbsolutePathStr | None = None
 
     @model_validator(mode="after")
-    def _validate_resource(self):
+    def _validate_resource(self: Self):
         data = self.model_dump()
-        match self.type:
-            case ResourceType.LOCAL:
-                ValidResourceLocal(**data)
-            case ResourceType.SLURM_SUDO:
-                ValidResourceSlurmSudo(**data)
-            case ResourceType.SLURM_SSH:
-                ValidResourceSlurmSSH(**data)
-
+        validate_resource(data)
         return self
 
 
