@@ -4,10 +4,11 @@ restores the settings to the original values, so as to guarantee statelessness.
 """
 import pytest
 
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-NEW_RUNNER_BACKEND = "slurm_sudo"
+NEW_RUNNER_BACKEND = ResourceType.SLURM_SUDO
 NEW_JWT_EXPIRE_SECONDS = 1234
 
 

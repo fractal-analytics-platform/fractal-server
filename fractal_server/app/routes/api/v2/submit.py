@@ -30,6 +30,7 @@ from fractal_server.app.routes.aux.validate_user_settings import (
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.runner.set_start_and_last_task_index import (
@@ -162,7 +163,7 @@ async def apply_workflow(
             job_create.slurm_account = user_settings.slurm_accounts[0]
 
     # User appropriate FractalSSH object
-    if resource.type == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         ssh_config = dict(
             user=profile.username,
             host=resource.host,
@@ -198,7 +199,7 @@ async def apply_workflow(
             workflow.model_dump_json(exclude={"task_list"})
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"user_list"})
+            project.model_dump_json(exclude={"user_list", "resource_id"})
         ),
         **job_create.model_dump(),
     )
@@ -225,17 +226,17 @@ async def apply_workflow(
     )
 
     # Define user-side job directory
-    if resource.type == "local":
+    if resource.type == ResourceType.LOCAL:
         WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         cache_dir = None
-    elif resource.type == "slurm_sudo":
+    elif resource.type == ResourceType.SLURM_SUDO:
         cache_dir = (
             Path(user_settings.project_dir) / ".fractal_cache"
             if user_settings.project_dir is not None
             else None
         )
         WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
-    elif resource.type == "slurm_ssh":
+    elif resource.type == ResourceType.SLURM_SSH:
         WORKFLOW_DIR_REMOTE = (
             Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
         )

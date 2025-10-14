@@ -16,6 +16,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
@@ -386,8 +387,8 @@ async def test_stop_job_local(
     client,
     override_settings_factory,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
-    assert not _backend_supports_shutdown(backend="local")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL)
+    assert not _backend_supports_shutdown(backend=ResourceType.LOCAL)
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(
             f"{PREFIX}/job/123/stop/",
@@ -395,7 +396,9 @@ async def test_stop_job_local(
         assert res.status_code == 422
 
 
-@pytest.mark.parametrize("backend", ["slurm_sudo", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "backend", [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]
+)
 async def test_stop_job_slurm(
     backend,
     MockCurrentUser,

@@ -17,6 +17,7 @@ from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_active_user
@@ -57,8 +58,11 @@ async def create_project(
     await _check_project_exists(
         project_name=project.name, user_id=user.id, db=db
     )
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
 
-    db_project = ProjectV2(**project.model_dump())
+    db_project = ProjectV2(**project.model_dump(), resource_id=resource_id)
     db_project.user_list.append(user)
 
     db.add(db_project)

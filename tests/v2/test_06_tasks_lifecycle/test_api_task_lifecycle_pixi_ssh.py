@@ -8,6 +8,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import PixiSLURMConfig
@@ -97,7 +98,7 @@ async def test_task_group_lifecycle_pixi_ssh(
     app.state.fractal_ssh_list = fractal_ssh_list
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
 
     with pixi_pkg_targz.open("rb") as f:
         files = {

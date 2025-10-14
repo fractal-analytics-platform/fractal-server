@@ -141,10 +141,9 @@ class Settings(BaseSettings):
     # FRACTAL SPECIFIC
     ###########################################################################
 
+    # FIXME use ResourceType
     FRACTAL_RUNNER_BACKEND: Literal[
-        "local",
-        "slurm_sudo",
-        "slurm_ssh",
+        "local", "slurm_ssh", "slurm_sudo"
     ] = "local"
     """
     Select which runner backend to use.

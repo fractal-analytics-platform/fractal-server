@@ -5,6 +5,7 @@ import sys
 
 import uvicorn
 
+from fractal_server.app.schemas.v2 import ResourceType
 
 parser = ap.ArgumentParser(description="fractal-server commands")
 
@@ -168,7 +169,7 @@ def init_db_data(
         else:
             resource_data = {
                 "name": "Local resource",
-                "type": "local",
+                "type": ResourceType.LOCAL,
                 "jobs_local_dir": "data-jobs",
                 "tasks_local_dir": "data-tasks",
             }

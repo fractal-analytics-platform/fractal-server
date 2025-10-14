@@ -15,6 +15,7 @@ from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
 from fractal_server import __VERSION__
+from fractal_server.app.schemas.v2 import ResourceType
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -74,7 +75,7 @@ async def lifespan(app: FastAPI):
     check_settings()
     settings = Inject(get_settings)
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         from fractal_server.ssh._fabric import FractalSSHList
 
         app.state.fractal_ssh_list = FractalSSHList()
@@ -95,7 +96,7 @@ async def lifespan(app: FastAPI):
     logger = get_logger("fractal_server.lifespan")
     logger.info("[teardown] START")
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         logger.info(
             "[teardown] Close FractalSSH connections "
             f"(current size: {app.state.fractal_ssh_list.size})."

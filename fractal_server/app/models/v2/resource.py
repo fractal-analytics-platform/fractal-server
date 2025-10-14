@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
+from sqlmodel import CheckConstraint
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -19,7 +20,7 @@ class Resource(SQLModel, table=True):
     `settings.FRACTAL_RUNNER_BACKEND`.
     """
 
-    name: str
+    name: str = Field(unique=True)
     """
     Resource name.
     """
@@ -55,9 +56,10 @@ class Resource(SQLModel, table=True):
     `fractal-server` worker from within the SLURM jobs.
     """
 
-    jobs_poll_interval: int = 5
+    jobs_poll_interval: int
     """
-    On SLURM deployments, the interval to wait before new `squeue` calls.
+    On SLURM resources: the interval to wait before new `squeue` calls.
+    On local resources: ignored.
     """
 
     # task_settings
@@ -104,3 +106,17 @@ class Resource(SQLModel, table=True):
             return f"--cache-dir {self.tasks_pip_cache_dir}"
         else:
             return "--no-cache-dir"
+
+    # Check constraints
+    __table_args__ = (
+        # `type` column must be one of "local", "slurm_sudo" or "slurm_ssh"
+        CheckConstraint(
+            "type IN ('local', 'slurm_sudo', 'slurm_ssh')",
+            name="ck_resource_correct_type",
+        ),
+        # If `type` is not "local", `jobs_slurm_python_worker` must be set
+        CheckConstraint(
+            "(type = 'local') OR (jobs_slurm_python_worker IS NOT NULL)",
+            name="ck_resource_jobs_slurm_python_worker_set",
+        ),
+    )

@@ -23,6 +23,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -169,17 +170,17 @@ def submit_workflow(
 
         try:
             # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
-            if resource.type == "local":
+            if resource.type == ResourceType.LOCAL:
                 WORKFLOW_DIR_LOCAL.mkdir(parents=True)
                 WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-            elif resource.type == "slurm_sudo":
+            elif resource.type == ResourceType.SLURM_SUDO:
                 original_umask = os.umask(0)
                 WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
                 os.umask(original_umask)
                 WORKFLOW_DIR_REMOTE = (
                     Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
                 )
-            elif resource.type == "slurm_ssh":
+            elif resource.type == ResourceType.SLURM_SSH:
                 WORKFLOW_DIR_LOCAL.mkdir(parents=True)
                 WORKFLOW_DIR_REMOTE = (
                     Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
@@ -234,10 +235,10 @@ def submit_workflow(
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {resource.type}")
         logger.debug(f"Computational resource: {resource.name}")
-        if resource.type in ["slurm_sudo", "slurm_ssh"]:
+        if resource.type in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
-        if resource.type == "slurm_ssh":
+        if resource.type == ResourceType.SLURM_SSH:
             logger.debug(f"ssh_user: {profile.username}")
             logger.debug(f"Remote jobs dir: {profile.jobs_remote_dir}")
         logger.debug(f"job.id: {job.id}")
@@ -249,16 +250,16 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
-        if resource.type == "local":
+        if resource.type == ResourceType.LOCAL:
             process_workflow = local_process_workflow
             backend_specific_kwargs = {}
-        elif resource.type == "slurm_sudo":
+        elif resource.type == ResourceType.SLURM_SUDO:
             process_workflow = slurm_sudo_process_workflow
             backend_specific_kwargs = dict(
                 slurm_account=job.slurm_account,
                 user_cache_dir=user_cache_dir,
             )
-        elif resource.type == "slurm_ssh":
+        elif resource.type == ResourceType.SLURM_SSH:
             process_workflow = slurm_ssh_process_workflow
             backend_specific_kwargs = dict(
                 fractal_ssh=fractal_ssh,
