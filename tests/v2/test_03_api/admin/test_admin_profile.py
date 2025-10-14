@@ -73,7 +73,7 @@ async def test_profile_api(
         res = await client.patch(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
-                f"profile/{slurm_ssh_prof_id}/",
+                f"profile/{slurm_ssh_prof_id}/"
             ),
             json=dict(username=None),
         )
