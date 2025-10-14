@@ -132,7 +132,7 @@ def init_db_data(
     from fractal_server.syringe import Inject
     from fractal_server.config import get_init_data_settings
     from fractal_server.app.db import get_sync_db
-    from sqlalchemy import select
+    from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
     from fractal_server.app.models import Resource, Profile
 
@@ -155,8 +155,15 @@ def init_db_data(
     )
     print()
 
-    # Create first resource
+    # Create resource and profile
     with next(get_sync_db()) as db:
+        # Preliminary check
+        num_resources = db.execute(select(func.count(Resource.id))).scalar()
+        if num_resources != 0:
+            print(f"There exist already {num_resources=} resources. Exit.")
+            sys.exit(1)
+
+        # Create resource
         if resource == "default":
             resource_data = {
                 "name": "Local resource",
@@ -165,34 +172,40 @@ def init_db_data(
                 "tasks_local_dir": (Path.cwd() / "data-tasks").as_posix(),
                 "jobs_poll_interval": 0,
             }
+            print("Prepared default resource data.")
         else:
             with open(resource) as f:
                 resource_data = json.load(f)
-        resource = Resource(**resource_data)
-        db.add(resource)
+            print(f"Read resource data from {resource}.")
+        resource_obj = Resource(**resource_data)
+        db.add(resource_obj)
         db.commit()
-        db.refresh(resource)
+        db.refresh(resource_obj)
+
+        # Create profile
         if profile == "default":
             profile_data = {}
+            print("Prepared default profile data.")
         else:
             with open(profile) as f:
                 profile_data = json.load(f)
-        profile_data["resource_id"] = resource.id
-        profile = Profile(**profile_data)
-        db.add(profile)
+            print(f"Read profile data from {resource}.")
+        profile_data["resource_id"] = resource_obj.id
+        profile_obj = Profile(**profile_data)
+        db.add(profile_obj)
         db.commit()
-        db.refresh(profile)
+        db.refresh(profile_obj)
 
+        # Associate profile to users
         res = db.execute(select(UserOAuth))
         users = res.unique().scalars().all()
         for user in users:
-            print(f"Now setting profile_id={profile.id} for {user.email}.")
-            user.profile_id = profile.id
+            print(f"Now set profile_id={profile_obj.id} for {user.email}.")
+            user.profile_id = profile_obj.id
             db.add(user)
         db.commit()
         db.expunge_all()
-
-    # FIXME not tested yet
+        print()
 
 
 def update_db_data():
