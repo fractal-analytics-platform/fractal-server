@@ -23,7 +23,7 @@ async def test_resource_api(
         res = await client.post(
             "/admin/v2/resource/",
             json=slurm_ssh_resource_profile_fake_objects[0].model_dump(
-                exclude="timestamp_created"
+                exclude={"timestamp_created", "id"}
             ),
         )
         assert res.status_code == 422
@@ -109,3 +109,9 @@ async def test_resource_api(
         )
         assert res.status_code == 200
         assert res.json()["name"] == NEW_NAME
+
+        # DELETE one resource / success
+        res = await client.delete(f"/admin/v2/resource/{resource_id}/")
+        assert res.status_code == 204
+        res = await client.get(f"/admin/v2/resource/{resource_id}/")
+        assert res.status_code == 404
