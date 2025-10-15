@@ -25,6 +25,7 @@ def validate_profile(
 
 
 class ValidProfileLocal(BaseModel):
+    name: NonEmptyStr
     resource_type: ResourceType
     username: None = None
     ssh_key_path: None = None
@@ -33,6 +34,7 @@ class ValidProfileLocal(BaseModel):
 
 
 class ValidProfileSlurmSudo(BaseModel):
+    name: NonEmptyStr
     resource_type: ResourceType
     username: NonEmptyStr
     ssh_key_path: None = None
@@ -41,6 +43,7 @@ class ValidProfileSlurmSudo(BaseModel):
 
 
 class ValidProfileSlurmSSH(BaseModel):
+    name: NonEmptyStr
     resource_type: ResourceType
     username: NonEmptyStr
     ssh_key_path: AbsolutePathStr
@@ -65,6 +68,7 @@ ProfileCreate = Annotated[
 
 class ProfileRead(BaseModel):
     id: int
+    name: str
     resource_id: int
     resource_type: str
     username: str | None = None

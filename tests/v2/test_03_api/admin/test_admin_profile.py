@@ -37,9 +37,10 @@ async def test_profile_api(
         # POST one profile / success
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(resource_type="local"),
+            json=dict(resource_type="local", name="name1"),
         )
         assert res.status_code == 201
+        assert res.json()["name"] == "name1"
 
         # POST one profile / failure due to invalid `resource_type`
         res = await client.post(
@@ -49,9 +50,19 @@ async def test_profile_api(
         assert res.status_code == 422
         assert "union_tag_invalid" in str(res.json()["detail"])
 
+        # POST one profile / failure due to name taken
+        res = await client.post(
+            f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
+            json=dict(name="name1"),
+        )
+        assert res.status_code == 422
+        assert "already exists" in str(res.json()["detail"])
+
         # PUT one profile / success
+        NEW_NAME = "new-name"
         NEW_USERNAME = "new-username"
         new_ssh_profile = slurm_ssh_prof.model_dump()
+        new_ssh_profile["name"] = NEW_NAME
         new_ssh_profile["username"] = NEW_USERNAME
         res = await client.put(
             (
@@ -62,6 +73,7 @@ async def test_profile_api(
         )
         assert res.status_code == 200
         assert res.json()["username"] == NEW_USERNAME
+        assert res.json()["name"] == NEW_NAME
 
         # PUT one profile / failure
         new_ssh_profile["username"] = None

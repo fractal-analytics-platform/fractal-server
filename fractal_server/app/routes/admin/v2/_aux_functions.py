@@ -45,3 +45,23 @@ async def _get_profile_or_404(
         )
 
     return profile
+
+
+async def _check_profile_name(*, name: str, db: AsyncSession) -> None:
+    res = await db.execute(select(Profile).where(Profile.name == name))
+    namesake = res.scalars().one_or_none()
+    if namesake is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Profile with name '{name}' already exists.",
+        )
+
+
+async def _check_resource_name(*, name: str, db: AsyncSession) -> None:
+    res = await db.execute(select(Resource).where(Resource.name == name))
+    namesake = res.scalars().one_or_none()
+    if namesake is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Resource with name '{name}' already exists.",
+        )

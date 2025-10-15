@@ -7,6 +7,8 @@ class Profile(SQLModel, table=True):
     resource_id: int = Field(foreign_key="resource.id", ondelete="CASCADE")
     resource_type: str
 
+    name: str = Field(unique=True)
+
     username: str | None = None
     ssh_key_path: str | None = None
 

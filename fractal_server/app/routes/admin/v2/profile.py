@@ -3,8 +3,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import select
 
+from ._aux_functions import _check_profile_name
 from ._aux_functions import _get_profile_or_404
 from ._aux_functions import _get_resource_or_404
 from fractal_server.app.db import AsyncSession
@@ -95,6 +97,7 @@ async def post_profile(
         resource=resource,
         new_profile=profile_create,
     )
+    await _check_profile_name(name=profile_create.name, db=db)
 
     profile = Profile(
         resource_id=resource_id,
@@ -132,6 +135,8 @@ async def put_profile(
         resource=resource,
         new_profile=profile_update,
     )
+    if profile_update.name and profile_update.name != profile.name:
+        await _check_profile_name(name=profile_update.name, db=db)
 
     for key, value in profile_update.model_dump().items():
         setattr(profile, key, value)
@@ -155,6 +160,24 @@ async def delete_profile(
         profile_id=profile_id,
         db=db,
     )
+
+    # Fail if at least one UserOAuth is associated with the Profile.
+    res = await db.execute(
+        select(func.count(UserOAuth.id)).where(
+            UserOAuth.profile_id == profile.id
+        )
+    )
+    associated_users_count = res.scalar()
+    if associated_users_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Cannot delete Profile {profile_id} because it's associated"
+                f" with {associated_users_count} UserOAuths."
+            ),
+        )
+
+    # Delete
     await db.delete(profile)
     await db.commit()
 

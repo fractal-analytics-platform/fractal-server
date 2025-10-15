@@ -67,7 +67,7 @@ async def test_resource_api(
             ),
         )
         assert res.status_code == 422
-        assert "already in use" in str(res.json()["detail"])
+        assert "already exists" in str(res.json()["detail"])
 
         # POST one resource / success
         valid_resource = local_resource_profile_db[0].model_dump(
@@ -125,7 +125,7 @@ async def test_resource_api(
             json=valid_new_resource,
         )
         assert res.status_code == 422
-        assert "already in use" in str(res.json()["detail"])
+        assert "already exists" in str(res.json()["detail"])
 
         # PUT one resource / success
         NEW_NAME = "A new name"
@@ -136,7 +136,22 @@ async def test_resource_api(
         assert res.status_code == 200
         assert res.json()["name"] == NEW_NAME
 
+        # DELETE one resource / failure
+        res = await client.post(
+            f"/admin/v2/resource/{resource_id}/profile/",
+            json=dict(name="name"),
+        )
+        assert res.status_code == 201
+        profile = res.json()
+        res = await client.delete(f"/admin/v2/resource/{resource_id}/")
+        assert res.status_code == 422
+        assert "it's associated with 1 Profiles" in str(res.json()["detail"])
+
         # DELETE one resource / success
+        res = await client.delete(
+            f"/admin/v2/resource/{resource_id}/profile/{profile['id']}/"
+        )
+        assert res.status_code == 204
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 204
         res = await client.get(f"/admin/v2/resource/{resource_id}/")

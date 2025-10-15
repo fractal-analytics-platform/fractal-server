@@ -78,6 +78,7 @@ def local_resource_profile_objects(
         jobs_poll_interval=0,
     )
     prof = Profile(
+        name="local_resource_profile_objects",
         resource_id=123456789,
         resource_type=ResourceType.LOCAL,
     )
@@ -113,6 +114,7 @@ def slurm_sudo_resource_profile_objects(
         jobs_poll_interval=0,
     )
     prof = Profile(
+        name="slurm_sudo_resource_profile_objects",
         resource_id=123456789,
         username=SLURM_USER,
         resource_type=ResourceType.SLURM_SUDO,
@@ -156,6 +158,7 @@ def slurm_ssh_resource_profile_objects(
     prof = Profile(
         resource_id=123456789,
         resource_type=ResourceType.SLURM_SSH,
+        name="slurm_ssh_resource_profile_objects",
         username=ssh_username,
         ssh_key_path=ssh_keys["private"],
         jobs_remote_dir=(tmp777_path / "remote-jobs").as_posix(),
@@ -198,6 +201,7 @@ def slurm_ssh_resource_profile_fake_objects(
     prof = Profile(
         resource_id=123456789,
         resource_type=ResourceType.SLURM_SSH,
+        name="slurm_ssh_resource_profile_fake_objects",
         username=ssh_username,
         ssh_key_path="/fake/key",
         jobs_remote_dir="/fake/jobs",
