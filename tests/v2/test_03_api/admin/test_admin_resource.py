@@ -139,7 +139,7 @@ async def test_resource_api(
         # DELETE one resource / failure
         res = await client.post(
             f"/admin/v2/resource/{resource_id}/profile/",
-            json=dict(name="name"),
+            json=dict(resource_type="local", name="name"),
         )
         assert res.status_code == 201
         profile = res.json()
