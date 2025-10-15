@@ -82,16 +82,6 @@ async def post_resource(
 
     await _check_resource_name(name=resource_create.name, db=db)
 
-    # Handle non-unique resource names
-    res = await db.execute(
-        select(Resource).where(Resource.name == resource_create.name)
-    )
-    if res.scalars().one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Resource name '{resource_create.name}' already in use.",
-        )
-
     resource = Resource(**resource_create.model_dump())
     db.add(resource)
     await db.commit()
