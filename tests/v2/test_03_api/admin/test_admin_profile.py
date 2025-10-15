@@ -37,25 +37,17 @@ async def test_profile_api(
         # POST one profile / success
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(),
+            json=dict(resource_type="local"),
         )
         assert res.status_code == 201
 
-        # POST one profile / failure due to extra
+        # POST one profile / failure due to invalid `resource_type`
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(extra_field="value"),
+            json=dict(resource_type="invalid"),
         )
         assert res.status_code == 422
-        assert "Extra inputs are not permitted" in str(res.json()["detail"])
-
-        # POST one profile / failure due to invalid object
-        res = await client.post(
-            f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
-            json=dict(),
-        )
-        assert res.status_code == 422
-        assert "Invalid profile for" in str(res.json()["detail"])
+        assert "union_tag_invalid" in str(res.json()["detail"])
 
         # PATCH one profile / success
         NEW_USERNAME = "new-username"

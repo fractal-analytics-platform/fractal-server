@@ -12,6 +12,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
@@ -19,6 +20,19 @@ from fractal_server.app.schemas.v2 import ProfileUpdate
 from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
+
+
+def _check_resource_type_match_or_422(
+    resource: Resource,
+    new_profile: ProfileCreate,
+) -> None:
+    if resource.type != new_profile.resource_type:
+        raise HTTPException(
+            status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"{resource.type=} differs from {new_profile.resource_type=}."
+            ),
+        )
 
 
 @router.get(
@@ -80,28 +94,19 @@ async def post_profile(
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=profile_create,
+    )
+
     profile = Profile(
         resource_id=resource_id,
         **profile_create.model_dump(),
     )
 
-    try:
-        validate_profile(
-            resource_type=resource.type,
-            profile_data=profile.model_dump(),
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Invalid profile for {resource.type=}. Original error: {e}"
-            ),
-        )
-
     db.add(profile)
     await db.commit()
     await db.refresh(profile)
-
     return profile
 
 

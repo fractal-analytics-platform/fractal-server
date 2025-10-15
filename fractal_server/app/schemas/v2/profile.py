@@ -1,7 +1,10 @@
+from typing import Annotated
 from typing import Any
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Discriminator
+from pydantic import Tag
 
 from .resource import ResourceType
 from fractal_server.types import AbsolutePathStr
@@ -23,6 +26,7 @@ def validate_profile(
 
 
 class ValidProfileLocal(BaseModel):
+    resource_type: ResourceType
     username: None = None
     ssh_key_path: None = None
     jobs_remote_dir: None = None
@@ -30,6 +34,7 @@ class ValidProfileLocal(BaseModel):
 
 
 class ValidProfileSlurmSudo(BaseModel):
+    resource_type: ResourceType
     username: NonEmptyStr
     ssh_key_path: None = None
     jobs_remote_dir: None = None
@@ -37,23 +42,32 @@ class ValidProfileSlurmSudo(BaseModel):
 
 
 class ValidProfileSlurmSSH(BaseModel):
+    resource_type: ResourceType
     username: NonEmptyStr
     ssh_key_path: AbsolutePathStr
     jobs_remote_dir: AbsolutePathStr
     tasks_remote_dir: AbsolutePathStr
 
 
-class ProfileCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    username: str | None = None
-    ssh_key_path: str | None = None
-    jobs_remote_dir: str | None = None
-    tasks_remote_dir: str | None = None
+def get_discriminator_value(v: Any) -> str:
+    # See https://github.com/fastapi/fastapi/discussions/12941
+    if isinstance(v, dict):
+        return v.get("resource_type")
+    return getattr(v, "resource_type")
+
+
+ProfileCreate = Annotated[
+    Annotated[ValidProfileLocal, Tag(ResourceType.LOCAL)]
+    | Annotated[ValidProfileSlurmSudo, Tag(ResourceType.SLURM_SUDO)]
+    | Annotated[ValidProfileSlurmSSH, Tag(ResourceType.SLURM_SSH)],
+    Discriminator(get_discriminator_value),
+]
 
 
 class ProfileRead(BaseModel):
     id: int
     resource_id: int
+    resource_type: str
     username: str | None = None
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None
