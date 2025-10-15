@@ -3,7 +3,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import ValidationError
 from sqlmodel import select
 
 from ._aux_functions import _get_resource_or_404
@@ -14,7 +13,6 @@ from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ResourceCreate
 from fractal_server.app.schemas.v2 import ResourceRead
-from fractal_server.app.schemas.v2.resource import validate_resource
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -137,18 +135,6 @@ async def patch_resource(
     # Prepare new db object
     for key, value in resource_update.model_dump(exclude_unset=True).items():
         setattr(resource, key, value)
-
-    # Validate new db object
-    try:
-        validate_resource(resource.model_dump())
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "PATCH would lead to invalid resource. Original error: "
-                f"{str(e)}."
-            ),
-        )
 
     await db.commit()
     await db.refresh(resource)
