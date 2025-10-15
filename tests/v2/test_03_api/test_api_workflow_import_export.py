@@ -235,30 +235,6 @@ async def test_import_export(
             == first_task_no_source.taskgroupv2_id
         )
 
-        # FIXME: is this needed?
-        # # issue 2226
-        # names = [
-        #     "Convert Cellvoyager to OME-Zarr",
-        #     "Project Image (HCS Plate)",
-        # ]
-        # for name in names:
-        #     await task_factory_v2(
-        #         user_id=user.id,
-        #         version="1.4.2",
-        #         name=name,
-        #         task_group_kwargs=dict(pkg_name="fractal-tasks-core"),
-        #     )
-        # with (testdata_path / "import_export/workflow-issue2226.json").open(
-        #     "r"
-        # ) as f:
-        #     workflow_issue_2226 = json.load(f)
-        # res = await client.post(
-        #     f"{PREFIX}/project/{prj.id}/workflow/import/",
-        #     json=workflow_issue_2226,
-        # )
-        # debug(res.json())
-        # assert res.status_code == 201
-
 
 async def test_unit_get_task_by_source():
     from fractal_server.app.routes.api.v2.workflow_import import (
@@ -677,3 +653,83 @@ async def test_import_filters_compatibility(
         )
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
+
+
+async def test_import_multiple_task_groups_same_version(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    db,
+):
+    """
+    Test the situation where several task-group of the same version are
+    available for the same user.
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2852
+    """
+
+    TASK_NAME = "my-task"
+    PKG_NAME = "tasks"
+    V1 = "1.0.0"
+    V2 = "2.0.0"
+
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
+    some_usergroup = UserGroup(name="Some group of users")
+    db.add(some_usergroup)
+    await db.commit()
+    await db.refresh(some_usergroup)
+
+    await task_factory_v2(
+        user_id=user2.id,
+        name=TASK_NAME,
+        task_group_kwargs=dict(
+            pkg_name=PKG_NAME,
+            version=V2,
+        ),
+        version=V2,
+    )
+
+    async with MockCurrentUser() as user1:
+        proj = await project_factory_v2(user1)
+
+        db.add(LinkUserGroup(user_id=user1.id, group_id=some_usergroup.id))
+        db.add(LinkUserGroup(user_id=user2_id, group_id=some_usergroup.id))
+        await db.commit()
+
+        await task_factory_v2(
+            user_id=user1.id,
+            name=TASK_NAME,
+            task_group_kwargs=dict(
+                pkg_name=PKG_NAME,
+                version=V1,
+            ),
+            version=V1,
+        )
+        await task_factory_v2(
+            user_id=user1.id,
+            name=TASK_NAME,
+            task_group_kwargs=dict(
+                pkg_name=PKG_NAME,
+                version=V2,
+                user_group_id=some_usergroup.id,
+            ),
+            version=V2,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/import/",
+            json=dict(
+                name="name",
+                task_list=[
+                    dict(
+                        task=dict(
+                            pkg_name=PKG_NAME,
+                            version=V2,
+                            name=TASK_NAME,
+                        )
+                    )
+                ],
+            ),
+        )
+        assert res.json()["task_list"][0]["task"]["version"] == V2
