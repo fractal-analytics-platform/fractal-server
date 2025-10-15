@@ -171,7 +171,7 @@ async def _get_task_by_taskimport(
             "after filtering by version."
         )
         final_task_group = await _disambiguate_task_groups(
-            matching_task_groups=matching_task_groups,
+            matching_task_groups=final_matching_task_groups,
             user_id=user_id,
             db=db,
             default_group_id=default_group_id,
