@@ -68,15 +68,17 @@ async def test_profile_api(
 
         # PATCH one profile / success
         NEW_USERNAME = "new-username"
+        NEW_NAME = "new-name"
         res = await client.patch(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=NEW_USERNAME),
+            json=dict(username=NEW_USERNAME, name=NEW_NAME),
         )
         assert res.status_code == 200
         assert res.json()["username"] == NEW_USERNAME
+        assert res.json()["name"] == NEW_NAME
 
         # PATCH one profile / failure
         res = await client.patch(
