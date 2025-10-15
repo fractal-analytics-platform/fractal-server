@@ -64,7 +64,7 @@ class ProfileRead(BaseModel):
 
 class ProfileUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: NonEmptyStr | None = None
+    name: NonEmptyStr = None
     username: NonEmptyStr | None = None
     ssh_key_path: NonEmptyStr | None = None
     jobs_remote_dir: NonEmptyStr | None = None
