@@ -97,3 +97,20 @@ async def test_profile_api(
             ),
         )
         assert res.status_code == 404
+
+
+async def test_resource_of_profile(
+    db,
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+        # Failure
+        res = await client.get("/admin/v2/resource-of-profile/9999/")
+        assert res.status_code == 404
+        # Success
+        res = await client.get(f"/admin/v2/resource-of-profile/{profile.id}/")
+        assert res.status_code == 200
+        assert res.json()["id"] == resource.id
