@@ -133,7 +133,7 @@ async def put_resource(
             )
 
     # Prepare new db object
-    for key, value in resource_update.model_dump(exclude_unset=True).items():
+    for key, value in resource_update.model_dump().items():
         setattr(resource, key, value)
 
     await db.commit()

@@ -133,7 +133,7 @@ async def put_profile(
         new_profile=profile_update,
     )
 
-    for key, value in profile_update.model_dump(exclude_unset=True).items():
+    for key, value in profile_update.model_dump().items():
         setattr(profile, key, value)
     await db.commit()
     await db.refresh(profile)

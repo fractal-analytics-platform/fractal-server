@@ -94,8 +94,8 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
 def get_discriminator_value(v: Any) -> str:
     # See https://github.com/fastapi/fastapi/discussions/12941
     if isinstance(v, dict):
-        return v.get("type")
-    return getattr(v, "type")
+        return v.get("type", None)
+    return getattr(v, "type", None)
 
 
 ResourceCreate = Annotated[

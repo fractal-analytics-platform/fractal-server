@@ -51,8 +51,8 @@ class ValidProfileSlurmSSH(BaseModel):
 def get_discriminator_value(v: Any) -> str:
     # See https://github.com/fastapi/fastapi/discussions/12941
     if isinstance(v, dict):
-        return v.get("resource_type")
-    return getattr(v, "resource_type")
+        return v.get("resource_type", None)
+    return getattr(v, "resource_type", None)
 
 
 ProfileCreate = Annotated[
