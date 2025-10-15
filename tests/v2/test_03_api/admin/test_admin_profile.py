@@ -63,7 +63,7 @@ async def test_profile_api(
             f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
             json=dict(name="name1"),
         )
-        assert res.status_code == 409
+        assert res.status_code == 422
         assert "already exists" in str(res.json()["detail"])
 
         # PATCH one profile / success
