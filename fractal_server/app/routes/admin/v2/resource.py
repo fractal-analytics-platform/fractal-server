@@ -21,17 +21,17 @@ from fractal_server.syringe import Inject
 router = APIRouter()
 
 
-def _check_type_match_or_422(resource_create: ResourceCreate) -> None:
+def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
     """
     Handle case where `resource.type != FRACTAL_RUNNER_BACKEND`
     """
     settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND != resource_create.type:
+    if settings.FRACTAL_RUNNER_BACKEND != new_resource.type:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"{settings.FRACTAL_RUNNER_BACKEND=} != "
-                f"{resource_create.type=}"
+                f"{new_resource.type=}"
             ),
         )
 
