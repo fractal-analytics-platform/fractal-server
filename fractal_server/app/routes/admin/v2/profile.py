@@ -15,6 +15,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
+from fractal_server.app.schemas.v2 import ProfileUpdate
 from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
@@ -112,7 +113,7 @@ async def post_profile(
 async def patch_profile(
     resource_id: int,
     profile_id: int,
-    profile_update: Profile,
+    profile_update: ProfileUpdate,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
