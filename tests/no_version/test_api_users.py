@@ -494,3 +494,31 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
         f"{PREFIX}/users/42/settings/", json=dict()
     )
     assert res.status_code == 404
+
+
+async def test_get_profile_info(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+
+    async with MockCurrentUser():
+        res = await client.get("/auth/current-user/profile-info/")
+        assert res.status_code == 200
+        assert res.json() == {
+            "has_profile": False,
+            "resource_name": None,
+            "profile_name": None,
+            "username": None,
+        }
+
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+        res = await client.get("/auth/current-user/profile-info/")
+        assert res.status_code == 200
+        assert res.json() == {
+            "has_profile": True,
+            "resource_name": resource.name,
+            "profile_name": profile.name,
+            "username": profile.username,
+        }
