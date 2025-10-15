@@ -27,7 +27,7 @@ def _check_resource_type_match_or_422(
 ) -> None:
     if resource.type != new_profile.resource_type:
         raise HTTPException(
-            status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"{resource.type=} differs from {new_profile.resource_type=}."
             ),
