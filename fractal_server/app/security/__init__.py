@@ -285,7 +285,6 @@ async def _create_first_user(
     password: str,
     is_superuser: bool = False,
     is_verified: bool = False,
-    username: str | None = None,
 ) -> None:
     """
     Private method to create the first fractal-server user
@@ -308,7 +307,6 @@ async def _create_first_user(
         password: New user's password
         is_superuser: `True` if the new user is a superuser
         is_verified: `True` if the new user is verified
-        username:
     """
     function_logger = set_logger("fractal_server.create_first_user")
     function_logger.info(f"START _create_first_user, with email '{email}'")
@@ -336,8 +334,6 @@ async def _create_first_user(
                         is_superuser=is_superuser,
                         is_verified=is_verified,
                     )
-                    if username is not None:
-                        kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     function_logger.info(f"User '{user.email}' created")
     except UserAlreadyExists:

@@ -15,9 +15,9 @@ A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/frac
 | is_active | bool | | true |
 | is_superuser | bool | | false |
 | is_verified | bool | | false |
-| <span style="background-color:teal;color:white">&nbsp;username&nbsp;</span> | string | * | null |
 
-The colored attribute (`username`) is specific for Fractal users, while the other attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
+
+Most attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
 In the startup phase, `fractal-server` creates a default user, who also has the superuser privileges that are necessary for managing other users.
 The credentials for this user are defined via the environment variables
@@ -99,8 +99,7 @@ $ curl \
     "is_superuser":true,
     "is_verified":false,
     "slurm_user":null,
-    "cache_dir":null,
-    "username":"admin"
+    "cache_dir":null
 }
 ```
 
@@ -265,8 +264,7 @@ curl \
     "is_superuser":false,
     "is_verified":false,
     "slurm_user":null,
-    "cache_dir":null,
-    "username":null
+    "cache_dir":null
 }
 ```
 

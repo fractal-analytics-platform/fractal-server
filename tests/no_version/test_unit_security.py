@@ -24,9 +24,7 @@ async def test_unit_create_first_user(db):
     await _create_first_user(email="test1@fractal.com", password="xxxx")
     assert await count_users(db) == 1
 
-    await _create_first_user(
-        email="test2@fractal.com", password="xxxx", username="test2"
-    )
+    await _create_first_user(email="test2@fractal.com", password="xxxx")
     assert await count_users(db) == 2
 
     await _create_first_user(
