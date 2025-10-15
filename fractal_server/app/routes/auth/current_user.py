@@ -142,9 +142,8 @@ async def get_current_user_profile_info(
             has_profile=True,
             resource_name=resource.name,
             profile_name=profile.name,
+            username=profile.username,
         )
-        if profile.username is not None:
-            response_data["username"] = profile.username
 
     return response_data
 
