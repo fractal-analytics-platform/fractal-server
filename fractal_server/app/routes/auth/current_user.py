@@ -9,19 +9,26 @@ from fastapi_users import schemas
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from . import current_active_user
-from ...db import get_async_db
-from ...schemas.user import UserRead
-from ...schemas.user import UserUpdate
-from ...schemas.user import UserUpdateStrict
-from ..aux.validate_user_settings import verify_user_has_settings
-from ._aux_auth import _get_single_user_with_groups
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_single_user_with_groups,
+)
+from fractal_server.app.routes.aux.validate_user_settings import (
+    verify_user_has_settings,
+)
+from fractal_server.app.schemas import UserProfileInfo
 from fractal_server.app.schemas import UserSettingsReadStrict
 from fractal_server.app.schemas import UserSettingsUpdateStrict
+from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user import UserUpdate
+from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
 from fractal_server.config import get_settings
@@ -108,6 +115,38 @@ async def patch_current_user_settings(
     await db.refresh(current_user_settings)
 
     return current_user_settings
+
+
+@router_current_user.get(
+    "/current-user/profile-info/",
+    response_model=UserProfileInfo,
+)
+async def get_current_user_profile_info(
+    current_user: UserOAuth = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserProfileInfo:
+    stm = (
+        select(Resource, Profile)
+        .join(UserOAuth)
+        .where(Resource.id == Profile.resource_id)
+        .where(Profile.id == UserOAuth.profile_id)
+        .where(UserOAuth.id == current_user.id)
+    )
+    res = await db.execute(stm)
+    db_data = res.one_or_none()
+    if db_data is None:
+        response_data = dict(has_profile=False)
+    else:
+        resource, profile = db_data
+        response_data = dict(
+            has_profile=True,
+            resource_name=resource.name,
+            profile_name=profile.name,
+        )
+        if profile.username is not None:
+            response_data["username"] = profile.username
+
+    return response_data
 
 
 @router_current_user.get(

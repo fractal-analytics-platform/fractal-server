@@ -7,13 +7,6 @@ from pydantic import Field
 from fractal_server.types import ListUniqueNonNegativeInt
 from fractal_server.types import NonEmptyStr
 
-__all__ = (
-    "UserRead",
-    "UserUpdate",
-    "UserUpdateGroups",
-    "UserCreate",
-)
-
 
 class OAuthAccountRead(BaseModel):
     """
@@ -94,3 +87,10 @@ class UserUpdateGroups(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     group_ids: ListUniqueNonNegativeInt = Field(min_length=1)
+
+
+class UserProfileInfo(BaseModel):
+    has_profile: bool
+    resource_name: str | None = None
+    profile_name: str | None = None
+    username: str | None = None
