@@ -1,11 +1,13 @@
 from enum import StrEnum
+from typing import Annotated
 from typing import Any
 from typing import Literal
 from typing import Self
 
 from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import Discriminator
 from pydantic import model_validator
+from pydantic import Tag
 from pydantic import ValidationError
 from pydantic.types import AwareDatetime
 
@@ -39,6 +41,7 @@ def validate_resource(resource_data: dict[str, Any]) -> None:
 
 class _ValidResourceBase(BaseModel):
     type: ResourceType
+    name: NonEmptyStr
 
     # Tasks
     tasks_python_config: dict[NonEmptyStr, Any]
@@ -49,7 +52,7 @@ class _ValidResourceBase(BaseModel):
     # Jobs
     jobs_local_dir: AbsolutePathStr
     jobs_runner_config: dict[NonEmptyStr, Any]
-    jobs_poll_interval: int
+    jobs_poll_interval: int = 5
 
     @model_validator(mode="after")
     def _tasks_configurations(self) -> Self:
@@ -88,44 +91,19 @@ class ValidResourceSlurmSSH(_ValidResourceBase):
     jobs_runner_config: JobRunnerConfigSLURM
 
 
-class ResourceCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    type: ResourceType
-
-    name: NonEmptyStr
-    host: NonEmptyStr | None = None
-
-    jobs_local_dir: NonEmptyStr
-    jobs_runner_config: dict[str, Any]
-    jobs_slurm_python_worker: AbsolutePathStr | None = None
-    jobs_poll_interval: int = 5
-
-    tasks_local_dir: AbsolutePathStr
-    tasks_python_config: dict[str, Any]
-    tasks_pixi_config: dict[str, Any]
-    tasks_pip_cache_dir: AbsolutePathStr | None = None
-
-    @model_validator(mode="after")
-    def _validate_resource(self: Self):
-        data = self.model_dump()
-        validate_resource(data)
-        return self
+def get_discriminator_value(v: Any) -> str:
+    # See https://github.com/fastapi/fastapi/discussions/12941
+    if isinstance(v, dict):
+        return v.get("type", None)
+    return getattr(v, "type", None)
 
 
-class ResourceUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    # Non-nullable db columns
-    name: NonEmptyStr = None
-    jobs_local_dir: NonEmptyStr = None
-    tasks_local_dir: AbsolutePathStr = None
-    tasks_python_config: dict[str, Any] = None
-    tasks_pixi_config: dict[str, Any] = None
-    jobs_poll_interval: int = None
-    # Nullable db columns
-    host: NonEmptyStr | None = None
-    jobs_slurm_python_worker: AbsolutePathStr | None = None
-    tasks_pip_cache_dir: AbsolutePathStr | None = None
+ResourceCreate = Annotated[
+    Annotated[ValidResourceLocal, Tag(ResourceType.LOCAL)]
+    | Annotated[ValidResourceSlurmSudo, Tag(ResourceType.SLURM_SUDO)]
+    | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)],
+    Discriminator(get_discriminator_value),
+]
 
 
 class ResourceRead(BaseModel):

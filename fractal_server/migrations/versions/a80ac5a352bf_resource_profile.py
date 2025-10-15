@@ -1,8 +1,8 @@
 """resource-profile
 
-Revision ID: 6aaf0ba0febd
+Revision ID: a80ac5a352bf
 Revises: 981d588fe248
-Create Date: 2025-10-15 15:51:54.935971
+Create Date: 2025-10-15 15:53:34.823398
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "6aaf0ba0febd"
+revision = "a80ac5a352bf"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -84,6 +84,9 @@ def upgrade() -> None:
         "profile",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("resource_id", sa.Integer(), nullable=False),
+        sa.Column(
+            "resource_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "username", sqlmodel.sql.sqltypes.AutoString(), nullable=True

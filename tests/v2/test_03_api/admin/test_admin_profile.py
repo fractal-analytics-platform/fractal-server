@@ -37,61 +37,68 @@ async def test_profile_api(
         # POST one profile / success
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(name="name1"),
+            json=dict(resource_type="local", name="name1"),
         )
         assert res.status_code == 201
         assert res.json()["name"] == "name1"
 
-        # POST one profile / failure due to extra
+        # POST one profile / failure due to invalid `resource_type`
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(extra_field="value"),
+            json=dict(resource_type="invalid"),
         )
         assert res.status_code == 422
-        assert "Extra inputs are not permitted" in str(res.json()["detail"])
-
-        # POST one profile / failure due to invalid object
-        res = await client.post(
-            f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
-            json=dict(name="name2"),
-        )
-        assert res.status_code == 422
-        assert "Invalid profile for" in str(res.json()["detail"])
+        assert "union_tag_invalid" in str(res.json()["detail"])
 
         # POST one profile / failure due to name taken
         res = await client.post(
-            f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
-            json=dict(name="name1"),
+            f"/admin/v2/resource/{local_res_id}/profile/",
+            json=dict(name="name1", resource_type="local"),
         )
         assert res.status_code == 422
         assert "already exists" in str(res.json()["detail"])
 
-        # PATCH one profile / success
-        NEW_USERNAME = "new-username"
+        # PUT one profile / success
         NEW_NAME = "new-name"
-        res = await client.patch(
+        NEW_USERNAME = "new-username"
+        new_ssh_profile = slurm_ssh_prof.model_dump()
+        new_ssh_profile["name"] = NEW_NAME
+        new_ssh_profile["username"] = NEW_USERNAME
+        res = await client.put(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=NEW_USERNAME, name=NEW_NAME),
+            json=new_ssh_profile,
         )
         assert res.status_code == 200
         assert res.json()["username"] == NEW_USERNAME
         assert res.json()["name"] == NEW_NAME
 
-        # PATCH one profile / failure
-        res = await client.patch(
+        # PUT one profile / failure
+        new_ssh_profile["username"] = None
+        res = await client.put(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=None),
+            json=new_ssh_profile,
         )
         assert res.status_code == 422
-        assert "PATCH would lead to invalid profile" in str(
-            res.json()["detail"]
-        )
+        assert res.json() == {
+            "detail": [
+                {
+                    "type": "string_type",
+                    "loc": [
+                        "body",
+                        "slurm_ssh",
+                        "username",
+                    ],
+                    "msg": "Input should be a valid string",
+                    "input": None,
+                },
+            ],
+        }
 
         # DELETE one profile
         res = await client.delete(

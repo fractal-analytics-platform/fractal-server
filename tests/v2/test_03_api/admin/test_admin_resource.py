@@ -25,13 +25,30 @@ async def test_resource_api(
         assert len(res.json()) == 1
 
         # POST one resource / fail due to invalid payload
+        faulty_slurm_ssh_resource = slurm_ssh_resource_profile_fake_objects[
+            0
+        ].model_dump(exclude={"timestamp_created", "id"})
+        FAULTY_RESOURCE_EXPECTED_ERROR = {
+            "detail": [
+                {
+                    "type": "string_type",
+                    "loc": [
+                        "body",
+                        "slurm_ssh",
+                        "host",
+                    ],
+                    "msg": "Input should be a valid string",
+                    "input": None,
+                },
+            ],
+        }
+        faulty_slurm_ssh_resource["host"] = None
         res = await client.post(
             "/admin/v2/resource/",
-            json=dict(something="else"),
+            json=faulty_slurm_ssh_resource,
         )
         assert res.status_code == 422
-        assert "Field required" in str(res.json()["detail"])
-
+        assert res.json() == FAULTY_RESOURCE_EXPECTED_ERROR
         # POST one resource / fail due to wrong resource.type
         res = await client.post(
             "/admin/v2/resource/",
@@ -79,46 +96,42 @@ async def test_resource_api(
         res = await client.get("/admin/v2/resource/9999/")
         assert res.status_code == 404
 
-        # PATCH one resource / failure due to extra
-        res = await client.patch(
+        # PUT one resource / missing `type`
+        res = await client.put(
             f"/admin/v2/resource/{resource_id}/",
-            json=dict(invalid_extra_key="value"),
+            json={},
         )
         assert res.status_code == 422
-        assert "Extra inputs are not permitted" in str(res.json()["detail"])
+        assert "union_tag_not_found" in str(res.json()["detail"])
 
-        # PATCH one resource / failure due to invalid request body
-        res = await client.patch(
+        # PUT one resource / failure due to invalid request body
+        res = await client.put(
             f"/admin/v2/resource/{resource_id}/",
-            json=dict(name=""),
+            json=faulty_slurm_ssh_resource,
         )
         assert res.status_code == 422
-        assert "string_too_short" in str(res.json()["detail"])
+        assert res.json() == FAULTY_RESOURCE_EXPECTED_ERROR
 
-        # PATCH one resource / failure due to invalid fields
-        res = await client.patch(
-            f"/admin/v2/resource/{resource_id}/",
-            json=dict(tasks_python_config=dict(invalid="value")),
+        # PUT one resource / failure due to non-unique name
+        valid_new_resource = local_resource_profile_db[0].model_dump(
+            exclude={
+                "timestamp_created",
+                "id",
+            }
         )
-        assert res.status_code == 422
-        assert "PATCH would lead to invalid resource" in str(
-            res.json()["detail"]
-        )
-
-        # PATCH one resource / failure due to non-unique name
-        NEW_NAME = "something else"
-        res = await client.patch(
+        valid_new_resource["name"] = local_resource_profile_db[0].name
+        res = await client.put(
             f"/admin/v2/resource/{resource_id}/",
-            json=dict(name=local_resource_profile_db[0].name),
+            json=valid_new_resource,
         )
         assert res.status_code == 422
         assert "already exists" in str(res.json()["detail"])
 
-        # PATCH one resource / success
-        NEW_NAME = "something else"
-        res = await client.patch(
-            f"/admin/v2/resource/{resource_id}/",
-            json=dict(name=NEW_NAME),
+        # PUT one resource / success
+        NEW_NAME = "A new name"
+        valid_new_resource["name"] = NEW_NAME
+        res = await client.put(
+            f"/admin/v2/resource/{resource_id}/", json=valid_new_resource
         )
         assert res.status_code == 200
         assert res.json()["name"] == NEW_NAME
@@ -126,7 +139,7 @@ async def test_resource_api(
         # DELETE one resource / failure
         res = await client.post(
             f"/admin/v2/resource/{resource_id}/profile/",
-            json=dict(name="name"),
+            json=dict(resource_type="local", name="name"),
         )
         assert res.status_code == 201
         profile = res.json()

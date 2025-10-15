@@ -3,7 +3,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import ValidationError
 from sqlmodel import func
 from sqlmodel import select
 
@@ -14,13 +13,25 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
-from fractal_server.app.schemas.v2 import ProfileUpdate
-from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
+
+
+def _check_resource_type_match_or_422(
+    resource: Resource,
+    new_profile: ProfileCreate,
+) -> None:
+    if resource.type != new_profile.resource_type:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"{resource.type=} differs from {new_profile.resource_type=}."
+            ),
+        )
 
 
 @router.get(
@@ -82,6 +93,10 @@ async def post_profile(
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=profile_create,
+    )
     await _check_profile_name(name=profile_create.name, db=db)
 
     profile = Profile(
@@ -89,35 +104,21 @@ async def post_profile(
         **profile_create.model_dump(),
     )
 
-    try:
-        validate_profile(
-            resource_type=resource.type,
-            profile_data=profile.model_dump(),
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Invalid profile for {resource.type=}. Original error: {e}"
-            ),
-        )
-
     db.add(profile)
     await db.commit()
     await db.refresh(profile)
-
     return profile
 
 
-@router.patch(
+@router.put(
     "/{resource_id}/profile/{profile_id}/",
     response_model=ProfileRead,
     status_code=200,
 )
-async def patch_profile(
+async def put_profile(
     resource_id: int,
     profile_id: int,
-    profile_update: ProfileUpdate,
+    profile_update: ProfileCreate,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
@@ -130,27 +131,17 @@ async def patch_profile(
         profile_id=profile_id,
         db=db,
     )
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=profile_update,
+    )
     if profile_update.name and profile_update.name != profile.name:
         await _check_profile_name(name=profile_update.name, db=db)
 
-    for key, value in profile_update.model_dump(exclude_unset=True).items():
+    for key, value in profile_update.model_dump().items():
         setattr(profile, key, value)
-    try:
-        validate_profile(
-            resource_type=resource.type, profile_data=profile.model_dump()
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "PATCH would lead to invalid profile. Original error: "
-                f"{str(e)}."
-            ),
-        )
-
     await db.commit()
     await db.refresh(profile)
-
     return profile
 
 
