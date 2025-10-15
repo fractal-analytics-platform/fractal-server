@@ -150,7 +150,6 @@ async def test_edit_users_as_superuser(
         is_active=False,
         is_superuser=True,
         is_verified=True,
-        username="user_patch",
         profile_id=profile.id,
     )
     res = await registered_superuser_client.patch(
@@ -202,20 +201,6 @@ async def test_edit_users_as_superuser(
             json={attribute: None},
         )
         assert res.status_code == 422
-
-    # USERNAME
-    # String attribute 'username' cannot be empty
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"username": "   "},
-    )
-    assert res.status_code == 422
-    # String attribute 'username' cannot be None
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"username": None},
-    )
-    assert res.status_code == 422
 
 
 async def test_add_superuser(registered_superuser_client):

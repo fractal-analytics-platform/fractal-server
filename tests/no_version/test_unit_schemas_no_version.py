@@ -13,11 +13,7 @@ from fractal_server.types.validators import val_absolute_path
 
 
 def test_user_create():
-    u = UserCreate(email="a@b.c", password="asd")
-    assert u.username is None
-
-    u = UserCreate(email="a@b.c", password="pwd", username="username")
-    assert u.username is not None
+    UserCreate(email="a@b.c", password="asd")
 
 
 def test_user_group_create():
