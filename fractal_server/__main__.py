@@ -184,7 +184,10 @@ def init_db_data(
 
         # Create profile
         if profile == "default":
-            profile_data = {}
+            profile_data = {
+                "resource_type": "local",
+                "name": "Local profile",
+            }
             print("Prepared default profile data.")
         else:
             with open(profile) as f:
