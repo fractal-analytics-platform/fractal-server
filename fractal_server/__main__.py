@@ -292,28 +292,29 @@ def print_encrypted_password():
 def run():
     args = parser.parse_args(sys.argv[1:])
 
-    if args.cmd == "openapi":
-        save_openapi(dest=args.openapi_file)
-    elif args.cmd == "set-db":
-        set_db()
-    elif args.cmd == "init-db-data":
-        init_db_data(
-            resource=args.resource,
-            profile=args.profile,
-        )
-    elif args.cmd == "update-db-data":
-        update_db_data()
-    elif args.cmd == "start":
-        uvicorn.run(
-            "fractal_server.main:app",
-            host=args.host,
-            port=args.port,
-            reload=args.reload,
-        )
-    elif args.cmd == "encrypt-email-password":
-        print_encrypted_password()
-    else:
-        sys.exit(f"Error: invalid command '{args.cmd}'.")
+    match args.cmd:
+        case "openapi":
+            save_openapi(dest=args.openapi_file)
+        case "set-db":
+            set_db()
+        case "init-db-data":
+            init_db_data(
+                resource=args.resource,
+                profile=args.profile,
+            )
+        case "update-db-data":
+            update_db_data()
+        case "start":
+            uvicorn.run(
+                "fractal_server.main:app",
+                host=args.host,
+                port=args.port,
+                reload=args.reload,
+            )
+        case "encrypt-email-password":
+            print_encrypted_password()
+        case _:
+            sys.exit(f"Error: invalid command '{args.cmd}'.")
 
 
 if __name__ == "__main__":

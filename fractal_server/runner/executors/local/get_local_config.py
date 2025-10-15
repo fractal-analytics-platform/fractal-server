@@ -35,14 +35,15 @@ def get_local_backend_config(
         A ready-to-use local-backend configuration object.
     """
 
-    if which_type == "non_parallel":
-        wftask_meta = wftask.meta_non_parallel
-    elif which_type == "parallel":
-        wftask_meta = wftask.meta_parallel
-    else:
-        raise ValueError(
-            f"Invalid {which_type=} in `get_local_backend_config`."
-        )
+    match which_type:
+        case "non_parallel":
+            wftask_meta = wftask.meta_non_parallel
+        case "parallel":
+            wftask_meta = wftask.meta_parallel
+        case _:
+            raise ValueError(
+                f"Invalid {which_type=} in `get_local_backend_config`."
+            )
 
     __KEY__ = "parallel_tasks_per_job"
     output = JobRunnerConfigLocal(**shared_config.model_dump())

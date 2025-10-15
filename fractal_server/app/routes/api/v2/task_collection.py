@@ -225,35 +225,36 @@ async def collect_tasks_pip(
     wheel_file = None
 
     # Set pkg_name, version, origin and archive_path
-    if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
-        try:
-            wheel_filename = request_data.file.filename
-            wheel_info = _parse_wheel_filename(wheel_filename)
-            wheel_file_content = await request_data.file.read()
-            wheel_file = FractalUploadedFile(
-                filename=wheel_filename,
-                contents=wheel_file_content,
+    match request_data.origin:
+        case TaskGroupV2OriginEnum.WHEELFILE:
+            try:
+                wheel_filename = request_data.file.filename
+                wheel_info = _parse_wheel_filename(wheel_filename)
+                wheel_file_content = await request_data.file.read()
+                wheel_file = FractalUploadedFile(
+                    filename=wheel_filename,
+                    contents=wheel_file_content,
+                )
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=(
+                        f"Invalid wheel-file name {wheel_filename}. "
+                        f"Original error: {str(e)}",
+                    ),
+                )
+            task_group_attrs["pkg_name"] = normalize_package_name(
+                wheel_info["distribution"]
             )
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Invalid wheel-file name {wheel_filename}. "
-                    f"Original error: {str(e)}",
-                ),
+            task_group_attrs["version"] = wheel_info["version"]
+        case TaskGroupV2OriginEnum.PYPI:
+            pkg_name = task_collect.package
+            task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
+            latest_version = await get_package_version_from_pypi(
+                task_collect.package,
+                task_collect.package_version,
             )
-        task_group_attrs["pkg_name"] = normalize_package_name(
-            wheel_info["distribution"]
-        )
-        task_group_attrs["version"] = wheel_info["version"]
-    elif request_data.origin == TaskGroupV2OriginEnum.PYPI:
-        pkg_name = task_collect.package
-        task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
-        latest_version = await get_package_version_from_pypi(
-            task_collect.package,
-            task_collect.package_version,
-        )
-        task_group_attrs["version"] = latest_version
+            task_group_attrs["version"] = latest_version
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(

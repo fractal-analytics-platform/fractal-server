@@ -23,28 +23,29 @@ settings = Inject(get_settings)
 for client_config in settings.OAUTH_CLIENTS_CONFIG:
     client_name = client_config.CLIENT_NAME.lower()
 
-    if client_name == "google":
-        from httpx_oauth.clients.google import GoogleOAuth2
+    match client_name:
+        case "google":
+            from httpx_oauth.clients.google import GoogleOAuth2
 
-        client = GoogleOAuth2(
-            client_config.CLIENT_ID,
-            client_config.CLIENT_SECRET.get_secret_value(),
-        )
-    elif client_name == "github":
-        from httpx_oauth.clients.github import GitHubOAuth2
+            client = GoogleOAuth2(
+                client_config.CLIENT_ID,
+                client_config.CLIENT_SECRET.get_secret_value(),
+            )
+        case "github":
+            from httpx_oauth.clients.github import GitHubOAuth2
 
-        client = GitHubOAuth2(
-            client_config.CLIENT_ID,
-            client_config.CLIENT_SECRET.get_secret_value(),
-        )
-    else:
-        from httpx_oauth.clients.openid import OpenID
+            client = GitHubOAuth2(
+                client_config.CLIENT_ID,
+                client_config.CLIENT_SECRET.get_secret_value(),
+            )
+        case _:
+            from httpx_oauth.clients.openid import OpenID
 
-        client = OpenID(
-            client_config.CLIENT_ID,
-            client_config.CLIENT_SECRET.get_secret_value(),
-            client_config.OIDC_CONFIGURATION_ENDPOINT,
-        )
+            client = OpenID(
+                client_config.CLIENT_ID,
+                client_config.CLIENT_SECRET.get_secret_value(),
+                client_config.OIDC_CONFIGURATION_ENDPOINT,
+            )
 
     router_oauth.include_router(
         fastapi_users.get_oauth_router(

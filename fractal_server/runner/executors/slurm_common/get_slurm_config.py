@@ -39,14 +39,15 @@ def _get_slurm_config_internal(
         A ready-to-use `SlurmConfig` object.
     """
 
-    if which_type == "non_parallel":
-        wftask_meta = wftask.meta_non_parallel
-    elif which_type == "parallel":
-        wftask_meta = wftask.meta_parallel
-    else:
-        raise ValueError(
-            f"get_slurm_config received invalid argument {which_type=}."
-        )
+    match which_type:
+        case "non_parallel":
+            wftask_meta = wftask.meta_non_parallel
+        case "parallel":
+            wftask_meta = wftask.meta_parallel
+        case _:
+            raise ValueError(
+                f"get_slurm_config received invalid argument {which_type=}."
+            )
 
     logger.debug(
         f"[get_slurm_config] WorkflowTask meta attribute: {wftask_meta=}"

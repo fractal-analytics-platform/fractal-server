@@ -128,22 +128,18 @@ class BaseRunner:
             raise ValueError(f"Invalid {task_type=} for `submit`.")
         if not isinstance(parameters, dict):
             raise ValueError("`parameters` must be a dictionary.")
-        if task_type in [
-            TaskType.NON_PARALLEL,
-            TaskType.COMPOUND,
-        ]:
-            if "zarr_urls" not in parameters.keys():
-                raise ValueError(
-                    f"No 'zarr_urls' key in in {list(parameters.keys())}"
-                )
-        elif task_type in [
-            TaskType.CONVERTER_NON_PARALLEL,
-            TaskType.CONVERTER_COMPOUND,
-        ]:
-            if "zarr_urls" in parameters.keys():
-                raise ValueError(
-                    f"Forbidden 'zarr_urls' key in {list(parameters.keys())}"
-                )
+        match task_type:
+            case TaskType.NON_PARALLEL | TaskType.COMPOUND:
+                if "zarr_urls" not in parameters.keys():
+                    raise ValueError(
+                        f"No 'zarr_urls' key in in {list(parameters.keys())}"
+                    )
+            case TaskType.CONVERTER_NON_PARALLEL | TaskType.CONVERTER_COMPOUND:
+                if "zarr_urls" in parameters.keys():
+                    raise ValueError(
+                        "Forbidden 'zarr_urls' key in "
+                        f"{list(parameters.keys())}"
+                    )
         logger.info("[validate_submit_parameters] END")
 
     def validate_multisubmit_parameters(

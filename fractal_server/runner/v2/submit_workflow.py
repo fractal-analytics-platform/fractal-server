@@ -170,27 +170,28 @@ def submit_workflow(
 
         try:
             # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
-            if resource.type == ResourceType.LOCAL:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-            elif resource.type == ResourceType.SLURM_SUDO:
-                original_umask = os.umask(0)
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-                os.umask(original_umask)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            elif resource.type == ResourceType.SLURM_SSH:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            else:
-                # FIXME: Set a CHECK constraint at the db level, and drop this
-                # (unreachable) branch
-                raise ValueError(
-                    "Invalid FRACTAL_RUNNER_BACKEND=" f"{resource.type}."
-                )
+            match resource.type:
+                case ResourceType.LOCAL:
+                    WORKFLOW_DIR_LOCAL.mkdir(parents=True)
+                    WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+                case ResourceType.SLURM_SUDO:
+                    original_umask = os.umask(0)
+                    WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
+                    os.umask(original_umask)
+                    WORKFLOW_DIR_REMOTE = (
+                        Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
+                    )
+                case ResourceType.SLURM_SSH:
+                    WORKFLOW_DIR_LOCAL.mkdir(parents=True)
+                    WORKFLOW_DIR_REMOTE = (
+                        Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
+                    )
+                case _:
+                    # FIXME: Set a CHECK constraint at the db level,
+                    # and drop this (unreachable) branch
+                    raise ValueError(
+                        "Invalid FRACTAL_RUNNER_BACKEND=" f"{resource.type}."
+                    )
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
@@ -250,25 +251,26 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
-        if resource.type == ResourceType.LOCAL:
-            process_workflow = local_process_workflow
-            backend_specific_kwargs = {}
-        elif resource.type == ResourceType.SLURM_SUDO:
-            process_workflow = slurm_sudo_process_workflow
-            backend_specific_kwargs = dict(
-                slurm_account=job.slurm_account,
-                user_cache_dir=user_cache_dir,
-            )
-        elif resource.type == ResourceType.SLURM_SSH:
-            process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(
-                fractal_ssh=fractal_ssh,
-                slurm_account=job.slurm_account,
-            )
-        else:
-            # FIXME: Set a CHECK constraint at the db level, and drop this
-            # (unreachable) branch
-            raise RuntimeError(f"Invalid runner backend {resource.type=}")
+        match resource.type:
+            case ResourceType.LOCAL:
+                process_workflow = local_process_workflow
+                backend_specific_kwargs = {}
+            case ResourceType.SLURM_SUDO:
+                process_workflow = slurm_sudo_process_workflow
+                backend_specific_kwargs = dict(
+                    slurm_account=job.slurm_account,
+                    user_cache_dir=user_cache_dir,
+                )
+            case ResourceType.SLURM_SSH:
+                process_workflow = slurm_ssh_process_workflow
+                backend_specific_kwargs = dict(
+                    fractal_ssh=fractal_ssh,
+                    slurm_account=job.slurm_account,
+                )
+            case _:
+                # FIXME: Set a CHECK constraint at the db level, and drop this
+                # (unreachable) branch
+                raise RuntimeError(f"Invalid runner backend {resource.type=}")
 
         process_workflow(
             workflow=workflow,

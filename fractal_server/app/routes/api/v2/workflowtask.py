@@ -48,33 +48,33 @@ async def create_workflowtask(
     task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
     )
-
-    if task.type == TaskType.PARALLEL:
-        if (
-            wftask.meta_non_parallel is not None
-            or wftask.args_non_parallel is not None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
-                    "`WorkflowTask.args_non_parallel` if the associated Task "
-                    "is `parallel`."
-                ),
-            )
-    elif task.type == TaskType.NON_PARALLEL:
-        if (
-            wftask.meta_parallel is not None
-            or wftask.args_parallel is not None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot set `WorkflowTaskV2.meta_parallel` or "
-                    "`WorkflowTask.args_parallel` if the associated Task "
-                    "is `non_parallel`."
-                ),
-            )
+    match task.type:
+        case TaskType.PARALLEL:
+            if (
+                wftask.meta_non_parallel is not None
+                or wftask.args_non_parallel is not None
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=(
+                        "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
+                        "`WorkflowTask.args_non_parallel` if the associated "
+                        "Task is `parallel`."
+                    ),
+                )
+        case TaskType.NON_PARALLEL:
+            if (
+                wftask.meta_parallel is not None
+                or wftask.args_parallel is not None
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=(
+                        "Cannot set `WorkflowTaskV2.meta_parallel` or "
+                        "`WorkflowTask.args_parallel` if the associated Task "
+                        "is `non_parallel`."
+                    ),
+                )
 
     _check_type_filters_compatibility(
         task_input_types=task.input_types,
@@ -176,24 +176,25 @@ async def update_workflowtask(
     for key, value in workflow_task_update.model_dump(
         exclude_unset=True
     ).items():
-        if key == "args_parallel":
-            # Get default arguments via a Task property method
-            actual_args = deepcopy(value)
-            if not actual_args:
-                actual_args = None
-            setattr(db_wf_task, key, actual_args)
-        elif key == "args_non_parallel":
-            actual_args = deepcopy(value)
-            if not actual_args:
-                actual_args = None
-            setattr(db_wf_task, key, actual_args)
-        elif key in ["meta_parallel", "meta_non_parallel", "type_filters"]:
-            setattr(db_wf_task, key, value)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"patch_workflow_task endpoint cannot set {key=}",
-            )
+        match key:
+            case "args_parallel":
+                # Get default arguments via a Task property method
+                actual_args = deepcopy(value)
+                if not actual_args:
+                    actual_args = None
+                setattr(db_wf_task, key, actual_args)
+            case "args_non_parallel":
+                actual_args = deepcopy(value)
+                if not actual_args:
+                    actual_args = None
+                setattr(db_wf_task, key, actual_args)
+            case "meta_parallel" | "meta_non_parallel" | "type_filters":
+                setattr(db_wf_task, key, value)
+            case _:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=f"patch_workflow_task endpoint cannot set {key=}",
+                )
 
     await db.commit()
     await db.refresh(db_wf_task)
