@@ -136,8 +136,9 @@ async def get_current_user_allowed_viewer_paths(
     current_user_settings = await db.get(
         UserSettings, current_user.user_settings_id
     )
-    # Append project_dir to the list of authorized paths
-    authorized_paths.append(current_user_settings.project_dir)
+    # If project_dir is set, append it to the list of authorized paths
+    if current_user_settings.project_dir is not None:
+        authorized_paths.append(current_user_settings.project_dir)
 
     # If auth scheme is "users-folders" and `slurm_user` is set,
     # build and append the user folder

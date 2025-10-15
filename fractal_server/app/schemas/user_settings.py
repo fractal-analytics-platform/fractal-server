@@ -26,14 +26,14 @@ class UserSettingsRead(BaseModel):
     ssh_private_key_path: str | None = None
     slurm_user: str | None = None
     slurm_accounts: list[str]
-    project_dir: str
+    project_dir: str | None = None
 
 
 class UserSettingsReadStrict(BaseModel):
     slurm_user: str | None = None
     slurm_accounts: list[str]
     ssh_username: str | None = None
-    project_dir: str
+    project_dir: str | None = None
 
 
 class UserSettingsUpdate(BaseModel):

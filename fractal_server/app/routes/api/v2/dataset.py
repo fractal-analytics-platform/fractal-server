@@ -45,6 +45,15 @@ async def create_dataset(
     )
 
     if dataset.zarr_dir is None:
+        if user.settings.project_dir is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Both 'dataset.zarr_dir' and 'user.settings.project_dir' "
+                    "are null"
+                ),
+            )
+
         db_dataset = DatasetV2(
             project_id=project_id,
             zarr_dir="__PLACEHOLDER__",
