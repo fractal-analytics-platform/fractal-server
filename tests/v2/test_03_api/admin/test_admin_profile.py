@@ -37,9 +37,10 @@ async def test_profile_api(
         # POST one profile / success
         res = await client.post(
             f"/admin/v2/resource/{local_res_id}/profile/",
-            json=dict(),
+            json=dict(name="name1"),
         )
         assert res.status_code == 201
+        assert res.json()["name"] == "name1"
 
         # POST one profile / failure due to extra
         res = await client.post(
@@ -52,22 +53,32 @@ async def test_profile_api(
         # POST one profile / failure due to invalid object
         res = await client.post(
             f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
-            json=dict(),
+            json=dict(name="name2"),
         )
         assert res.status_code == 422
         assert "Invalid profile for" in str(res.json()["detail"])
 
+        # POST one profile / failure due to name taken
+        res = await client.post(
+            f"/admin/v2/resource/{slurm_ssh_res_id}/profile/",
+            json=dict(name="name1"),
+        )
+        assert res.status_code == 422
+        assert "already exists" in str(res.json()["detail"])
+
         # PATCH one profile / success
         NEW_USERNAME = "new-username"
+        NEW_NAME = "new-name"
         res = await client.patch(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=NEW_USERNAME),
+            json=dict(username=NEW_USERNAME, name=NEW_NAME),
         )
         assert res.status_code == 200
         assert res.json()["username"] == NEW_USERNAME
+        assert res.json()["name"] == NEW_NAME
 
         # PATCH one profile / failure
         res = await client.patch(

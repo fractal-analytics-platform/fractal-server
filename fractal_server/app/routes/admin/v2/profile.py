@@ -4,8 +4,10 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import ValidationError
+from sqlmodel import func
 from sqlmodel import select
 
+from ._aux_functions import _check_profile_name
 from ._aux_functions import _get_profile_or_404
 from ._aux_functions import _get_resource_or_404
 from fractal_server.app.db import AsyncSession
@@ -15,6 +17,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
+from fractal_server.app.schemas.v2 import ProfileUpdate
 from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
@@ -79,6 +82,8 @@ async def post_profile(
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
+    await _check_profile_name(name=profile_create.name, db=db)
+
     profile = Profile(
         resource_id=resource_id,
         **profile_create.model_dump(),
@@ -112,7 +117,7 @@ async def post_profile(
 async def patch_profile(
     resource_id: int,
     profile_id: int,
-    profile_update: Profile,
+    profile_update: ProfileUpdate,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
@@ -125,6 +130,8 @@ async def patch_profile(
         profile_id=profile_id,
         db=db,
     )
+    if profile_update.name and profile_update.name != profile.name:
+        await _check_profile_name(name=profile_update.name, db=db)
 
     for key, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(profile, key, value)
@@ -162,6 +169,24 @@ async def delete_profile(
         profile_id=profile_id,
         db=db,
     )
+
+    # Fail if at least one UserOAuth is associated with the Profile.
+    res = await db.execute(
+        select(func.count(UserOAuth.id)).where(
+            UserOAuth.profile_id == profile.id
+        )
+    )
+    associated_users_count = res.scalar()
+    if associated_users_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Cannot delete Profile {profile_id} because it's associated"
+                f" with {associated_users_count} UserOAuths."
+            ),
+        )
+
+    # Delete
     await db.delete(profile)
     await db.commit()
 
