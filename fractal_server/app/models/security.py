@@ -73,7 +73,6 @@ class UserOAuth(SQLModel, table=True):
         is_active:
         is_superuser:
         is_verified:
-        username:
         oauth_accounts:
         user_settings_id:
         profile_id:
@@ -91,8 +90,6 @@ class UserOAuth(SQLModel, table=True):
     is_active: bool = Field(default=True, nullable=False)
     is_superuser: bool = Field(default=False, nullable=False)
     is_verified: bool = Field(default=False, nullable=False)
-
-    username: str | None = None
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",

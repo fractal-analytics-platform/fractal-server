@@ -36,10 +36,11 @@ class UserRead(schemas.BaseUser[int]):
     Schema for `User` read from database.
 
     Attributes:
-        username:
+        group_ids_names:
+        oauth_accounts:
+        profile_id:
     """
 
-    username: str | None = None
     group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
     profile_id: int | None = None
@@ -50,11 +51,15 @@ class UserUpdate(schemas.BaseUserUpdate):
     Schema for `User` update.
 
     Attributes:
-        username:
+        password:
+        email:
+        is_active:
+        is_superuser:
+        is_verified:
+        profile_id:
     """
 
     model_config = ConfigDict(extra="forbid")
-    username: NonEmptyStr = None
     password: NonEmptyStr = None
     email: EmailStr = None
     is_active: bool = None
@@ -78,10 +83,9 @@ class UserCreate(schemas.BaseUserCreate):
     Schema for `User` creation.
 
     Attributes:
-        username:
+        profile_id:
     """
 
-    username: NonEmptyStr = None
     profile_id: int | None = None
 
 
