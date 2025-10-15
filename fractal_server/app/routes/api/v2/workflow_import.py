@@ -149,7 +149,7 @@ async def _get_task_by_taskimport(
 
     # Filter task groups by version
     final_matching_task_groups = list(
-        filter(lambda tg: tg.version == version, task_groups_list)
+        filter(lambda tg: tg.version == version, matching_task_groups)
     )
 
     if len(final_matching_task_groups) < 1:
