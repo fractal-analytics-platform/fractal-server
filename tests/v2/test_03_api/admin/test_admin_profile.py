@@ -49,30 +49,44 @@ async def test_profile_api(
         assert res.status_code == 422
         assert "union_tag_invalid" in str(res.json()["detail"])
 
-        # PATCH one profile / success
+        # PUT one profile / success
         NEW_USERNAME = "new-username"
-        res = await client.patch(
+        new_ssh_profile = slurm_ssh_prof.model_dump()
+        new_ssh_profile["username"] = NEW_USERNAME
+        res = await client.put(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=NEW_USERNAME),
+            json=new_ssh_profile,
         )
         assert res.status_code == 200
         assert res.json()["username"] == NEW_USERNAME
 
-        # PATCH one profile / failure
-        res = await client.patch(
+        # PUT one profile / failure
+        new_ssh_profile["username"] = None
+        res = await client.put(
             (
                 f"/admin/v2/resource/{slurm_ssh_res_id}/"
                 f"profile/{slurm_ssh_prof_id}/"
             ),
-            json=dict(username=None),
+            json=new_ssh_profile,
         )
         assert res.status_code == 422
-        assert "PATCH would lead to invalid profile" in str(
-            res.json()["detail"]
-        )
+        assert res.json() == {
+            "detail": [
+                {
+                    "type": "string_type",
+                    "loc": [
+                        "body",
+                        "slurm_ssh",
+                        "username",
+                    ],
+                    "msg": "Input should be a valid string",
+                    "input": None,
+                },
+            ],
+        }
 
         # DELETE one profile
         res = await client.delete(

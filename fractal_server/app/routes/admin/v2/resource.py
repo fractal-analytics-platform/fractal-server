@@ -100,7 +100,7 @@ async def post_resource(
     response_model=ResourceRead,
     status_code=200,
 )
-async def patch_resource(
+async def put_resource(
     resource_id: int,
     resource_update: ResourceCreate,
     superuser: UserOAuth = Depends(current_active_superuser),

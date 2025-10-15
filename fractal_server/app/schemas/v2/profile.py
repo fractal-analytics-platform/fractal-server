@@ -2,7 +2,6 @@ from typing import Annotated
 from typing import Any
 
 from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Discriminator
 from pydantic import Tag
 
@@ -68,14 +67,6 @@ class ProfileRead(BaseModel):
     id: int
     resource_id: int
     resource_type: str
-    username: str | None = None
-    ssh_key_path: str | None = None
-    jobs_remote_dir: str | None = None
-    tasks_remote_dir: str | None = None
-
-
-class ProfileUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
     username: str | None = None
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None

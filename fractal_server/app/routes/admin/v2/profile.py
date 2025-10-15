@@ -3,7 +3,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import ValidationError
 from sqlmodel import select
 
 from ._aux_functions import _get_profile_or_404
@@ -16,8 +15,6 @@ from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
-from fractal_server.app.schemas.v2 import ProfileUpdate
-from fractal_server.app.schemas.v2.profile import validate_profile
 
 router = APIRouter()
 
@@ -110,15 +107,15 @@ async def post_profile(
     return profile
 
 
-@router.patch(
+@router.put(
     "/{resource_id}/profile/{profile_id}/",
     response_model=ProfileRead,
     status_code=200,
 )
-async def patch_profile(
+async def put_profile(
     resource_id: int,
     profile_id: int,
-    profile_update: ProfileUpdate,
+    profile_update: ProfileCreate,
     superuser: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
@@ -131,25 +128,15 @@ async def patch_profile(
         profile_id=profile_id,
         db=db,
     )
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=profile_update,
+    )
 
     for key, value in profile_update.model_dump(exclude_unset=True).items():
         setattr(profile, key, value)
-    try:
-        validate_profile(
-            resource_type=resource.type, profile_data=profile.model_dump()
-        )
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "PATCH would lead to invalid profile. Original error: "
-                f"{str(e)}."
-            ),
-        )
-
     await db.commit()
     await db.refresh(profile)
-
     return profile
 
 
