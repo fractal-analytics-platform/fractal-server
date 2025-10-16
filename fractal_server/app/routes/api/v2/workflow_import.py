@@ -149,7 +149,7 @@ async def _get_task_by_taskimport(
 
     # Filter task groups by version
     final_matching_task_groups = list(
-        filter(lambda tg: tg.version == version, task_groups_list)
+        filter(lambda tg: tg.version == version, matching_task_groups)
     )
 
     if len(final_matching_task_groups) < 1:
@@ -167,10 +167,11 @@ async def _get_task_by_taskimport(
     else:
         logger.info(
             "[_get_task_by_taskimport] "
-            "Found many task groups, after filtering by version."
+            f"Found {len(final_matching_task_groups)} task groups, "
+            "after filtering by version."
         )
         final_task_group = await _disambiguate_task_groups(
-            matching_task_groups=matching_task_groups,
+            matching_task_groups=final_matching_task_groups,
             user_id=user_id,
             db=db,
             default_group_id=default_group_id,
