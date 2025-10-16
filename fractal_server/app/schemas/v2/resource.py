@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from pydantic import Discriminator
 from pydantic import model_validator
 from pydantic import Tag
-from pydantic import ValidationError
 from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
@@ -64,7 +63,7 @@ class _ValidResourceBase(BaseModel):
                 self.type == ResourceType.SLURM_SSH
                 and pixi_settings.SLURM_CONFIG is None
             ):
-                raise ValidationError(
+                raise ValueError(
                     "`tasks_pixi_config` must include `SLURM_CONFIG`."
                 )
         return self
