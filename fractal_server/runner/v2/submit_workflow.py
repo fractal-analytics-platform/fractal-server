@@ -186,12 +186,7 @@ def submit_workflow(
                     WORKFLOW_DIR_REMOTE = (
                         Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
                     )
-                case _:
-                    # FIXME: Set a CHECK constraint at the db level,
-                    # and drop this (unreachable) branch
-                    raise ValueError(
-                        "Invalid FRACTAL_RUNNER_BACKEND=" f"{resource.type}."
-                    )
+
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
@@ -267,10 +262,6 @@ def submit_workflow(
                     fractal_ssh=fractal_ssh,
                     slurm_account=job.slurm_account,
                 )
-            case _:
-                # FIXME: Set a CHECK constraint at the db level, and drop this
-                # (unreachable) branch
-                raise RuntimeError(f"Invalid runner backend {resource.type=}")
 
         process_workflow(
             workflow=workflow,
