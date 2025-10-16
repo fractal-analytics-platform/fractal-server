@@ -436,8 +436,6 @@ async def test_oauth_accounts_list(
 
 
 async def test_get_and_patch_user_settings(registered_superuser_client):
-    # FIXME: Review this test after completing UserSettings updates.
-
     # Register new user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")
@@ -489,6 +487,7 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
     # Get non-existing-user settings
     res = await registered_superuser_client.get(f"{PREFIX}/users/42/settings/")
     assert res.status_code == 404
+
     # Patch non-existing-user settings
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/42/settings/", json=dict()
