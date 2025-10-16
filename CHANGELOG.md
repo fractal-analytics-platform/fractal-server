@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.16.6
 
+* API:
+    * Fix bug in import-workflow endpoint, leading to the wrong task-group being selected (\#2863).
 * Models:
     * Fix use of custom `AttributeFilters` type in SQLModel model (\#2830).
 * Dependencies:
