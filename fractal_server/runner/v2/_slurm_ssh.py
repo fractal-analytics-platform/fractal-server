@@ -71,7 +71,7 @@ def process_workflow(
         fractal_ssh=fractal_ssh,
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
-        slurm_account=slurm_account,  # FIXME: drop this?
+        slurm_account=slurm_account,
         resource=resource,
         profile=profile,
         common_script_lines=worker_init,
