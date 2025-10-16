@@ -85,8 +85,20 @@ async def test_profile_api(
             ],
         }
 
-        # DELETE one profile
+        # DELETE one profile / success
         res = await client.delete(f"/admin/v2/profile/{slurm_ssh_prof_id}/")
         assert res.status_code == 204
+
+        # DELETE one profile / not found
         res = await client.get(f"/admin/v2/profile/{slurm_ssh_prof_id}/")
         assert res.status_code == 404
+
+        # DELETE one profile / failure because of users
+        res = await client.patch(
+            f"/auth/users/{local_prof_id}/",
+            json=dict(profile_id=local_prof_id),
+        )
+        assert res.status_code == 200
+        res = await client.delete(f"/admin/v2/profile/{local_prof_id}/")
+        assert res.status_code == 422
+        assert "Cannot delete Profile" in str(res.json()["detail"])

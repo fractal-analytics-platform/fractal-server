@@ -62,6 +62,7 @@ def test_template_2(
     tmp_path, testdata_path, current_py_version, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
+    resource.tasks_pip_cache_dir = (tmp_path / "pip_cache").as_posix()
 
     path = tmp_path / "unit_templates"
 

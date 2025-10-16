@@ -85,12 +85,10 @@ async def test_api_failures(
 
 
 async def test_pixi_collection_path_already_exists(
-    override_settings_factory,
     client,
     MockCurrentUser,
     pixi: TasksPixiSettings,
     pixi_pkg_targz: Path,
-    tmp_path: Path,
     local_resource_profile_db,
     db,
 ):
@@ -154,6 +152,15 @@ async def test_task_group_lifecycle_pixi_local(
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ):
+        # Failed collection (pixi version not available)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data=dict(pixi_version="9.9.9"),
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "is not available" in str(res.json()["detail"])
+
         # Successful collection
         res = await client.post(
             "api/v2/task/collect/pixi/",
