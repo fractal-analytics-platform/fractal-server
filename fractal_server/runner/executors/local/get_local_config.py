@@ -45,7 +45,7 @@ def get_local_backend_config(
         )
 
     __KEY__ = "parallel_tasks_per_job"
-    output = JobRunnerConfigLocal(**shared_config.model_dump())
+    output = shared_config.model_copy(deep=True)
     if wftask_meta and __KEY__ in wftask_meta:
         output.parallel_tasks_per_job = wftask_meta[__KEY__]
     return output
