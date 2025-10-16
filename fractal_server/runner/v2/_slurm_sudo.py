@@ -69,8 +69,8 @@ def process_workflow(
         common_script_lines=worker_init,
         resource=resource,
         profile=profile,
-        user_cache_dir=user_cache_dir,  # FIXME: drop
-        slurm_account=slurm_account,  # FIXME: Drop
+        user_cache_dir=user_cache_dir,
+        slurm_account=slurm_account,
     ) as runner:
         execute_tasks_v2(
             wf_task_list=workflow.task_list[
