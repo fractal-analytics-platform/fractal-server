@@ -8,18 +8,34 @@ from sqlmodel import select
 
 from ._aux_functions import _check_resource_name
 from ._aux_functions import _get_resource_or_404
+from .profile import _check_profile_name
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.schemas.v2 import ProfileCreate
+from fractal_server.app.schemas.v2 import ProfileRead
 from fractal_server.app.schemas.v2 import ResourceCreate
 from fractal_server.app.schemas.v2 import ResourceRead
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
 router = APIRouter()
+
+
+def _check_resource_type_match_or_422(
+    resource: Resource,
+    new_profile: ProfileCreate,
+) -> None:
+    if resource.type != new_profile.resource_type:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"{resource.type=} differs from {new_profile.resource_type=}."
+            ),
+        )
 
 
 def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
@@ -155,3 +171,59 @@ async def delete_resource(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/{resource_id}/profile/",
+    response_model=list[ProfileRead],
+    status_code=200,
+)
+async def get_resource_profiles(
+    resource_id: int,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProfileRead]:
+    """
+    Query `Profile`s for single `Resource`.
+    """
+    await _get_resource_or_404(resource_id=resource_id, db=db)
+
+    res = await db.execute(
+        select(Profile).where(Profile.resource_id == resource_id)
+    )
+    profiles = res.scalars().all()
+
+    return profiles
+
+
+@router.post(
+    "/{resource_id}/profile/",
+    response_model=ProfileRead,
+    status_code=201,
+)
+async def post_profile(
+    resource_id: int,
+    profile_create: ProfileCreate,
+    superuser: UserOAuth = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> ProfileRead:
+    """
+    Create new `Profile`.
+    """
+    resource = await _get_resource_or_404(resource_id=resource_id, db=db)
+
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=profile_create,
+    )
+    await _check_profile_name(name=profile_create.name, db=db)
+
+    profile = Profile(
+        resource_id=resource_id,
+        **profile_create.model_dump(),
+    )
+
+    db.add(profile)
+    await db.commit()
+    await db.refresh(profile)
+    return profile

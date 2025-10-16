@@ -148,9 +148,7 @@ async def test_resource_api(
         assert "it's associated with 1 Profiles" in str(res.json()["detail"])
 
         # DELETE one resource / success
-        res = await client.delete(
-            f"/admin/v2/resource/{resource_id}/profile/{profile['id']}/"
-        )
+        res = await client.delete(f"/admin/v2/profile/{profile['id']}/")
         assert res.status_code == 204
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 204
