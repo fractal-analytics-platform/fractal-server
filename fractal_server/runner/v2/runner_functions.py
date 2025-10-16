@@ -185,11 +185,10 @@ def run_v2_task_non_parallel(
 
     # Database History operations
     with next(get_sync_db()) as db:
-        match task_type:
-            case TaskType.NON_PARALLEL:
-                zarr_urls = function_kwargs["zarr_urls"]
-            case TaskType.CONVERTER_NON_PARALLEL:
-                zarr_urls = []
+        if task_type == TaskType.NON_PARALLEL:
+            zarr_urls = function_kwargs["zarr_urls"]
+        elif task_type == TaskType.CONVERTER_NON_PARALLEL:
+            zarr_urls = []
 
         history_unit = HistoryUnit(
             history_run_id=history_run_id,
@@ -413,12 +412,11 @@ def run_v2_task_compound(
         "zarr_dir": zarr_dir,
         **(wftask.args_non_parallel or {}),
     }
-    match task_type:
-        case TaskType.COMPOUND:
-            function_kwargs["zarr_urls"] = [img["zarr_url"] for img in images]
-            input_image_zarr_urls = function_kwargs["zarr_urls"]
-        case TaskType.CONVERTER_COMPOUND:
-            input_image_zarr_urls = []
+    if task_type == TaskType.COMPOUND:
+        function_kwargs["zarr_urls"] = [img["zarr_url"] for img in images]
+        input_image_zarr_urls = function_kwargs["zarr_urls"]
+    elif task_type == TaskType.CONVERTER_COMPOUND:
+        input_image_zarr_urls = []
 
     # Create database History entries
     with next(get_sync_db()) as db:
