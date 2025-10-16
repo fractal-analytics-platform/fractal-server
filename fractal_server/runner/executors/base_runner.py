@@ -47,13 +47,14 @@ class BaseRunner:
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
-        task_type: TaskType,
+        task_type: SubmitTaskType,
         task_files: TaskFiles,
         user_id: int,
         config: Any,
@@ -80,6 +81,7 @@ class BaseRunner:
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
@@ -87,7 +89,7 @@ class BaseRunner:
         list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: TaskType,
+        task_type: MultisubmitTaskType,
         config: Any,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:

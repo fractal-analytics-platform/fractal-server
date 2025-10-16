@@ -1,7 +1,7 @@
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from typing import Literal
+from typing import Protocol
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -40,6 +40,32 @@ from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
 
+
+class GetRunnerConfigTypeLocal(Protocol):
+    def __call__(
+        self,
+        shared_config: JobRunnerConfigLocal,
+        wftask: WorkflowTaskV2,
+        which_type: Literal["non_parallel", "parallel"],
+        tot_tasks: int,
+    ) -> JobRunnerConfigLocal:
+        ...
+
+
+class GetRunnerConfigTypeSLURM(Protocol):
+    def __call__(
+        self,
+        shared_config: JobRunnerConfigSLURM,
+        wftask: WorkflowTaskV2,
+        which_type: Literal["non_parallel", "parallel"],
+        tot_tasks: int,
+    ) -> SlurmConfig:
+        ...
+
+
+GetRunnerConfigType = GetRunnerConfigTypeLocal | GetRunnerConfigTypeSLURM
+
+
 __all__ = [
     "run_v2_task_parallel",
     "run_v2_task_non_parallel",
@@ -64,16 +90,6 @@ class InitSubmissionOutcome(BaseModel):
 
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
-
-GetRunnerConfigType = Callable[
-    [
-        JobRunnerConfigLocal | JobRunnerConfigSLURM,
-        WorkflowTaskV2,
-        Literal["non_parallel", "parallel"],
-        int,
-    ],
-    JobRunnerConfigLocal | SlurmConfig,
-]
 
 
 def _process_task_output(
@@ -170,7 +186,7 @@ def run_v2_task_non_parallel(
     )
 
     runner_config = get_runner_config(
-        runner.shared_config,
+        shared_config=runner.shared_config,
         wftask=wftask,
         which_type="non_parallel",
         tot_tasks=1,
@@ -279,7 +295,7 @@ def run_v2_task_parallel(
     )
 
     runner_config = get_runner_config(
-        runner.shared_config,
+        shared_config=runner.shared_config,
         wftask=wftask,
         which_type="parallel",
         tot_tasks=len(images),
@@ -401,7 +417,7 @@ def run_v2_task_compound(
     )
 
     runner_config_init = get_runner_config(
-        runner.shared_config,
+        shared_config=runner.shared_config,
         wftask=wftask,
         which_type="non_parallel",
         tot_tasks=1,
@@ -502,7 +518,7 @@ def run_v2_task_compound(
         return init_outcome, num_tasks
 
     runner_config_compute = get_runner_config(
-        runner.shared_config,
+        shared_config=runner.shared_config,
         wftask=wftask,
         which_type="parallel",
         tot_tasks=len(parallelization_list),

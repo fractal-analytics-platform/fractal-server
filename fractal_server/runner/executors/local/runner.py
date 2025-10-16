@@ -88,6 +88,7 @@ class LocalRunner(BaseRunner):
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
@@ -154,6 +155,7 @@ class LocalRunner(BaseRunner):
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
