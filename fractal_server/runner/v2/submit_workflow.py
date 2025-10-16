@@ -132,9 +132,9 @@ def submit_workflow(
             return
 
         try:
+            # Define local/remote folders, and create local folder
             local_job_dir = Path(job.working_dir)
             remote_job_dir = Path(job.working_dir_user)
-            # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
             match resource.type:
                 case ResourceType.LOCAL:
                     local_job_dir.mkdir(parents=True, exist_ok=False)
