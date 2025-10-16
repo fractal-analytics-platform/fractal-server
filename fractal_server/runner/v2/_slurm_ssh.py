@@ -49,7 +49,7 @@ def process_workflow(
     profile: Profile,
     # SLURM-ssh-specific
     fractal_ssh: FractalSSH,
-    slurm_account: str | None = None,  # FIXME: drop this?
+    slurm_account: str | None = None,
     worker_init: str | None = None,
 ) -> None:
     """

@@ -43,7 +43,7 @@ def process_workflow(
     user_id: int,
     # SLURM-sudo-specific
     user_cache_dir: str | None = None,
-    slurm_account: str | None = None,  # FIXME drop this
+    slurm_account: str | None = None,
     worker_init: str | None = None,
     resource: Resource,
     profile: Profile,
