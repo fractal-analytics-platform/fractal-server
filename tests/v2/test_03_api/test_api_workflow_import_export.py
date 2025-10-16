@@ -663,8 +663,7 @@ async def test_import_multiple_task_groups_same_version(
     db,
 ):
     """
-    Test the situation where several task-group of the same version are
-    available for the same user.
+    Represent regression described in
     https://github.com/fractal-analytics-platform/fractal-server/issues/2852
     """
 
