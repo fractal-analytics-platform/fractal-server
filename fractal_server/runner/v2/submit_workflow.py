@@ -131,30 +131,21 @@ def submit_workflow(
             )
             return
 
-        # Define and create server-side working folder
-        local_job_dir = Path(job.working_dir)
-        remote_job_dir = Path(job.working_dir_user)
-        if local_job_dir.exists():
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=f"Workflow dir {local_job_dir} already exists.",
-                logger_name=logger_name,
-                emit_log=True,
-            )
-            return
-
         try:
+            local_job_dir = Path(job.working_dir)
+            remote_job_dir = Path(job.working_dir_user)
             # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
             match resource.type:
                 case ResourceType.LOCAL:
-                    local_job_dir.mkdir(parents=True)
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
                 case ResourceType.SLURM_SUDO:
                     original_umask = os.umask(0)
-                    local_job_dir.mkdir(parents=True, mode=0o755)
+                    local_job_dir.mkdir(
+                        parents=True, mode=0o755, exist_ok=False
+                    )
                     os.umask(original_umask)
                 case ResourceType.SLURM_SSH:
-                    local_job_dir.mkdir(parents=True)
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
 
         except Exception as e:
             error_type = type(e).__name__
@@ -162,8 +153,8 @@ def submit_workflow(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"{error_type} error occurred while creating job folder "
-                    f"and subfolders.\nOriginal error: {str(e)}"
+                    f"{error_type} error while creating local job folder."
+                    f" Original error: {str(e)}"
                 ),
                 logger_name=logger_name,
                 emit_log=True,
