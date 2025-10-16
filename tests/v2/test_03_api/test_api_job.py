@@ -15,10 +15,9 @@ from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.runner.v2.submit_workflow import _backends
 
 PREFIX = "/api/v2"
-backends_available = list(_backends.keys())
+backends_available = list(element.value for element in ResourceType)
 
 
 async def test_submit_job_failures_non_verified_user(

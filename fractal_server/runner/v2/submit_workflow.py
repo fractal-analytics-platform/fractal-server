@@ -34,13 +34,6 @@ from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-_backends = dict(
-    local=local_process_workflow,
-    slurm_sudo=slurm_sudo_process_workflow,
-    slurm_ssh=slurm_ssh_process_workflow,
-)
-
-
 def fail_job(
     *,
     db: DBSyncSession,
@@ -135,24 +128,6 @@ def submit_workflow(
                 )
             fail_job(
                 db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
-            )
-            return
-
-        # Declare runner backend and set `process_workflow` function
-        try:
-            process_workflow = _backends[resource.type]
-        except KeyError as e:
-            # FIXME: Set a CHECK constraint at the db level, and drop this
-            # (unreachable) branch
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=(
-                    f"Invalid {resource.type=}.\n"
-                    f"Original KeyError: {str(e)}"
-                ),
-                logger_name=logger_name,
-                emit_log=True,
             )
             return
 
