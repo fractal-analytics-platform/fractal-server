@@ -9,7 +9,6 @@ async def test_profile_api(
     local_res_id = local_res.id
     local_prof_id = local_prof.id
     slurm_ssh_res, slurm_ssh_prof = slurm_ssh_resource_profile_fake_db
-    slurm_ssh_res_id = slurm_ssh_res.id
     slurm_ssh_prof_id = slurm_ssh_prof.id
 
     async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
@@ -22,16 +21,8 @@ async def test_profile_api(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
-        # GET a specific profile / failure
-        res = await client.get(
-            f"/admin/v2/resource/{local_res_id}/profile/{slurm_ssh_prof_id}/"
-        )
-        assert res.status_code == 404
-
         # GET a specific profile / success
-        res = await client.get(
-            f"/admin/v2/resource/{local_res_id}/profile/{local_prof_id}/"
-        )
+        res = await client.get(f"/admin/v2/profile/{local_prof_id}/")
         assert res.status_code == 200
 
         # POST one profile / success
@@ -65,10 +56,7 @@ async def test_profile_api(
         new_ssh_profile["name"] = NEW_NAME
         new_ssh_profile["username"] = NEW_USERNAME
         res = await client.put(
-            (
-                f"/admin/v2/resource/{slurm_ssh_res_id}/"
-                f"profile/{slurm_ssh_prof_id}/"
-            ),
+            f"/admin/v2/profile/{slurm_ssh_prof_id}/",
             json=new_ssh_profile,
         )
         assert res.status_code == 200
@@ -78,10 +66,7 @@ async def test_profile_api(
         # PUT one profile / failure
         new_ssh_profile["username"] = None
         res = await client.put(
-            (
-                f"/admin/v2/resource/{slurm_ssh_res_id}/"
-                f"profile/{slurm_ssh_prof_id}/"
-            ),
+            (f"/admin/v2/profile/{slurm_ssh_prof_id}/"),
             json=new_ssh_profile,
         )
         assert res.status_code == 422
@@ -101,34 +86,7 @@ async def test_profile_api(
         }
 
         # DELETE one profile
-        res = await client.delete(
-            (
-                f"/admin/v2/resource/{slurm_ssh_res_id}/"
-                f"profile/{slurm_ssh_prof_id}/"
-            ),
-        )
+        res = await client.delete(f"/admin/v2/profile/{slurm_ssh_prof_id}/")
         assert res.status_code == 204
-        res = await client.get(
-            (
-                f"/admin/v2/resource/{slurm_ssh_res_id}/"
-                f"profile/{slurm_ssh_prof_id}/"
-            ),
-        )
+        res = await client.get(f"/admin/v2/profile/{slurm_ssh_prof_id}/")
         assert res.status_code == 404
-
-
-async def test_resource_of_profile(
-    db,
-    client,
-    MockCurrentUser,
-    local_resource_profile_db,
-):
-    resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
-        # Failure
-        res = await client.get("/admin/v2/resource-of-profile/9999/")
-        assert res.status_code == 404
-        # Success
-        res = await client.get(f"/admin/v2/resource-of-profile/{profile.id}/")
-        assert res.status_code == 200
-        assert res.json()["id"] == resource.id

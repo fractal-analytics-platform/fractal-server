@@ -9,7 +9,6 @@ from .job import router as job_router
 from .profile import router as profile_router
 from .project import router as project_router
 from .resource import router as resource_router
-from .resource_of_profile import router as resource_of_profile_router
 from .task import router as task_router
 from .task_group import router as task_group_router
 from .task_group_lifecycle import router as task_group_lifecycle_router
@@ -26,5 +25,4 @@ router_admin_v2.include_router(
 )
 router_admin_v2.include_router(impersonate_router, prefix="/impersonate")
 router_admin_v2.include_router(resource_router, prefix="/resource")
-router_admin_v2.include_router(profile_router, prefix="/resource")
-router_admin_v2.include_router(resource_of_profile_router, prefix="")
+router_admin_v2.include_router(profile_router, prefix="/profile")
