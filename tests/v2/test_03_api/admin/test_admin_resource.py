@@ -1,6 +1,32 @@
 import pytest
+from fastapi import HTTPException
 
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.routes.admin.v2.resource import (
+    _check_resource_type_match_or_422,
+)
 from fractal_server.app.schemas.v2.resource import validate_resource
+
+
+def test_check_resource_type_match_or_422(
+    local_resource_profile_objects,
+):
+    resource, old_profile = local_resource_profile_objects[:]
+    new_profile_ok = Profile(**old_profile.model_dump())
+    new_profile_bad = Profile(
+        **old_profile.model_dump(exclude={"resource_type"}),
+        resource_type="slurm_ssh",
+    )
+
+    _check_resource_type_match_or_422(
+        resource=resource,
+        new_profile=new_profile_ok,
+    )
+    with pytest.raises(HTTPException, match="differs"):
+        _check_resource_type_match_or_422(
+            resource=resource,
+            new_profile=new_profile_bad,
+        )
 
 
 def test_validate_resource():
