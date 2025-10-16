@@ -34,13 +34,6 @@ from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-_backends = dict(
-    local=local_process_workflow,
-    slurm_sudo=slurm_sudo_process_workflow,
-    slurm_ssh=slurm_ssh_process_workflow,
-)
-
-
 def fail_job(
     *,
     db: DBSyncSession,
@@ -138,67 +131,30 @@ def submit_workflow(
             )
             return
 
-        # Declare runner backend and set `process_workflow` function
         try:
-            process_workflow = _backends[resource.type]
-        except KeyError as e:
-            # FIXME: Set a CHECK constraint at the db level, and drop this
-            # (unreachable) branch
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=(
-                    f"Invalid {resource.type=}.\n"
-                    f"Original KeyError: {str(e)}"
-                ),
-                logger_name=logger_name,
-                emit_log=True,
-            )
-            return
+            # Define local/remote folders, and create local folder
+            local_job_dir = Path(job.working_dir)
+            remote_job_dir = Path(job.working_dir_user)
+            match resource.type:
+                case ResourceType.LOCAL:
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
+                case ResourceType.SLURM_SUDO:
+                    original_umask = os.umask(0)
+                    local_job_dir.mkdir(
+                        parents=True, mode=0o755, exist_ok=False
+                    )
+                    os.umask(original_umask)
+                case ResourceType.SLURM_SSH:
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
 
-        # Define and create server-side working folder
-        WORKFLOW_DIR_LOCAL = Path(job.working_dir)
-        if WORKFLOW_DIR_LOCAL.exists():
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
-                logger_name=logger_name,
-                emit_log=True,
-            )
-            return
-
-        try:
-            # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
-            if resource.type == ResourceType.LOCAL:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-            elif resource.type == ResourceType.SLURM_SUDO:
-                original_umask = os.umask(0)
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-                os.umask(original_umask)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            elif resource.type == ResourceType.SLURM_SSH:
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            else:
-                # FIXME: Set a CHECK constraint at the db level, and drop this
-                # (unreachable) branch
-                raise ValueError(
-                    "Invalid FRACTAL_RUNNER_BACKEND=" f"{resource.type}."
-                )
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"{error_type} error occurred while creating job folder "
-                    f"and subfolders.\nOriginal error: {str(e)}"
+                    f"{error_type} error while creating local job folder."
+                    f" Original error: {str(e)}"
                 ),
                 logger_name=logger_name,
                 emit_log=True,
@@ -223,7 +179,7 @@ def submit_workflow(
 
         # Write logs
         # FIXME: Review which profile/resource attributes should be logged
-        log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
+        log_file_path = local_job_dir / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,
@@ -250,33 +206,30 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
-        if resource.type == ResourceType.LOCAL:
-            process_workflow = local_process_workflow
-            backend_specific_kwargs = {}
-        elif resource.type == ResourceType.SLURM_SUDO:
-            process_workflow = slurm_sudo_process_workflow
-            backend_specific_kwargs = dict(
-                slurm_account=job.slurm_account,
-                user_cache_dir=user_cache_dir,
-            )
-        elif resource.type == ResourceType.SLURM_SSH:
-            process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(
-                fractal_ssh=fractal_ssh,
-                slurm_account=job.slurm_account,
-            )
-        else:
-            # FIXME: Set a CHECK constraint at the db level, and drop this
-            # (unreachable) branch
-            raise RuntimeError(f"Invalid runner backend {resource.type=}")
+        match resource.type:
+            case ResourceType.LOCAL:
+                process_workflow = local_process_workflow
+                backend_specific_kwargs = {}
+            case ResourceType.SLURM_SUDO:
+                process_workflow = slurm_sudo_process_workflow
+                backend_specific_kwargs = dict(
+                    slurm_account=job.slurm_account,
+                    user_cache_dir=user_cache_dir,
+                )
+            case ResourceType.SLURM_SSH:
+                process_workflow = slurm_ssh_process_workflow
+                backend_specific_kwargs = dict(
+                    fractal_ssh=fractal_ssh,
+                    slurm_account=job.slurm_account,
+                )
 
         process_workflow(
             workflow=workflow,
             dataset=dataset,
             job_id=job_id,
             user_id=user_id,
-            workflow_dir_local=WORKFLOW_DIR_LOCAL,
-            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
+            workflow_dir_local=local_job_dir,
+            workflow_dir_remote=remote_job_dir,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,

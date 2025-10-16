@@ -94,7 +94,8 @@ async def test_mkdir_error(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            working_dir=(tmp_path / "abc").as_posix(),
+            working_dir=(tmp_path / "local").as_posix(),
+            working_dir_user=(tmp_path / "remote").as_posix(),
             status="submitted",
         )
 
@@ -151,7 +152,7 @@ async def test_submit_workflow_failure(
             dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=working_dir.as_posix(),
-            working_dir_user=working_dir.as_posix(),
+            working_dir_user=(working_dir / "remote").as_posix(),
         )
         db.expunge_all()
 
@@ -168,4 +169,4 @@ async def test_submit_workflow_failure(
     job = await db.get(JobV2, job.id)
     debug(job)
     assert job.status == "failed"
-    assert "already exists" in job.log
+    assert "FileExistsError" in job.log

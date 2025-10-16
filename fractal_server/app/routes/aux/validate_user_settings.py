@@ -50,13 +50,14 @@ async def validate_user_settings(
 
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
-    if backend == ResourceType.SLURM_SSH:
-        UserSettingsValidationModel = SlurmSshUserSettings
-    elif backend == ResourceType.SLURM_SUDO:
-        UserSettingsValidationModel = SlurmSudoUserSettings
-    else:
-        # For other backends, we don't validate anything
-        return user_settings
+    match backend:
+        case ResourceType.SLURM_SSH:
+            UserSettingsValidationModel = SlurmSshUserSettings
+        case ResourceType.SLURM_SUDO:
+            UserSettingsValidationModel = SlurmSudoUserSettings
+        case _:
+            # For other backends, we don't validate anything
+            return user_settings
 
     try:
         UserSettingsValidationModel(**user_settings.model_dump())

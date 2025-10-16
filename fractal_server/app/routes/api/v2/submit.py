@@ -226,21 +226,22 @@ async def apply_workflow(
     )
 
     # Define user-side job directory
-    if resource.type == ResourceType.LOCAL:
-        WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        cache_dir = None
-    elif resource.type == ResourceType.SLURM_SUDO:
-        cache_dir = (
-            Path(user_settings.project_dir) / ".fractal_cache"
-            if user_settings.project_dir is not None
-            else None
-        )
-        WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
-    elif resource.type == ResourceType.SLURM_SSH:
-        WORKFLOW_DIR_REMOTE = (
-            Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
-        )
-        cache_dir = None
+    match resource.type:
+        case ResourceType.LOCAL:
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            cache_dir = None
+        case ResourceType.SLURM_SUDO:
+            cache_dir = (
+                Path(user_settings.project_dir) / ".fractal_cache"
+                if user_settings.project_dir is not None
+                else None
+            )
+            WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
+        case ResourceType.SLURM_SSH:
+            WORKFLOW_DIR_REMOTE = (
+                Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
+            )
+            cache_dir = None
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
