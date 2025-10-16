@@ -3,7 +3,7 @@
 # 2.16.6
 
 * API:
-    * Fix bug in import-workflow endpoint, for when several same-version candidate task groups are available (\#XXX).
+    * Fix bug in import-workflow endpoint, for when several same-version candidate task groups are available (\#2863).
 * Models:
     * Fix use of custom `AttributeFilters` type in SQLModel model (\#2830).
 * Dependencies:
