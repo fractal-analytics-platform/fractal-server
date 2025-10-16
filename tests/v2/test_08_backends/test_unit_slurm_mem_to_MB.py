@@ -14,10 +14,10 @@ def test_slurm_mem_to_MB():
     with pytest.raises(SlurmConfigError):
         slurm_mem_to_MB("ABC")
     with pytest.raises(SlurmConfigError):
-        slurm_mem_to_MB("AM")
+        slurm_mem_to_MB("1AM")
     with pytest.raises(SlurmConfigError):
-        slurm_mem_to_MB("AG")
+        slurm_mem_to_MB("1AG")
     with pytest.raises(SlurmConfigError):
-        slurm_mem_to_MB("AT")
+        slurm_mem_to_MB("1AT")
     with pytest.raises(SlurmConfigError):
         slurm_mem_to_MB("1A")
