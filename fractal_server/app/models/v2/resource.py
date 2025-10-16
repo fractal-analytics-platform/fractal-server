@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from typing import Self
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
@@ -73,38 +74,44 @@ class Resource(SQLModel, table=True):
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
-    Example:
+    Python configuration for task collection. Example:
+    ```json
     {
       "default_version": "3.10",
       "versions:{
-        "3.10": "/somewhere/venv-3.10/bin/python",
-        "3.11": "/somewhere/venv-3.11/bin/python",
-        "3.12": "/somewhere/venv-3.12/bin/python",
+        "3.10": "/xxx/venv-3.10/bin/python",
+        "3.11": "/xxx/venv-3.11/bin/python",
+        "3.12": "/xxx/venv-3.12/bin/python"
        }
     }
+    ```
     """
 
     tasks_pixi_config: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
-    FIXME: describe
-    """
-
-    tasks_pip_cache_dir: str | None = None
-    """
-    FIXME: describe
+    Pixi configuration for task collection. Basic example:
+    ```json
+    {
+        "default_version": "0.41.0",
+        "versions": {
+            "0.40.0": "/xxx/pixi/0.40.0/",
+            "0.41.0": "/xxx/pixi/0.41.0/"
+        },
+    }
+    ```
     """
 
     @property
-    def pip_cache_dir_arg(self) -> str:
+    def pip_cache_dir_arg(self: Self) -> str:
         """
-        Option for `pip install`, based on `tasks_pip_cache_dir` value.
-        If `tasks_pip_cache_dir` is set, then return
-        `--cache-dir /somewhere`; else return `--no-cache-dir`.
+        If `pip_cache_dir` is set (in `self.tasks_python_config`), then
+        return `--cache_dir /something`; else return `--no-cache-dir`.
         """
-        if self.tasks_pip_cache_dir is not None:
-            return f"--cache-dir {self.tasks_pip_cache_dir}"
+        _pip_cache_dir = self.tasks_python_config.get("pip_cache_dir", None)
+        if _pip_cache_dir is not None:
+            return f"--cache-dir {_pip_cache_dir}"
         else:
             return "--no-cache-dir"
 

@@ -62,11 +62,6 @@ def upgrade() -> None:
             server_default="{}",
             nullable=False,
         ),
-        sa.Column(
-            "tasks_pip_cache_dir",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=True,
-        ),
         sa.CheckConstraint(
             "(type = 'local') OR (jobs_slurm_python_worker IS NOT NULL)",
             name=op.f(

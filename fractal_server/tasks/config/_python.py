@@ -8,7 +8,7 @@ from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
 
 
-class TaskPythonSettings(BaseModel):
+class TasksPythonSettings(BaseModel):
     """
     Configuration for the Python base interpreters to be used for task venvs.
 
@@ -33,6 +33,11 @@ class TaskPythonSettings(BaseModel):
     ]
     """
     Dictionary mapping Python versions to the corresponding interpreters.
+    """
+
+    pip_cache_dir: AbsolutePathStr | None = None
+    """
+    Argument for `--cache-dir` option of `pip install`, if set.
     """
 
     @model_validator(mode="after")
