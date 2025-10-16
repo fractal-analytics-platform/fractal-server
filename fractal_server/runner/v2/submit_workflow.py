@@ -189,7 +189,6 @@ def submit_workflow(
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"Resource name: {resource.name}")
-        logger.debug(f"Resource type: {resource.type}")
         logger.debug(f"Profile name: {profile.name}")
         logger.debug(f"Username: {profile.username}")
         if resource.type in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
