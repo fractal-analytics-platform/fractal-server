@@ -132,12 +132,13 @@ def submit_workflow(
             return
 
         # Define and create server-side working folder
-        WORKFLOW_DIR_LOCAL = Path(job.working_dir)
-        if WORKFLOW_DIR_LOCAL.exists():
+        local_job_dir = Path(job.working_dir)
+        remote_job_dir = Path(job.working_dir_user)
+        if local_job_dir.exists():
             fail_job(
                 db=db_sync,
                 job=job,
-                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
+                log_msg=f"Workflow dir {local_job_dir} already exists.",
                 logger_name=logger_name,
                 emit_log=True,
             )
@@ -147,20 +148,13 @@ def submit_workflow(
             # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
             match resource.type:
                 case ResourceType.LOCAL:
-                    WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                    WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+                    local_job_dir.mkdir(parents=True)
                 case ResourceType.SLURM_SUDO:
                     original_umask = os.umask(0)
-                    WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
+                    local_job_dir.mkdir(parents=True, mode=0o755)
                     os.umask(original_umask)
-                    WORKFLOW_DIR_REMOTE = (
-                        Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-                    )
                 case ResourceType.SLURM_SSH:
-                    WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                    WORKFLOW_DIR_REMOTE = (
-                        Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
-                    )
+                    local_job_dir.mkdir(parents=True)
 
         except Exception as e:
             error_type = type(e).__name__
@@ -194,7 +188,7 @@ def submit_workflow(
 
         # Write logs
         # FIXME: Review which profile/resource attributes should be logged
-        log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
+        log_file_path = local_job_dir / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,
@@ -243,8 +237,8 @@ def submit_workflow(
             dataset=dataset,
             job_id=job_id,
             user_id=user_id,
-            workflow_dir_local=WORKFLOW_DIR_LOCAL,
-            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
+            workflow_dir_local=local_job_dir,
+            workflow_dir_remote=remote_job_dir,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,
