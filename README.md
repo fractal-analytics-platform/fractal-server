@@ -56,7 +56,7 @@
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                  |      124 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_version\_update.py                   |       91 |        1 |       16 |        1 |     98% |       203 |
 | fractal\_server/app/routes/api/v2/workflow.py                                |      121 |        0 |       20 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/workflow\_import.py                        |       95 |        2 |       20 |        1 |     97% |   179-182 |
+| fractal\_server/app/routes/api/v2/workflow\_import.py                        |       95 |        2 |       20 |        1 |     97% |   180-183 |
 | fractal\_server/app/routes/api/v2/workflowtask.py                            |       76 |        2 |       28 |        2 |     96% |  183, 193 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                              |       23 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                               |       60 |        0 |       14 |        0 |    100% |           |
