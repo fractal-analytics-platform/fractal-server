@@ -307,8 +307,6 @@ async def test_get_user_optional_group_info(
 async def test_patch_user_settings_bulk(
     MockCurrentUser, registered_superuser_client, default_user_group, db
 ):
-    # FIXME: review this test after recent changes to UserSettings
-
     # Register 4 users
     async with MockCurrentUser() as user1:
         pass
@@ -368,7 +366,6 @@ async def test_patch_user_settings_bulk(
                 "ssh_username",
             }
         )
-        assert user.settings.slurm_user == "test01"  # `slurm_user` not patched
     # assert user4 has old settings
     await db.refresh(user4)
     assert dict(

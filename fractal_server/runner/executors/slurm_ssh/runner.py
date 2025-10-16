@@ -227,11 +227,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
 
         logger.debug("[_send_many_job_inputs] END.")
 
-    def run_squeue(
-        self,
-        *,
-        job_ids: list[str],
-    ) -> str:
+    def run_squeue(self, *, job_ids: list[str]) -> str:
         """
         Run `squeue` for a set of SLURM job IDs.
 

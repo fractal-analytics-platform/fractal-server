@@ -11,7 +11,7 @@ SCRIPTS_SUBFOLDER = "scripts"
 logger = set_logger(__name__)
 
 
-def _check_pixi_frozen_option(replacements: list[tuple[str, str]]):
+def _check_pixi_frozen_option(replacements: set[tuple[str, str]]):
     try:
         replacement = next(
             rep for rep in replacements if rep[0] == "__FROZEN_OPTION__"
@@ -27,7 +27,7 @@ def customize_template(
     template_name: str,
     replacements: set[tuple[str, str]],
     script_path: str,
-) -> str:
+) -> None:
     """
     Customize a bash-script template and write it to disk.
 
@@ -84,7 +84,7 @@ def parse_script_pip_show_stdout(stdout: str) -> dict[str, str]:
 
 def get_collection_replacements(
     *, task_group: TaskGroupV2, python_bin: str, resource: Resource
-) -> dict[str, str]:
+) -> list[tuple[str, str]]:
     replacements = [
         ("__PACKAGE_NAME__", task_group.pkg_name),
         ("__PACKAGE_ENV_DIR__", task_group.venv_path),

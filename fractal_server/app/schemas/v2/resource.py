@@ -12,8 +12,8 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
-from fractal_server.tasks.config import TaskPythonSettings
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
 
@@ -46,7 +46,6 @@ class _ValidResourceBase(BaseModel):
     tasks_python_config: dict[NonEmptyStr, Any]
     tasks_pixi_config: dict[NonEmptyStr, Any]
     tasks_local_dir: AbsolutePathStr
-    tasks_pip_cache_dir: AbsolutePathStr | None
 
     # Jobs
     jobs_local_dir: AbsolutePathStr
@@ -56,7 +55,7 @@ class _ValidResourceBase(BaseModel):
     @model_validator(mode="after")
     def _tasks_configurations(self) -> Self:
         if self.tasks_python_config != {}:
-            TaskPythonSettings(**self.tasks_python_config)
+            TasksPythonSettings(**self.tasks_python_config)
         if self.tasks_pixi_config != {}:
             pixi_settings = TasksPixiSettings(**self.tasks_pixi_config)
             if (
@@ -123,4 +122,3 @@ class ResourceRead(BaseModel):
     tasks_local_dir: str
     tasks_python_config: dict[str, Any]
     tasks_pixi_config: dict[str, Any]
-    tasks_pip_cache_dir: str | None

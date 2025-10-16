@@ -262,43 +262,16 @@ async def test_reactivate_task_group_api(
         assert res.json()["status"] == "failed"
 
 
-@pytest.mark.parametrize(
-    "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
-)
-@pytest.mark.container
-async def test_lifecycle(
+async def _aux_test_lifecycle(
+    *,
     client,
     MockCurrentUser,
     db,
     testdata_path,
-    FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
-    app,
     tmp777_path: Path,
-    request,
     monkeypatch,
-    local_resource_profile_db,
-    slurm_ssh_resource_profile_db,
+    profile,
 ):
-    # FIXME: Extract function that runs the whole tests, apart from the (tiny)
-    # if/else for backend. Run two tests, so that the correct fixture and
-    # marker are used. No getfixturevalue should remain.
-
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
-
-    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
-        resource, profile = slurm_ssh_resource_profile_db
-        app.state.fractal_ssh_list = request.getfixturevalue(
-            "fractal_ssh_list"
-        )
-        user_settings_dict = dict(
-            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-        )
-    else:
-        resource, profile = local_resource_profile_db
-        user_settings_dict = {}
-
     # Absolute path to wheel file (use a path in tmp77_path, so that it is
     # also accessible on the SSH remote host)
     old_archive_path = (
@@ -315,8 +288,7 @@ async def test_lifecycle(
         user_kwargs=dict(
             is_verified=True,
             profile_id=profile.id,
-        ),
-        user_settings_dict=user_settings_dict,
+        )
     ) as user:
         # STEP 1: Task collection
         res = await client.post(
@@ -477,6 +449,60 @@ async def test_lifecycle(
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.FAILED
         assert "No such file or directory" in activity["log"]
+
+
+async def test_lifecycle_local(
+    client,
+    MockCurrentUser,
+    db,
+    testdata_path,
+    override_settings_factory,
+    tmp777_path: Path,
+    monkeypatch,
+    local_resource_profile_db,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="local")
+    resource, profile = local_resource_profile_db
+
+    await _aux_test_lifecycle(
+        client=client,
+        MockCurrentUser=MockCurrentUser,
+        db=db,
+        testdata_path=testdata_path,
+        tmp777_path=tmp777_path,
+        monkeypatch=monkeypatch,
+        profile=profile,
+    )
+
+
+@pytest.mark.container
+@pytest.mark.ssh
+async def test_lifecycle_slurm_ssh(
+    client,
+    MockCurrentUser,
+    db,
+    testdata_path,
+    override_settings_factory,
+    tmp777_path: Path,
+    monkeypatch,
+    slurm_ssh_resource_profile_db,
+    fractal_ssh_list,
+    app,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+
+    app.state.fractal_ssh_list = fractal_ssh_list
+    resource, profile = slurm_ssh_resource_profile_db
+
+    await _aux_test_lifecycle(
+        client=client,
+        MockCurrentUser=MockCurrentUser,
+        db=db,
+        testdata_path=testdata_path,
+        tmp777_path=tmp777_path,
+        monkeypatch=monkeypatch,
+        profile=profile,
+    )
 
 
 async def test_fail_due_to_ongoing_activities(

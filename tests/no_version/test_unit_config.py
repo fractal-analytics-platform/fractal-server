@@ -10,8 +10,8 @@ from fractal_server.config import EmailSettings
 from fractal_server.config import Settings
 from fractal_server.config._main import OAuthClientConfig
 from fractal_server.tasks.config import PixiSLURMConfig
-from fractal_server.tasks.config import TaskPythonSettings
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.config import TasksPythonSettings
 
 
 @pytest.mark.parametrize(
@@ -263,11 +263,11 @@ def test_email_settings():
 
 def test_python_config():
     valid = dict(default_version="3.10", versions={"3.10": "/fake"})
-    TaskPythonSettings(**valid)
+    TasksPythonSettings(**valid)
 
     invalid = dict(default_version="3.11", versions={"3.10": "/fake"})
     with pytest.raises(ValueError):
-        TaskPythonSettings(**invalid)
+        TasksPythonSettings(**invalid)
 
 
 def test_pixi_config():

@@ -178,7 +178,6 @@ def submit_workflow(
             db_sync.refresh(wftask)
 
         # Write logs
-        # FIXME: Review which profile/resource attributes should be logged
         log_file_path = local_job_dir / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
@@ -189,14 +188,12 @@ def submit_workflow(
             f"more logs at {str(log_file_path)}"
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
-        logger.debug(f"FRACTAL_RUNNER_BACKEND: {resource.type}")
-        logger.debug(f"Computational resource: {resource.name}")
+        logger.debug(f"Resource name: {resource.name}")
+        logger.debug(f"Profile name: {profile.name}")
+        logger.debug(f"Username: {profile.username}")
         if resource.type in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
-        if resource.type == ResourceType.SLURM_SSH:
-            logger.debug(f"ssh_user: {profile.username}")
-            logger.debug(f"Remote jobs dir: {profile.jobs_remote_dir}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")

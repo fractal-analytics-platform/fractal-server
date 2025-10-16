@@ -131,7 +131,7 @@ class BaseSlurmRunner(BaseRunner):
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
+    def run_squeue(self, *, job_ids: list[str]) -> str:
         raise NotImplementedError("Implement in child class.")
 
     def _is_squeue_error_recoverable(
@@ -599,6 +599,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
@@ -754,6 +755,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
