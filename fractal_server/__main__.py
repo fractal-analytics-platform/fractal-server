@@ -164,11 +164,20 @@ def init_db_data(
 
         # Create resource
         if resource == "default":
+            _python_version = (
+                f"{sys.version_info.major}.{sys.version_info.minor}"
+            )
             resource_data = {
                 "name": "Local resource",
                 "type": ResourceType.LOCAL,
                 "jobs_local_dir": (Path.cwd() / "data-jobs").as_posix(),
                 "tasks_local_dir": (Path.cwd() / "data-tasks").as_posix(),
+                "tasks_python_config": {
+                    "default_version": _python_version,
+                    "versions": {
+                        _python_version: sys.executable,
+                    },
+                },
                 "jobs_poll_interval": 0,
             }
             print("Prepared default resource data.")
