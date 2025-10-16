@@ -141,7 +141,7 @@ class Settings(BaseSettings):
     # FRACTAL SPECIFIC
     ###########################################################################
 
-    # FIXME use ResourceType
+    # Note: we do not use ResourceType here to avoid circular imports
     FRACTAL_RUNNER_BACKEND: Literal[
         "local", "slurm_ssh", "slurm_sudo"
     ] = "local"

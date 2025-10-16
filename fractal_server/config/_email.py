@@ -40,7 +40,7 @@ class PublicEmailSettings(BaseModel):
 
 class EmailSettings(BaseSettings):
     """
-    FIXME
+    Class with settings for email-sending feature.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -87,6 +87,10 @@ class EmailSettings(BaseSettings):
     """
 
     public: PublicEmailSettings | None = None
+    """
+    The validated field which is actually used in `fractal-server
+    (automatically populated upon creation).
+    """
 
     @model_validator(mode="after")
     def validate_email_settings(self):

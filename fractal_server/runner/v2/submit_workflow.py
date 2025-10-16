@@ -62,7 +62,7 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    user_settings: UserSettings,  # FIXME: Drop this
+    user_settings: UserSettings,
     worker_init: str | None = None,
     user_cache_dir: str | None = None,  # FIXME: review this
     resource: Resource,
