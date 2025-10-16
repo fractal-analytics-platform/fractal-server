@@ -33,14 +33,11 @@ def override_settings_factory():
     Returns a function that can be used to override settings.
     """
 
-    # FIXME: this should only count dependencies for `get_settings`
-    original_num_dependencies = len(Inject._dependencies)
+    original_dependency = Inject._dependencies.get(get_settings, None)
 
     def _overrride_settings(**kwargs):
-        # Extract original settings (needed to restore them later)
-        _original_settings = Inject(get_settings)
-
         # Create and validate new `Settings` object
+        _original_settings = Inject(get_settings)
         _data = _original_settings.model_dump()
         _data.update(kwargs)
         _new_settings = Settings(**_data)
@@ -55,11 +52,12 @@ def override_settings_factory():
         yield _overrride_settings
 
     finally:
-        # If some override actually took place, `pop` it. An example of an
-        # override not taking place is when the test provides invalid data,
-        # and `_new_settings Settings(...)` fails.
-        if original_num_dependencies < len(Inject._dependencies):
-            Inject.pop(get_settings)
+        # Restore initial configuration
+        if original_dependency is None:
+            if get_settings in Inject._dependencies.keys():
+                Inject._dependencies.pop(get_settings)
+        else:
+            Inject._dependencies[get_settings] = original_dependency
 
 
 @pytest.fixture(scope="function")
@@ -68,14 +66,11 @@ def override_email_settings_factory():
     Returns a function that can be used to override email settings.
     """
 
-    # FIXME: this should only count dependencies for `get_email_settings`
-    original_num_dependencies = len(Inject._dependencies)
+    original_dependency = Inject._dependencies.get(get_email_settings, None)
 
     def _overrride_email_settings(**kwargs):
-        # Extract original settings (needed to restore them later)
-        _original_settings = Inject(get_email_settings)
-
         # Create and validate new `Settings` object
+        _original_settings = Inject(get_email_settings)
         _data = _original_settings.model_dump()
         _data.update(kwargs)
         _new_settings = EmailSettings(**_data)
@@ -90,11 +85,12 @@ def override_email_settings_factory():
         yield _overrride_email_settings
 
     finally:
-        # If some override actually took place, `pop` it. An example of an
-        # override not taking place is when the test provides invalid data,
-        # and `_new_settings Settings(...)` fails.
-        if original_num_dependencies < len(Inject._dependencies):
-            Inject.pop(get_email_settings)
+        # Restore initial configuration
+        if original_dependency is None:
+            if get_email_settings in Inject._dependencies.keys():
+                Inject._dependencies.pop(get_email_settings)
+        else:
+            Inject._dependencies[get_email_settings] = original_dependency
 
 
 @pytest.fixture(scope="function")
