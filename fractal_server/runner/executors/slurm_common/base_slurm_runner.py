@@ -468,7 +468,7 @@ class BaseSlurmRunner(BaseRunner):
         *,
         task: SlurmTask,
         was_job_scancelled: bool = False,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
@@ -561,6 +561,10 @@ class BaseSlurmRunner(BaseRunner):
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
 
+    @property
+    def job_ids_int(self) -> list[int]:
+        return list(map(int, self.jobs.keys()))
+
     def wait_and_check_shutdown(self) -> list[str]:
         """
         Wait at most `self.poll_interval`, while also checking for shutdown.
@@ -608,7 +612,7 @@ class BaseSlurmRunner(BaseRunner):
         config: SlurmConfig,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
         """
         Run a single fractal task.
 
@@ -699,7 +703,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
             # Retrieval phase
@@ -919,7 +923,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
         except Exception as e:

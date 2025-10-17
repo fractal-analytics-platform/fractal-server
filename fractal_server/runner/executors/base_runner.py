@@ -58,7 +58,7 @@ class BaseRunner:
         task_files: TaskFiles,
         user_id: int,
         config: Any,
-    ) -> tuple[Any, BaseException]:
+    ) -> tuple[Any, BaseException | None]:
         """
         Run a single fractal task.
 
@@ -118,7 +118,7 @@ class BaseRunner:
     def validate_submit_parameters(
         self,
         parameters: dict[str, Any],
-        task_type: TaskType,
+        task_type: SubmitTaskType | MultisubmitTaskType,
     ) -> None:
         """
         Validate parameters for `submit` method
@@ -153,7 +153,7 @@ class BaseRunner:
     def validate_multisubmit_parameters(
         self,
         *,
-        task_type: TaskType,
+        task_type: MultisubmitTaskType,
         list_parameters: list[dict[str, Any]],
         list_task_files: list[TaskFiles],
         history_unit_ids: list[int],

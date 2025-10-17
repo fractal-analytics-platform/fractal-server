@@ -99,7 +99,7 @@ class LocalRunner(BaseRunner):
         config: JobRunnerConfigLocal,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
         """
         Run a single fractal task.
 
