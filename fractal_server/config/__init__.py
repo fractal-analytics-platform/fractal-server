@@ -9,8 +9,11 @@ def get_db_settings(db_settings=DatabaseSettings()) -> DatabaseSettings:
     return db_settings
 
 
-def get_settings(settings=Settings()) -> Settings:
-    return settings
+SETTINGS = Settings()
+
+
+def get_settings() -> Settings:
+    return SETTINGS
 
 
 def get_email_settings(email_settings=EmailSettings()) -> EmailSettings:

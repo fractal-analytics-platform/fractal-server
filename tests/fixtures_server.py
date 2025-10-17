@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
@@ -22,42 +23,30 @@ from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import EmailSettings
 from fractal_server.config import get_email_settings
-from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
 
 @pytest.fixture(scope="function")
-def override_settings_factory():
+def override_settings_factory(monkeypatch):
     """
     Returns a function that can be used to override settings.
     """
+    debug("TOP")
+    import fractal_server.config  # noqa
+    from fractal_server.config import SETTINGS
 
-    original_dependency = Inject._dependencies.get(get_settings, None)
+    with monkeypatch.context() as m:
 
-    def _overrride_settings(**kwargs):
-        # Create and validate new `Settings` object
-        _original_settings = Inject(get_settings)
-        _data = _original_settings.model_dump()
-        _data.update(kwargs)
-        _new_settings = Settings(**_data)
+        def _overrride_settings(**kwargs):
+            new_settings = SETTINGS.model_copy(deep=True)
+            for key, value in kwargs.items():
+                setattr(new_settings, key, value)
+            Settings(**new_settings.model_dump())
+            m.setattr(fractal_server.config, "SETTINGS", new_settings)
+            debug(f"Now patching settings with {new_settings}")
 
-        # Override `get_settings`
-        def _patched_get_settings():
-            return _new_settings
-
-        Inject.override(get_settings, _patched_get_settings)
-
-    try:
         yield _overrride_settings
-
-    finally:
-        # Restore initial configuration
-        if original_dependency is None:
-            if get_settings in Inject._dependencies.keys():
-                Inject._dependencies.pop(get_settings)
-        else:
-            Inject._dependencies[get_settings] = original_dependency
 
 
 @pytest.fixture(scope="function")
