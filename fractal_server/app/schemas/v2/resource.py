@@ -26,7 +26,9 @@ class ResourceType(StrEnum):
     LOCAL = "local"
 
 
-def _cast_and_serialize(v: dict[NonEmptyStr, Any]) -> dict[NonEmptyStr, Any]:
+def cast_serialize_pixi_settings(
+    v: dict[NonEmptyStr, Any],
+) -> dict[NonEmptyStr, Any]:
     """
     Validate current value, and enrich it with default values.
     """
@@ -43,7 +45,7 @@ class _ValidResourceBase(BaseModel):
     tasks_python_config: TasksPythonSettings
     tasks_pixi_config: Annotated[
         dict[NonEmptyStr, Any],
-        AfterValidator(_cast_and_serialize),
+        AfterValidator(cast_serialize_pixi_settings),
     ]
     tasks_local_dir: AbsolutePathStr
 
