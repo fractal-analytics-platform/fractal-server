@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import Discriminator
 from pydantic import Tag
+from pydantic import validate_call
 
 from .resource import ResourceType
 from fractal_server.types import AbsolutePathStr
@@ -61,3 +62,11 @@ class ProfileRead(BaseModel):
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None
     tasks_remote_dir: str | None = None
+
+
+@validate_call
+def validate_profile_data(_data: ProfileCreate):
+    """
+    We use `@validate_call` because `ProfileCreate` is a `Union` type and it
+    cannot be instantiated directly.
+    """

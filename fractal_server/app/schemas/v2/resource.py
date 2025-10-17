@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from pydantic import Discriminator
 from pydantic import model_validator
 from pydantic import Tag
+from pydantic import validate_call
 from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
@@ -106,3 +107,11 @@ class ResourceRead(BaseModel):
     tasks_local_dir: str
     tasks_python_config: dict[str, Any]
     tasks_pixi_config: dict[str, Any]
+
+
+@validate_call
+def validate_resource_data(_data: ResourceCreate):
+    """
+    We use `@validate_call` because `ResourceCreate` is a `Union` type and it
+    cannot be instantiated directly.
+    """
