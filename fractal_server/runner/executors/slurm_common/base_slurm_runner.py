@@ -134,9 +134,7 @@ class BaseSlurmRunner(BaseRunner):
     def run_squeue(self, *, job_ids: list[str]) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def _is_squeue_error_recoverable(
-        self, exception: BaseException
-    ) -> Literal[True]:
+    def _is_squeue_error_recoverable(self, exception: BaseException) -> bool:
         """
         Determine whether a `squeue` error is considered recoverable.
 
@@ -470,7 +468,7 @@ class BaseSlurmRunner(BaseRunner):
         *,
         task: SlurmTask,
         was_job_scancelled: bool = False,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
@@ -563,6 +561,10 @@ class BaseSlurmRunner(BaseRunner):
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
 
+    @property
+    def job_ids_int(self) -> list[int]:
+        return list(map(int, self.jobs.keys()))
+
     def wait_and_check_shutdown(self) -> list[str]:
         """
         Wait at most `self.poll_interval`, while also checking for shutdown.
@@ -610,7 +612,23 @@ class BaseSlurmRunner(BaseRunner):
         config: SlurmConfig,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
+        """
+        Run a single fractal task.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            parameters: Dictionary of parameters.
+            history_unit_id:
+                Database ID of the corresponding `HistoryUnit` entry.
+            task_type: Task type.
+            task_files: `TaskFiles` object.
+            config: Runner-specific parameters.
+            user_id:
+        """
         logger.debug("[submit] START")
 
         # Always refresh `executor_error_log` before starting a task
@@ -685,7 +703,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
             # Retrieval phase
@@ -760,7 +778,7 @@ class BaseSlurmRunner(BaseRunner):
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
-        list_parameters: list[dict],
+        list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: MultisubmitTaskType,
@@ -768,15 +786,35 @@ class BaseSlurmRunner(BaseRunner):
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
+        Run a parallel fractal task.
+
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            list_parameters:
+                List of dictionaries of parameters (each one must include
+                `zarr_urls` key).
+            history_unit_ids:
+                Database IDs of the corresponding `HistoryUnit` entries.
+            list_task_files: `TaskFiles` objects.
+            task_type: Task type.
+            config: Runner-specific parameters.
+            user_id:
         """
 
         # Always refresh `executor_error_log` before starting a task
         self.executor_error_log = None
 
         config = self._enrich_slurm_config(config)
+
+        results: dict[int, Any] = {}
+        exceptions: dict[int, BaseException] = {}
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
@@ -788,8 +826,8 @@ class BaseSlurmRunner(BaseRunner):
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
-                results: dict[int, Any] = {}
-                exceptions: dict[int, BaseException] = {
+                results = {}
+                exceptions = {
                     ind: SHUTDOWN_EXCEPTION
                     for ind in range(len(list_parameters))
                 }
@@ -810,9 +848,6 @@ class BaseSlurmRunner(BaseRunner):
             if task_type == TaskType.PARALLEL:
                 self._mkdir_local_folder(workdir_local.as_posix())
                 self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-
-            results: dict[int, Any] = {}
-            exceptions: dict[int, BaseException] = {}
 
             # NOTE: chunking has already taken place in `get_slurm_config`,
             # so that `config.tasks_per_job` is now set.
@@ -888,7 +923,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
         except Exception as e:

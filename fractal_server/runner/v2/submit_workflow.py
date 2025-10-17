@@ -8,6 +8,7 @@ the individual backends.
 import os
 import traceback
 from pathlib import Path
+from typing import Protocol
 
 from sqlalchemy.orm import Session as DBSyncSession
 
@@ -16,7 +17,6 @@ from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import Profile
@@ -30,8 +30,30 @@ from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.types import AttributeFilters
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
+
+
+class ProcessWorkflowType(Protocol):
+    def __call__(
+        self,
+        *,
+        workflow: WorkflowV2,
+        dataset: DatasetV2,
+        workflow_dir_local: Path,
+        job_id: int,
+        workflow_dir_remote: Path | None,
+        first_task_index: int | None,
+        last_task_index: int | None,
+        logger_name: str,
+        job_attribute_filters: AttributeFilters,
+        job_type_filters: dict[str, bool],
+        user_id: int,
+        resource: Resource,
+        profile: Profile,
+    ) -> None:
+        ...
 
 
 def fail_job(
@@ -62,7 +84,6 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    user_settings: UserSettings,
     worker_init: str | None = None,
     user_cache_dir: str | None = None,  # FIXME: review this
     resource: Resource,
@@ -205,16 +226,20 @@ def submit_workflow(
     try:
         match resource.type:
             case ResourceType.LOCAL:
-                process_workflow = local_process_workflow
+                process_workflow: ProcessWorkflowType = local_process_workflow
                 backend_specific_kwargs = {}
             case ResourceType.SLURM_SUDO:
-                process_workflow = slurm_sudo_process_workflow
+                process_workflow: ProcessWorkflowType = (
+                    slurm_sudo_process_workflow
+                )
                 backend_specific_kwargs = dict(
                     slurm_account=job.slurm_account,
                     user_cache_dir=user_cache_dir,
                 )
             case ResourceType.SLURM_SSH:
-                process_workflow = slurm_ssh_process_workflow
+                process_workflow: ProcessWorkflowType = (
+                    slurm_ssh_process_workflow
+                )
                 backend_specific_kwargs = dict(
                     fractal_ssh=fractal_ssh,
                     slurm_account=job.slurm_account,

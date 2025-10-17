@@ -249,7 +249,7 @@ def execute_tasks_v2(
         except Exception as e:
             outcomes_dict = {
                 0: SubmissionOutcome(
-                    result=None,
+                    task_output=None,
                     exception=e,
                 )
             }

@@ -99,7 +99,23 @@ class LocalRunner(BaseRunner):
         config: JobRunnerConfigLocal,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
+        """
+        Run a single fractal task.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            parameters: Dictionary of parameters.
+            history_unit_id:
+                Database ID of the corresponding `HistoryUnit` entry.
+            task_type: Task type.
+            task_files: `TaskFiles` object.
+            config: Runner-specific parameters.
+            user_id:
+        """
         logger.debug("[submit] START")
 
         try:
@@ -160,7 +176,7 @@ class LocalRunner(BaseRunner):
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
-        list_parameters: list[dict],
+        list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: MultisubmitTaskType,
@@ -168,9 +184,26 @@ class LocalRunner(BaseRunner):
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
+        Run a parallel fractal task.
+
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            list_parameters:
+                List of dictionaries of parameters (each one must include
+                `zarr_urls` key).
+            history_unit_ids:
+                Database IDs of the corresponding `HistoryUnit` entries.
+            list_task_files: `TaskFiles` objects.
+            task_type: Task type.
+            config: Runner-specific parameters.
+            user_id:
         """
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")

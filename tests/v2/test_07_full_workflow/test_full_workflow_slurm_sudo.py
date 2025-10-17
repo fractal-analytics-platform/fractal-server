@@ -48,7 +48,7 @@ async def test_full_workflow_slurm(
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    fractal_tasks_mock_db,  # FIXME
+    fractal_tasks_mock_db,
     slurm_sudo_resource_profile_db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
