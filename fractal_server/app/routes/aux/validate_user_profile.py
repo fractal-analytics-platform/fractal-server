@@ -6,8 +6,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.schemas.v2.profile import validate_profile_data
-from fractal_server.app.schemas.v2.resource import validate_resource_data
+from fractal_server.app.schemas.v2.profile import cast_serialize_profile
+from fractal_server.app.schemas.v2.resource import cast_serialize_resource
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -38,10 +38,10 @@ async def validate_user_profile(
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
-        validate_resource_data(
+        cast_serialize_resource(
             resource.model_dump(exclude={"id", "timestamp_created"}),
         )
-        validate_profile_data(
+        cast_serialize_profile(
             profile.model_dump(exclude={"resource_id", "id"}),
         )
         db.expunge(resource)
