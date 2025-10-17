@@ -134,9 +134,7 @@ class BaseSlurmRunner(BaseRunner):
     def run_squeue(self, *, job_ids: list[str]) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def _is_squeue_error_recoverable(
-        self, exception: BaseException
-    ) -> Literal[True]:
+    def _is_squeue_error_recoverable(self, exception: BaseException) -> bool:
         """
         Determine whether a `squeue` error is considered recoverable.
 
