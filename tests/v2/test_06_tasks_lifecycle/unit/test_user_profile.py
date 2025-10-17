@@ -9,6 +9,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
+from fractal_server.app.schemas.v2.resource import cast_serialize_pixi_settings
 
 
 async def test_user_has_profile_or_422(
@@ -44,14 +45,12 @@ async def test_validate_user_profile_local(
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
-    res.tasks_pixi_config = {
-        "default_version": "0.41.0",
-        "versions": {
-            "0.40.0": "/common/path/pixi/0.40.0/",
-            "0.41.0": "/common/path/pixi/0.41.0/",
-            "0.43.0": "/common/path/pixi/0.43.0/",
-        },
-    }
+    res.tasks_pixi_config = cast_serialize_pixi_settings(
+        {
+            "default_version": "0.41.0",
+            "versions": {"0.41.0": "/common/path/pixi/0.41.0/"},
+        }
+    )
     db.add(res)
     await db.commit()
     await db.refresh(res)
