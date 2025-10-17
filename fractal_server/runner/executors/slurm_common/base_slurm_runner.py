@@ -813,6 +813,9 @@ class BaseSlurmRunner(BaseRunner):
 
         config = self._enrich_slurm_config(config)
 
+        results: dict[int, Any] = {}
+        exceptions: dict[int, BaseException] = {}
+
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
             if self.is_shutdown():
@@ -823,8 +826,8 @@ class BaseSlurmRunner(BaseRunner):
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
-                results: dict[int, Any] = {}
-                exceptions: dict[int, BaseException] = {
+                results = {}
+                exceptions = {
                     ind: SHUTDOWN_EXCEPTION
                     for ind in range(len(list_parameters))
                 }
@@ -845,9 +848,6 @@ class BaseSlurmRunner(BaseRunner):
             if task_type == TaskType.PARALLEL:
                 self._mkdir_local_folder(workdir_local.as_posix())
                 self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-
-            results: dict[int, Any] = {}
-            exceptions: dict[int, BaseException] = {}
 
             # NOTE: chunking has already taken place in `get_slurm_config`,
             # so that `config.tasks_per_job` is now set.
