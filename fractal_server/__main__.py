@@ -136,8 +136,8 @@ def init_db_data(
     from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
     from fractal_server.app.models import Resource, Profile
-    from fractal_server.app.schemas.v2.resource import validate_resource_data
-    from fractal_server.app.schemas.v2.profile import validate_profile_data
+    from fractal_server.app.schemas.v2.resource import cast_serialize_resource
+    from fractal_server.app.schemas.v2.profile import cast_serialize_profile
 
     init_data_settings = Inject(get_init_data_settings)
 
@@ -203,15 +203,17 @@ def init_db_data(
 
         # Validate resource/profile data
         try:
-            validate_resource_data(resource_data)
+            resource_data = cast_serialize_resource(resource_data)
         except ValidationError as e:
-            print(e)
-            sys.exit("ERROR: Invalid resource data.")
+            sys.exit(
+                f"ERROR: Invalid resource data.\nOriginal error:\n{str(e)}"
+            )
         try:
-            validate_profile_data(profile_data)
+            profile_data = cast_serialize_profile(profile_data)
         except ValidationError as e:
-            print(e)
-            sys.exit("ERROR: Invalid profile data.")
+            sys.exit(
+                f"ERROR: Invalid profile data.\nOriginal error:\n{str(e)}"
+            )
 
         # Create resource/profile db objects
         resource_obj = Resource(**resource_data)
