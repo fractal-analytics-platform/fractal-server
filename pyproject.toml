@@ -60,6 +60,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"
 pytest = "8.4.*"
+pytest-env = ">=1.1.5,<1.2.0"
 httpx = ">=0.28.0,<0.29.0"
 devtools = "^0.12"
 pytest-asyncio = "1.2.*"
@@ -122,3 +123,13 @@ omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
 ignore_missing_imports = true
+
+
+[tool.pytest_env]
+PYTHONASYNCIODEBUG=1
+JWT_SECRET_KEY="very_secret_key"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgres"
+POSTGRES_DB="fractal_test"
+FRACTAL_API_MAX_JOB_LIST_LENGTH=1
+FRACTAL_GRACEFUL_SHUTDOWN_TIME=1

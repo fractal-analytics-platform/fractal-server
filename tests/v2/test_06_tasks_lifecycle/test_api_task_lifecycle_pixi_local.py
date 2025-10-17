@@ -4,14 +4,17 @@ from pathlib import Path
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
-from fractal_server.config import PixiSettings
-from fractal_server.syringe import Inject
+from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
-async def test_pixi_not_available(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+async def test_pixi_not_available(
+    client, MockCurrentUser, local_resource_profile_db
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={"pixi_version": "9.9.9"},
@@ -22,21 +25,12 @@ async def test_pixi_not_available(client, MockCurrentUser):
 
 
 async def test_api_failures(
-    override_settings_factory,
     client,
     MockCurrentUser,
     tmp_path: Path,
+    local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_PIXI_CONFIG_FILE="/fake/pixi/pixi.json",
-        pixi=PixiSettings(
-            default_version="1.0.0",
-            versions={
-                "1.0.0": "/fake/pixi/1.0.0",
-                "1.0.1": "/fake/pixi/1.0.1",
-            },
-        ),
-    )
+    resource, profile = local_resource_profile_db
 
     def empty_tar_gz(filename) -> dict:
         valid_tar_gz = tmp_path / f"{filename}.tar.gz"
@@ -51,7 +45,12 @@ async def test_api_failures(
             )
         }
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        )
+    ):
         # no data nor files
         res = await client.post(
             "api/v2/task/collect/pixi/",
@@ -79,26 +78,20 @@ async def test_api_failures(
         # pixi version not available
         res = await client.post(
             "api/v2/task/collect/pixi/",
-            data={"pixi_version": "1.2.3"},
+            data={"pixi_version": "9.9.9"},
             files=empty_tar_gz("mypackage-0.1.2a345"),
         )
         assert res.status_code == 422
 
 
 async def test_pixi_collection_path_already_exists(
-    override_settings_factory,
     client,
     MockCurrentUser,
-    pixi: PixiSettings,
+    pixi: TasksPixiSettings,
     pixi_pkg_targz: Path,
-    tmp_path: Path,
+    local_resource_profile_db,
+    db,
 ):
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
-        pixi=pixi,
-    )
-
     with pixi_pkg_targz.open("rb") as f:
         files = {
             "file": (
@@ -108,11 +101,15 @@ async def test_pixi_collection_path_already_exists(
             )
         }
 
-    settings = Inject(get_settings)
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = pixi.model_dump()
+    db.add(resource)
+    await db.commit()
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         task_group_path = (
-            Path(settings.FRACTAL_TASKS_DIR.as_posix())
+            Path(Path(resource.tasks_local_dir).as_posix())
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"
@@ -131,19 +128,17 @@ async def test_pixi_collection_path_already_exists(
 
 
 async def test_task_group_lifecycle_pixi_local(
-    override_settings_factory,
     client,
     MockCurrentUser,
-    pixi: PixiSettings,
+    pixi: TasksPixiSettings,
     pixi_pkg_targz: Path,
-    tmp_path: Path,
     db,
+    local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_PIXI_CONFIG_FILE="/fake/file",
-        FRACTAL_TASKS_DIR=tmp_path,
-        pixi=pixi,
-    )
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = pixi.model_dump()
+    db.add(resource)
+    await db.commit()
 
     with pixi_pkg_targz.open("rb") as f:
         files = {
@@ -154,7 +149,18 @@ async def test_task_group_lifecycle_pixi_local(
             )
         }
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
+        # Failed collection (pixi version not available)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data=dict(pixi_version="9.9.9"),
+            files=files,
+        )
+        assert res.status_code == 422
+        assert "is not available" in str(res.json()["detail"])
+
         # Successful collection
         res = await client.post(
             "api/v2/task/collect/pixi/",

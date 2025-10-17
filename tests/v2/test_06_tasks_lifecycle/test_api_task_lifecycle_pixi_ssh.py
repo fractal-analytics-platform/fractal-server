@@ -8,12 +8,12 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import TaskGroupV2
-from fractal_server.config import PixiSettings
-from fractal_server.config import PixiSLURMConfig
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
+from fractal_server.tasks.config import PixiSLURMConfig
+from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
-from tests.fixtures_slurm import SLURM_USER
 
 
 def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
@@ -26,7 +26,7 @@ def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
 
 
 @pytest.fixture(scope="function")
-def pixi_ssh(tmp777_path: Path) -> PixiSettings:
+def pixi_ssh(tmp777_path: Path) -> TasksPixiSettings:
     """
     Similar to the `pixi` fixture, but it uses a 777 pixi folder, which
     is also writeable from within SSH remote-host container.
@@ -53,7 +53,7 @@ def pixi_ssh(tmp777_path: Path) -> PixiSettings:
     )
     logging.info(f"END   running {cmd=}")
 
-    return PixiSettings(
+    return TasksPixiSettings(
         default_version="0.54.1",
         versions={"0.54.1": pixi_home.as_posix()},
         SLURM_CONFIG=PixiSLURMConfig(
@@ -76,39 +76,29 @@ async def test_task_group_lifecycle_pixi_ssh(
     override_settings_factory,
     tmp777_path: Path,
     fractal_ssh_list: FractalSSHList,
-    slurmlogin_ip,
-    ssh_keys,
-    pixi_ssh: PixiSettings,
+    pixi_ssh: TasksPixiSettings,
     pixi_pkg_targz: Path,
+    slurm_ssh_resource_profile_db,
 ):
+    resource, profile = slurm_ssh_resource_profile_db
     credentials = dict(
-        host=slurmlogin_ip,
-        user=SLURM_USER,
-        key_path=ssh_keys["private"],
+        host=resource.host,
+        user=profile.username,
+        key_path=profile.ssh_key_path,
     )
 
-    assert not fractal_ssh_list.contains(**credentials)
+    resource.tasks_pixi_config = pixi_ssh.model_dump()
+    db.add(resource)
+    await db.commit()
+    await db.refresh(resource)
 
-    # Define and create remote working directory
-    REMOTE_TASKS_BASE_DIR = (tmp777_path / "tasks").as_posix()
+    assert not fractal_ssh_list.contains(**credentials)
 
     # Assign FractalSSH object to app state
     app.state.fractal_ssh_list = fractal_ssh_list
     fractal_ssh = fractal_ssh_list.get(**credentials)
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm_ssh",
-        FRACTAL_PIXI_CONFIG_FILE="fake",
-        pixi=pixi_ssh,
-    )
-
-    user_settings_dict = dict(
-        ssh_host=slurmlogin_ip,
-        ssh_username=SLURM_USER,
-        ssh_private_key_path=ssh_keys["private"],
-        ssh_tasks_dir=REMOTE_TASKS_BASE_DIR,
-        ssh_jobs_dir=(tmp777_path / "jobs").as_posix(),
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
 
     with pixi_pkg_targz.open("rb") as f:
         files = {
@@ -120,12 +110,14 @@ async def test_task_group_lifecycle_pixi_ssh(
         }
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=profile.id,
+        ),
     ) as user:
         # 1 / Failed collection - remote folder already exists
         task_group_path = (
-            Path(REMOTE_TASKS_BASE_DIR)
+            Path(profile.tasks_remote_dir)
             / str(user.id)
             / "mock-pixi-tasks"
             / "0.2.1"
@@ -149,7 +141,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert "already exists" in activity["log"]
         fractal_ssh.remove_folder(
             folder=task_group_path,
-            safe_root=REMOTE_TASKS_BASE_DIR,
+            safe_root=profile.tasks_remote_dir,
         )
 
         # 2 / Successful collection
@@ -165,6 +157,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
         assert res.status_code == 200
         activity = res.json()
+        debug(activity["log"])
         assert activity["log"] is not None
         assert activity["timestamp_ended"] is not None
         assert activity["status"] == "OK"

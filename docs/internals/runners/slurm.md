@@ -1,7 +1,7 @@
 # SLURM backends
 
 **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`, and they are not meant to be initialized by the user; the same holds for
-`SlurmConfig` attributes (e.g. `mem_per_task_MB`) which are not meant to be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on the expected file content are defined in the `SlurmConfigFile` model).
+`SlurmConfig` attributes (e.g. `mem_per_task_MB`) which are not meant to be part of the `FRACTAL_SLURM_CONFIG_FILE_zzz` JSON file (details on the expected file content are defined in the `SlurmConfigFile` model).
 
 ## SLURM configuration
 
@@ -11,7 +11,7 @@ The different sources for SLURM configuration options (like `partition`, `cpus_p
 
 1. All attributes that are explicitly set in the `WorkflowTask.meta` dictionary attribute take highest priority;
 2. Next priority goes to all attributes that are explicitly set in the `WorkflowTask.task.meta` dictionary attribute;
-3. Lowest-priority (that is default) values come from the configuration in `FRACTAL_SLURM_CONFIG_FILE`.
+3. Lowest-priority (that is default) values come from the configuration in `FRACTAL_SLURM_CONFIG_FILE_zzz`.
 
 ### Example
 

@@ -1,50 +1,42 @@
-from pathlib import Path
 from typing import Literal
 
 from ._batching import heuristics
-from ._slurm_config import _parse_mem_value
-from ._slurm_config import load_slurm_config_file
-from ._slurm_config import logger
-from ._slurm_config import SlurmConfig
-from ._slurm_config import SlurmConfigError
+from .slurm_config import logger
+from .slurm_config import SlurmConfig
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
+from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.string_tools import interpret_as_bool
 
 
-def get_slurm_config_internal(
+def _get_slurm_config_internal(
+    shared_config: JobRunnerConfigSLURM,
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
-    config_path: Path | None = None,
 ) -> SlurmConfig:
     """
-    Prepare a `SlurmConfig` configuration object
 
-    The argument `which_type` determines whether we use `wftask.meta_parallel`
-    or `wftask.meta_non_parallel`. In the following description, let us assume
-    that `which_type="parallel"`.
+    Prepare a specific `SlurmConfig` configuration.
 
-    The sources for `SlurmConfig` attributes, in increasing priority order, are
+    The base configuration is the runner-level `shared_config` object, based
+    on `resource.jobs_runner_config` (note that GPU-specific properties take
+    priority, when `needs_gpu=True`). We then incorporate attributes from
+    `wftask.meta_{non_parallel,parallel}` - with higher priority.
 
-    1. The general content of the Fractal SLURM configuration file.
-    2. The GPU-specific content of the Fractal SLURM configuration file, if
-        appropriate.
-    3. Properties in `wftask.meta_parallel` (which typically include those in
-       `wftask.task.meta_parallel`). Note that `wftask.meta_parallel` may be
-       `None`.
-
-    Arguments:
+    Args:
+        shared_config:
+            Configuration object based on `resource.jobs_runner_config`.
         wftask:
-            WorkflowTask for which the SLURM configuration is is to be
-            prepared.
-        config_path:
-            Path of a Fractal SLURM configuration file; if `None`, use
-            `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
+            WorkflowTaskV2 for which the backend configuration should
+            be prepared.
         which_type:
-            Determines whether to use `meta_parallel` or `meta_non_parallel`.
+            Whether we should look at the non-parallel or parallel part
+            of `wftask`.
+        tot_tasks: Not used here, only present as a common interface.
 
     Returns:
-        slurm_config:
-            The SlurmConfig object
+        A ready-to-use `SlurmConfig` object.
     """
 
     if which_type == "non_parallel":
@@ -60,25 +52,19 @@ def get_slurm_config_internal(
         f"[get_slurm_config] WorkflowTask meta attribute: {wftask_meta=}"
     )
 
-    # Incorporate slurm_env.default_slurm_config
-    slurm_env = load_slurm_config_file(config_path=config_path)
-    slurm_dict = slurm_env.default_slurm_config.model_dump(
+    # Start from `shared_config`
+    slurm_dict = shared_config.default_slurm_config.model_dump(
         exclude_unset=True, exclude={"mem"}
     )
-    if slurm_env.default_slurm_config.mem:
-        slurm_dict["mem_per_task_MB"] = slurm_env.default_slurm_config.mem
+    if shared_config.default_slurm_config.mem:
+        slurm_dict["mem_per_task_MB"] = shared_config.default_slurm_config.mem
 
     # Incorporate slurm_env.batching_config
-    for key, value in slurm_env.batching_config.model_dump().items():
+    for key, value in shared_config.batching_config.model_dump().items():
         slurm_dict[key] = value
 
     # Incorporate slurm_env.user_local_exports
-    slurm_dict["user_local_exports"] = slurm_env.user_local_exports
-
-    logger.debug(
-        "[get_slurm_config] Fractal SLURM configuration file: "
-        f"{slurm_env.model_dump()=}"
-    )
+    slurm_dict["user_local_exports"] = shared_config.user_local_exports
 
     # GPU-related options
     # Notes about priority:
@@ -92,12 +78,12 @@ def get_slurm_config_internal(
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
-        for key, value in slurm_env.gpu_slurm_config.model_dump(
+        for key, value in shared_config.gpu_slurm_config.model_dump(
             exclude_unset=True, exclude={"mem"}
         ).items():
             slurm_dict[key] = value
-        if slurm_env.gpu_slurm_config.mem:
-            slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
+        if shared_config.gpu_slurm_config.mem:
+            slurm_dict["mem_per_task_MB"] = shared_config.gpu_slurm_config.mem
 
     # Number of CPUs per task, for multithreading
     if wftask_meta is not None and "cpus_per_task" in wftask_meta:
@@ -107,7 +93,7 @@ def get_slurm_config_internal(
     # Required memory per task, in MB
     if wftask_meta is not None and "mem" in wftask_meta:
         raw_mem = wftask_meta["mem"]
-        mem_per_task_MB = _parse_mem_value(raw_mem)
+        mem_per_task_MB = slurm_mem_to_MB(raw_mem)
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
     # Job name
@@ -144,8 +130,7 @@ def get_slurm_config_internal(
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
         logger.debug(
-            "[get_slurm_config] Removing repeated elements from "
-            f"{extra_lines=}."
+            f"[get_slurm_config] Removing repeated elements in {extra_lines=}."
         )
         extra_lines = list(set(extra_lines))
     slurm_dict["extra_lines"] = extra_lines
@@ -164,8 +149,7 @@ def get_slurm_config_internal(
 
     # Put everything together
     logger.debug(
-        "[get_slurm_config] Now create a SlurmConfig object based on "
-        f"{slurm_dict=}"
+        f"[get_slurm_config] Create SlurmConfig object based on {slurm_dict=}"
     )
     slurm_config = SlurmConfig(**slurm_dict)
 
@@ -173,15 +157,15 @@ def get_slurm_config_internal(
 
 
 def get_slurm_config(
+    shared_config: JobRunnerConfigSLURM,
     wftask: WorkflowTaskV2,
     which_type: Literal["non_parallel", "parallel"],
-    config_path: Path | None = None,
     tot_tasks: int = 1,
 ) -> SlurmConfig:
-    config = get_slurm_config_internal(
-        wftask,
-        which_type,
-        config_path,
+    config = _get_slurm_config_internal(
+        shared_config=shared_config,
+        wftask=wftask,
+        which_type=which_type,
     )
 
     # Set/validate parameters for task batching

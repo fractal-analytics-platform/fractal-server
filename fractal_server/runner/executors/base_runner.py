@@ -3,6 +3,8 @@ from typing import Any
 
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigLocal
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.task_files import TaskFiles
 
 
@@ -39,21 +41,24 @@ class BaseRunner:
     Base class for Fractal runners.
     """
 
+    shared_config: JobRunnerConfigLocal | JobRunnerConfigSLURM
+
     executor_error_log: str | None = None
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
         parameters: dict[str, Any],
         history_unit_id: int,
-        task_type: TaskType,
+        task_type: SubmitTaskType,
         task_files: TaskFiles,
-        config: Any,
         user_id: int,
-    ) -> tuple[Any, BaseException]:
+        config: Any,
+    ) -> tuple[Any, BaseException | None]:
         """
         Run a single fractal task.
 
@@ -74,19 +79,24 @@ class BaseRunner:
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
-        list_parameters: list[dict[str, Any]],
+        list_parameters: list[dict],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
-        task_type: TaskType,
+        task_type: MultisubmitTaskType,
         config: Any,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
         Run a parallel fractal task.
+
+        Note: `list_parameters`, `list_task_files` and `history_unit_ids`
+        have the same size. For parallel tasks, this is also the number of
+        input images, while for compound tasks these can differ.
 
         Args:
             base_command:
@@ -108,7 +118,7 @@ class BaseRunner:
     def validate_submit_parameters(
         self,
         parameters: dict[str, Any],
-        task_type: TaskType,
+        task_type: SubmitTaskType | MultisubmitTaskType,
     ) -> None:
         """
         Validate parameters for `submit` method
@@ -143,7 +153,7 @@ class BaseRunner:
     def validate_multisubmit_parameters(
         self,
         *,
-        task_type: TaskType,
+        task_type: MultisubmitTaskType,
         list_parameters: list[dict[str, Any]],
         list_task_files: list[TaskFiles],
         history_unit_ids: list[int],

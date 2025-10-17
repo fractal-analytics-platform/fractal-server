@@ -11,8 +11,10 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+
 
 PREFIX = "/admin/v2"
 
@@ -306,7 +308,9 @@ class MockFractalSSHList:
         return None
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
+)
 async def test_admin_deactivate_task_group_api(
     app,
     client,
@@ -315,6 +319,8 @@ async def test_admin_deactivate_task_group_api(
     task_factory_v2,
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
+    local_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
     """
     This tests _only_ the API of the admin's `deactivate` endpoint.
@@ -323,19 +329,21 @@ async def test_admin_deactivate_task_group_api(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
     )
 
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
+        resource, profile = slurm_ssh_resource_profile_fake_db[:]
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
@@ -400,13 +408,15 @@ async def test_admin_deactivate_task_group_api(
         # Check that background task failed
         res = await db.get(TaskGroupActivityV2, activity_id)
         assert res.status == "failed"
-        if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
             assert "Cannot establish SSH connection" in res.log
         else:
             assert "does not exist" in res.log
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
+@pytest.mark.parametrize(
+    "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
+)
 async def test_reactivate_task_group_api(
     app,
     client,
@@ -416,28 +426,31 @@ async def test_reactivate_task_group_api(
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
     override_settings_factory,
+    local_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
     """
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-    )
-
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
+        resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
         user_settings_dict = dict(
-            ssh_host="ssh_host",
-            ssh_username="ssh_username",
-            ssh_private_key_path="/invalid/ssh_private_key_path",
+            ssh_host=resource.host,
+            ssh_username=profile.username,
+            ssh_private_key_path=profile.ssh_key_path + "invalid",
             ssh_tasks_dir="/invalid/ssh_tasks_dir",
             ssh_jobs_dir="/invalid/ssh_jobs_dir",
         )
     else:
+        resource, profile = local_resource_profile_db
         user_settings_dict = {}
 
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
 
@@ -579,66 +592,74 @@ async def test_lifecycle_actions_with_submitted_jobs(
         assert "submitted jobs use its tasks" in res.json()["detail"]
 
 
-@pytest.mark.parametrize("FRACTAL_RUNNER_BACKEND", ["local", "slurm_ssh"])
-@pytest.mark.container
-async def test_admin_delete_task_group_api(
+async def test_admin_delete_task_group_api_local(
     client,
     MockCurrentUser,
-    FRACTAL_RUNNER_BACKEND,
-    override_settings_factory,
-    app,
-    tmp777_path,
-    request,
-    current_py_version,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    overrides = dict(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_TASKS_DIR=tmp777_path,
-    )
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # Setup remote Python interpreter
-        current_py_version_underscore = current_py_version.replace(".", "_")
-        python_key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
-        python_value = (
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-        overrides[python_key] = python_value
-    override_settings_factory(**overrides)
-
-    if FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        app.state.fractal_ssh_list = request.getfixturevalue(
-            "fractal_ssh_list"
-        )
-        slurmlogin_ip = request.getfixturevalue("slurmlogin_ip")
-        ssh_keys = request.getfixturevalue("ssh_keys")
-        user_settings_dict = dict(
-            ssh_host=slurmlogin_ip,
-            ssh_username="test01",
-            ssh_private_key_path=ssh_keys["private"],
-            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-        )
-    else:
-        user_settings_dict = {}
-
-    async with MockCurrentUser(user_settings_dict=user_settings_dict) as user:
-        task = await task_factory_v2(
-            user_id=user.id,
-            name="AaAa",
-        )
-        res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
-        task_group = res.json()
+    resource, profile = local_resource_profile_db
+    user_settings_dict = {}
 
     async with MockCurrentUser(
-        user_kwargs={"is_superuser": True},
-    ):
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
+        task = await task_factory_v2(user_id=user.id, name="task-name")
+        res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
+        task_group_id = res.json()["id"]
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/task-group/")
         assert len(res.json()) == 1
 
-        res = await client.post(
-            f"{PREFIX}/task-group/{task_group['id']}/delete/"
-        )
+        res = await client.post(f"{PREFIX}/task-group/{task_group_id}/delete/")
+        assert res.status_code == 202
+        activity = res.json()
+        activity_id = activity["id"]
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+
+        res = await client.get(f"{PREFIX}/task-group/activity/?action=delete")
+        assert len(res.json()) == 1
+        activity = res.json()[0]
+        assert activity["id"] == activity_id
+        assert activity["action"] == TaskGroupActivityActionV2.DELETE
+        assert activity["status"] == TaskGroupActivityStatusV2.OK
+
+
+@pytest.mark.container
+async def test_admin_delete_task_group_api_ssh(
+    client,
+    MockCurrentUser,
+    app,
+    tmp777_path,
+    task_factory_v2,
+    fractal_ssh_list,
+    slurm_ssh_resource_profile_db,
+):
+    app.state.fractal_ssh_list = fractal_ssh_list
+    resource, profile = slurm_ssh_resource_profile_db[:]
+    user_settings_dict = dict(
+        ssh_host=resource.host,
+        ssh_username=profile.username,
+        ssh_private_key_path=profile.ssh_key_path,
+        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
+        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
+    )
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id),
+        user_settings_dict=user_settings_dict,
+    ) as user:
+        task = await task_factory_v2(user_id=user.id, name="task-name")
+        res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
+        task_group_id = res.json()["id"]
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        res = await client.get(f"{PREFIX}/task-group/")
+        assert len(res.json()) == 1
+
+        res = await client.post(f"{PREFIX}/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
         activity = res.json()
         activity_id = activity["id"]

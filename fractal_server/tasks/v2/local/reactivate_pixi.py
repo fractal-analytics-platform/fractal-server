@@ -9,12 +9,12 @@ from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
 from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
-from fractal_server.config import get_settings
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import get_current_log
@@ -27,6 +27,8 @@ def reactivate_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Reactivate a task group venv.
@@ -34,9 +36,10 @@ def reactivate_local_pixi(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
+        resource:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -76,12 +79,13 @@ def reactivate_local_pixi(
                 activity.status = TaskGroupActivityStatusV2.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                settings = Inject(get_settings)
                 common_args = dict(
                     replacements={
                         (
                             "__PIXI_HOME__",
-                            settings.pixi.versions[task_group.pixi_version],
+                            resource.tasks_pixi_config["versions"][
+                                task_group.pixi_version
+                            ],
                         ),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
@@ -93,15 +97,27 @@ def reactivate_local_pixi(
                         ("__FROZEN_OPTION__", "--frozen"),
                         (
                             "__TOKIO_WORKER_THREADS__",
-                            str(settings.pixi.TOKIO_WORKER_THREADS),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "TOKIO_WORKER_THREADS"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_SOLVES__",
-                            str(settings.pixi.PIXI_CONCURRENT_SOLVES),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_SOLVES"
+                                ]
+                            ),
                         ),
                         (
                             "__PIXI_CONCURRENT_DOWNLOADS__",
-                            str(settings.pixi.PIXI_CONCURRENT_DOWNLOADS),
+                            str(
+                                resource.tasks_pixi_config[
+                                    "PIXI_CONCURRENT_DOWNLOADS"
+                                ]
+                            ),
                         ),
                     },
                     script_dir=Path(
@@ -124,7 +140,9 @@ def reactivate_local_pixi(
 
                 # Simplify `pyproject.toml`
                 pyproject_toml_path = Path(source_dir, "pyproject.toml")
-                edit_pyproject_toml_in_place_local(pyproject_toml_path)
+                edit_pyproject_toml_in_place_local(
+                    pyproject_toml_path, resource=resource
+                )
 
                 # Write pixi.lock into `source_dir`
                 logger.debug(f"start - writing {source_dir}/pixi.lock")

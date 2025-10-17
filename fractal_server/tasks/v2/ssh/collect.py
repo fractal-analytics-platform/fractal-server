@@ -8,6 +8,8 @@ from ..utils_background import prepare_tasks_metadata
 from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
@@ -21,7 +23,7 @@ from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import (
@@ -35,8 +37,8 @@ def collect_ssh(
     *,
     task_group_id: int,
     task_group_activity_id: int,
-    ssh_config: SSHConfig,
-    tasks_base_dir: str,
+    resource: Resource,
+    profile: Profile,
     wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
@@ -50,13 +52,11 @@ def collect_ssh(
     https://github.com/encode/starlette/blob/master/starlette/background.py).
 
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
+        resource:
         wheel_file:
     """
 
@@ -81,7 +81,11 @@ def collect_ssh(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:
@@ -144,11 +148,14 @@ def collect_ssh(
                         task_group.archive_path = archive_path
                         task_group = add_commit_refresh(obj=task_group, db=db)
 
+                    python_bin = get_python_interpreter(
+                        python_version=task_group.python_version,
+                        resource=resource,
+                    )
                     replacements = get_collection_replacements(
                         task_group=task_group,
-                        python_bin=get_python_interpreter_v2(
-                            python_version=task_group.python_version
-                        ),
+                        python_bin=python_bin,
+                        resource=resource,
                     )
 
                     # Prepare common arguments for _customize_and_run_template
@@ -301,7 +308,7 @@ def collect_ssh(
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(
                             f"Deleted remoted folder {task_group.path}"

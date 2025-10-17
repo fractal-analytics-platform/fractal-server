@@ -1,7 +1,6 @@
 import pytest
 from devtools import debug
 
-from fractal_server.config import Settings
 from fractal_server.tasks.v2.local.collect import _customize_and_run_template
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.tasks.v2.utils_templates import (
@@ -60,13 +59,13 @@ def test_template_1(tmp_path, current_py_version):
 
 
 def test_template_2(
-    tmp_path, testdata_path, current_py_version, override_settings_factory
+    tmp_path, testdata_path, current_py_version, local_resource_profile_db
 ):
-    settings = Settings(
-        **Settings(
-            FRACTAL_PIP_CACHE_DIR=(tmp_path / "CACHE_DIR").as_posix()
-        ).model_dump(exclude_unset=True)
-    )
+    resource, profile = local_resource_profile_db
+    resource.tasks_python_config["pip_cache_dir"] = (
+        tmp_path / "pip_cache"
+    ).as_posix()
+
     path = tmp_path / "unit_templates"
 
     # Case 1: successful `pip install`, with pinned packages
@@ -83,7 +82,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST_PRE__", "pydantic==2.8.2"),
         ("__PINNED_PACKAGE_LIST_POST__", "devtools==0.12.2"),
-        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
     ]
     script_path = tmp_path / "2_good.sh"
     customize_template(
@@ -122,7 +121,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST_PRE__", ""),
         ("__PINNED_PACKAGE_LIST_POST__", pinned_pkg_list_post),
-        ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
     ]
     script_path = tmp_path / "2_bad_pkg.sh"
     customize_template(
@@ -152,7 +151,7 @@ def test_template_2(
         ("__INSTALL_STRING__", install_string.as_posix()),
         ("__PINNED_PACKAGE_LIST_PRE__", ""),
         ("__PINNED_PACKAGE_LIST_POST__", ""),
-        ("__FRACTAL_PIP_CACHE_DIR_ARG__", settings.PIP_CACHE_DIR_ARG),
+        ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
     ]
     script_path = tmp_path / "2_bad_whl.sh"
     customize_template(
@@ -201,7 +200,11 @@ def _parse_pip_freeze_output(stdout: str) -> dict[str, str]:
     return freeze_dict
 
 
-def test_templates_freeze(tmp_path, current_py_version):
+def test_templates_freeze(
+    tmp_path, current_py_version, local_resource_profile_db
+):
+    resource, profile = local_resource_profile_db
+
     # Create two venvs
     venv_path_1 = tmp_path / "venv1"
     venv_path_2 = tmp_path / "venv2"
@@ -225,7 +228,7 @@ def test_templates_freeze(tmp_path, current_py_version):
             ("__INSTALL_STRING__", "devtools"),
             ("__PINNED_PACKAGE_LIST_PRE__", ""),
             ("__PINNED_PACKAGE_LIST_POST__", ""),
-            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
         ],
         script_dir=tmp_path,
         logger_name=__name__,
@@ -253,7 +256,7 @@ def test_templates_freeze(tmp_path, current_py_version):
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
-            ("__FRACTAL_PIP_CACHE_DIR_ARG__", Settings().PIP_CACHE_DIR_ARG),
+            ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
         ],
         script_dir=tmp_path,
         logger_name=__name__,

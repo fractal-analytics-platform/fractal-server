@@ -5,11 +5,13 @@ from pathlib import Path
 from typing import Any
 
 from ..call_command_wrapper import call_command_wrapper
-from .get_local_config import LocalBackendConfig
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.base_runner import MultisubmitTaskType
@@ -56,15 +58,21 @@ def run_single_task(
 class LocalRunner(BaseRunner):
     executor: ThreadPoolExecutor
     root_dir_local: Path
+    shared_config: JobRunnerConfigLocal
 
     def __init__(
         self,
         root_dir_local: Path,
+        resource: Resource,
+        profile: Profile,
     ):
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
         logger.debug("Create LocalRunner")
+        self.shared_config = JobRunnerConfigLocal(
+            **resource.jobs_runner_config
+        )
 
     def __enter__(self):
         logger.debug("Enter LocalRunner")
@@ -80,6 +88,7 @@ class LocalRunner(BaseRunner):
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
@@ -87,10 +96,26 @@ class LocalRunner(BaseRunner):
         parameters: dict[str, Any],
         history_unit_id: int,
         task_files: TaskFiles,
-        config: LocalBackendConfig,
+        config: JobRunnerConfigLocal,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
+        """
+        Run a single fractal task.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            parameters: Dictionary of parameters.
+            history_unit_id:
+                Database ID of the corresponding `HistoryUnit` entry.
+            task_type: Task type.
+            task_files: `TaskFiles` object.
+            config: Runner-specific parameters.
+            user_id:
+        """
         logger.debug("[submit] START")
 
         try:
@@ -146,21 +171,39 @@ class LocalRunner(BaseRunner):
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
-        list_parameters: list[dict],
+        list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: MultisubmitTaskType,
-        config: LocalBackendConfig,
+        config: JobRunnerConfigLocal,
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
+        Run a parallel fractal task.
+
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            list_parameters:
+                List of dictionaries of parameters (each one must include
+                `zarr_urls` key).
+            history_unit_ids:
+                Database IDs of the corresponding `HistoryUnit` entries.
+            list_task_files: `TaskFiles` objects.
+            task_type: Task type.
+            config: Runner-specific parameters.
+            user_id:
         """
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")

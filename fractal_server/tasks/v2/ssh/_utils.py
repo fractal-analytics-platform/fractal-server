@@ -1,17 +1,16 @@
 import os
 from pathlib import Path
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from ..utils_background import fail_and_cleanup
 from ..utils_pixi import simplify_pyproject_toml
+from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_templates import customize_template
 
 logger = set_logger(__name__)
@@ -143,7 +142,7 @@ def check_ssh_or_fail_and_cleanup(
     task_group_activity: TaskGroupActivityV2,
     logger_name: str,
     log_file_path: Path,
-    db: AsyncSession,
+    db: Session,
 ) -> bool:
     """
     Check SSH connection.
@@ -174,6 +173,7 @@ def edit_pyproject_toml_in_place_ssh(
     *,
     fractal_ssh: FractalSSH,
     pyproject_toml_path: Path,
+    resource: Resource,
 ) -> None:
     """
     Wrapper of `simplify_pyproject_toml`, with I/O.
@@ -185,11 +185,10 @@ def edit_pyproject_toml_in_place_ssh(
     )
 
     # Simplify contents
-    settings = Inject(get_settings)
     new_pyproject_contents = simplify_pyproject_toml(
         original_toml_string=pyproject_contents,
-        pixi_environment=settings.pixi.DEFAULT_ENVIRONMENT,
-        pixi_platform=settings.pixi.DEFAULT_PLATFORM,
+        pixi_environment=resource.tasks_pixi_config["DEFAULT_ENVIRONMENT"],
+        pixi_platform=resource.tasks_pixi_config["DEFAULT_PLATFORM"],
     )
     # Write new `pyproject.toml`
     fractal_ssh.write_remote_file(

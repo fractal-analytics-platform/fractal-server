@@ -9,6 +9,8 @@ from ..utils_background import get_activity_and_task_group
 from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
@@ -25,6 +27,8 @@ def deactivate_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Deactivate a task group venv.
@@ -32,9 +36,10 @@ def deactivate_local(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
+        resource:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -85,6 +90,7 @@ def deactivate_local(
                     replacements = get_collection_replacements(
                         task_group=task_group,
                         python_bin="/not/applicable",
+                        resource=resource,
                     )
 
                     # Prepare common arguments for _customize_and_run_template

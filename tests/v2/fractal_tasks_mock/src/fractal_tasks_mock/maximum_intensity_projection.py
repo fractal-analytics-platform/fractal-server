@@ -14,7 +14,7 @@ def maximum_intensity_projection(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: dummy argument description.
         init_args: dummy argument description.
     """

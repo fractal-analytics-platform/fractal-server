@@ -15,7 +15,7 @@ def fill_cellvoyager_ome_zarr(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: description
         init_args: description
     """

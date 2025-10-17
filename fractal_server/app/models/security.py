@@ -73,8 +73,9 @@ class UserOAuth(SQLModel, table=True):
         is_active:
         is_superuser:
         is_verified:
-        username:
         oauth_accounts:
+        user_settings_id:
+        profile_id:
         settings:
     """
 
@@ -90,8 +91,6 @@ class UserOAuth(SQLModel, table=True):
     is_superuser: bool = Field(default=False, nullable=False)
     is_verified: bool = Field(default=False, nullable=False)
 
-    username: str | None = None
-
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
@@ -99,6 +98,11 @@ class UserOAuth(SQLModel, table=True):
 
     user_settings_id: int | None = Field(
         foreign_key="user_settings.id", default=None
+    )
+    profile_id: int | None = Field(
+        foreign_key="profile.id",
+        default=None,
+        ondelete="SET NULL",
     )
     settings: UserSettings | None = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")

@@ -2,7 +2,6 @@ import logging
 import os
 import shlex
 import subprocess  # nosec
-import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -10,10 +9,11 @@ from ..slurm_common.base_slurm_runner import BaseSlurmRunner
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
-from fractal_server.config import get_settings
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
@@ -51,19 +51,21 @@ class SudoSlurmRunner(BaseSlurmRunner):
         root_dir_local: Path,
         root_dir_remote: Path,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,
-        poll_interval: int | None = None,
+        resource: Resource,
         # Specific
+        profile: Profile,
+        user_cache_dir: str | None = None,  # FIXME: make required?
         slurm_account: str | None = None,
-        slurm_user: str,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
         different SLURM jobs/tasks.
         """
 
-        self.slurm_user = slurm_user
-        settings = Inject(get_settings)
+        self.slurm_user = profile.username
+        self.shared_config = JobRunnerConfigSLURM(
+            **resource.jobs_runner_config
+        )
 
         super().__init__(
             slurm_runner_type="sudo",
@@ -71,10 +73,8 @@ class SudoSlurmRunner(BaseSlurmRunner):
             root_dir_remote=root_dir_remote,
             common_script_lines=common_script_lines,
             user_cache_dir=user_cache_dir,
-            poll_interval=poll_interval,
-            python_worker_interpreter=(
-                settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-            ),
+            poll_interval=resource.jobs_poll_interval,
+            python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,
         )
 

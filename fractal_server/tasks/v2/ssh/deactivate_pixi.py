@@ -7,6 +7,8 @@ from ..utils_background import get_activity_and_task_group
 from ..utils_pixi import SOURCE_DIR_NAME
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -21,8 +23,8 @@ def deactivate_ssh_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_config: SSHConfig,
-    tasks_base_dir: str,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Deactivate a pixi task group venv.
@@ -30,13 +32,11 @@ def deactivate_ssh_pixi(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
-        task_group_id:
+    Args:
         task_group_activity_id:
-        ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
+        task_group_id:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -59,7 +59,11 @@ def deactivate_ssh_pixi(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:
@@ -101,7 +105,7 @@ def deactivate_ssh_pixi(
                     logger.info(f"Now removing {source_dir}.")
                     fractal_ssh.remove_folder(
                         folder=source_dir,
-                        safe_root=tasks_base_dir,
+                        safe_root=profile.tasks_remote_dir,
                     )
                     logger.info(f"All good, {source_dir} removed.")
                     activity.status = TaskGroupActivityStatusV2.OK

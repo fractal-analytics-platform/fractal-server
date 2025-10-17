@@ -10,7 +10,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 PREFIX = "api/v2/task"
 
 
-async def test_non_verified_user(client, MockCurrentUser, testdata_path):
+async def test_(client, MockCurrentUser, testdata_path):
     # Task collection triggered by non-verified user
     archive_path = (
         testdata_path.parent
@@ -32,14 +32,18 @@ async def test_non_verified_user(client, MockCurrentUser, testdata_path):
 async def test_folder_already_exists(
     MockCurrentUser,
     client,
-    override_settings_factory,
-    tmp_path: Path,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         # Create the folder in advance
-        expected_path = tmp_path / f"{user.id}/fractal-tasks-mock/0.0.1"
+        expected_path = (
+            Path(resource.tasks_local_dir)
+            / f"{user.id}/fractal-tasks-mock/0.0.1"
+        )
         expected_path.mkdir(parents=True, exist_ok=True)
         assert expected_path.exists()
         archive_path = (
@@ -61,13 +65,12 @@ async def test_folder_already_exists(
 async def test_invalid_python_version(
     client,
     MockCurrentUser,
-    override_settings_factory,
+    local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_TASKS_PYTHON_3_9=None,
-    )
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(package="invalid-task-package", python_version="3.9"),
@@ -81,6 +84,7 @@ async def test_wheel_collection_failures(
     client,
     MockCurrentUser,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
     archive_path = (
         testdata_path.parent
@@ -94,7 +98,10 @@ async def test_wheel_collection_failures(
         "file": (archive_path.name, wheel_file_content, "application/zip")
     }
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data={},
@@ -170,20 +177,22 @@ async def test_failure_cleanup(
     override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
+    local_resource_profile_db,
 ):
     """
     Verify that a failed collection cleans up its folder and TaskGroupV2.
     """
 
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=tmp_path,
-        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-    )
+    override_settings_factory(FRACTAL_LOGGING_LEVEL=logging.CRITICAL)
+
+    resource, profile = local_resource_profile_db
 
     # Valid part of the payload
     payload = dict(package_extras="my_extra")
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ) as user:
         archive_path = (
             testdata_path.parent
             / "v2/fractal_tasks_mock/dist"

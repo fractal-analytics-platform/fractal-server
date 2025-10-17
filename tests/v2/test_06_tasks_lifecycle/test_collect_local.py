@@ -10,7 +10,12 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.tasks.v2.local import collect_local
 
 
-async def test_collect_pip_existing_folder(tmp_path, db, first_user):
+async def test_collect_pip_existing_folder(
+    tmp_path,
+    db,
+    first_user,
+    local_resource_profile_objects,
+):
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -44,6 +49,8 @@ async def test_collect_pip_existing_folder(tmp_path, db, first_user):
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         wheel_file=None,
+        resource=local_resource_profile_objects[0],
+        profile=local_resource_profile_objects[1],
     )
     # Verify that collection failed
     task_group_activity_v2 = await db.get(
@@ -60,6 +67,7 @@ async def test_collect_pip_local_fail_rmtree(
     first_user,
     current_py_version,
     monkeypatch,
+    local_resource_profile_objects,
 ):
     import fractal_server.tasks.v2.local.collect
 
@@ -111,6 +119,8 @@ async def test_collect_pip_local_fail_rmtree(
                 contents=b"fakebytes",
                 filename="fractal_tasks_mock-0.0.1-py3-none-any.whl",
             ),
+            resource=local_resource_profile_objects[0],
+            profile=local_resource_profile_objects[1],
         )
     except RuntimeError as e:
         print(
@@ -130,19 +140,17 @@ async def test_collect_pip_local_fail_rmtree(
 
 async def test_invalid_wheel(
     MockCurrentUser,
-    override_settings_factory,
     tmp_path: Path,
     current_py_version,
     testdata_path: Path,
     db,
+    local_resource_profile_objects,
 ):
     """
     GIVEN a package with invalid/missing manifest or missing executable
     WHEN the 'collect_local' function is called
     THEN the expected log is shown
     """
-
-    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
 
     pkgnames_logs = [
         ("invalid_manifest", "manifest_version"),
@@ -194,6 +202,8 @@ async def test_invalid_wheel(
                         contents=whl.read(),
                         filename=archive_path.name,
                     ),
+                    resource=local_resource_profile_objects[0],
+                    profile=local_resource_profile_objects[1],
                 )
 
             task_group_activity = await db.get(

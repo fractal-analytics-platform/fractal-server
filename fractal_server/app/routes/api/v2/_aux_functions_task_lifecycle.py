@@ -59,7 +59,7 @@ async def get_package_version_from_pypi(
 
     Ref https://warehouse.pypa.io/api-reference/json.html.
 
-    Arguments:
+    Args:
         name: Package name.
         version:
             Could be a correct version (`1.3.0`), an incomplete one
@@ -165,7 +165,7 @@ async def check_no_ongoing_activity(
     """
     Find ongoing activities for the same task group.
 
-    Arguments:
+    Args:
         task_group_id:
         db:
     """
@@ -204,7 +204,7 @@ async def check_no_submitted_job(
     """
     Find submitted jobs which include tasks from a given task group.
 
-    Arguments:
+    Args:
         task_group_id: ID of the `TaskGroupV2` object.
         db: Asynchronous database session.
     """

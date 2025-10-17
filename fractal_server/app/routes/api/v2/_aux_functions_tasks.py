@@ -33,7 +33,7 @@ async def _get_task_group_or_404(
     """
     Get an existing task group or raise a 404.
 
-    Arguments:
+    Args:
         task_group_id: The TaskGroupV2 id
         db: An asynchronous db session
     """
@@ -55,7 +55,7 @@ async def _get_task_group_read_access(
     """
     Get a task group or raise a 403 if user has no read access.
 
-    Arguments:
+    Args:
         task_group_id: ID of the required task group.
         user_id: ID of the current user.
         db: An asynchronous db session.
@@ -100,7 +100,7 @@ async def _get_task_group_full_access(
     """
     Get a task group or raise a 403 if user has no full access.
 
-    Arguments:
+    Args:
         task_group_id: ID of the required task group.
         user_id: ID of the current user.
         db: An asynchronous db session
@@ -125,7 +125,7 @@ async def _get_task_or_404(*, task_id: int, db: AsyncSession) -> TaskV2:
     """
     Get an existing task or raise a 404.
 
-    Arguments:
+    Args:
         task_id: ID of the required task.
         db: An asynchronous db session
     """
@@ -147,7 +147,7 @@ async def _get_task_full_access(
     """
     Get an existing task or raise a 404.
 
-    Arguments:
+    Args:
         task_id: ID of the required task.
         user_id: ID of the current user.
         db: An asynchronous db session.
@@ -169,7 +169,7 @@ async def _get_task_read_access(
     """
     Get an existing task or raise a 404.
 
-    Arguments:
+    Args:
         task_id: ID of the required task.
         user_id: ID of the current user.
         db: An asynchronous db session.
@@ -198,7 +198,7 @@ async def _get_valid_user_group_id(
     """
     Validate query parameters for endpoints that create some task(s).
 
-    Arguments:
+    Args:
         user_group_id:
         private:
         user_id: ID of the current user

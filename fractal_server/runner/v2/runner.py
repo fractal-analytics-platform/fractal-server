@@ -1,15 +1,14 @@
-from collections.abc import Callable
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
-from typing import Literal
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 from sqlmodel import update
 
 from .merge_outputs import merge_outputs
+from .runner_functions import GetRunnerConfigType
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
@@ -92,14 +91,7 @@ def execute_tasks_v2(
     job_id: int,
     workflow_dir_remote: Path | None = None,
     logger_name: str | None = None,
-    get_runner_config: Callable[
-        [
-            WorkflowTaskV2,
-            Literal["non_parallel", "parallel"],
-            Path | None,
-        ],
-        Any,
-    ],
+    get_runner_config: GetRunnerConfigType,
     job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFilters,
 ) -> None:
@@ -257,7 +249,7 @@ def execute_tasks_v2(
         except Exception as e:
             outcomes_dict = {
                 0: SubmissionOutcome(
-                    result=None,
+                    task_output=None,
                     exception=e,
                 )
             }

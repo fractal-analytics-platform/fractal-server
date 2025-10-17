@@ -14,10 +14,8 @@ from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
 
-from .....config import get_settings
 from .....logger import reset_logger_handlers
 from .....logger import set_logger
-from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import TaskGroupV2
@@ -26,7 +24,8 @@ from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
-from ...aux.validate_user_settings import validate_user_settings
+from ...aux.validate_user_profile import validate_user_profile
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -35,11 +34,11 @@ from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -47,7 +46,7 @@ from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 
 
@@ -168,11 +167,18 @@ async def collect_tasks_pip(
     """
     Task-collection endpoint
     """
-    # Get settings
-    settings = Inject(get_settings)
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
     # Get some validated request data
     task_collect = request_data.task_collect
+
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
 
     # Initialize task-group attributes
     task_group_attrs = dict(
@@ -182,14 +188,15 @@ async def collect_tasks_pip(
 
     # Set/check python version
     if task_collect.python_version is None:
-        task_group_attrs[
-            "python_version"
-        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        task_group_attrs["python_version"] = resource.tasks_python_config[
+            "default_version"
+        ]
     else:
         task_group_attrs["python_version"] = task_collect.python_version
     try:
-        get_python_interpreter_v2(
-            python_version=task_group_attrs["python_version"]
+        get_python_interpreter(
+            python_version=task_group_attrs["python_version"],
+            resource=resource,
         )
     except ValueError:
         raise HTTPException(
@@ -259,16 +266,11 @@ async def collect_tasks_pip(
     # Set user_group_id
     task_group_attrs["user_group_id"] = user_group_id
 
-    # Validate user settings (backend-specific)
-    user_settings = await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
-    )
-
     # Set path and venv_path
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        base_tasks_path = user_settings.ssh_tasks_dir
+    if resource.type == ResourceType.SLURM_SSH:
+        base_tasks_path = profile.tasks_remote_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+        base_tasks_path = resource.tasks_local_dir
     task_group_path = (
         Path(base_tasks_path)
         / str(user.id)
@@ -309,7 +311,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+    if resource.type != ResourceType.SLURM_SSH:
         # Verify that folder does not exist (for local collection)
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -318,7 +320,7 @@ async def collect_tasks_pip(
             )
 
     # Create TaskGroupV2 object
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
@@ -340,33 +342,20 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        # SSH task collection
-        # Use appropriate FractalSSH object
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
-        background_tasks.add_task(
-            collect_ssh,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-            wheel_file=wheel_file,
-        )
-
+    if resource.type == ResourceType.SLURM_SSH:
+        collect_function = collect_ssh
     else:
-        # Local task collection
+        collect_function = collect_local
 
-        background_tasks.add_task(
-            collect_local,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            wheel_file=wheel_file,
-        )
+    background_tasks.add_task(
+        collect_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        wheel_file=wheel_file,
+        resource=resource,
+        profile=profile,
+    )
+
     logger.debug(
         "Task-collection endpoint: start background collection "
         "and return task_group_activity"

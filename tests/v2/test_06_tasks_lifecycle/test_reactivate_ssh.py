@@ -8,8 +8,19 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+
+
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    import logging
+
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    if fractal_ssh.remote_exists(remote_folder):
+        fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
 @pytest.mark.container
@@ -17,11 +28,12 @@ async def test_reactivate_ssh_venv_exists(
     tmp777_path,
     db,
     first_user,
-    ssh_alive,
     fractal_ssh: FractalSSH,
-    ssh_config_dict: dict,
+    slurm_ssh_resource_profile_db,
 ):
-    path = tmp777_path / "package"
+    resource, profile = slurm_ssh_resource_profile_db
+
+    path = Path(profile.tasks_remote_dir) / "package"
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
@@ -53,8 +65,8 @@ async def test_reactivate_ssh_venv_exists(
     reactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that reactivate failed
@@ -65,31 +77,28 @@ async def test_reactivate_ssh_venv_exists(
     assert task_group_activity_v2.status == "failed"
     assert "already exists" in task_group_activity_v2.log
 
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
+
 
 @pytest.mark.parametrize("make_rmtree_fail", [False, True])
 @pytest.mark.container
 async def test_reactivate_ssh_fail(
-    tmp777_path,
     db,
     first_user,
     monkeypatch,
     make_rmtree_fail: bool,
     fractal_ssh: FractalSSH,
-    ssh_config_dict: dict,
-    override_settings_factory,
     current_py_version,
+    slurm_ssh_resource_profile_db,
 ):
     """
     Make reactivation fail (due to wrong pip-freeze data), in two cases:
     1. The removal of the venv path works.
     2. The removal of the venv path fails.
     """
-
-    # Setup remote Python interpreter
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
-    value = f"/.venv{current_py_version}/bin/python{current_py_version}"
-    override_settings_factory(**{key: value})
 
     if make_rmtree_fail:
         import fractal_server.tasks.v2.ssh._utils
@@ -105,8 +114,12 @@ async def test_reactivate_ssh_fail(
             patched_rmtree,
         )
 
+    resource, profile = slurm_ssh_resource_profile_db
+
     # Prepare task group that will make `pip install` fail
-    path = tmp777_path / f"make-rmtree-fail-{make_rmtree_fail}"
+    path = (
+        Path(profile.tasks_remote_dir) / f"make-rmtree-fail-{make_rmtree_fail}"
+    )
     task_group = TaskGroupV2(
         pkg_name="invalid-package-name",
         version="11.11.11",
@@ -142,8 +155,8 @@ async def test_reactivate_ssh_fail(
         reactivate_ssh(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=SSHConfig(**ssh_config_dict),
-            tasks_base_dir=tmp777_path.as_posix(),
+            resource=resource,
+            profile=profile,
         )
     except RuntimeError as e:
         print(
@@ -166,3 +179,8 @@ async def test_reactivate_ssh_fail(
         assert fractal_ssh.remote_exists(task_group.venv_path)
     else:
         assert not fractal_ssh.remote_exists(task_group.venv_path)
+
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )

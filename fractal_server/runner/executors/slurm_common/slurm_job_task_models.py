@@ -112,7 +112,7 @@ class SlurmJob(BaseModel):
         return self.slurm_stderr_remote_path.as_posix()
 
     @property
-    def slurm_stdout_local_path(self) -> str:
+    def slurm_stdout_local_path(self) -> Path:
         return (
             self.workdir_local
             / f"{self.prefix}-slurm-{self.slurm_job_id_placeholder}.out"

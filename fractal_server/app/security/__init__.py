@@ -58,7 +58,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.security.signup_email import mail_new_oauth_signup
-from fractal_server.config import get_settings
+from fractal_server.config import get_email_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
@@ -248,20 +248,17 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             )
 
             # Send mail section
-            settings = Inject(get_settings)
+            email_settings = Inject(get_email_settings)
 
-            if (
-                this_user.oauth_accounts
-                and settings.email_settings is not None
-            ):
+            if this_user.oauth_accounts and email_settings.public is not None:
                 try:
                     logger.info(
                         "START sending email about new signup to "
-                        f"{settings.email_settings.recipients}."
+                        f"{email_settings.public.recipients}."
                     )
                     mail_new_oauth_signup(
                         msg=f"New user registered: '{this_user.email}'.",
-                        email_settings=settings.email_settings,
+                        email_settings=email_settings.public,
                     )
                     logger.info("END sending email about new signup.")
                 except Exception as e:
@@ -288,7 +285,6 @@ async def _create_first_user(
     password: str,
     is_superuser: bool = False,
     is_verified: bool = False,
-    username: str | None = None,
 ) -> None:
     """
     Private method to create the first fractal-server user
@@ -306,12 +302,11 @@ async def _create_first_user(
     See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
     12.1/cookbook/create-user-programmatically)
 
-    Arguments:
+    Args:
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser
         is_verified: `True` if the new user is verified
-        username:
     """
     function_logger = set_logger("fractal_server.create_first_user")
     function_logger.info(f"START _create_first_user, with email '{email}'")
@@ -339,8 +334,6 @@ async def _create_first_user(
                         is_superuser=is_superuser,
                         is_verified=is_verified,
                     )
-                    if username is not None:
-                        kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     function_logger.info(f"User '{user.email}' created")
     except UserAlreadyExists:

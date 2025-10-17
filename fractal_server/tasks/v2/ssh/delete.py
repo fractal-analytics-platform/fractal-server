@@ -6,6 +6,8 @@ from ..utils_background import fail_and_cleanup
 from ..utils_background import get_activity_and_task_group
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import reset_logger_handlers
@@ -21,8 +23,8 @@ def delete_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_config: SSHConfig,
-    tasks_base_dir: str,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Delete a task group.
@@ -30,13 +32,10 @@ def delete_ssh(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -59,7 +58,11 @@ def delete_ssh(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:
@@ -86,11 +89,11 @@ def delete_ssh(
                     if task_group.origin != TaskGroupV2OriginEnum.OTHER:
                         logger.debug(
                             f"Removing remote {task_group.path=} "
-                            f"(with {tasks_base_dir=})."
+                            f"(with {profile.tasks_remote_dir=})."
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.debug(f"Remote {task_group.path=} removed.")
 

@@ -9,6 +9,8 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...aux.validate_user_profile import validate_user_profile
+from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -16,15 +18,14 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import TaskReadV2
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils_background import (
     prepare_tasks_metadata,
 )
@@ -47,7 +48,8 @@ async def collect_task_custom(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
-    settings = Inject(get_settings)
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
@@ -57,7 +59,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         if task_collect.package_root is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -143,6 +145,10 @@ async def collect_task_custom(
         package_version=task_collect.version,
     )
 
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
+
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin=TaskGroupV2OriginEnum.OTHER,
@@ -167,7 +173,7 @@ async def collect_task_custom(
         db=db,
     )
 
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(**task_group_attrs, resource_id=resource_id)
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)

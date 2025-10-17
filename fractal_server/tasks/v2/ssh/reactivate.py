@@ -9,6 +9,8 @@ from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
 from fractal_server.logger import reset_logger_handlers
@@ -18,7 +20,7 @@ from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter_v2,
+    get_python_interpreter,
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
@@ -28,8 +30,8 @@ def reactivate_ssh(
     *,
     task_group_activity_id: int,
     task_group_id: int,
-    ssh_config: SSHConfig,
-    tasks_base_dir: str,
+    resource: Resource,
+    profile: Profile,
 ) -> None:
     """
     Reactivate a task group venv.
@@ -37,13 +39,10 @@ def reactivate_ssh(
     This function is run as a background task, therefore exceptions must be
     handled.
 
-    Arguments:
+    Args:
         task_group_id:
         task_group_activity_id:
         ssh_config:
-        tasks_base_dir:
-            Only used as a `safe_root` in `remove_dir`, and typically set to
-            `user_settings.ssh_tasks_dir`.
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -67,7 +66,11 @@ def reactivate_ssh(
                 return
 
             with SingleUseFractalSSH(
-                ssh_config=ssh_config,
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
                 logger_name=LOGGER_NAME,
             ) as fractal_ssh:
                 try:
@@ -102,11 +105,14 @@ def reactivate_ssh(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Prepare replacements for templates
+                    python_bin = get_python_interpreter(
+                        python_version=task_group.python_version,
+                        resource=resource,
+                    )
                     replacements = get_collection_replacements(
                         task_group=task_group,
-                        python_bin=get_python_interpreter_v2(
-                            python_version=task_group.python_version
-                        ),
+                        python_bin=python_bin,
+                        resource=resource,
                     )
 
                     # Prepare replacements for templates
@@ -181,7 +187,7 @@ def reactivate_ssh(
                         )
                         fractal_ssh.remove_folder(
                             folder=task_group.venv_path,
-                            safe_root=tasks_base_dir,
+                            safe_root=profile.tasks_remote_dir,
                         )
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:

@@ -15,7 +15,7 @@ router_oauth = APIRouter()
 # environment variables (e.g. by setting OAUTH_FOO_CLIENT_ID and
 # OAUTH_FOO_CLIENT_SECRET), this list is empty
 
-# FIXME:Dependency injection should be wrapped within a function call to make
+# Note: dependency injection should be wrapped within a function call to make
 # it truly lazy. This function could then be called on startup of the FastAPI
 # app (cf. fractal_server.main)
 settings = Inject(get_settings)

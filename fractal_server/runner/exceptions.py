@@ -63,3 +63,7 @@ class JobExecutionError(RuntimeError):
             content = str(self)
         message = f"JobExecutionError\n{content}"
         return message
+
+
+class SlurmConfigError(ValueError):
+    pass

@@ -657,8 +657,8 @@ async def workflow_with_non_python_task(
             json={},
         )
         job_data = res.json()
-        debug(job_data)
-        assert res.status_code == 202
+        with informative_assertion_block(job_data):
+            assert res.status_code == 202
 
         # Check that the workflow execution is complete
         res = await client.get(

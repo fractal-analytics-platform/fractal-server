@@ -44,7 +44,7 @@ def get_logger(logger_name: str | None = None) -> logging.Logger:
         close_logger(logger)
     ```
 
-    Arguments:
+    Args:
         logger_name: Name of logger
     Returns:
         Logger with name `logger_name`
@@ -124,7 +124,7 @@ def close_logger(logger: logging.Logger) -> None:
     """
     Close all handlers associated to a `logging.Logger` object
 
-    Arguments:
+    Args:
         logger: The actual logger
     """
     for handle in logger.handlers:
@@ -135,7 +135,7 @@ def reset_logger_handlers(logger: logging.Logger) -> None:
     """
     Close and remove all handlers associated to a `logging.Logger` object
 
-    Arguments:
+    Args:
         logger: The actual logger
     """
     close_logger(logger)

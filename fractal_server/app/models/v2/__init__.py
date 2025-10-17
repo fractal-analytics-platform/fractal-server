@@ -9,7 +9,9 @@ from .history import HistoryImageCache
 from .history import HistoryRun
 from .history import HistoryUnit
 from .job import JobV2
+from .profile import Profile
 from .project import ProjectV2
+from .resource import Resource
 from .task import TaskV2
 from .task_group import TaskGroupActivityV2
 from .task_group import TaskGroupV2
@@ -31,4 +33,6 @@ __all__ = [
     "HistoryRun",
     "HistoryUnit",
     "HistoryImageCache",
+    "Resource",
+    "Profile",
 ]

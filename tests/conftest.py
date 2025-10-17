@@ -2,13 +2,9 @@ import logging
 import sys
 import threading
 import time
-from os import environ
 from pathlib import Path
 
 import pytest
-
-
-environ["PYTHONASYNCIODEBUG"] = "1"
 
 
 def check_basetemp(tpath: Path):
@@ -51,8 +47,8 @@ from .fixtures_server_v2 import *  # noqa F403
 from .fixtures_tasks_v2 import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
-from .fixtures_commands import *  # noqa F403
 from .fixtures_pixi import *  # noqa F403
+from .fixtures_computational_settings import *  # noqa F403
 
 
 def _get_threads():

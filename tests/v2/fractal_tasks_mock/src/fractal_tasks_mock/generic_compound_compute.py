@@ -15,7 +15,7 @@ def generic_compound_compute(
     """
     Dummy task description.
 
-    Arguments:
+    Args:
         zarr_url: description
         init_args: description
         another_argument: description

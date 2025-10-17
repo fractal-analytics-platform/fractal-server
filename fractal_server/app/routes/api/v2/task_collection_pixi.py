@@ -10,6 +10,7 @@ from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
 
+from ._aux_functions import _get_resource_and_profile_ids
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -28,18 +29,16 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.routes.aux.validate_user_settings import (
-    validate_user_settings,
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import FractalUploadedFile
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import SSHConfig
-from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
@@ -89,23 +88,26 @@ async def collect_task_pixi(
     user: UserOAuth = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
-    settings = Inject(get_settings)
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
+
     # Check if Pixi is available
-    if settings.pixi is None:
+    if not resource.tasks_pixi_config:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Pixi task collection is not available.",
         )
     # Check if provided Pixi version is available. Use default if not provided
     if pixi_version is None:
-        pixi_version = settings.pixi.default_version
+        pixi_version = resource.tasks_pixi_config["default_version"]
     else:
-        if pixi_version not in settings.pixi.versions:
+        if pixi_version not in resource.tasks_pixi_config["versions"]:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
-                    f"Pixi version {pixi_version} is not available. Available "
-                    f"versions: {list(settings.pixi.versions.keys())}"
+                    f"Pixi version '{pixi_version}' is not available. "
+                    "Available versions: "
+                    f"{list(resource.tasks_pixi_config['versions'].keys())}"
                 ),
             )
 
@@ -123,21 +125,22 @@ async def collect_task_pixi(
         db=db,
     )
 
-    user_settings = await validate_user_settings(
-        user=user, backend=settings.FRACTAL_RUNNER_BACKEND, db=db
-    )
-
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        base_tasks_path = user_settings.ssh_tasks_dir
+    if resource.type == ResourceType.SLURM_SSH:
+        base_tasks_path = profile.tasks_remote_dir
     else:
-        base_tasks_path = settings.FRACTAL_TASKS_DIR.as_posix()
+        base_tasks_path = resource.tasks_local_dir
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
 
+    resource_id, _ = await _get_resource_and_profile_ids(
+        user_id=user.id, db=db
+    )
+
     task_group_attrs = dict(
         user_id=user.id,
         user_group_id=user_group_id,
+        resource_id=resource_id,
         origin=TaskGroupV2OriginEnum.PIXI,
         pixi_version=pixi_version,
         pkg_name=pkg_name,
@@ -162,7 +165,7 @@ async def collect_task_pixi(
         db=db,
     )
 
-    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+    if resource.type != ResourceType.SLURM_SSH:
         if Path(task_group_path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -187,28 +190,19 @@ async def collect_task_pixi(
     await db.commit()
     await db.refresh(task_group_activity)
 
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        ssh_config = SSHConfig(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
-        )
-
-        background_tasks.add_task(
-            collect_ssh_pixi,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            ssh_config=ssh_config,
-            tasks_base_dir=user_settings.ssh_tasks_dir,
-            tar_gz_file=tar_gz_file,
-        )
+    if resource.type == ResourceType.SLURM_SSH:
+        collect_function = collect_ssh_pixi
     else:
-        background_tasks.add_task(
-            collect_local_pixi,
-            task_group_id=task_group.id,
-            task_group_activity_id=task_group_activity.id,
-            tar_gz_file=tar_gz_file,
-        )
+        collect_function = collect_local_pixi
+
+    background_tasks.add_task(
+        collect_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        tar_gz_file=tar_gz_file,
+        resource=resource,
+        profile=profile,
+    )
     logger.info(
         "Task-collection endpoint: start background collection "
         "and return task_group_activity. "

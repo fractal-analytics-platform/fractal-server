@@ -21,6 +21,7 @@ env:
   #current version.
   SOURCE_VERSION: 2.11.0
   ROOTDIR: tests/data/testing_databases
+  JWT_SECRET_KEY: fake
 
 jobs:
 

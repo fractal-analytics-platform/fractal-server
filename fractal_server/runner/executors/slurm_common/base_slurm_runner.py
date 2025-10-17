@@ -9,17 +9,17 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common._slurm_config import SlurmConfig
 from ..slurm_common.slurm_job_task_models import SlurmJob
 from ..slurm_common.slurm_job_task_models import SlurmTask
 from ._job_states import STATES_FINISHED
+from .slurm_config import SlurmConfig
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
@@ -31,7 +31,6 @@ from fractal_server.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
 )
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
-from fractal_server.syringe import Inject
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
@@ -77,16 +76,18 @@ class BaseSlurmRunner(BaseRunner):
     python_worker_interpreter: str
     slurm_runner_type: Literal["ssh", "sudo"]
     slurm_account: str | None = None
+    shared_config: JobRunnerConfigSLURM
 
     def __init__(
         self,
+        *,
         root_dir_local: Path,
         root_dir_remote: Path,
         slurm_runner_type: Literal["ssh", "sudo"],
         python_worker_interpreter: str,
+        poll_interval: int,
         common_script_lines: list[str] | None = None,
-        user_cache_dir: str | None = None,
-        poll_interval: int | None = None,
+        user_cache_dir: str | None = None,  # FIXME: make required?
         slurm_account: str | None = None,
     ):
         self.slurm_runner_type = slurm_runner_type
@@ -98,11 +99,7 @@ class BaseSlurmRunner(BaseRunner):
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
 
-        settings = Inject(get_settings)
-
-        self.poll_interval = (
-            poll_interval or settings.FRACTAL_SLURM_POLL_INTERVAL
-        )
+        self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
 
         self.check_fractal_server_versions()
@@ -134,12 +131,10 @@ class BaseSlurmRunner(BaseRunner):
     def _run_remote_cmd(self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, *, job_ids: list[str], **kwargs) -> str:
+    def run_squeue(self, *, job_ids: list[str]) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def _is_squeue_error_recoverable(
-        self, exception: BaseException
-    ) -> Literal[True]:
+    def _is_squeue_error_recoverable(self, exception: BaseException) -> bool:
         """
         Determine whether a `squeue` error is considered recoverable.
 
@@ -245,7 +240,7 @@ class BaseSlurmRunner(BaseRunner):
             A new, up-to-date, `SlurmConfig` object.
         """
 
-        new_slurm_config = slurm_config.model_copy()
+        new_slurm_config = slurm_config.model_copy(deep=True)
 
         # Include SLURM account in `slurm_config`.
         if self.slurm_account is not None:
@@ -473,7 +468,7 @@ class BaseSlurmRunner(BaseRunner):
         *,
         task: SlurmTask,
         was_job_scancelled: bool = False,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
@@ -566,6 +561,10 @@ class BaseSlurmRunner(BaseRunner):
     def job_ids(self) -> list[str]:
         return list(self.jobs.keys())
 
+    @property
+    def job_ids_int(self) -> list[int]:
+        return list(map(int, self.jobs.keys()))
+
     def wait_and_check_shutdown(self) -> list[str]:
         """
         Wait at most `self.poll_interval`, while also checking for shutdown.
@@ -602,6 +601,7 @@ class BaseSlurmRunner(BaseRunner):
 
     def submit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
@@ -612,7 +612,23 @@ class BaseSlurmRunner(BaseRunner):
         config: SlurmConfig,
         task_type: SubmitTaskType,
         user_id: int,
-    ) -> tuple[Any, Exception]:
+    ) -> tuple[Any, Exception | None]:
+        """
+        Run a single fractal task.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            parameters: Dictionary of parameters.
+            history_unit_id:
+                Database ID of the corresponding `HistoryUnit` entry.
+            task_type: Task type.
+            task_files: `TaskFiles` object.
+            config: Runner-specific parameters.
+            user_id:
+        """
         logger.debug("[submit] START")
 
         # Always refresh `executor_error_log` before starting a task
@@ -687,7 +703,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
             # Retrieval phase
@@ -757,11 +773,12 @@ class BaseSlurmRunner(BaseRunner):
 
     def multisubmit(
         self,
+        *,
         base_command: str,
         workflow_task_order: int,
         workflow_task_id: int,
         task_name: str,
-        list_parameters: list[dict],
+        list_parameters: list[dict[str, Any]],
         history_unit_ids: list[int],
         list_task_files: list[TaskFiles],
         task_type: MultisubmitTaskType,
@@ -769,15 +786,35 @@ class BaseSlurmRunner(BaseRunner):
         user_id: int,
     ) -> tuple[dict[int, Any], dict[int, BaseException]]:
         """
+        Run a parallel fractal task.
+
         Note: `list_parameters`, `list_task_files` and `history_unit_ids`
         have the same size. For parallel tasks, this is also the number of
         input images, while for compound tasks these can differ.
+
+        Args:
+            base_command:
+            workflow_task_order:
+            workflow_task_id:
+            task_name:
+            list_parameters:
+                List of dictionaries of parameters (each one must include
+                `zarr_urls` key).
+            history_unit_ids:
+                Database IDs of the corresponding `HistoryUnit` entries.
+            list_task_files: `TaskFiles` objects.
+            task_type: Task type.
+            config: Runner-specific parameters.
+            user_id:
         """
 
         # Always refresh `executor_error_log` before starting a task
         self.executor_error_log = None
 
         config = self._enrich_slurm_config(config)
+
+        results: dict[int, Any] = {}
+        exceptions: dict[int, BaseException] = {}
 
         logger.debug(f"[multisubmit] START, {len(list_parameters)=}")
         try:
@@ -789,8 +826,8 @@ class BaseSlurmRunner(BaseRunner):
                             status=HistoryUnitStatus.FAILED,
                             db_sync=db,
                         )
-                results: dict[int, Any] = {}
-                exceptions: dict[int, BaseException] = {
+                results = {}
+                exceptions = {
                     ind: SHUTDOWN_EXCEPTION
                     for ind in range(len(list_parameters))
                 }
@@ -811,9 +848,6 @@ class BaseSlurmRunner(BaseRunner):
             if task_type == TaskType.PARALLEL:
                 self._mkdir_local_folder(workdir_local.as_posix())
                 self._mkdir_remote_folder(folder=workdir_remote.as_posix())
-
-            results: dict[int, Any] = {}
-            exceptions: dict[int, BaseException] = {}
 
             # NOTE: chunking has already taken place in `get_slurm_config`,
             # so that `config.tasks_per_job` is now set.
@@ -889,7 +923,7 @@ class BaseSlurmRunner(BaseRunner):
 
             create_accounting_record_slurm(
                 user_id=user_id,
-                slurm_job_ids=self.job_ids,
+                slurm_job_ids=self.job_ids_int,
             )
 
         except Exception as e:

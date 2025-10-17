@@ -9,9 +9,21 @@ from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
-from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+
+
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    import logging
+
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    if fractal_ssh.remote_exists(remote_folder):
+        fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
 @pytest.mark.container
@@ -19,7 +31,8 @@ async def test_deactivate_fail_no_venv_path(
     tmp777_path,
     db,
     first_user,
-    ssh_config_dict,
+    slurm_ssh_resource_profile_db,
+    fractal_ssh,
 ):
     path = tmp777_path / "something"
     task_group = TaskGroupV2(
@@ -46,12 +59,15 @@ async def test_deactivate_fail_no_venv_path(
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
+
+    resource, profile = slurm_ssh_resource_profile_db
+
     # background task
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed
@@ -62,12 +78,24 @@ async def test_deactivate_fail_no_venv_path(
     assert task_group_activity_v2.status == "failed"
     assert "does not exist" in task_group_activity_v2.log
 
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
+
 
 @pytest.mark.container
 async def test_deactivate_ssh_fail(
-    tmp777_path, db, first_user, monkeypatch, fractal_ssh, ssh_config_dict
+    tmp777_path,
+    db,
+    first_user,
+    monkeypatch,
+    fractal_ssh,
+    slurm_ssh_resource_profile_db,
 ):
     FAKE_ERROR_MSG = "this is some fake error message"
+
+    resource, profile = slurm_ssh_resource_profile_db
 
     def fail_function(*args, **kwargs):
         raise RuntimeError(FAKE_ERROR_MSG)
@@ -80,7 +108,7 @@ async def test_deactivate_ssh_fail(
         fail_function,
     )
 
-    path = tmp777_path / "something"
+    path = Path(profile.tasks_remote_dir) / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -113,8 +141,8 @@ async def test_deactivate_ssh_fail(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed
@@ -122,17 +150,22 @@ async def test_deactivate_ssh_fail(
     assert activity.status == "failed"
     assert FAKE_ERROR_MSG in activity.log
 
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
+
 
 @pytest.mark.container
 async def test_deactivate_wheel_no_archive_path(
-    tmp777_path,
     db,
     first_user,
     fractal_ssh,
-    ssh_config_dict,
+    slurm_ssh_resource_profile_db,
 ):
+    resource, profile = slurm_ssh_resource_profile_db
     # Prepare db objects
-    path = tmp777_path / "something"
+    path = Path(profile.tasks_remote_dir) / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
@@ -167,8 +200,8 @@ async def test_deactivate_wheel_no_archive_path(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
     # Verify that deactivate failed
     task_group_activity_v2 = await db.get(
@@ -179,6 +212,11 @@ async def test_deactivate_wheel_no_archive_path(
     assert "does not exist" in task_group_activity_v2.log
     assert "Invalid wheel path" in task_group_activity_v2.log
 
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
+
 
 @pytest.mark.container
 async def test_deactivate_wheel_package_created_before_2_9_0(
@@ -187,18 +225,12 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     current_py_version,
     testdata_path,
     fractal_ssh,
-    ssh_config_dict,
-    tmp777_path,
-    override_settings_factory,
+    slurm_ssh_resource_profile_db,
 ):
-    # Setup remote Python interpreter
-    current_py_version_underscore = current_py_version.replace(".", "_")
-    key = f"FRACTAL_TASKS_PYTHON_{current_py_version_underscore}"
-    value = f"/.venv{current_py_version}/bin/python{current_py_version}"
-    override_settings_factory(**{key: value})
+    resource, profile = slurm_ssh_resource_profile_db
 
     # STEP 1: collect a package
-    path = tmp777_path / "fractal-tasks-mock-path"
+    path = Path(profile.tasks_remote_dir) / "fractal-tasks-mock-path"
     venv_path = path / "venv"
     local_archive_path = (
         testdata_path.parent
@@ -242,12 +274,12 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     collect_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_collect.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
         wheel_file=FractalUploadedFile(
             contents=wheel_buffer,
             filename=Path(archive_path).name,
         ),
+        resource=resource,
+        profile=profile,
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
     assert activity_collect.status == TaskGroupActivityStatusV2.OK
@@ -284,8 +316,8 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=activity_deactivate.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Check outcome
@@ -297,6 +329,11 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     print(activity_deactivate.log)
     assert "Recreate pip-freeze information" in activity_deactivate.log
 
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )
+
 
 @pytest.mark.container
 async def test_deactivate_ssh_github_dependency(
@@ -304,9 +341,10 @@ async def test_deactivate_ssh_github_dependency(
     db,
     first_user,
     fractal_ssh,
-    ssh_config_dict,
+    slurm_ssh_resource_profile_db,
 ):
-    path = tmp777_path / "something"
+    resource, profile = slurm_ssh_resource_profile_db
+    path = Path(profile.tasks_remote_dir) / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -346,8 +384,8 @@ async def test_deactivate_ssh_github_dependency(
     deactivate_ssh(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
-        ssh_config=SSHConfig(**ssh_config_dict),
-        tasks_base_dir=tmp777_path.as_posix(),
+        resource=resource,
+        profile=profile,
     )
 
     # Verify that deactivate failed
@@ -355,3 +393,8 @@ async def test_deactivate_ssh_github_dependency(
     assert activity.status == "failed"
     assert "github.com" in activity.log
     assert "not currently supported" in activity.log
+
+    _reset_permissions(
+        fractal_ssh=fractal_ssh,
+        remote_folder=profile.tasks_remote_dir,
+    )

@@ -17,6 +17,7 @@ async def test_clean_app_job_list_v2(
     dataset_factory_v2,
     job_factory_v2,
     override_settings_factory,
+    local_resource_profile_db,
 ):
     # Check that app fixture starts in a clean state
     assert app.state.jobsV2 == []
@@ -24,7 +25,14 @@ async def test_clean_app_job_list_v2(
     # Set this to 0 so that the endpoint also calls the clean-up function
     override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    res, prof = local_resource_profile_db
+
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
         # Create DB objects
         task = await task_factory_v2(
             user_id=user.id, name="task", command_non_parallel="echo"

@@ -5,7 +5,6 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
@@ -20,6 +19,7 @@ async def test_unit_invalid_ssh(
     first_user,
     tmp777_path: Path,
     monkeypatch,
+    slurm_ssh_resource_profile_fake_objects,
 ):
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -58,6 +58,8 @@ async def test_unit_invalid_ssh(
         _patched_get_logger,
     )
 
+    resource, profile = slurm_ssh_resource_profile_fake_objects
+
     for function, custom_args in [
         (collect_ssh, dict(wheel_file=None)),
         (collect_ssh_pixi, dict(tar_gz_file=None)),
@@ -70,8 +72,8 @@ async def test_unit_invalid_ssh(
         function(
             task_group_id=task_group.id,
             task_group_activity_id=task_group_activity.id,
-            ssh_config=SSHConfig(host="fake", user="fake", key_path="fake"),
-            tasks_base_dir="/invalid",
+            resource=resource,
+            profile=profile,
             **custom_args,
         )
         debug(caplog.text)

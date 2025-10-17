@@ -10,6 +10,7 @@ from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import clean_app_job_list_v2
@@ -29,6 +30,7 @@ from fractal_server.app.routes.aux.validate_user_settings import (
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.runner.set_start_and_last_task_index import (
@@ -122,10 +124,14 @@ async def apply_workflow(
         )
         used_task_group_ids.add(task.taskgroupv2_id)
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
     # Validate user settings
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     user_settings = await validate_user_settings(
-        user=user, backend=FRACTAL_RUNNER_BACKEND, db=db
+        user=user, backend=resource.type, db=db
     )
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
@@ -157,11 +163,11 @@ async def apply_workflow(
             job_create.slurm_account = user_settings.slurm_accounts[0]
 
     # User appropriate FractalSSH object
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if resource.type == ResourceType.SLURM_SSH:
         ssh_config = dict(
-            user=user_settings.ssh_username,
-            host=user_settings.ssh_host,
-            key_path=user_settings.ssh_private_key_path,
+            user=profile.username,
+            host=resource.host,
+            key_path=profile.ssh_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
         try:
@@ -193,7 +199,7 @@ async def apply_workflow(
             workflow.model_dump_json(exclude={"task_list"})
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"user_list"})
+            project.model_dump_json(exclude={"user_list", "resource_id"})
         ),
         **job_create.model_dump(),
     )
@@ -214,26 +220,28 @@ async def apply_workflow(
 
     # Define server-side job directory
     timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR_LOCAL = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
+    WORKFLOW_DIR_LOCAL = Path(resource.jobs_local_dir) / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )
 
-    cache_dir = (
-        Path(user_settings.project_dir) / ".fractal_cache"
-        if user_settings.project_dir is not None
-        else None
-    )
-
     # Define user-side job directory
-    if FRACTAL_RUNNER_BACKEND == "local":
-        WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
-    elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        WORKFLOW_DIR_REMOTE = (
-            Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
-        )
+    match resource.type:
+        case ResourceType.LOCAL:
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            cache_dir = None
+        case ResourceType.SLURM_SUDO:
+            cache_dir = (
+                Path(user_settings.project_dir) / ".fractal_cache"
+                if user_settings.project_dir is not None
+                else None
+            )
+            WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
+        case ResourceType.SLURM_SSH:
+            WORKFLOW_DIR_REMOTE = (
+                Path(profile.jobs_remote_dir) / WORKFLOW_DIR_LOCAL.name
+            )
+            cache_dir = None
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
@@ -250,11 +258,11 @@ async def apply_workflow(
         dataset_id=dataset.id,
         job_id=job.id,
         user_id=user.id,
-        user_settings=user_settings,
         worker_init=job.worker_init,
-        slurm_user=user_settings.slurm_user,
         user_cache_dir=cache_dir.as_posix() if cache_dir else None,
         fractal_ssh=fractal_ssh,
+        resource=resource,
+        profile=profile,
     )
     request.app.state.jobsV2.append(job.id)
     logger.info(

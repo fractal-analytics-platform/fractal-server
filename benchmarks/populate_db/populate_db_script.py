@@ -38,13 +38,14 @@ def _create_user_client(
     email = f"{user_identifier}@example.org"
     password = f"{user_identifier}-pwd"
     slurm_user = f"{user_identifier}-slurm"
-    _admin.add_user(
+    _user = _admin.add_user(
         UserCreate(
             email=email,
             password=password,
             slurm_user=slurm_user,
         )
     )
+    _admin.associate_user_with_profile(user_id=_user.id)
     _user = FractalClient(credentials=dict(username=email, password=password))
     print(_user.whoami())
     return _user

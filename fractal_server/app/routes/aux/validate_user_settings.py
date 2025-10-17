@@ -5,9 +5,11 @@ from pydantic import ValidationError
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.user_settings import SlurmSshUserSettings
 from fractal_server.app.user_settings import SlurmSudoUserSettings
 from fractal_server.logger import set_logger
+
 
 logger = set_logger(__name__)
 
@@ -19,7 +21,7 @@ def verify_user_has_settings(user: UserOAuth) -> None:
     NOTE: This check will become useless when we make the foreign-key column
     required, but for the moment (as of v2.6.0) we have to keep it in place.
 
-    Arguments:
+    Args:
         user: The user to be checked.
     """
     if user.user_settings_id is None:
@@ -35,7 +37,7 @@ async def validate_user_settings(
     """
     Get a UserSettings object and validate it based on a given Fractal backend.
 
-    Arguments:
+    Args:
         user: The user whose settings we should validate.
         backend: The value of `FRACTAL_RUNNER_BACKEND`
         db: An async DB session
@@ -48,13 +50,14 @@ async def validate_user_settings(
 
     user_settings = await db.get(UserSettings, user.user_settings_id)
 
-    if backend == "slurm_ssh":
-        UserSettingsValidationModel = SlurmSshUserSettings
-    elif backend == "slurm":
-        UserSettingsValidationModel = SlurmSudoUserSettings
-    else:
-        # For other backends, we don't validate anything
-        return user_settings
+    match backend:
+        case ResourceType.SLURM_SSH:
+            UserSettingsValidationModel = SlurmSshUserSettings
+        case ResourceType.SLURM_SUDO:
+            UserSettingsValidationModel = SlurmSudoUserSettings
+        case _:
+            # For other backends, we don't validate anything
+            return user_settings
 
     try:
         UserSettingsValidationModel(**user_settings.model_dump())

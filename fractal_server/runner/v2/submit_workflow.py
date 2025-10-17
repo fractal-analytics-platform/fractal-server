@@ -8,35 +8,52 @@ the individual backends.
 import os
 import traceback
 from pathlib import Path
+from typing import Protocol
 
 from sqlalchemy.orm import Session as DBSyncSession
 
-from ...config import get_settings
-from ...logger import get_logger
-from ...logger import reset_logger_handlers
-from ...logger import set_logger
-from ...ssh._fabric import FractalSSH
-from ...syringe import Inject
-from ...utils import get_timestamp
-from ...zip_tools import _zip_folder_to_file_and_remove
-from ..exceptions import JobExecutionError
-from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.logger import get_logger
+from fractal_server.logger import reset_logger_handlers
+from fractal_server.logger import set_logger
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.types import AttributeFilters
+from fractal_server.utils import get_timestamp
+from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 
-_backends = {}
-_backends["local"] = local_process_workflow
-_backends["slurm"] = slurm_sudo_process_workflow
-_backends["slurm_ssh"] = slurm_ssh_process_workflow
+class ProcessWorkflowType(Protocol):
+    def __call__(
+        self,
+        *,
+        workflow: WorkflowV2,
+        dataset: DatasetV2,
+        workflow_dir_local: Path,
+        job_id: int,
+        workflow_dir_remote: Path | None,
+        first_task_index: int | None,
+        last_task_index: int | None,
+        logger_name: str,
+        job_attribute_filters: AttributeFilters,
+        job_type_filters: dict[str, bool],
+        user_id: int,
+        resource: Resource,
+        profile: Profile,
+    ) -> None:
+        ...
 
 
 def fail_job(
@@ -67,10 +84,10 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    user_settings: UserSettings,
     worker_init: str | None = None,
-    slurm_user: str | None = None,
-    user_cache_dir: str | None = None,
+    user_cache_dir: str | None = None,  # FIXME: review this
+    resource: Resource,
+    profile: Profile,
     fractal_ssh: FractalSSH | None = None,
 ) -> None:
     """
@@ -94,15 +111,15 @@ def submit_workflow(
             each task.
         user_cache_dir:
             Cache directory (namely a path where the user can write); for the
-            slurm backend, this is used as a base directory for
-            `job.working_dir_user`.
-        slurm_user:
-            The username to impersonate for the workflow execution, for the
-            slurm backend.
+            slurm backend, this is used as a base directory for FIXME.
+        resource:
+            Computational resource to be used for this job (e.g. a SLURM
+            cluster).
+        profile:
+           Computational profile to be used for this job.
+        fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
     """
     # Declare runner backend and set `process_workflow` function
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(logger_name=logger_name)
 
@@ -135,66 +152,30 @@ def submit_workflow(
             )
             return
 
-        # Declare runner backend and set `process_workflow` function
-        settings = Inject(get_settings)
-        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
         try:
-            process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
-        except KeyError as e:
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=(
-                    f"Invalid {FRACTAL_RUNNER_BACKEND=}.\n"
-                    f"Original KeyError: {str(e)}"
-                ),
-                logger_name=logger_name,
-                emit_log=True,
-            )
-            return
+            # Define local/remote folders, and create local folder
+            local_job_dir = Path(job.working_dir)
+            remote_job_dir = Path(job.working_dir_user)
+            match resource.type:
+                case ResourceType.LOCAL:
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
+                case ResourceType.SLURM_SUDO:
+                    original_umask = os.umask(0)
+                    local_job_dir.mkdir(
+                        parents=True, mode=0o755, exist_ok=False
+                    )
+                    os.umask(original_umask)
+                case ResourceType.SLURM_SSH:
+                    local_job_dir.mkdir(parents=True, exist_ok=False)
 
-        # Define and create server-side working folder
-        WORKFLOW_DIR_LOCAL = Path(job.working_dir)
-        if WORKFLOW_DIR_LOCAL.exists():
-            fail_job(
-                db=db_sync,
-                job=job,
-                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
-                logger_name=logger_name,
-                emit_log=True,
-            )
-            return
-
-        try:
-            # Create WORKFLOW_DIR_LOCAL and define WORKFLOW_DIR_REMOTE
-            if FRACTAL_RUNNER_BACKEND == "local":
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-            elif FRACTAL_RUNNER_BACKEND == "slurm":
-                original_umask = os.umask(0)
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-                os.umask(original_umask)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-                WORKFLOW_DIR_LOCAL.mkdir(parents=True)
-                WORKFLOW_DIR_REMOTE = (
-                    Path(user_settings.ssh_jobs_dir) / WORKFLOW_DIR_LOCAL.name
-                )
-            else:
-                raise ValueError(
-                    "Invalid FRACTAL_RUNNER_BACKEND="
-                    f"{settings.FRACTAL_RUNNER_BACKEND}."
-                )
         except Exception as e:
             error_type = type(e).__name__
             fail_job(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"{error_type} error occurred while creating job folder "
-                    f"and subfolders.\nOriginal error: {str(e)}"
+                    f"{error_type} error while creating local job folder."
+                    f" Original error: {str(e)}"
                 ),
                 logger_name=logger_name,
                 emit_log=True,
@@ -218,7 +199,7 @@ def submit_workflow(
             db_sync.refresh(wftask)
 
         # Write logs
-        log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
+        log_file_path = local_job_dir / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,
@@ -228,14 +209,10 @@ def submit_workflow(
             f"more logs at {str(log_file_path)}"
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
-        logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
-        if FRACTAL_RUNNER_BACKEND == "slurm":
-            logger.debug(f"slurm_user: {slurm_user}")
-            logger.debug(f"slurm_account: {job.slurm_account}")
-            logger.debug(f"worker_init: {worker_init}")
-        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            logger.debug(f"ssh_user: {user_settings.ssh_username}")
-            logger.debug(f"base dir: {user_settings.ssh_tasks_dir}")
+        logger.debug(f"Resource name: {resource.name}")
+        logger.debug(f"Profile name: {profile.name}")
+        logger.debug(f"Username: {profile.username}")
+        if resource.type in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
@@ -247,40 +224,42 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
-        if FRACTAL_RUNNER_BACKEND == "local":
-            process_workflow = local_process_workflow
-            backend_specific_kwargs = {}
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-            process_workflow = slurm_sudo_process_workflow
-            backend_specific_kwargs = dict(
-                slurm_user=slurm_user,
-                slurm_account=job.slurm_account,
-                user_cache_dir=user_cache_dir,
-            )
-        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(
-                fractal_ssh=fractal_ssh,
-                slurm_account=job.slurm_account,
-            )
-        else:
-            raise RuntimeError(
-                f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"
-            )
+        match resource.type:
+            case ResourceType.LOCAL:
+                process_workflow: ProcessWorkflowType = local_process_workflow
+                backend_specific_kwargs = {}
+            case ResourceType.SLURM_SUDO:
+                process_workflow: ProcessWorkflowType = (
+                    slurm_sudo_process_workflow
+                )
+                backend_specific_kwargs = dict(
+                    slurm_account=job.slurm_account,
+                    user_cache_dir=user_cache_dir,
+                )
+            case ResourceType.SLURM_SSH:
+                process_workflow: ProcessWorkflowType = (
+                    slurm_ssh_process_workflow
+                )
+                backend_specific_kwargs = dict(
+                    fractal_ssh=fractal_ssh,
+                    slurm_account=job.slurm_account,
+                )
 
         process_workflow(
             workflow=workflow,
             dataset=dataset,
             job_id=job_id,
             user_id=user_id,
-            workflow_dir_local=WORKFLOW_DIR_LOCAL,
-            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
+            workflow_dir_local=local_job_dir,
+            workflow_dir_remote=remote_job_dir,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
             job_attribute_filters=job.attribute_filters,
             job_type_filters=job.type_filters,
+            resource=resource,
+            profile=profile,
             **backend_specific_kwargs,
         )
 

@@ -1,11 +1,8 @@
-import logging
 import random
-import sys
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 from dataclasses import dataclass
 from dataclasses import field
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -13,101 +10,91 @@ from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
-from pydantic import SecretStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import EmailSettings
+from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
 
-def get_patched_settings(temp_path: Path):
-    INFO = sys.version_info
-    CURRENT_PY_VERSION = f"{INFO.major}.{INFO.minor}"
-    PYTHON_BIN = f"/.venv{CURRENT_PY_VERSION}/bin/python{CURRENT_PY_VERSION}"
+@pytest.fixture(scope="function")
+def override_settings_factory():
+    """
+    Returns a function that can be used to override settings.
+    """
 
-    settings = Settings(
-        JWT_SECRET_KEY="secret_key",
-        FRACTAL_DEFAULT_ADMIN_USERNAME="admin",
-        POSTGRES_USER="postgres",
-        POSTGRES_PASSWORD=SecretStr("postgres"),
-        POSTGRES_DB="fractal_test",
-        FRACTAL_TASKS_DIR=temp_path / "tasks",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=temp_path / "jobs",
-        FRACTAL_API_MAX_JOB_LIST_LENGTH=1,
-        FRACTAL_GRACEFUL_SHUTDOWN_TIME=1,
-        FRACTAL_SLURM_WORKER_PYTHON=PYTHON_BIN,
-        FRACTAL_SLURM_CONFIG_FILE=temp_path / "slurm_config.json",
-        FRACTAL_SLURM_POLL_INTERVAL=1,
-        FRACTAL_LOGGING_LEVEL=logging.DEBUG,
-    )
+    original_dependency = Inject._dependencies.get(get_settings, None)
 
-    settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
-    settings.FRACTAL_TASKS_DIR.chmod(0o755)
+    def _overrride_settings(**kwargs):
+        # Create and validate new `Settings` object
+        _original_settings = Inject(get_settings)
+        _data = _original_settings.model_dump()
+        _data.update(kwargs)
+        _new_settings = Settings(**_data)
 
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
+        # Override `get_settings`
+        def _patched_get_settings():
+            return _new_settings
 
-    return settings
+        Inject.override(get_settings, _patched_get_settings)
 
-
-@pytest.fixture(scope="function", autouse=True)
-def override_settings(tmp777_path: Path):
-    backend_dir = tmp777_path.with_name(tmp777_path.name + "-backend")
-    backend_dir.mkdir(mode=0o777)
-
-    settings = get_patched_settings(backend_dir)
-
-    def _get_settings():
-        return settings
-
-    Inject.override(get_settings, _get_settings)
     try:
-        yield settings
+        yield _overrride_settings
+
     finally:
-        Inject.pop(get_settings)
+        # Restore initial configuration
+        if original_dependency is None:
+            if get_settings in Inject._dependencies.keys():
+                Inject._dependencies.pop(get_settings)
+        else:
+            Inject._dependencies[get_settings] = original_dependency
 
 
 @pytest.fixture(scope="function")
-def override_settings_factory():
-    from fractal_server.config import Settings
+def override_email_settings_factory():
+    """
+    Returns a function that can be used to override email settings.
+    """
 
-    # NOTE: using a mutable variable so that we can modify it from within the
-    # inner function
-    get_settings_orig = []
+    original_dependency = Inject._dependencies.get(get_email_settings, None)
 
-    def _overrride_settings_factory(**kwargs):
-        # NOTE: extract patched settings *before* popping out the patch!
-        settings = Settings(
-            **Inject(get_settings).model_dump(exclude_unset=True)
-        )
-        get_settings_orig.append(Inject.pop(get_settings))
-        for k, v in kwargs.items():
-            setattr(settings, k, v)
+    def _overrride_email_settings(**kwargs):
+        # Create and validate new `Settings` object
+        _original_settings = Inject(get_email_settings)
+        _data = _original_settings.model_dump()
+        _data.update(kwargs)
+        _new_settings = EmailSettings(**_data)
 
-        def _get_settings():
-            return settings
+        # Override `get_settings`
+        def _patched_get_email_settings():
+            return _new_settings
 
-        Inject.override(get_settings, _get_settings)
+        Inject.override(get_email_settings, _patched_get_email_settings)
 
     try:
-        yield _overrride_settings_factory
+        yield _overrride_email_settings
+
     finally:
-        if get_settings_orig:
-            Inject.override(get_settings, get_settings_orig[0])
+        # Restore initial configuration
+        if original_dependency is None:
+            if get_email_settings in Inject._dependencies.keys():
+                Inject._dependencies.pop(get_email_settings)
+        else:
+            Inject._dependencies[get_email_settings] = original_dependency
 
 
-@pytest.fixture
-async def db_create_tables(override_settings):
+@pytest.fixture(scope="function")
+async def db_create_tables():
     from fractal_server.app.db import DB
     from sqlmodel import SQLModel
 
@@ -123,6 +110,7 @@ async def db_create_tables(override_settings):
 
     engine = DB.engine_sync()
     engine_async = DB.engine_async()
+
     metadata = SQLModel.metadata
     metadata.create_all(engine)
 
@@ -135,6 +123,8 @@ async def db_create_tables(override_settings):
 
 @pytest.fixture
 async def db(db_create_tables):
+    from fractal_server.app.db import get_async_db
+
     async for session in get_async_db():
         yield session
 
@@ -148,7 +138,7 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-def app(override_settings) -> Generator[FastAPI, Any]:
+def app() -> Generator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobsV2 = []
     app.state.fractal_ssh_list = None
@@ -156,7 +146,7 @@ def app(override_settings) -> Generator[FastAPI, Any]:
 
 
 @pytest.fixture
-def register_routers(app, override_settings):
+def register_routers(app):
     from fractal_server.main import collect_routers
 
     collect_routers(app)

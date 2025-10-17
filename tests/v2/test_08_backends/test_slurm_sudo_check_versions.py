@@ -1,28 +1,25 @@
 import pytest
+from devtools import debug
 
 from fractal_server.runner.executors.slurm_sudo.runner import (
     SudoSlurmRunner,
 )
-from tests.fixtures_slurm import SLURM_USER
 
 
 @pytest.mark.container
 async def test_check_fractal_server_versions_executable(
     tmp777_path,
     monkey_slurm,
-    current_py_version,
-    override_settings_factory,
     monkeypatch,
+    slurm_sudo_resource_profile_objects,
 ):
-    override_settings_factory(
-        FRACTAL_SLURM_WORKER_PYTHON=(
-            f"/.venv{current_py_version}/bin/python{current_py_version}"
-        )
-    )
+    debug(slurm_sudo_resource_profile_objects)
+
     with SudoSlurmRunner(
-        slurm_user=SLURM_USER,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        resource=slurm_sudo_resource_profile_objects[0],
+        profile=slurm_sudo_resource_profile_objects[1],
     ) as runner:
         # Successful check
         runner.check_fractal_server_versions()

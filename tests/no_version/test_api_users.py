@@ -7,7 +7,9 @@ from fractal_server.app.models.security import UserOAuth
 PREFIX = "/auth"
 
 
-async def test_register_user(registered_client, registered_superuser_client):
+async def test_register_user(
+    registered_client, registered_superuser_client, local_resource_profile_db
+):
     """
     Test that user registration is only allowed to a superuser
     """
@@ -29,6 +31,33 @@ async def test_register_user(registered_client, registered_superuser_client):
     assert res.status_code == 201
     assert res.json()["email"] == EMAIL
     assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] is None
+
+    # Superuser: ALLOWED
+    EMAIL = "asd2@asd.asd"
+    payload_register2 = dict(email=EMAIL, password="12345")
+
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register2
+    )
+    debug(res.json())
+    assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] is None
+
+    _, profile = local_resource_profile_db
+    EMAIL = "asd3@asd.asd"
+    payload_register3 = dict(
+        email=EMAIL, password="12345", profile_id=profile.id
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register3
+    )
+    assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["oauth_accounts"] == []
+    assert res.json()["profile_id"] == profile.id
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -79,13 +108,19 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.json()["oauth_accounts"] == []
 
 
-async def test_edit_users_as_superuser(registered_superuser_client):
+async def test_edit_users_as_superuser(
+    registered_superuser_client, local_resource_profile_db
+):
+    _, profile = local_resource_profile_db
+
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
+
+    assert pre_patch_user["profile_id"] is None
 
     # Fail because invalid password
     res = await registered_superuser_client.patch(
@@ -102,13 +137,20 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     debug(res.json())
     assert "The password is too short" in str(res.json()["detail"])
 
+    # Fail because invalid profile_id
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(profile_id=9999),
+    )
+    assert res.status_code == 404
+
     # succeed
     update = dict(
         email="patch@fractal.xy",
         is_active=False,
         is_superuser=True,
         is_verified=True,
-        username="user_patch",
+        profile_id=profile.id,
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
@@ -159,20 +201,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
             json={attribute: None},
         )
         assert res.status_code == 422
-
-    # USERNAME
-    # String attribute 'username' cannot be empty
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"username": "   "},
-    )
-    assert res.status_code == 422
-    # String attribute 'username' cannot be None
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"username": None},
-    )
-    assert res.status_code == 422
 
 
 async def test_add_superuser(registered_superuser_client):
@@ -388,7 +416,7 @@ async def test_oauth_accounts_list(
     res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 
-    # test PATCH /auth/users/{user_id}
+    # test PATCH /auth/users/{user_id}/
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{u1.id}/", json=dict(password="password")
     )
@@ -430,12 +458,6 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
 
     # Path user settings
     patch = dict(
-        ssh_host="127.0.0.1",
-        ssh_username="fractal",
-        ssh_private_key_path="/tmp/fractal",
-        ssh_tasks_dir="/tmp/tasks",
-        # missing "ssh_jobs_dir"
-        slurm_user="fractal",
         slurm_accounts=["foo", "bar"],
     )
     res = await registered_superuser_client.patch(
@@ -465,8 +487,37 @@ async def test_get_and_patch_user_settings(registered_superuser_client):
     # Get non-existing-user settings
     res = await registered_superuser_client.get(f"{PREFIX}/users/42/settings/")
     assert res.status_code == 404
+
     # Patch non-existing-user settings
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/42/settings/", json=dict()
     )
     assert res.status_code == 404
+
+
+async def test_get_profile_info(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+
+    async with MockCurrentUser():
+        res = await client.get("/auth/current-user/profile-info/")
+        assert res.status_code == 200
+        assert res.json() == {
+            "has_profile": False,
+            "resource_name": None,
+            "profile_name": None,
+            "username": None,
+        }
+
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+        res = await client.get("/auth/current-user/profile-info/")
+        assert res.status_code == 200
+        assert res.json() == {
+            "has_profile": True,
+            "resource_name": resource.name,
+            "profile_name": profile.name,
+            "username": profile.username,
+        }
