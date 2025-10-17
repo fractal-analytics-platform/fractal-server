@@ -65,8 +65,14 @@ class ProfileRead(BaseModel):
 
 
 @validate_call
-def validate_profile_data(_data: ProfileCreate):
+def cast_serialize_profile(_data: ProfileCreate) -> dict[str, Any]:
     """
-    We use `@validate_call` because `ProfileCreate` is a `Union` type and it
+    Cast/serialize round-trip for `Profile` data.
+
+    We use `@validate_call` because `ProfileeCreate` is a `Union` type and it
     cannot be instantiated directly.
+
+    Return:
+        Serialized version of a valid profile object.
     """
+    return _data.model_dump()

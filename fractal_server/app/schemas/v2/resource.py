@@ -4,6 +4,7 @@ from typing import Any
 from typing import Literal
 from typing import Self
 
+from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Discriminator
 from pydantic import model_validator
@@ -25,13 +26,27 @@ class ResourceType(StrEnum):
     LOCAL = "local"
 
 
+def cast_serialize_pixi_settings(
+    v: dict[NonEmptyStr, Any],
+) -> dict[NonEmptyStr, Any]:
+    """
+    Validate current value, and enrich it with default values.
+    """
+    if v != {}:
+        v = TasksPixiSettings(**v).model_dump()
+    return v
+
+
 class _ValidResourceBase(BaseModel):
     type: ResourceType
     name: NonEmptyStr
 
     # Tasks
     tasks_python_config: TasksPythonSettings
-    tasks_pixi_config: dict[NonEmptyStr, Any]
+    tasks_pixi_config: Annotated[
+        dict[NonEmptyStr, Any],
+        AfterValidator(cast_serialize_pixi_settings),
+    ]
     tasks_local_dir: AbsolutePathStr
 
     # Jobs
@@ -40,16 +55,15 @@ class _ValidResourceBase(BaseModel):
     jobs_poll_interval: int = 5
 
     @model_validator(mode="after")
-    def _tasks_configurations(self) -> Self:
-        if self.tasks_pixi_config != {}:
-            pixi_settings = TasksPixiSettings(**self.tasks_pixi_config)
-            if (
-                self.type == ResourceType.SLURM_SSH
-                and pixi_settings.SLURM_CONFIG is None
-            ):
-                raise ValueError(
-                    "`tasks_pixi_config` must include `SLURM_CONFIG`."
-                )
+    def _pixi_slurm_config(self) -> Self:
+        if (
+            self.tasks_pixi_config != {}
+            and self.type == ResourceType.SLURM_SSH
+            and self.tasks_pixi_config["SLURM_CONFIG"] is None
+        ):
+            raise ValueError(
+                "`tasks_pixi_config` must include `SLURM_CONFIG`."
+            )
         return self
 
 
@@ -110,8 +124,14 @@ class ResourceRead(BaseModel):
 
 
 @validate_call
-def validate_resource_data(_data: ResourceCreate):
+def cast_serialize_resource(_data: ResourceCreate) -> dict[str, Any]:
     """
+    Cast/serialize round-trip for `Resource` data.
+
     We use `@validate_call` because `ResourceCreate` is a `Union` type and it
     cannot be instantiated directly.
+
+    Return:
+        Serialized version of a valid resource object.
     """
+    return _data.model_dump()

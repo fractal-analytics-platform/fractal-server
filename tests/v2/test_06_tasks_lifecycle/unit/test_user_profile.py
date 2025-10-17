@@ -9,6 +9,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
+from fractal_server.app.schemas.v2.resource import cast_serialize_pixi_settings
 
 
 async def test_user_has_profile_or_422(
@@ -44,13 +45,25 @@ async def test_validate_user_profile_local(
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
+    res.tasks_pixi_config = cast_serialize_pixi_settings(
+        {
+            "default_version": "0.41.0",
+            "versions": {"0.41.0": "/common/path/pixi/0.41.0/"},
+        }
+    )
+    db.add(res)
+    await db.commit()
+    await db.refresh(res)
+
     async with MockCurrentUser(user_kwargs=dict(profile_id=prof.id)) as u:
         # Successful validation
         _res, _prof = await validate_user_profile(user=u, db=db)
+        assert _res.tasks_pixi_config["TOKIO_WORKER_THREADS"]
+
         assert _res.id == res.id
         assert _prof.id == prof.id
 
-        # Failed validation
+        # # Failed validation
         current_res = await db.get(Resource, res.id)
         current_res.tasks_python_config = {"invalid": "data"}
         db.add(current_res)

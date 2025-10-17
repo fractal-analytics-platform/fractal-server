@@ -20,18 +20,22 @@ def test_init_db_data(db_sync):
 
 
 def test_init_db_data_from_file(
-    db_create_tables,
+    db_sync,
     local_resource_profile_objects,
     tmp_path,
 ):
     resource, profile = local_resource_profile_objects
+    resource.tasks_pixi_config = {
+        "default_version": "0.41.0",
+        "versions": {"0.41.0": "/xxx/pixi/0.41.0/"},
+    }
     res_json_file = tmp_path / "res.json"
-    prof_json_file = tmp_path / "prof.json"
     with res_json_file.open("w") as f:
         json.dump(
             resource.model_dump(exclude={"id", "timestamp_created"}),
             f,
         )
+    prof_json_file = tmp_path / "prof.json"
     with prof_json_file.open("w") as f:
         json.dump(
             profile.model_dump(exclude={"id", "resource_id"}),
@@ -41,6 +45,9 @@ def test_init_db_data_from_file(
         resource=res_json_file.as_posix(),
         profile=prof_json_file.as_posix(),
     )
+
+    db_resource = db_sync.execute(select(Resource)).scalars().first()
+    assert "TOKIO_WORKER_THREADS" in db_resource.tasks_pixi_config
 
 
 def test_init_db_data_failure(db_create_tables, tmp_path: Path):
