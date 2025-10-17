@@ -5,7 +5,6 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.admin.v2.resource import (
     _check_resource_type_match_or_422,
 )
-from fractal_server.app.schemas.v2.resource import validate_resource
 
 
 def test_check_resource_type_match_or_422(
@@ -27,14 +26,6 @@ def test_check_resource_type_match_or_422(
             resource=resource,
             new_profile=new_profile_bad,
         )
-
-
-def test_validate_resource():
-    with pytest.raises(
-        ValueError,
-        match="Missing `type` key",
-    ):
-        validate_resource({})
 
 
 async def test_resource_api(
