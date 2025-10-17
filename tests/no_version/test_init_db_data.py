@@ -29,22 +29,12 @@ def test_init_db_data_from_file(
     prof_json_file = tmp_path / "prof.json"
     with res_json_file.open("w") as f:
         json.dump(
-            resource.model_dump(
-                exclude={
-                    "id",
-                    "timestamp_created",
-                }
-            ),
+            resource.model_dump(exclude={"id", "timestamp_created"}),
             f,
         )
     with prof_json_file.open("w") as f:
         json.dump(
-            profile.model_dump(
-                exclude={
-                    "id",
-                    "resource_id",
-                }
-            ),
+            profile.model_dump(exclude={"id", "resource_id"}),
             f,
         )
     init_db_data(
