@@ -2,7 +2,6 @@ import sys
 
 from devtools import debug
 
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -37,7 +36,6 @@ async def test_fail_submit_workflows_wrong_IDs(
             dataset_id=dataset.id,
             job_id=9999999,
             user_id=user.id,
-            user_settings=UserSettings(),
             resource=res,
             profile=prof,
         )
@@ -54,7 +52,6 @@ async def test_fail_submit_workflows_wrong_IDs(
             dataset_id=9999999,
             job_id=job.id,
             user_id=user.id,
-            user_settings=UserSettings(),
             resource=res,
             profile=prof,
         )
@@ -105,7 +102,6 @@ async def test_mkdir_error(
             job_id=job.id,
             user_id=user.id,
             user_cache_dir=(tmp_path / "xxx").as_posix(),
-            user_settings=UserSettings(),
             resource=res,
             profile=prof,
         )
@@ -161,7 +157,6 @@ async def test_submit_workflow_failure(
             dataset_id=dataset.id,
             job_id=job.id,
             user_id=user.id,
-            user_settings=UserSettings(),
             resource=res,
             profile=prof,
         )
