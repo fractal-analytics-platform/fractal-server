@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import validate_call
 from pydantic import ValidationError
 
 from fractal_server.app.db import AsyncSession
@@ -24,6 +25,22 @@ async def user_has_profile_or_422(*, user: UserOAuth) -> None:
         )
 
 
+@validate_call
+def _validate_resource_data(_data: ResourceCreate):
+    """
+    We use `@validate_call` because `ResourceCreate` is a `Union` type and it
+    cannot be instantiated directly.
+    """
+
+
+@validate_call
+def _validate_profile_data(_data: ProfileCreate):
+    """
+    We use `@validate_call` because `ProfileCreate` is a `Union` type and it
+    cannot be instantiated directly.
+    """
+
+
 async def validate_user_profile(
     *,
     user: UserOAuth,
@@ -38,21 +55,11 @@ async def validate_user_profile(
     profile = await db.get(Profile, user.profile_id)
     resource = await db.get(Resource, profile.resource_id)
     try:
-        ResourceCreate(
-            **resource.model_dump(
-                exclude={
-                    "id",
-                    "timestamp_created",
-                }
-            )
+        _validate_resource_data(
+            resource.model_dump(exclude={"id", "timestamp_created"}),
         )
-        ProfileCreate(
-            **profile.model_dump(
-                exclude={
-                    "resource_id",
-                    "id",
-                }
-            )
+        _validate_profile_data(
+            profile.model_dump(exclude={"resource_id", "id"}),
         )
         db.expunge(resource)
         db.expunge(profile)

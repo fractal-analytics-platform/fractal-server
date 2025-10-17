@@ -1,9 +1,8 @@
 import pytest
-from devtools import debug
 from fastapi import HTTPException
-from pydantic import ValidationError
 
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.aux.validate_user_profile import (
     user_has_profile_or_422,
 )
@@ -43,24 +42,18 @@ async def test_validate_user_profile_local(
     db,
     MockCurrentUser,
     local_resource_profile_db,
-    monkeypatch,
 ):
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=local_resource_profile_db[1].id)
-    ) as user:
-        res, prof = await validate_user_profile(user=user, db=db)
-        debug(res)
-        debug(prof)
+    res, prof = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=prof.id)) as u:
+        # Successful validation
+        _res, _prof = await validate_user_profile(user=u, db=db)
+        assert _res.id == res.id
+        assert _prof.id == prof.id
 
-        import fractal_server.app.routes.aux.validate_user_profile
-
-        def _bad_function(resource):
-            raise ValidationError("Bad error", [])
-
-        monkeypatch.setattr(
-            fractal_server.app.routes.aux.validate_user_profile,
-            "validate_resource",
-            _bad_function,
-        )
+        # Failed validation
+        current_res = await db.get(Resource, res.id)
+        current_res.tasks_python_config = {"invalid": "data"}
+        db.add(current_res)
+        await db.commit()
         with pytest.raises(HTTPException, match="are not valid"):
-            await validate_user_profile(user=user, db=db)
+            await validate_user_profile(user=u, db=db)
