@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import uvicorn
+from pydantic import ValidationError
 
 from fractal_server.app.schemas.v2 import ResourceType
 
@@ -164,7 +165,7 @@ def init_db_data(
             print(f"There exist already {num_resources=} resources. Exit.")
             sys.exit(1)
 
-        # Create resource
+        # Get resource/profile data
         if resource == "default":
             _python_version = (
                 f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -189,13 +190,6 @@ def init_db_data(
             with open(resource) as f:
                 resource_data = json.load(f)
             print(f"Read resource data from {resource}.")
-        validate_resource_data(resource_data)
-        resource_obj = Resource(**resource_data)
-        db.add(resource_obj)
-        db.commit()
-        db.refresh(resource_obj)
-
-        # Create profile
         if profile == "default":
             profile_data = {
                 "resource_type": "local",
@@ -206,7 +200,22 @@ def init_db_data(
             with open(profile) as f:
                 profile_data = json.load(f)
             print(f"Read profile data from {resource}.")
-        validate_profile_data(profile_data)
+
+        # Validate resource/profile data
+        try:
+            validate_resource_data(resource_data)
+        except ValidationError:
+            sys.exit("ERROR: Invalid resource data.")
+        try:
+            validate_profile_data(profile_data)
+        except ValidationError:
+            sys.exit("ERROR: Invalid profile data.")
+
+        # Create resource/profile db objects
+        resource_obj = Resource(**resource_data)
+        db.add(resource_obj)
+        db.commit()
+        db.refresh(resource_obj)
         profile_data["resource_id"] = resource_obj.id
         profile_obj = Profile(**profile_data)
         db.add(profile_obj)
