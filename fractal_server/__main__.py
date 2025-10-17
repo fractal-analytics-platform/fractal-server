@@ -199,16 +199,18 @@ def init_db_data(
         else:
             with open(profile) as f:
                 profile_data = json.load(f)
-            print(f"Read profile data from {resource}.")
+            print(f"Read profile data from {profile}.")
 
         # Validate resource/profile data
         try:
             validate_resource_data(resource_data)
-        except ValidationError:
+        except ValidationError as e:
+            print(e)
             sys.exit("ERROR: Invalid resource data.")
         try:
             validate_profile_data(profile_data)
-        except ValidationError:
+        except ValidationError as e:
+            print(e)
             sys.exit("ERROR: Invalid profile data.")
 
         # Create resource/profile db objects
