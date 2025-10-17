@@ -135,7 +135,8 @@ def init_db_data(
     from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
     from fractal_server.app.models import Resource, Profile
-    from fractal_server.app.schemas.v2 import ResourceCreate, ProfileCreate
+    from fractal_server.app.schemas.v2.resource import validate_resource_data
+    from fractal_server.app.schemas.v2.profile import validate_profile_data
 
     init_data_settings = Inject(get_init_data_settings)
 
@@ -180,13 +181,15 @@ def init_db_data(
                     },
                 },
                 "jobs_poll_interval": 0,
+                "jobs_runner_config": {},
+                "tasks_pixi_config": {},
             }
             print("Prepared default resource data.")
         else:
             with open(resource) as f:
                 resource_data = json.load(f)
             print(f"Read resource data from {resource}.")
-        ResourceCreate(**resource_data)
+        validate_resource_data(resource_data)
         resource_obj = Resource(**resource_data)
         db.add(resource_obj)
         db.commit()
@@ -203,7 +206,7 @@ def init_db_data(
             with open(profile) as f:
                 profile_data = json.load(f)
             print(f"Read profile data from {resource}.")
-        ProfileCreate(**profile_data)
+        validate_profile_data(profile_data)
         profile_data["resource_id"] = resource_obj.id
         profile_obj = Profile(**profile_data)
         db.add(profile_obj)
