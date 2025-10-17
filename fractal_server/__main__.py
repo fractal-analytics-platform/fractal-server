@@ -135,6 +135,7 @@ def init_db_data(
     from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
     from fractal_server.app.models import Resource, Profile
+    from fractal_server.app.schemas.v2 import ResourceCreate, ProfileCreate
 
     init_data_settings = Inject(get_init_data_settings)
 
@@ -185,6 +186,7 @@ def init_db_data(
             with open(resource) as f:
                 resource_data = json.load(f)
             print(f"Read resource data from {resource}.")
+        ResourceCreate(**resource_data)
         resource_obj = Resource(**resource_data)
         db.add(resource_obj)
         db.commit()
@@ -201,6 +203,7 @@ def init_db_data(
             with open(profile) as f:
                 profile_data = json.load(f)
             print(f"Read profile data from {resource}.")
+        ProfileCreate(**profile_data)
         profile_data["resource_id"] = resource_obj.id
         profile_obj = Profile(**profile_data)
         db.add(profile_obj)

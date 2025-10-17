@@ -24,26 +24,12 @@ class ResourceType(StrEnum):
     LOCAL = "local"
 
 
-def validate_resource(resource_data: dict[str, Any]) -> None:
-    try:
-        resource_type = resource_data["type"]
-    except KeyError:
-        raise ValueError("Missing `type` key.")
-    match resource_type:
-        case ResourceType.LOCAL:
-            ValidResourceLocal(**resource_data)
-        case ResourceType.SLURM_SUDO:
-            ValidResourceSlurmSudo(**resource_data)
-        case ResourceType.SLURM_SSH:
-            ValidResourceSlurmSSH(**resource_data)
-
-
 class _ValidResourceBase(BaseModel):
     type: ResourceType
     name: NonEmptyStr
 
     # Tasks
-    tasks_python_config: dict[NonEmptyStr, Any]
+    tasks_python_config: TasksPythonSettings
     tasks_pixi_config: dict[NonEmptyStr, Any]
     tasks_local_dir: AbsolutePathStr
 
@@ -54,8 +40,6 @@ class _ValidResourceBase(BaseModel):
 
     @model_validator(mode="after")
     def _tasks_configurations(self) -> Self:
-        if self.tasks_python_config != {}:
-            TasksPythonSettings(**self.tasks_python_config)
         if self.tasks_pixi_config != {}:
             pixi_settings = TasksPixiSettings(**self.tasks_pixi_config)
             if (
