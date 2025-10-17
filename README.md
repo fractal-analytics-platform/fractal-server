@@ -5,7 +5,7 @@
 | Name                                                                         |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |----------------------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | fractal\_server/\_\_init\_\_.py                                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/\_\_main\_\_.py                                              |      154 |       63 |       28 |        1 |     55% |92-98, 108-123, 244-304, 308-315, 319-342, 346 |
+| fractal\_server/\_\_main\_\_.py                                              |      152 |       63 |       28 |        1 |     54% |92-98, 108-123, 246-306, 310-317, 321-344, 348 |
 | fractal\_server/app/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/db/\_\_init\_\_.py                                       |       56 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        5 |        0 |        0 |        0 |    100% |           |
@@ -90,9 +90,9 @@
 | fractal\_server/app/schemas/v2/history.py                                    |       50 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/job.py                                        |       70 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/manifest.py                                   |       71 |        0 |       28 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/profile.py                                    |       46 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/app/schemas/v2/profile.py                                    |       47 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/project.py                                    |       19 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/resource.py                                   |       72 |        0 |        6 |        0 |    100% |           |
+| fractal\_server/app/schemas/v2/resource.py                                   |       76 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/status\_legacy.py                             |        9 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/task.py                                       |      104 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/task\_collection.py                           |       57 |        0 |       10 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **10122** |  **288** | **1774** |   **89** | **96%** |           |
+|                                                                    **TOTAL** | **10125** |  **288** | **1774** |   **89** | **96%** |           |
 
 
 ## Setup coverage badge
