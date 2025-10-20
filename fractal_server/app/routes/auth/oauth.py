@@ -68,3 +68,5 @@ def get_oauth_router() -> APIRouter | None:
     for route in router_oauth.routes:
         if not route.path.endswith("/"):
             route.path = f"{route.path}/"
+
+    return router_oauth

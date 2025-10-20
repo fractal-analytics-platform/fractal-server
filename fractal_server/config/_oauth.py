@@ -61,11 +61,9 @@ class OAuthSettings(BaseSettings):
         return self
 
     @property
-    def is_set(self):
-        return all(
-            [
-                self.OAUTH_CLIENT_NAME is not None,
-                self.OAUTH_CLIENT_ID is not None,
-                self.OAUTH_CLIENT_SECRET is not None,
-            ]
+    def is_set(self) -> bool:
+        return None not in (
+            self.OAUTH_CLIENT_NAME,
+            self.OAUTH_CLIENT_ID,
+            self.OAUTH_CLIENT_SECRET,
         )
