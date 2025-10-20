@@ -48,6 +48,18 @@ class OAuthSettings(BaseSettings):
     `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`
     """
 
+    @model_validator(mode="after")
+    def check_configuration(self: Self) -> Self:
+        if (
+            self.FRACTAL_OAUTH_CLIENT_NAME not in ["google", "github", None]
+            and self.FRACTAL_OIDC_CONFIG_ENDPOINT is None
+        ):
+            raise ValueError(
+                f"{self.FRACTAL_OIDC_CONFIG_ENDPOINT=} but "
+                f"{self.FRACTAL_OAUTH_CLIENT_NAME=}"
+            )
+        return self
+
     @property
     def is_set(self):
         return all(
@@ -57,16 +69,3 @@ class OAuthSettings(BaseSettings):
                 self.FRACTAL_OAUTH_CLIENT_SECRET is not None,
             ]
         )
-
-    @model_validator(mode="after")
-    def check_configuration(self: Self) -> Self:
-        if (
-            self.is_set()
-            and self.FRACTAL_OAUTH_CLIENT_NAME not in ["google", "github"]
-            and self.FRACTAL_OIDC_CONFIG_ENDPOINT is None
-        ):
-            raise ValueError(
-                f"{self.FRACTAL_OIDC_CONFIG_ENDPOINT=} but "
-                f"{self.FRACTAL_OAUTH_CLIENT_NAME=}"
-            )
-        return self

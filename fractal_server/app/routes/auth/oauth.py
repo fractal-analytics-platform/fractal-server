@@ -40,7 +40,7 @@ def get_oauth_router() -> APIRouter | None:
     router_oauth = APIRouter()
     settings = Inject(get_settings)
     oauth_settings = Inject(get_oauth_settings)
-    if not oauth_settings.is_set():
+    if not oauth_settings.is_set:
         return None
 
     client_name = oauth_settings.FRACTAL_OAUTH_CLIENT_NAME
