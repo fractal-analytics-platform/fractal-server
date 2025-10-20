@@ -93,76 +93,83 @@ def test_database_settings():
     )
 
 
-@pytest.mark.skip(reason="FIXME")
-def test_OAuthClientConfig():
-    from fractal_server.config._main import OAuthClientConfig
+def test_OAuthSettings():
+    from fractal_server.config import OAuthSettings
 
-    config = OAuthClientConfig(
-        CLIENT_NAME="GOOGLE",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="GOOGLE",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
     )
-    debug(config)
+    assert config.is_set
+    assert config.OAUTH_CLIENT_NAME == "google"
 
-    config = OAuthClientConfig(
-        CLIENT_NAME="GITHUB",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="GITHUB",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
     )
-    debug(config)
+    assert config.is_set
+    assert config.OAUTH_CLIENT_NAME == "github"
 
-    config = OAuthClientConfig(
-        CLIENT_NAME="SOMETHING",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
-        OIDC_CONFIGURATION_ENDPOINT="endpoint",
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="SOMETHING",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
+        OAUTH_OIDC_CONFIG_ENDPOINT="endpoint",
     )
-    debug(config)
+    assert config.is_set
+
+    config = OAuthSettings(
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
+    )
+    assert not config.is_set
 
     with pytest.raises(ValueError):
-        OAuthClientConfig(
-            CLIENT_NAME="SOMETHING",
-            CLIENT_ID="123",
-            CLIENT_SECRET="456",
+        OAuthSettings(
+            OAUTH_CLIENT_NAME="SOMETHING",
+            OAUTH_CLIENT_ID="123",
+            OAUTH_CLIENT_SECRET="456",
         )
 
 
-def test_collect_oauth_clients(monkeypatch):
-    settings = Settings(
-        JWT_SECRET_KEY="secret",
-        FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-    )
-    debug(settings.OAUTH_CLIENTS_CONFIG)
-    assert settings.OAUTH_CLIENTS_CONFIG == []
+# def test_collect_oauth_clients(monkeypatch):
+#     settings = Settings(
+#         JWT_SECRET_KEY="secret",
+#         FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
+#     )
+#     debug(settings.OAUTH_CLIENTS_CONFIG)
+#     assert settings.OAUTH_CLIENTS_CONFIG == []
 
-    with monkeypatch.context() as m:
-        m.setenv("OAUTH_GITHUB_CLIENT_ID", "123")
-        m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "456")
-        settings = Settings(
-            JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-        )
-        debug(settings.OAUTH_CLIENTS_CONFIG)
-        assert len(settings.OAUTH_CLIENTS_CONFIG) == 1
+#     with monkeypatch.context() as m:
+#         m.setenv("OAUTH_GITHUB_CLIENT_ID", "123")
+#         m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "456")
+#         settings = Settings(
+#             JWT_SECRET_KEY="secret",
+#             FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
+#         )
+#         debug(settings.OAUTH_CLIENTS_CONFIG)
+#         assert len(settings.OAUTH_CLIENTS_CONFIG) == 1
 
-    with monkeypatch.context() as m:
-        m.setenv("OAUTH_GITHUB_CLIENT_ID", "789")
-        m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "012")
+#     with monkeypatch.context() as m:
+#         m.setenv("OAUTH_GITHUB_CLIENT_ID", "789")
+#         m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "012")
 
-        m.setenv("OAUTH_MYCLIENT_CLIENT_ID", "345")
-        m.setenv("OAUTH_MYCLIENT_CLIENT_SECRET", "678")
-        m.setenv(
-            "OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT",
-            "https://example.com/.well-known/openid-configuration",
-        )
-        settings = Settings(
-            JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-        )
-        debug(settings.OAUTH_CLIENTS_CONFIG)
-        assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
-        names = {c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG}
-        assert names == {"GITHUB", "MYCLIENT"}
+#         m.setenv("OAUTH_MYCLIENT_CLIENT_ID", "345")
+#         m.setenv("OAUTH_MYCLIENT_CLIENT_SECRET", "678")
+#         m.setenv(
+#             "OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT",
+#             "https://example.com/.well-known/openid-configuration",
+#         )
+#         settings = Settings(
+#             JWT_SECRET_KEY="secret",
+#             FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
+#         )
+#         debug(settings.OAUTH_CLIENTS_CONFIG)
+#         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
+#         names = {c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG}
+#         assert names == {"GITHUB", "MYCLIENT"}
 
 
 def test_email_settings():
