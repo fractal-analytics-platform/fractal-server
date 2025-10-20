@@ -152,7 +152,7 @@ def test_get_oauth_router(override_oauth_settings_factory):
 
     url = "https://example.com/.well-known/openid-configuration"
     override_oauth_settings_factory(
-        OAUTH_CLIENT_NAME="google",
+        OAUTH_CLIENT_NAME="example-oidc",
         OAUTH_CLIENT_ID="id",
         OAUTH_CLIENT_SECRET="secret",
         OAUTH_OIDC_CONFIG_ENDPOINT=url,
