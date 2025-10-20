@@ -13,23 +13,23 @@ from fractal_server.syringe import Inject
 
 def _create_client_github(cfg: OAuthSettings) -> GitHubOAuth2:
     return GitHubOAuth2(
-        client_id=cfg.FRACTAL_OAUTH_CLIENT_ID.get_secret_value(),
-        client_secret=cfg.FRACTAL_OAUTH_CLIENT_SECRET.get_secret_value(),
+        client_id=cfg.OAUTH_CLIENT_ID.get_secret_value(),
+        client_secret=cfg.OAUTH_CLIENT_SECRET.get_secret_value(),
     )
 
 
 def _create_client_google(cfg: OAuthSettings) -> GoogleOAuth2:
     return GoogleOAuth2(
-        client_id=cfg.FRACTAL_OAUTH_CLIENT_ID.get_secret_value(),
-        client_secret=cfg.FRACTAL_OAUTH_CLIENT_SECRET.get_secret_value(),
+        client_id=cfg.OAUTH_CLIENT_ID.get_secret_value(),
+        client_secret=cfg.OAUTH_CLIENT_SECRET.get_secret_value(),
     )
 
 
 def _create_client_oidc(cfg: OAuthSettings) -> OpenID:
     return OpenID(
-        client_id=cfg.FRACTAL_OAUTH_CLIENT_ID.get_secret_value(),
-        client_secret=cfg.FRACTAL_OAUTH_CLIENT_SECRET.get_secret_value(),
-        openid_configuration_endpoint=cfg.FRACTAL_OIDC_CONFIG_ENDPOINT,
+        client_id=cfg.OAUTH_CLIENT_ID.get_secret_value(),
+        client_secret=cfg.OAUTH_CLIENT_SECRET.get_secret_value(),
+        openid_configuration_endpoint=cfg.OAUTH_OIDC_CONFIG_ENDPOINT,
     )
 
 
@@ -43,7 +43,7 @@ def get_oauth_router() -> APIRouter | None:
     if not oauth_settings.is_set:
         return None
 
-    client_name = oauth_settings.FRACTAL_OAUTH_CLIENT_NAME
+    client_name = oauth_settings.OAUTH_CLIENT_NAME
 
     if client_name == "google":
         client = _create_client_google(oauth_settings)
@@ -59,7 +59,7 @@ def get_oauth_router() -> APIRouter | None:
             settings.JWT_SECRET_KEY,
             is_verified_by_default=False,
             associate_by_email=True,
-            redirect_url=oauth_settings.FRACTAL_OAUTH_REDIRECT_URL,
+            redirect_url=oauth_settings.OAUTH_REDIRECT_URL,
         ),
         prefix=f"/{client_name}",
     )

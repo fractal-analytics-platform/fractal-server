@@ -19,7 +19,7 @@ class OAuthSettings(BaseSettings):
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
-    FRACTAL_OAUTH_CLIENT_NAME: (
+    OAUTH_CLIENT_NAME: (
         Annotated[
             NonEmptyStr,
             StringConstraints(to_lower=True),
@@ -29,19 +29,19 @@ class OAuthSettings(BaseSettings):
     """
     The name of the client.
     """
-    FRACTAL_OAUTH_CLIENT_ID: SecretStr | None = None
+    OAUTH_CLIENT_ID: SecretStr | None = None
     """
     ID of client.
     """
-    FRACTAL_OAUTH_CLIENT_SECRET: SecretStr | None = None
+    OAUTH_CLIENT_SECRET: SecretStr | None = None
     """
     Secret to authorise against the identity provider.
     """
-    FRACTAL_OIDC_CONFIG_ENDPOINT: str | None = None
+    OAUTH_OIDC_CONFIG_ENDPOINT: str | None = None
     """
     OpenID configuration endpoint, for autodiscovery of relevant endpoints.
     """
-    FRACTAL_OAUTH_REDIRECT_URL: str | None = None
+    OAUTH_REDIRECT_URL: str | None = None
     """
     String to be used as `redirect_url` argument in
     `fastapi_users.get_oauth_router`, and then in
@@ -51,12 +51,12 @@ class OAuthSettings(BaseSettings):
     @model_validator(mode="after")
     def check_configuration(self: Self) -> Self:
         if (
-            self.FRACTAL_OAUTH_CLIENT_NAME not in ["google", "github", None]
-            and self.FRACTAL_OIDC_CONFIG_ENDPOINT is None
+            self.OAUTH_CLIENT_NAME not in ["google", "github", None]
+            and self.OAUTH_OIDC_CONFIG_ENDPOINT is None
         ):
             raise ValueError(
-                f"{self.FRACTAL_OIDC_CONFIG_ENDPOINT=} but "
-                f"{self.FRACTAL_OAUTH_CLIENT_NAME=}"
+                f"{self.OAUTH_OIDC_CONFIG_ENDPOINT=} but "
+                f"{self.OAUTH_CLIENT_NAME=}"
             )
         return self
 
@@ -64,8 +64,8 @@ class OAuthSettings(BaseSettings):
     def is_set(self):
         return all(
             [
-                self.FRACTAL_OAUTH_CLIENT_NAME is not None,
-                self.FRACTAL_OAUTH_CLIENT_ID is not None,
-                self.FRACTAL_OAUTH_CLIENT_SECRET is not None,
+                self.OAUTH_CLIENT_NAME is not None,
+                self.OAUTH_CLIENT_ID is not None,
+                self.OAUTH_CLIENT_SECRET is not None,
             ]
         )
