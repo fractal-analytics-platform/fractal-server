@@ -4,11 +4,11 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
+from fractal_server.app.routes.auth.oauth import get_oauth_router
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import Settings
-from fractal_server.config._main import OAuthClientConfig
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
@@ -94,73 +94,70 @@ def test_database_settings():
     )
 
 
-def test_OAuthClientConfig():
-    config = OAuthClientConfig(
-        CLIENT_NAME="GOOGLE",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
-    )
-    debug(config)
+def test_OAuthSettings():
+    from fractal_server.config import OAuthSettings
 
-    config = OAuthClientConfig(
-        CLIENT_NAME="GITHUB",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="GOOGLE",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
     )
-    debug(config)
+    assert config.is_set
+    assert config.OAUTH_CLIENT_NAME == "google"
 
-    config = OAuthClientConfig(
-        CLIENT_NAME="SOMETHING",
-        CLIENT_ID="123",
-        CLIENT_SECRET="456",
-        OIDC_CONFIGURATION_ENDPOINT="endpoint",
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="GITHUB",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
     )
-    debug(config)
+    assert config.is_set
+    assert config.OAUTH_CLIENT_NAME == "github"
+
+    config = OAuthSettings(
+        OAUTH_CLIENT_NAME="SOMETHING",
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
+        OAUTH_OIDC_CONFIG_ENDPOINT="endpoint",
+    )
+    assert config.is_set
+
+    config = OAuthSettings(
+        OAUTH_CLIENT_ID="123",
+        OAUTH_CLIENT_SECRET="456",
+    )
+    assert not config.is_set
 
     with pytest.raises(ValueError):
-        OAuthClientConfig(
-            CLIENT_NAME="SOMETHING",
-            CLIENT_ID="123",
-            CLIENT_SECRET="456",
+        OAuthSettings(
+            OAUTH_CLIENT_NAME="SOMETHING",
+            OAUTH_CLIENT_ID="123",
+            OAUTH_CLIENT_SECRET="456",
         )
 
 
-def test_collect_oauth_clients(monkeypatch):
-    settings = Settings(
-        JWT_SECRET_KEY="secret",
-        FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
+def test_get_oauth_router(override_oauth_settings_factory):
+    override_oauth_settings_factory(
+        OAUTH_CLIENT_NAME="github",
+        OAUTH_CLIENT_ID="id",
+        OAUTH_CLIENT_SECRET="secret",
     )
-    debug(settings.OAUTH_CLIENTS_CONFIG)
-    assert settings.OAUTH_CLIENTS_CONFIG == []
+    assert get_oauth_router() is not None
 
-    with monkeypatch.context() as m:
-        m.setenv("OAUTH_GITHUB_CLIENT_ID", "123")
-        m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "456")
-        settings = Settings(
-            JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-        )
-        debug(settings.OAUTH_CLIENTS_CONFIG)
-        assert len(settings.OAUTH_CLIENTS_CONFIG) == 1
+    override_oauth_settings_factory(
+        OAUTH_CLIENT_NAME="google",
+        OAUTH_CLIENT_ID="id",
+        OAUTH_CLIENT_SECRET="secret",
+    )
+    assert get_oauth_router() is not None
 
-    with monkeypatch.context() as m:
-        m.setenv("OAUTH_GITHUB_CLIENT_ID", "789")
-        m.setenv("OAUTH_GITHUB_CLIENT_SECRET", "012")
-
-        m.setenv("OAUTH_MYCLIENT_CLIENT_ID", "345")
-        m.setenv("OAUTH_MYCLIENT_CLIENT_SECRET", "678")
-        m.setenv(
-            "OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT",
-            "https://example.com/.well-known/openid-configuration",
-        )
-        settings = Settings(
-            JWT_SECRET_KEY="secret",
-            FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-        )
-        debug(settings.OAUTH_CLIENTS_CONFIG)
-        assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
-        names = {c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG}
-        assert names == {"GITHUB", "MYCLIENT"}
+    url = "https://accounts.google.com/.well-known/openid-configuration"
+    override_oauth_settings_factory(
+        OAUTH_CLIENT_NAME="example-oidc",
+        OAUTH_CLIENT_ID="id",
+        OAUTH_CLIENT_SECRET="secret",
+        OAUTH_OIDC_CONFIG_ENDPOINT=url,
+    )
+    assert get_oauth_router() is not None
 
 
 def test_email_settings():
