@@ -202,6 +202,14 @@ async def test_edit_users_as_superuser(
         )
         assert res.status_code == 422
 
+    # Set `profile_id` query parameter
+    res = await registered_superuser_client.get(
+        f"{PREFIX}/users/?profile_id=987654321",
+    )
+    assert res.status_code == 200
+    users = res.json()
+    assert len(users) == 0
+
 
 async def test_add_superuser(registered_superuser_client):
     # Create non-superuser user

@@ -112,6 +112,7 @@ async def patch_user(
 
 @router_users.get("/users/", response_model=list[UserRead])
 async def list_users(
+    profile_id: int | None = None,
     user: UserOAuth = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -119,6 +120,8 @@ async def list_users(
     Return list of all users
     """
     stm = select(UserOAuth)
+    if profile_id is not None:
+        stm = stm.where(UserOAuth.profile_id == profile_id)
     res = await db.execute(stm)
     user_list = res.scalars().unique().all()
 
