@@ -150,7 +150,7 @@ def test_get_oauth_router(override_oauth_settings_factory):
     )
     assert get_oauth_router() is not None
 
-    url = "https://example.com/.well-known/openid-configuration"
+    url = "https://accounts.google.com/.well-known/openid-configuration"
     override_oauth_settings_factory(
         OAUTH_CLIENT_NAME="example-oidc",
         OAUTH_CLIENT_ID="id",
