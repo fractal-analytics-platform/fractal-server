@@ -46,10 +46,6 @@ class Settings(BaseSettings):
     Cookie token lifetime, in seconds.
     """
 
-    ###########################################################################
-    # FRACTAL SPECIFIC
-    ###########################################################################
-
     # Note: we do not use ResourceType here to avoid circular imports
     FRACTAL_RUNNER_BACKEND: Literal[
         "local", "slurm_ssh", "slurm_sudo"
