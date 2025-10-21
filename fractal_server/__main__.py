@@ -136,11 +136,10 @@ def set_db():
 
 
 def init_db_data(
-    *,
-    resource: str | None,
-    profile: str | None,
-    admin_email: str | None,
-    admin_password: str | None,
+    resource: str | None = None,
+    profile: str | None = None,
+    admin_email: str | None = None,
+    admin_password: str | None = None,
 ) -> None:
     from fractal_server.app.security import _create_first_user
     from fractal_server.app.security import _create_first_group
