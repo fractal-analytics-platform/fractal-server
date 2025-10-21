@@ -21,7 +21,7 @@ Most attributes are [the default ones from `fastapi-users`](https://fastapi-user
 
 In the startup phase, `fractal-server` creates a default user, who also has the superuser privileges that are necessary for managing other users.
 The credentials for this user are defined via the environment variables
-[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@fractal.xy`)
+[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@example.org`)
 and
 [`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
@@ -58,7 +58,7 @@ The [Bearer](https://fastapi-users.github.io/fastapi-users/latest/configuration/
 $ curl \
     -X POST \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=admin@fractal.xy&password=1234" \
+    -d "username=admin@example.org&password=1234" \
     http://127.0.0.1:8000/auth/token/login/
 
 {
@@ -75,7 +75,7 @@ The [Cookie](https://fastapi-users.github.io/fastapi-users/latest/configuration/
 $ curl \
     -X POST \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=admin@fractal.xy&password=1234" \
+    -d "username=admin@example.org&password=1234" \
     --cookie-jar - \
     http://127.0.0.1:8000/auth/login/
 
@@ -94,7 +94,7 @@ $ curl \
 
 {
     "id":1,
-    "email":"admin@fractal.xy",
+    "email":"admin@example.org",
     "is_active":true,
     "is_superuser":true,
     "is_verified":false,
@@ -388,7 +388,7 @@ $ curl \
 [
     {
         "id":1,
-        "email":"admin@fractal.xy",
+        "email":"admin@example.org",
         "is_active":true,
         "is_superuser":true,
         "is_verified":false,

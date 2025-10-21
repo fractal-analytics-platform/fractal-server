@@ -80,7 +80,7 @@ jobs:
             FRACTAL_EMAIL_PASSWORD_KEY: lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=
           run: |
             fractalctl set-db
-            fractalctl init-db-data --resource default --profile default
+            fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234
             fractalctl start --port 8001 &
             sleep 2
 

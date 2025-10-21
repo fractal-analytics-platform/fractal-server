@@ -115,7 +115,7 @@ async def test_edit_users_as_superuser(
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="test@fractal.xy", password="12345"),
+        json=dict(email="test@example.org", password="12345"),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -146,7 +146,7 @@ async def test_edit_users_as_superuser(
 
     # succeed
     update = dict(
-        email="patch@fractal.xy",
+        email="patch@example.org",
         is_active=False,
         is_superuser=True,
         is_verified=True,
@@ -275,7 +275,7 @@ async def test_set_groups_endpoint(
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
         json=dict(
-            email="test@fractal.xy",
+            email="test@example.org",
             password="12345",
             slurm_accounts=["foo", "bar"],
         ),

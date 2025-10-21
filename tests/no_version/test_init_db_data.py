@@ -8,15 +8,85 @@ from sqlalchemy import select
 from fractal_server.__main__ import init_db_data
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.models import UserOAuth
 
 
-def test_init_db_data(db_sync):
+def test_init_db_data_default(db_sync):
     init_db_data(resource="default", profile="default")
     assert db_sync.execute(select(func.count(Resource.id))).scalar() == 1
     assert db_sync.execute(select(func.count(Profile.id))).scalar() == 1
 
     with pytest.raises(SystemExit):
         init_db_data(resource="default", profile="default")
+
+
+def test_init_db_data_resource_and_profile(
+    db_sync, tmp_path, local_resource_profile_objects
+):
+    resource, profile = local_resource_profile_objects
+    resource_path = tmp_path / "resource.json"
+    profile_path = tmp_path / "profile.json"
+
+    with resource_path.open("w") as f:
+        json.dump(resource.model_dump(exclude={"id", "timestamp_created"}), f)
+    with profile_path.open("w") as f:
+        json.dump(profile.model_dump(exclude={"id"}), f)
+
+    with pytest.raises(SystemExit):
+        init_db_data(resource=resource_path.as_posix())
+
+    with pytest.raises(SystemExit):
+        init_db_data(profile=profile_path.as_posix())
+
+    init_db_data(
+        resource=resource_path.as_posix(), profile=profile_path.as_posix()
+    )
+
+
+def test_init_db_data_user_and_password(db_sync):
+    email = "admin@example.org"
+    password = "1234"
+
+    with pytest.raises(SystemExit):
+        init_db_data(admin_password=password)
+
+    with pytest.raises(SystemExit):
+        init_db_data(admin_email=email)
+
+    init_db_data(admin_email=email, admin_password=password)
+
+
+def test_init_db_data_all_args(
+    db_sync, local_resource_profile_objects, tmp_path
+):
+    email = "admin@example.org"
+    password = "1234"
+
+    resource_obj, profile_obj = local_resource_profile_objects
+    resource_path = tmp_path / "resource.json"
+    profile_path = tmp_path / "profile.json"
+    with resource_path.open("w") as f:
+        json.dump(
+            resource_obj.model_dump(exclude={"id", "timestamp_created"}), f
+        )
+    with profile_path.open("w") as f:
+        json.dump(profile_obj.model_dump(exclude={"id"}), f)
+
+    init_db_data(
+        resource=resource_path,
+        profile=profile_path,
+        admin_email=email,
+        admin_password=password,
+    )
+
+    res = db_sync.execute(select(UserOAuth).where(UserOAuth.email == email))
+    user = res.scalars().unique().one()
+    assert user.profile_id is not None
+    profile = db_sync.get(Profile, user.profile_id)
+
+    assert profile.model_dump(
+        exclude={"id", "resource_id"}
+    ) == profile_obj.model_dump(exclude={"id", "resource_id"})
 
 
 def test_init_db_data_from_file(
