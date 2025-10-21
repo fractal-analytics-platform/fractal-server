@@ -9,7 +9,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
 
 async def test_task_group_v2(db):
-    user = UserOAuth(email="user@fractal.xy", hashed_password="1234")
+    user = UserOAuth(email="user@example.org", hashed_password="1234")
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -101,7 +101,7 @@ async def test_task_group_v2(db):
 
 
 async def test_collection_state(db):
-    user = UserOAuth(email="user@fractal.xy", hashed_password="1234")
+    user = UserOAuth(email="user@example.org", hashed_password="1234")
     db.add(user)
     await db.commit()
     await db.refresh(user)

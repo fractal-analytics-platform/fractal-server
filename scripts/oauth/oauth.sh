@@ -72,7 +72,7 @@ assert_users_and_oauth 1 0
 assert_email_count 0
 
 # Register "kilgore@kilgore.trout" (the user from Dex) as regular account.
-SUPERUSER_TOKEN=$(standard_login "admin@fractal.xy" "1234")
+SUPERUSER_TOKEN=$(standard_login "admin@example.org" "1234")
 
 curl --silent -X POST \
     http://127.0.0.1:8001/auth/register/ \
@@ -98,28 +98,28 @@ USER_TOKEN_OAUTH=$(oauth_login)
 assert_users_and_oauth 2 1
 assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
 
-# Change email into "kilgore@fractal.xy".
+# Change email into "kilgore@example.org".
 curl --silent -X PATCH \
     "http://127.0.0.1:8001/auth/users/$USER_ID/" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
-    -d '{"email": "kilgore@fractal.xy"}'
+    -d '{"email": "kilgore@example.org"}'
 
-# Test I can login as "kilgore@fractal.xy" with both standard and oauth login.
-USER_TOKEN=$(standard_login "kilgore@fractal.xy" "kilgore")
-assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
+# Test I can login as "kilgore@example.org" with both standard and oauth login.
+USER_TOKEN=$(standard_login "kilgore@example.org" "kilgore")
+assert_email_and_id $USER_TOKEN "kilgore@example.org" $USER_ID
 
 USER_TOKEN_OAUTH=$(oauth_login)
-assert_email_and_id $USER_TOKEN_OAUTH "kilgore@fractal.xy" $USER_ID
+assert_email_and_id $USER_TOKEN_OAUTH "kilgore@example.org" $USER_ID
 
 # Remove all oauth accounts from db.
 assert_users_and_oauth 2 1
 psql -c "DELETE FROM oauthaccount;"
 assert_users_and_oauth 2 0
 
-# Test I can login as "kilgore@fractal.xy" with standard login.
-USER_TOKEN=$(standard_login "kilgore@fractal.xy" "kilgore")
-assert_email_and_id $USER_TOKEN "kilgore@fractal.xy" $USER_ID
+# Test I can login as "kilgore@example.org" with standard login.
+USER_TOKEN=$(standard_login "kilgore@example.org" "kilgore")
+assert_email_and_id $USER_TOKEN "kilgore@example.org" $USER_ID
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0

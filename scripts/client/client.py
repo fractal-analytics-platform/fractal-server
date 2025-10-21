@@ -28,7 +28,7 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.main import app
 
 DEFAULT_CREDENTIALS = {}
-DEFAULT_CREDENTIALS["username"] = "admin@fractal.xy"
+DEFAULT_CREDENTIALS["username"] = "admin@example.org"
 DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
 
 

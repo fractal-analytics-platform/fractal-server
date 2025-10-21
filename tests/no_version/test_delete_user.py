@@ -51,7 +51,7 @@ async def test_delete_user(
 
 async def test_cascade_on_delete_user_settings(db):
     user = UserOAuth(
-        email="user@fractal.xy",
+        email="user@example.org",
         hashed_password="fake_hashed_password",
         settings=UserSettings(slurm_accounts=["account1", "account2"]),
     )
