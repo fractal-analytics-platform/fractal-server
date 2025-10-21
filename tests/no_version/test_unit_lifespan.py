@@ -38,7 +38,7 @@ async def test_app_with_lifespan(
 
     _create_first_group()
     await _create_first_user(
-        email="admin@fractal.xy",
+        email="admin@example.org",
         password="1234",
         is_superuser=True,
         is_verified=True,
