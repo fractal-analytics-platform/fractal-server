@@ -5,7 +5,7 @@
 | Name                                                                         |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |----------------------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | fractal\_server/\_\_init\_\_.py                                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/\_\_main\_\_.py                                              |      152 |       63 |       28 |        1 |     54% |92-98, 108-123, 246-306, 310-317, 321-344, 348 |
+| fractal\_server/\_\_main\_\_.py                                              |      159 |       63 |       36 |        1 |     58% |104-110, 120-135, 265-325, 329-336, 340-365, 369 |
 | fractal\_server/app/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/db/\_\_init\_\_.py                                       |       56 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        5 |        0 |        0 |        0 |    100% |           |
@@ -103,10 +103,9 @@
 | fractal\_server/app/security/signup\_email.py                                |       20 |        8 |        4 |        0 |     50% |     33-44 |
 | fractal\_server/app/shutdown.py                                              |       34 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/user\_settings.py                                        |        7 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/config/\_\_init\_\_.py                                       |       16 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/config/\_\_init\_\_.py                                       |       13 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_database.py                                         |       27 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_email.py                                            |       68 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/config/\_init\_data.py                                       |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_main.py                                             |       36 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/config/\_oauth.py                                            |       29 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_settings\_config.py                                 |        2 |        0 |        0 |        0 |    100% |           |
@@ -202,7 +201,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **10158** |  **277** | **1778** |   **89** | **96%** |           |
+|                                                                    **TOTAL** | **10152** |  **277** | **1786** |   **89** | **96%** |           |
 
 
 ## Setup coverage badge
