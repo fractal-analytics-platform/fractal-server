@@ -2,6 +2,8 @@ import pytest
 from fastapi import HTTPException
 
 from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.admin.v2.resource import (
     _check_resource_type_match_or_422,
 )
@@ -35,7 +37,9 @@ async def test_resource_api(
     local_resource_profile_db,
     slurm_ssh_resource_profile_fake_objects,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True)
+    ) as superuser:
         # GET all resources
         res = await client.get("/admin/v2/resource/")
         assert res.status_code == 200
@@ -163,10 +167,37 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert "it's associated with 1 Profiles" in str(res.json()["detail"])
-
-        # DELETE one resource / success
         res = await client.delete(f"/admin/v2/profile/{profile['id']}/")
         assert res.status_code == 204
+
+        project = ProjectV2(name="project", resource_id=resource_id)
+        db.add(project)
+        await db.commit()
+        await db.refresh(project)
+        res = await client.delete(f"/admin/v2/resource/{resource_id}/")
+        assert res.status_code == 422
+        assert "it's associated with 1 Project" in str(res.json()["detail"])
+        await db.delete(project)
+        await db.commit()
+
+        task_group = TaskGroupV2(
+            user_id=superuser.id,
+            origin="other",
+            pkg_name="pkg",
+            resource_id=resource_id,
+        )
+        db.add(task_group)
+        await db.commit()
+        await db.refresh(task_group)
+        res = await client.delete(f"/admin/v2/resource/{resource_id}/")
+        assert res.status_code == 422
+        assert "it's associated with 1 TaskGroupV2" in str(
+            res.json()["detail"]
+        )
+        await db.delete(task_group)
+        await db.commit()
+
+        # DELETE one resource / success
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 204
         res = await client.get(f"/admin/v2/resource/{resource_id}/")
