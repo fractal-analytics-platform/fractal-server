@@ -62,14 +62,26 @@ init_db_data_parser = subparsers.add_parser(
 init_db_data_parser.add_argument(
     "--resource",
     type=str,
-    help=("Either `default` or path to the JSON file of the first resource."),
-    required=True,
+    help="Either `default` or path to the JSON file of the first resource.",
+    required=False,
 )
 init_db_data_parser.add_argument(
     "--profile",
     type=str,
-    help=("Either `default` or path to the JSON file of the first profile."),
-    required=True,
+    help="Either `default` or path to the JSON file of the first profile.",
+    required=False,
+)
+init_db_data_parser.add_argument(
+    "--admin-email",
+    type=str,
+    help="Email of the first admin user to create.",
+    required=False,
+)
+init_db_data_parser.add_argument(
+    "--admin-pwd",
+    type=str,
+    help="Password of the first admin user to create.",
+    required=False,
 )
 
 # fractalctl update-db-data
@@ -145,11 +157,7 @@ def init_db_data(
     print()
 
     # Create admin user if requested
-    admin_email = admin_email.strip() if admin_email else admin_email
-    admin_password = (
-        admin_password.strip() if admin_password else admin_password
-    )
-    if bool(admin_password) != bool(admin_email):
+    if (admin_email is None) != (admin_password is None):
         print("You must provide both --admin-email and --admin-pwd. Exit.")
         sys.exit(1)
     if admin_password and admin_email:
@@ -164,9 +172,7 @@ def init_db_data(
         print()
 
     # Create resource and profile if requested
-    resource = resource.strip() if resource else resource
-    profile = profile.strip() if profile else profile
-    if bool(resource) != bool(profile):
+    if (resource is None) != (profile is None):
         print("You must provide both --resource and --profile. Exit.")
         sys.exit(1)
     if resource and profile:
