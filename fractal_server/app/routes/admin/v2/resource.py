@@ -13,7 +13,9 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_active_superuser
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
@@ -163,6 +165,38 @@ async def delete_resource(
             detail=(
                 f"Cannot delete Resource {resource_id} because it's associated"
                 f" with {associated_profile_count} Profiles."
+            ),
+        )
+
+    # Fail if at least one Project is associated with the Resource.
+    res = await db.execute(
+        select(func.count(ProjectV2.id)).where(
+            ProjectV2.resource_id == resource_id
+        )
+    )
+    associated_project_count = res.scalar()
+    if associated_project_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Cannot delete Resource {resource_id} because it's associated"
+                f" with {associated_project_count} Projects."
+            ),
+        )
+
+    # Fail if at least one TaskGroupV2 is associated with the Resource.
+    res = await db.execute(
+        select(func.count(TaskGroupV2.id)).where(
+            TaskGroupV2.resource_id == resource_id
+        )
+    )
+    associated_taskgroup_count = res.scalar()
+    if associated_taskgroup_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Cannot delete Resource {resource_id} because it's associated"
+                f" with {associated_taskgroup_count} TaskGroupV2."
             ),
         )
 
