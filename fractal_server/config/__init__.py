@@ -1,7 +1,6 @@
 from ._database import DatabaseSettings
 from ._email import EmailSettings
 from ._email import PublicEmailSettings  # noqa F401
-from ._init_data import InitDataSettings
 from ._main import Settings
 from ._oauth import OAuthSettings
 
@@ -16,12 +15,6 @@ def get_settings(settings=Settings()) -> Settings:
 
 def get_email_settings(email_settings=EmailSettings()) -> EmailSettings:
     return email_settings
-
-
-def get_init_data_settings(
-    init_data_settings=InitDataSettings(),
-) -> InitDataSettings:
-    return init_data_settings
 
 
 def get_oauth_settings(oauth_settings=OAuthSettings()) -> OAuthSettings:

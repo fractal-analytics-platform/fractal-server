@@ -14,11 +14,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
-from fractal_server.config import get_init_data_settings
 from fractal_server.main import lifespan
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.ssh._fabric import FractalSSHList
-from fractal_server.syringe import Inject
 
 
 async def test_app_with_lifespan(
@@ -37,12 +35,11 @@ async def test_app_with_lifespan(
     assert res.unique().all() == []
 
     # create first user
-    init_data_settings = Inject(get_init_data_settings)
 
     _create_first_group()
     await _create_first_user(
-        email=init_data_settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=init_data_settings.FRACTAL_DEFAULT_ADMIN_PASSWORD.get_secret_value(),  # noqa E501
+        email="admin@fractal.xy",
+        password="1234",
         is_superuser=True,
         is_verified=True,
     )
