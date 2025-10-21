@@ -26,5 +26,5 @@ dropdb $POSTGRES_DB
 createdb $POSTGRES_DB
 
 fractalctl set-db
-fractalctl init-db-data --resource default --profile default
+fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234
 fractalctl start --port 8001

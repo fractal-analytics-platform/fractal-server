@@ -5,7 +5,7 @@ set -e
 # Create and init db
 createdb fractal-example-test
 poetry run fractalctl set-db
-poetry run fractalctl init-db-data --resource default --profile default
+poetry run fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234
 
 # Start the server
 poetry run gunicorn fractal_server.main:app \
