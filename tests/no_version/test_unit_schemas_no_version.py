@@ -9,7 +9,8 @@ from fractal_server.types.validators import val_absolute_path
 
 
 def test_user_create():
-    UserCreate(email="a@b.c", password="asd", project_dir="/fake")
+    u = UserCreate(email="a@b.c", password="asd", project_dir="/fake")
+    assert u.slurm_accounts == []
 
 
 def test_user_group_create():
