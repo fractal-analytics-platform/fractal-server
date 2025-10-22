@@ -1,17 +1,16 @@
-"""user-settings-related
+"""user-settings-review
 
-Revision ID: f68960037f10
+Revision ID: f67d750f2469
 Revises: 90f6508c6379
-Create Date: 2025-10-22 13:44:03.160849
+Create Date: 2025-10-22 14:08:03.376795
 
 """
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "f68960037f10"
+revision = "f67d750f2469"
 down_revision = "90f6508c6379"
 branch_labels = None
 depends_on = None
@@ -23,7 +22,8 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "project_dir",
-                sqlmodel.sql.sqltypes.AutoString(),
+                sa.String(),
+                server_default="/PLACEHOLDER",
                 nullable=False,
             )
         )
