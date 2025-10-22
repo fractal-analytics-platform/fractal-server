@@ -102,7 +102,7 @@ class UserCreate(schemas.BaseUserCreate):
 
     profile_id: int | None = None
     project_dir: Annotated[AbsolutePathStr, AfterValidator(_validate_cmd)]
-    slurm_accounts: list[str] = Field(default=list)
+    slurm_accounts: list[str] = Field(default_factory=list)
 
 
 class UserUpdateGroups(BaseModel):
