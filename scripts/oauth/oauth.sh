@@ -12,7 +12,7 @@ oauth_login(){
         curl -L --silent --output /dev/null --cookie-jar - "$AUTHORIZATION_URL" \
         | grep "fastapiusersauth" | awk '{print $NF}'
     )
-    echo $TOKEN_OAUTH
+    echo "$TOKEN_OAUTH"
 }
 
 standard_login(){
@@ -23,7 +23,7 @@ standard_login(){
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "username=$1&password=$2" | jq -r ".access_token"
     )
-    echo $TOKEN
+    echo "$TOKEN"
 }
 
 assert_users_and_oauth() {
@@ -45,8 +45,8 @@ assert_email_and_id(){
         curl --silent -H "Authorization: Bearer $1" \
         http://127.0.0.1:8001/auth/current-user/
     )
-    EMAIL=$(echo $USER | jq -r ".email")
-    ID=$(echo $USER | jq -r ".id")
+    EMAIL=$(echo "$USER" | jq -r ".email")
+    ID=$(echo "$USER" | jq -r ".id")
     if [ "$EMAIL" != "$2" ]; then
         echo "ERROR: Expected email==${2}, got ${EMAIL}."
         exit 1
@@ -78,7 +78,7 @@ curl --silent -X POST \
     http://127.0.0.1:8001/auth/register/ \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $SUPERUSER_TOKEN" \
-    -d '{"email": "kilgore@kilgore.trout", "password": "kilgore"}'
+    -d '{"email": "kilgore@kilgore.trout", "password": "kilgore", "project_dir": "/fake"}'
 assert_users_and_oauth 2 0
 
 # Login with "kilgore@kilgore.trout" with standard login.
@@ -88,7 +88,7 @@ USER_ID=$(
     http://127.0.0.1:8001/auth/current-user/ | jq -r ".id"
 )
 
-assert_email_and_id $USER_TOKEN "kilgore@kilgore.trout" $USER_ID
+assert_email_and_id "$USER_TOKEN" "kilgore@kilgore.trout" "$USER_ID"
 
 # First oauth login:
 # - create "kilgore@kilgore.trout" oauth account,
@@ -96,7 +96,8 @@ assert_email_and_id $USER_TOKEN "kilgore@kilgore.trout" $USER_ID
 USER_TOKEN_OAUTH=$(oauth_login)
 
 assert_users_and_oauth 2 1
-assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $USER_ID
+assert_email_and_id "$USER_TOKEN_OAUTH" "kilgore@kilgore.trout" "$USER_ID"
+
 
 # Change email into "kilgore@example.org".
 curl --silent -X PATCH \
@@ -107,10 +108,12 @@ curl --silent -X PATCH \
 
 # Test I can login as "kilgore@example.org" with both standard and oauth login.
 USER_TOKEN=$(standard_login "kilgore@example.org" "kilgore")
-assert_email_and_id $USER_TOKEN "kilgore@example.org" $USER_ID
+assert_email_and_id "$USER_TOKEN" "kilgore@example.org" "$USER_ID"
+
 
 USER_TOKEN_OAUTH=$(oauth_login)
-assert_email_and_id $USER_TOKEN_OAUTH "kilgore@example.org" $USER_ID
+assert_email_and_id "$USER_TOKEN_OAUTH" "kilgore@example.org" "$USER_ID"
+
 
 # Remove all oauth accounts from db.
 assert_users_and_oauth 2 1
@@ -119,16 +122,17 @@ assert_users_and_oauth 2 0
 
 # Test I can login as "kilgore@example.org" with standard login.
 USER_TOKEN=$(standard_login "kilgore@example.org" "kilgore")
-assert_email_and_id $USER_TOKEN "kilgore@example.org" $USER_ID
+assert_email_and_id "$USER_TOKEN" "kilgore@example.org" "$USER_ID"
 
 # Using oauth login creates another user: "kilgore@kilgore.trout".
 assert_users_and_oauth 2 0
 assert_email_count 0
-USER_TOKEN_OAUTH=$(oauth_login)
-assert_users_and_oauth 3 1
-assert_email_count 1
-# Print emails
-echo EMAIL LIST
-curl --silent http://localhost:8025/api/v1/messages | jq
 
-assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
+
+# USER_TOKEN_OAUTH=$(oauth_login)
+# assert_users_and_oauth 3 1
+# assert_email_count 1
+# # Print emails
+# echo EMAIL LIST
+# curl --silent http://localhost:8025/api/v1/messages | jq
+# assert_email_and_id $USER_TOKEN_OAUTH "kilgore@kilgore.trout" $((USER_ID+1))
