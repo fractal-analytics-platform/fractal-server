@@ -5,7 +5,7 @@ docker run -p 5556:5556 ghcr.io/fractal-analytics-platform/oauth:0.1
 
 Terminal 2:
 ```
-docker run -p 1025:1025 -p 8025:8025 axllent/mailpit
+docker run -e MP_SMTP_AUTH="sender@example.org:fakepassword" -e MP_SMTP_AUTH_ALLOW_INSECURE=true -p 1025:1025 -p 8025:8025 axllent/mailpit
 ```
 
 Terminal 3
