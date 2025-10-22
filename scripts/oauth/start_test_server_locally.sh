@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 export FRACTAL_RUNNER_BACKEND=local
 export JWT_SECRET_KEY=jwt_secret_key
 export JWT_EXPIRE_SECONDS=1000
@@ -22,9 +24,9 @@ export PGHOST=localhost
 export PGPORT=5432
 export PGDATABASE=$POSTGRES_DB
 
-dropdb $POSTGRES_DB
+dropdb --if-exists $POSTGRES_DB
 createdb $POSTGRES_DB
 
 fractalctl set-db
-fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --project-dir /fake
+fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir /fake
 fractalctl start --port 8001
