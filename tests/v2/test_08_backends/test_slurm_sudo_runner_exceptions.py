@@ -31,6 +31,7 @@ async def test_submit_exception(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -78,6 +79,7 @@ async def test_multisubmit_exception_submission(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -131,6 +133,7 @@ async def test_multisubmit_exception_fetch_artifacts(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -184,6 +187,7 @@ async def test_multisubmit_exception_postprocess_single_task(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:

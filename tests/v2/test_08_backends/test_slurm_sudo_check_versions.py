@@ -18,6 +18,7 @@ async def test_check_fractal_server_versions_executable(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=slurm_sudo_resource_profile_objects[0],
         profile=slurm_sudo_resource_profile_objects[1],
     ) as runner:

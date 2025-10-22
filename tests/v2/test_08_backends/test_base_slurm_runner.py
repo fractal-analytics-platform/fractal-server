@@ -73,6 +73,7 @@ async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
+        user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:
@@ -87,6 +88,7 @@ async def test_check_no_active_jobs(tmp_path: Path):
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
+        user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:
@@ -111,6 +113,7 @@ async def test_not_implemented_errors(tmp_path: Path):
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
+        user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:
@@ -172,6 +175,7 @@ Try 'ls --help' for more information.
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
+        user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:
@@ -246,6 +250,7 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
         root_dir_remote=tmp_path / "user",
+        user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
     ) as runner:

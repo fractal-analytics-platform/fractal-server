@@ -54,6 +54,7 @@ async def test_submit_success(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -124,6 +125,7 @@ async def test_submit_fail(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -177,6 +179,7 @@ async def test_multisubmit_parallel(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -237,6 +240,7 @@ async def test_multisubmit_compound(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -309,6 +313,7 @@ def test_send_many_job_inputs_failure(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
         root_dir_remote=root_dir_remote,
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:

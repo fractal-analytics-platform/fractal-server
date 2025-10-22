@@ -3,8 +3,8 @@ from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from fractal_server.config import ViewerAuthScheme
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
-
 
 PREFIX = "/auth/current-user/"
 
@@ -176,7 +176,7 @@ async def test_get_current_user_allowed_viewer_paths(
 ):
     # Start test with "viewer-paths" auth scheme
     override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="viewer-paths"
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.VIEWER_PATHS
     )
 
     # Check that a vanilla user has no viewer_paths
@@ -229,7 +229,7 @@ async def test_get_current_user_allowed_viewer_paths(
 
     # Check that project_dir is used by "viewer-paths" auth scheme
     override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="viewer-paths"
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.VIEWER_PATHS
     )
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
@@ -238,7 +238,7 @@ async def test_get_current_user_allowed_viewer_paths(
     # Test with "users-folders" scheme
     override_settings_factory(FRACTAL_VIEWER_BASE_FOLDER="/path/to/base")
     override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders"
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.USERS_FOLDERS
     )
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
@@ -247,10 +247,7 @@ async def test_get_current_user_allowed_viewer_paths(
     # Update user profile adding the slurm_user
     resource, profile = slurm_sudo_resource_profile_db
     res = await registered_superuser_client.patch(
-        f"/auth/users/{user_id}/",
-        json=dict(
-            profile_id=profile.id,
-        ),
+        f"/auth/users/{user_id}/", json=dict(profile_id=profile.id)
     )
     assert res.status_code == 200
 
@@ -263,7 +260,9 @@ async def test_get_current_user_allowed_viewer_paths(
     }
 
     # Verify that scheme "none" returns an empty list
-    override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
+    override_settings_factory(
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.NONE
+    )
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
     assert res.json() == []
