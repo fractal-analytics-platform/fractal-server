@@ -486,7 +486,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has a non empty SLURM accounts list
-        assert user2.settings.slurm_accounts == SLURM_LIST
+        assert user2.slurm_accounts == SLURM_LIST
 
         # If no slurm_account is provided, we use the first one of the list
 
