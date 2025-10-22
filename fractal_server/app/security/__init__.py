@@ -46,7 +46,9 @@ from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.app.security.signup_email import send_fractal_email
+from fractal_server.app.security.signup_email import (
+    send_fractal_email_or_log_failure,
+)
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -279,7 +281,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 )
 
                 # (1) Prepare user-facing error message
-                email_settings = Inject(get_email_settings)
                 settings = Inject(get_settings)
                 error_msg = (
                     "Thank you for registering for the Fractal service. "
@@ -293,36 +294,19 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                         f"process at {settings.FRACTAL_HELP_URL}."
                     )
 
-                # (2) Send email to admins.
-                if email_settings.public is None:
-                    logger.error(
-                        "Could not send self-registration email, "
-                        f"since {email_settings.public=}."
-                    )
-                else:
-                    try:
-                        logger.info(
-                            "START sending email about self-registration."
-                        )
-                        send_fractal_email(
-                            subject="New OAuth self-registration",
-                            msg=(
-                                f"User '{account_email}' tried to "
-                                "self-register through OAuth.\n"
-                                "Please create the Fractal account manually.\n"
-                                "Here is the error message displayed to the "
-                                f"user:\n{error_msg}"
-                            ),
-                            email_settings=email_settings.public,
-                        )
-                        logger.info(
-                            "END sending email about self-registration."
-                        )
-                    except Exception as e:
-                        logger.error(
-                            "Could not send self-registration email, "
-                            f"original error: {str(e)}."
-                        )
+                # (2) Send email to admins
+                email_settings = Inject(get_email_settings)
+                send_fractal_email_or_log_failure(
+                    subject="New OAuth self-registration",
+                    msg=(
+                        f"User '{account_email}' tried to "
+                        "self-register through OAuth.\n"
+                        "Please create the Fractal account manually.\n"
+                        "Here is the error message displayed to the "
+                        f"user:\n{error_msg}"
+                    ),
+                    email_settings=email_settings.public,
+                )
 
                 # (3) Raise
                 raise HTTPException(
