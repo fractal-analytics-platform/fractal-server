@@ -1,8 +1,8 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.models.security import OAuthAccount
 from fractal_server.app.models.security import UserOAuth
+from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
 
@@ -15,7 +15,11 @@ async def test_register_user(
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="12345")
+    payload_register = dict(
+        email=EMAIL,
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
 
     # Non-superuser user: FORBIDDEN
     res = await registered_client.post(
@@ -35,7 +39,11 @@ async def test_register_user(
 
     # Superuser: ALLOWED
     EMAIL = "asd2@asd.asd"
-    payload_register2 = dict(email=EMAIL, password="12345")
+    payload_register2 = dict(
+        email=EMAIL,
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register2
@@ -49,7 +57,10 @@ async def test_register_user(
     _, profile = local_resource_profile_db
     EMAIL = "asd3@asd.asd"
     payload_register3 = dict(
-        email=EMAIL, password="12345", profile_id=profile.id
+        email=EMAIL,
+        password="12345",
+        profile_id=profile.id,
+        project_dir=PROJECT_DIR_PLACEHOLDER,
     )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register3
@@ -67,10 +78,20 @@ async def test_list_users(registered_client, registered_superuser_client):
 
     # Create two users
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12345")
+        f"{PREFIX}/register/",
+        json=dict(
+            email="0@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12345")
+        f"{PREFIX}/register/",
+        json=dict(
+            email="1@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
 
     # Non-superuser user is not allowed
@@ -90,7 +111,11 @@ async def test_list_users(registered_client, registered_superuser_client):
 async def test_show_user(registered_client, registered_superuser_client):
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_show@asd.asd", password="12345"),
+        json=dict(
+            email="to_show@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     user_id = res.json()["id"]
     assert res.status_code == 201
@@ -115,7 +140,11 @@ async def test_edit_users_as_superuser(
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="test@example.org", password="12345"),
+        json=dict(
+            email="test@example.org",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -215,7 +244,11 @@ async def test_add_superuser(registered_superuser_client):
     # Create non-superuser user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="future_superuser@asd.asd", password="12345"),
+        json=dict(
+            email="future_superuser@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     debug(res.json())
     user_id = res.json()["id"]
@@ -236,37 +269,6 @@ async def test_delete_user_method_not_allowed(registered_superuser_client):
     assert res.status_code == 405
 
 
-@pytest.mark.skip(reason="DELETE endpoint is currently disabled")
-async def test_delete_user(registered_client, registered_superuser_client):
-    """
-    Check that DELETE/{user_id} returns some of the correct responses:
-        * 204 No content
-        * 401 Unauthorized - Missing token or inactive user.
-        * 403 Forbidden - Not a superuser.
-        * 404 Not found - The user does not exist.
-    """
-
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/",
-        json=dict(email="to_delete@asd.asd", password="1234"),
-    )
-    user_id = res.json()["id"]
-    debug(res.json)
-    assert res.status_code == 201
-
-    # Test delete endpoint
-    res = await registered_client.delete(f"{PREFIX}/users/{user_id}/")
-    assert res.status_code == 403
-    res = await registered_superuser_client.delete(
-        f"{PREFIX}/users/{user_id}/"
-    )
-    assert res.status_code == 204
-    res = await registered_superuser_client.delete(
-        f"{PREFIX}/users/THIS-IS-NOT-AN-ID"
-    )
-    assert res.status_code == 404
-
-
 async def test_set_groups_endpoint(
     registered_superuser_client,
     default_user_group,
@@ -277,6 +279,7 @@ async def test_set_groups_endpoint(
         json=dict(
             email="test@example.org",
             password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
             slurm_accounts=["foo", "bar"],
         ),
     )
@@ -367,8 +370,16 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-    u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
-    u2 = UserOAuth(email="user2@email.com", hashed_password="abc2")
+    u1 = UserOAuth(
+        email="user1@email.com",
+        hashed_password="abc1",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
+    u2 = UserOAuth(
+        email="user2@email.com",
+        hashed_password="abc2",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
     db.add(u1)
     db.add(u2)
     await db.commit()

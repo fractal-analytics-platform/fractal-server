@@ -2,6 +2,7 @@ from sqlmodel import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
+from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
 
@@ -34,7 +35,11 @@ async def test_update_group(registered_superuser_client):
     """
 
     # Preliminary: register a new user
-    credentials_user_A = dict(email="aaa@example.org", password="12345")
+    credentials_user_A = dict(
+        email="aaa@example.org",
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A
     )
@@ -89,8 +94,16 @@ async def test_user_group_crud(
     """
 
     # Preliminary: register two new users
-    credentials_user_A = dict(email="aaa@example.org", password="12345")
-    credentials_user_B = dict(email="bbb@example.org", password="12345")
+    credentials_user_A = dict(
+        email="aaa@example.org",
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
+    credentials_user_B = dict(
+        email="bbb@example.org",
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A
     )
