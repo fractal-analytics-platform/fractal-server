@@ -28,6 +28,9 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
 
+PROJECT_DIR_PLACEHOLDER = "/fake/placeholder"
+
+
 @pytest.fixture(scope="function")
 def override_settings_factory():
     """
@@ -209,7 +212,7 @@ async def registered_client(
         email=EMAIL,
         password=PWD,
         is_superuser=False,
-        project_dir="/fake/placeholder",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
     )
 
     async with (
@@ -238,7 +241,7 @@ async def registered_superuser_client(
         email=EMAIL,
         password=PWD,
         is_superuser=True,
-        project_dir="/fake/placeholder",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
     )
     async with (
         AsyncClient(

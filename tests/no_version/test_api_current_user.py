@@ -3,6 +3,8 @@ from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
+from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
+
 
 PREFIX = "/auth/current-user/"
 
@@ -177,7 +179,7 @@ async def test_get_current_user_allowed_viewer_paths(
     # Check that a vanilla user has no viewer_paths
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
-    assert res.json() == []
+    assert res.json() == [PROJECT_DIR_PLACEHOLDER]
 
     # Find current-user ID
     res = await registered_client.get(f"{PREFIX}")
@@ -200,7 +202,7 @@ async def test_get_current_user_allowed_viewer_paths(
     # Check current-user viewer-paths again
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
-    assert set(res.json()) == {"/a", "/b"}
+    assert set(res.json()) == {"/a", "/b", PROJECT_DIR_PLACEHOLDER}
 
     # Add one group to this user
     res = await registered_superuser_client.post(
@@ -240,23 +242,35 @@ async def test_get_current_user_allowed_viewer_paths(
     assert set(res.json()) == {"/path/to/project_dir"}
 
     # Update user profile adding the slurm_user
-    NEW_USERNAME = "xyz"
-    res = await registered_superuser_client.get(f"/auth/users/{user_id}/")
-    assert res.status_code == 200
-    profile_id = res.json()["profile_id"]
-    res = await registered_superuser_client.patch(
-        f"/admin/profile/{profile_id}/",
-        json=dict(username=NEW_USERNAME),
+    raise NotImplementedError(
+        "Here we should test that the `profile.username`-specific folder is "
+        "in the allowed-viewer-path response."
     )
-    assert res.status_code == 200
+    # NEW_USERNAME = "xyz"
+    # res = await registered_superuser_client.get(f"/auth/users/{user_id}/")
+    # assert res.status_code == 200
+    # profile_id = res.json()["profile_id"]
+    # debug(profile_id)
+    # res = await registered_superuser_client.get(...)
+    # debug(res.json()); return
+    # assert res.status_code == 200
+    # new_profile = res.json()
+    # new_profile.pop("id")
+    # new_profile.pop("resource_id")
+    # new_profile["username"] = NEW_USERNAME
+    # res = await registered_superuser_client.put(
+    #     f"/admin/v2/profile/{profile_id}/",
+    #     json=new_profile,
+    # )
+    # assert res.status_code == 200
 
-    # Test that user dir is added when using "users-folders" scheme
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert set(res.json()) == {
-        "/path/to/project_dir",
-        f"/path/to/base/{NEW_USERNAME}",
-    }
+    # # Test that user dir is added when using "users-folders" scheme
+    # res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    # assert res.status_code == 200
+    # assert set(res.json()) == {
+    #     "/path/to/project_dir",
+    #     f"/path/to/base/{NEW_USERNAME}",
+    # }
 
     # Verify that scheme "none" returns an empty list
     override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
