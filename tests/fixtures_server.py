@@ -17,7 +17,6 @@ from sqlmodel import select
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import EmailSettings
@@ -206,7 +205,12 @@ async def registered_client(
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "test@test.com"
     PWD = "12345"
-    await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
+    await _create_first_user(
+        email=EMAIL,
+        password=PWD,
+        is_superuser=False,
+        project_dir="/fake/placeholder",
+    )
 
     async with (
         AsyncClient(
@@ -230,7 +234,12 @@ async def registered_superuser_client(
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "some-admin@example.org"
     PWD = "some-admin-password"
-    await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
+    await _create_first_user(
+        email=EMAIL,
+        password=PWD,
+        is_superuser=True,
+        project_dir="/fake/placeholder",
+    )
     async with (
         AsyncClient(
             base_url="http://test", transport=ASGITransport(app=app)
@@ -262,7 +271,6 @@ async def MockCurrentUser(app, db, default_user_group):
     from fractal_server.app.routes.auth import current_active_verified_user
     from fractal_server.app.routes.auth import current_active_user
     from fractal_server.app.routes.auth import current_active_superuser
-    from fractal_server.app.models import UserSettings
 
     def _random_email():
         return f"{random.randint(0, 100000000)}@example.org"
@@ -274,7 +282,6 @@ async def MockCurrentUser(app, db, default_user_group):
         """
 
         user_kwargs: dict[str, Any] | None = None
-        user_settings_dict: dict[str, Any] | None = None
         email: str | None = field(default_factory=_random_email)
         previous_dependencies: dict = field(default_factory=dict)
 
@@ -296,16 +303,11 @@ async def MockCurrentUser(app, db, default_user_group):
                 user_attributes = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
+                    project_dir="/fake",
                 )
                 if self.user_kwargs is not None:
                     user_attributes.update(self.user_kwargs)
                 self.user = UserOAuth(**user_attributes)
-
-                # Create new user_settings object and associate it to user
-                user_settings_dict = dict(slurm_user="test01")
-                user_settings_dict.update(self.user_settings_dict or {})
-                user_settings = UserSettings(**user_settings_dict)
-                self.user.settings = user_settings
 
                 try:
                     db.add(self.user)
@@ -326,7 +328,6 @@ async def MockCurrentUser(app, db, default_user_group):
                 await db.commit()
                 # Removing objects from test db session, so that we can operate
                 # on them from other sessions
-                db.expunge(user_settings)
                 db.expunge(self.user)
 
             # Find out which dependencies should be overridden, and store their
@@ -377,8 +378,6 @@ async def first_user(db: AsyncSession, default_user_group: UserGroup):
             is_active=True,
             is_verified=True,
         )
-        user_settings = UserSettings()
-        user.settings = user_settings
         db.add(user)
         await db.commit()
         db.expunge(user)

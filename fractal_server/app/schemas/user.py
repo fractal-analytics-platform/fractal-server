@@ -1,9 +1,15 @@
+from typing import Annotated
+
 from fastapi_users import schemas
+from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
 
+from fractal_server.string_tools import validate_cmd
+from fractal_server.types import AbsolutePathStr
+from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import ListUniqueNonNegativeInt
 from fractal_server.types import NonEmptyStr
 
@@ -37,6 +43,8 @@ class UserRead(schemas.BaseUser[int]):
     group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
     profile_id: int | None = None
+    project_dir: str
+    slurm_accounts: list[str]
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -50,6 +58,8 @@ class UserUpdate(schemas.BaseUserUpdate):
         is_superuser:
         is_verified:
         profile_id:
+        project_dir:
+        slurm_accounts:
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -59,6 +69,10 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_superuser: bool = None
     is_verified: bool = None
     profile_id: int | None = None
+    project_dir: Annotated[
+        AbsolutePathStr, AfterValidator(validate_cmd)
+    ] = None
+    slurm_accounts: ListUniqueNonEmptyString | None = None
 
 
 class UserUpdateStrict(BaseModel):
@@ -66,9 +80,11 @@ class UserUpdateStrict(BaseModel):
     Schema for `User` self-editing.
 
     Attributes:
+        slurm_accounts:
     """
 
     model_config = ConfigDict(extra="forbid")
+    slurm_accounts: ListUniqueNonEmptyString | None = None
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -80,6 +96,8 @@ class UserCreate(schemas.BaseUserCreate):
     """
 
     profile_id: int | None = None
+    project_dir: NonEmptyStr
+    slurm_accounts: list[str] = Field(default=list)
 
 
 class UserUpdateGroups(BaseModel):

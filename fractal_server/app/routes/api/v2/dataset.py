@@ -45,15 +45,6 @@ async def create_dataset(
     )
 
     if dataset.zarr_dir is None:
-        if user.settings.project_dir is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Both 'dataset.zarr_dir' and 'user.settings.project_dir' "
-                    "are null"
-                ),
-            )
-
         db_dataset = DatasetV2(
             project_id=project_id,
             zarr_dir="__PLACEHOLDER__",
@@ -63,7 +54,7 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
         path = (
-            f"{user.settings.project_dir}/fractal/"
+            f"{user.project_dir}/fractal/"
             f"{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )

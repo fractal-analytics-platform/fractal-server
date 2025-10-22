@@ -24,9 +24,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
 from fractal_server.app.routes.auth import current_active_verified_user
-from fractal_server.app.routes.aux.validate_user_settings import (
-    validate_user_settings,
-)
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
@@ -129,10 +126,7 @@ async def apply_workflow(
         user=user,
         db=db,
     )
-    # Validate user settings
-    user_settings = await validate_user_settings(
-        user=user, backend=resource.type, db=db
-    )
+
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
         select(JobV2)
@@ -150,7 +144,7 @@ async def apply_workflow(
         )
 
     if job_create.slurm_account is not None:
-        if job_create.slurm_account not in user_settings.slurm_accounts:
+        if job_create.slurm_account not in user.slurm_accounts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
@@ -159,8 +153,8 @@ async def apply_workflow(
                 ),
             )
     else:
-        if len(user_settings.slurm_accounts) > 0:
-            job_create.slurm_account = user_settings.slurm_accounts[0]
+        if len(user.slurm_accounts) > 0:
+            job_create.slurm_account = user.slurm_accounts[0]
 
     # User appropriate FractalSSH object
     if resource.type == ResourceType.SLURM_SSH:
@@ -232,8 +226,8 @@ async def apply_workflow(
             cache_dir = None
         case ResourceType.SLURM_SUDO:
             cache_dir = (
-                Path(user_settings.project_dir) / ".fractal_cache"
-                if user_settings.project_dir is not None
+                Path(user.project_dir) / ".fractal_cache"
+                if user.project_dir is not None
                 else None
             )
             WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
@@ -248,9 +242,6 @@ async def apply_workflow(
     job.working_dir_user = WORKFLOW_DIR_REMOTE.as_posix()
     await db.merge(job)
     await db.commit()
-
-    # Expunge user settings from db, to use in background task
-    db.expunge(user_settings)
 
     background_tasks.add_task(
         submit_workflow,

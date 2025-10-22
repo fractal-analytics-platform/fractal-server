@@ -15,17 +15,11 @@ from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.auth import current_active_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
-from fractal_server.app.routes.aux.validate_user_settings import (
-    verify_user_has_settings,
-)
 from fractal_server.app.schemas import UserProfileInfo
-from fractal_server.app.schemas import UserSettingsReadStrict
-from fractal_server.app.schemas import UserSettingsUpdateStrict
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateStrict
@@ -83,41 +77,6 @@ async def patch_current_user(
 
 
 @router_current_user.get(
-    "/current-user/settings/", response_model=UserSettingsReadStrict
-)
-async def get_current_user_settings(
-    current_user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> UserSettingsReadStrict:
-    verify_user_has_settings(current_user)
-    user_settings = await db.get(UserSettings, current_user.user_settings_id)
-    return user_settings
-
-
-@router_current_user.patch(
-    "/current-user/settings/", response_model=UserSettingsReadStrict
-)
-async def patch_current_user_settings(
-    settings_update: UserSettingsUpdateStrict,
-    current_user: UserOAuth = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> UserSettingsReadStrict:
-    verify_user_has_settings(current_user)
-    current_user_settings = await db.get(
-        UserSettings, current_user.user_settings_id
-    )
-
-    for k, v in settings_update.model_dump(exclude_unset=True).items():
-        setattr(current_user_settings, k, v)
-
-    db.add(current_user_settings)
-    await db.commit()
-    await db.refresh(current_user_settings)
-
-    return current_user_settings
-
-
-@router_current_user.get(
     "/current-user/profile-info/",
     response_model=UserProfileInfo,
 )
@@ -167,27 +126,20 @@ async def get_current_user_allowed_viewer_paths(
 
     authorized_paths = []
 
-    # Respond with 422 error if user has no settings
-    verify_user_has_settings(current_user)
-
-    # Load current user settings
-    current_user_settings = await db.get(
-        UserSettings, current_user.user_settings_id
-    )
-    # If project_dir is set, append it to the list of authorized paths
-    if current_user_settings.project_dir is not None:
-        authorized_paths.append(current_user_settings.project_dir)
+    # Append `project_dir` it to the list of authorized paths
+    authorized_paths.append(current_user.project_dir)
 
     # If auth scheme is "users-folders" and `slurm_user` is set,
     # build and append the user folder
+    # FIXME: Use enums rather than hard-coded strings
     if (
         settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders"
-        and current_user_settings.slurm_user is not None
+        and current_user.profile_id is not None
     ):
-        base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
-        user_folder = os.path.join(
-            base_folder, current_user_settings.slurm_user
-        )
+        profile = await db.get(Profile, current_user.profile_id)
+        if profile.username:
+            base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
+            user_folder = os.path.join(base_folder, profile.username)
         authorized_paths.append(user_folder)
 
     if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "viewer-paths":
@@ -207,7 +159,6 @@ async def get_current_user_allowed_viewer_paths(
             for _viewer_paths in viewer_paths_nested
             for path in _viewer_paths
         }
-
         authorized_paths.extend(all_viewer_paths_set)
 
     return authorized_paths

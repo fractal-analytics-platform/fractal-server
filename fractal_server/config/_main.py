@@ -2,6 +2,7 @@ import logging
 from typing import Literal
 from typing import TypeVar
 
+from pydantic import HttpUrl
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -119,3 +120,8 @@ class Settings(BaseSettings):
                     "FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "
                     "users-folders"
                 )
+
+    FRACTAL_HELP_URL: HttpUrl | None = None
+    """
+    The URL of an instance-specific Fractal help page.
+    """

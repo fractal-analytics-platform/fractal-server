@@ -18,11 +18,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
-from fractal_server.app.schemas.user_settings import UserSettingsUpdate
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.logger import set_logger
 
@@ -157,31 +155,6 @@ async def delete_single_group(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router_group.patch("/group/{group_id}/user-settings/", status_code=200)
-async def patch_user_settings_bulk(
-    group_id: int,
-    settings_update: UserSettingsUpdate,
-    superuser: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-):
-    await _usergroup_or_404(group_id, db)
-    res = await db.execute(
-        select(UserSettings)
-        .join(UserOAuth)
-        .where(LinkUserGroup.user_id == UserOAuth.id)
-        .where(LinkUserGroup.group_id == group_id)
-    )
-    settings_list = res.scalars().all()
-    update = settings_update.model_dump(exclude_unset=True)
-    for settings in settings_list:
-        for k, v in update.items():
-            setattr(settings, k, v)
-        db.add(settings)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_200_OK)
 
 
 @router_group.post("/group/{group_id}/add-user/{user_id}/", status_code=200)

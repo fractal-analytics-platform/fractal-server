@@ -7,9 +7,14 @@ from cryptography.fernet import Fernet
 from fractal_server.config import PublicEmailSettings
 
 
-def mail_new_oauth_signup(msg: str, email_settings: PublicEmailSettings):
+def send_fractal_email(
+    *,
+    subject: str,
+    msg: str,
+    email_settings: PublicEmailSettings,
+):
     """
-    Send an email using the specified settings to notify a new OAuth signup.
+    Send an email using the specified settings.
     """
 
     mail_msg = EmailMessage()
@@ -25,7 +30,7 @@ def mail_new_oauth_signup(msg: str, email_settings: PublicEmailSettings):
     )
     mail_msg[
         "Subject"
-    ] = f"[Fractal, {email_settings.instance_name}] New OAuth signup"
+    ] = f"[Fractal, {email_settings.instance_name}] {subject}"
 
     with smtplib.SMTP(
         email_settings.smtp_server, email_settings.port

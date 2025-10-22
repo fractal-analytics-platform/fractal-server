@@ -5,10 +5,6 @@ from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
-from fractal_server.app.schemas.user_settings import UserSettingsRead
-from fractal_server.app.schemas.user_settings import UserSettingsReadStrict
-from fractal_server.app.schemas.user_settings import UserSettingsUpdate
-from fractal_server.app.schemas.user_settings import UserSettingsUpdateStrict
 from fractal_server.types.validators import val_absolute_path
 
 
@@ -83,54 +79,6 @@ def test_user_group_read():
         viewer_paths=[],
     )
     assert g.user_ids == [1, 2]
-
-
-def test_user_settings_read():
-    data = dict(
-        id=1,
-        ssh_host="MY_HOST",
-        ssh_username="MY_SSH_USERNAME",
-        slurm_accounts=[],
-    )
-    read = UserSettingsRead(**data)
-    assert read.model_dump().get("ssh_host") == "MY_HOST"
-    read_strict = UserSettingsReadStrict(**data)
-    assert read_strict.model_dump().get("ssh_host") is None
-    assert read_strict.model_dump().get("ssh_username") == "MY_SSH_USERNAME"
-
-
-def test_user_settings_update():
-    update_request_body = UserSettingsUpdate(ssh_host="NEW_HOST")
-    assert update_request_body.slurm_accounts is None
-
-    update_request_body = UserSettingsUpdate(
-        ssh_host="NEW_HOST", slurm_accounts=None
-    )
-    assert update_request_body.slurm_accounts is None
-
-    with pytest.raises(ValidationError):
-        UserSettingsUpdate(slurm_accounts=[""])
-    with pytest.raises(ValidationError):
-        UserSettingsUpdate(slurm_accounts=["a", "a"])
-    with pytest.raises(ValidationError):
-        UserSettingsUpdate(slurm_accounts=["a", "a "])
-    with pytest.raises(ValidationError):
-        UserSettingsUpdateStrict(ssh_host="NEW_HOST")
-    with pytest.raises(ValidationError):
-        UserSettingsUpdateStrict(slurm_user="NEW_SLURM_USER")
-
-    # Verify that a series of attributes can be made None
-    nullable_attributes = [
-        "ssh_host",
-        "ssh_username",
-        "ssh_private_key_path",
-        "slurm_user",
-    ]
-    for key in nullable_attributes:
-        update_request_body = UserSettingsUpdate(**{key: None})
-        assert getattr(update_request_body, key) is None
-        assert key in update_request_body.model_dump(exclude_unset=True)
-        assert key not in update_request_body.model_dump(exclude_none=True)
 
 
 def test_unit_val_absolute_path():

@@ -1,27 +1,17 @@
-# This is based on fastapi_users_db_sqlmodel
-# <https://github.com/fastapi-users/fastapi-users-db-sqlmodel>
-# Original Copyright
-# Copyright 2022 François Voron
-# License: MIT
-#
-# Modified by:
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
 from datetime import datetime
 from typing import Optional
 
 from pydantic import ConfigDict
 from pydantic import EmailStr
 from sqlalchemy import Column
+from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from .user_settings import UserSettings
 from fractal_server.utils import get_timestamp
 
 
@@ -66,6 +56,8 @@ class UserOAuth(SQLModel, table=True):
     fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
     released under MIT licence.
 
+    FIXME
+
     Attributes:
         id:
         email:
@@ -74,17 +66,19 @@ class UserOAuth(SQLModel, table=True):
         is_superuser:
         is_verified:
         oauth_accounts:
-        user_settings_id:
         profile_id:
         settings:
     """
+
+    model_config = ConfigDict(from_attributes=True)
 
     __tablename__ = "user_oauth"
 
     id: int | None = Field(default=None, primary_key=True)
 
     email: EmailStr = Field(
-        sa_column_kwargs={"unique": True, "index": True}, nullable=False
+        sa_column_kwargs={"unique": True, "index": True},
+        nullable=False,
     )
     hashed_password: str
     is_active: bool = Field(default=True, nullable=False)
@@ -96,18 +90,16 @@ class UserOAuth(SQLModel, table=True):
         sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
     )
 
-    user_settings_id: int | None = Field(
-        foreign_key="user_settings.id", default=None
-    )
     profile_id: int | None = Field(
         foreign_key="profile.id",
         default=None,
         ondelete="SET NULL",
     )
-    settings: UserSettings | None = Relationship(
-        sa_relationship_kwargs=dict(lazy="selectin", cascade="all, delete")
+
+    project_dir: str
+    slurm_accounts: list[str] = Field(
+        sa_column=Column(ARRAY(String)), default_factory=list
     )
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserGroup(SQLModel, table=True):

@@ -443,66 +443,6 @@ async def test_oauth_accounts_list(
         assert len(res.json()["oauth_accounts"]) == 1
 
 
-async def test_get_and_patch_user_settings(registered_superuser_client):
-    # Register new user
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")
-    )
-    assert res.status_code == 201
-    user_id = res.json()["id"]
-
-    # Get user settings
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{user_id}/settings/",
-    )
-    assert res.status_code == 200
-    for k, v in res.json().items():
-        if k == "id":
-            pass
-        elif k == "slurm_accounts":
-            assert v == []
-        else:
-            assert v is None
-
-    # Path user settings
-    patch = dict(
-        slurm_accounts=["foo", "bar"],
-    )
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/settings/", json=patch
-    )
-    debug(res.json())
-    assert res.status_code == 200
-
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/settings/", json=dict(slurm_accounts=["  "])
-    )
-    debug(res.json())
-    assert res.status_code == 422
-
-    # Assert patch was successful
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{user_id}/settings/",
-    )
-    for k, v in res.json().items():
-        if k in patch:
-            assert v == patch[k]
-        elif k == "id":
-            pass
-        else:
-            assert v is None
-
-    # Get non-existing-user settings
-    res = await registered_superuser_client.get(f"{PREFIX}/users/42/settings/")
-    assert res.status_code == 404
-
-    # Patch non-existing-user settings
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/42/settings/", json=dict()
-    )
-    assert res.status_code == 404
-
-
 async def test_get_profile_info(
     client,
     MockCurrentUser,

@@ -166,28 +166,6 @@ async def test_patch_current_user_password(registered_client, client):
     assert res.status_code == 200
 
 
-async def test_get_and_patch_current_user_settings(registered_client):
-    res = await registered_client.get(f"{PREFIX}settings/")
-    assert res.status_code == 200
-    for k, v in res.json().items():
-        if k == "slurm_accounts":
-            assert v == []
-        else:
-            assert v is None
-
-    patch = dict(slurm_accounts=["foo", "bar"])
-    res = await registered_client.patch(f"{PREFIX}settings/", json=patch)
-    assert res.status_code == 200
-
-    # Assert patch was successful
-    res = await registered_client.get(f"{PREFIX}settings/")
-    for k, v in res.json().items():
-        if k in patch:
-            assert v == patch[k]
-        else:
-            assert v is None
-
-
 async def test_get_current_user_allowed_viewer_paths(
     registered_client, registered_superuser_client, override_settings_factory
 ):
@@ -237,9 +215,9 @@ async def test_get_current_user_allowed_viewer_paths(
     )
     assert res.status_code == 200
 
-    # Update user settings defining project_dir
+    # Update user, defining project_dir
     res = await registered_superuser_client.patch(
-        f"/auth/users/{user_id}/settings/",
+        f"/auth/users/{user_id}/",
         json=dict(project_dir="/path/to/project_dir"),
     )
     assert res.status_code == 200
@@ -261,17 +239,24 @@ async def test_get_current_user_allowed_viewer_paths(
     assert res.status_code == 200
     assert set(res.json()) == {"/path/to/project_dir"}
 
-    # Update user settings adding the slurm_user
+    # Update user profile adding the slurm_user
+    NEW_USERNAME = "xyz"
+    res = await registered_superuser_client.get(f"/auth/users/{user_id}/")
+    assert res.status_code == 200
+    profile_id = res.json()["profile_id"]
     res = await registered_superuser_client.patch(
-        f"/auth/users/{user_id}/settings/",
-        json=dict(project_dir="/path/to/project_dir", slurm_user="foo"),
+        f"/admin/profile/{profile_id}/",
+        json=dict(username=NEW_USERNAME),
     )
     assert res.status_code == 200
 
     # Test that user dir is added when using "users-folders" scheme
     res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
     assert res.status_code == 200
-    assert set(res.json()) == {"/path/to/project_dir", "/path/to/base/foo"}
+    assert set(res.json()) == {
+        "/path/to/project_dir",
+        f"/path/to/base/{NEW_USERNAME}",
+    }
 
     # Verify that scheme "none" returns an empty list
     override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")

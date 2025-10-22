@@ -1,4 +1,5 @@
 from typing import Literal
+from typing import Self
 
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
@@ -93,7 +94,7 @@ class EmailSettings(BaseSettings):
     """
 
     @model_validator(mode="after")
-    def validate_email_settings(self):
+    def validate_email_settings(self: Self) -> Self:
         """
         Set `self.public`.
         """
