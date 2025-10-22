@@ -169,7 +169,10 @@ async def test_patch_current_user_password(registered_client, client):
 
 
 async def test_get_current_user_allowed_viewer_paths(
-    registered_client, registered_superuser_client, override_settings_factory
+    registered_client,
+    registered_superuser_client,
+    override_settings_factory,
+    slurm_sudo_resource_profile_db,
 ):
     # Start test with "viewer-paths" auth scheme
     override_settings_factory(
@@ -242,35 +245,22 @@ async def test_get_current_user_allowed_viewer_paths(
     assert set(res.json()) == {"/path/to/project_dir"}
 
     # Update user profile adding the slurm_user
-    raise NotImplementedError(
-        "Here we should test that the `profile.username`-specific folder is "
-        "in the allowed-viewer-path response."
+    resource, profile = slurm_sudo_resource_profile_db
+    res = await registered_superuser_client.patch(
+        f"/auth/users/{user_id}/",
+        json=dict(
+            profile_id=profile.id,
+        ),
     )
-    # NEW_USERNAME = "xyz"
-    # res = await registered_superuser_client.get(f"/auth/users/{user_id}/")
-    # assert res.status_code == 200
-    # profile_id = res.json()["profile_id"]
-    # debug(profile_id)
-    # res = await registered_superuser_client.get(...)
-    # debug(res.json()); return
-    # assert res.status_code == 200
-    # new_profile = res.json()
-    # new_profile.pop("id")
-    # new_profile.pop("resource_id")
-    # new_profile["username"] = NEW_USERNAME
-    # res = await registered_superuser_client.put(
-    #     f"/admin/v2/profile/{profile_id}/",
-    #     json=new_profile,
-    # )
-    # assert res.status_code == 200
+    assert res.status_code == 200
 
     # # Test that user dir is added when using "users-folders" scheme
-    # res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    # assert res.status_code == 200
-    # assert set(res.json()) == {
-    #     "/path/to/project_dir",
-    #     f"/path/to/base/{NEW_USERNAME}",
-    # }
+    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
+    assert res.status_code == 200
+    assert set(res.json()) == {
+        "/path/to/project_dir",
+        f"/path/to/base/{profile.username}",
+    }
 
     # Verify that scheme "none" returns an empty list
     override_settings_factory(FRACTAL_VIEWER_AUTHORIZATION_SCHEME="none")
