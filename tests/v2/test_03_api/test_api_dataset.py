@@ -207,13 +207,6 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
         )
         assert res.status_code == 201
 
-    async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName2")
-        )
-        assert res.status_code == 422
-
 
 async def test_delete_dataset(
     client, MockCurrentUser, project_factory_v2, dataset_factory_v2
