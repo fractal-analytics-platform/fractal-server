@@ -47,6 +47,11 @@ class UserRead(schemas.BaseUser[int]):
     slurm_accounts: list[str]
 
 
+def _validate_cmd(value: str) -> str:
+    validate_cmd(value)
+    return value
+
+
 class UserUpdate(schemas.BaseUserUpdate):
     """
     Schema for `User` update.
@@ -70,8 +75,8 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_verified: bool = None
     profile_id: int | None = None
     project_dir: Annotated[
-        AbsolutePathStr, AfterValidator(validate_cmd)
-    ] = None
+        AbsolutePathStr, AfterValidator(_validate_cmd)
+    ] | None = None
     slurm_accounts: ListUniqueNonEmptyString | None = None
 
 
@@ -96,7 +101,7 @@ class UserCreate(schemas.BaseUserCreate):
     """
 
     profile_id: int | None = None
-    project_dir: NonEmptyStr
+    project_dir: Annotated[AbsolutePathStr, AfterValidator(_validate_cmd)]
     slurm_accounts: list[str] = Field(default=list)
 
 
