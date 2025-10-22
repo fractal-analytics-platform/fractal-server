@@ -1,4 +1,3 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
@@ -107,65 +106,10 @@ async def test_patch_current_user_no_extra(registered_client):
 
 async def test_patch_current_user_password_fails(registered_client, client):
     """
-    This test exists for the same reason that test_patch_current_user_password
-    is skipped.
+    Users cannot edit their own password.
     """
     res = await registered_client.patch(PREFIX, json={"password": "something"})
     assert res.status_code == 422
-
-
-@pytest.mark.skip(reason="Users cannot edit their own password for the moment")
-async def test_patch_current_user_password(registered_client, client):
-    """
-    Test several scenarios for updating `password` for the current user.
-    """
-    res = await registered_client.get(PREFIX)
-    user_email = res.json()["email"]
-
-    # Fail due to null password
-    res = await registered_client.patch(PREFIX, json={"password": None})
-    assert res.status_code == 422
-
-    # Fail due to empty-string password
-    res = await registered_client.patch(PREFIX, json={"password": ""})
-    assert res.status_code == 422
-
-    # Fail due to invalid password (too short)
-    res = await registered_client.patch(PREFIX, json={"password": "abc"})
-    assert res.status_code == 400
-    assert "too short" in res.json()["detail"]["reason"]
-
-    # Fail due to invalid password (too long)
-    res = await registered_client.patch(PREFIX, json={"password": "x" * 101})
-    assert res.status_code == 400
-    assert "too long" in res.json()["detail"]["reason"]
-
-    # Successful password update
-    NEW_PASSWORD = "my-new-password"
-    res = await registered_client.patch(
-        PREFIX, json={"password": NEW_PASSWORD}
-    )
-    assert res.status_code == 200
-
-    # Check that old password is not valid any more
-    res = await client.post(
-        "auth/token/login/",
-        data=dict(
-            username=user_email,
-            password="12345",  # default password of registered_client
-        ),
-    )
-    assert res.status_code == 400
-
-    # Check that new password is valid
-    res = await client.post(
-        "auth/token/login/",
-        data=dict(
-            username=user_email,
-            password=NEW_PASSWORD,
-        ),
-    )
-    assert res.status_code == 200
 
 
 async def test_get_current_user_allowed_viewer_paths(
