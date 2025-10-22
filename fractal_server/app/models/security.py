@@ -56,8 +56,6 @@ class UserOAuth(SQLModel, table=True):
     fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
     released under MIT licence.
 
-    FIXME
-
     Attributes:
         id:
         email:
@@ -67,7 +65,8 @@ class UserOAuth(SQLModel, table=True):
         is_verified:
         oauth_accounts:
         profile_id:
-        settings:
+        project_dir:
+        slurm_accounts:
     """
 
     model_config = ConfigDict(from_attributes=True)
