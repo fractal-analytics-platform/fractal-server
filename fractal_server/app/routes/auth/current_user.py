@@ -26,6 +26,7 @@ from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
 from fractal_server.config import get_settings
+from fractal_server.config import ViewerAuthScheme
 from fractal_server.syringe import Inject
 
 router_current_user = APIRouter()
@@ -121,19 +122,19 @@ async def get_current_user_allowed_viewer_paths(
 
     settings = Inject(get_settings)
 
-    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "none":
-        return []
-
     authorized_paths = []
 
-    # Append `project_dir` it to the list of authorized paths
+    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == ViewerAuthScheme.NONE:
+        return authorized_paths
+
+    # Append `project_dir` to the list of authorized paths
     authorized_paths.append(current_user.project_dir)
 
     # If auth scheme is "users-folders" and `slurm_user` is set,
     # build and append the user folder
-    # FIXME: Use enums rather than hard-coded strings
     if (
-        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "users-folders"
+        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME
+        == ViewerAuthScheme.USERS_FOLDERS
         and current_user.profile_id is not None
     ):
         profile = await db.get(Profile, current_user.profile_id)
@@ -142,7 +143,10 @@ async def get_current_user_allowed_viewer_paths(
             user_folder = os.path.join(base_folder, profile.username)
             authorized_paths.append(user_folder)
 
-    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "viewer-paths":
+    if (
+        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME
+        == ViewerAuthScheme.VIEWER_PATHS
+    ):
         # Returns the union of `viewer_paths` for all user's groups
         cmd = (
             select(UserGroup.viewer_paths)

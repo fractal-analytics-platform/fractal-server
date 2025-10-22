@@ -136,7 +136,7 @@ class SlurmConfig(BaseModel):
 
     def to_sbatch_preamble(
         self,
-        remote_export_dir: str | None = None,
+        remote_export_dir: str,
     ) -> list[str]:
         """
         Compile `SlurmConfig` object into the preamble of a SLURM submission
@@ -192,10 +192,6 @@ class SlurmConfig(BaseModel):
                 lines.append(line)
 
         if self.user_local_exports:
-            if remote_export_dir is None:
-                raise ValueError(
-                    f"remote_export_dir=None but {self.user_local_exports=}"
-                )
             for key, value in self.user_local_exports.items():
                 tmp_value = str(Path(remote_export_dir) / value)
                 lines.append(f"export {key}={tmp_value}")

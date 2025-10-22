@@ -52,6 +52,7 @@ class ProcessWorkflowType(Protocol):
         user_id: int,
         resource: Resource,
         profile: Profile,
+        user_cache_dir: str,
     ) -> None:
         ...
 
@@ -85,7 +86,7 @@ def submit_workflow(
     job_id: int,
     user_id: int,
     worker_init: str | None = None,
-    user_cache_dir: str | None = None,  # FIXME: review this
+    user_cache_dir: str,
     resource: Resource,
     profile: Profile,
     fractal_ssh: FractalSSH | None = None,
@@ -110,8 +111,10 @@ def submit_workflow(
             Custom executor parameters that get parsed before the execution of
             each task.
         user_cache_dir:
-            Cache directory (namely a path where the user can write); for the
-            slurm backend, this is used as a base directory for FIXME.
+            Cache directory (namely a path where the user can write). For
+            `slurm_sudo` backend, this is both a base directory for
+            `job.working_dir_user`. For `slurm_sudo` and `slurm_ssh` backends,
+            this is used for `user_local_exports`.
         resource:
             Computational resource to be used for this job (e.g. a SLURM
             cluster).
@@ -224,22 +227,18 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
+        process_workflow: ProcessWorkflowType
         match resource.type:
             case ResourceType.LOCAL:
-                process_workflow: ProcessWorkflowType = local_process_workflow
+                process_workflow = local_process_workflow
                 backend_specific_kwargs = {}
             case ResourceType.SLURM_SUDO:
-                process_workflow: ProcessWorkflowType = (
-                    slurm_sudo_process_workflow
-                )
+                process_workflow = slurm_sudo_process_workflow
                 backend_specific_kwargs = dict(
                     slurm_account=job.slurm_account,
-                    user_cache_dir=user_cache_dir,
                 )
             case ResourceType.SLURM_SSH:
-                process_workflow: ProcessWorkflowType = (
-                    slurm_ssh_process_workflow
-                )
+                process_workflow = slurm_ssh_process_workflow
                 backend_specific_kwargs = dict(
                     fractal_ssh=fractal_ssh,
                     slurm_account=job.slurm_account,
@@ -260,6 +259,7 @@ def submit_workflow(
             job_type_filters=job.type_filters,
             resource=resource,
             profile=profile,
+            user_cache_dir=user_cache_dir,
             **backend_specific_kwargs,
         )
 
