@@ -137,10 +137,10 @@ async def get_current_user_allowed_viewer_paths(
         and current_user.profile_id is not None
     ):
         profile = await db.get(Profile, current_user.profile_id)
-        if profile.username:
+        if profile is not None and profile.username is not None:
             base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
             user_folder = os.path.join(base_folder, profile.username)
-        authorized_paths.append(user_folder)
+            authorized_paths.append(user_folder)
 
     if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == "viewer-paths":
         # Returns the union of `viewer_paths` for all user's groups
