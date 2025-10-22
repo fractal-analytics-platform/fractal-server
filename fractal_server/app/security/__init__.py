@@ -227,10 +227,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         is True, the OAuth account is associated to this user.
         Otherwise, the `UserNotExists` exception is raised.
 
-        If the user does not exist, FIXME
-        This is the branch where the `fractal-server` implementation deviates
+        If the user does not exist, send an email to the Fractal admins (if
+        configured) and respond with a 400 error status. NOTE: This is the
+        function branch where the `fractal-server` implementation deviates
         from the original `fastapi-users` one.
-
 
         :param oauth_name: Name of the OAuth client.
         :param access_token: Valid access token for the service provider.
