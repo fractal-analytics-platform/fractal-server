@@ -105,7 +105,7 @@ class UserOAuth(SQLModel, table=True):
         )
     )
     slurm_accounts: list[str] = Field(
-        sa_column=Column(ARRAY(String)), default_factory=list
+        sa_column=Column(ARRAY(String), server_default="[]"),
     )
 
 
