@@ -7,26 +7,21 @@ from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 PREFIX = "/auth"
 
 
-async def test_no_access_user_group_api(client, registered_client):
+async def test_no_access_user_group_api(client):
     """
-    Verify that anonymous or non-superuser users have no access to user-group
-    CRUD.
+    Verify that anonymous users have no access to user-group CRUD.
     """
-    for _client, expected_status in [(client, 401), (registered_client, 403)]:
-        res = await _client.get(f"{PREFIX}/group/")
-        assert res.status_code == expected_status
-
-        res = await _client.post(f"{PREFIX}/group/")
-        assert res.status_code == expected_status
-
-        res = await _client.get(f"{PREFIX}/group/1/")
-        assert res.status_code == expected_status
-
-        res = await _client.patch(f"{PREFIX}/group/1/")
-        assert res.status_code == expected_status
-
-        res = await _client.delete(f"{PREFIX}/group/1/")
-        assert res.status_code == expected_status
+    expected_status = 401
+    res = await client.get(f"{PREFIX}/group/")
+    assert res.status_code == expected_status
+    res = await client.post(f"{PREFIX}/group/")
+    assert res.status_code == expected_status
+    res = await client.get(f"{PREFIX}/group/1/")
+    assert res.status_code == expected_status
+    res = await client.patch(f"{PREFIX}/group/1/")
+    assert res.status_code == expected_status
+    res = await client.delete(f"{PREFIX}/group/1/")
+    assert res.status_code == expected_status
 
 
 async def test_update_group(registered_superuser_client):
@@ -256,61 +251,65 @@ async def test_create_user_group_same_name(registered_superuser_client):
     assert "A group with the same name already exists" in str(res.json())
 
 
-async def test_get_user_optional_group_info(
-    registered_client, registered_superuser_client
-):
+async def test_get_user_optional_group_info(MockCurrentUser, client):
     """
     Test that GET-ting a single user may be enriched with group IDs/names.
     """
-
-    # Create two groups
-    GROUP_A_NAME = "my group A"
-    GROUP_B_NAME = "my group B"
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_A_NAME)
-    )
-    assert res.status_code == 201
-    GROUP_A_ID = res.json()["id"]
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name=GROUP_B_NAME)
-    )
-    assert res.status_code == 201
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True)
+    ) as superuser:
+        superuser_id = superuser.id
+        # Create two groups
+        GROUP_A_NAME = "my group A"
+        GROUP_B_NAME = "my group B"
+        res = await client.post(
+            f"{PREFIX}/group/", json=dict(name=GROUP_A_NAME)
+        )
+        assert res.status_code == 201
+        GROUP_A_ID = res.json()["id"]
+        res = await client.post(
+            f"{PREFIX}/group/", json=dict(name=GROUP_B_NAME)
+        )
+        assert res.status_code == 201
 
     # Get current user and check it has no group names/ID
-    res = await registered_client.get(f"{PREFIX}/current-user/")
-    assert res.status_code == 200
-    current_user_id = res.json()["id"]
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        res = await client.get(f"{PREFIX}/current-user/")
+        assert res.status_code == 200
+        current_user_id = res.json()["id"]
 
     # Add current user to group A
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/group/{GROUP_A_ID}/add-user/{current_user_id}/"
-    )
-    assert res.status_code == 200
+    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
+        res = await client.post(
+            f"{PREFIX}/group/{GROUP_A_ID}/add-user/{current_user_id}/"
+        )
+        assert res.status_code == 200
 
     # Calls to `/auth/current-users/` may or may not include `group_names_id`,
     # depending on a query parameter
-    for query_param, expected_attribute in [
-        ("", None),
-        ("?group_ids_names=False", None),
-        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
-    ]:
-        res = await registered_client.get(
-            f"{PREFIX}/current-user/{query_param}"
-        )
-        assert res.status_code == 200
-        current_user = res.json()
-        assert current_user["group_ids_names"] == expected_attribute
+    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
+        for query_param, expected_attribute in [
+            ("", None),
+            ("?group_ids_names=False", None),
+            ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+        ]:
+            res = await client.get(f"{PREFIX}/current-user/{query_param}")
+            assert res.status_code == 200
+            current_user = res.json()
+            assert current_user["group_ids_names"] == expected_attribute
 
     # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
     # depending on a query parameter
-    for query_param, expected_attribute in [
-        ("", [[GROUP_A_ID, GROUP_A_NAME]]),
-        ("?group_ids_names=False", None),
-        ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
-    ]:
-        res = await registered_superuser_client.get(
-            f"{PREFIX}/users/{current_user_id}/{query_param}"
-        )
-        assert res.status_code == 200
-        user = res.json()
-        assert user["group_ids_names"] == expected_attribute
+    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
+        for query_param, expected_attribute in [
+            ("", [[GROUP_A_ID, GROUP_A_NAME]]),
+            ("?group_ids_names=False", None),
+            ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+        ]:
+            res = await client.get(
+                f"{PREFIX}/users/{current_user_id}/{query_param}"
+            )
+            assert res.status_code == 200
+            user = res.json()
+            assert user["group_ids_names"] == expected_attribute

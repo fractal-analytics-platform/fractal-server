@@ -1,7 +1,6 @@
 from devtools import debug
 
 from fractal_server.app.models.security import OAuthAccount
-from fractal_server.app.models.security import UserOAuth
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
@@ -370,21 +369,14 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-    u1 = UserOAuth(
-        email="user1@email.com",
-        hashed_password="abc1",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
-    )
-    u2 = UserOAuth(
-        email="user2@email.com",
-        hashed_password="abc2",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
-    )
-    db.add(u1)
-    db.add(u2)
-    await db.commit()
-    await db.refresh(u1)
-    await db.refresh(u2)
+    async with MockCurrentUser(
+        user_kwargs=dict(email="user1@email.org")
+    ) as u1:
+        u1_id = u1.id
+    async with MockCurrentUser(
+        user_kwargs=dict(email="user2@email.org")
+    ) as u2:
+        u2_id = u2.id
 
     oauth1 = OAuthAccount(
         user_id=u1.id,
@@ -394,14 +386,14 @@ async def test_oauth_accounts_list(
         access_token="aaa",
     )
     oauth2 = OAuthAccount(
-        user_id=u1.id,
+        user_id=u1_id,
         oauth_name="google",
         account_email="user1@gmail.com",
         account_id="222",
         access_token="bbb",
     )
     oauth3 = OAuthAccount(
-        user_id=u2.id,
+        user_id=u2_id,
         oauth_name="oidc",
         account_email="user2@uzh.com",
         account_id="333",
@@ -416,15 +408,15 @@ async def test_oauth_accounts_list(
     # test GET /auth/users/
     res = await registered_superuser_client.get(f"{PREFIX}/users/")
     for user in res.json():
-        if user["id"] == u1.id:
+        if user["id"] == u1_id:
             assert len(user["oauth_accounts"]) == 2
-        elif user["id"] == u2.id:
+        elif user["id"] == u2_id:
             assert len(user["oauth_accounts"]) == 1
         else:
             assert len(user["oauth_accounts"]) == 0
 
     # test GET /auth/users/{user_id}/
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{u1.id}/")
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u1_id}/")
     assert len(res.json()["oauth_accounts"]) == 2
     assert res.json()["group_ids_names"] is not None
     res = await registered_superuser_client.get(
@@ -432,24 +424,24 @@ async def test_oauth_accounts_list(
     )
     assert len(res.json()["oauth_accounts"]) == 2
     assert res.json()["group_ids_names"] is None
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u2_id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 
     # test PATCH /auth/users/{user_id}/
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{u1.id}/", json=dict(password="password")
+        f"{PREFIX}/users/{u1_id}/", json=dict(password="password")
     )
     assert len(res.json()["oauth_accounts"]) == 2
 
     # test GET /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u1.id)):
+    async with MockCurrentUser(user_kwargs=dict(id=u1_id)):
         res = await client.get(f"{PREFIX}/current-user/")
         assert len(res.json()["oauth_accounts"]) == 2
         res = await client.get(f"{PREFIX}/current-user/?group_names=true")
         assert len(res.json()["oauth_accounts"]) == 2
 
     # test PATCH /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u2.id)):
+    async with MockCurrentUser(user_kwargs=dict(id=u2_id)):
         res = await client.patch(f"{PREFIX}/current-user/", json=dict())
         assert len(res.json()["oauth_accounts"]) == 1
 
@@ -461,7 +453,7 @@ async def test_get_profile_info(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {

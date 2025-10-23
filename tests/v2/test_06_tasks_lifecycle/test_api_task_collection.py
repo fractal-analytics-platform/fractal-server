@@ -250,7 +250,7 @@ async def test_contact_an_admin_message(
     resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
     # default UserGroup (this is NOT ALLOWED using the API).
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as userA:
+    async with MockCurrentUser() as userA:
         for _ in range(2):
             db.add(
                 TaskGroupV2(

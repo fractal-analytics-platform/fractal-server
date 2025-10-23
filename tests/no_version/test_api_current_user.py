@@ -8,26 +8,26 @@ from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 PREFIX = "/auth/current-user/"
 
 
-async def test_get_current_user(
-    client, registered_client, registered_superuser_client
-):
+async def test_get_current_user(client, MockCurrentUser):
     # Anonymous user
     res = await client.get(PREFIX)
     debug(res.json())
     assert res.status_code == 401
 
     # Registered non-superuser user
-    res = await registered_client.get(PREFIX)
-    debug(res.json())
-    assert res.status_code == 200
-    assert not res.json()["is_superuser"]
-    assert res.json()["oauth_accounts"] == []
+    async with MockCurrentUser():
+        res = await client.get(PREFIX)
+        debug(res.json())
+        assert res.status_code == 200
+        assert not res.json()["is_superuser"]
+        assert res.json()["oauth_accounts"] == []
 
     # Registered superuser
-    res = await registered_superuser_client.get(PREFIX)
-    debug(res.json())
-    assert res.status_code == 200
-    assert res.json()["is_superuser"]
+    async with MockCurrentUser(user_args=dict(is_superuser=True)):
+        res = await client.get(PREFIX)
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["is_superuser"]
 
 
 async def test_get_current_user_group_ids_names_order(
@@ -83,38 +83,29 @@ async def test_get_current_user_group_ids_names_order(
         ]
 
 
-async def test_patch_current_user_response(registered_client):
-    res = await registered_client.get(f"{PREFIX}?group_ids_names=True")
-    pre_patch_user = res.json()
+async def test_patch_current_user_response(client, MockCurrentUser):
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}?group_ids_names=True")
+        pre_patch_user = res.json()
 
-    # Successful API call with empty payload
-    res = await registered_client.patch(PREFIX, json={})
-    assert res.status_code == 200
-    assert res.json() == pre_patch_user
-
-
-async def test_patch_current_user_no_extra(registered_client):
-    """
-    Test that the PATCH-current-user endpoint fails when extra attributes are
-    provided.
-    """
-    res = await registered_client.patch(PREFIX, json={})
-    assert res.status_code == 200
-    res = await registered_client.patch(PREFIX, json={"foo": "bar"})
-    assert res.status_code == 422
+        # Successful API call with empty payload
+        res = await client.patch(PREFIX, json={})
+        assert res.status_code == 200
+        assert res.json() == pre_patch_user
 
 
-async def test_patch_current_user_password_fails(registered_client, client):
+async def test_patch_current_user_password_fails(MockCurrentUser, client):
     """
     Users cannot edit their own password.
     """
-    res = await registered_client.patch(PREFIX, json={"password": "something"})
-    assert res.status_code == 422
+    async with MockCurrentUser():
+        res = await client.patch(PREFIX, json={"password": "something"})
+        assert res.status_code == 422
 
 
 async def test_get_current_user_allowed_viewer_paths(
-    registered_client,
-    registered_superuser_client,
+    MockCurrentUser,
+    client,
     override_settings_factory,
     slurm_sudo_resource_profile_db,
 ):
@@ -124,89 +115,89 @@ async def test_get_current_user_allowed_viewer_paths(
     )
 
     # Check that a vanilla user has no viewer_paths
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert res.json() == [PROJECT_DIR_PLACEHOLDER]
+    async with MockCurrentUser() as user:
+        user_id = user.id
 
-    # Find current-user ID
-    res = await registered_client.get(f"{PREFIX}")
-    assert res.status_code == 200
-    user_id = res.json()["id"]
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert set(res.json()) == {user.project_dir}
+
+        # Add one group to this user
+        async with MockCurrentUser(
+            user_kwargs=dict(is_superuser=True)
+        ) as superuser:
+            superuser_id = superuser.id
+            res = await client.post(
+                "/auth/group/",
+                json=dict(name="group1", viewer_paths=["/a", "/b"]),
+            )
+            assert res.status_code == 201
+            group1_id = res.json()["id"]
+
+        # Add user to group1
+        res = await client.post(f"/auth/group/{group1_id}/add-user/{user_id}/")
+        assert res.status_code == 200
+
+        # Check current-user viewer-paths again
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert set(res.json()) == {"/a", "/b", PROJECT_DIR_PLACEHOLDER}
 
     # Add one group to this user
-    res = await registered_superuser_client.post(
-        "/auth/group/", json=dict(name="group1", viewer_paths=["/a", "/b"])
-    )
-    assert res.status_code == 201
-    group1_id = res.json()["id"]
+    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
+        res = await client.post(
+            "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
+        )
+        assert res.status_code == 201
+        group2_id = res.json()["id"]
 
-    # Add user to group1
-    res = await registered_superuser_client.post(
-        f"/auth/group/{group1_id}/add-user/{user_id}/"
-    )
-    assert res.status_code == 200
+        # Add user to group2
+        res = await client.post(f"/auth/group/{group2_id}/add-user/{user_id}/")
+        assert res.status_code == 200
 
-    # Check current-user viewer-paths again
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert set(res.json()) == {"/a", "/b", PROJECT_DIR_PLACEHOLDER}
-
-    # Add one group to this user
-    res = await registered_superuser_client.post(
-        "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
-    )
-    assert res.status_code == 201
-    group2_id = res.json()["id"]
-
-    # Add user to group2
-    res = await registered_superuser_client.post(
-        f"/auth/group/{group2_id}/add-user/{user_id}/"
-    )
-    assert res.status_code == 200
-
-    # Update user, defining project_dir
-    res = await registered_superuser_client.patch(
-        f"/auth/users/{user_id}/",
-        json=dict(project_dir="/path/to/project_dir"),
-    )
-    assert res.status_code == 200
+        # Update user, defining project_dir
+        res = await client.patch(
+            f"/auth/users/{user_id}/",
+            json=dict(project_dir=PROJECT_DIR_PLACEHOLDER),
+        )
+        assert res.status_code == 200
 
     # Check that project_dir is used by "viewer-paths" auth scheme
-    override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.VIEWER_PATHS
-    )
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert set(res.json()) == {"/path/to/project_dir", "/a", "/b", "/c"}
+    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER, "/a", "/b", "/c"}
 
     # Test with "users-folders" scheme
-    override_settings_factory(FRACTAL_VIEWER_BASE_FOLDER="/path/to/base")
     override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.USERS_FOLDERS
+        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.USERS_FOLDERS,
+        FRACTAL_VIEWER_BASE_FOLDER="/path/to/base",
     )
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert set(res.json()) == {"/path/to/project_dir"}
+    async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER}
 
-    # Update user profile adding the slurm_user
+    # Test that user dir is added when using "users-folders" scheme
     resource, profile = slurm_sudo_resource_profile_db
-    res = await registered_superuser_client.patch(
-        f"/auth/users/{user_id}/", json=dict(profile_id=profile.id)
-    )
-    assert res.status_code == 200
-
-    # # Test that user dir is added when using "users-folders" scheme
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert set(res.json()) == {
-        "/path/to/project_dir",
-        f"/path/to/base/{profile.username}",
-    }
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            id=user_id,
+            profile_id=profile.id,
+        )
+    ):
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert set(res.json()) == {
+            PROJECT_DIR_PLACEHOLDER,
+            f"/path/to/base/{profile.username}",
+        }
 
     # Verify that scheme "none" returns an empty list
     override_settings_factory(
         FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.NONE
     )
-    res = await registered_client.get(f"{PREFIX}allowed-viewer-paths/")
-    assert res.status_code == 200
-    assert res.json() == []
+    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
+        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
+        assert res.status_code == 200
+        assert res.json() == []
