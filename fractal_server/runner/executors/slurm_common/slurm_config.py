@@ -86,7 +86,7 @@ class SlurmConfig(BaseModel):
     extra_lines: list[str] = Field(default_factory=list)
 
     # Variables that will be `export`ed in the SLURM submission script
-    user_local_exports: dict[str, str] = Field(default=dict)
+    user_local_exports: dict[str, str] = Field(default_factory=dict)
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: int | None = None
