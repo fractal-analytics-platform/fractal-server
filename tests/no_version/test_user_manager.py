@@ -10,7 +10,9 @@ from fractal_server.app.security import get_user_manager
 from fractal_server.config._email import PublicEmailSettings
 
 
-async def test_oauth_callback(override_email_settings_factory, db):
+async def test_oauth_callback(
+    override_settings_factory, override_email_settings_factory, db
+):
     override_email_settings_factory(
         public=PublicEmailSettings(
             sender="fractal@fractal.fractal",
@@ -27,6 +29,8 @@ async def test_oauth_callback(override_email_settings_factory, db):
             use_login=True,
         )
     )
+    HELP_PAGE = "https://example.org/fractal-help-page"
+    override_settings_factory(FRACTAL_HELP_URL=HELP_PAGE)
     user = UserOAuth(
         email="user1@example.org",
         hashed_password="xxx",
@@ -93,10 +97,11 @@ async def test_oauth_callback(override_email_settings_factory, db):
                     )
 
                 # Failure and 422
-                with pytest.raises(HTTPException):
+                with pytest.raises(HTTPException) as exc_info:
                     await um.oauth_callback(
                         oauth_name="x",
                         access_token="x",
                         account_id="x",
                         account_email="xxx@example.org",
                     )
+                assert HELP_PAGE in str(exc_info.value)
