@@ -59,13 +59,21 @@ current_superuser_act = fastapi_users.current_user(
     superuser=True,
 )
 
+current_user = fastapi_users.current_user()
+
 
 async def current_user_act_ver_prof(
-    user: UserOAuth = Depends(current_user_act_ver),
+    user: UserOAuth = Depends(current_user),
 ) -> UserOAuth:
-    if user.profile_id is None:
+    if any(
+        (
+            not user.is_active,
+            not user.is_verified,
+            user.profile_id is None,
+        )
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User has no computational profile.",
+            detail="Forbidden access.",
         )
     return user
