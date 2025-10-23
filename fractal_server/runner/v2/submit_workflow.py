@@ -85,10 +85,10 @@ def submit_workflow(
     dataset_id: int,
     job_id: int,
     user_id: int,
-    worker_init: str | None = None,
     user_cache_dir: str,
     resource: Resource,
     profile: Profile,
+    worker_init: str | None = None,
     fractal_ssh: FractalSSH | None = None,
 ) -> None:
     """
