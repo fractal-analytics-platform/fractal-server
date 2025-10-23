@@ -84,9 +84,9 @@ async def apply_workflow(
     res = await db.execute(
         select(Profile.resource_id).where(Profile.id == user.profile_id)
     )
-    user_resource = res.scalar_one()
+    user_resource_id = res.scalar_one()
 
-    if project.resource_id != user_resource:
+    if project.resource_id != user_resource_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Project's resource does not match with user's resource",
