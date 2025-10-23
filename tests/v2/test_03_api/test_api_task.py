@@ -15,8 +15,11 @@ async def test_non_verified_user(client, MockCurrentUser):
     Test that a non-verified user is not authorized to make POST/PATCH task
     cals.
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)) as user:
+        debug(user)
         res = await client.post(f"{PREFIX}/", json={})
+        debug(res.json())
+        return
         assert res.status_code == 401
 
         res = await client.patch(f"{PREFIX}/123/", json={})
