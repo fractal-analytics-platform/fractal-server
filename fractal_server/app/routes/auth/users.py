@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
 
-from . import current_active_superuser
+from . import current_superuser_act
 from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
@@ -39,7 +39,7 @@ logger = set_logger(__name__)
 async def get_user(
     user_id: int,
     group_ids_names: bool = True,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
@@ -53,7 +53,7 @@ async def get_user(
 async def patch_user(
     user_id: int,
     user_update: UserUpdate,
-    current_superuser: UserOAuth = Depends(current_active_superuser),
+    current_superuser: UserOAuth = Depends(current_superuser_act),
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -109,7 +109,7 @@ async def patch_user(
 @router_users.get("/users/", response_model=list[UserRead])
 async def list_users(
     profile_id: int | None = None,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -144,7 +144,7 @@ async def list_users(
 async def set_user_groups(
     user_id: int,
     user_update: UserUpdateGroups,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     # Preliminary check that all objects exist in the db

@@ -11,7 +11,7 @@ from ._aux_functions import _get_profile_or_404
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
 
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/{profile_id}/", response_model=ProfileRead, status_code=200)
 async def get_single_profile(
     profile_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
     """
@@ -35,7 +35,7 @@ async def get_single_profile(
 async def put_profile(
     profile_id: int,
     profile_update: ProfileCreate,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
     """
@@ -56,7 +56,7 @@ async def put_profile(
 @router.delete("/{profile_id}/", status_code=204)
 async def delete_profile(
     profile_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     """

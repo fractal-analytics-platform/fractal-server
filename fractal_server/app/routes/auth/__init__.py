@@ -54,8 +54,9 @@ current_user_act_ver = fastapi_users.current_user(
     active=True,
     verified=True,
 )
-current_active_superuser = fastapi_users.current_user(
-    active=True, superuser=True
+current_superuser_act = fastapi_users.current_user(
+    active=True,
+    superuser=True,
 )
 
 

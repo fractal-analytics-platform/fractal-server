@@ -13,7 +13,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import AccountingRecordSlurm
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
@@ -34,7 +34,7 @@ async def query_accounting(
     query: AccountingQuery,
     # Dependencies
     pagination: PaginationRequest = Depends(get_pagination_params),
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[AccountingRecordRead]:
     page = pagination.page
@@ -79,7 +79,7 @@ async def query_accounting(
 async def query_accounting_slurm(
     query: AccountingQuery,
     # dependencies
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     stm = select(AccountingRecordSlurm.slurm_job_ids)

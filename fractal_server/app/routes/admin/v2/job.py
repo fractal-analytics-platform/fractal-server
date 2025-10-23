@@ -16,7 +16,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -43,7 +43,7 @@ async def view_job(
     end_timestamp_min: AwareDatetime | None = None,
     end_timestamp_max: AwareDatetime | None = None,
     log: bool = True,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobReadV2]:
     """
@@ -111,7 +111,7 @@ async def view_job(
 async def view_single_job(
     job_id: int,
     show_tmp_logs: bool = False,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
     job = await db.get(JobV2, job_id)
@@ -136,7 +136,7 @@ async def view_single_job(
 async def update_job(
     job_update: JobUpdateV2,
     job_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2 | None:
     """
@@ -200,7 +200,7 @@ async def update_job(
 @router.get("/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -224,7 +224,7 @@ async def stop_job(
 @router.get("/{job_id}/download/", response_class=StreamingResponse)
 async def download_job_logs(
     job_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """

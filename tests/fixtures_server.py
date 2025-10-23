@@ -273,7 +273,7 @@ async def default_user_group(db) -> UserGroup:
 async def MockCurrentUser(app, db, default_user_group):
     from fractal_server.app.routes.auth import current_user_act_ver
     from fractal_server.app.routes.auth import current_user_act
-    from fractal_server.app.routes.auth import current_active_superuser
+    from fractal_server.app.routes.auth import current_superuser_act
 
     def _random_email():
         return f"{random.randint(0, 100000000)}@example.org"
@@ -341,10 +341,8 @@ async def MockCurrentUser(app, db, default_user_group):
                 ] = app.dependency_overrides.get(current_user_act, None)
             if self.user.is_active and self.user.is_superuser:
                 self.previous_dependencies[
-                    current_active_superuser
-                ] = app.dependency_overrides.get(
-                    current_active_superuser, None
-                )
+                    current_superuser_act
+                ] = app.dependency_overrides.get(current_superuser_act, None)
             if self.user.is_active and self.user.is_verified:
                 self.previous_dependencies[
                     current_user_act_ver
