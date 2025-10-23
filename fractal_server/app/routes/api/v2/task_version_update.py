@@ -23,7 +23,7 @@ from ._aux_functions_tasks import _get_task_group_or_404
 from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_user_act
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
@@ -75,7 +75,7 @@ class TaskVersionRead(BaseModel):
 async def get_workflow_version_update_candidates(
     project_id: int,
     workflow_id: int,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[list[TaskVersionRead]]:
     workflow = await _get_workflow_check_owner(
@@ -177,7 +177,7 @@ async def replace_workflowtask(
     workflow_task_id: int,
     task_id: int,
     replace: WorkflowTaskReplaceV2,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskReadV2:
     # Get objects from database

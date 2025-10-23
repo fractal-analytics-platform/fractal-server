@@ -33,7 +33,7 @@ from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.auth import current_user_act_ver
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
@@ -161,7 +161,7 @@ async def collect_tasks_pip(
     request_data: CollectionRequestData = Depends(parse_request_data),
     private: bool = False,
     user_group_id: int | None = None,
-    user: UserOAuth = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_user_act_ver),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """

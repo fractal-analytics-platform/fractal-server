@@ -23,7 +23,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
-from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.auth import current_user_act_ver
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
@@ -53,7 +53,7 @@ async def apply_workflow(
     job_create: JobCreateV2,
     background_tasks: BackgroundTasks,
     request: Request,
-    user: UserOAuth = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_user_act_ver),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2 | None:
     # Remove non-submitted V2 jobs from the app state when the list grows

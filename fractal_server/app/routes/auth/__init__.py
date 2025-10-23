@@ -46,9 +46,10 @@ fastapi_users = FastAPIUsers[UserOAuth, int](
     get_user_manager,
     [token_backend, cookie_backend],
 )
-current_active_user = fastapi_users.current_user(active=True)
-current_active_verified_user = fastapi_users.current_user(
-    active=True, verified=True
+current_user_act = fastapi_users.current_user(active=True)
+current_user_act_ver = fastapi_users.current_user(
+    active=True,
+    verified=True,
 )
 current_active_superuser = fastapi_users.current_user(
     active=True, superuser=True

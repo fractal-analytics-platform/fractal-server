@@ -20,14 +20,14 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_user_act
 
 router = APIRouter()
 
 
 @router.get("/project/", response_model=list[ProjectReadV2])
 async def get_list_project(
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectV2]:
     """
@@ -47,7 +47,7 @@ async def get_list_project(
 @router.post("/project/", response_model=ProjectReadV2, status_code=201)
 async def create_project(
     project: ProjectCreateV2,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectReadV2 | None:
     """
@@ -76,7 +76,7 @@ async def create_project(
 @router.get("/project/{project_id}/", response_model=ProjectReadV2)
 async def read_project(
     project_id: int,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectReadV2 | None:
     """
@@ -93,7 +93,7 @@ async def read_project(
 async def update_project(
     project_id: int,
     project_update: ProjectUpdateV2,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     project = await _get_project_check_owner(
@@ -118,7 +118,7 @@ async def update_project(
 @router.delete("/project/{project_id}/", status_code=204)
 async def delete_project(
     project_id: int,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

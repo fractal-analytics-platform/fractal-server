@@ -15,7 +15,7 @@ from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_user_act
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
@@ -35,7 +35,7 @@ router_current_user = APIRouter()
 @router_current_user.get("/current-user/", response_model=UserRead)
 async def get_current_user(
     group_ids_names: bool = False,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -51,7 +51,7 @@ async def get_current_user(
 @router_current_user.patch("/current-user/", response_model=UserRead)
 async def patch_current_user(
     user_update: UserUpdateStrict,
-    current_user: UserOAuth = Depends(current_active_user),
+    current_user: UserOAuth = Depends(current_user_act),
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -82,7 +82,7 @@ async def patch_current_user(
     response_model=UserProfileInfo,
 )
 async def get_current_user_profile_info(
-    current_user: UserOAuth = Depends(current_active_user),
+    current_user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserProfileInfo:
     stm = (
@@ -112,7 +112,7 @@ async def get_current_user_profile_info(
     "/current-user/allowed-viewer-paths/", response_model=list[str]
 )
 async def get_current_user_allowed_viewer_paths(
-    current_user: UserOAuth = Depends(current_active_user),
+    current_user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
