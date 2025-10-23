@@ -341,16 +341,6 @@ async def MockCurrentUser(app, db, default_user_group):
                         db.expunge(profile)
                     profile_id = profile.id
 
-                # FIXME: create local resource/profile
-                # resource = Resource()
-                # db.add(resource)
-                # await db.commit()
-                # await db.refresh(resource)
-                # profile = Profile()
-                # db.add(profile)
-                # await db.commit()
-                # await db.refresh(profile)
-
                 # Create new user
                 user_attributes = dict(
                     email=self.email,
