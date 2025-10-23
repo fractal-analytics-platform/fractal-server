@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic.types import PositiveInt
 
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
@@ -44,7 +45,7 @@ class _SlurmConfigSet(BaseModel):
     nodelist: NonEmptyStr | None = None
     time: NonEmptyStr | None = None
     account: NonEmptyStr | None = None
-    extra_lines: list[NonEmptyStr] | None = None
+    extra_lines: list[NonEmptyStr] = Field(default_factory=list)
     gpus: NonEmptyStr | None = None
 
 

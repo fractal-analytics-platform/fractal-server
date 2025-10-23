@@ -252,7 +252,7 @@ class BaseSlurmRunner(BaseRunner):
                 f"Add {self.common_script_lines} to "
                 f"{new_slurm_config.extra_lines=}."
             )
-            current_extra_lines = new_slurm_config.extra_lines or []
+            current_extra_lines = new_slurm_config.extra_lines
             new_slurm_config.extra_lines = (
                 current_extra_lines + self.common_script_lines
             )
