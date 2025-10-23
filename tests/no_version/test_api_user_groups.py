@@ -251,7 +251,9 @@ async def test_create_user_group_same_name(registered_superuser_client):
     assert "A group with the same name already exists" in str(res.json())
 
 
-async def test_get_user_optional_group_info(MockCurrentUser, client):
+async def test_get_user_optional_group_info(
+    MockCurrentUser, client, default_user_group
+):
     """
     Test that GET-ting a single user may be enriched with group IDs/names.
     """
@@ -292,7 +294,13 @@ async def test_get_user_optional_group_info(MockCurrentUser, client):
         for query_param, expected_attribute in [
             ("", None),
             ("?group_ids_names=False", None),
-            ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+            (
+                "?group_ids_names=True",
+                [
+                    [default_user_group.id, default_user_group.name],
+                    [GROUP_A_ID, GROUP_A_NAME],
+                ],
+            ),
         ]:
             res = await client.get(f"{PREFIX}/current-user/{query_param}")
             assert res.status_code == 200
@@ -303,9 +311,21 @@ async def test_get_user_optional_group_info(MockCurrentUser, client):
     # depending on a query parameter
     async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
         for query_param, expected_attribute in [
-            ("", [[GROUP_A_ID, GROUP_A_NAME]]),
+            (
+                "",
+                [
+                    [default_user_group.id, default_user_group.name],
+                    [GROUP_A_ID, GROUP_A_NAME],
+                ],
+            ),
             ("?group_ids_names=False", None),
-            ("?group_ids_names=True", [[GROUP_A_ID, GROUP_A_NAME]]),
+            (
+                "?group_ids_names=True",
+                [
+                    [default_user_group.id, default_user_group.name],
+                    [GROUP_A_ID, GROUP_A_NAME],
+                ],
+            ),
         ]:
             res = await client.get(
                 f"{PREFIX}/users/{current_user_id}/{query_param}"
