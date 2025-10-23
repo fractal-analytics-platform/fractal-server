@@ -308,7 +308,10 @@ async def MockCurrentUser(app, db, default_user_group):
                 # on them from other sessions
                 db.expunge(self.user)
             else:
-                if "profile_id" not in self.user_kwargs.keys():
+                if (
+                    self.user_kwargs is not None
+                    and "profile_id" not in self.user_kwargs.keys()
+                ):
                     res = await db.execute(select(Profile))
                     profile = res.scalars().one_or_none()
                     if profile is None:
