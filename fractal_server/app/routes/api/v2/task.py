@@ -21,8 +21,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.routes.auth import current_user_act
-from fractal_server.app.routes.auth import current_user_act_ver
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.app.schemas.v2 import TaskReadV2
@@ -41,7 +40,7 @@ async def get_list_task(
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
     """
@@ -83,7 +82,7 @@ async def get_list_task(
 @router.get("/{task_id}/", response_model=TaskReadV2)
 async def get_task(
     task_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskReadV2:
     """
@@ -97,7 +96,7 @@ async def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdateV2,
-    user: UserOAuth = Depends(current_user_act_ver),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskReadV2 | None:
     """
@@ -138,7 +137,7 @@ async def create_task(
     task: TaskCreateV2,
     user_group_id: int | None = None,
     private: bool = False,
-    user: UserOAuth = Depends(current_user_act_ver),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskReadV2 | None:
     """
@@ -212,7 +211,7 @@ async def create_task(
 @router.delete("/{task_id}/", status_code=204)
 async def delete_task(
     task_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

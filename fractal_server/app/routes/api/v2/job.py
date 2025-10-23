@@ -23,7 +23,7 @@ from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_user_act
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
@@ -39,7 +39,7 @@ router = APIRouter()
 
 @router.get("/job/", response_model=list[JobReadV2])
 async def get_user_jobs(
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobReadV2]:
@@ -68,7 +68,7 @@ async def get_user_jobs(
 async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobReadV2] | None:
     """
@@ -88,7 +88,7 @@ async def get_latest_job(
     project_id: int,
     workflow_id: int,
     dataset_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
     await _get_workflow_check_owner(
@@ -120,7 +120,7 @@ async def read_job(
     project_id: int,
     job_id: int,
     show_tmp_logs: bool = False,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2 | None:
     """
@@ -153,7 +153,7 @@ async def read_job(
 async def download_job_logs(
     project_id: int,
     job_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """
@@ -183,7 +183,7 @@ async def download_job_logs(
 )
 async def get_job_list(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobReadV2] | None:
@@ -212,7 +212,7 @@ async def get_job_list(
 async def stop_job(
     project_id: int,
     job_id: int,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

@@ -61,7 +61,7 @@ current_superuser_act = fastapi_users.current_user(
 
 
 async def current_user_act_ver_prof(
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver),
 ) -> UserOAuth:
     if user.profile_id is None:
         raise HTTPException(

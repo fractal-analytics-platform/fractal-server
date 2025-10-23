@@ -271,8 +271,7 @@ async def default_user_group(db) -> UserGroup:
 
 @pytest.fixture
 async def MockCurrentUser(app, db, default_user_group):
-    from fractal_server.app.routes.auth import current_user_act_ver
-    from fractal_server.app.routes.auth import current_user_act
+    from fractal_server.app.routes.auth import current_user_act_ver_prof
     from fractal_server.app.routes.auth import current_superuser_act
 
     def _random_email():
@@ -337,16 +336,20 @@ async def MockCurrentUser(app, db, default_user_group):
             # pre-override value
             if self.user.is_active:
                 self.previous_dependencies[
-                    current_user_act
-                ] = app.dependency_overrides.get(current_user_act, None)
+                    current_user_act_ver_prof
+                ] = app.dependency_overrides.get(
+                    current_user_act_ver_prof, None
+                )
             if self.user.is_active and self.user.is_superuser:
                 self.previous_dependencies[
                     current_superuser_act
                 ] = app.dependency_overrides.get(current_superuser_act, None)
             if self.user.is_active and self.user.is_verified:
                 self.previous_dependencies[
-                    current_user_act_ver
-                ] = app.dependency_overrides.get(current_user_act_ver, None)
+                    current_user_act_ver_prof
+                ] = app.dependency_overrides.get(
+                    current_user_act_ver_prof, None
+                )
 
             # Override dependencies in the FastAPI app
             for dep in self.previous_dependencies.keys():

@@ -13,7 +13,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.routes.auth import current_user_act
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -50,7 +50,7 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """
@@ -154,7 +154,7 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     """
@@ -263,7 +263,7 @@ async def delete_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """

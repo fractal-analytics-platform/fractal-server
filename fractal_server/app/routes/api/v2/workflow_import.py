@@ -24,7 +24,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     _disambiguate_task_groups,
 )
-from fractal_server.app.routes.auth import current_user_act
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.schemas.v2 import TaskImportV2
 from fractal_server.logger import set_logger
@@ -205,7 +205,7 @@ async def _get_task_by_taskimport(
 async def import_workflow(
     project_id: int,
     workflow_import: WorkflowImportV2,
-    user: UserOAuth = Depends(current_user_act),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowReadV2WithWarnings:
     """
