@@ -77,7 +77,7 @@ def _get_slurm_config_internal(
     else:
         needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
-    if needs_gpu:
+    if needs_gpu and shared_config.gpu_slurm_config is not None:
         for key, value in shared_config.gpu_slurm_config.model_dump(
             exclude_unset=True, exclude={"mem"}
         ).items():

@@ -10,6 +10,7 @@ TBD
 \#2877
 \#2882
 \#2884
+\#2893
 
 \#2890 (oauth self-registration)
 

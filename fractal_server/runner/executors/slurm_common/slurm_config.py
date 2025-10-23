@@ -83,10 +83,10 @@ class SlurmConfig(BaseModel):
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
-    extra_lines: list[str] | None = Field(default_factory=list)
+    extra_lines: list[str] = Field(default_factory=list)
 
     # Variables that will be `export`ed in the SLURM submission script
-    user_local_exports: dict[str, str] | None = None
+    user_local_exports: dict[str, str] = Field(default_factory=dict)
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: int | None = None
@@ -152,9 +152,8 @@ class SlurmConfig(BaseModel):
                 "SlurmConfig.sbatch_preamble requires that "
                 f"{self.parallel_tasks_per_job=} is not None."
             )
-        if self.extra_lines:
-            if len(self.extra_lines) != len(set(self.extra_lines)):
-                raise ValueError(f"{self.extra_lines=} contains repetitions")
+        if len(self.extra_lines) != len(set(self.extra_lines)):
+            raise ValueError(f"{self.extra_lines=} contains repetitions")
 
         mem_per_job_MB = self.parallel_tasks_per_job * self.mem_per_task_MB
         lines = [
@@ -187,9 +186,8 @@ class SlurmConfig(BaseModel):
                 option = key.replace("_", "-")
                 lines.append(f"{self.prefix} --{option}={value}")
 
-        if self.extra_lines:
-            for line in self._sorted_extra_lines():
-                lines.append(line)
+        for line in self._sorted_extra_lines():
+            lines.append(line)
 
         if self.user_local_exports:
             for key, value in self.user_local_exports.items():
