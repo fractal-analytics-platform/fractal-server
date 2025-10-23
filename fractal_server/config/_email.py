@@ -1,6 +1,5 @@
 from typing import Literal
 
-from cryptography.fernet import Fernet
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
@@ -31,8 +30,7 @@ class PublicEmailSettings(BaseModel):
     recipients: list[EmailStr] = Field(min_length=1)
     smtp_server: str
     port: int
-    encrypted_password: SecretStr | None = None
-    encryption_key: SecretStr | None = None
+    password: SecretStr | None = None
     instance_name: str
     use_starttls: bool
     use_login: bool
@@ -52,10 +50,6 @@ class EmailSettings(BaseSettings):
     FRACTAL_EMAIL_PASSWORD: SecretStr | None = None
     """
     Password for the OAuth-signup email sender.
-    """
-    FRACTAL_EMAIL_PASSWORD_KEY: SecretStr | None = None
-    """
-    Key value for `cryptography.fernet` decrypt
     """
     FRACTAL_EMAIL_SMTP_SERVER: str | None = None
     """
@@ -81,8 +75,7 @@ class EmailSettings(BaseSettings):
     FRACTAL_EMAIL_USE_LOGIN: Literal["true", "false"] = "true"
     """
     Whether to use login when using the SMTP server.
-    If 'true', FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY must be
-    provided.
+    If 'true', FRACTAL_EMAIL_PASSWORD  must be provided.
     Accepted values: 'true', 'false'.
     """
 
@@ -119,49 +112,18 @@ class EmailSettings(BaseSettings):
             use_starttls = self.FRACTAL_EMAIL_USE_STARTTLS == "true"
             use_login = self.FRACTAL_EMAIL_USE_LOGIN == "true"
 
-            if use_login:
-                if self.FRACTAL_EMAIL_PASSWORD is None:
+            if use_login and self.FRACTAL_EMAIL_PASSWORD is None:
                     raise ValueError(
                         "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
                         "'FRACTAL_EMAIL_PASSWORD' is not provided."
                     )
-                if self.FRACTAL_EMAIL_PASSWORD_KEY is None:
-                    raise ValueError(
-                        "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
-                        "'FRACTAL_EMAIL_PASSWORD_KEY' is not provided."
-                    )
-                try:
-                    (
-                        Fernet(
-                            self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
-                        )
-                        .decrypt(
-                            self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
-                        )
-                        .decode("utf-8")
-                    )
-                except Exception as e:
-                    raise ValueError(
-                        "Invalid pair (FRACTAL_EMAIL_PASSWORD, "
-                        "FRACTAL_EMAIL_PASSWORD_KEY). "
-                        f"Original error: {str(e)}."
-                    )
-                password = self.FRACTAL_EMAIL_PASSWORD.get_secret_value()
-            else:
-                password = None
-
-            if self.FRACTAL_EMAIL_PASSWORD_KEY is not None:
-                key = self.FRACTAL_EMAIL_PASSWORD_KEY.get_secret_value()
-            else:
-                key = None
-
+                
             self.public = PublicEmailSettings(
                 sender=self.FRACTAL_EMAIL_SENDER,
                 recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
                 smtp_server=self.FRACTAL_EMAIL_SMTP_SERVER,
                 port=self.FRACTAL_EMAIL_SMTP_PORT,
-                encrypted_password=password,
-                encryption_key=key,
+                password=self.FRACTAL_EMAIL_PASSWORD,
                 instance_name=self.FRACTAL_EMAIL_INSTANCE_NAME,
                 use_starttls=use_starttls,
                 use_login=use_login,
