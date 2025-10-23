@@ -138,6 +138,7 @@ def test_get_slurm_config_internal_gpu_options():
             "max_num_jobs": 10,
         },
     )
+    assert shared_slurm_config.user_local_exports == {}
     assert shared_slurm_config.default_slurm_config.extra_lines == []
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used

@@ -126,4 +126,4 @@ class JobRunnerConfigSLURM(BaseModel):
     default_slurm_config: _SlurmConfigSet
     gpu_slurm_config: _SlurmConfigSet | None = None
     batching_config: _BatchingConfigSet
-    user_local_exports: DictStrStr | None = None
+    user_local_exports: DictStrStr = Field(default_factory=dict)

@@ -86,7 +86,7 @@ class SlurmConfig(BaseModel):
     extra_lines: list[str] = Field(default_factory=list)
 
     # Variables that will be `export`ed in the SLURM submission script
-    user_local_exports: dict[str, str] | None = None
+    user_local_exports: dict[str, str] = Field(default=dict)
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: int | None = None
@@ -189,14 +189,13 @@ class SlurmConfig(BaseModel):
         for line in self._sorted_extra_lines():
             lines.append(line)
 
-        if self.user_local_exports:
-            if remote_export_dir is None:
-                raise ValueError(
-                    f"remote_export_dir=None but {self.user_local_exports=}"
-                )
-            for key, value in self.user_local_exports.items():
-                tmp_value = str(Path(remote_export_dir) / value)
-                lines.append(f"export {key}={tmp_value}")
+        if self.user_local_exports != {} and remote_export_dir is None:
+            raise ValueError(
+                f"{remote_export_dir=} but {self.user_local_exports=}"
+            )
+        for key, value in self.user_local_exports.items():
+            tmp_value = str(Path(remote_export_dir) / value)
+            lines.append(f"export {key}={tmp_value}")
 
         """
         FIXME export SRUN_CPUS_PER_TASK
