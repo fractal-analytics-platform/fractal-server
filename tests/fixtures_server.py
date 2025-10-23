@@ -15,8 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_user
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import EmailSettings
@@ -305,11 +308,55 @@ async def MockCurrentUser(app, db, default_user_group):
                 # on them from other sessions
                 db.expunge(self.user)
             else:
+                if "profile_id" not in self.user_kwargs.keys():
+                    res = await db.execute(select(Profile))
+                    profile = res.scalars().one_or_none()
+                    if profile is None:
+                        resource = Resource(
+                            name="local resource 1",
+                            type=ResourceType.LOCAL,
+                            jobs_local_dir="/jobs_local_dir",
+                            tasks_local_dir="/tasks_local_dir",
+                            jobs_runner_config={"parallel_tasks_per_job": 1},
+                            tasks_python_config={
+                                "default_version": "3.0",
+                                "versions": {"3.0": "/fake/python3.0"},
+                            },
+                            tasks_pixi_config={},
+                            jobs_poll_interval=0,
+                        )
+                        db.add(resource)
+                        await db.commit()
+                        await db.refresh(resource)
+                        db.expunge(resource)
+
+                        profile = Profile(
+                            resource_id=resource.id,
+                            name="local_resource_profile_objects",
+                            resource_type=ResourceType.LOCAL,
+                        )
+                        db.add(profile)
+                        await db.commit()
+                        await db.refresh(profile)
+                        db.expunge(profile)
+                    profile_id = profile.id
+
+                # FIXME: create local resource/profile
+                # resource = Resource()
+                # db.add(resource)
+                # await db.commit()
+                # await db.refresh(resource)
+                # profile = Profile()
+                # db.add(profile)
+                # await db.commit()
+                # await db.refresh(profile)
+
                 # Create new user
                 user_attributes = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
                     project_dir="/fake",
+                    profile_id=profile_id,
                 )
                 if self.user_kwargs is not None:
                     user_attributes.update(self.user_kwargs)
@@ -331,7 +378,7 @@ async def MockCurrentUser(app, db, default_user_group):
                         user_id=self.user.id, group_id=default_user_group.id
                     )
                 )
-                await db.commit()
+
                 # Removing objects from test db session, so that we can operate
                 # on them from other sessions
                 db.expunge(self.user)
