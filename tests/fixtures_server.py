@@ -1,4 +1,4 @@
-import random
+import time
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 from dataclasses import dataclass
@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -206,7 +206,7 @@ async def client(
 
 
 @pytest.fixture
-async def registered_client(
+async def registered_client(  # FIXME maybe remove?
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "test@test.com"
@@ -273,16 +273,16 @@ async def default_user_group(db) -> UserGroup:
 
 
 @pytest.fixture
-async def MockCurrentUser(app, db, default_user_group):
+async def MockCurrentUser(app: FastAPI, db, default_user_group):
     from fractal_server.app.routes.auth import (
         current_user_act_ver_prof,
         current_user_act,
         current_user_act_ver,
+        current_superuser_act,
     )
-    from fractal_server.app.routes.auth import current_superuser_act
 
-    def _random_email():
-        return f"{random.randint(0, 100000000)}@example.org"
+    def _new_mail():
+        return f"{time.perf_counter_ns()}@example.org"
 
     @dataclass
     class _MockCurrentUser:
@@ -290,33 +290,49 @@ async def MockCurrentUser(app, db, default_user_group):
         Context managed user override
         """
 
-        user_kwargs: dict[str, Any] | None = None
-        email: str | None = field(default_factory=_random_email)
-        previous_dependencies: dict = field(default_factory=dict)
+        user_kwargs: dict[str, Any] = field(default_factory=dict)
+        email: str | None = field(default_factory=_new_mail)
+        previous_deps: dict = field(default_factory=dict)
+        debug: bool = False
 
         async def __aenter__(self):
-            if self.user_kwargs is not None and "id" in self.user_kwargs:
+            user_id = self.user_kwargs.get("id", None)
+            if user_id is not None:
+                # (1) Look for existing user, by ID
                 db_user = await db.get(
-                    UserOAuth, self.user_kwargs["id"], populate_existing=True
+                    UserOAuth,
+                    user_id,
+                    populate_existing=True,
                 )
+                if self.debug:
+                    debug("FOUND USER", db_user)
                 if db_user is None:
                     raise RuntimeError(
-                        f"User with id {self.user_kwargs['id']} doesn't exist"
+                        f"[MockCurrentUser] User with {user_id=} doesn't exist"
                     )
+                for k, v in self.user_kwargs.items():
+                    if not getattr(db_user, k) == v:
+                        raise RuntimeError(
+                            f"[MockCurrentUser] User with {user_id=} has "
+                            f"{k}={v}."
+                        )
                 self.user = db_user
-                # Removing objects from test db session, so that we can operate
-                # on them from other sessions
-                db.expunge(self.user)
             else:
-                if (
-                    self.user_kwargs is not None
-                    and "profile_id" not in self.user_kwargs.keys()
-                ):
+                # (2) Create new user
+                default_user_kwargs = dict(
+                    email=self.email,
+                    hashed_password="fake_hashed_password",
+                    project_dir=PROJECT_DIR_PLACEHOLDER,
+                    is_verified=True,
+                )
+
+                # (2/a) Handle resource and profile
+                if "profile_id" not in self.user_kwargs.keys():
                     res = await db.execute(select(Profile))
-                    profile = res.scalars().one_or_none()
+                    profile = res.scalars().first()
                     if profile is None:
                         resource = Resource(
-                            name="local resource 1",
+                            name="Local resource",
                             type=ResourceType.LOCAL,
                             jobs_local_dir="/jobs_local_dir",
                             tasks_local_dir="/tasks_local_dir",
@@ -332,8 +348,8 @@ async def MockCurrentUser(app, db, default_user_group):
                         await db.commit()
                         await db.refresh(resource)
                         db.expunge(resource)
-
                         profile = Profile(
+                            username="test01",
                             resource_id=resource.id,
                             name="local_resource_profile_objects",
                             resource_type=ResourceType.LOCAL,
@@ -342,76 +358,85 @@ async def MockCurrentUser(app, db, default_user_group):
                         await db.commit()
                         await db.refresh(profile)
                         db.expunge(profile)
-                    profile_id = profile.id
+                    default_user_kwargs["profile_id"] = profile.id
 
                 # Create new user
-                user_attributes = dict(
-                    email=self.email,
-                    hashed_password="fake_hashed_password",
-                    project_dir="/fake",
-                    profile_id=profile_id,
-                )
-                if self.user_kwargs is not None:
-                    user_attributes.update(self.user_kwargs)
-                self.user = UserOAuth(**user_attributes)
+                default_user_kwargs.update(self.user_kwargs)
+                self.user = UserOAuth(**default_user_kwargs)
 
-                try:
-                    db.add(self.user)
-                    await db.commit()
-                except IntegrityError:
-                    # Safety net, in case of non-unique email addresses
-                    await db.rollback()
-                    self.user.email = _random_email()
-                    db.add(self.user)
-                    await db.commit()
+                db.add(self.user)
+                await db.commit()
                 await db.refresh(self.user)
+
+                if self.debug:
+                    debug("CREATED USER", self.user)
 
                 db.add(
                     LinkUserGroup(
-                        user_id=self.user.id, group_id=default_user_group.id
+                        user_id=self.user.id,
+                        group_id=default_user_group.id,
                     )
                 )
+                await db.commit()
+                if self.debug:
+                    debug(
+                        f"Created link between user_id={self.user.id} and "
+                        f"group_id={default_user_group.id}."
+                    )
 
-                # Removing objects from test db session, so that we can operate
-                # on them from other sessions
-                db.expunge(self.user)
+            # Removing objects from test db session, so that we can operate
+            # on them from other sessions
+            db.expunge(self.user)
 
             # Find out which dependencies should be overridden, and store their
             # pre-override value
             if self.user.is_active:
-                self.previous_dependencies[
-                    current_user_act
-                ] = app.dependency_overrides.get(current_user_act, None)
-            if self.user.is_active and self.user.is_superuser:
-                self.previous_dependencies[
-                    current_superuser_act
-                ] = app.dependency_overrides.get(current_superuser_act, None)
+                dep = current_user_act
+                self.previous_deps[dep] = app.dependency_overrides.get(
+                    dep, None
+                )
+                if self.debug:
+                    debug(f"Override {current_user_act}.")
+
             if self.user.is_active and self.user.is_verified:
-                self.previous_dependencies[
-                    current_user_act_ver
-                ] = app.dependency_overrides.get(current_user_act_ver, None)
+                dep = current_user_act_ver
+                self.previous_deps[dep] = app.dependency_overrides.get(
+                    dep, None
+                )
+                if self.debug:
+                    debug(f"Override {current_user_act_ver}.")
+
             if (
                 self.user.is_active
                 and self.user.is_verified
                 and self.user.profile_id is not None
             ):
-                self.previous_dependencies[
-                    current_user_act_ver_prof
-                ] = app.dependency_overrides.get(
-                    current_user_act_ver_prof, None
+                dep = current_user_act_ver_prof
+                if self.debug:
+                    debug(f"Override {current_user_act_ver_prof}.")
+                self.previous_deps[dep] = app.dependency_overrides.get(
+                    dep, None
+                )
+
+            if self.user.is_active and self.user.is_superuser:
+                dep = current_superuser_act
+                if self.debug:
+                    debug(f"Override {current_superuser_act}.")
+                self.previous_deps[dep] = app.dependency_overrides.get(
+                    dep, None
                 )
 
             # Override dependencies in the FastAPI app
-            for dep in self.previous_dependencies.keys():
-                app.dependency_overrides[dep] = lambda: self.user
+            for _dep in self.previous_deps.keys():
+                app.dependency_overrides[_dep] = lambda: self.user
 
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
             # Reset overridden dependencies to the original ones
-            for dep, previous_dep in self.previous_dependencies.items():
+            for _dep, previous_dep in self.previous_deps.items():
                 if previous_dep is not None:
-                    app.dependency_overrides[dep] = previous_dep
+                    app.dependency_overrides[_dep] = previous_dep
 
     return _MockCurrentUser
 
