@@ -1,3 +1,6 @@
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend
 from fastapi_users.authentication import BearerTransport
@@ -54,3 +57,14 @@ current_user_act_ver = fastapi_users.current_user(
 current_active_superuser = fastapi_users.current_user(
     active=True, superuser=True
 )
+
+
+async def current_user_act_ver_prof(
+    user: UserOAuth = Depends(current_user_act),
+) -> UserOAuth:
+    if user.profile_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User has no computational profile.",
+        )
+    return user
