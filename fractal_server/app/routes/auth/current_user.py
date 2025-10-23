@@ -83,7 +83,7 @@ async def patch_current_user(
     response_model=UserProfileInfo,
 )
 async def get_current_user_profile_info(
-    current_user: UserOAuth = Depends(current_user_act_ver_prof),
+    current_user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserProfileInfo:
     stm = (
@@ -113,7 +113,7 @@ async def get_current_user_profile_info(
     "/current-user/allowed-viewer-paths/", response_model=list[str]
 )
 async def get_current_user_allowed_viewer_paths(
-    current_user: UserOAuth = Depends(current_user_act_ver_prof),
+    current_user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
