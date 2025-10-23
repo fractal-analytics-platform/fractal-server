@@ -113,11 +113,11 @@ class EmailSettings(BaseSettings):
             use_login = self.FRACTAL_EMAIL_USE_LOGIN == "true"
 
             if use_login and self.FRACTAL_EMAIL_PASSWORD is None:
-                    raise ValueError(
-                        "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
-                        "'FRACTAL_EMAIL_PASSWORD' is not provided."
-                    )
-                
+                raise ValueError(
+                    "'FRACTAL_EMAIL_USE_LOGIN' is 'true' but "
+                    "'FRACTAL_EMAIL_PASSWORD' is not provided."
+                )
+
             self.public = PublicEmailSettings(
                 sender=self.FRACTAL_EMAIL_SENDER,
                 recipients=self.FRACTAL_EMAIL_RECIPIENTS.split(","),
