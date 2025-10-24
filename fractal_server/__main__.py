@@ -90,15 +90,6 @@ update_db_data_parser = subparsers.add_parser(
     description="Apply data-migration script to an existing database.",
 )
 
-# fractalctl encrypt-email-password
-encrypt_email_password_parser = subparsers.add_parser(
-    "encrypt-email-password",
-    description=(
-        "Generate valid values for environment variables "
-        "FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KEY."
-    ),
-)
-
 
 def save_openapi(dest="openapi.json"):
     from fractal_server.main import start_application
@@ -325,17 +316,6 @@ def update_db_data():
     current_update_db_data_module.fix_db()
 
 
-def print_encrypted_password():
-    from cryptography.fernet import Fernet
-
-    password = input("Insert email password: ").encode("utf-8")
-    key = Fernet.generate_key().decode("utf-8")
-    encrypted_password = Fernet(key).encrypt(password).decode("utf-8")
-
-    print(f"\nFRACTAL_EMAIL_PASSWORD={encrypted_password}")
-    print(f"FRACTAL_EMAIL_PASSWORD_KEY={key}")
-
-
 def run():
     args = parser.parse_args(sys.argv[1:])
 
@@ -359,8 +339,6 @@ def run():
             port=args.port,
             reload=args.reload,
         )
-    elif args.cmd == "encrypt-email-password":
-        print_encrypted_password()
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")
 

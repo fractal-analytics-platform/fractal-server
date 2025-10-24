@@ -56,16 +56,3 @@ def test_email_settings():
     )
     assert not res.stdout
     assert "usage" in res.stderr
-
-    cmd = (
-        'printf "mypassword\n" | poetry run fractalctl encrypt-email-password'
-    )
-    res = subprocess.run(
-        cmd,
-        encoding="utf-8",
-        capture_output=True,
-        shell=True,
-    )
-    assert "FRACTAL_EMAIL_PASSWORD" in res.stdout
-    assert "FRACTAL_EMAIL_PASSWORD_KEY" in res.stdout
-    assert not res.stderr
