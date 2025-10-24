@@ -187,6 +187,7 @@ async def task_factory_v2(db: AsyncSession):
 
     async def __task_factory(
         user_id: int,
+        resource_id: int,
         task_group_kwargs: dict[str, str] | None = None,
         db: AsyncSession = db,
         index: int = 0,
@@ -266,6 +267,7 @@ async def task_factory_v2(db: AsyncSession):
         task_group = TaskGroupV2(
             user_id=user_id,
             user_group_id=user_group_id,
+            resource_id=resource_id,
             active=task_group_kwargs.get("active", True),
             version=version,
             origin=task_group_kwargs.get("origin", "other"),
