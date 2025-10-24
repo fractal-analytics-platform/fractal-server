@@ -4,11 +4,14 @@ from typing import Literal
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
+from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -187,7 +190,6 @@ async def task_factory_v2(db: AsyncSession):
 
     async def __task_factory(
         user_id: int,
-        resource_id: int,
         task_group_kwargs: dict[str, str] | None = None,
         db: AsyncSession = db,
         index: int = 0,
@@ -263,6 +265,16 @@ async def task_factory_v2(db: AsyncSession):
             pkg_name=pkg_name,
             version=version,
         )
+
+        res = await db.execute(
+            select(Resource.id)
+            .join(Profile)
+            .join(UserOAuth)
+            .where(Resource.id == Profile.resource_id)
+            .where(Profile.id == UserOAuth.profile_id)
+            .where(UserOAuth.id == user_id)
+        )
+        resource_id = res.scalar_one()
 
         task_group = TaskGroupV2(
             user_id=user_id,
