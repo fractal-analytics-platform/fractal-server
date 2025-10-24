@@ -363,6 +363,7 @@ async def test_deactivate_ssh_github_dependency(
             "@166bf6190c1827b5a5ece4a5542433c96a2bc997"
             "\n"
         ),
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
