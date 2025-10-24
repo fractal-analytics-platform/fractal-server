@@ -60,7 +60,7 @@ async def test_loss_of_access_to_task(
         )
         async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
             # Prepare all objects
-            project = await project_factory_v2(user)
+            project = await project_factory_v2(user, resource_id=resource.id)
             dataset = await dataset_factory_v2(project_id=project.id)
             workflow = await workflow_factory_v2(project_id=project.id)
             await _workflow_insert_task(
