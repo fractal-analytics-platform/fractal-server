@@ -15,6 +15,7 @@ async def test_reactivate_local_venv_exists(
     tmp_path, db, first_user, local_resource_profile_db
 ):
     # Prepare db objects
+    resource, profile = local_resource_profile_db
     path = tmp_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -23,6 +24,7 @@ async def test_reactivate_local_venv_exists(
         path=path.as_posix(),
         venv_path=f"{tmp_path}/i_am_here",
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -42,7 +44,6 @@ async def test_reactivate_local_venv_exists(
     db.expunge(task_group_activity)
     # create venv_path
     Path(task_group.venv_path).mkdir()
-    resource, profile = local_resource_profile_db
     # background task
     reactivate_local(
         task_group_id=task_group.id,
@@ -93,6 +94,7 @@ async def test_reactivate_local_fail(
     )
 
     # Prepare task group that will make `pip install` fail
+    resource, profile = local_resource_profile_db
     path = tmp_path / f"make-rmtree-fail-{make_rmtree_fail}"
     task_group = TaskGroupV2(
         pkg_name="invalid-package-name",
@@ -102,6 +104,7 @@ async def test_reactivate_local_fail(
         path=path.as_posix(),
         venv_path="/fake/folder/impossible/",
         user_id=first_user.id,
+        resource_id=resource.id,
         env_info="something==99.99.99",
     )
     debug(task_group)
@@ -123,8 +126,6 @@ async def test_reactivate_local_fail(
 
     # Create path
     Path(task_group.path).mkdir()
-
-    resource, profile = local_resource_profile_db
 
     # Run background task
     try:

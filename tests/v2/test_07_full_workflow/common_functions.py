@@ -33,6 +33,7 @@ async def full_workflow(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -310,6 +311,7 @@ async def full_workflow_TaskExecutionError(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -413,6 +415,7 @@ async def non_executable_task_command(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -484,6 +487,7 @@ async def failing_workflow_UnknownError(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -585,6 +589,7 @@ async def workflow_with_non_python_task(
     workflow_factory_v2,
     task_factory_v2,
     tmp777_path: Path,
+    resource_id: int,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
 ) -> str:
@@ -692,6 +697,7 @@ async def failing_workflow_post_task_execution(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
     tmp_path: Path,
 ):

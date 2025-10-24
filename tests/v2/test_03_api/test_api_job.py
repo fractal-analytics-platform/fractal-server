@@ -46,33 +46,44 @@ async def test_submit_job_failures(
     workflow_factory_v2,
     task_factory_v2,
     local_resource_profile_db,
+    slurm_sudo_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
+    res2, _ = slurm_sudo_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
             profile_id=prof.id,
         )
     ) as user:
-        project1 = await project_factory_v2(user)
-        project2 = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project1.id, name="dataset"
-        )
-
-        workflow1 = await workflow_factory_v2(project_id=project1.id)
-        workflow2 = await workflow_factory_v2(project_id=project1.id)
-        workflow3 = await workflow_factory_v2(project_id=project2.id)
-
         task = await task_factory_v2(user_id=user.id)
+        # 1
+        project1 = await project_factory_v2(user)
+        dataset1 = await dataset_factory_v2(
+            project_id=project1.id, name="dataset1"
+        )
+        workflow1a = await workflow_factory_v2(project_id=project1.id)
+        workflow1b = await workflow_factory_v2(project_id=project1.id)
         await _workflow_insert_task(
-            workflow_id=workflow1.id, task_id=task.id, db=db
+            workflow_id=workflow1a.id, task_id=task.id, db=db
+        )
+        # 2
+        project2 = await project_factory_v2(user)
+        workflow2 = await workflow_factory_v2(project_id=project2.id)
+        # 3
+        project3 = await project_factory_v2(user, resource_id=res2.id)
+        dataset3 = await dataset_factory_v2(
+            project_id=project3.id, name="dataset3"
+        )
+        workflow3 = await workflow_factory_v2(project_id=project3.id)
+        await _workflow_insert_task(
+            workflow_id=workflow3.id, task_id=task.id, db=db
         )
 
         # (A) Not existing workflow
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
-            f"?workflow_id=123&dataset_id={dataset.id}",
+            f"?workflow_id=123&dataset_id={dataset1.id}",
             json={},
         )
         debug(res.json())
@@ -81,7 +92,7 @@ async def test_submit_job_failures(
         # (B) Workflow with wrong project_id
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
-            f"?workflow_id={workflow3.id}&dataset_id={dataset.id}",
+            f"?workflow_id={workflow2.id}&dataset_id={dataset1.id}",
             json={},
         )
         debug(res.json())
@@ -90,7 +101,7 @@ async def test_submit_job_failures(
         # (C) Not existing dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
-            f"?workflow_id={workflow1.id}&dataset_id=999999999",
+            f"?workflow_id={workflow1a.id}&dataset_id=999999999",
             json={},
         )
         debug(res.json())
@@ -99,12 +110,24 @@ async def test_submit_job_failures(
         # (D) Workflow without tasks
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
-            f"?workflow_id={workflow2.id}&dataset_id={dataset.id}",
+            f"?workflow_id={workflow1b.id}&dataset_id={dataset1.id}",
             json={},
         )
         debug(res.json())
         assert res.status_code == 422
         assert "empty task list" in res.json()["detail"]
+
+        # (E) Project's resource different from user's resource
+        res = await client.post(
+            f"{PREFIX}/project/{project3.id}/job/submit/"
+            f"?workflow_id={workflow3.id}&dataset_id={dataset3.id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Project's resource does not match with user's resource"
+        )
 
 
 async def test_submit_job_ssh_connection_failure(
@@ -424,11 +447,11 @@ async def test_project_apply_slurm_account(
     db,
     local_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db
+    resource, profile = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
-            profile_id=prof.id,
+            profile_id=profile.id,
         )
     ) as user:
         project = await project_factory_v2(user)
@@ -465,7 +488,7 @@ async def test_project_apply_slurm_account(
     async with MockCurrentUser(
         user_kwargs={
             "is_verified": True,
-            "profile_id": prof.id,
+            "profile_id": profile.id,
             "slurm_accounts": SLURM_LIST,
         },
     ) as user2:

@@ -42,6 +42,7 @@ class TaskGroupV2(SQLModel, table=True):
     user_group_id: int | None = Field(
         foreign_key="usergroup.id", default=None, ondelete="SET NULL"
     )
+    # TODO-2.17.1: make `resource_id` not nullable
     resource_id: int | None = Field(
         foreign_key="resource.id", default=None, ondelete="SET NULL"
     )
