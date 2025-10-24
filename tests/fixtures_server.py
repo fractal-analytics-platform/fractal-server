@@ -443,10 +443,13 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
 
 
 @pytest.fixture(scope="function")
-async def first_user(db: AsyncSession, default_user_group: UserGroup):
+async def first_user(
+    db: AsyncSession, default_user_group: UserGroup, local_resource_profile_db
+):
     """
     Make sure that at least one user exists.
     """
+    resource, profile = local_resource_profile_db
     res = await db.execute(select(UserOAuth).order_by(UserOAuth.id))
     user = res.scalars().first()
     if user is None:
@@ -455,6 +458,7 @@ async def first_user(db: AsyncSession, default_user_group: UserGroup):
             hashed_password="fake_password",
             is_active=True,
             is_verified=True,
+            profile_id=profile.id,
         )
         db.add(user)
         await db.commit()

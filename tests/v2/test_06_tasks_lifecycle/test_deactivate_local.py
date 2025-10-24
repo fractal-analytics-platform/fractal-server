@@ -124,6 +124,7 @@ async def test_deactivate_local_fail(
 async def test_deactivate_wheel_no_archive_path(
     tmp_path, db, first_user, local_resource_profile_db
 ):
+    resource, profile = local_resource_profile_db
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -134,6 +135,7 @@ async def test_deactivate_wheel_no_archive_path(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
         env_info="pip",
     )
     db.add(task_group)
@@ -155,8 +157,6 @@ async def test_deactivate_wheel_no_archive_path(
     # create path and venv_path
     Path(task_group.path).mkdir()
     Path(task_group.venv_path).mkdir()
-
-    resource, profile = local_resource_profile_db
 
     # background task
     deactivate_local(
@@ -183,6 +183,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     testdata_path,
     local_resource_profile_db,
 ):
+    resource, profile = local_resource_profile_db
     # STEP 1: collect a package
     path = tmp_path / "fractal-tasks-mock-path"
     venv_path = path / "venv"
@@ -203,6 +204,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         user_id=first_user.id,
         env_info="pip",
         python_version=current_py_version,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -219,8 +221,6 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     await db.commit()
     await db.refresh(activity_collect)
     db.expunge_all()
-
-    resource, profile = local_resource_profile_db
 
     collect_local(
         task_group_id=task_group.id,
@@ -284,6 +284,7 @@ async def test_deactivate_local_github_dependency(
     first_user,
     local_resource_profile_db,
 ):
+    resource, profile = local_resource_profile_db
     path = tmp_path / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(
@@ -300,6 +301,7 @@ async def test_deactivate_local_github_dependency(
             "@166bf6190c1827b5a5ece4a5542433c96a2bc997"
             "\n"
         ),
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -319,8 +321,6 @@ async def test_deactivate_local_github_dependency(
 
     path.mkdir()
     venv_path.mkdir()
-
-    resource, profile = local_resource_profile_db
 
     deactivate_local(
         task_group_id=task_group.id,
