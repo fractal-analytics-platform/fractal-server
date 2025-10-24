@@ -236,15 +236,17 @@ async def registered_client(  # FIXME maybe remove?
 
 @pytest.fixture
 async def registered_superuser_client(
-    app: FastAPI, register_routers, db
+    app: FastAPI, register_routers, db, local_resource_profile_db
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "some-admin@example.org"
     PWD = "some-admin-password"
+    resouce, profile = local_resource_profile_db
     await _create_first_user(
         email=EMAIL,
         password=PWD,
         is_superuser=True,
         project_dir=PROJECT_DIR_PLACEHOLDER,
+        profile_id=profile.id,
     )
     async with (
         AsyncClient(

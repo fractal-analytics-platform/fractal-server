@@ -34,6 +34,7 @@ async def test_deactivate_fail_no_venv_path(
     slurm_ssh_resource_profile_db,
     fractal_ssh,
 ):
+    resource, profile = slurm_ssh_resource_profile_db
     path = tmp777_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -42,6 +43,7 @@ async def test_deactivate_fail_no_venv_path(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -59,8 +61,6 @@ async def test_deactivate_fail_no_venv_path(
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
-
-    resource, profile = slurm_ssh_resource_profile_db
 
     # background task
     deactivate_ssh(

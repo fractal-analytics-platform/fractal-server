@@ -15,6 +15,7 @@ from fractal_server.utils import execute_command_sync
 async def test_deactivate_fail_no_venv_path(
     tmp_path, db, first_user, local_resource_profile_db
 ):
+    resource, profile = local_resource_profile_db
     path = tmp_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -23,6 +24,7 @@ async def test_deactivate_fail_no_venv_path(
         path=path.as_posix(),
         venv_path="/invalid",
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -40,8 +42,6 @@ async def test_deactivate_fail_no_venv_path(
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
-
-    resource, profile = local_resource_profile_db
 
     # background task
     deactivate_local(
@@ -76,6 +76,7 @@ async def test_deactivate_local_fail(
         fail_function,
     )
 
+    resource, profile = local_resource_profile_db
     path = tmp_path / "something"
     venv_path = path / "venv"
     task_group = TaskGroupV2(
@@ -85,6 +86,7 @@ async def test_deactivate_local_fail(
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -104,8 +106,6 @@ async def test_deactivate_local_fail(
 
     path.mkdir()
     venv_path.mkdir()
-
-    resource, profile = local_resource_profile_db
 
     # background task
     deactivate_local(
