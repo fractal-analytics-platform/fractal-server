@@ -33,6 +33,7 @@ async def full_workflow(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -41,7 +42,7 @@ async def full_workflow(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -310,6 +311,7 @@ async def full_workflow_TaskExecutionError(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -319,7 +321,7 @@ async def full_workflow_TaskExecutionError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -413,6 +415,7 @@ async def non_executable_task_command(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -431,7 +434,7 @@ async def non_executable_task_command(
         debug(task)
 
         # Create project
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
 
         # Create workflow
@@ -484,6 +487,7 @@ async def failing_workflow_UnknownError(
     dataset_factory_v2,
     workflow_factory_v2,
     task_factory_v2,
+    resource_id: int,
     user_kwargs: dict | None = None,
 ):
     if user_kwargs is None:
@@ -493,7 +497,7 @@ async def failing_workflow_UnknownError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -585,6 +589,7 @@ async def workflow_with_non_python_task(
     workflow_factory_v2,
     task_factory_v2,
     tmp777_path: Path,
+    resource_id: int,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
 ) -> str:
@@ -602,7 +607,7 @@ async def workflow_with_non_python_task(
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
 
         # Create workflow
@@ -692,6 +697,7 @@ async def failing_workflow_post_task_execution(
     workflow_factory_v2,
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
+    resource_id: int,
     user_kwargs: dict | None = None,
     tmp_path: Path,
 ):
@@ -701,7 +707,7 @@ async def failing_workflow_post_task_execution(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(user, resource_id=resource_id)
         project_id = project.id
 
         zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
