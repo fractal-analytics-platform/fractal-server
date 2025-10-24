@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
 
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.security import _create_first_user
@@ -10,7 +11,12 @@ _EMAIL = "test@test.com"
 _PWD = "12345"
 
 
-async def test_current_user_act_ver_prof(app: FastAPI, client):
+async def test_current_user_act_ver_prof(
+    app: FastAPI,
+    client,
+    local_resource_profile_db,
+    db,
+):
     await _create_first_user(
         email=_EMAIL,
         password=_PWD,
@@ -33,16 +39,30 @@ async def test_current_user_act_ver_prof(app: FastAPI, client):
         # Success in GET-current-user (which depends on `current_user_act`)
         res = await client.get("/auth/current-user/")
         assert res.status_code == 200
+        user_id = res.json()["id"]
         assert res.json()["email"] == _EMAIL
         assert res.json()["profile_id"] is None
 
-        # Failure in GET-current-user, if it provisionally depends on
-        # `current_user_act_ver_prof`
         assert app.dependency_overrides == {}
         app.dependency_overrides[current_user_act] = current_user_act_ver_prof
+
+        # Failure in GET-current-user, if it provisionally depends on
+        # `current_user_act_ver_prof`
         res = await client.get("/auth/current-user/")
         assert res.status_code == 403
         assert res.json()["detail"] == (
             "Forbidden access (user.is_verified=True user.profile_id=None)."
         )
+
+        # Set user.profile_id
+        _, profile = local_resource_profile_db
+        user = await db.get(UserOAuth, user_id)
+        user.profile_id = profile.id
+        db.add(user)
+        await db.commit()
+        await db.close()
+
+        res = await client.get("/auth/current-user/")
+        assert res.status_code == 200
+
         app.dependency_overrides = {}
