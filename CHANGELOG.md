@@ -15,6 +15,7 @@ TBD
 
 
 \#2890 (oauth self-registration)
+\#2896
 
 # 2.16.6
 

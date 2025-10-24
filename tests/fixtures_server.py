@@ -236,15 +236,17 @@ async def registered_client(  # FIXME maybe remove?
 
 @pytest.fixture
 async def registered_superuser_client(
-    app: FastAPI, register_routers, db
+    app: FastAPI, register_routers, db, local_resource_profile_db
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "some-admin@example.org"
     PWD = "some-admin-password"
+    resouce, profile = local_resource_profile_db
     await _create_first_user(
         email=EMAIL,
         password=PWD,
         is_superuser=True,
         project_dir=PROJECT_DIR_PLACEHOLDER,
+        profile_id=profile.id,
     )
     async with (
         AsyncClient(
@@ -441,10 +443,13 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
 
 
 @pytest.fixture(scope="function")
-async def first_user(db: AsyncSession, default_user_group: UserGroup):
+async def first_user(
+    db: AsyncSession, default_user_group: UserGroup, local_resource_profile_db
+):
     """
     Make sure that at least one user exists.
     """
+    resource, profile = local_resource_profile_db
     res = await db.execute(select(UserOAuth).order_by(UserOAuth.id))
     user = res.scalars().first()
     if user is None:
@@ -453,6 +458,7 @@ async def first_user(db: AsyncSession, default_user_group: UserGroup):
             hashed_password="fake_password",
             is_active=True,
             is_verified=True,
+            profile_id=profile.id,
         )
         db.add(user)
         await db.commit()

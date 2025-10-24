@@ -82,7 +82,10 @@ async def test_update_group(registered_superuser_client):
 
 
 async def test_user_group_crud(
-    registered_superuser_client, db, default_user_group
+    registered_superuser_client,
+    db,
+    default_user_group,
+    local_resource_profile_db,
 ):
     """
     Test basic working of POST/GET/PATCH for user groups.
@@ -199,12 +202,12 @@ async def test_user_group_crud(
     assert "is not a member" in res.json()["detail"]
 
     # DELETE (and cascade operations)
-
     task_group = TaskGroupV2(
         user_id=user_A_id,
         user_group_id=group_1_id,
         origin="pypi",
         pkg_name="fractal-tasks-core",
+        resource_id=local_resource_profile_db[0].id,
     )
     db.add(task_group)
     await db.commit()

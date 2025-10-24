@@ -14,8 +14,9 @@ async def test_collect_pip_existing_folder(
     tmp_path,
     db,
     first_user,
-    local_resource_profile_objects,
+    local_resource_profile_db,
 ):
+    resource, profile = local_resource_profile_db
     # Prepare db objects
     path = tmp_path / "something"
     task_group = TaskGroupV2(
@@ -25,6 +26,7 @@ async def test_collect_pip_existing_folder(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -49,8 +51,8 @@ async def test_collect_pip_existing_folder(
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         wheel_file=None,
-        resource=local_resource_profile_objects[0],
-        profile=local_resource_profile_objects[1],
+        resource=resource,
+        profile=profile,
     )
     # Verify that collection failed
     task_group_activity_v2 = await db.get(
@@ -67,7 +69,7 @@ async def test_collect_pip_local_fail_rmtree(
     first_user,
     current_py_version,
     monkeypatch,
-    local_resource_profile_objects,
+    local_resource_profile_db,
 ):
     import fractal_server.tasks.v2.local.collect
 
@@ -81,6 +83,7 @@ async def test_collect_pip_local_fail_rmtree(
     )
 
     # Prepare db objects
+    resource, profile = local_resource_profile_db
     path = tmp_path / "rmtree-error"
     task_group = TaskGroupV2(
         pkg_name="fractal-tasks-mock",
@@ -91,6 +94,7 @@ async def test_collect_pip_local_fail_rmtree(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     debug(task_group)
     db.add(task_group)
@@ -119,8 +123,8 @@ async def test_collect_pip_local_fail_rmtree(
                 contents=b"fakebytes",
                 filename="fractal_tasks_mock-0.0.1-py3-none-any.whl",
             ),
-            resource=local_resource_profile_objects[0],
-            profile=local_resource_profile_objects[1],
+            resource=resource,
+            profile=profile,
         )
     except RuntimeError as e:
         print(
@@ -144,7 +148,7 @@ async def test_invalid_wheel(
     current_py_version,
     testdata_path: Path,
     db,
-    local_resource_profile_objects,
+    local_resource_profile_db,
 ):
     """
     GIVEN a package with invalid/missing manifest or missing executable
@@ -152,12 +156,14 @@ async def test_invalid_wheel(
     THEN the expected log is shown
     """
 
+    resource, profile = local_resource_profile_db
+
     pkgnames_logs = [
         ("invalid_manifest", "manifest_version"),
         ("missing_manifest", "manifest path not found"),
         ("missing_executable", "missing file"),
     ]
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
         for name, log in pkgnames_logs:
             archive_path = (
                 testdata_path.parent
@@ -174,6 +180,7 @@ async def test_invalid_wheel(
                 path=(tmp_path / name).as_posix(),
                 venv_path=(tmp_path / name / "venv").as_posix(),
                 user_id=user.id,
+                resource_id=resource.id,
             )
 
             db.add(task_group)
@@ -202,8 +209,8 @@ async def test_invalid_wheel(
                         contents=whl.read(),
                         filename=archive_path.name,
                     ),
-                    resource=local_resource_profile_objects[0],
-                    profile=local_resource_profile_objects[1],
+                    resource=resource,
+                    profile=profile,
                 )
 
             task_group_activity = await db.get(

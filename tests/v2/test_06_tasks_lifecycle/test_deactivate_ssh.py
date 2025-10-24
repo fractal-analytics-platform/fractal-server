@@ -34,6 +34,7 @@ async def test_deactivate_fail_no_venv_path(
     slurm_ssh_resource_profile_db,
     fractal_ssh,
 ):
+    resource, profile = slurm_ssh_resource_profile_db
     path = tmp777_path / "something"
     task_group = TaskGroupV2(
         pkg_name="pkg",
@@ -42,6 +43,7 @@ async def test_deactivate_fail_no_venv_path(
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -59,8 +61,6 @@ async def test_deactivate_fail_no_venv_path(
     await db.commit()
     await db.refresh(task_group_activity)
     db.expunge(task_group_activity)
-
-    resource, profile = slurm_ssh_resource_profile_db
 
     # background task
     deactivate_ssh(
@@ -117,6 +117,7 @@ async def test_deactivate_ssh_fail(
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -175,6 +176,7 @@ async def test_deactivate_wheel_no_archive_path(
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
         env_info="pip",
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -254,6 +256,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         user_id=first_user.id,
         env_info="pip",
         python_version=current_py_version,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -360,6 +363,7 @@ async def test_deactivate_ssh_github_dependency(
             "@166bf6190c1827b5a5ece4a5542433c96a2bc997"
             "\n"
         ),
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()

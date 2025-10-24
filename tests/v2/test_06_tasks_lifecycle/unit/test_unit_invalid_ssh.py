@@ -19,14 +19,16 @@ async def test_unit_invalid_ssh(
     first_user,
     tmp777_path: Path,
     monkeypatch,
-    slurm_ssh_resource_profile_fake_objects,
+    slurm_ssh_resource_profile_fake_db,
 ):
+    resource, profile = slurm_ssh_resource_profile_fake_db
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
         origin="pypi",
         path=(tmp777_path / "somewhere").as_posix(),
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -57,8 +59,6 @@ async def test_unit_invalid_ssh(
         "get_logger",
         _patched_get_logger,
     )
-
-    resource, profile = slurm_ssh_resource_profile_fake_objects
 
     for function, custom_args in [
         (collect_ssh, dict(wheel_file=None)),

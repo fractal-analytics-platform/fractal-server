@@ -41,6 +41,7 @@ async def test_reactivate_ssh_venv_exists(
         path=path.as_posix(),
         venv_path=f"{tmp777_path}/i_am_here",
         user_id=first_user.id,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
@@ -129,6 +130,7 @@ async def test_reactivate_ssh_fail(
         venv_path=(path / "venv").as_posix(),
         user_id=first_user.id,
         env_info="something==99.99.99",
+        resource_id=resource.id,
     )
     debug(task_group)
     db.add(task_group)

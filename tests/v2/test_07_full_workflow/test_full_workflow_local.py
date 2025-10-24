@@ -31,6 +31,7 @@ async def test_full_workflow_local(
     local_resource_profile_db,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    resource, profile = local_resource_profile_db
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -39,8 +40,9 @@ async def test_full_workflow_local(
         client=client,
         tasks=fractal_tasks_mock_db,
         user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
+            profile_id=profile.id,
         ),
+        resource_id=resource.id,
     )
 
 
@@ -60,6 +62,7 @@ async def test_full_workflow_TaskExecutionError(
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    resource, profile = local_resource_profile_db
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -67,9 +70,8 @@ async def test_full_workflow_TaskExecutionError(
         workflow_factory_v2=workflow_factory_v2,
         client=client,
         tasks=fractal_tasks_mock_db,
-        user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-        ),
+        user_kwargs=dict(profile_id=profile.id),
+        resource_id=resource.id,
     )
 
 
@@ -89,6 +91,7 @@ async def test_non_executable_task_command_local(
     not executable).
     """
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    resource, profile = local_resource_profile_db
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
         client=client,
@@ -98,8 +101,9 @@ async def test_non_executable_task_command_local(
         dataset_factory_v2=dataset_factory_v2,
         task_factory_v2=task_factory_v2,
         user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
+            profile_id=profile.id,
         ),
+        resource_id=resource.id,
     )
 
 
@@ -120,6 +124,7 @@ async def test_failing_workflow_UnknownError_local(
     """
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    resource, profile = local_resource_profile_db
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
         client=client,
@@ -128,9 +133,8 @@ async def test_failing_workflow_UnknownError_local(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
-        user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-        ),
+        user_kwargs=dict(profile_id=profile.id),
+        resource_id=resource.id,
     )
 
 
@@ -153,6 +157,8 @@ async def test_non_python_task_local(
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
+    resource, profile = local_resource_profile_db
+
     await workflow_with_non_python_task(
         client=client,
         MockCurrentUser=MockCurrentUser,
@@ -162,9 +168,8 @@ async def test_non_python_task_local(
         task_factory_v2=task_factory_v2,
         testdata_path=testdata_path,
         tmp777_path=tmp777_path,
-        additional_user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-        ),
+        additional_user_kwargs=dict(profile_id=profile.id),
+        resource_id=resource.id,
     )
 
 
@@ -180,6 +185,7 @@ async def test_failing_workflow_post_task_execution(
     local_resource_profile_db,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    resource, profile = local_resource_profile_db
 
     await failing_workflow_post_task_execution(
         MockCurrentUser=MockCurrentUser,
@@ -189,7 +195,6 @@ async def test_failing_workflow_post_task_execution(
         client=client,
         tasks=fractal_tasks_mock_db,
         tmp_path=tmp_path,
-        user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-        ),
+        user_kwargs=dict(profile_id=profile.id),
+        resource_id=resource.id,
     )

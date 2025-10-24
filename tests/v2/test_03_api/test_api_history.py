@@ -13,6 +13,7 @@ async def test_get_workflow_tasks_statuses(
     MockCurrentUser,
     client,
     db,
+    local_resource_profile_db,
 ):
     """
     Test the status endpoint, especially as of
@@ -29,8 +30,10 @@ async def test_get_workflow_tasks_statuses(
     5      | None  | None                | None
 
     """
-
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, "profile_id": profile.id}
+    ) as user:
         user_id = user.id
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
@@ -53,6 +56,7 @@ async def test_get_workflow_tasks_statuses(
         origin="other",
         pkg_name="echoes",
         active=True,
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()

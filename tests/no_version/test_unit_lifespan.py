@@ -28,6 +28,7 @@ async def test_app_with_lifespan(
     dataset_factory_v2,
     job_factory_v2,
     tmp_path,
+    local_resource_profile_db,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     app = FastAPI()
@@ -35,7 +36,7 @@ async def test_app_with_lifespan(
     assert res.unique().all() == []
 
     # create first user
-
+    resource, profile = local_resource_profile_db
     _create_first_group()
     await _create_first_user(
         email="admin@example.org",
@@ -43,6 +44,7 @@ async def test_app_with_lifespan(
         is_superuser=True,
         is_verified=True,
         project_dir="/fake",
+        profile_id=profile.id,
     )
     res = await db.execute(select(UserOAuth))
     user = res.scalars().unique().one()  # assert only one user

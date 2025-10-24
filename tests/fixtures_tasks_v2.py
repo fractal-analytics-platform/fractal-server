@@ -9,9 +9,12 @@ from typing import Any
 import pytest
 from pytest import TempdirFactory
 from sqlalchemy.orm import Session as DBSyncSession
+from sqlmodel import select
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import ManifestV2
@@ -91,14 +94,21 @@ def fractal_tasks_mock_db(
     first_user: UserOAuth,
     default_user_group: UserGroup,
 ) -> dict[str, TaskV2]:
+    res = db_sync.execute(
+        select(Resource.id)
+        .join(Profile)
+        .where(Profile.resource_id == Resource.id)
+        .where(first_user.profile_id == Profile.id)
+    )
+    resource_id = res.scalar_one()
+
     task_group_obj = TaskGroupCreateV2(
         origin="other",
         pkg_name="fractal_tasks_mock",
         user_id=first_user.id,
+        resource_id=resource_id,
         user_group_id=default_user_group.id,
     )
-
-    # FIXME: We may need a `resource_id` attached to this task group
     task_group = TaskGroupV2(**task_group_obj.model_dump())
     db_sync.add(task_group)
     db_sync.commit()

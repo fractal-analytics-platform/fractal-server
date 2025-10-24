@@ -35,6 +35,7 @@ async def test_collect_local_pixi_path_exists(
         path=path.as_posix(),
         user_id=first_user.id,
         pixi_version="x",
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()

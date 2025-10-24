@@ -73,6 +73,7 @@ async def test_task_collection_from_wheel_non_canonical(
         log = task_group_activity["log"]
         assert log is not None
         # Check that my_extra was included, in a local-package collection
+        debug(log)
         assert ".whl[my_extra]" in log
         assert task_group_activity["status"] == "OK"
         assert task_group_activity["timestamp_ended"] is not None
@@ -228,6 +229,7 @@ async def test_task_collection_failure_due_to_existing_path(
             pkg_name="testing-tasks-mock-FAKE",
             version="0.1.3",
             user_id=user.id,
+            resource_id=resource.id,
         )
         db.add(tg)
         await db.commit()
@@ -250,7 +252,9 @@ async def test_contact_an_admin_message(
     resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
     # default UserGroup (this is NOT ALLOWED using the API).
-    async with MockCurrentUser() as userA:
+    async with MockCurrentUser(
+        user_kwargs={"profile_id": profile.id}
+    ) as userA:
         for _ in range(2):
             db.add(
                 TaskGroupV2(
@@ -259,6 +263,7 @@ async def test_contact_an_admin_message(
                     pkg_name="testing-tasks-mock",
                     version="0.1.2",
                     origin="pypi",
+                    resource_id=resource.id,
                 )
             )
         await db.commit()
@@ -285,6 +290,7 @@ async def test_contact_an_admin_message(
                     pkg_name="testing-tasks-mock",
                     version="0.1.2",
                     origin="pypi",
+                    resource_id=resource.id,
                 )
             )
         await db.commit()
@@ -304,6 +310,7 @@ async def test_contact_an_admin_message(
             pkg_name="testing-tasks-mock",
             version="0.1.3",
             origin="pypi",
+            resource_id=resource.id,
         )
         db.add(task_group)
         await db.commit()

@@ -100,11 +100,13 @@ async def test_dummy_insert_single_image(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
+    resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
         execute_tasks_v2_args = dict(
             runner=local_runner,
             user_id=user.id,

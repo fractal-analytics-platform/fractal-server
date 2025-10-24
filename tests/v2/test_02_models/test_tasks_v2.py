@@ -8,8 +8,11 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
 
-async def test_task_group_v2(db):
-    user = UserOAuth(email="user@example.org", hashed_password="1234")
+async def test_task_group_v2(db, local_resource_profile_db):
+    resource, profile = local_resource_profile_db
+    user = UserOAuth(
+        email="user@example.org", hashed_password="1234", profile_id=profile.id
+    )
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -37,6 +40,7 @@ async def test_task_group_v2(db):
 
     task_group = TaskGroupV2(
         user_id=user.id,
+        resource_id=resource.id,
         active=True,
         task_list=[task1, task2, task3],
         origin="wheel-file",
@@ -100,8 +104,11 @@ async def test_task_group_v2(db):
     assert task3 is None
 
 
-async def test_collection_state(db):
-    user = UserOAuth(email="user@example.org", hashed_password="1234")
+async def test_collection_state(db, local_resource_profile_db):
+    resource, profile = local_resource_profile_db
+    user = UserOAuth(
+        email="user@example.org", hashed_password="1234", profile_id=profile.id
+    )
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -110,6 +117,7 @@ async def test_collection_state(db):
         user_id=user.id,
         origin="wheel-file",
         pkg_name="package-name",
+        resource_id=resource.id,
     )
     db.add(task_group)
     await db.commit()
