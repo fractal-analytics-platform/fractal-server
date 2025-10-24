@@ -19,6 +19,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
@@ -46,10 +48,22 @@ async def get_list_task(
     """
     Get list of available tasks
     """
+    res = await db.execute(
+        select(Resource.id)
+        .join(Profile)
+        .where(Resource.id == Profile.resource_id)
+        .where(Profile.id == user.profile_id)
+    )
+    user_resource_id = res.scalar_one_or_none()
+
+    if user_resource_id is None:
+        return []
+
     stm = (
         select(TaskV2)
         .join(TaskGroupV2)
         .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskGroupV2.resource_id == user_resource_id)
         .where(
             or_(
                 TaskGroupV2.user_id == user.id,
