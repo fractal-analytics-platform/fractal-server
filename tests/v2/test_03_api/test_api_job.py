@@ -58,7 +58,7 @@ async def test_submit_job_failures(
     ) as user:
         task = await task_factory_v2(user_id=user.id)
         # 1
-        project1 = await project_factory_v2(user, resource_id=res.id)
+        project1 = await project_factory_v2(user)
         dataset1 = await dataset_factory_v2(
             project_id=project1.id, name="dataset1"
         )
@@ -68,10 +68,10 @@ async def test_submit_job_failures(
             workflow_id=workflow1a.id, task_id=task.id, db=db
         )
         # 2
-        project2 = await project_factory_v2(user, resource_id=res.id)
+        project2 = await project_factory_v2(user)
         workflow2 = await workflow_factory_v2(project_id=project2.id)
         # 3
-        project3 = await project_factory_v2(user, resource_id=res2.id)
+        project3 = await project_factory_v2(user)
         dataset3 = await dataset_factory_v2(
             project_id=project3.id, name="dataset3"
         )
@@ -149,7 +149,7 @@ async def test_submit_job_ssh_connection_failure(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource.id)
+        project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="ds1", type="type1"
         )
@@ -189,7 +189,7 @@ async def test_submit_incompatible_filters(
     ) as user:
         task = await task_factory_v2(user_id=user.id, input_types={"a": True})
 
-        project = await project_factory_v2(user, resource_id=res.id)
+        project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(project_id=project.id)
 
         workflow1 = await workflow_factory_v2(project_id=project.id)
@@ -246,7 +246,7 @@ async def test_submit_jobs_with_same_dataset(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user, resource_id=res.id)
+        project = await project_factory_v2(user)
         dataset1 = await dataset_factory_v2(
             project_id=project.id, name="dataset1"
         )
@@ -319,7 +319,7 @@ async def test_project_apply_workflow_subset(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user, resource_id=res.id)
+        project = await project_factory_v2(user)
         dataset1 = await dataset_factory_v2(
             project_id=project.id, name="ds1", type="type1"
         )
@@ -454,7 +454,7 @@ async def test_project_apply_slurm_account(
             profile_id=profile.id,
         )
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource.id)
+        project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="ds1", type="type1"
         )
@@ -492,7 +492,7 @@ async def test_project_apply_slurm_account(
             "slurm_accounts": SLURM_LIST,
         },
     ) as user2:
-        project = await project_factory_v2(user2, resource_id=resource.id)
+        project = await project_factory_v2(user2)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="ds2", type="type2"
         )
@@ -711,7 +711,7 @@ async def test_update_timestamp_taskgroup(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user, resource_id=res.id)
+        project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, name="dataset"
         )

@@ -37,7 +37,7 @@ async def test_clean_app_job_list_v2(
         task = await task_factory_v2(
             user_id=user.id, name="task", command_non_parallel="echo"
         )
-        project = await project_factory_v2(user, resource_id=res.id)
+        project = await project_factory_v2(user)
         workflow = await workflow_factory_v2(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db

@@ -38,9 +38,14 @@ async def project_factory_v2(db):
     """
 
     async def __project_factory(user, **kwargs):
-        defaults = dict(name="project")
-        defaults.update(kwargs)
-        project = ProjectV2(**defaults)
+        res = await db.execute(
+            select(Resource.id)
+            .join(Profile)
+            .where(Resource.id == Profile.resource_id)
+            .where(Profile.id == user.profile_id)
+        )
+        resource_id = res.scalar_one()
+        project = ProjectV2(name="project", resource_id=resource_id, **kwargs)
         project.user_list.append(user)
         db.add(project)
         await db.commit()

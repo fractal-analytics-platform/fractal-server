@@ -42,7 +42,7 @@ async def full_workflow(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -321,7 +321,7 @@ async def full_workflow_TaskExecutionError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -434,7 +434,7 @@ async def non_executable_task_command(
         debug(task)
 
         # Create project
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
 
         # Create workflow
@@ -497,7 +497,7 @@ async def failing_workflow_UnknownError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id,
@@ -607,7 +607,7 @@ async def workflow_with_non_python_task(
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
 
         # Create workflow
@@ -707,7 +707,7 @@ async def failing_workflow_post_task_execution(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
     ) as user:
-        project = await project_factory_v2(user, resource_id=resource_id)
+        project = await project_factory_v2(user)
         project_id = project.id
 
         zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
