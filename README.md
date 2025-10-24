@@ -5,7 +5,7 @@
 | Name                                                                         |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |----------------------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | fractal\_server/\_\_init\_\_.py                                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/\_\_main\_\_.py                                              |      159 |       63 |       36 |        1 |     58% |104-110, 120-135, 265-325, 329-336, 340-365, 369 |
+| fractal\_server/\_\_main\_\_.py                                              |      149 |       55 |       34 |        1 |     61% |95-101, 111-126, 256-316, 320-343, 347 |
 | fractal\_server/app/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/db/\_\_init\_\_.py                                       |       56 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        5 |        0 |        0 |        0 |    100% |           |
@@ -100,12 +100,12 @@
 | fractal\_server/app/schemas/v2/workflow.py                                   |       38 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/workflowtask.py                               |       71 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/security/\_\_init\_\_.py                                 |      174 |       30 |       32 |        1 |     80% |115-128, 147-148, 153-162, 167-175, 208, 263, 341-345 |
-| fractal\_server/app/security/signup\_email.py                                |       20 |        8 |        4 |        0 |     50% |     33-44 |
+| fractal\_server/app/security/signup\_email.py                                |       19 |        8 |        4 |        0 |     48% |     31-38 |
 | fractal\_server/app/shutdown.py                                              |       34 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/app/user\_settings.py                                        |        7 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_\_init\_\_.py                                       |       13 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_database.py                                         |       27 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/config/\_email.py                                            |       68 |        0 |       12 |        0 |    100% |           |
+| fractal\_server/config/\_email.py                                            |       52 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/config/\_main.py                                             |       36 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/config/\_oauth.py                                            |       29 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_settings\_config.py                                 |        2 |        0 |        0 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **10150** |  **275** | **1780** |   **90** | **97%** |           |
+|                                                                    **TOTAL** | **10123** |  **267** | **1772** |   **90** | **97%** |           |
 
 
 ## Setup coverage badge
