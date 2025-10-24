@@ -49,31 +49,36 @@ fastapi_users = FastAPIUsers[UserOAuth, int](
     get_user_manager,
     [token_backend, cookie_backend],
 )
+
+# Current-user dependencies
 current_user_act = fastapi_users.current_user(active=True)
 current_user_act_ver = fastapi_users.current_user(
     active=True,
     verified=True,
 )
+
+
+async def current_user_act_ver_prof(
+    user: UserOAuth = Depends(current_user_act_ver),
+) -> UserOAuth:
+    """
+    Require a active&verified user, with a non-null `profile_id`.
+
+    Raises 401 if user does not exist or is not active.
+    Raises 403 if user is not verified or has null `profile_id`.
+    """
+    if user.profile_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Forbidden access "
+                f"({user.is_verified=} {user.profile_id=})."
+            ),
+        )
+    return user
+
+
 current_superuser_act = fastapi_users.current_user(
     active=True,
     superuser=True,
 )
-
-current_user = fastapi_users.current_user()
-
-
-async def current_user_act_ver_prof(
-    user: UserOAuth = Depends(current_user),
-) -> UserOAuth:
-    if any(
-        (
-            not user.is_active,
-            not user.is_verified,
-            user.profile_id is None,
-        )
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden access.",
-        )
-    return user

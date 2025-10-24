@@ -16,7 +16,6 @@ from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act
-from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
@@ -52,7 +51,7 @@ async def get_current_user(
 @router_current_user.patch("/current-user/", response_model=UserRead)
 async def patch_current_user(
     user_update: UserUpdateStrict,
-    current_user: UserOAuth = Depends(current_user_act_ver_prof),
+    current_user: UserOAuth = Depends(current_user_act),
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
 ):
