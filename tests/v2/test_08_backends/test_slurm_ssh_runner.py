@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,15 @@ from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+
+def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):
+    """
+    This is useful to avoid "garbage" folders (in pytest tmp folder) that
+    cannot be removed because of wrong permissions.
+    """
+    logging.warning(f"[_reset_permissions] {remote_folder=}")
+    fractal_ssh.run_command(cmd=f"chmod -R 777 {remote_folder}")
 
 
 @pytest.mark.ssh
@@ -54,6 +64,7 @@ async def test_submit_success(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -90,6 +101,8 @@ async def test_submit_success(
     else:
         assert unit.status == HistoryUnitStatus.SUBMITTED
 
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
+
 
 @pytest.mark.ssh
 @pytest.mark.container
@@ -124,6 +137,7 @@ async def test_submit_fail(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -158,6 +172,8 @@ async def test_submit_fail(
     debug(unit)
     assert unit.status == HistoryUnitStatus.FAILED
 
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
+
 
 @pytest.mark.ssh
 @pytest.mark.container
@@ -177,6 +193,7 @@ async def test_multisubmit_parallel(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -218,6 +235,8 @@ async def test_multisubmit_parallel(
         debug(unit)
         assert unit.status == HistoryUnitStatus.DONE
 
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
+
 
 @pytest.mark.ssh
 @pytest.mark.container
@@ -237,6 +256,7 @@ async def test_multisubmit_compound(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -290,6 +310,8 @@ async def test_multisubmit_compound(
         # for compound tasks
         assert unit.status == HistoryUnitStatus.SUBMITTED
 
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
+
 
 @pytest.mark.ssh
 @pytest.mark.container
@@ -298,9 +320,9 @@ def test_send_many_job_inputs_failure(
     fractal_ssh,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
 ):
-    root_dir_local = tmp777_path / "local"
+    root_dir_local = tmp777_path / "server"
     root_dir_local.mkdir(parents=True)
-    root_dir_remote = tmp777_path / "remote"
+    root_dir_remote = tmp777_path / "user"
     dummy_file = root_dir_local / "foo.txt"
     dummy_file.touch()
     res, prof = slurm_ssh_resource_profile_objects[:]
@@ -309,6 +331,7 @@ def test_send_many_job_inputs_failure(
         fractal_ssh=fractal_ssh,
         root_dir_local=root_dir_local,
         root_dir_remote=root_dir_remote,
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
     ) as runner:
@@ -328,3 +351,5 @@ def test_send_many_job_inputs_failure(
     tar_path_local = root_dir_local.with_suffix(".tar.gz")
     assert not tar_path_local.exists()
     assert dummy_file.exists()
+
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)

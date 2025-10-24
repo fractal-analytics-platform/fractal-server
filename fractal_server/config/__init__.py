@@ -2,6 +2,7 @@ from ._database import DatabaseSettings
 from ._email import EmailSettings
 from ._email import PublicEmailSettings  # noqa F401
 from ._main import Settings
+from ._main import ViewerAuthScheme  # noqa F401
 from ._oauth import OAuthSettings
 
 

@@ -14,7 +14,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ async def query_tasks(
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
     """

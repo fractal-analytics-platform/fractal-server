@@ -46,14 +46,19 @@ def test_init_db_data_resource_and_profile(
 def test_init_db_data_user_and_password(db_sync):
     email = "admin@example.org"
     password = "1234"
+    project_dir = "/fake"
 
     with pytest.raises(SystemExit):
-        init_db_data(admin_password=password)
+        init_db_data(admin_password=password, admin_project_dir=project_dir)
 
     with pytest.raises(SystemExit):
-        init_db_data(admin_email=email)
+        init_db_data(admin_email=email, admin_project_dir=project_dir)
 
-    init_db_data(admin_email=email, admin_password=password)
+    init_db_data(
+        admin_email=email,
+        admin_password=password,
+        admin_project_dir=project_dir,
+    )
 
 
 def test_init_db_data_all_args(
@@ -61,6 +66,7 @@ def test_init_db_data_all_args(
 ):
     email = "admin@example.org"
     password = "1234"
+    project_dir = "/fake"
 
     resource_obj, profile_obj = local_resource_profile_objects
     resource_path = tmp_path / "resource.json"
@@ -77,6 +83,7 @@ def test_init_db_data_all_args(
         profile=profile_path,
         admin_email=email,
         admin_password=password,
+        admin_project_dir=project_dir,
     )
 
     res = db_sync.execute(select(UserOAuth).where(UserOAuth.email == email))

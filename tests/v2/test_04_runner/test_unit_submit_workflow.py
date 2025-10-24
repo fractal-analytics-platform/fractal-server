@@ -38,6 +38,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             user_id=user.id,
             resource=res,
             profile=prof,
+            user_cache_dir=tmp_path / "cache",
         )
 
         job = await job_factory_v2(
@@ -54,6 +55,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             user_id=user.id,
             resource=res,
             profile=prof,
+            user_cache_dir=tmp_path / "cache",
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV2.FAILED
@@ -159,6 +161,7 @@ async def test_submit_workflow_failure(
             user_id=user.id,
             resource=res,
             profile=prof,
+            user_cache_dir=tmp_path / "cache",
         )
 
     job = await db.get(JobV2, job.id)

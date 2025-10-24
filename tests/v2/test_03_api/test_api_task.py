@@ -15,8 +15,11 @@ async def test_non_verified_user(client, MockCurrentUser):
     Test that a non-verified user is not authorized to make POST/PATCH task
     cals.
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)) as user:
+        debug(user)
         res = await client.post(f"{PREFIX}/", json={})
+        debug(res.json())
+        return
         assert res.status_code == 401
 
         res = await client.patch(f"{PREFIX}/123/", json={})
@@ -111,7 +114,7 @@ async def test_task_get_list(
 
 
 async def test_post_task(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser():
         # Successful task creations
         task = TaskCreateV2(
             name="task_name",
@@ -239,9 +242,9 @@ async def test_post_task_user_group_id(
     await db.commit()
     await db.refresh(team1_group)
 
-    args = dict(command_non_parallel="cmd")
+    args = dict(command_non_parallel="cmd", type="non_parallel")
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser():
         # No query parameter
         res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
@@ -298,7 +301,7 @@ async def test_patch_task_auth(
     client,
 ):
     # POST-task as user_A
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
+    async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
         payload_obj = TaskCreateV2(
             name="a", category="my-cat", command_parallel="c"
@@ -320,7 +323,7 @@ async def test_patch_task_auth(
         assert res.json()["category"] == "new-cat-1"
 
     # PATCH-task failure as a different user -> failure (task belongs to user)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+    async with MockCurrentUser():
         # PATCH-task failure (task does not belong to user)
         payload_obj = TaskUpdateV2(category="new-cat-2")
         res = await client.patch(

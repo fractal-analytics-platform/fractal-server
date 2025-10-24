@@ -7,6 +7,9 @@ from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     _get_slurm_config_internal,
 )
+from fractal_server.runner.executors.slurm_common.slurm_config import (
+    SlurmConfig,
+)
 
 
 class MockTaskV2(BaseModel):
@@ -161,3 +164,27 @@ def test_get_slurm_config_internal_gpu_options():
     assert slurm_config.partition == GPU_PARTITION
     assert slurm_config.gpus == GPUS
     assert slurm_config.mem_per_task_MB == GPU_MEM_PER_TASK_MB
+
+
+def test_SlurmConfig():
+    cfg = SlurmConfig(
+        partition="x",
+        cpus_per_task=1,
+        mem_per_task_MB=1,
+        target_cpus_per_job=1,
+        max_cpus_per_job=1,
+        target_mem_per_job=1,
+        max_mem_per_job=1,
+        target_num_jobs=1,
+        max_num_jobs=1,
+        parallel_tasks_per_job=1,
+        user_local_exports={"CELLPOSE_LOCAL_MODELS_PATH": "cellpose"},
+    )
+
+    # Without trailing slash
+    preamble = cfg.to_sbatch_preamble(remote_export_dir="/cache/dir")
+    assert "export CELLPOSE_LOCAL_MODELS_PATH=/cache/dir/cellpose" in preamble
+
+    # With trailing slash
+    preamble = cfg.to_sbatch_preamble(remote_export_dir="/cache/dir/")
+    assert "export CELLPOSE_LOCAL_MODELS_PATH=/cache/dir/cellpose" in preamble

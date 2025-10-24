@@ -71,6 +71,7 @@ async def test_submit_shutdown(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -130,6 +131,7 @@ async def test_multisubmit_shutdown(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -199,6 +201,7 @@ async def test_shutdown_before_submit(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -251,6 +254,7 @@ async def test_shutdown_before_multisubmit(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:

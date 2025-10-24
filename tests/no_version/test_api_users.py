@@ -1,8 +1,7 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.models.security import OAuthAccount
-from fractal_server.app.models.security import UserOAuth
+from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
 
@@ -15,7 +14,11 @@ async def test_register_user(
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="12345")
+    payload_register = dict(
+        email=EMAIL,
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
 
     # Non-superuser user: FORBIDDEN
     res = await registered_client.post(
@@ -35,7 +38,11 @@ async def test_register_user(
 
     # Superuser: ALLOWED
     EMAIL = "asd2@asd.asd"
-    payload_register2 = dict(email=EMAIL, password="12345")
+    payload_register2 = dict(
+        email=EMAIL,
+        password="12345",
+        project_dir=PROJECT_DIR_PLACEHOLDER,
+    )
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register2
@@ -49,7 +56,10 @@ async def test_register_user(
     _, profile = local_resource_profile_db
     EMAIL = "asd3@asd.asd"
     payload_register3 = dict(
-        email=EMAIL, password="12345", profile_id=profile.id
+        email=EMAIL,
+        password="12345",
+        profile_id=profile.id,
+        project_dir=PROJECT_DIR_PLACEHOLDER,
     )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register3
@@ -67,10 +77,20 @@ async def test_list_users(registered_client, registered_superuser_client):
 
     # Create two users
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12345")
+        f"{PREFIX}/register/",
+        json=dict(
+            email="0@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12345")
+        f"{PREFIX}/register/",
+        json=dict(
+            email="1@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
 
     # Non-superuser user is not allowed
@@ -90,7 +110,11 @@ async def test_list_users(registered_client, registered_superuser_client):
 async def test_show_user(registered_client, registered_superuser_client):
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_show@asd.asd", password="12345"),
+        json=dict(
+            email="to_show@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     user_id = res.json()["id"]
     assert res.status_code == 201
@@ -115,7 +139,11 @@ async def test_edit_users_as_superuser(
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="test@example.org", password="12345"),
+        json=dict(
+            email="test@example.org",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -215,7 +243,11 @@ async def test_add_superuser(registered_superuser_client):
     # Create non-superuser user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="future_superuser@asd.asd", password="12345"),
+        json=dict(
+            email="future_superuser@asd.asd",
+            password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
+        ),
     )
     debug(res.json())
     user_id = res.json()["id"]
@@ -236,37 +268,6 @@ async def test_delete_user_method_not_allowed(registered_superuser_client):
     assert res.status_code == 405
 
 
-@pytest.mark.skip(reason="DELETE endpoint is currently disabled")
-async def test_delete_user(registered_client, registered_superuser_client):
-    """
-    Check that DELETE/{user_id} returns some of the correct responses:
-        * 204 No content
-        * 401 Unauthorized - Missing token or inactive user.
-        * 403 Forbidden - Not a superuser.
-        * 404 Not found - The user does not exist.
-    """
-
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/",
-        json=dict(email="to_delete@asd.asd", password="1234"),
-    )
-    user_id = res.json()["id"]
-    debug(res.json)
-    assert res.status_code == 201
-
-    # Test delete endpoint
-    res = await registered_client.delete(f"{PREFIX}/users/{user_id}/")
-    assert res.status_code == 403
-    res = await registered_superuser_client.delete(
-        f"{PREFIX}/users/{user_id}/"
-    )
-    assert res.status_code == 204
-    res = await registered_superuser_client.delete(
-        f"{PREFIX}/users/THIS-IS-NOT-AN-ID"
-    )
-    assert res.status_code == 404
-
-
 async def test_set_groups_endpoint(
     registered_superuser_client,
     default_user_group,
@@ -277,6 +278,7 @@ async def test_set_groups_endpoint(
         json=dict(
             email="test@example.org",
             password="12345",
+            project_dir=PROJECT_DIR_PLACEHOLDER,
             slurm_accounts=["foo", "bar"],
         ),
     )
@@ -367,13 +369,14 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-    u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
-    u2 = UserOAuth(email="user2@email.com", hashed_password="abc2")
-    db.add(u1)
-    db.add(u2)
-    await db.commit()
-    await db.refresh(u1)
-    await db.refresh(u2)
+    async with MockCurrentUser(
+        user_kwargs=dict(email="user1@email.org")
+    ) as u1:
+        u1_id = u1.id
+    async with MockCurrentUser(
+        user_kwargs=dict(email="user2@email.org")
+    ) as u2:
+        u2_id = u2.id
 
     oauth1 = OAuthAccount(
         user_id=u1.id,
@@ -383,14 +386,14 @@ async def test_oauth_accounts_list(
         access_token="aaa",
     )
     oauth2 = OAuthAccount(
-        user_id=u1.id,
+        user_id=u1_id,
         oauth_name="google",
         account_email="user1@gmail.com",
         account_id="222",
         access_token="bbb",
     )
     oauth3 = OAuthAccount(
-        user_id=u2.id,
+        user_id=u2_id,
         oauth_name="oidc",
         account_email="user2@uzh.com",
         account_id="333",
@@ -405,15 +408,15 @@ async def test_oauth_accounts_list(
     # test GET /auth/users/
     res = await registered_superuser_client.get(f"{PREFIX}/users/")
     for user in res.json():
-        if user["id"] == u1.id:
+        if user["id"] == u1_id:
             assert len(user["oauth_accounts"]) == 2
-        elif user["id"] == u2.id:
+        elif user["id"] == u2_id:
             assert len(user["oauth_accounts"]) == 1
         else:
             assert len(user["oauth_accounts"]) == 0
 
     # test GET /auth/users/{user_id}/
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{u1.id}/")
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u1_id}/")
     assert len(res.json()["oauth_accounts"]) == 2
     assert res.json()["group_ids_names"] is not None
     res = await registered_superuser_client.get(
@@ -421,86 +424,26 @@ async def test_oauth_accounts_list(
     )
     assert len(res.json()["oauth_accounts"]) == 2
     assert res.json()["group_ids_names"] is None
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{u2.id}/")
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{u2_id}/")
     assert len(res.json()["oauth_accounts"]) == 1
 
     # test PATCH /auth/users/{user_id}/
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{u1.id}/", json=dict(password="password")
+        f"{PREFIX}/users/{u1_id}/", json=dict(password="password")
     )
     assert len(res.json()["oauth_accounts"]) == 2
 
     # test GET /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u1.id)):
+    async with MockCurrentUser(user_kwargs=dict(id=u1_id)):
         res = await client.get(f"{PREFIX}/current-user/")
         assert len(res.json()["oauth_accounts"]) == 2
         res = await client.get(f"{PREFIX}/current-user/?group_names=true")
         assert len(res.json()["oauth_accounts"]) == 2
 
     # test PATCH /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u2.id)):
+    async with MockCurrentUser(user_kwargs=dict(id=u2_id)):
         res = await client.patch(f"{PREFIX}/current-user/", json=dict())
         assert len(res.json()["oauth_accounts"]) == 1
-
-
-async def test_get_and_patch_user_settings(registered_superuser_client):
-    # Register new user
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="a@b.c", password="1234")
-    )
-    assert res.status_code == 201
-    user_id = res.json()["id"]
-
-    # Get user settings
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{user_id}/settings/",
-    )
-    assert res.status_code == 200
-    for k, v in res.json().items():
-        if k == "id":
-            pass
-        elif k == "slurm_accounts":
-            assert v == []
-        else:
-            assert v is None
-
-    # Path user settings
-    patch = dict(
-        slurm_accounts=["foo", "bar"],
-    )
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/settings/", json=patch
-    )
-    debug(res.json())
-    assert res.status_code == 200
-
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/settings/", json=dict(slurm_accounts=["  "])
-    )
-    debug(res.json())
-    assert res.status_code == 422
-
-    # Assert patch was successful
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/users/{user_id}/settings/",
-    )
-    for k, v in res.json().items():
-        if k in patch:
-            assert v == patch[k]
-        elif k == "id":
-            pass
-        else:
-            assert v is None
-
-    # Get non-existing-user settings
-    res = await registered_superuser_client.get(f"{PREFIX}/users/42/settings/")
-    assert res.status_code == 404
-
-    # Patch non-existing-user settings
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/42/settings/", json=dict()
-    )
-    assert res.status_code == 404
 
 
 async def test_get_profile_info(
@@ -510,7 +453,7 @@ async def test_get_profile_info(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {

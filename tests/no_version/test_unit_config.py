@@ -161,16 +161,6 @@ def test_get_oauth_router(override_oauth_settings_factory):
 
 
 def test_email_settings():
-    from cryptography.fernet import Fernet
-
-    password = "password"
-    FRACTAL_EMAIL_PASSWORD_KEY = Fernet.generate_key().decode("utf-8")
-    FRACTAL_EMAIL_PASSWORD = (
-        Fernet(FRACTAL_EMAIL_PASSWORD_KEY)
-        .encrypt(password.encode("utf-8"))
-        .decode("utf-8")
-    )
-
     required_mail_args = dict(
         FRACTAL_EMAIL_SENDER="sender@example.org",
         FRACTAL_EMAIL_SMTP_SERVER="smtp_server",
@@ -186,23 +176,13 @@ def test_email_settings():
         EmailSettings(
             **required_mail_args,
         )
-    # 3a: missing password
+    # 3: missing password
     with pytest.raises(ValidationError):
-        EmailSettings(
-            **required_mail_args,
-            FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
-        )
-    # 3b missing password key
-    with pytest.raises(ValidationError):
-        EmailSettings(
-            **required_mail_args,
-            FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
-        )
+        EmailSettings(**required_mail_args)
     # 4: ok
     email_settings = EmailSettings(
         **required_mail_args,
-        FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
-        FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
+        FRACTAL_EMAIL_PASSWORD="password",
     )
     assert email_settings.public is not None
     assert len(email_settings.public.recipients) == 2
@@ -222,19 +202,6 @@ def test_email_settings():
                 **{k: v for k, v in required_mail_args.items() if k != arg},
                 FRACTAL_EMAIL_USE_LOGIN="false",
             )
-    # 7a: fail with Fernet encryption
-    with pytest.raises(ValidationError, match="FRACTAL_EMAIL_PASSWORD"):
-        EmailSettings(
-            **required_mail_args,
-            FRACTAL_EMAIL_PASSWORD="invalid",
-            FRACTAL_EMAIL_PASSWORD_KEY=FRACTAL_EMAIL_PASSWORD_KEY,
-        )
-    with pytest.raises(ValidationError, match="FRACTAL_EMAIL_PASSWORD"):
-        EmailSettings(
-            **required_mail_args,
-            FRACTAL_EMAIL_PASSWORD=FRACTAL_EMAIL_PASSWORD,
-            FRACTAL_EMAIL_PASSWORD_KEY="invalid",
-        )
     # 8: fail with sender emails
     with pytest.raises(ValidationError):
         EmailSettings(

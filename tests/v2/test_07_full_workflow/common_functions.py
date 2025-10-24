@@ -34,14 +34,12 @@ async def full_workflow(
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
     user_kwargs: dict | None = None,
-    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
 
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs},
-        user_settings_dict=user_settings_dict,
+        user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
@@ -313,15 +311,13 @@ async def full_workflow_TaskExecutionError(
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
     user_kwargs: dict | None = None,
-    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
 
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs},
-        user_settings_dict=user_settings_dict,
+        user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
@@ -418,14 +414,12 @@ async def non_executable_task_command(
     dataset_factory_v2,
     task_factory_v2,
     user_kwargs: dict | None = None,
-    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
 
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
-        user_settings_dict=user_settings_dict,
     ) as user:
         # Create task
         task = await task_factory_v2(
@@ -491,15 +485,13 @@ async def failing_workflow_UnknownError(
     workflow_factory_v2,
     task_factory_v2,
     user_kwargs: dict | None = None,
-    user_settings_dict: dict | None = None,
 ):
     if user_kwargs is None:
         user_kwargs = {}
 
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs},
-        user_settings_dict=user_settings_dict,
+        user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
@@ -595,7 +587,6 @@ async def workflow_with_non_python_task(
     tmp777_path: Path,
     additional_user_kwargs=None,
     this_should_fail: bool = False,
-    user_settings_dict: dict | None = None,
 ) -> str:
     """
     Run a non-python-task Fractal job.
@@ -609,9 +600,7 @@ async def workflow_with_non_python_task(
         user_kwargs.update(additional_user_kwargs)
     debug(user_kwargs)
 
-    async with MockCurrentUser(
-        user_kwargs=user_kwargs, user_settings_dict=user_settings_dict
-    ) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project
         project = await project_factory_v2(user)
         project_id = project.id
@@ -704,7 +693,6 @@ async def failing_workflow_post_task_execution(
     dataset_factory_v2,
     tasks: dict[str, TaskV2],
     user_kwargs: dict | None = None,
-    user_settings_dict: dict | None = None,
     tmp_path: Path,
 ):
     if user_kwargs is None:
@@ -712,7 +700,6 @@ async def failing_workflow_post_task_execution(
 
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
-        user_settings_dict=user_settings_dict,
     ) as user:
         project = await project_factory_v2(user)
         project_id = project.id

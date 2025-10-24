@@ -281,15 +281,8 @@ async def test_task_collection_ssh_failure_no_connection(
     # Assign empty FractalSSH object to app state
     app.state.fractal_ssh_list = FractalSSHList()
 
-    user_settings_dict = dict(
-        ssh_host="fake",
-        ssh_username="fake",
-        ssh_private_key_path="fake",
-    )
-
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ):
         # Trigger task collection
         res = await client.post(

@@ -6,7 +6,7 @@ from fastapi_users.authentication import JWTStrategy
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
@@ -17,7 +17,7 @@ router = APIRouter()
 @router.get("/{user_id}/")
 async def impersonate_user(
     user_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     user = await _user_or_404(user_id, db)

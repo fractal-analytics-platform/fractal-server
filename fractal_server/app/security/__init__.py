@@ -1,14 +1,3 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
 """
 Auth subsystem
 
@@ -30,6 +19,7 @@ import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
 from typing import Generic
+from typing import Self
 
 from fastapi import Depends
 from fastapi import Request
@@ -55,10 +45,12 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.app.security.signup_email import mail_new_oauth_signup
+from fractal_server.app.security.signup_email import (
+    send_fractal_email_or_log_failure,
+)
 from fractal_server.config import get_email_settings
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
@@ -209,6 +201,131 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 f"The password is too long (maximum length: {min_length})."
             )
 
+    async def oauth_callback(
+        self: Self,
+        oauth_name: str,
+        access_token: str,
+        account_id: str,
+        account_email: str,
+        expires_at: int | None = None,
+        refresh_token: str | None = None,
+        request: Request | None = None,
+        *,
+        associate_by_email: bool = False,
+        is_verified_by_default: bool = False,
+    ) -> UserOAuth:
+        """
+        Handle the callback after a successful OAuth authentication.
+
+        This method extends the corresponding `BaseUserManager` method of
+        > fastapi-users v14.0.1, Copyright (c) 2019 François Voron, MIT License
+
+        If the user already exists with this OAuth account, the token is
+        updated.
+
+        If a user with the same e-mail already exists and `associate_by_email`
+        is True, the OAuth account is associated to this user.
+        Otherwise, the `UserNotExists` exception is raised.
+
+        If the user does not exist, send an email to the Fractal admins (if
+        configured) and respond with a 400 error status. NOTE: This is the
+        function branch where the `fractal-server` implementation deviates
+        from the original `fastapi-users` one.
+
+        :param oauth_name: Name of the OAuth client.
+        :param access_token: Valid access token for the service provider.
+        :param account_id: models.ID of the user on the service provider.
+        :param account_email: E-mail of the user on the service provider.
+        :param expires_at: Optional timestamp at which the access token
+        expires.
+        :param refresh_token: Optional refresh token to get a
+        fresh access token from the service provider.
+        :param request: Optional FastAPI request that
+        triggered the operation, defaults to None
+        :param associate_by_email: If True, any existing user with the same
+        e-mail address will be associated to this user. Defaults to False.
+        :param is_verified_by_default: If True, the `is_verified` flag will be
+        set to `True` on newly created user. Make sure the OAuth Provider you
+        are using does verify the email address before enabling this flag.
+        Defaults to False.
+        :return: A user.
+        """
+        from fastapi import HTTPException
+        from fastapi import status
+        from fastapi_users import exceptions
+
+        oauth_account_dict = {
+            "oauth_name": oauth_name,
+            "access_token": access_token,
+            "account_id": account_id,
+            "account_email": account_email,
+            "expires_at": expires_at,
+            "refresh_token": refresh_token,
+        }
+
+        try:
+            user = await self.get_by_oauth_account(oauth_name, account_id)
+        except exceptions.UserNotExists:
+            try:
+                # Associate account
+                user = await self.get_by_email(account_email)
+                if not associate_by_email:
+                    raise exceptions.UserAlreadyExists()
+                user = await self.user_db.add_oauth_account(
+                    user, oauth_account_dict
+                )
+            except exceptions.UserNotExists:
+                # (0) Log
+                logger.warning(
+                    f"Self-registration attempt by {account_email}."
+                )
+
+                # (1) Prepare user-facing error message
+                settings = Inject(get_settings)
+                error_msg = (
+                    "Thank you for registering for the Fractal service. "
+                    "Administrators have been informed to configure your "
+                    "account and will get back to you."
+                )
+                if settings.FRACTAL_HELP_URL is not None:
+                    error_msg = (
+                        f"{error_msg}\n"
+                        "You can find more information about the onboarding "
+                        f"process at {settings.FRACTAL_HELP_URL}."
+                    )
+
+                # (2) Send email to admins
+                email_settings = Inject(get_email_settings)
+                send_fractal_email_or_log_failure(
+                    subject="New OAuth self-registration",
+                    msg=(
+                        f"User '{account_email}' tried to "
+                        "self-register through OAuth.\n"
+                        "Please create the Fractal account manually.\n"
+                        "Here is the error message displayed to the "
+                        f"user:\n{error_msg}"
+                    ),
+                    email_settings=email_settings.public,
+                )
+
+                # (3) Raise
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_msg,
+                )
+        else:
+            # Update oauth
+            for existing_oauth_account in user.oauth_accounts:
+                if (
+                    existing_oauth_account.account_id == account_id
+                    and existing_oauth_account.oauth_name == oauth_name
+                ):
+                    user = await self.user_db.update_oauth_account(
+                        user, existing_oauth_account, oauth_account_dict
+                    )
+
+        return user
+
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
     ):
@@ -216,7 +333,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
         async for db in get_async_db():
-            # Find default group
             stm = select(UserGroup).where(
                 UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
             )
@@ -236,38 +352,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                     f"Added {user.email} user to group {default_group.id=}."
                 )
 
-            this_user = await db.get(UserOAuth, user.id)
-
-            this_user.settings = UserSettings()
-            await db.merge(this_user)
-            await db.commit()
-            await db.refresh(this_user)
-            logger.info(
-                f"Associated empty settings (id={this_user.user_settings_id}) "
-                f"to '{this_user.email}'."
-            )
-
-            # Send mail section
-            email_settings = Inject(get_email_settings)
-
-            if this_user.oauth_accounts and email_settings.public is not None:
-                try:
-                    logger.info(
-                        "START sending email about new signup to "
-                        f"{email_settings.public.recipients}."
-                    )
-                    mail_new_oauth_signup(
-                        msg=f"New user registered: '{this_user.email}'.",
-                        email_settings=email_settings.public,
-                    )
-                    logger.info("END sending email about new signup.")
-                except Exception as e:
-                    logger.error(
-                        "ERROR sending notification email after oauth "
-                        f"registration of {this_user.email}. "
-                        f"Original error: '{e}'."
-                    )
-
 
 async def get_user_manager(
     user_db: SQLModelUserDatabaseAsync = Depends(get_user_db),
@@ -283,6 +367,7 @@ get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 async def _create_first_user(
     email: str,
     password: str,
+    project_dir: str,
     is_superuser: bool = False,
     is_verified: bool = False,
 ) -> None:
@@ -331,6 +416,7 @@ async def _create_first_user(
                     kwargs = dict(
                         email=email,
                         password=password,
+                        project_dir=project_dir,
                         is_superuser=is_superuser,
                         is_verified=is_verified,
                     )

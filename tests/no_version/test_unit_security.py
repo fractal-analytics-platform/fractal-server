@@ -21,31 +21,52 @@ async def test_unit_create_first_user(db):
 
     # Calls that do create a new user
 
-    await _create_first_user(email="test1@fractal.com", password="xxxx")
+    await _create_first_user(
+        email="test1@fractal.com",
+        password="xxxx",
+        project_dir="/fake",
+    )
     assert await count_users(db) == 1
 
-    await _create_first_user(email="test2@fractal.com", password="xxxx")
+    await _create_first_user(
+        email="test2@fractal.com",
+        password="xxxx",
+        project_dir="/fake",
+    )
     assert await count_users(db) == 2
 
     await _create_first_user(
-        email="test3@fractal.com", password="xxxx", is_superuser=True
+        email="test3@fractal.com",
+        password="xxxx",
+        is_superuser=True,
+        project_dir="/fake",
     )
     assert await count_users(db) == 3
 
     await _create_first_user(
-        email="test4@fractal.com", password="xxxx", is_verified=True
+        email="test4@fractal.com",
+        password="xxxx",
+        is_verified=True,
+        project_dir="/fake",
     )
     assert await count_users(db) == 4
 
     # Calls that do not create new users
 
     # Cannot create two users with the same email
-    await _create_first_user(email="test2@fractal.com", password="xxxx")
+    await _create_first_user(
+        email="test2@fractal.com",
+        password="xxxx",
+        project_dir="/fake",
+    )
     assert await count_users(db) == 4
 
     # Cannot create more than one superuser
     await _create_first_user(
-        email="test5@fractal.com", password="xxxx", is_superuser=True
+        email="test5@fractal.com",
+        password="xxxx",
+        is_superuser=True,
+        project_dir="/fake",
     )
     assert await count_users(db) == 4
 
