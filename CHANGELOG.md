@@ -11,6 +11,8 @@ TBD
 \#2882
 \#2884
 \#2893
+\#2895 (remove email-password encryption)
+
 
 \#2890 (oauth self-registration)
 
