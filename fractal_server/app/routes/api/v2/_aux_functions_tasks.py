@@ -12,6 +12,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -179,12 +181,28 @@ async def _get_task_read_access(
     task_group = await _get_task_group_read_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
-    if require_active:
-        if not task_group.active:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"Error: task {task_id} ({task.name}) is not active.",
-            )
+
+    res = await db.execute(
+        select(Resource.id)
+        .join(Profile)
+        .join(UserOAuth)
+        .where(Resource.id == Profile.resource_id)
+        .where(Profile.id == UserOAuth.profile_id)
+        .where(UserOAuth.id == user_id)
+    )
+    resource_id = res.scalar_one_or_none()
+    if resource_id is None or resource_id != task_group.resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user_id} has no access to TaskGroup's Resource.",
+        )
+
+    if require_active and not task_group.active:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Error: task {task_id} ({task.name}) is not active.",
+        )
+
     return task
 
 
