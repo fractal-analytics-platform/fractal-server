@@ -4,6 +4,7 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 
+# TODO-2.17.1: Drop `UserSettings`
 class UserSettings(SQLModel, table=True):
     """
     Comprehensive list of user settings.

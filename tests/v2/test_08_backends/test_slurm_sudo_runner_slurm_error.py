@@ -39,6 +39,7 @@ async def test_executor_error(
         root_dir_remote=tmp777_path / "user",
         resource=resource,
         profile=profile,
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
     ) as runner:
         runner.submit(
             base_command="true",

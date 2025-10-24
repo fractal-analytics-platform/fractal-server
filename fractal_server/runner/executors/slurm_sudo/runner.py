@@ -54,7 +54,7 @@ class SudoSlurmRunner(BaseSlurmRunner):
         resource: Resource,
         # Specific
         profile: Profile,
-        user_cache_dir: str | None = None,  # FIXME: make required?
+        user_cache_dir: str,
         slurm_account: str | None = None,
     ) -> None:
         """

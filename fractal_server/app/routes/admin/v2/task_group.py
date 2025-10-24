@@ -12,7 +12,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -38,7 +38,7 @@ async def get_task_group_activity_list(
     status: TaskGroupActivityStatusV2 | None = None,
     action: TaskGroupActivityActionV2 | None = None,
     timestamp_started_min: AwareDatetime | None = None,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityV2Read]:
     stm = select(TaskGroupActivityV2)
@@ -67,7 +67,7 @@ async def get_task_group_activity_list(
 @router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
 async def query_task_group(
     task_group_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadV2:
     task_group = await db.get(TaskGroupV2, task_group_id)
@@ -89,7 +89,7 @@ async def query_task_group_list(
     origin: TaskGroupV2OriginEnum | None = None,
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
     stm = select(TaskGroupV2)
@@ -138,7 +138,7 @@ async def query_task_group_list(
 async def patch_task_group(
     task_group_id: int,
     task_group_update: TaskGroupUpdateV2,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadV2]:
     task_group = await db.get(TaskGroupV2, task_group_id)

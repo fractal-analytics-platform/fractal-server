@@ -74,13 +74,20 @@ init_db_data_parser.add_argument(
 init_db_data_parser.add_argument(
     "--admin-email",
     type=str,
-    help="Email of the first admin user to create.",
+    help="Email of the first admin user.",
     required=False,
 )
 init_db_data_parser.add_argument(
     "--admin-pwd",
     type=str,
-    help="Password of the first admin user to create.",
+    help="Password for the first admin user.",
+    required=False,
+)
+
+init_db_data_parser.add_argument(
+    "--admin-project-dir",
+    type=str,
+    help="Project_dir for the first admin user.",
     required=False,
 )
 
@@ -127,10 +134,12 @@ def set_db():
 
 
 def init_db_data(
+    *,
     resource: str | None = None,
     profile: str | None = None,
     admin_email: str | None = None,
     admin_password: str | None = None,
+    admin_project_dir: str | None = None,
 ) -> None:
     from fractal_server.app.security import _create_first_user
     from fractal_server.app.security import _create_first_group
@@ -147,14 +156,22 @@ def init_db_data(
     print()
 
     # Create admin user if requested
-    if (admin_email is None) != (admin_password is None):
-        print("You must provide both --admin-email and --admin-pwd. Exit.")
+    if not (
+        (admin_email is None)
+        == (admin_password is None)
+        == (admin_project_dir is None)
+    ):
+        print(
+            "You must provide either or or none of `--admin-email`, "
+            "`--admin-pwd` and `--admin-project-dir`. Exit."
+        )
         sys.exit(1)
     if admin_password and admin_email:
         asyncio.run(
             _create_first_user(
                 email=admin_email,
                 password=admin_password,
+                project_dir=admin_project_dir,
                 is_superuser=True,
                 is_verified=True,
             )
@@ -329,6 +346,7 @@ def run():
             profile=args.profile,
             admin_email=args.admin_email,
             admin_password=args.admin_pwd,
+            admin_project_dir=args.admin_project_dir,
         )
     elif args.cmd == "update-db-data":
         update_db_data()

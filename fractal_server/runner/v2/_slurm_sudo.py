@@ -44,7 +44,7 @@ def process_workflow(
     user_id: int,
     resource: Resource,
     profile: Profile,
-    user_cache_dir: str | None = None,
+    user_cache_dir: str,
     slurm_account: str | None = None,
     worker_init: str | None = None,
     fractal_ssh: FractalSSH | None = None,

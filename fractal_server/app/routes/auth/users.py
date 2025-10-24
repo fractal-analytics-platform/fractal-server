@@ -12,22 +12,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
 
-from . import current_active_superuser
+from . import current_superuser_act
 from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
-from ..aux.validate_user_settings import verify_user_has_settings
 from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_user_with_groups
 from ._aux_auth import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
-from fractal_server.app.schemas import UserSettingsRead
-from fractal_server.app.schemas import UserSettingsUpdate
 from fractal_server.app.schemas.user import UserUpdateGroups
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
@@ -43,7 +39,7 @@ logger = set_logger(__name__)
 async def get_user(
     user_id: int,
     group_ids_names: bool = True,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     user = await _user_or_404(user_id, db)
@@ -57,7 +53,7 @@ async def get_user(
 async def patch_user(
     user_id: int,
     user_update: UserUpdate,
-    current_superuser: UserOAuth = Depends(current_active_superuser),
+    current_superuser: UserOAuth = Depends(current_superuser_act),
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -113,7 +109,7 @@ async def patch_user(
 @router_users.get("/users/", response_model=list[UserRead])
 async def list_users(
     profile_id: int | None = None,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -148,7 +144,7 @@ async def list_users(
 async def set_user_groups(
     user_id: int,
     user_update: UserUpdateGroups,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
     # Preliminary check that all objects exist in the db
@@ -210,40 +206,3 @@ async def set_user_groups(
     user_with_groups = await _get_single_user_with_groups(user, db)
 
     return user_with_groups
-
-
-@router_users.get(
-    "/users/{user_id}/settings/", response_model=UserSettingsRead
-)
-async def get_user_settings(
-    user_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> UserSettingsRead:
-    user = await _user_or_404(user_id=user_id, db=db)
-    verify_user_has_settings(user)
-    user_settings = await db.get(UserSettings, user.user_settings_id)
-    return user_settings
-
-
-@router_users.patch(
-    "/users/{user_id}/settings/", response_model=UserSettingsRead
-)
-async def patch_user_settings(
-    user_id: int,
-    settings_update: UserSettingsUpdate,
-    superuser: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> UserSettingsRead:
-    user = await _user_or_404(user_id=user_id, db=db)
-    verify_user_has_settings(user)
-    user_settings = await db.get(UserSettings, user.user_settings_id)
-
-    for k, v in settings_update.model_dump(exclude_unset=True).items():
-        setattr(user_settings, k, v)
-
-    db.add(user_settings)
-    await db.commit()
-    await db.refresh(user_settings)
-
-    return user_settings

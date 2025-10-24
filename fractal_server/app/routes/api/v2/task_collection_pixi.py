@@ -28,7 +28,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
-from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -85,7 +85,7 @@ async def collect_task_pixi(
     pixi_version: NonEmptyStr | None = Form(None),
     private: bool = False,
     user_group_id: int | None = None,
-    user: UserOAuth = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     # Get validated resource and profile

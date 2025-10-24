@@ -54,7 +54,7 @@ async def test_post_worfkflow_task(
         the Workflow.task_list is called
     THEN the new WorkflowTask is inserted in Workflow.task_list
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         # Create project and workflow
         proj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=proj.id)
@@ -133,7 +133,7 @@ async def test_post_worfkflow_task_failures(
     * task_A_non_active -> 422 (non active)
     * task_B -> 403 (forbidden)
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_A:
+    async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
         task_A_active = await task_factory_v2(
             name="a-active",
@@ -144,7 +144,7 @@ async def test_post_worfkflow_task_failures(
             user_id=user_A_id,
             task_group_kwargs=dict(active=False),
         )
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user_B:
+    async with MockCurrentUser() as user_B:
         # Create a new UserGroup with user_B
         new_group = UserGroup(name="new_group")
         db.add(new_group)
@@ -231,7 +231,7 @@ async def test_delete_workflow_task(
     THEN the selected WorkflowTask is properly removed
         from Workflow.task_list
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",
@@ -316,7 +316,7 @@ async def test_patch_workflow_task(
     WHEN the endpoint to PATCH a WorkflowTask is called
     THEN the WorkflowTask is updated
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         workflow = {"name": "WF"}
         res = await client.post(
@@ -581,7 +581,7 @@ async def test_patch_workflow_task_failures(
     WHEN the endpoint to PATCH a WorkflowTask is called with invalid arguments
     THEN the correct status code is returned
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         # Prepare two workflows, with one task each
         project = await project_factory_v2(user)
         workflow1 = {"name": "WF1"}
@@ -671,7 +671,7 @@ async def test_reorder_task_list(
         [1, 3, 2],
         [4, 3, 5, 1, 2],
     ]
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         # Create a main project and a pool of available tasks
         project = await project_factory_v2(user)
         tasks = [(await post_task(client, f"task-{ind}")) for ind in range(5)]
@@ -754,7 +754,7 @@ async def test_reorder_task_list_fail(
     """
     num_tasks = 3
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory_v2(user)
         res = await client.post(
@@ -845,7 +845,7 @@ async def test_reorder_task_list_fail(
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.schemas import UserSettingsUpdateStrict
+from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
@@ -111,10 +111,10 @@ def test_workflow_task_dump():
     )
 
 
-def test_UserSettingsUpdateStrict():
-    UserSettingsUpdateStrict()
-    UserSettingsUpdateStrict(slurm_accounts=[])
-    UserSettingsUpdateStrict(slurm_accounts=["a"])
-    UserSettingsUpdateStrict(slurm_accounts=["a", "b"])
+def test_UserUpdateStrict():
+    UserUpdateStrict()
+    UserUpdateStrict(slurm_accounts=[])
+    UserUpdateStrict(slurm_accounts=["a"])
+    UserUpdateStrict(slurm_accounts=["a", "b"])
     with pytest.raises(ValueError, match="has repetitions"):
-        UserSettingsUpdateStrict(slurm_accounts=["a", "a"])
+        UserUpdateStrict(slurm_accounts=["a", "a"])

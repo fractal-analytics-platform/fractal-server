@@ -1,4 +1,5 @@
 from typing import Literal
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import EmailStr
@@ -86,7 +87,7 @@ class EmailSettings(BaseSettings):
     """
 
     @model_validator(mode="after")
-    def validate_email_settings(self):
+    def validate_email_settings(self: Self) -> Self:
         """
         Set `self.public`.
         """

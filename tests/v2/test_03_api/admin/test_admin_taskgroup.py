@@ -332,17 +332,11 @@ async def test_admin_deactivate_task_group_api(
     if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db[:]
         app.state.fractal_ssh_list = MockFractalSSHList()
-        user_settings_dict = dict(
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
-        )
     else:
         resource, profile = local_resource_profile_db
-        user_settings_dict = {}
 
     async with MockCurrentUser(
         user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
     ) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
@@ -436,20 +430,11 @@ async def test_reactivate_task_group_api(
     if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
-        user_settings_dict = dict(
-            ssh_host=resource.host,
-            ssh_username=profile.username,
-            ssh_private_key_path=profile.ssh_key_path + "invalid",
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
-        )
     else:
         resource, profile = local_resource_profile_db
-        user_settings_dict = {}
 
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(profile_id=profile.id)
     ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task")
@@ -599,11 +584,9 @@ async def test_admin_delete_task_group_api_local(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    user_settings_dict = {}
 
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(profile_id=profile.id)
     ) as user:
         task = await task_factory_v2(user_id=user.id, name="task-name")
         res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
@@ -640,16 +623,8 @@ async def test_admin_delete_task_group_api_ssh(
 ):
     app.state.fractal_ssh_list = fractal_ssh_list
     resource, profile = slurm_ssh_resource_profile_db[:]
-    user_settings_dict = dict(
-        ssh_host=resource.host,
-        ssh_username=profile.username,
-        ssh_private_key_path=profile.ssh_key_path,
-        ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-        ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-    )
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(profile_id=profile.id)
     ) as user:
         task = await task_factory_v2(user_id=user.id, name="task-name")
         res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")

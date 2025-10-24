@@ -124,15 +124,7 @@ async def test_submit_job_ssh_connection_failure(
         user_kwargs=dict(
             is_verified=True,
             profile_id=prof.id,
-        ),
-        user_settings_dict=dict(
-            ssh_host=resource.host,
-            ssh_username=prof.ssh_key_path,
-            ssh_private_key_path=prof.ssh_key_path,
-            ssh_tasks_dir=(tmp777_path / "tasks").as_posix(),
-            ssh_jobs_dir=(tmp777_path / "artifacts").as_posix(),
-            project_dir=(tmp777_path / "project").as_posix(),
-        ),
+        )
     ) as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
@@ -450,7 +442,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has an empty SLURM accounts list
-        assert user.settings.slurm_accounts == []
+        assert user.slurm_accounts == []
 
         # If no slurm_account is provided, it's automatically set to None
         res = await client.post(
@@ -471,8 +463,11 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, "profile_id": prof.id},
-        user_settings_dict={"slurm_accounts": SLURM_LIST},
+        user_kwargs={
+            "is_verified": True,
+            "profile_id": prof.id,
+            "slurm_accounts": SLURM_LIST,
+        },
     ) as user2:
         project = await project_factory_v2(user2)
         dataset = await dataset_factory_v2(
@@ -491,7 +486,7 @@ async def test_project_apply_slurm_account(
         )
 
         # User has a non empty SLURM accounts list
-        assert user2.settings.slurm_accounts == SLURM_LIST
+        assert user2.slurm_accounts == SLURM_LIST
 
         # If no slurm_account is provided, we use the first one of the list
 
