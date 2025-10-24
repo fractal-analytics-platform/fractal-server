@@ -139,9 +139,9 @@ async def test_submit_job_ssh_connection_failure(
     workflow_factory_v2,
     task_factory_v2,
     tmp777_path,
-    slurm_ssh_resource_profile_db,
+    slurm_ssh_resource_profile_fake_db,
 ):
-    resource, prof = slurm_ssh_resource_profile_db
+    resource, prof = slurm_ssh_resource_profile_fake_db
 
     async with MockCurrentUser(
         user_kwargs=dict(
