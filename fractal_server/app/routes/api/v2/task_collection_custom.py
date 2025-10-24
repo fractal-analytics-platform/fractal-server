@@ -17,7 +17,7 @@ from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_active_verified_user
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -45,7 +45,7 @@ async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     private: bool = False,
     user_group_id: int | None = None,
-    user: UserOAuth = Depends(current_active_verified_user),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
     # Get validated resource and profile

@@ -348,7 +348,7 @@ async def test_get_resource_and_profile_ids(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=None)) as user:
         res = await _get_resource_and_profile_ids(user_id=user.id, db=db)
         assert res == (None, None)
 

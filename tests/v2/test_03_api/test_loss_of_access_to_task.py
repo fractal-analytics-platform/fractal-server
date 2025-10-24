@@ -1,7 +1,6 @@
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -33,8 +32,6 @@ async def test_loss_of_access_to_task(
         )
         user_A = UserOAuth(email=f"a{i}@a.a", **attrs)
         user_B = UserOAuth(email=f"b{i}@b.b", **attrs)
-        user_A.settings = UserSettings()
-        user_B.settings = UserSettings()
         team_group = UserGroup(name=f"team{i}")
         db.add(user_A)
         db.add(user_B)

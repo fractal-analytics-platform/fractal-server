@@ -21,7 +21,7 @@ from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_group_or_404,
 )
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -52,7 +52,7 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """
@@ -146,7 +146,7 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityV2Read:
     """
@@ -247,7 +247,7 @@ async def delete_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     task_group = await _get_task_group_or_404(

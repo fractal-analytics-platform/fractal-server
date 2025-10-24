@@ -42,6 +42,7 @@ async def test_app_with_lifespan(
         password="1234",
         is_superuser=True,
         is_verified=True,
+        project_dir="/fake",
     )
     res = await db.execute(select(UserOAuth))
     user = res.scalars().unique().one()  # assert only one user

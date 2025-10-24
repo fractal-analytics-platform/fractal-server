@@ -6,7 +6,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProjectReadV2
 
 router = APIRouter()
@@ -16,7 +16,7 @@ router = APIRouter()
 async def view_project(
     id: int | None = None,
     user_id: int | None = None,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectReadV2]:
     """

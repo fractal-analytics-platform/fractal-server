@@ -74,13 +74,11 @@ jobs:
             FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
             FRACTAL_EMAIL_USE_STARTTLS: false
             FRACTAL_EMAIL_USE_LOGIN: true
-            # FRACTAL_EMAIL_PASSWORD and FRACTAL_EMAIL_PASSWORD_KET are generated with the following command
-            # `printf "fakepassword\n" | poetry run fractalctl encrypt-email-password`
-            FRACTAL_EMAIL_PASSWORD: gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuMP5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg==
-            FRACTAL_EMAIL_PASSWORD_KEY: lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=
+            FRACTAL_EMAIL_PASSWORD: fakepassword
+            FRACTAL_HELP_URL: https://example.org/info
           run: |
             fractalctl set-db
-            fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234
+            fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir /fake
             fractalctl start --port 8001 &
             sleep 2
 

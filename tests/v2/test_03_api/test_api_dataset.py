@@ -194,25 +194,18 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
 
     # Test POST dataset without zarr_dir
     async with MockCurrentUser(
-        user_settings_dict={"project_dir": "/some/dir"}
+        user_kwargs={"project_dir": "/some/dir"}
     ) as user:
         prj = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
         )
         assert res.json()["zarr_dir"] == normalize_url(
-            f"{user.settings.project_dir}/fractal/"
+            f"{user.project_dir}/fractal/"
             f"{prj.id}_{sanitize_string(prj.name)}/"
             f"{res.json()['id']}_{sanitize_string(res.json()['name'])}"
         )
         assert res.status_code == 201
-
-    async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName2")
-        )
-        assert res.status_code == 422
 
 
 async def test_delete_dataset(

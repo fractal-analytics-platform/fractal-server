@@ -192,18 +192,20 @@ async def test_patch_task_group(
     task_factory_v2,
     default_user_group,
     user_group_factory,
-    first_user,
 ):
-    async with MockCurrentUser() as user1:
+    async with MockCurrentUser(debug=True) as another_user:
+        another_user_id = another_user.id
+
+    async with MockCurrentUser(debug=True) as user1:
         taskA = await task_factory_v2(
             name="asd",
             user_id=user1.id,
             task_group_kwargs=dict(user_group_id=default_user_group.id),
         )
-        group2 = await user_group_factory("team2", user1.id, first_user.id)
+        group2 = await user_group_factory("team2", user1.id, another_user_id)
         taskB = await task_factory_v2(
             name="asd",
-            user_id=first_user.id,
+            user_id=another_user_id,
             task_group_kwargs=dict(user_group_id=group2.id),
         )
 
@@ -236,7 +238,9 @@ async def test_patch_task_group(
         )
         assert res.status_code == 200
 
-    async with MockCurrentUser(user_kwargs=dict(id=first_user.id)):
+    async with MockCurrentUser(
+        debug=True, user_kwargs=dict(id=another_user_id)
+    ):
         # Link the task-group to another usergroup and fail due to
         # non-duplication constraint
         res = await client.patch(
@@ -246,7 +250,7 @@ async def test_patch_task_group(
         assert res.status_code == 422
         assert "already owns a task group" in res.json()["detail"]
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(debug=True):
         # Unauthorized
         res = await client.patch(
             f"{PREFIX}/{taskA.taskgroupv2_id}/",

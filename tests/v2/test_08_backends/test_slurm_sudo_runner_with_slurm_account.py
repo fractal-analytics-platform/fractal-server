@@ -33,6 +33,7 @@ async def test_submit_with_slurm_account_and_worker_init(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
         slurm_account=SLURM_ACCOUNT,

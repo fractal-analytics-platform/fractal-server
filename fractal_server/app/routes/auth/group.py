@@ -9,7 +9,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from . import current_active_superuser
+from . import current_superuser_act
 from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_usergroup_with_user_ids
 from ._aux_auth import _user_or_404
@@ -18,11 +18,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
-from fractal_server.app.schemas.user_settings import UserSettingsUpdate
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.logger import set_logger
 
@@ -36,7 +34,7 @@ router_group = APIRouter()
 )
 async def get_list_user_groups(
     user_ids: bool = False,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
     # Get all groups
@@ -70,7 +68,7 @@ async def get_list_user_groups(
 )
 async def get_single_user_group(
     group_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
     group = await _get_single_usergroup_with_user_ids(group_id=group_id, db=db)
@@ -84,7 +82,7 @@ async def get_single_user_group(
 )
 async def create_single_group(
     group_create: UserGroupCreate,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
     # Check that name is not already in use
@@ -116,7 +114,7 @@ async def create_single_group(
 async def update_single_group(
     group_id: int,
     group_update: UserGroupUpdate,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
     group = await _usergroup_or_404(group_id, db)
@@ -137,7 +135,7 @@ async def update_single_group(
 @router_group.delete("/group/{group_id}/", status_code=204)
 async def delete_single_group(
     group_id: int,
-    user: UserOAuth = Depends(current_active_superuser),
+    user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     group = await _usergroup_or_404(group_id, db)
@@ -159,36 +157,11 @@ async def delete_single_group(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router_group.patch("/group/{group_id}/user-settings/", status_code=200)
-async def patch_user_settings_bulk(
-    group_id: int,
-    settings_update: UserSettingsUpdate,
-    superuser: UserOAuth = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-):
-    await _usergroup_or_404(group_id, db)
-    res = await db.execute(
-        select(UserSettings)
-        .join(UserOAuth)
-        .where(LinkUserGroup.user_id == UserOAuth.id)
-        .where(LinkUserGroup.group_id == group_id)
-    )
-    settings_list = res.scalars().all()
-    update = settings_update.model_dump(exclude_unset=True)
-    for settings in settings_list:
-        for k, v in update.items():
-            setattr(settings, k, v)
-        db.add(settings)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_200_OK)
-
-
 @router_group.post("/group/{group_id}/add-user/{user_id}/", status_code=200)
 async def add_user_to_group(
     group_id: int,
     user_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
     await _usergroup_or_404(group_id, db)
@@ -212,7 +185,7 @@ async def add_user_to_group(
 async def remove_user_from_group(
     group_id: int,
     user_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
     # Check that user and group exist

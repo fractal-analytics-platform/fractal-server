@@ -22,6 +22,7 @@ async def test_run_squeue(
         fractal_ssh=fractal_ssh,
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:

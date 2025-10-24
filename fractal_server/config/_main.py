@@ -1,7 +1,9 @@
 import logging
+from enum import StrEnum
 from typing import Literal
 from typing import TypeVar
 
+from pydantic import HttpUrl
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -12,6 +14,12 @@ from fractal_server.types import AbsolutePathStr
 
 class FractalConfigurationError(ValueError):
     pass
+
+
+class ViewerAuthScheme(StrEnum):
+    VIEWER_PATHS = "viewer-paths"
+    USERS_FOLDERS = "users-folders"
+    NONE = "none"
 
 
 T = TypeVar("T")
@@ -72,9 +80,7 @@ class Settings(BaseSettings):
     Waiting time for the shutdown phase of executors
     """
 
-    FRACTAL_VIEWER_AUTHORIZATION_SCHEME: Literal[
-        "viewer-paths", "users-folders", "none"
-    ] = "none"
+    FRACTAL_VIEWER_AUTHORIZATION_SCHEME: ViewerAuthScheme = "none"
     """
     Defines how the list of allowed viewer paths is built.
 
@@ -119,3 +125,8 @@ class Settings(BaseSettings):
                     "FRACTAL_VIEWER_AUTHORIZATION_SCHEME is set to "
                     "users-folders"
                 )
+
+    FRACTAL_HELP_URL: HttpUrl | None = None
+    """
+    The URL of an instance-specific Fractal help page.
+    """

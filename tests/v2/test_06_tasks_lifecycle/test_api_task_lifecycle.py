@@ -55,20 +55,11 @@ async def test_deactivate_task_group_api(
     if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         app.state.fractal_ssh_list = MockFractalSSHList()
         resource, profile = slurm_ssh_resource_profile_fake_db
-        user_settings_dict = dict(
-            ssh_host=resource.host,
-            ssh_username=profile.username,
-            ssh_private_key_path=profile.ssh_key_path,
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
-        )
     else:
         resource, profile = local_resource_profile_db
-        user_settings_dict = {}
 
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(profile_id=profile.id)
     ) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
@@ -168,19 +159,10 @@ async def test_reactivate_task_group_api(
     if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
-        user_settings_dict = dict(
-            ssh_host=resource.host,
-            ssh_username=profile.username,
-            ssh_private_key_path=profile.ssh_key_path + "invalid",
-            ssh_tasks_dir="/invalid/ssh_tasks_dir",
-            ssh_jobs_dir="/invalid/ssh_jobs_dir",
-        )
     else:
         resource, profile = local_resource_profile_db
-        user_settings_dict = {}
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-        user_settings_dict=user_settings_dict,
+        user_kwargs=dict(profile_id=profile.id)
     ) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task2")

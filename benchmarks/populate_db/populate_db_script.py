@@ -37,12 +37,12 @@ def _create_user_client(
 ) -> FractalClient:
     email = f"{user_identifier}@example.org"
     password = f"{user_identifier}-pwd"
-    slurm_user = f"{user_identifier}-slurm"
+    project_dir = f"/fake/{user_identifier}"
     _user = _admin.add_user(
         UserCreate(
             email=email,
             password=password,
-            slurm_user=slurm_user,
+            project_dir=project_dir,
         )
     )
     _admin.associate_user_with_profile(user_id=_user.id)

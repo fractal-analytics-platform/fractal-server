@@ -13,7 +13,7 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_active_user
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     workflow_id: int,
-    user: UserOAuth = Depends(current_active_user),
+    user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> LegacyStatusReadV2 | None:
     """

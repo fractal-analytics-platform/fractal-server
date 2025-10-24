@@ -48,6 +48,7 @@ async def test_submit_success(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -115,6 +116,7 @@ async def test_submit_fail(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -165,6 +167,7 @@ async def test_multisubmit_parallel(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -222,6 +225,7 @@ async def test_multisubmit_compound(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:
@@ -295,6 +299,7 @@ async def test_multisubmit_parallel_partial_failure(
     with SudoSlurmRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
     ) as runner:

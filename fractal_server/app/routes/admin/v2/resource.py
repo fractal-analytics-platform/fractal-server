@@ -16,7 +16,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_active_superuser
+from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
 from fractal_server.app.schemas.v2 import ResourceCreate
@@ -57,7 +57,7 @@ def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
 
 @router.get("/", response_model=list[ResourceRead], status_code=200)
 async def get_resource_list(
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ResourceRead]:
     """
@@ -74,7 +74,7 @@ async def get_resource_list(
 @router.get("/{resource_id}/", response_model=ResourceRead, status_code=200)
 async def get_resource(
     resource_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ResourceRead:
     """
@@ -88,7 +88,7 @@ async def get_resource(
 @router.post("/", response_model=ResourceRead, status_code=201)
 async def post_resource(
     resource_create: ResourceCreate,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ResourceRead:
     """
@@ -116,7 +116,7 @@ async def post_resource(
 async def put_resource(
     resource_id: int,
     resource_update: ResourceCreate,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ResourceRead:
     """
@@ -144,7 +144,7 @@ async def put_resource(
 @router.delete("/{resource_id}/", status_code=204)
 async def delete_resource(
     resource_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
@@ -214,7 +214,7 @@ async def delete_resource(
 )
 async def get_resource_profiles(
     resource_id: int,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProfileRead]:
     """
@@ -238,7 +238,7 @@ async def get_resource_profiles(
 async def post_profile(
     resource_id: int,
     profile_create: ProfileCreate,
-    superuser: UserOAuth = Depends(current_active_superuser),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProfileRead:
     """

@@ -27,7 +27,11 @@ async def test_user_or_404(db):
     with pytest.raises(HTTPException) as exc_info:
         await _user_or_404(user_id=9999, db=db)
     debug(exc_info.value)
-    await _create_first_user(email="test1@fractal.com", password="xxxx")
+    await _create_first_user(
+        email="test1@fractal.com",
+        password="xxxx",
+        project_dir="/fake",
+    )
     user = await _get_first_user(db)
     await _user_or_404(user_id=user.id, db=db)
 
@@ -39,7 +43,9 @@ async def test_get_single_group_with_user_ids(db):
 
 
 async def test_get_single_user_with_groups(db):
-    await _create_first_user(email="test1@fractal.com", password="xxxx")
+    await _create_first_user(
+        email="test1@fractal.com", password="xxxx", project_dir="/fake"
+    )
     user = await _get_first_user(db)
     res = await _get_single_user_with_groups(user=user, db=db)
     debug(res)
