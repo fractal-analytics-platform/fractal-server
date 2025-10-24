@@ -15,6 +15,7 @@ async def test_current_user_act_ver_prof(app: FastAPI, client):
         email=_EMAIL,
         password=_PWD,
         is_superuser=False,
+        is_verified=True,
         project_dir="/fake",
     )
     async with AsyncClient(
@@ -32,6 +33,7 @@ async def test_current_user_act_ver_prof(app: FastAPI, client):
         # Success in GET-current-user (which depends on `current_user_act`)
         res = await client.get("/auth/current-user/")
         assert res.status_code == 200
+        assert res.json()["email"] == _EMAIL
         assert res.json()["profile_id"] is None
 
         # Failure in GET-current-user, if it provisionally depends on
@@ -40,4 +42,7 @@ async def test_current_user_act_ver_prof(app: FastAPI, client):
         app.dependency_overrides[current_user_act] = current_user_act_ver_prof
         res = await client.get("/auth/current-user/")
         assert res.status_code == 403
+        assert res.json()["detail"] == (
+            "Forbidden access (user.is_verified=True user.profile_id=None)."
+        )
         app.dependency_overrides = {}

@@ -349,7 +349,7 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
                         await db.refresh(resource)
                         db.expunge(resource)
                         profile = Profile(
-                            username="test01",
+                            username="fake-username",
                             resource_id=resource.id,
                             name="local_resource_profile_objects",
                             resource_type=ResourceType.LOCAL,
@@ -363,7 +363,6 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
                 # Create new user
                 default_user_kwargs.update(self.user_kwargs)
                 self.user = UserOAuth(**default_user_kwargs)
-
                 db.add(self.user)
                 await db.commit()
                 await db.refresh(self.user)
