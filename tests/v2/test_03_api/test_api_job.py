@@ -71,7 +71,7 @@ async def test_submit_job_failures(
         project2 = await project_factory_v2(user)
         workflow2 = await workflow_factory_v2(project_id=project2.id)
         # 3
-        project3 = await project_factory_v2(user)
+        project3 = await project_factory_v2(user, resource_id=res2.id)
         dataset3 = await dataset_factory_v2(
             project_id=project3.id, name="dataset3"
         )
