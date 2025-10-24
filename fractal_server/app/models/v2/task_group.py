@@ -42,8 +42,8 @@ class TaskGroupV2(SQLModel, table=True):
     user_group_id: int | None = Field(
         foreign_key="usergroup.id", default=None, ondelete="SET NULL"
     )
-    resource_id: int | None = Field(
-        foreign_key="resource.id", default=None, ondelete="SET NULL"
+    resource_id: int = Field(
+        foreign_key="resource.id", nullable=False, ondelete="CASCADE"
     )
 
     origin: str
