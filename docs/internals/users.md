@@ -113,6 +113,9 @@ Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), w
 #### Configuration
 
 To use a certain `OAuth2` client, you must first register the `fractal-server` application (see instructions for [GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) and [Google](https://blog.rebex.net/howto-register-gmail-oauth)).
+
+
+
 During app registration, you should provide two endpoints:
 
 - the `Homepage URL` (e.g. `http://127.0.0.1:8000/`),
@@ -120,7 +123,10 @@ During app registration, you should provide two endpoints:
 
 and at the end of this procedure, you will kwnow the _Client ID_ and _Client Secret_ for the app.
 
-> You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
+> Note 1: You have to enable the "Email addresses" permission for your GitHub registered app, at https://github.com/settings/apps/{registered-app}/permissions.
+. And a similar setting may be required for Google.
+
+> Note 2: You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
 
 To add an `OAuth2` client, the following environment variables must be added to [`fractal-server` configuration](../configuration.md):
 
