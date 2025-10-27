@@ -77,7 +77,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     project_dir: Annotated[
         AbsolutePathStr, AfterValidator(_validate_cmd)
     ] = None
-    slurm_accounts: ListUniqueNonEmptyString | None = None
+    slurm_accounts: ListUniqueNonEmptyString = None
 
 
 class UserUpdateStrict(BaseModel):
@@ -89,7 +89,7 @@ class UserUpdateStrict(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: ListUniqueNonEmptyString | None = None
+    slurm_accounts: ListUniqueNonEmptyString = None
 
 
 class UserCreate(schemas.BaseUserCreate):
