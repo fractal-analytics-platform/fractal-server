@@ -12,6 +12,7 @@ TBD
 \#2884
 \#2893
 \#2895, \#2898 (remove email-password encryption)
+\#2907 Bump fastapi-users to v15
 
 
 \#2890 (oauth self-registration)
