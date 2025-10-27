@@ -34,7 +34,10 @@ The main content of this release is the introduction of the computational resour
     * Remove email-password encryption.
     * Introduce `init-db-data` command.
 * Dependencies:
+    * Bump `fastapi` to v0.120 (\#xxxx).
+    * Bump `uvicorn` to v0.38 (\#xxxx).
     * Bump `fastapi-users` to v15 (\#2907).
+    * Drop explicit dependency on `python-dotenv (\#xxxx).
 * Testing:
     * Introduce `pytest-env` dependency.
 
