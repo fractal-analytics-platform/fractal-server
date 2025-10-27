@@ -412,14 +412,32 @@ async def test_patch_task(
         assert res_parallel.status_code == 200
 
 
-async def test_get_task(task_factory_v2, client, MockCurrentUser):
-    async with MockCurrentUser() as user:
-        task = await task_factory_v2(user_id=user.id, name="name")
-        res = await client.get(f"{PREFIX}/{task.id}/")
+async def test_get_task(
+    task_factory_v2,
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+    slurm_sudo_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    resource2, profile2 = slurm_sudo_resource_profile_db
+
+    async with MockCurrentUser(
+        user_kwargs={"profile_id": profile.id}
+    ) as user1:
+        task1 = await task_factory_v2(user_id=user1.id, name="name1")
+
+    async with MockCurrentUser(
+        user_kwargs={"profile_id": profile2.id}
+    ) as user2:
+        task2 = await task_factory_v2(user_id=user2.id, name="name2")
+        res = await client.get(f"{PREFIX}/{task2.id}/")
         assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{task.id + 999}/")
+        res = await client.get(f"{PREFIX}/9999/")
         assert res.status_code == 404
         assert "not found" in str(res.json()["detail"])
+        res = await client.get(f"{PREFIX}/{task1.id}/")
+        assert res.status_code == 403
 
 
 async def test_delete_task(
