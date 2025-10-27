@@ -5,10 +5,9 @@ from devtools import debug
 from pydantic import ValidationError
 
 from fractal_server.app.routes.auth.oauth import get_oauth_router
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.config import DatabaseSettings
+from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
-from fractal_server.config import Settings
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
@@ -17,27 +16,10 @@ from fractal_server.tasks.config import TasksPythonSettings
 @pytest.mark.parametrize(
     ("settings_dict", "raises"),
     [
-        # Valid
-        (
-            dict(
-                JWT_SECRET_KEY="secret",
-                FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-            ),
-            False,
-        ),
-        # Invalid JWT_SECRET_KEY
-        (
-            dict(
-                JWT_SECRET_KEY=None,
-                FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL,
-            ),
-            True,
-        ),
         # valid FRACTAL_DATA_BASE_FOLDER
         # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
-                JWT_SECRET_KEY="secret",
                 FRACTAL_DATA_AUTH_SCHEME="users-folders",
                 FRACTAL_DATA_BASE_FOLDER="/path/to/base",
             ),
@@ -47,7 +29,6 @@ from fractal_server.tasks.config import TasksPythonSettings
         # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
-                JWT_SECRET_KEY="secret",
                 FRACTAL_DATA_AUTH_SCHEME="users-folders",
             ),
             True,
@@ -56,7 +37,6 @@ from fractal_server.tasks.config import TasksPythonSettings
         # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
-                JWT_SECRET_KEY="secret",
                 FRACTAL_DATA_AUTH_SCHEME="users-folders",
                 FRACTAL_DATA_BASE_FOLDER="invalid/relative/path",
             ),
@@ -64,18 +44,18 @@ from fractal_server.tasks.config import TasksPythonSettings
         ),
     ],
 )
-def test_settings_check(
-    settings_dict: dict[str, str], raises: bool, testdata_path: Path
+def test_data_settings(
+    settings_dict: dict[str, str],
+    raises: bool,
+    testdata_path: Path,
 ):
     debug(settings_dict, raises)
 
     if raises:
         with pytest.raises(ValueError):
-            settings = Settings(**settings_dict)
-            settings.check()
+            DataSettings(**settings_dict)
     else:
-        settings = Settings(**settings_dict)
-        settings.check()
+        DataSettings(**settings_dict)
 
 
 def test_database_settings():
