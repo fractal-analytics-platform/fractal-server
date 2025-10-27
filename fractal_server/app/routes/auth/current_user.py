@@ -5,7 +5,6 @@ import os
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi_users import schemas
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -66,7 +65,7 @@ async def patch_current_user(
     # their own password
 
     user = await user_manager.update(update, current_user, safe=True)
-    validated_user = schemas.model_validate(UserOAuth, user.model_dump())
+    validated_user = UserOAuth.model_validate(user.model_dump())
 
     patched_user = await db.get(
         UserOAuth, validated_user.id, populate_existing=True
