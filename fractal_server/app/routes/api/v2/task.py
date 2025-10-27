@@ -10,6 +10,7 @@ from sqlmodel import or_
 from sqlmodel import select
 
 from ._aux_functions import _get_resource_and_profile_ids
+from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -19,8 +20,6 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import Profile
-from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
@@ -48,13 +47,8 @@ async def get_list_task(
     """
     Get list of available tasks
     """
-    res = await db.execute(
-        select(Resource.id)
-        .join(Profile)
-        .where(Resource.id == Profile.resource_id)
-        .where(Profile.id == user.profile_id)
-    )
-    user_resource_id = res.scalar_one_or_none()
+
+    user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
     if user_resource_id is None:
         return []

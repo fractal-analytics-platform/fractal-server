@@ -12,12 +12,13 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import Profile
-from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_user_resource_id,
+)
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -182,15 +183,7 @@ async def _get_task_read_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
 
-    res = await db.execute(
-        select(Resource.id)
-        .join(Profile)
-        .join(UserOAuth)
-        .where(Resource.id == Profile.resource_id)
-        .where(Profile.id == UserOAuth.profile_id)
-        .where(UserOAuth.id == user_id)
-    )
-    resource_id = res.scalar_one_or_none()
+    resource_id = await _get_user_resource_id(user_id=user_id, db=db)
     if resource_id is None or resource_id != task_group.resource_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
