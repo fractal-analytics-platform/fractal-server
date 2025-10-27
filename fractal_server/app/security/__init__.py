@@ -368,6 +368,7 @@ async def _create_first_user(
     email: str,
     password: str,
     project_dir: str,
+    profile_id: int | None = None,
     is_superuser: bool = False,
     is_verified: bool = False,
 ) -> None:
@@ -417,6 +418,7 @@ async def _create_first_user(
                         email=email,
                         password=password,
                         project_dir=project_dir,
+                        profile_id=profile_id,
                         is_superuser=is_superuser,
                         is_verified=is_verified,
                     )

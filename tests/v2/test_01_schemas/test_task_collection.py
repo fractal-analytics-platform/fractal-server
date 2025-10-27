@@ -141,6 +141,7 @@ def test_TaskGroupCreateV2Strict():
         archive_path="/a",
         pkg_name="x",
         user_id=1,
+        resource_id=1,
     )
     # Validators from parent class
     with pytest.raises(ValueError, match="absolute path"):
@@ -152,6 +153,7 @@ def test_TaskGroupCreateV2Strict():
             origin=TaskGroupV2OriginEnum.PYPI,
             pkg_name="x",
             user_id=1,
+            resource_id=1,
         )
     # No path
     with pytest.raises(ValidationError):
@@ -163,6 +165,7 @@ def test_TaskGroupCreateV2Strict():
             archive_path="/a",
             pkg_name="x",
             user_id=1,
+            resource_id=1,
         )
     # No venv_path
     with pytest.raises(ValidationError):
@@ -174,6 +177,7 @@ def test_TaskGroupCreateV2Strict():
             archive_path="/a",
             pkg_name="x",
             user_id=1,
+            resource_id=1,
         )
     # No version
     with pytest.raises(ValidationError):
@@ -185,6 +189,7 @@ def test_TaskGroupCreateV2Strict():
             archive_path="/a",
             pkg_name="x",
             user_id=1,
+            resource_id=1,
         )
     # No python_version
     with pytest.raises(ValidationError):
@@ -196,4 +201,5 @@ def test_TaskGroupCreateV2Strict():
             archive_path="/a",
             pkg_name="x",
             user_id=1,
+            resource_id=1,
         )

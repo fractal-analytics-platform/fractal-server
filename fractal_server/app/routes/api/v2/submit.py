@@ -17,6 +17,7 @@ from ._aux_functions import clean_app_job_list_v2
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
@@ -76,6 +77,17 @@ async def apply_workflow(
     )
     project = output["project"]
     dataset = output["dataset"]
+
+    # Verify that user's resource matches with project resource
+    res = await db.execute(
+        select(Profile.resource_id).where(Profile.id == user.profile_id)
+    )
+    user_resource_id = res.scalar_one()
+    if project.resource_id != user_resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Project resource does not match with user's resource",
+        )
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db

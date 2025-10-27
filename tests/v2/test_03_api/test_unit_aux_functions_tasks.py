@@ -25,16 +25,24 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
-async def test_get_task(db, task_factory_v2):
+async def test_get_task(db, task_factory_v2, local_resource_profile_db):
     # Create the following initial situations:
     # * User group A, with two users (A1 and A2)
     # * User B, who is not part of any group
     # * Task A_no_group, which belongs to user A1 and no group
     # * Task A_group_A, which belongs to user A1 and group A
 
-    user_A1 = UserOAuth(email="a1@a.a", hashed_password="xxx")
-    user_A2 = UserOAuth(email="a2@a.a", hashed_password="xxx")
-    user_B = UserOAuth(email="b@b.b", hashed_password="xxx")
+    resource, profile = local_resource_profile_db
+
+    user_A1 = UserOAuth(
+        email="a1@a.a", hashed_password="xxx", profile_id=profile.id
+    )
+    user_A2 = UserOAuth(
+        email="a2@a.a", hashed_password="xxx", profile_id=profile.id
+    )
+    user_B = UserOAuth(
+        email="b@b.b", hashed_password="xxx", profile_id=profile.id
+    )
     group_0 = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
     group_A = UserGroup(name="A")
     db.add(user_A1)
@@ -115,12 +123,17 @@ async def test_get_task(db, task_factory_v2):
         )
 
 
-async def test_get_task_require_active(db, task_factory_v2):
+async def test_get_task_require_active(
+    db, task_factory_v2, local_resource_profile_db
+):
     """
     Test the `require_active` argument of `_get_task_read_access`.
     """
     # Preliminary setup
-    user = UserOAuth(email="a@a.a", hashed_password="xxx")
+    resource, profile = local_resource_profile_db
+    user = UserOAuth(
+        email="a@a.a", hashed_password="xxx", profile_id=profile.id
+    )
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -163,13 +176,14 @@ async def test_get_task_require_active(db, task_factory_v2):
 
 
 async def test_get_collection_task_group_activity_status_message(
-    db,
-    MockCurrentUser,
+    db, MockCurrentUser, local_resource_profile_db
 ):
-    async with MockCurrentUser() as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
         # Create task group
         task_group = TaskGroupV2(
             user_id=user.id,
+            resource_id=resource.id,
             origin="other",
             pkg_name="pkg_name",
             version="version",
