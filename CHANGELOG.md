@@ -14,6 +14,7 @@ TBD
 \#2895, \#2898 (remove email-password encryption)
 \#2907 Bump fastapi-users to v15
 \#2916 Make oidc config URL secret
+\#2915 Reject `project_dir=None` in PATCH
 
 
 \#2890 (oauth self-registration)
