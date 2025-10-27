@@ -15,6 +15,7 @@ TBD
 \#2907 Bump fastapi-users to v15
 \#2916 Make oidc config URL secret
 \#2915 Reject `project_dir=None` in PATCH
+\#2911 `resource_id` in task/task-groups requests/responses (admin-side)
 \#2917 Drop handling of deprecated `DatasetV2.filters` attribute
 
 

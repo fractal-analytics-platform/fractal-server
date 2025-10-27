@@ -1,5 +1,7 @@
 from devtools import debug
+from sqlalchemy import select
 
+from fractal_server.app.models import Resource
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -109,6 +111,14 @@ async def test_task_query(
         assert res.status_code == 200
         assert len(res.json()) == 3
         debug(res.json())
+
+        # Query all tasks, with naive `resource_id` query parameter
+        # (assuming a single resource exists in the db)
+        res = await db.execute(select(Resource.id))
+        resource_id = res.scalars().first()
+        res = await client.get(f"{PREFIX}/task/?{resource_id=}")
+        assert res.status_code == 200
+        assert len(res.json()) == 3
 
         # Query by ID
 

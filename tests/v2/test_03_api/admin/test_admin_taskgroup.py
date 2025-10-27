@@ -35,6 +35,9 @@ async def test_task_group_admin(
         )
         res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
         task_group_1 = res.json()
+
+        assert "resource_id" not in task_group_1
+
         task2 = await task_factory_v2(
             name="BBB",
             user_id=user1.id,
@@ -47,18 +50,22 @@ async def test_task_group_admin(
         await db.commit()
         res = await client.get(f"/api/v2/task-group/{task2.taskgroupv2_id}/")
         task_group_2 = res.json()
+        assert "resource_id" not in task_group_2
         debug(task_group_2)
 
     async with MockCurrentUser() as user2:
         task3 = await task_factory_v2(user_id=user2.id, name="bbbbbbbb")
         res = await client.get(f"/api/v2/task-group/{task3.taskgroupv2_id}/")
         task_group_3 = res.json()
+        assert "resource_id" not in task_group_3
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         # GET /{id}/
         for task_group in [task_group_1, task_group_2, task_group_3]:
             res = await client.get(f"{PREFIX}/task-group/{task_group['id']}/")
             assert res.status_code == 200
+            assert "resource_id" in res.json()
+
         res = await client.get(f"{PREFIX}/task-group/9999/")
         assert res.status_code == 404
 
@@ -69,7 +76,6 @@ async def test_task_group_admin(
         groups = sorted(res.json(), key=lambda x: x["timestamp_last_used"])
 
         # Filter using `user_id`
-
         res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -143,6 +149,14 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?private=false")
         assert res.status_code == 200
         assert len(res.json()) == 2
+
+        # Filter using `resource_id` (assuming they all have the same resource)
+        resource_id = res.json()[0]["resource_id"]
+        res = await client.get(
+            f"{PREFIX}/task-group/?resource_id={resource_id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
 
         # Filter using `user_group_id` and/or `private`
         res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")
