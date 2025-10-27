@@ -21,7 +21,7 @@ jobs:
         if: ${{ env.CURRENT_PYPI_TOKEN == '' }}
         run: echo "Secret PYPI_TOKEN is not defined." && exit 1
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
