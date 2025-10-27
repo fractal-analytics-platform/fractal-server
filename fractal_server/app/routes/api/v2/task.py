@@ -50,9 +50,6 @@ async def get_list_task(
 
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
-    if user_resource_id is None:
-        return []
-
     stm = (
         select(TaskV2)
         .join(TaskGroupV2)
