@@ -156,9 +156,17 @@ async def _get_task_full_access(
         db: An asynchronous db session.
     """
     task = await _get_task_or_404(task_id=task_id, db=db)
-    await _get_task_group_full_access(
+    task_group = await _get_task_group_full_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
+
+    resource_id = await _get_user_resource_id(user_id=user_id, db=db)
+    if resource_id is None or resource_id != task_group.resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user_id} has no access to TaskGroup's Resource.",
+        )
+
     return task
 
 
