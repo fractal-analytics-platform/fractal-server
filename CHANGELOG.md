@@ -13,9 +13,10 @@ TBD
 \#2893
 \#2895, \#2898 (remove email-password encryption)
 
-
 \#2890 (oauth self-registration)
 \#2896
+
+\#2906 (Only show Tasks associated to current user's Resource)
 
 # 2.16.6
 
