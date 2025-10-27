@@ -14,6 +14,7 @@ TBD
 \#2895, \#2898 (remove email-password encryption)
 \#2907 Bump fastapi-users to v15
 \#2915 Reject `project_dir=None` in PATCH
+\#2917 Drop handling of deprecated `DatasetV2.filters` attribute
 
 
 \#2890 (oauth self-registration)
