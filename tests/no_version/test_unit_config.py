@@ -33,32 +33,32 @@ from fractal_server.tasks.config import TasksPythonSettings
             ),
             True,
         ),
-        # valid FRACTAL_VIEWER_BASE_FOLDER
-        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        # valid FRACTAL_DATA_BASE_FOLDER
+        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
                 JWT_SECRET_KEY="secret",
-                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
-                FRACTAL_VIEWER_BASE_FOLDER="/path/to/base",
+                FRACTAL_DATA_AUTH_SCHEME="users-folders",
+                FRACTAL_DATA_BASE_FOLDER="/path/to/base",
             ),
             False,
         ),
-        # missing FRACTAL_VIEWER_BASE_FOLDER
-        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        # missing FRACTAL_DATA_BASE_FOLDER
+        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
                 JWT_SECRET_KEY="secret",
-                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
+                FRACTAL_DATA_AUTH_SCHEME="users-folders",
             ),
             True,
         ),
-        # not absolute FRACTAL_VIEWER_BASE_FOLDER
-        # (FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders")
+        # not absolute FRACTAL_DATA_BASE_FOLDER
+        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
         (
             dict(
                 JWT_SECRET_KEY="secret",
-                FRACTAL_VIEWER_AUTHORIZATION_SCHEME="users-folders",
-                FRACTAL_VIEWER_BASE_FOLDER="invalid/relative/path",
+                FRACTAL_DATA_AUTH_SCHEME="users-folders",
+                FRACTAL_DATA_BASE_FOLDER="invalid/relative/path",
             ),
             True,
         ),

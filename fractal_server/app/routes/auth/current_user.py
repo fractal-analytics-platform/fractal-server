@@ -24,8 +24,8 @@ from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
-from fractal_server.config import get_settings
-from fractal_server.config import ViewerAuthScheme
+from fractal_server.config import DataAuthScheme
+from fractal_server.config import get_data_settings
 from fractal_server.syringe import Inject
 
 router_current_user = APIRouter()
@@ -116,14 +116,14 @@ async def get_current_user_allowed_viewer_paths(
 ) -> list[str]:
     """
     Returns the allowed viewer paths for current user, according to the
-    selected FRACTAL_VIEWER_AUTHORIZATION_SCHEME
+    selected FRACTAL_DATA_AUTH_SCHEME
     """
 
-    settings = Inject(get_settings)
+    data_settings = Inject(get_data_settings)
 
     authorized_paths = []
 
-    if settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME == ViewerAuthScheme.NONE:
+    if data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.NONE:
         return authorized_paths
 
     # Append `project_dir` to the list of authorized paths
@@ -132,20 +132,16 @@ async def get_current_user_allowed_viewer_paths(
     # If auth scheme is "users-folders" and `slurm_user` is set,
     # build and append the user folder
     if (
-        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME
-        == ViewerAuthScheme.USERS_FOLDERS
+        data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.USERS_FOLDERS
         and current_user.profile_id is not None
     ):
         profile = await db.get(Profile, current_user.profile_id)
         if profile is not None and profile.username is not None:
-            base_folder = settings.FRACTAL_VIEWER_BASE_FOLDER
+            base_folder = data_settings.FRACTAL_DATA_BASE_FOLDER
             user_folder = os.path.join(base_folder, profile.username)
             authorized_paths.append(user_folder)
 
-    if (
-        settings.FRACTAL_VIEWER_AUTHORIZATION_SCHEME
-        == ViewerAuthScheme.VIEWER_PATHS
-    ):
+    if data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.VIEWER_PATHS:
         # Returns the union of `viewer_paths` for all user's groups
         cmd = (
             select(UserGroup.viewer_paths)
