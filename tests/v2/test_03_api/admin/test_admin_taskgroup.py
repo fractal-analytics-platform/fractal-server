@@ -76,7 +76,6 @@ async def test_task_group_admin(
         groups = sorted(res.json(), key=lambda x: x["timestamp_last_used"])
 
         # Filter using `user_id`
-
         res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -150,6 +149,14 @@ async def test_task_group_admin(
         res = await client.get(f"{PREFIX}/task-group/?private=false")
         assert res.status_code == 200
         assert len(res.json()) == 2
+
+        # Filter using `resource_id` (assuming they all have the same resource)
+        resource_id = res.json()[0]["resource_id"]
+        res = await client.get(
+            f"{PREFIX}/task-group/?resource_id={resource_id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
 
         # Filter using `user_group_id` and/or `private`
         res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")

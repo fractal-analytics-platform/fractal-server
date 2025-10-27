@@ -90,6 +90,7 @@ async def query_task_group_list(
     origin: TaskGroupV2OriginEnum | None = None,
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
+    resource_id: int | None = None,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadSuperuser]:
@@ -129,6 +130,8 @@ async def query_task_group_list(
         stm = stm.where(
             TaskGroupV2.timestamp_last_used <= timestamp_last_used_max
         )
+    if resource_id is not None:
+        stm = stm.where(TaskGroupV2.resource_id == resource_id)
 
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
