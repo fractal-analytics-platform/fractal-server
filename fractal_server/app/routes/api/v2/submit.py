@@ -78,15 +78,15 @@ async def apply_workflow(
     project = output["project"]
     dataset = output["dataset"]
 
+    # Verify that user's resource matches with project resource
     res = await db.execute(
         select(Profile.resource_id).where(Profile.id == user.profile_id)
     )
     user_resource_id = res.scalar_one()
-
     if project.resource_id != user_resource_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Project's resource does not match with user's resource",
+            detail="Project resource does not match with user's resource",
         )
 
     workflow = await _get_workflow_check_owner(
