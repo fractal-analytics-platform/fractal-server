@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 
 from fractal_server.app.models.v2 import AccountingRecordSlurm
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa
     _run_command_as_user,
@@ -58,6 +59,14 @@ async def test_full_workflow_slurm(
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
 
+    task_group_id = next(
+        t.taskgroupv2_id for t in fractal_tasks_mock_db.values()
+    )
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    task_group.resource_id = resource.id
+    await db.commit()
+    db.expunge(task_group)
+
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
         user_kwargs=dict(
@@ -95,6 +104,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     override_settings_factory,
     fractal_tasks_mock_db,
     slurm_sudo_resource_profile_db,
+    db,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
@@ -104,6 +114,14 @@ async def test_full_workflow_TaskExecutionError_slurm(
     """
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
+
+    task_group_id = next(
+        t.taskgroupv2_id for t in fractal_tasks_mock_db.values()
+    )
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    task_group.resource_id = resource.id
+    await db.commit()
+    db.expunge(task_group)
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
 
