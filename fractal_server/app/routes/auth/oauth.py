@@ -29,7 +29,7 @@ def _create_client_oidc(cfg: OAuthSettings) -> OpenID:
     return OpenID(
         client_id=cfg.OAUTH_CLIENT_ID.get_secret_value(),
         client_secret=cfg.OAUTH_CLIENT_SECRET.get_secret_value(),
-        openid_configuration_endpoint=cfg.OAUTH_OIDC_CONFIG_ENDPOINT,
+        openid_configuration_endpoint=cfg.OAUTH_OIDC_CONFIG_ENDPOINT.get_secret_value(),  # noqa
     )
 
 
