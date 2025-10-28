@@ -10,6 +10,165 @@ permissions: {}
 
 jobs:
 
+  tests_api:
+
+    name: "V2 - API - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==2.2.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
+          DO_NOT_USE_DOCKER: 1
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-api-${{ matrix.python-version }}
+          path: coverage-data-api-${{ matrix.python-version }}*
+
+
+  tests_not_api:
+
+    name: "V2 - not API - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==2.2.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
+          DO_NOT_USE_DOCKER: 1
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-not-api-${{ matrix.python-version }}
+          path: coverage-data-not-api-${{ matrix.python-version }}*
+
+
+  tests_containers:
+
+    name: "V2 - Containers - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Cache SLURM Docker images
+        id: cache-docker-ubuntu24-slurm-multipy
+        uses: actions/cache@v4
+        with:
+          path: ci/cache/docker/ubuntu24-slurm-multipy
+          key: cache-docker-ubuntu24-slurm-multipy
+
+      - name: Use Ubuntu24 SLURM Docker Image Cache if cache hit
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
+
+      - name: Update Ubuntu24 SLURM Docker Image Cache if cache miss
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
+        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
+
+      - name: Install poetry
+        run: pipx install poetry==2.2.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-containers-${{ matrix.python-version }}
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-containers-${{ matrix.python-version }}
+          path: coverage-data-containers-${{ matrix.python-version }}*
+
+
   tests_oauth:
 
     name: "V2 - OAuth - Python ${{ matrix.python-version }}"
@@ -102,7 +261,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_oauth]
+    needs: [tests_api, tests_not_api, tests_containers, tests_oauth]
 
     permissions:
       pull-requests: write
