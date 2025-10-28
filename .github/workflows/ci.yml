@@ -50,7 +50,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" -m "not oauth" tests/v2/test_03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -99,7 +99,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" -m "not oauth" --ignore tests/v2/test_03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
