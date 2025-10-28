@@ -14,6 +14,7 @@ The main content of this release is the introduction of the computational resour
     * Enable querying users by `resource_id` (\#2877).
     * Check matching-`resource_id` upon job submission (\#2896).
     * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
+    * Split `/api/settings/` into smaller-scope endpoints.
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner
@@ -28,7 +29,7 @@ The main content of this release is the introduction of the computational resour
     * Discontinue usage of `UserSettings` table.
 * Authentication API:
     * Drop OAuth-based self registration (\#2890).
-* App settings (\#2874, \#2882, \#2895, \#2898, \#2916):
+* App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#2922):
     * Remove all configuration variables that are now part of `Resource`s.
     * Split main `Settings` model into smaller-scope models.
     * Remove email-password encryption.
