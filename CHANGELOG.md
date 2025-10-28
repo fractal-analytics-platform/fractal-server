@@ -35,7 +35,8 @@ The main content of this release is the introduction of the computational resour
     * Introduce `init-db-data` command.
 * Dependencies:
     * Bump `fastapi-users` to v15 (\#2907).
-* Testing:
+* Testing and GitHub actions:
+    * Simplify Python environment in documentation GitHub action (\#2919).
     * Introduce `pytest-env` dependency.
 
 
