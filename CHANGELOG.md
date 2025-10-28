@@ -29,7 +29,7 @@ The main content of this release is the introduction of the computational resour
     * Discontinue usage of `UserSettings` table.
 * Authentication API:
     * Drop OAuth-based self registration (\#2890).
-* App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#xxxx):
+* App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#2922):
     * Remove all configuration variables that are now part of `Resource`s.
     * Split main `Settings` model into smaller-scope models.
     * Remove email-password encryption.
