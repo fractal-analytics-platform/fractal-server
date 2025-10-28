@@ -1,5 +1,5 @@
 """
-The following tests require this docker-compose.yaml running:
+The following test requires this docker-compose.yaml to be running:
 
 ```yaml
 version: "3.8"
@@ -33,6 +33,11 @@ from sqlmodel import select
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
+from fractal_server.config import get_email_settings
+from fractal_server.syringe import Inject
+
+
+email_settings = Inject(get_email_settings)
 
 
 async def _user_count(db: AsyncSession) -> int:
@@ -52,6 +57,36 @@ def _email_count() -> int:
         data = response.json()
         total = data.get("total")
     return total
+
+
+def read_mailpit_messages() -> list[dict]:
+    base_url = "http://localhost:8025/api/v1"
+    messages = []
+
+    with httpx.Client() as client:
+        # Get message list
+        r = client.get(f"{base_url}/messages")
+        r.raise_for_status()
+        data = r.json()
+
+        for msg in data.get("messages", []):
+            msg_id = msg["ID"]
+
+            # Get message details
+            r_detail = client.get(f"{base_url}/message/{msg_id}")
+            r_detail.raise_for_status()
+            detail = r_detail.json()
+
+            # Get plain text or HTML body (optional)
+            r_body = client.get(f"{base_url}/message/{msg_id}/plain")
+            if r_body.status_code == 200:
+                detail["body"] = r_body.text
+            else:
+                detail["body"] = "(no body)"
+
+            messages.append(detail)
+
+    return messages
 
 
 async def _standard_login(client, username, password) -> str:
@@ -160,3 +195,22 @@ async def test_oauth(registered_superuser_client, db, client):
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 0
     assert _email_count() == 1
+
+    email = read_mailpit_messages()[0]
+    assert email["Subject"] == "[Fractal, test] New OAuth self-registration"
+    assert email["From"]["Address"] == email_settings.FRACTAL_EMAIL_SENDER
+    assert [
+        e["Address"] for e in email["To"]
+    ] == email_settings.FRACTAL_EMAIL_RECIPIENTS.split(",")
+    assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
+    assert email["Text"] == (
+        "User 'kilgore@kilgore.trout' tried to self-register "
+        "through OAuth.\r\n"
+        "Please create the Fractal account manually.\r\n"
+        "Here is the error message displayed to the user:\r\n"
+        "Thank you for registering for the Fractal service. "
+        "Administrators have been informed to configure your account "
+        "and will get back to you.\r\n"
+        "You can find more information about the onboarding process "
+        "at https://example.org/info.\r\n"
+    )
