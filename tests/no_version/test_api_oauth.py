@@ -1,26 +1,5 @@
 """
-The following containers are required:
-
-```yaml
-version: "3.8"
-
-services:
-  mailpit:
-    image: axllent/mailpit
-    container_name: mailpit
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-    environment:
-      MP_SMTP_AUTH: "sender@example.org:fakepassword"
-      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
-
-  dexidp:
-    image: ghcr.io/fractal-analytics-platform/oauth:0.1
-    container_name: dexidp
-    ports:
-      - "5556:5556"
-```
+Required: scripts/oauth/docker-compose.yaml
 """
 from urllib.parse import urlparse
 
