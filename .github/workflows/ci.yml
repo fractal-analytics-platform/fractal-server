@@ -169,10 +169,70 @@ jobs:
           path: coverage-data-containers-${{ matrix.python-version }}*
 
 
+  tests_oauth:
+
+    name: "V2 - OAuth - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    services:
+
+      dexidp:
+        image: ghcr.io/fractal-analytics-platform/oauth:0.1
+        ports:
+          - 5556:5556
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
+        env:
+          MP_SMTP_AUTH: "sender@example.org:fakepassword"
+          MP_SMTP_AUTH_ALLOW_INSECURE: true
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==2.2.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-oauth-${{ matrix.python-version }}
+          path: coverage-data-oauth-${{ matrix.python-version }}*
+
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_api, tests_not_api, tests_containers]
+    needs: [tests_api, tests_not_api, tests_containers, tests_oauth]
 
     permissions:
       pull-requests: write
