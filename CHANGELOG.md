@@ -7,7 +7,7 @@
 The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
 
 
-* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915):
+* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925):
     * Introduce API for `Resource` and `Profile` models.
     * Drop API for user settings.
     * Drop handling of deprecated `DatasetV2.filters` attribute when creating dataset dumps (\#2917).
