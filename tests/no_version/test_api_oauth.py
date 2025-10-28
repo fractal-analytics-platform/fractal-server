@@ -1,5 +1,5 @@
 """
-The following test requires this docker-compose.yaml to be running:
+The following containers are required:
 
 ```yaml
 version: "3.8"
@@ -9,8 +9,8 @@ services:
     image: axllent/mailpit
     container_name: mailpit
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025"
+      - "8025:8025"
     environment:
       MP_SMTP_AUTH: "sender@example.org:fakepassword"
       MP_SMTP_AUTH_ALLOW_INSECURE: "true"

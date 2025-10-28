@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script was originally run as a job in the GitHub CI by `.github/workflows/oauth.yaml`
+# Removed by PR #2929 and replaced with `tests/no_version/test_api_oauth.py`.
+
 set -eu
 
 # --- Functions
