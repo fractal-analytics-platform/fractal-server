@@ -25,7 +25,12 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
-async def test_get_task(db, task_factory_v2, local_resource_profile_db):
+async def test_get_task(
+    db,
+    task_factory_v2,
+    local_resource_profile_db,
+    slurm_sudo_resource_profile_db,
+):
     # Create the following initial situations:
     # * User group A, with two users (A1 and A2)
     # * User B, who is not part of any group
@@ -33,6 +38,7 @@ async def test_get_task(db, task_factory_v2, local_resource_profile_db):
     # * Task A_group_A, which belongs to user A1 and group A
 
     resource, profile = local_resource_profile_db
+    resource2, profile2 = slurm_sudo_resource_profile_db
 
     user_A1 = UserOAuth(
         email="a1@a.a", hashed_password="xxx", profile_id=profile.id
@@ -43,11 +49,15 @@ async def test_get_task(db, task_factory_v2, local_resource_profile_db):
     user_B = UserOAuth(
         email="b@b.b", hashed_password="xxx", profile_id=profile.id
     )
+    user_C = UserOAuth(
+        email="c@c.c", hashed_password="xxx", profile_id=profile2.id
+    )
     group_0 = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
     group_A = UserGroup(name="A")
     db.add(user_A1)
     db.add(user_A2)
     db.add(user_B)
+    db.add(user_C)
     db.add(group_0)
     db.add(group_A)
     await db.commit()
@@ -60,6 +70,7 @@ async def test_get_task(db, task_factory_v2, local_resource_profile_db):
     db.add(LinkUserGroup(user_id=user_A1.id, group_id=group_A.id))
     db.add(LinkUserGroup(user_id=user_A2.id, group_id=group_0.id))
     db.add(LinkUserGroup(user_id=user_A2.id, group_id=group_A.id))
+    db.add(LinkUserGroup(user_id=user_C.id, group_id=group_A.id))
     await db.commit()
 
     task_A_no_group = await task_factory_v2(user_id=user_A1.id, name="1")
@@ -67,6 +78,11 @@ async def test_get_task(db, task_factory_v2, local_resource_profile_db):
         user_id=user_A1.id,
         task_group_kwargs=dict(user_group_id=group_A.id),
         name="2",
+    )
+    task_A_group_A_resource2 = await task_factory_v2(
+        user_id=user_C.id,
+        task_group_kwargs=dict(user_group_id=group_A.id),
+        name="3",
     )
 
     # Existence check success
@@ -120,6 +136,14 @@ async def test_get_task(db, task_factory_v2, local_resource_profile_db):
     with pytest.raises(HTTPException, match="403"):
         await _get_task_full_access(
             task_id=task_A_group_A.id, db=db, user_id=user_B.id
+        )
+
+    user_C.profile_id = profile.id
+    db.add(user_C)
+    await db.commit()
+    with pytest.raises(HTTPException, match="403"):
+        await _get_task_full_access(
+            task_id=task_A_group_A_resource2.id, db=db, user_id=user_C.id
         )
 
 
