@@ -1,8 +1,8 @@
 """v2.17
 
-Revision ID: 6b3922b2a0ee
+Revision ID: 21fd2bde21bb
 Revises: 981d588fe248
-Create Date: 2025-10-28 13:55:08.856482
+Create Date: 2025-10-28 13:56:58.856432
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "6b3922b2a0ee"
+revision = "21fd2bde21bb"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -64,11 +64,11 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "(type = 'local') OR (jobs_slurm_python_worker IS NOT NULL)",
-            name=op.f("ck_resource_`jobs_slurm_python_worker_set`"),
+            name=op.f("ck_resource_jobs_slurm_python_worker_set"),
         ),
         sa.CheckConstraint(
             "type IN ('local', 'slurm_sudo', 'slurm_ssh')",
-            name=op.f("ck_resource_`correct_type`"),
+            name=op.f("ck_resource_correct_type"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_resource")),
         sa.UniqueConstraint("name", name=op.f("uq_resource_name")),
@@ -161,8 +161,8 @@ def upgrade() -> None:
             ["id"],
             ondelete="SET NULL",
         )
-        batch_op.drop_column("username")
         batch_op.drop_column("user_settings_id")
+        batch_op.drop_column("username")
 
     with op.batch_alter_table("user_settings", schema=None) as batch_op:
         batch_op.drop_column("ssh_jobs_dir")
@@ -194,15 +194,15 @@ def downgrade() -> None:
     with op.batch_alter_table("user_oauth", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "user_settings_id",
-                sa.INTEGER(),
-                autoincrement=False,
-                nullable=True,
+                "username", sa.VARCHAR(), autoincrement=False, nullable=True
             )
         )
         batch_op.add_column(
             sa.Column(
-                "username", sa.VARCHAR(), autoincrement=False, nullable=True
+                "user_settings_id",
+                sa.INTEGER(),
+                autoincrement=False,
+                nullable=True,
             )
         )
         batch_op.drop_constraint(
