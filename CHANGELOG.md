@@ -40,6 +40,7 @@ The main content of this release is the introduction of the computational resour
     * Bump `fastapi-users` to v15 (\#2907).
 * Testing and GitHub actions:
     * Simplify Python environment in documentation GitHub action (\#2919).
+    * Simplify PyPI-publish GitHub action (\#2927).
     * Drop explicit dependency on `python-dotenv (\#2921).
 * Testing:
     * Introduce `pytest-env` dependency.
