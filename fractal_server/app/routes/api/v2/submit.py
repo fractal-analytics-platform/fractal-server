@@ -59,6 +59,9 @@ async def apply_workflow(
 ) -> JobReadV2 | None:
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
+    # NOTE: this may lead to a race condition on `app.state.jobsV2` if two
+    # requests take place at the same time and `clean_app_job_list_v2` is
+    # somewhat slow.
     settings = Inject(get_settings)
     if (
         len(request.app.state.jobsV2)

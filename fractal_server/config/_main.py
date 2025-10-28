@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     Only logs of with this level (or higher) will appear in the console logs.
     """
 
-    FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
+    FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
     """
     Number of ids that can be stored in the `jobsV2` attribute of
     `app.state`.
