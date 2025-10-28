@@ -1,8 +1,8 @@
 """v2.17
 
-Revision ID: ba7aca5247ad
+Revision ID: 6b3922b2a0ee
 Revises: 981d588fe248
-Create Date: 2025-10-28 13:51:14.956316
+Create Date: 2025-10-28 13:55:08.856482
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "ba7aca5247ad"
+revision = "6b3922b2a0ee"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -64,13 +64,11 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "(type = 'local') OR (jobs_slurm_python_worker IS NOT NULL)",
-            name=op.f(
-                "ck_resource_`ck_resource_jobs_slurm_python_worker_set`"
-            ),
+            name=op.f("ck_resource_`jobs_slurm_python_worker_set`"),
         ),
         sa.CheckConstraint(
             "type IN ('local', 'slurm_sudo', 'slurm_ssh')",
-            name=op.f("ck_resource_`ck_resource_correct_type`"),
+            name=op.f("ck_resource_`correct_type`"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_resource")),
         sa.UniqueConstraint("name", name=op.f("uq_resource_name")),
