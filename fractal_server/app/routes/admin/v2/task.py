@@ -10,6 +10,7 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -58,6 +59,7 @@ async def query_tasks(
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
+    resource_id: int | None = None,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
@@ -75,6 +77,7 @@ async def query_tasks(
         category:
         modality:
         author:
+        resource_id:
     """
 
     stm = select(TaskV2)
@@ -93,6 +96,12 @@ async def query_tasks(
         stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
+    if resource_id is not None:
+        stm = (
+            stm.join(TaskGroupV2)
+            .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+            .where(TaskGroupV2.resource_id == resource_id)
+        )
 
     res = await db.execute(stm)
     task_list = res.scalars().all()

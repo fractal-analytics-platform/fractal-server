@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import exceptions
-from fastapi_users import schemas
 from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
@@ -80,7 +79,7 @@ async def patch_user(
             safe=False,
             request=None,
         )
-        validated_user = schemas.model_validate(UserOAuth, user.model_dump())
+        validated_user = UserOAuth.model_validate(user.model_dump())
         patched_user = await db.get(
             UserOAuth, validated_user.id, populate_existing=True
         )

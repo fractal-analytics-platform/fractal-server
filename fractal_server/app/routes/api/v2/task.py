@@ -10,6 +10,7 @@ from sqlmodel import or_
 from sqlmodel import select
 
 from ._aux_functions import _get_resource_and_profile_ids
+from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -46,10 +47,14 @@ async def get_list_task(
     """
     Get list of available tasks
     """
+
+    user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+
     stm = (
         select(TaskV2)
         .join(TaskGroupV2)
         .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskGroupV2.resource_id == user_resource_id)
         .where(
             or_(
                 TaskGroupV2.user_id == user.id,

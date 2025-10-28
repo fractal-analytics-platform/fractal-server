@@ -427,9 +427,7 @@ async def test_project_apply_workflow_subset(
         ).model_dump()
         expected_dataset_dump = DatasetDumpV2(
             **json.loads(
-                dataset1.model_dump_json(
-                    exclude={"history", "images", "filters"}
-                )
+                dataset1.model_dump_json(exclude={"history", "images"})
             )
         ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump

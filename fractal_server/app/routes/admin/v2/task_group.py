@@ -19,10 +19,11 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupReadV2
+from fractal_server.app.schemas.v2 import TaskGroupReadSuperuser
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
+
 
 router = APIRouter()
 
@@ -64,12 +65,12 @@ async def get_task_group_activity_list(
     return activities
 
 
-@router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.get("/{task_group_id}/", response_model=TaskGroupReadSuperuser)
 async def query_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupReadSuperuser:
     task_group = await db.get(TaskGroupV2, task_group_id)
     if task_group is None:
         raise HTTPException(
@@ -79,7 +80,7 @@ async def query_task_group(
     return task_group
 
 
-@router.get("/", response_model=list[TaskGroupReadV2])
+@router.get("/", response_model=list[TaskGroupReadSuperuser])
 async def query_task_group_list(
     user_id: int | None = None,
     user_group_id: int | None = None,
@@ -89,9 +90,10 @@ async def query_task_group_list(
     origin: TaskGroupV2OriginEnum | None = None,
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
+    resource_id: int | None = None,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupReadV2]:
+) -> list[TaskGroupReadSuperuser]:
     stm = select(TaskGroupV2)
 
     if user_group_id is not None and private is True:
@@ -128,19 +130,21 @@ async def query_task_group_list(
         stm = stm.where(
             TaskGroupV2.timestamp_last_used <= timestamp_last_used_max
         )
+    if resource_id is not None:
+        stm = stm.where(TaskGroupV2.resource_id == resource_id)
 
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
     return task_groups_list
 
 
-@router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.patch("/{task_group_id}/", response_model=TaskGroupReadSuperuser)
 async def patch_task_group(
     task_group_id: int,
     task_group_update: TaskGroupUpdateV2,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupReadV2]:
+) -> list[TaskGroupReadSuperuser]:
     task_group = await db.get(TaskGroupV2, task_group_id)
     if task_group is None:
         raise HTTPException(

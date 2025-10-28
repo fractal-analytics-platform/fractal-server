@@ -96,6 +96,10 @@ class TaskGroupReadV2(BaseModel):
         return v.isoformat()
 
 
+class TaskGroupReadSuperuser(TaskGroupReadV2):
+    resource_id: int
+
+
 class TaskGroupUpdateV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_group_id: int | None = None

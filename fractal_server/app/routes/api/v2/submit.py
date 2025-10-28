@@ -59,6 +59,9 @@ async def apply_workflow(
 ) -> JobReadV2 | None:
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
+    # NOTE: this may lead to a race condition on `app.state.jobsV2` if two
+    # requests take place at the same time and `clean_app_job_list_v2` is
+    # somewhat slow.
     settings = Inject(get_settings)
     if (
         len(request.app.state.jobsV2)
@@ -196,10 +199,8 @@ async def apply_workflow(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        # The 'filters' field is not supported any more but still exists as a
-        # database column, therefore we manually exclude it from dumps.
         dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history", "filters"})
+            dataset.model_dump_json(exclude={"images", "history"})
         ),
         workflow_dump=json.loads(
             workflow.model_dump_json(exclude={"task_list"})

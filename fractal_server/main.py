@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.shutdown import cleanup_after_shutdown
+from .config import get_data_settings
 from .config import get_db_settings
 from .config import get_email_settings
 from .config import get_settings
@@ -50,16 +51,16 @@ def check_settings() -> None:
         ValidationError: If the configuration is invalid.
     """
     settings = Inject(get_settings)
-    settings.check()
     db_settings = Inject(get_db_settings)
     email_settings = Inject(get_email_settings)
-
+    data_settings = Inject(get_data_settings)
     logger = set_logger("fractal_server_settings")
     logger.debug("Fractal Settings:")
     for key, value in chain(
         db_settings.model_dump().items(),
         settings.model_dump().items(),
         email_settings.model_dump().items(),
+        data_settings.model_dump().items(),
     ):
         if any(s in key.upper() for s in ["PASSWORD", "SECRET", "KEY"]):
             value = "*****"

@@ -157,6 +157,20 @@ async def test_edit_users_as_superuser(
     )
     assert res.status_code == 422
 
+    # Fail because `project_dir=None`
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(project_dir=None),
+    )
+    assert res.status_code == 422
+
+    # Fail because `slurm_accounts=None`
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=dict(slurm_accounts=None),
+    )
+    assert res.status_code == 422
+
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=dict(password="abc"),
