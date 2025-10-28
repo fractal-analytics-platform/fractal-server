@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">139 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">138<span class="text"> run</span></button>
+            <span class="text">143 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">142<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">1<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">1<span class="text"> partial</span></button>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b__aux_functions_history_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-28 10:15 +0000
+            created at 2025-10-28 10:22 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -648,6 +648,19 @@
     <p class="run"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">        <span class="key">return</span> <span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t565" href="#t565">565</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t566" href="#t566">566</a></span><span class="t">        <span class="key">return</span> <span class="nam">tuple</span><span class="op">(</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t567" href="#t567">567</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t568" href="#t568">568</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t569" href="#t569">569</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">_get_user_resource_id</span><span class="op">(</span><span class="nam">user_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span> <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t570" href="#t570">570</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t571" href="#t571">571</a></span><span class="t">        <span class="nam">select</span><span class="op">(</span><span class="nam">Resource</span><span class="op">.</span><span class="nam">id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t572" href="#t572">572</a></span><span class="t">        <span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">Profile</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t573" href="#t573">573</a></span><span class="t">        <span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t574" href="#t574">574</a></span><span class="t">        <span class="op">.</span><span class="nam">where</span><span class="op">(</span><span class="nam">Resource</span><span class="op">.</span><span class="nam">id</span> <span class="op">==</span> <span class="nam">Profile</span><span class="op">.</span><span class="nam">resource_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t575" href="#t575">575</a></span><span class="t">        <span class="op">.</span><span class="nam">where</span><span class="op">(</span><span class="nam">Profile</span><span class="op">.</span><span class="nam">id</span> <span class="op">==</span> <span class="nam">UserOAuth</span><span class="op">.</span><span class="nam">profile_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t576" href="#t576">576</a></span><span class="t">        <span class="op">.</span><span class="nam">where</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">.</span><span class="nam">id</span> <span class="op">==</span> <span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t577" href="#t577">577</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t578" href="#t578">578</a></span><span class="t">    <span class="nam">resource_id</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">scalar_one_or_none</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t579" href="#t579">579</a></span><span class="t">    <span class="key">return</span> <span class="nam">resource_id</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -657,7 +670,7 @@
             <a class="nav" href="z_09e701d32150411b__aux_functions_history_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-28 10:15 +0000
+            created at 2025-10-28 10:22 +0000
         </p>
     </div>
 </footer>
