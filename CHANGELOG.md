@@ -2,21 +2,49 @@
 
 # 2.17.0 - prereleases
 
-TBD
+> This version requires a data-migration script (`fractalctl update-db-data`), see instructions at TBD.
 
-\#2809
-\#2870
-\#2874
-\#2877
-\#2882
-\#2884
-\#2893
-\#2895, \#2898 (remove email-password encryption)
+The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
 
-\#2890 (oauth self-registration)
-\#2896
 
-\#2906 (Only show Tasks associated to current user's Resource)
+* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925):
+    * Introduce API for `Resource` and `Profile` models.
+    * Drop API for user settings.
+    * Drop handling of deprecated `DatasetV2.filters` attribute when creating dataset dumps (\#2917).
+    * Enable querying users by `resource_id` (\#2877).
+    * Check matching-`resource_id` upon job submission (\#2896).
+    * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
+    * Split `/api/settings/` into smaller-scope endpoints.
+    * Only show `Task`s associated to current user's `Resource` (\#2906).
+* Task-group lifecycle:
+    * Rely on resource and profile rather than user settings (\#2809).
+* Runner
+    * Rely on resource and profile rather than user settings (\#2809).
+    * Make `extra_lines` a non-optional list in SLURM configuration (\#2893).
+    * Enable `user_local_exports` on SLURM-SSH runner.
+* Database and models:
+    * Introduce `Resource` and `Profile` models (\#2809).
+    * Introduce `resource_id` foreign key for task-group and project models (\#).
+    * Move `project_dir` and `slurm_accounts` from `UserSettings` to `UserOAuth`.
+    * Make `project_dir` required.
+    * Discontinue usage of `UserSettings` table.
+* Authentication API:
+    * Drop OAuth-based self registration (\#2890).
+* App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#2922):
+    * Remove all configuration variables that are now part of `Resource`s.
+    * Split main `Settings` model into smaller-scope models.
+    * Remove email-password encryption.
+    * Introduce `init-db-data` command.
+* Dependencies:
+    * Bump `fastapi` to v0.120 (\#2921).
+    * Bump `uvicorn` to v0.38 (\#2921).
+    * Bump `fastapi-users` to v15 (\#2907).
+* Testing and GitHub actions:
+    * Simplify Python environment in documentation GitHub action (\#2919).
+    * Drop explicit dependency on `python-dotenv (\#2921).
+* Testing:
+    * Introduce `pytest-env` dependency.
+
 
 # 2.16.6
 

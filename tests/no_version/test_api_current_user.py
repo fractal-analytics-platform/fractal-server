@@ -2,7 +2,7 @@ from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from fractal_server.config import ViewerAuthScheme
+from fractal_server.config import DataAuthScheme
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth/current-user/"
@@ -106,12 +106,12 @@ async def test_patch_current_user_password_fails(MockCurrentUser, client):
 async def test_get_current_user_allowed_viewer_paths(
     MockCurrentUser,
     client,
-    override_settings_factory,
+    override_data_settings_factory,
     slurm_sudo_resource_profile_db,
 ):
     # Start test with "viewer-paths" auth scheme
-    override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.VIEWER_PATHS
+    override_data_settings_factory(
+        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.VIEWER_PATHS
     )
 
     # Check that a vanilla user has no viewer_paths
@@ -169,9 +169,9 @@ async def test_get_current_user_allowed_viewer_paths(
         assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER, "/a", "/b", "/c"}
 
     # Test with "users-folders" scheme
-    override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.USERS_FOLDERS,
-        FRACTAL_VIEWER_BASE_FOLDER="/path/to/base",
+    override_data_settings_factory(
+        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.USERS_FOLDERS,
+        FRACTAL_DATA_BASE_FOLDER="/path/to/base",
     )
     async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
@@ -194,8 +194,8 @@ async def test_get_current_user_allowed_viewer_paths(
         }
 
     # Verify that scheme "none" returns an empty list
-    override_settings_factory(
-        FRACTAL_VIEWER_AUTHORIZATION_SCHEME=ViewerAuthScheme.NONE
+    override_data_settings_factory(
+        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.NONE
     )
     async with MockCurrentUser(user_kwargs=dict(id=user_id)):
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")

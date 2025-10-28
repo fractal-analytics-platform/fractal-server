@@ -102,3 +102,10 @@ async def test_profile_api(
         res = await client.delete(f"/admin/v2/profile/{local_prof_id}/")
         assert res.status_code == 422
         assert "Cannot delete Profile" in str(res.json()["detail"])
+
+        # GET all profiles
+        res = await client.get("/admin/v2/profile/")
+        assert res.status_code == 200
+        profiles = res.json()
+        assert len(profiles) == 2
+        assert all("resource_id" in prof.keys() for prof in profiles)

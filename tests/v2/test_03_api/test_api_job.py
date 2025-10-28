@@ -117,7 +117,7 @@ async def test_submit_job_failures(
         assert res.status_code == 422
         assert "empty task list" in res.json()["detail"]
 
-        # (E) Project's resource different from user's resource
+        # (E) Project resource different from user's resource
         res = await client.post(
             f"{PREFIX}/project/{project3.id}/job/submit/"
             f"?workflow_id={workflow3.id}&dataset_id={dataset3.id}",
@@ -126,7 +126,7 @@ async def test_submit_job_failures(
         debug(res.json())
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Project's resource does not match with user's resource"
+            "Project resource does not match with user's resource"
         )
 
 
@@ -427,9 +427,7 @@ async def test_project_apply_workflow_subset(
         ).model_dump()
         expected_dataset_dump = DatasetDumpV2(
             **json.loads(
-                dataset1.model_dump_json(
-                    exclude={"history", "images", "filters"}
-                )
+                dataset1.model_dump_json(exclude={"history", "images"})
             )
         ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump

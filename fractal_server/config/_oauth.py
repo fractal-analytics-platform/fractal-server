@@ -37,7 +37,7 @@ class OAuthSettings(BaseSettings):
     """
     Secret to authorise against the identity provider.
     """
-    OAUTH_OIDC_CONFIG_ENDPOINT: str | None = None
+    OAUTH_OIDC_CONFIG_ENDPOINT: SecretStr | None = None
     """
     OpenID configuration endpoint, for autodiscovery of relevant endpoints.
     """
@@ -55,7 +55,7 @@ class OAuthSettings(BaseSettings):
             and self.OAUTH_OIDC_CONFIG_ENDPOINT is None
         ):
             raise ValueError(
-                f"{self.OAUTH_OIDC_CONFIG_ENDPOINT=} but "
+                f"self.OAUTH_OIDC_CONFIG_ENDPOINT=None but "
                 f"{self.OAUTH_CLIENT_NAME=}"
             )
         return self

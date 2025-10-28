@@ -10,6 +10,7 @@ from ._aux_functions import _check_profile_name
 from ._aux_functions import _get_profile_or_404
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import Profile
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProfileCreate
@@ -29,6 +30,19 @@ async def get_single_profile(
     """
     profile = await _get_profile_or_404(profile_id=profile_id, db=db)
     return profile
+
+
+@router.get("/", response_model=list[ProfileRead], status_code=200)
+async def get_profile_list(
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> ProfileRead:
+    """
+    Query single `Profile`.
+    """
+    res = await db.execute(select(Profile).order_by(Profile.id))
+    profiles = res.scalars().all()
+    return profiles
 
 
 @router.put("/{profile_id}/", response_model=ProfileRead, status_code=200)
