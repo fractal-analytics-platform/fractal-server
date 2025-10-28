@@ -1,8 +1,8 @@
-"""resource-profile
+"""v2.17
 
-Revision ID: a80ac5a352bf
+Revision ID: ba7aca5247ad
 Revises: 981d588fe248
-Create Date: 2025-10-15 15:53:34.823398
+Create Date: 2025-10-28 13:51:14.956316
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "a80ac5a352bf"
+revision = "ba7aca5247ad"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -136,6 +136,26 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column("profile_id", sa.Integer(), nullable=True)
         )
+        batch_op.add_column(
+            sa.Column(
+                "project_dir",
+                sa.String(),
+                server_default="/PLACEHOLDER",
+                nullable=False,
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
+                "slurm_accounts",
+                postgresql.ARRAY(sa.String()),
+                server_default="{}",
+                nullable=True,
+            )
+        )
+        batch_op.drop_constraint(
+            batch_op.f("fk_user_oauth_user_settings_id_user_settings"),
+            type_="foreignkey",
+        )
         batch_op.create_foreign_key(
             batch_op.f("fk_user_oauth_profile_id_profile"),
             "profile",
@@ -143,6 +163,8 @@ def upgrade() -> None:
             ["id"],
             ondelete="SET NULL",
         )
+        batch_op.drop_column("username")
+        batch_op.drop_column("user_settings_id")
 
     with op.batch_alter_table("user_settings", schema=None) as batch_op:
         batch_op.drop_column("ssh_jobs_dir")
@@ -172,9 +194,30 @@ def downgrade() -> None:
         )
 
     with op.batch_alter_table("user_oauth", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "user_settings_id",
+                sa.INTEGER(),
+                autoincrement=False,
+                nullable=True,
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
+                "username", sa.VARCHAR(), autoincrement=False, nullable=True
+            )
+        )
         batch_op.drop_constraint(
             batch_op.f("fk_user_oauth_profile_id_profile"), type_="foreignkey"
         )
+        batch_op.create_foreign_key(
+            batch_op.f("fk_user_oauth_user_settings_id_user_settings"),
+            "user_settings",
+            ["user_settings_id"],
+            ["id"],
+        )
+        batch_op.drop_column("slurm_accounts")
+        batch_op.drop_column("project_dir")
         batch_op.drop_column("profile_id")
 
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
