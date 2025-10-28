@@ -29,5 +29,9 @@ class UserSettings(SQLModel, table=True):
     ssh_host: str | None = None
     ssh_username: str | None = None
     ssh_private_key_path: str | None = None
+
     slurm_user: str | None = None
     project_dir: str | None = None
+
+    ssh_tasks_dir: str | None = None
+    ssh_jobs_dir: str | None = None
