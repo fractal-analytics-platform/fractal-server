@@ -11,30 +11,20 @@ on:
 
 jobs:
   build_and_publish:
+
     runs-on: ubuntu-24.04
     environment: pypi
-    steps:
+    permissions:
+      id-token: write
 
-      - name: Check that PYPI_TOKEN secret exists
-        env:
-            CURRENT_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN}}
-        if: ${{ env.CURRENT_PYPI_TOKEN == '' }}
-        run: echo "Secret PYPI_TOKEN is not defined." && exit 1
+    steps:
 
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-
-      - name: "Set up Python 3.11"
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-
-      - name: "Install poetry"
-        run: pipx install poetry==2.2.1
-
-      - name: Build package
-        run: poetry build
-
-      - name: Publish package to PyPI
-        run: poetry publish --username "__token__" --password ${{ secrets.PYPI_TOKEN}}
+          python-version: "3.12"
+      - run: pipx install poetry==2.2.1
+      - run: poetry build
+      - uses: pypa/gh-action-pypi-publish@release/v1
