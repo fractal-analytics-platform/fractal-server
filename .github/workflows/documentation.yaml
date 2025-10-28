@@ -19,12 +19,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - run: pipx install poetry==2.2.1
+
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: poetry
 
-      - run: pipx install poetry==2.2.1
 
       - run: poetry install --with docs
 
@@ -52,12 +53,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - run: pipx install poetry==2.2.1
+
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: poetry
 
-      - run: pipx install poetry==2.2.1
 
       - run: poetry install --with docs
 
