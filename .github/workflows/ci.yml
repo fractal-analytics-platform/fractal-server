@@ -91,7 +91,7 @@ jobs:
           FRACTAL_HELP_URL: https://example.org/info
           # Coverage
           COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -s -vv -m "oauth" --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
