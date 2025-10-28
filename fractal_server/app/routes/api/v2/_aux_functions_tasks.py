@@ -16,6 +16,9 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_user_resource_id,
+)
 from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -153,9 +156,17 @@ async def _get_task_full_access(
         db: An asynchronous db session.
     """
     task = await _get_task_or_404(task_id=task_id, db=db)
-    await _get_task_group_full_access(
+    task_group = await _get_task_group_full_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
+
+    resource_id = await _get_user_resource_id(user_id=user_id, db=db)
+    if resource_id is None or resource_id != task_group.resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user_id} has no access to TaskGroup's Resource.",
+        )
+
     return task
 
 
@@ -179,12 +190,20 @@ async def _get_task_read_access(
     task_group = await _get_task_group_read_access(
         task_group_id=task.taskgroupv2_id, user_id=user_id, db=db
     )
-    if require_active:
-        if not task_group.active:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"Error: task {task_id} ({task.name}) is not active.",
-            )
+
+    resource_id = await _get_user_resource_id(user_id=user_id, db=db)
+    if resource_id is None or resource_id != task_group.resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User {user_id} has no access to TaskGroup's Resource.",
+        )
+
+    if require_active and not task_group.active:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Error: task {task_id} ({task.name}) is not active.",
+        )
+
     return task
 
 

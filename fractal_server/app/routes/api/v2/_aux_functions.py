@@ -564,3 +564,16 @@ async def _get_resource_and_profile_ids(
         return (None, None)
     else:
         return tuple(data)
+
+
+async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
+    res = await db.execute(
+        select(Resource.id)
+        .join(Profile)
+        .join(UserOAuth)
+        .where(Resource.id == Profile.resource_id)
+        .where(Profile.id == UserOAuth.profile_id)
+        .where(UserOAuth.id == user_id)
+    )
+    resource_id = res.scalar_one_or_none()
+    return resource_id

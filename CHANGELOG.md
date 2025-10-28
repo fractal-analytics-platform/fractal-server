@@ -15,6 +15,7 @@ The main content of this release is the introduction of the computational resour
     * Check matching-`resource_id` upon job submission (\#2896).
     * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
     * Split `/api/settings/` into smaller-scope endpoints.
+    * Only show `Task`s associated to current user's `Resource` (\#2906).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner
