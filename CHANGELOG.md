@@ -2,25 +2,42 @@
 
 # 2.17.0 - prereleases
 
-TBD
+> This version requires a data-migration script (`fractalctl update-db-data`), see instructions at TBD.
 
-\#2809
-\#2870
-\#2874
-\#2877
-\#2882
-\#2884
-\#2893
-\#2895, \#2898 (remove email-password encryption)
-\#2907 Bump fastapi-users to v15
-\#2916 Make oidc config URL secret
-\#2915 Reject `project_dir=None` in PATCH
-\#2911 `resource_id` in task/task-groups requests/responses (admin-side)
-\#2917 Drop handling of deprecated `DatasetV2.filters` attribute
+The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
 
 
-\#2890 (oauth self-registration)
-\#2896
+* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915):
+    * Introduce API for `Resource` and `Profile` models.
+    * Drop API for user settings.
+    * Drop handling of deprecated `DatasetV2.filters` attribute when creating dataset dumps (\#2917).
+    * Enable querying users by `resource_id` (\#2877).
+    * Check matching-`resource_id` upon job submission (\#2896).
+    * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
+* Task-group lifecycle:
+    * Rely on resource and profile rather than user settings (\#2809).
+* Runner
+    * Rely on resource and profile rather than user settings (\#2809).
+    * Make `extra_lines` a non-optional list in SLURM configuration (\#2893).
+    * Enable `user_local_exports` on SLURM-SSH runner.
+* Database and models:
+    * Introduce `Resource` and `Profile` models (\#2809).
+    * Introduce `resource_id` foreign key for task-group and project models (\#).
+    * Move `project_dir` and `slurm_accounts` from `UserSettings` to `UserOAuth`.
+    * Make `project_dir` required.
+    * Discontinue usage of `UserSettings` table.
+* Authentication API:
+    * Drop OAuth-based self registration (\#2890).
+* App settings (\#2874, \#2882, \#2895, \#2898, \#2916):
+    * Remove all configuration variables that are now part of `Resource`s.
+    * Split main `Settings` model into smaller-scope models.
+    * Remove email-password encryption.
+    * Introduce `init-db-data` command.
+* Dependencies:
+    * Bump `fastapi-users` to v15 (\#2907).
+* Testing:
+    * Introduce `pytest-env` dependency.
+
 
 # 2.16.6
 
