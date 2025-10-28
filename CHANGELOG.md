@@ -46,6 +46,7 @@ The main content of this release is the introduction of the computational resour
     * Drop explicit dependency on `python-dotenv (\#2921).
 * Testing:
     * Introduce `pytest-env` dependency.
+    * Update testing database to version 2.16.6 (\#2909).
 
 
 # 2.16.6
