@@ -3,6 +3,7 @@ Required: scripts/oauth/docker-compose.yaml
 """
 import httpx
 import pytest
+from httpx import AsyncClient
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import delete
@@ -108,6 +109,14 @@ async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
     return res.headers["set-cookie"][len("fastapiusersauth=") :].split(";")[0]
 
 
+async def _verify_token(client: AsyncClient, token: str, expected_email: str):
+    res = await client.get(
+        "/auth/current-user/", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert res.status_code == 200
+    assert res.json()["email"] == expected_email
+
+
 @pytest.mark.oauth
 async def test_oauth(registered_superuser_client, db, client):
     settings = Inject(get_settings)
@@ -153,9 +162,11 @@ async def test_oauth(registered_superuser_client, db, client):
     assert _mailpit_email_count() == 0
 
     # Standard Login
-    await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
+    token = await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
+    await _verify_token(client, token, "kilgore@kilgore.trout")
     # First OAuth Login
-    await _oauth_login(client, oauth_settings)
+    token = await _oauth_login(client, oauth_settings)
+    await _verify_token(client, token, "kilgore@kilgore.trout")
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
@@ -171,9 +182,11 @@ async def test_oauth(registered_superuser_client, db, client):
     # Standard Login
     with pytest.raises(AssertionError):
         await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
-    await _standard_login(client, "kilgore@example.org", "kilgore")
+    token = await _standard_login(client, "kilgore@example.org", "kilgore")
+    await _verify_token(client, token, "kilgore@example.org")
     # OAuth Login
-    await _oauth_login(client, oauth_settings)
+    token = await _oauth_login(client, oauth_settings)
+    await _verify_token(client, token, "kilgore@example.org")
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
@@ -188,7 +201,8 @@ async def test_oauth(registered_superuser_client, db, client):
     assert _mailpit_email_count() == 0
 
     # Standard Login
-    await _standard_login(client, "kilgore@example.org", "kilgore")
+    token = await _standard_login(client, "kilgore@example.org", "kilgore")
+    await _verify_token(client, token, "kilgore@example.org")
     # OAuth Login, for non-existing user "kilgore@kilgore.trout".
     # This will lead to an error,
     # and to an email being sent to the Fractal admins
@@ -206,8 +220,19 @@ async def test_oauth(registered_superuser_client, db, client):
         e["Address"] for e in email["To"]
     ] == email_settings.FRACTAL_EMAIL_RECIPIENTS.split(",")
     assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
-    assert "tried to self-register" in email["Text"]
-    assert str(settings.FRACTAL_HELP_URL) in email["Text"]
+    email_msg = email["Text"]
+    assert "tried to self-register" in email_msg
+    assert str(settings.FRACTAL_HELP_URL) in email_msg
+
+    with pytest.raises(AssertionError):
+        await _oauth_login(client, oauth_settings)
+
+    assert await _user_count(db) == 2
+    assert await _oauth_count(db) == 0
+    assert _mailpit_email_count() == 2
+
+    for msg in _mailpit_read_messages():
+        msg["Text"] == email_msg
 
 
 @pytest.mark.oauth
