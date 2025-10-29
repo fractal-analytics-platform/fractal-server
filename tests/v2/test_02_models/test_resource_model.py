@@ -51,7 +51,7 @@ async def test_resource_constraints(db):
     with pytest.raises(IntegrityError) as e:
         await db.commit()
     await db.rollback()
-    assert "ck_resource_correct_type" in e.value.args[0]
+    assert "correct_type" in e.value.args[0]
 
     # test `jobs_slurm_python_worker` is set
     r4 = Resource(
@@ -65,7 +65,7 @@ async def test_resource_constraints(db):
     with pytest.raises(IntegrityError) as e:
         await db.commit()
     await db.rollback()
-    assert "ck_resource_jobs_slurm_python_worker_set" in e.value.args[0]
+    assert "jobs_slurm_python_worker_set" in e.value.args[0]
     r4 = Resource(
         type=ResourceType.SLURM_SSH,
         jobs_slurm_python_worker="/jobs_slurm_python_worker",

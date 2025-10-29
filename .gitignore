@@ -54,3 +54,5 @@ mypy-scan
 .coverage*
 mock*.tar.gz
 pixi_collection_test.sh
+
+tmp-test-2.17-data-migration
