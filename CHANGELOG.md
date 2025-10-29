@@ -22,7 +22,7 @@ The main content of this release is the introduction of the computational resour
     * Rely on resource and profile rather than user settings (\#2809).
     * Make `extra_lines` a non-optional list in SLURM configuration (\#2893).
     * Enable `user_local_exports` on SLURM-SSH runner.
-* Database and models:
+* Database and models (also \#2931):
     * Introduce `Resource` and `Profile` models (\#2809).
     * Introduce `resource_id` foreign key for task-group and project models (\#).
     * Move `project_dir` and `slurm_accounts` from `UserSettings` to `UserOAuth`.
