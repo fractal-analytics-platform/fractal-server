@@ -57,8 +57,7 @@ def get_oauth_router() -> APIRouter | None:
                 oauth_settings.OAUTH_OIDC_CONFIG_ENDPOINT.get_secret_value()
             )
             raise RuntimeError(
-                f"Cannot initialize httpx_oauth client {client_name}. "
-                f"Original error: '{e}'. "
+                f"Cannot initialize OpenID client. Original error: '{e}'. "
                 f"Hint: is {OAUTH_OIDC_CONFIG_ENDPOINT=} reachable?"
             )
 
