@@ -11,8 +11,8 @@
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        5 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkusergroup.py                                  |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkuserproject.py                                |        5 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/security.py                                       |       42 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/user\_settings.py                                 |       13 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/security.py                                       |       43 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/user\_settings.py                                 |       15 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/\_\_init\_\_.py                                |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/accounting.py                                  |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/dataset.py                                     |       21 |        0 |        0 |        0 |    100% |           |
@@ -199,7 +199,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9735** |  **250** | **1770** |   **93** | **97%** |           |
+|                                                                    **TOTAL** | **9738** |  **250** | **1770** |   **93** | **97%** |           |
 
 
 ## Setup coverage badge
