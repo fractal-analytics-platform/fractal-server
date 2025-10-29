@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import func
 from sqlmodel import select
 
 from . import current_superuser_act
@@ -16,6 +17,7 @@ from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user_group import UserGroupCreate
@@ -119,12 +121,29 @@ async def update_single_group(
 ) -> UserGroupRead:
     group = await _usergroup_or_404(group_id, db)
 
-    # Patch `viewer_paths`
-    if group_update.viewer_paths is not None:
-        group.viewer_paths = group_update.viewer_paths
-        db.add(group)
-        await db.commit()
+    # Preliminary check
+    if group_update.resource_id is not None:
+        stm = select(func.count(TaskGroupV2.id)).where(
+            TaskGroupV2.user_group_id == group_id
+        )
+        res = await db.execute(stm)
+        num_task_groups = res.scalar()
+        if num_task_groups > 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Cannot modify `resource_id` because this user group "
+                    f"is associated to {num_task_groups} task groups."
+                ),
+            )
 
+    # Actual update
+    for key, value in group_update.model_dump(exclude_unset=True):
+        setattr(group, key, value)
+    db.add(group)
+    await db.commit()
+
+    # Enrich response
     updated_group = await _get_single_usergroup_with_user_ids(
         group_id=group_id, db=db
     )
