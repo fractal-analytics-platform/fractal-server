@@ -142,15 +142,17 @@ async def test_oauth(registered_superuser_client, db, client):
     settings = Inject(get_settings)
     email_settings = Inject(get_email_settings)
     oauth_settings = Inject(get_oauth_settings)
+
     try:
         email_count = _mailpit_email_count()
-        assert email_count == 0
     except httpx.ConnectError as e:
         raise RuntimeError(
             f"Cannot connect to Mailpit. Original error: '{e}'. "
             "Hint: is Mailpit container running? "
             "Try `docker compose -f scripts/oauth/docker-compose.yaml up -d`"
         )
+    try:
+        assert email_count == 0
     except AssertionError:
         raise RuntimeError(
             f"Mailpit has {email_count} messages in memory. Hint: try "
