@@ -133,3 +133,8 @@ class UserGroup(SQLModel, table=True):
     viewer_paths: list[str] = Field(
         sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
+    resource_id: int | None = Field(
+        foreign_key="resource.id",
+        default=None,
+        ondelete="SET NULL",
+    )

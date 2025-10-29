@@ -34,6 +34,7 @@ class UserGroupRead(BaseModel):
     timestamp_created: AwareDatetime
     user_ids: list[int] | None = None
     viewer_paths: list[str]
+    resource_id: int | None
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -52,6 +53,7 @@ class UserGroupCreate(BaseModel):
 
     name: str
     viewer_paths: ListUniqueAbsolutePathStr = Field(default_factory=list)
+    resource_id: int | None = None
 
 
 class UserGroupUpdate(BaseModel):
@@ -62,3 +64,4 @@ class UserGroupUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     viewer_paths: ListUniqueAbsolutePathStr = None
+    resource_id: int | None = None
