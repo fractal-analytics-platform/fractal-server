@@ -10,7 +10,6 @@ from fastapi import Response
 from fastapi import status
 from fastapi import UploadFile
 
-from ._aux_functions import _get_resource_and_profile_ids
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -90,6 +89,7 @@ async def collect_task_pixi(
 ) -> TaskGroupActivityV2Read:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
+    resource_id = resource.id
 
     # Check if Pixi is available
     if not resource.tasks_pixi_config:
@@ -132,10 +132,6 @@ async def collect_task_pixi(
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
-
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
-    )
 
     task_group_attrs = dict(
         user_id=user.id,
