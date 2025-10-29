@@ -1,8 +1,8 @@
 """2.17.0
 
-Revision ID: 8b4095ee6bfc
+Revision ID: cc3d6e8abc44
 Revises: 981d588fe248
-Create Date: 2025-10-29 16:21:31.968824
+Create Date: 2025-10-29 16:41:56.309819
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "8b4095ee6bfc"
+revision = "cc3d6e8abc44"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -101,7 +101,7 @@ def upgrade() -> None:
             ["resource_id"],
             ["resource.id"],
             name=op.f("fk_profile_resource_id_resource"),
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_profile")),
         sa.UniqueConstraint("name", name=op.f("uq_profile_name")),
