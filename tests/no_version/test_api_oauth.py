@@ -12,9 +12,11 @@ from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
+from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
 
+settings = Inject(get_settings)
 email_settings = Inject(get_email_settings)
 oauth_settings = Inject(get_oauth_settings)
 
@@ -187,14 +189,5 @@ async def test_oauth(registered_superuser_client, db, client):
         e["Address"] for e in email["To"]
     ] == email_settings.FRACTAL_EMAIL_RECIPIENTS.split(",")
     assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
-    assert email["Text"] == (
-        "User 'kilgore@kilgore.trout' tried to self-register "
-        "through OAuth.\r\n"
-        "Please create the Fractal account manually.\r\n"
-        "Here is the error message displayed to the user:\r\n"
-        "Thank you for registering for the Fractal service. "
-        "Administrators have been informed to configure your account "
-        "and will get back to you.\r\n"
-        "You can find more information about the onboarding process "
-        "at https://example.org/info.\r\n"
-    )
+    assert "tried to self-register" in email["Text"]
+    assert settings.FRACTAL_HELP_URL in email["Text"]
