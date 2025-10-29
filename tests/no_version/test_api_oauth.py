@@ -82,6 +82,9 @@ async def _standard_login(client, username, password) -> str:
 
 
 async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
+    """
+    Login via Dex as 'kilgore@kilgore.trout'
+    """
     res = await client.get("/auth/dexidp/authorize/")
     authorization_url = res.json()["authorization_url"]
 
@@ -223,6 +226,9 @@ async def test_oauth(registered_superuser_client, db, client):
     email_msg = email["Text"]
     assert "tried to self-register" in email_msg
     assert str(settings.FRACTAL_HELP_URL) in email_msg
+
+    # For each subsequent OAuth Login, an additional identical email is sent
+    # TODO fix with issue #2937
 
     with pytest.raises(AssertionError):
         await _oauth_login(client, oauth_settings)
