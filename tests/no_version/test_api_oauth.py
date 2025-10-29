@@ -190,4 +190,4 @@ async def test_oauth(registered_superuser_client, db, client):
     ] == email_settings.FRACTAL_EMAIL_RECIPIENTS.split(",")
     assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
     assert "tried to self-register" in email["Text"]
-    assert settings.FRACTAL_HELP_URL in email["Text"]
+    assert str(settings.FRACTAL_HELP_URL) in email["Text"]
