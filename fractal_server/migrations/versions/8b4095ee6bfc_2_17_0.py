@@ -1,8 +1,8 @@
-"""v2.17.0
+"""2.17.0
 
-Revision ID: 5db229e467bf
+Revision ID: 8b4095ee6bfc
 Revises: 981d588fe248
-Create Date: 2025-10-29 14:00:41.326236
+Create Date: 2025-10-29 16:21:31.968824
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "5db229e467bf"
+revision = "8b4095ee6bfc"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -115,7 +115,7 @@ def upgrade() -> None:
             "resource",
             ["resource_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
 
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
@@ -127,7 +127,7 @@ def upgrade() -> None:
             "resource",
             ["resource_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
 
     with op.batch_alter_table("user_oauth", schema=None) as batch_op:
@@ -168,7 +168,7 @@ def upgrade() -> None:
             "resource",
             ["resource_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
 
     # ### end Alembic commands ###

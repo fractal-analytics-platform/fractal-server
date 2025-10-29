@@ -136,5 +136,5 @@ class UserGroup(SQLModel, table=True):
     resource_id: int | None = Field(
         foreign_key="resource.id",
         default=None,
-        ondelete="SET NULL",
+        ondelete="RESTRICT",
     )
