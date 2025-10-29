@@ -60,7 +60,11 @@ def test_user_group_read():
 
     XX = get_timestamp()
     g = UserGroupRead(
-        id=1, name="group", timestamp_created=XX, viewer_paths=[]
+        id=1,
+        name="group",
+        timestamp_created=XX,
+        viewer_paths=[],
+        resource_id=1,
     )
     assert g.user_ids is None
     g = UserGroupRead(
@@ -69,6 +73,7 @@ def test_user_group_read():
         timestamp_created=XX,
         user_ids=[],
         viewer_paths=["/a"],
+        resource_id=None,
     )
     assert g.user_ids == []
     assert g.viewer_paths == ["/a"]
@@ -78,6 +83,7 @@ def test_user_group_read():
         timestamp_created=XX,
         user_ids=[1, 2],
         viewer_paths=[],
+        resource_id=1,
     )
     assert g.user_ids == [1, 2]
 

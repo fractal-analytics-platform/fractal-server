@@ -138,7 +138,7 @@ async def update_single_group(
             )
 
     # Actual update
-    for key, value in group_update.model_dump(exclude_unset=True):
+    for key, value in group_update.model_dump(exclude_unset=True).items():
         setattr(group, key, value)
     db.add(group)
     await db.commit()
