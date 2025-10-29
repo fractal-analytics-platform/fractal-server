@@ -18,6 +18,9 @@ from fractal_server.syringe import Inject
 
 email_settings = Inject(get_email_settings)
 
+DEX_URL = "http://127.0.0.1:5556"
+MAILPIT_URL = "http://localhost:8025"
+
 
 async def _user_count(db: AsyncSession) -> int:
     res = await db.execute(select(func.count(UserOAuth.id)))
@@ -29,22 +32,21 @@ async def _oauth_count(db: AsyncSession) -> int:
     return res.scalar_one()
 
 
-def _email_count() -> int:
+def _mailpit_email_count() -> int:
     with httpx.Client() as client:
-        response = client.get("http://localhost:8025/api/v1/messages")
+        response = client.get(f"{MAILPIT_URL}/api/v1/messages")
         response.raise_for_status()
         data = response.json()
         total = data.get("total")
     return total
 
 
-def read_mailpit_messages() -> list[dict]:
-    base_url = "http://localhost:8025/api/v1"
+def _mailpit_read_messages() -> list[dict]:
     messages = []
 
     with httpx.Client() as client:
         # Get message list
-        r = client.get(f"{base_url}/messages")
+        r = client.get(f"{MAILPIT_URL}/api/v1/messages")
         r.raise_for_status()
         data = r.json()
 
@@ -52,12 +54,12 @@ def read_mailpit_messages() -> list[dict]:
             msg_id = msg["ID"]
 
             # Get message details
-            r_detail = client.get(f"{base_url}/message/{msg_id}")
+            r_detail = client.get(f"{MAILPIT_URL}/api/v1/message/{msg_id}")
             r_detail.raise_for_status()
             detail = r_detail.json()
 
             # Get plain text or HTML body (optional)
-            r_body = client.get(f"{base_url}/message/{msg_id}/plain")
+            r_body = client.get(f"{MAILPIT_URL}/api/v1/message/{msg_id}/plain")
             if r_body.status_code == 200:
                 detail["body"] = r_body.text
             else:
@@ -86,7 +88,7 @@ async def _oauth_login(client) -> str:
         assert res.status_code == 302
         location = res.headers["location"]
 
-        res = httpx_client.get(f"http://127.0.0.1:5556{location}")
+        res = httpx_client.get(f"{DEX_URL}{location}")
         assert res.status_code == 302
         location = res.headers["location"]
 
@@ -106,7 +108,7 @@ async def _oauth_login(client) -> str:
 async def test_oauth(registered_superuser_client, db, client):
     assert await _user_count(db) == 1
     assert await _oauth_count(db) == 0
-    assert _email_count() == 0
+    assert _mailpit_email_count() == 0
 
     # Standard Login (fail)
     with pytest.raises(AssertionError):
@@ -126,7 +128,7 @@ async def test_oauth(registered_superuser_client, db, client):
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 0
-    assert _email_count() == 0
+    assert _mailpit_email_count() == 0
 
     # Standard Login
     await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
@@ -135,7 +137,7 @@ async def test_oauth(registered_superuser_client, db, client):
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
-    assert _email_count() == 0
+    assert _mailpit_email_count() == 0
 
     # Change email into "kilgore@example.org".
     res = await registered_superuser_client.patch(
@@ -153,7 +155,7 @@ async def test_oauth(registered_superuser_client, db, client):
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
-    assert _email_count() == 0
+    assert _mailpit_email_count() == 0
 
     # Remove all OAuth accounts from db.
     await db.execute(delete(OAuthAccount))
@@ -161,7 +163,7 @@ async def test_oauth(registered_superuser_client, db, client):
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 0
-    assert _email_count() == 0
+    assert _mailpit_email_count() == 0
 
     # Standard Login
     await _standard_login(client, "kilgore@example.org", "kilgore")
@@ -173,9 +175,9 @@ async def test_oauth(registered_superuser_client, db, client):
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 0
-    assert _email_count() == 1
+    assert _mailpit_email_count() == 1
 
-    email = read_mailpit_messages()[0]
+    email = _mailpit_read_messages()[0]
     assert email["Subject"] == "[Fractal, test] New OAuth self-registration"
     assert email["From"]["Address"] == email_settings.FRACTAL_EMAIL_SENDER
     assert [
