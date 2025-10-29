@@ -3,6 +3,7 @@ Required: scripts/oauth/docker-compose.yaml
 """
 import httpx
 import pytest
+from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import delete
 from sqlmodel import func
@@ -10,15 +11,13 @@ from sqlmodel import select
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth.oauth import _create_client_oidc
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
+from fractal_server.config import OAuthSettings
 from fractal_server.syringe import Inject
 
-
-settings = Inject(get_settings)
-email_settings = Inject(get_email_settings)
-oauth_settings = Inject(get_oauth_settings)
 
 DEX_URL = "http://127.0.0.1:5556"
 MAILPIT_URL = "http://localhost:8025"
@@ -81,7 +80,7 @@ async def _standard_login(client, username, password) -> str:
     return res.json()["access_token"]
 
 
-async def _oauth_login(client) -> str:
+async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
     res = await client.get("/auth/dexidp/authorize/")
     authorization_url = res.json()["authorization_url"]
 
@@ -111,6 +110,9 @@ async def _oauth_login(client) -> str:
 
 @pytest.mark.oauth
 async def test_oauth(registered_superuser_client, db, client):
+    settings = Inject(get_settings)
+    email_settings = Inject(get_email_settings)
+    oauth_settings = Inject(get_oauth_settings)
     try:
         email_count = _mailpit_email_count()
         assert email_count == 0
@@ -153,7 +155,7 @@ async def test_oauth(registered_superuser_client, db, client):
     # Standard Login
     await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
     # First OAuth Login
-    await _oauth_login(client)
+    await _oauth_login(client, oauth_settings)
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
@@ -171,7 +173,7 @@ async def test_oauth(registered_superuser_client, db, client):
         await _standard_login(client, "kilgore@kilgore.trout", "kilgore")
     await _standard_login(client, "kilgore@example.org", "kilgore")
     # OAuth Login
-    await _oauth_login(client)
+    await _oauth_login(client, oauth_settings)
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 1
@@ -191,7 +193,7 @@ async def test_oauth(registered_superuser_client, db, client):
     # This will lead to an error,
     # and to an email being sent to the Fractal admins
     with pytest.raises(AssertionError):
-        await _oauth_login(client)
+        await _oauth_login(client, oauth_settings)
 
     assert await _user_count(db) == 2
     assert await _oauth_count(db) == 0
@@ -206,3 +208,14 @@ async def test_oauth(registered_superuser_client, db, client):
     assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
     assert "tried to self-register" in email["Text"]
     assert str(settings.FRACTAL_HELP_URL) in email["Text"]
+
+
+@pytest.mark.oauth
+def test_unit_create_client_oidc():
+    oauth_settings = Inject(get_oauth_settings)
+    _create_client_oidc(oauth_settings)
+
+    oauth_settings.OAUTH_OIDC_CONFIG_ENDPOINT = SecretStr("http://error.org")
+    with pytest.raises(RuntimeError) as e:
+        _create_client_oidc(oauth_settings)
+    assert "Cannot initialize OpenID client" in str(e)
