@@ -1,8 +1,6 @@
 """
 Required: scripts/oauth/docker-compose.yaml
 """
-from urllib.parse import urlparse
-
 import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,10 +11,12 @@ from sqlmodel import select
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.config import get_email_settings
+from fractal_server.config import get_oauth_settings
 from fractal_server.syringe import Inject
 
 
 email_settings = Inject(get_email_settings)
+oauth_settings = Inject(get_oauth_settings)
 
 DEX_URL = "http://127.0.0.1:5556"
 MAILPIT_URL = "http://localhost:8025"
@@ -85,6 +85,7 @@ async def _oauth_login(client) -> str:
 
     with httpx.Client() as httpx_client:
         res = httpx_client.get(authorization_url)
+
         assert res.status_code == 302
         location = res.headers["location"]
 
@@ -95,9 +96,11 @@ async def _oauth_login(client) -> str:
         res = httpx_client.get(location)
         assert res.status_code == 303
         location = res.headers["location"]
-        parsed_location = urlparse(location)
 
-    res = await client.get(f"{parsed_location.path}?{parsed_location.query}")
+        assert location.startswith(oauth_settings.OAUTH_REDIRECT_URL)
+        code_and_state = location[len(oauth_settings.OAUTH_REDIRECT_URL) :]
+
+    res = await client.get(f"/auth/dexidp/callback/{code_and_state}")
     assert res.status_code == 204
     assert res.headers["set-cookie"].startswith("fastapiusersauth=")
 
