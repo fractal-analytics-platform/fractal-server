@@ -150,6 +150,7 @@ async def collect_task_pixi(
 
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
+        resource_id=resource_id,
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
         db=db,
@@ -159,6 +160,7 @@ async def collect_task_pixi(
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
         db=db,
+        resource_id=resource_id,
     )
     await _verify_non_duplication_group_path(
         path=task_group_attrs["path"],

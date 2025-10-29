@@ -163,6 +163,7 @@ async def collect_task_custom(
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
+        resource_id=resource_id,
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
         db=db,
@@ -172,6 +173,7 @@ async def collect_task_custom(
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
         db=db,
+        resource_id=resource_id,
     )
 
     task_group = TaskGroupV2(**task_group_attrs)

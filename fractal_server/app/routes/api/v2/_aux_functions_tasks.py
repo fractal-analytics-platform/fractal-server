@@ -274,9 +274,11 @@ async def _get_collection_task_group_activity_status_message(
 
 
 async def _verify_non_duplication_user_constraint(
+    *,
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
+    resource_id: int,
     version: str | None,
 ):
     stm = (
@@ -284,6 +286,7 @@ async def _verify_non_duplication_user_constraint(
         .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.resource_id == resource_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()
@@ -316,10 +319,12 @@ async def _verify_non_duplication_user_constraint(
 
 
 async def _verify_non_duplication_group_constraint(
+    *,
     db: AsyncSession,
     user_group_id: int | None,
     pkg_name: str,
     version: str | None,
+    resource_id: int,
 ):
     if user_group_id is None:
         return
@@ -329,6 +334,7 @@ async def _verify_non_duplication_group_constraint(
         .where(TaskGroupV2.user_group_id == user_group_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.resource_id == resource_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()

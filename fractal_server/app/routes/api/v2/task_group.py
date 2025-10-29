@@ -220,6 +220,7 @@ async def patch_task_group(
             pkg_name=task_group.pkg_name,
             version=task_group.version,
             user_group_id=task_group_update.user_group_id,
+            resource_id=task_group.resource_id,
         )
     for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
