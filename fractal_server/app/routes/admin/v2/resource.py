@@ -11,6 +11,7 @@ from ._aux_functions import _get_resource_or_404
 from .profile import _check_profile_name
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
@@ -51,6 +52,31 @@ def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
             detail=(
                 f"{settings.FRACTAL_RUNNER_BACKEND=} != "
                 f"{new_resource.type=}"
+            ),
+        )
+
+
+async def _check_safe_resource_delete(
+    *,
+    db: AsyncSession,
+    model,
+    model_name: str,
+    resource_id: int,
+) -> None:
+    """
+    FIXME
+    """
+    # Fail if at least one Project is associated with the Resource.
+    res = await db.execute(
+        select(func.count(model.id)).where(model.resource_id == resource_id)
+    )
+    associated_object_count = res.scalar()
+    if associated_object_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Cannot delete Resource {resource_id} because it is "
+                f"associated with {associated_object_count} {model_name}s."
             ),
         )
 
@@ -149,58 +175,40 @@ async def delete_resource(
 ):
     """
     Delete single `Resource`.
+
+    NOTE: all the `_check_safe_resource_delete` calls could be in principle
+    replaced by a single try/except capturing and handling `IntegrityError`s
+    (if we set the appropriate cascade options on the foreign keys).
+    Because of how rare a resource deletion should be, we currently proceed
+    with this more explicit version.
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
 
-    # Fail if at least one Profile is associated with the Resource.
-    res = await db.execute(
-        select(func.count(Profile.id)).where(
-            Profile.resource_id == resource_id
-        )
+    await _check_safe_resource_delete(
+        db=db,
+        model=Profile,
+        model_name="profile",
+        resource_id=resource.id,
     )
-    associated_profile_count = res.scalar()
-    if associated_profile_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_profile_count} Profiles."
-            ),
-        )
-
-    # Fail if at least one Project is associated with the Resource.
-    res = await db.execute(
-        select(func.count(ProjectV2.id)).where(
-            ProjectV2.resource_id == resource_id
-        )
+    await _check_safe_resource_delete(
+        db=db,
+        model=UserGroup,
+        model_name="user group",
+        resource_id=resource.id,
     )
-    associated_project_count = res.scalar()
-    if associated_project_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_project_count} Projects."
-            ),
-        )
-
-    # Fail if at least one TaskGroupV2 is associated with the Resource.
-    res = await db.execute(
-        select(func.count(TaskGroupV2.id)).where(
-            TaskGroupV2.resource_id == resource_id
-        )
+    await _check_safe_resource_delete(
+        db=db,
+        model=TaskGroupV2,
+        model_name="task group",
+        resource_id=resource.id,
     )
-    associated_taskgroup_count = res.scalar()
-    if associated_taskgroup_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_taskgroup_count} TaskGroupV2."
-            ),
-        )
+    await _check_safe_resource_delete(
+        db=db,
+        model=ProjectV2,
+        model_name="project",
+        resource_id=resource.id,
+    )
 
-    # Delete
     await db.delete(resource)
     await db.commit()
 
