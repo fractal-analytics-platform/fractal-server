@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.openid import OpenID
+from httpx_oauth.clients.openid import OpenIDConfigurationError
 
 from . import cookie_backend
 from . import fastapi_users
@@ -44,13 +45,22 @@ def get_oauth_router() -> APIRouter | None:
         return None
 
     client_name = oauth_settings.OAUTH_CLIENT_NAME
-
     if client_name == "google":
         client = _create_client_google(oauth_settings)
     elif client_name == "github":
         client = _create_client_github(oauth_settings)
     else:
-        client = _create_client_oidc(oauth_settings)
+        try:
+            client = _create_client_oidc(oauth_settings)
+        except OpenIDConfigurationError as e:
+            OAUTH_OIDC_CONFIG_ENDPOINT = (
+                oauth_settings.OAUTH_OIDC_CONFIG_ENDPOINT.get_secret_value()
+            )
+            raise RuntimeError(
+                f"Cannot initialize httpx_oauth client {client_name}. "
+                f"Original error: '{e}'. "
+                f"Hint: is {OAUTH_OIDC_CONFIG_ENDPOINT=} reachable?"
+            )
 
     router_oauth.include_router(
         fastapi_users.get_oauth_router(
