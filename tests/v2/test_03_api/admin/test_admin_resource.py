@@ -166,7 +166,7 @@ async def test_resource_api(
         profile = res.json()
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
-        assert "it's associated with 1 Profiles" in str(res.json()["detail"])
+        assert "it is associated with 1 profiles" in str(res.json()["detail"])
         res = await client.delete(f"/admin/v2/profile/{profile['id']}/")
         assert res.status_code == 204
 
@@ -176,7 +176,7 @@ async def test_resource_api(
         await db.refresh(project)
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
-        assert "it's associated with 1 Project" in str(res.json()["detail"])
+        assert "it is associated with 1 projects" in str(res.json()["detail"])
         await db.delete(project)
         await db.commit()
 
@@ -191,7 +191,7 @@ async def test_resource_api(
         await db.refresh(task_group)
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
-        assert "it's associated with 1 TaskGroupV2" in str(
+        assert "it is associated with 1 task groups" in str(
             res.json()["detail"]
         )
         await db.delete(task_group)
