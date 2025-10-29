@@ -1,5 +1,22 @@
 """
-Required: scripts/oauth/docker-compose.yaml
+Requires `scripts/oauth/docker-compose.yaml` running and the following
+environment variables:
+```
+OAUTH_CLIENT_NAME=dexidp
+OAUTH_CLIENT_ID=client_test_id
+OAUTH_CLIENT_SECRET=client_test_secret
+OAUTH_REDIRECT_URL=http://localhost:8001/auth/dexidp/callback/
+OAUTH_OIDC_CONFIG_ENDPOINT=http://127.0.0.1:5556/dex/.well-known/openid-configuration
+FRACTAL_EMAIL_SENDER=sender@example.org
+FRACTAL_EMAIL_SMTP_SERVER=localhost
+FRACTAL_EMAIL_SMTP_PORT=1025
+FRACTAL_EMAIL_INSTANCE_NAME=test
+FRACTAL_EMAIL_RECIPIENTS=recipient1@example.org,recipient2@example.org
+FRACTAL_EMAIL_USE_STARTTLS=false
+FRACTAL_EMAIL_USE_LOGIN=true
+FRACTAL_EMAIL_PASSWORD=fakepassword
+FRACTAL_HELP_URL=https://example.org/info
+```
 """
 import httpx
 import pytest
