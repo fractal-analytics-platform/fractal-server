@@ -191,7 +191,11 @@ async def create_task(
     db_task = TaskV2(**task.model_dump(exclude_unset=True))
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
-        db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
+        db=db,
+        pkg_name=pkg_name,
+        user_id=user.id,
+        version=db_task.version,
+        user_resource_id=resource_id,
     )
     await _verify_non_duplication_group_constraint(
         db=db,

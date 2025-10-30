@@ -274,16 +274,19 @@ async def _get_collection_task_group_activity_status_message(
 
 
 async def _verify_non_duplication_user_constraint(
+    *,
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
     version: str | None,
+    user_resource_id: int,
 ):
     stm = (
         select(TaskGroupV2)
         .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()
