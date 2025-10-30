@@ -32,7 +32,6 @@ async def test_get_task(
     local_resource_profile_db,
     slurm_sudo_resource_profile_db,
 ):
-    settings = Inject(get_settings)
     # Create the following initial situations:
     # * User group A, with two users (A1 and A2)
     # * User B, who is not part of any group
@@ -54,7 +53,7 @@ async def test_get_task(
     user_C = UserOAuth(
         email="c@c.c", hashed_password="xxx", profile_id=profile2.id
     )
-    group_0 = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
+    group_0 = UserGroup(name="All")
     group_A = UserGroup(name="A")
     db.add(user_A1)
     db.add(user_A2)
@@ -150,11 +149,12 @@ async def test_get_task(
 
 
 async def test_get_task_require_active(
-    db, task_factory_v2, local_resource_profile_db
+    db, task_factory_v2, local_resource_profile_db, override_settings_factory
 ):
     """
     Test the `require_active` argument of `_get_task_read_access`.
     """
+    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
     settings = Inject(get_settings)
     # Preliminary setup
     resource, profile = local_resource_profile_db

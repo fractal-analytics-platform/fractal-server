@@ -71,7 +71,8 @@ async def test_unit_create_first_user(db):
     assert await count_users(db) == 4
 
 
-async def test_unit_create_first_group(db):
+async def test_unit_create_first_group(db, override_settings_factory):
+    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
     assert await count_groups(db) == 0
     # First call is effective
     _create_first_group()
