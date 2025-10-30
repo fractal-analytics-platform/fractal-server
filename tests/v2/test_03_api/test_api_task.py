@@ -234,6 +234,7 @@ async def test_post_task_user_group_id(
     default_user_group,
     MockCurrentUser,
     monkeypatch,
+    override_settings_factory,
     db,
 ):
     # Create a usergroup
@@ -285,13 +286,7 @@ async def test_post_task_user_group_id(
         debug(res.json())
 
         # Default group does not exist
-        monkeypatch.setattr(
-            (
-                "fractal_server.app.routes.auth._aux_auth."
-                "FRACTAL_DEFAULT_GROUP_NAME"
-            ),
-            "MONKEY",
-        )
+        override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="MONKEY")
         res = await client.post(f"{PREFIX}/", json=dict(name="f", **args))
         assert res.status_code == 404
 
