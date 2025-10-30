@@ -293,10 +293,13 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def default_user_group(db: AsyncSession) -> UserGroup | None:
+async def default_user_group(
+    db: AsyncSession, override_settings_factory
+) -> UserGroup | None:
     settings = Inject(get_settings)
     if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
-        return None
+        override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
+        settings = Inject(get_settings)
     stm = select(UserGroup).where(
         UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
     )
