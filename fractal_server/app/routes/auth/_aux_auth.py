@@ -13,7 +13,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
-FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
 
 logger = set_logger(__name__)
 
@@ -32,6 +31,9 @@ async def _get_single_user_with_groups(
     Returns:
         A `UserRead` object with `group_ids_names` dict
     """
+
+    settings = Inject(get_settings)
+
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
@@ -47,14 +49,14 @@ async def _get_single_user_with_groups(
         (
             i
             for i, group_tuple in enumerate(group_ids_names)
-            if group_tuple[1] == FRACTAL_DEFAULT_GROUP_NAME
+            if group_tuple[1] == settings.FRACTAL_DEFAULT_GROUP_NAME
         ),
         None,
     )
     if index is None:
         logger.warning(
             f"User {user.id} not in "
-            f"default UserGroup '{FRACTAL_DEFAULT_GROUP_NAME}'"
+            f"default UserGroup '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
         )
     elif index != 0:
         default_group = group_ids_names.pop(index)
@@ -125,15 +127,19 @@ async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
 
 
 async def _get_default_usergroup_id(db: AsyncSession) -> int:
+    settings = Inject(get_settings)
     stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+        UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
     )
     res = await db.execute(stm)
     user_group_id = res.scalars().one_or_none()
     if user_group_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
+            detail=(
+                f"User group '{settings.FRACTAL_DEFAULT_GROUP_NAME}' "
+                "not found."
+            ),
         )
     return user_group_id
 

@@ -29,7 +29,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
-FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
 
 router_users = APIRouter()
 
@@ -149,6 +148,7 @@ async def set_user_groups(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
+    settings = Inject(get_settings)
     # Preliminary check that all objects exist in the db
     user = await _user_or_404(user_id=user_id, db=db)
     target_group_ids = user_update.group_ids
@@ -170,7 +170,7 @@ async def set_user_groups(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"Cannot remove user from "
-                f"'{FRACTAL_DEFAULT_GROUP_NAME}' group.",
+                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}' group.",
             ),
         )
 

@@ -26,7 +26,7 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
-FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
+
 
 router_group = APIRouter()
 
@@ -140,14 +140,15 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    settings = Inject(get_settings)
     group = await _usergroup_or_404(group_id, db)
 
-    if group.name == FRACTAL_DEFAULT_GROUP_NAME:
+    if group.name == settings.FRACTAL_DEFAULT_GROUP_NAME:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot delete default UserGroup "
-                f"'{FRACTAL_DEFAULT_GROUP_NAME}'."
+                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'."
             ),
         )
 
@@ -190,6 +191,7 @@ async def remove_user_from_group(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
+    settings = Inject(get_settings)
     # Check that user and group exist
     await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
@@ -200,8 +202,8 @@ async def remove_user_from_group(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
-                "group.",
+                f"Cannot remove user from "
+                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}' group.",
             ),
         )
 
