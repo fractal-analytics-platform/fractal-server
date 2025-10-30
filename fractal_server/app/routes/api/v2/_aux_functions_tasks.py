@@ -93,7 +93,7 @@ async def _get_task_group_read_access(
             .where(TaskGroupV2.resource_id == Profile.resource_id)
         )
         res = await db.execute(stm)
-        link = res.scalar_one_or_none()
+        link = res.unique().scalars().one_or_none()
         if link is None:
             raise forbidden_exception
         else:
