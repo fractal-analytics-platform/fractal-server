@@ -44,8 +44,7 @@ async def _get_single_user_with_groups(
     groups = res.scalars().unique().all()
     group_ids_names = [(group.id, group.name) for group in groups]
 
-    # Check that Fractal Default Group (if it exists) is the first of the list.
-    # If not, fix.
+    # Check that Fractal Default Group is the first of the list. If not, fix.
     index = next(
         (
             i
@@ -54,12 +53,16 @@ async def _get_single_user_with_groups(
         ),
         None,
     )
-
-    if (index is None) or (index == 0):
-        pass
-    else:
+    if index is None:
+        logger.warning(
+            f"User {user.id} not in "
+            f"default UserGroup '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
+        )
+    elif index != 0:
         default_group = group_ids_names.pop(index)
         group_ids_names.insert(0, default_group)
+    else:
+        pass
     oauth_accounts = [
         oauth_account.model_dump() for oauth_account in user.oauth_accounts
     ]
@@ -123,13 +126,21 @@ async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
     return user
 
 
-async def _get_default_usergroup_id(db: AsyncSession) -> int | None:
+async def _get_default_usergroup_id(db: AsyncSession) -> int:
     settings = Inject(get_settings)
     stm = select(UserGroup.id).where(
         UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
     )
     res = await db.execute(stm)
     user_group_id = res.scalars().one_or_none()
+    if user_group_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"User group '{settings.FRACTAL_DEFAULT_GROUP_NAME}' "
+                "not found."
+            ),
+        )
     return user_group_id
 
 
