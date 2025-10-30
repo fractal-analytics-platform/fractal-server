@@ -25,7 +25,6 @@ from ....schemas.v2 import TaskGroupActivityStatusV2
 from ....schemas.v2 import TaskGroupActivityV2Read
 from ....schemas.v2 import TaskGroupCreateV2Strict
 from ...aux.validate_user_profile import validate_user_profile
-from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -173,12 +172,10 @@ async def collect_tasks_pip(
         user=user,
         db=db,
     )
+    resource_id = resource.id
+
     # Get some validated request data
     task_collect = request_data.task_collect
-
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
-    )
 
     # Initialize task-group attributes
     task_group_attrs = dict(
