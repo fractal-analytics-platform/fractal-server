@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     The URL of an instance-specific Fractal help page.
     """
 
-    FRACTAL_DEFAULT_GROUP_NAME: str | None = None
+    FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] = None
     """
     Name of the default UserGroup.
     """
