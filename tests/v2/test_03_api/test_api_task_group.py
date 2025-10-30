@@ -284,10 +284,20 @@ async def test_get_single_task_group_activity(client, MockCurrentUser, db):
 
 
 async def test_get_task_group_activity_list(
-    client, MockCurrentUser, db, task_factory_v2
+    client,
+    MockCurrentUser,
+    db,
+    task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser() as user:
-        task = await task_factory_v2(user_id=user.id)
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user:
+        task = await task_factory_v2(
+            user_id=user.id,
+            task_group_kwargs=dict(resource_id=resource.id),
+        )
 
         activity1 = TaskGroupActivityV2(
             user_id=user.id,
@@ -381,7 +391,7 @@ async def test_get_task_group_activity_list(
         res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
         assert len(res.json()) == 2
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         res = await client.get(f"{PREFIX}/activity/")
         assert res.status_code == 200
         assert len(res.json()) == 0

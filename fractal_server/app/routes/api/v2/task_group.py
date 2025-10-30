@@ -88,14 +88,6 @@ async def get_task_group_activity_list(
             TaskGroupActivityV2.timestamp_started >= timestamp_started_min
         )
 
-    # Only display activities for current user's resource
-    user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
-    stm = (
-        stm.join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskGroupActivityV2.taskgroupv2_id)
-        .where(TaskGroupV2.resource_id == user_resource_id)
-    )
-
     res = await db.execute(stm)
     activities = res.scalars().all()
     return activities
