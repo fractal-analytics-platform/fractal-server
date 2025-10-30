@@ -9,7 +9,7 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
-from ._aux_functions import _get_resource_and_profile_ids
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
@@ -149,6 +149,13 @@ async def create_task(
     Create a new task
     """
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
+    resource_id = resource.id
+
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
         user_group_id=user_group_id,
@@ -191,9 +198,6 @@ async def create_task(
         pkg_name=pkg_name,
         user_group_id=user_group_id,
         version=db_task.version,
-    )
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
     )
     db_task_group = TaskGroupV2(
         user_id=user.id,
