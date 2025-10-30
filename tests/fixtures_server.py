@@ -21,7 +21,6 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_user
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import get_data_settings
@@ -295,11 +294,16 @@ async def registered_superuser_client(
 
 @pytest.fixture
 async def default_user_group(db) -> UserGroup:
-    stm = select(UserGroup).where(UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME)
+    settings = Inject(get_settings)
+    stm = select(UserGroup).where(
+        UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
+    )
     res = await db.execute(stm)
     default_user_group = res.scalars().one_or_none()
     if default_user_group is None:
-        default_user_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+        default_user_group = UserGroup(
+            name=settings.FRACTAL_DEFAULT_GROUP_NAME
+        )
         db.add(default_user_group)
         await db.commit()
         await db.refresh(default_user_group)

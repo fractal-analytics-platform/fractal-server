@@ -22,7 +22,8 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 async def test_get_task(
@@ -31,6 +32,7 @@ async def test_get_task(
     local_resource_profile_db,
     slurm_sudo_resource_profile_db,
 ):
+    settings = Inject(get_settings)
     # Create the following initial situations:
     # * User group A, with two users (A1 and A2)
     # * User B, who is not part of any group
@@ -52,7 +54,7 @@ async def test_get_task(
     user_C = UserOAuth(
         email="c@c.c", hashed_password="xxx", profile_id=profile2.id
     )
-    group_0 = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+    group_0 = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
     group_A = UserGroup(name="A")
     db.add(user_A1)
     db.add(user_A2)
@@ -153,6 +155,7 @@ async def test_get_task_require_active(
     """
     Test the `require_active` argument of `_get_task_read_access`.
     """
+    settings = Inject(get_settings)
     # Preliminary setup
     resource, profile = local_resource_profile_db
     user = UserOAuth(
@@ -161,7 +164,7 @@ async def test_get_task_require_active(
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    group_0 = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+    group_0 = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
     db.add(group_0)
     await db.commit()
     await db.refresh(group_0)

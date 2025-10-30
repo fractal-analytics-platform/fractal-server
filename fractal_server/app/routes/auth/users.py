@@ -17,7 +17,6 @@ from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
 from ._aux_auth import _get_default_usergroup_id
 from ._aux_auth import _get_single_user_with_groups
-from ._aux_auth import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -26,7 +25,11 @@ from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserUpdateGroups
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
+
+FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
 
 router_users = APIRouter()
 

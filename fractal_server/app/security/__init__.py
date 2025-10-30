@@ -56,7 +56,8 @@ from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
-FRACTAL_DEFAULT_GROUP_NAME = "All"
+settings = Inject(get_settings)
+FRACTAL_DEFAULT_GROUP_NAME = settings.FRACTAL_DEFAULT_GROUP_NAME
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -281,7 +282,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 )
 
                 # (1) Prepare user-facing error message
-                settings = Inject(get_settings)
                 error_msg = (
                     "Thank you for registering for the Fractal service. "
                     "Administrators have been informed to configure your "
