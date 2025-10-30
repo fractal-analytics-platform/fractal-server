@@ -24,7 +24,13 @@ async def _project_list_v2(user: UserOAuth, db):
     return res.scalars().unique().all()
 
 
-async def test_post_and_get_project(client, db, MockCurrentUser):
+async def test_post_and_get_project(
+    client,
+    db,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
     PAYLOAD = dict(name="project_v2")
 
     # unauthenticated
@@ -34,7 +40,9 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
     assert res.status_code == 401
 
     # authenticated
-    async with MockCurrentUser() as userA:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as userA:
         res = await client.post(
             f"{PREFIX}/project/", json=dict(name="project")
         )
@@ -79,7 +87,15 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
         assert res.status_code == 403
 
 
-async def test_post_project(app, client, MockCurrentUser, db):
+async def test_post_project(
+    app,
+    client,
+    MockCurrentUser,
+    db,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+
     payload = dict(name="new project")
 
     # Fail for anonymous user
@@ -87,7 +103,7 @@ async def test_post_project(app, client, MockCurrentUser, db):
     data = res.json()
     assert res.status_code == 401
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         res = await client.post(f"{PREFIX}/project/", json=payload)
         data = res.json()
         assert res.status_code == 201
@@ -101,12 +117,19 @@ async def test_post_project(app, client, MockCurrentUser, db):
         assert res.status_code == 422
 
 
-async def test_post_project_name_constraint(app, client, MockCurrentUser, db):
+async def test_post_project_name_constraint(
+    app,
+    client,
+    MockCurrentUser,
+    db,
+    local_resource_profile_db,
+):
     payload = dict(name="new project")
     res = await client.post(f"{PREFIX}/project/", json=payload)
     assert res.status_code == 401
 
-    async with MockCurrentUser():
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # Create a first project named "new project"
         res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 201
@@ -117,8 +140,15 @@ async def test_post_project_name_constraint(app, client, MockCurrentUser, db):
         assert res.status_code == 422
 
 
-async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
-    async with MockCurrentUser():
+async def test_patch_project_name_constraint(
+    app,
+    client,
+    MockCurrentUser,
+    db,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # Create a first project named "name1"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name1"))
         assert res.status_code == 201
@@ -135,7 +165,7 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
         assert res.status_code == 422
         assert res.json()["detail"] == "Project name (name1) already in use"
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # Using another user, create a project named "name3"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name3"))
         assert res.status_code == 201
@@ -148,12 +178,17 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
         assert res.status_code == 200
 
 
-async def test_patch_project(client, MockCurrentUser):
+async def test_patch_project(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
     """
     Test that the project can be patched correctly, with any possible
     combination of set/unset attributes.
     """
-    async with MockCurrentUser():
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         for new_name in (None, "new name"):
             # Create project
             payload = dict(name=f"old {new_name}")
@@ -189,8 +224,15 @@ async def test_delete_project(
     workflow_factory_v2,
     job_factory_v2,
     task_factory_v2,
+    local_resource_profile_db,
 ):
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}) as user:
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs={
+            "is_superuser": True,
+            "profile_id": profile.id,
+        }
+    ) as user:
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0

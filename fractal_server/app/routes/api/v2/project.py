@@ -15,9 +15,9 @@ from ....models.v2 import ProjectV2
 from ....schemas.v2 import ProjectCreateV2
 from ....schemas.v2 import ProjectReadV2
 from ....schemas.v2 import ProjectUpdateV2
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act_ver_prof
@@ -54,12 +54,16 @@ async def create_project(
     Create new project
     """
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
+    resource_id = resource.id
+
     # Check that there is no project with the same user and name
     await _check_project_exists(
         project_name=project.name, user_id=user.id, db=db
-    )
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
     )
 
     db_project = ProjectV2(**project.model_dump(), resource_id=resource_id)

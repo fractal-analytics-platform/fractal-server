@@ -15,9 +15,6 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_project_check_owner,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_resource_and_profile_ids,
-)
-from fractal_server.app.routes.api.v2._aux_functions import (
     _get_submitted_jobs_statement,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -339,24 +336,3 @@ async def test_get_submitted_jobs_statement():
     from sqlmodel.sql.expression import SelectOfScalar
 
     assert type(stm) is SelectOfScalar
-
-
-async def test_get_resource_and_profile_ids(
-    local_resource_profile_db,
-    MockCurrentUser,
-    db,
-):
-    resource, profile = local_resource_profile_db
-
-    async with MockCurrentUser(user_kwargs=dict(profile_id=None)) as user:
-        res = await _get_resource_and_profile_ids(user_id=user.id, db=db)
-        assert res == (None, None)
-
-    res = await _get_resource_and_profile_ids(user_id=9999999, db=db)
-    assert res == (None, None)
-
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-    ) as user:
-        res = await _get_resource_and_profile_ids(user_id=user.id, db=db)
-        assert res == (resource.id, profile.id)
