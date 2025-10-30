@@ -47,6 +47,8 @@ The main content of this release is the introduction of the computational resour
 * Testing:
     * Introduce `pytest-env` dependency.
     * Update testing database to version 2.16.6 (\#2909).
+    * Test OAuth flow with `pytest` and remove OAuth GHA (\#2929).
+
 
 
 # 2.16.6
