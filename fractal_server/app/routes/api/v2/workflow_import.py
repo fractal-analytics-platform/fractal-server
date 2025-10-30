@@ -93,7 +93,7 @@ async def _get_task_by_taskimport(
     task_import: TaskImportV2,
     task_groups_list: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> int | None:
     """

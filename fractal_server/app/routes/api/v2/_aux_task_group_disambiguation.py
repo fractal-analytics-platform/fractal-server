@@ -16,7 +16,7 @@ async def _disambiguate_task_groups(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2 | None:
     """
@@ -51,6 +51,7 @@ async def _disambiguate_task_groups(
     # Medium priority: task groups owned by default user group
     list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
     try:
+        # This also handle the case `default_group_id is None`
         ind_user_group_id = list_user_group_ids.index(default_group_id)
         task_group = matching_task_groups[ind_user_group_id]
         logger.debug(
@@ -97,7 +98,7 @@ async def _disambiguate_task_groups_not_none(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -133,7 +134,7 @@ async def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
