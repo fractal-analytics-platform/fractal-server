@@ -1,8 +1,8 @@
-"""v2_17_0
+"""2.17.0
 
-Revision ID: 204d4791d1cc
+Revision ID: 83bc2ad3ffcc
 Revises: 981d588fe248
-Create Date: 2025-10-28 14:05:43.825784
+Create Date: 2025-10-30 14:16:53.639006
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "204d4791d1cc"
+revision = "83bc2ad3ffcc"
 down_revision = "981d588fe248"
 branch_labels = None
 depends_on = None
@@ -101,7 +101,7 @@ def upgrade() -> None:
             ["resource_id"],
             ["resource.id"],
             name=op.f("fk_profile_resource_id_resource"),
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_profile")),
         sa.UniqueConstraint("name", name=op.f("uq_profile_name")),
@@ -115,7 +115,7 @@ def upgrade() -> None:
             "resource",
             ["resource_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
 
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
@@ -127,7 +127,7 @@ def upgrade() -> None:
             "resource",
             ["resource_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
 
     with op.batch_alter_table("user_oauth", schema=None) as batch_op:
@@ -155,7 +155,7 @@ def upgrade() -> None:
             "profile",
             ["profile_id"],
             ["id"],
-            ondelete="SET NULL",
+            ondelete="RESTRICT",
         )
         batch_op.drop_column("username")
 
