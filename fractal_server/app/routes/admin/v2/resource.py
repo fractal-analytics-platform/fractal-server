@@ -3,7 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import func
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from ._aux_functions import _check_resource_name
@@ -13,9 +13,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
-from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
@@ -151,60 +149,19 @@ async def delete_resource(
     Delete single `Resource`.
     """
     resource = await _get_resource_or_404(resource_id=resource_id, db=db)
-
-    # Fail if at least one Profile is associated with the Resource.
-    res = await db.execute(
-        select(func.count(Profile.id)).where(
-            Profile.resource_id == resource_id
-        )
-    )
-    associated_profile_count = res.scalar()
-    if associated_profile_count > 0:
+    try:
+        await db.delete(resource)
+        await db.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except IntegrityError as e:
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_profile_count} Profiles."
+                "IntegrityError for resource deletion. "
+                f"Original error:\n{str(e)}"
             ),
         )
-
-    # Fail if at least one Project is associated with the Resource.
-    res = await db.execute(
-        select(func.count(ProjectV2.id)).where(
-            ProjectV2.resource_id == resource_id
-        )
-    )
-    associated_project_count = res.scalar()
-    if associated_project_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_project_count} Projects."
-            ),
-        )
-
-    # Fail if at least one TaskGroupV2 is associated with the Resource.
-    res = await db.execute(
-        select(func.count(TaskGroupV2.id)).where(
-            TaskGroupV2.resource_id == resource_id
-        )
-    )
-    associated_taskgroup_count = res.scalar()
-    if associated_taskgroup_count > 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete Resource {resource_id} because it's associated"
-                f" with {associated_taskgroup_count} TaskGroupV2."
-            ),
-        )
-
-    # Delete
-    await db.delete(resource)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

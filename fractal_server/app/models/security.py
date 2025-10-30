@@ -92,7 +92,7 @@ class UserOAuth(SQLModel, table=True):
     profile_id: int | None = Field(
         foreign_key="profile.id",
         default=None,
-        ondelete="SET NULL",
+        ondelete="RESTRICT",
     )
 
     # TODO-2.17.1: update to `project_dir: str`
