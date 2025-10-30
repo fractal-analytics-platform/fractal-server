@@ -133,6 +133,7 @@ async def query_task_group_list(
     if resource_id is not None:
         stm = stm.where(TaskGroupV2.resource_id == resource_id)
 
+    stm = stm.order_by(TaskGroupV2.id)
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
     return task_groups_list
