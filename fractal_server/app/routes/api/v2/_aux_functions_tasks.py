@@ -12,6 +12,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -83,8 +85,13 @@ async def _get_task_group_read_access(
     else:
         stm = (
             select(LinkUserGroup)
+            .join(UserOAuth)
+            .join(Profile)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
             .where(LinkUserGroup.user_id == user_id)
+            .where(UserOAuth.id == user_id)
+            .where(Profile.id == UserOAuth.profile_id)
+            .where(Resource.id == Profile.resource_id)
         )
         res = await db.execute(stm)
         link = res.scalar_one_or_none()
