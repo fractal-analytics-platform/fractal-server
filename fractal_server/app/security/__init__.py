@@ -441,7 +441,12 @@ def _create_first_group():
     """
     settings = Inject(get_settings)
     function_logger = set_logger("fractal_server.create_first_group")
-
+    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
+        function_logger.info(
+            "SKIP _create_first_group, because "
+            f"'{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
+        )
+        return
     function_logger.info(
         "START _create_first_group, with name "
         f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'"

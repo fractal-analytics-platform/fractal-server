@@ -293,8 +293,10 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def default_user_group(db) -> UserGroup:
+async def default_user_group(db: AsyncSession) -> UserGroup | None:
     settings = Inject(get_settings)
+    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
+        return None
     stm = select(UserGroup).where(
         UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
     )
@@ -311,7 +313,9 @@ async def default_user_group(db) -> UserGroup:
 
 
 @pytest.fixture
-async def MockCurrentUser(app: FastAPI, db, default_user_group):
+async def MockCurrentUser(
+    app: FastAPI, db, default_user_group: UserGroup | None
+):
     from fractal_server.app.routes.auth import (
         current_user_act_ver_prof,
         current_user_act,
@@ -407,19 +411,19 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
 
                 if self.debug:
                     debug("CREATED USER", self.user)
-
-                db.add(
-                    LinkUserGroup(
-                        user_id=self.user.id,
-                        group_id=default_user_group.id,
+                if default_user_group is not None:
+                    db.add(
+                        LinkUserGroup(
+                            user_id=self.user.id,
+                            group_id=default_user_group.id,
+                        )
                     )
-                )
-                await db.commit()
-                if self.debug:
-                    debug(
-                        f"Created link between user_id={self.user.id} and "
-                        f"group_id={default_user_group.id}."
-                    )
+                    await db.commit()
+                    if self.debug:
+                        debug(
+                            f"Created link between user_id={self.user.id} and "
+                            f"group_id={default_user_group.id}."
+                        )
 
             # Removing objects from test db session, so that we can operate
             # on them from other sessions
@@ -480,7 +484,9 @@ async def MockCurrentUser(app: FastAPI, db, default_user_group):
 
 @pytest.fixture(scope="function")
 async def first_user(
-    db: AsyncSession, default_user_group: UserGroup, local_resource_profile_db
+    db: AsyncSession,
+    default_user_group: UserGroup | None,
+    local_resource_profile_db,
 ):
     """
     Make sure that at least one user exists.
@@ -500,8 +506,11 @@ async def first_user(
         await db.commit()
         db.expunge(user)
 
-        db.add(LinkUserGroup(user_id=user.id, group_id=default_user_group.id))
-        await db.commit()
+        if default_user_group is not None:
+            db.add(
+                LinkUserGroup(user_id=user.id, group_id=default_user_group.id)
+            )
+            await db.commit()
 
     return user
 
