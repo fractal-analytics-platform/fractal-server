@@ -44,7 +44,7 @@ class TaskGroupV2(SQLModel, table=True):
     )
     # TODO-2.17.1: make `resource_id` not nullable
     resource_id: int | None = Field(
-        foreign_key="resource.id", default=None, ondelete="SET NULL"
+        foreign_key="resource.id", default=None, ondelete="RESTRICT"
     )
 
     origin: str

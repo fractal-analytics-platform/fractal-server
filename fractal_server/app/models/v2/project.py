@@ -15,7 +15,7 @@ class ProjectV2(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     resource_id: int | None = Field(
-        foreign_key="resource.id", default=None, ondelete="SET NULL"
+        foreign_key="resource.id", default=None, ondelete="RESTRICT"
     )
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
