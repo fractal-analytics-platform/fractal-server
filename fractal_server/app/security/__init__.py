@@ -451,12 +451,6 @@ def _get_default_group_or_none(db: Session):
     return default_group
 
 
-async def _async_get_default_group_or_none(db: AsyncSession):
-    res = await db.execute(select(UserGroup).where(UserGroup.name == "All"))
-    default_group = res.scalars().one_or_none()
-    return default_group
-
-
 def _create_default_group():
     """
     Create a `UserGroup` named 'All'

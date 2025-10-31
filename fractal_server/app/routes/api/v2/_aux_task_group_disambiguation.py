@@ -5,10 +5,11 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.config import get_settings
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
@@ -18,7 +19,6 @@ async def _disambiguate_task_groups(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2 | None:
     """
@@ -27,7 +27,6 @@ async def _disambiguate_task_groups(
     Args:
         matching_task_groups:
         user_id:
-        default_group_id:
         db:
 
     Returns:
@@ -51,8 +50,8 @@ async def _disambiguate_task_groups(
         )
 
     # Medium priority: task groups owned by default user group
-    settings = Inject(get_settings)
-    if settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
+    default_group_id = await _get_default_usergroup_id_or_none(db)
+    if default_group_id is not None:
         list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
         try:
             ind_user_group_id = list_user_group_ids.index(default_group_id)
@@ -101,7 +100,6 @@ async def _disambiguate_task_groups_not_none(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -109,9 +107,7 @@ async def _disambiguate_task_groups_not_none(
 
     Args:
         matching_task_groups:
-        user_id:
-        default_group_id:
-        db:
+        user_id:db:
 
     Returns:
         The top-priority task group.
@@ -119,13 +115,12 @@ async def _disambiguate_task_groups_not_none(
     task_group = await _disambiguate_task_groups(
         matching_task_groups=matching_task_groups,
         user_id=user_id,
-        default_group_id=default_group_id,
         db=db,
     )
     if task_group is None:
         error_msg = (
             "[_disambiguate_task_groups_not_none] Could not find a task "
-            f"group ({user_id=}, {default_group_id=})."
+            f"group ({user_id=}."
         )
         logger.error(f"UnreachableBranchError {error_msg}")
         raise UnreachableBranchError(error_msg)
@@ -156,7 +151,6 @@ async def remove_duplicate_task_groups(
             await _disambiguate_task_groups_not_none(
                 matching_task_groups=list(groups),
                 user_id=user_id,
-                default_group_id=default_group_id,
                 db=db,
             )
         )
