@@ -445,19 +445,20 @@ async def _create_first_user(
 
 def _create_first_group():
     """
-    Create a `UserGroup` with `name=FRACTAL_DEFAULT_GROUP_NAME`, if missing.
+    Create a `UserGroup` named `FRACTAL_DEFAULT_GROUP_NAME`, if this variable
+    is set and if such a group does not already exist.
     """
     settings = Inject(get_settings)
     function_logger = set_logger("fractal_server.create_first_group")
+
     if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
         function_logger.info(
-            "SKIP _create_first_group, because "
-            f"'{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
+            f"SKIP because '{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
         )
         return
+
     function_logger.info(
-        "START _create_first_group, with name "
-        f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
+        f"START, name '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
     )
     with next(get_sync_db()) as db:
         group_all = db.execute(
@@ -477,8 +478,5 @@ def _create_first_group():
                 f"Group '{settings.FRACTAL_DEFAULT_GROUP_NAME}' "
                 "already exists, skip."
             )
-    function_logger.info(
-        "END   _create_first_group, with name "
-        f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
-    )
+    function_logger.info("END")
     close_logger(function_logger)
