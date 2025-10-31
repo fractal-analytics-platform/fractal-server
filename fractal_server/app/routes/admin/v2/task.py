@@ -103,6 +103,7 @@ async def query_tasks(
             .where(TaskGroupV2.resource_id == resource_id)
         )
 
+    stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = res.scalars().all()
     if len(task_list) > max_number_of_results:
