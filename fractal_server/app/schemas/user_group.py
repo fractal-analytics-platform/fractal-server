@@ -6,7 +6,7 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.types import NonEmptyString
+from fractal_server.types import NonEmptyStr
 from fractal_server.types import ListUniqueAbsolutePathStr
 
 __all__ = (
@@ -51,7 +51,7 @@ class UserGroupCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyString
+    name: NonEmptyStr
     viewer_paths: ListUniqueAbsolutePathStr = Field(default_factory=list)
 
 
