@@ -333,7 +333,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         )
         async for db in get_async_db():
             # Note: if `FRACTAL_DEFAULT_GROUP_NAME=None`, this query will
-            # not produce any result
+            # result into `None`
             stm = select(UserGroup).where(
                 UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
             )
