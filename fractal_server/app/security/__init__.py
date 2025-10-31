@@ -45,9 +45,6 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth._aux_auth import (
-    _get_default_usergroup_id_or_none,
-)
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.security.signup_email import (
     send_fractal_email_or_log_failure,
@@ -338,9 +335,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         async for db in get_async_db():
             # Note: if `FRACTAL_DEFAULT_GROUP_NAME=None`, this query will
             # result into `None`
-            default_group_id_or_none = await _get_default_usergroup_id_or_none(
-                db=db
+            settings = Inject(get_settings)
+            stm = select(UserGroup.id).where(
+                UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
             )
+            res = await db.execute(stm)
+            default_group_id_or_none = res.scalars().one_or_none()
             if default_group_id_or_none is not None:
                 link = LinkUserGroup(
                     user_id=user.id, group_id=default_group_id_or_none
