@@ -62,7 +62,7 @@ async def get_resource_list(
     Query `Resource` table.
     """
 
-    stm = select(Resource)
+    stm = select(Resource).order_by(Resource.id)
     res = await db.execute(stm)
     resource_list = res.scalars().all()
 
