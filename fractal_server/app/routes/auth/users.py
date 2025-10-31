@@ -164,10 +164,10 @@ async def set_user_groups(
         )
 
     # Check that default group is not being removed
-    default_group_id_or_None = await _get_default_usergroup_id_or_none(db=db)
+    default_group_id_or_none = await _get_default_usergroup_id_or_none(db=db)
     if (
-        default_group_id_or_None is not None
-        and default_group_id_or_None not in target_group_ids
+        default_group_id_or_none is not None
+        and default_group_id_or_none not in target_group_ids
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
