@@ -138,6 +138,19 @@ async def _get_default_usergroup_id(db: AsyncSession) -> int | None:
     )
     res = await db.execute(stm)
     user_group_id = res.scalars().one_or_none()
+
+    if (
+        settings.FRACTAL_DEFAULT_GROUP_NAME is not None
+        and user_group_id is None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"User group '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
+                " not found.",
+            ),
+        )
+
     return user_group_id
 
 
