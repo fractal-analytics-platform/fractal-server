@@ -10,7 +10,6 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...aux.validate_user_profile import validate_user_profile
-from ._aux_functions import _get_resource_and_profile_ids
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -50,6 +49,7 @@ async def collect_task_custom(
 ) -> list[TaskReadV2]:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
+    resource_id = resource.id
 
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
@@ -145,10 +145,6 @@ async def collect_task_custom(
         package_version=task_collect.version,
     )
 
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
-    )
-
     # Prepare task-group attributes
     task_group_attrs = dict(
         origin=TaskGroupV2OriginEnum.OTHER,
@@ -165,6 +161,7 @@ async def collect_task_custom(
         user_id=user.id,
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
+        user_resource_id=resource_id,
         db=db,
     )
     await _verify_non_duplication_group_constraint(
