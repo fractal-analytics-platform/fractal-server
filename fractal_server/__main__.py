@@ -81,13 +81,18 @@ init_db_data_parser.add_argument(
     help="Password for the first admin user.",
     required=False,
 )
-
 init_db_data_parser.add_argument(
     "--admin-project-dir",
     type=str,
     help="Project_dir for the first admin user.",
     required=False,
 )
+init_db_data_parser.add_argument(
+    "--create-default-group",
+    action="store_true",
+    help="TBD",
+)
+
 
 # fractalctl update-db-data
 update_db_data_parser = subparsers.add_parser(
@@ -138,9 +143,10 @@ def init_db_data(
     admin_email: str | None = None,
     admin_password: str | None = None,
     admin_project_dir: str | None = None,
+    create_default_group: bool = False,
 ) -> None:
     from fractal_server.app.security import _create_first_user
-    from fractal_server.app.security import _create_first_group
+    from fractal_server.app.security import _create_default_group
     from fractal_server.app.db import get_sync_db
     from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
@@ -150,7 +156,8 @@ def init_db_data(
 
     # Create default group and user
     print()
-    _create_first_group()
+    if create_default_group is True:
+        _create_default_group()
     print()
 
     # Create admin user if requested
@@ -345,6 +352,7 @@ def run():
             admin_email=args.admin_email,
             admin_password=args.admin_pwd,
             admin_project_dir=args.admin_project_dir,
+            create_default_group=args.create_default_group,
         )
     elif args.cmd == "update-db-data":
         update_db_data()
