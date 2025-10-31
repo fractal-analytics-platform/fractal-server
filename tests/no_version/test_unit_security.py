@@ -5,7 +5,7 @@ from sqlmodel import select
 import fractal_server.app.security
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.security import _create_first_group
+from fractal_server.app.security import _create_default_group
 from fractal_server.app.security import _create_first_user
 
 
@@ -79,10 +79,10 @@ async def test_unit_create_first_group(
 ):
     assert await count_groups(db) == 0
     # First call is effective
-    _create_first_group()
+    _create_default_group()
     assert await count_groups(db) == 1
     # Second call is a no-op
-    _create_first_group()
+    _create_default_group()
     assert await count_groups(db) == 1
 
     override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME=None)
@@ -93,7 +93,7 @@ async def test_unit_create_first_group(
         lambda _: logging.getLogger(LOGGER_NAME),
     )
     with caplog.at_level(logging.INFO, logger=LOGGER_NAME):
-        _create_first_group()
+        _create_default_group()
     assert (
         "SKIP because 'settings.FRACTAL_DEFAULT_GROUP_NAME=None'"
         in caplog.text

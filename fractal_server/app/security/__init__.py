@@ -36,6 +36,7 @@ from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session
 from sqlmodel import func
 from sqlmodel import select
 
@@ -444,40 +445,33 @@ async def _create_first_user(
         function_logger.info(f"END   _create_first_user, with email '{email}'")
 
 
-def _create_first_group():
+def _get_default_group_or_none(db: Session):
+    res = db.execute(select(UserGroup).where(UserGroup.name == "All"))
+    default_group = res.scalars().one_or_none()
+    return default_group
+
+
+async def _async_get_default_group_or_none(db: AsyncSession):
+    res = await db.execute(select(UserGroup).where(UserGroup.name == "All"))
+    default_group = res.scalars().one_or_none()
+    return default_group
+
+
+def _create_default_group():
     """
-    Create a `UserGroup` named `FRACTAL_DEFAULT_GROUP_NAME`, if this variable
-    is set and if such a group does not already exist.
+    Create a `UserGroup` named 'All'
     """
-    settings = Inject(get_settings)
     function_logger = set_logger("fractal_server.create_first_group")
 
-    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
-        function_logger.info(
-            f"SKIP because '{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
-        )
-        return
-
-    function_logger.info(
-        f"START, name '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
-    )
+    function_logger.info("START _create_default_group")
     with next(get_sync_db()) as db:
-        group_all = db.execute(
-            select(UserGroup).where(
-                UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
-            )
-        )
-        if group_all.scalars().one_or_none() is None:
-            first_group = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
+        default_group = _get_default_group_or_none(db)
+        if default_group is None:
+            first_group = UserGroup(name="All")
             db.add(first_group)
             db.commit()
-            function_logger.info(
-                f"Created group '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
-            )
+            function_logger.info("Created group 'All'")
         else:
-            function_logger.info(
-                f"Group '{settings.FRACTAL_DEFAULT_GROUP_NAME}' "
-                "already exists, skip."
-            )
-    function_logger.info("END")
+            function_logger.info("Group 'All' already exists, skip.")
+    function_logger.info("END _create_default_group")
     close_logger(function_logger)
