@@ -66,3 +66,13 @@ class Settings(BaseSettings):
     """
     The URL of an instance-specific Fractal help page.
     """
+
+    FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
+    """
+    Name of the default user group.
+
+    If set to `"All"`, then the user group with that name is a special user
+    group (e.g. it cannot be deleted, and new users are automatically added
+    to it). If set to `None` (the default value), then user groups are all
+    equivalent, independently on their name.
+    """

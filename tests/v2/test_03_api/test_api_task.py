@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
@@ -239,6 +241,7 @@ async def test_post_task_user_group_id(
     default_user_group,
     MockCurrentUser,
     monkeypatch,
+    override_settings_factory,
     db,
     local_resource_profile_db,
 ):
@@ -294,15 +297,8 @@ async def test_post_task_user_group_id(
         debug(res.json())
 
         # Default group does not exist
-        monkeypatch.setattr(
-            (
-                "fractal_server.app.routes.auth._aux_auth."
-                "FRACTAL_DEFAULT_GROUP_NAME"
-            ),
-            "MONKEY",
-        )
-        res = await client.post(f"{PREFIX}/", json=dict(name="f", **args))
-        assert res.status_code == 404
+        with pytest.raises(ValidationError):
+            override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="Monkey")
 
 
 async def test_patch_task_auth(
