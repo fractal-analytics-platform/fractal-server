@@ -6,8 +6,8 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.types import NonEmptyStr
 from fractal_server.types import ListUniqueAbsolutePathStr
+from fractal_server.types import NonEmptyStr
 
 __all__ = (
     "UserGroupRead",
