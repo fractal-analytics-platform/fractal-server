@@ -294,10 +294,6 @@ async def registered_superuser_client(
 
 @pytest.fixture
 async def default_user_group(db: AsyncSession) -> UserGroup | None:
-    """
-    Note: using this fixture also sets `FRACTAL_DEFAULT_GROUP_NAME="All"`
-    in settings.
-    """
     settings = Inject(get_settings)
     if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
         return None

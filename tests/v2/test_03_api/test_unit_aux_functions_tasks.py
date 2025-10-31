@@ -1,6 +1,7 @@
 import pytest
 from devtools import debug
 from fastapi import HTTPException
+from sqlmodel import delete
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupActivityV2
@@ -12,6 +13,9 @@ from fractal_server.app.routes.api.v2._aux_functions_task_version_update import 
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_collection_task_group_activity_status_message,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_default_usergroup_id_or_none,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_full_access,
@@ -307,3 +311,23 @@ def test_get_new_workflow_task_meta():
         old_workflow_task_meta={"mem": 6000, "cpus_per_task": 2},
         new_task_meta=None,
     ) == {"cpus_per_task": 2}
+
+
+async def test_get_default_usergroup_id_or_none(
+    db, override_settings_factory, default_user_group
+):
+    # Case 1: FRACTAL_DEFAULT_GROUP_NAME=None
+    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME=None)
+    ug_id = await _get_default_usergroup_id_or_none(db)
+    assert ug_id is None
+
+    # Case 2: FRACTAL_DEFAULT_GROUP_NAME="All"
+    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
+    ug_id = await _get_default_usergroup_id_or_none(db)
+    assert ug_id is not None
+
+    # Case 3: FRACTAL_DEFAULT_GROUP_NAME="All" but group "All" does not exist
+    await db.execute(delete(UserGroup).where(UserGroup.id == ug_id))
+    await db.commit()
+    with pytest.raises(HTTPException):
+        await _get_default_usergroup_id_or_none(db)
