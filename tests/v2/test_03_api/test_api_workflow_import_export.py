@@ -303,7 +303,6 @@ async def test_unit_get_task_by_taskimport():
         task_import=TaskImportV2(name="task", pkg_name="pkg", version="1.0.0"),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
         db=None,
     )
     assert task_id == task1.id
@@ -316,7 +315,6 @@ async def test_unit_get_task_by_taskimport():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
         db=None,
     )
     assert task_id == task2.id
@@ -329,7 +327,6 @@ async def test_unit_get_task_by_taskimport():
         ),
         user_id=1,
         task_groups_list=[task_group3],
-        default_group_id=1,
         db=None,
     )
     assert task_id == task3.id
@@ -343,7 +340,6 @@ async def test_unit_get_task_by_taskimport():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
         db=None,
     )
     assert task_id is None
@@ -356,7 +352,6 @@ async def test_unit_get_task_by_taskimport():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
         db=None,
     )
     assert task_id is None
@@ -369,7 +364,6 @@ async def test_unit_get_task_by_taskimport():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
         db=None,
     )
     assert task_id is None

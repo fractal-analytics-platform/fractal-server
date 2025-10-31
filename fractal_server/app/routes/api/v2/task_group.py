@@ -31,9 +31,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
-from fractal_server.app.security import (
-    _get_default_usergroup_id_or_none,
-)
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -165,7 +162,6 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
-    default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
         (
             pkg_name,
@@ -177,7 +173,6 @@ async def get_task_group_list(
                         reverse=True,
                     ),
                     user_id=user.id,
-                    default_group_id=default_group_id,
                     db=db,
                 )
             ),
