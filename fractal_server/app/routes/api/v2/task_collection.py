@@ -305,6 +305,7 @@ async def collect_tasks_pip(
     )
     await _verify_non_duplication_group_path(
         path=task_group_attrs["path"],
+        resource_id=resource_id,
         db=db,
     )
 

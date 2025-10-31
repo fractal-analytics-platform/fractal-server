@@ -159,6 +159,7 @@ async def collect_task_pixi(
     )
     await _verify_non_duplication_group_path(
         path=task_group_attrs["path"],
+        resource_id=resource_id,
         db=db,
     )
 

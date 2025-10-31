@@ -370,7 +370,9 @@ async def _verify_non_duplication_group_constraint(
 
 
 async def _verify_non_duplication_group_path(
+    *,
     path: str | None,
+    resource_id: int,
     db: AsyncSession,
 ) -> None:
     """
@@ -378,7 +380,11 @@ async def _verify_non_duplication_group_path(
     """
     if path is None:
         return
-    stm = select(TaskGroupV2.id).where(TaskGroupV2.path == path)
+    stm = (
+        select(TaskGroupV2.id)
+        .where(TaskGroupV2.path == path)
+        .where(TaskGroupV2.resource_id == resource_id)
+    )
     res = await db.execute(stm)
     duplicate_ids = res.scalars().all()
     if duplicate_ids:

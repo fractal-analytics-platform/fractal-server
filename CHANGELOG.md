@@ -7,7 +7,7 @@
 The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
 
 
-* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925, \#2940, \#2941):
+* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925, \#2940, \#2941, \#2943):
     * Introduce API for `Resource` and `Profile` models.
     * Drop API for user settings.
     * Drop handling of deprecated `DatasetV2.filters` attribute when creating dataset dumps (\#2917).
@@ -15,8 +15,8 @@ The main content of this release is the introduction of the computational resour
     * Check matching-`resource_id` upon job submission (\#2896).
     * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
     * Split `/api/settings/` into smaller-scope endpoints.
-    * Only show `Task`s associated to current user's `Resource` (\#2906).
     * Update rules for read access to task groups with resource information (\#2941).
+    * Only show tasks and task groups associated to current user's `Resource` (\#2906, \#2943).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner

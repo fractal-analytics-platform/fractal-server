@@ -73,6 +73,7 @@ async def get_list_task(
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
 
+    stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = list(res.scalars().all())
     await db.close()
