@@ -259,20 +259,6 @@ async def task_factory_v2(db: AsyncSession):
 
         pkg_name = task_group_kwargs.get("pkg_name", task.name)
         version = task_group_kwargs.get("version", task.version)
-
-        await _verify_non_duplication_user_constraint(
-            db=db,
-            user_id=user_id,
-            pkg_name=pkg_name,
-            version=version,
-        )
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            user_group_id=user_group_id,
-            pkg_name=pkg_name,
-            version=version,
-        )
-
         res = await db.execute(
             select(Resource.id)
             .join(Profile)
@@ -282,6 +268,20 @@ async def task_factory_v2(db: AsyncSession):
             .where(UserOAuth.id == user_id)
         )
         resource_id = res.scalar_one()
+
+        await _verify_non_duplication_user_constraint(
+            db=db,
+            user_id=user_id,
+            pkg_name=pkg_name,
+            version=version,
+            user_resource_id=resource_id,
+        )
+        await _verify_non_duplication_group_constraint(
+            db=db,
+            user_group_id=user_group_id,
+            pkg_name=pkg_name,
+            version=version,
+        )
 
         task_group = TaskGroupV2(
             user_id=user_id,

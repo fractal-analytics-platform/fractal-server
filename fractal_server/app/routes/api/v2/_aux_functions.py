@@ -543,29 +543,6 @@ async def _get_submitted_job_or_none(
         )
 
 
-async def _get_resource_and_profile_ids(
-    *,
-    user_id: int,
-    db: AsyncSession,
-) -> tuple[int, int] | tuple[None, None]:
-    """
-    Get `(resource_id, profile_id)` pair for a given user, or `(None,None)`.
-    """
-    stm = (
-        select(Resource.id, Profile.id)
-        .join(UserOAuth)
-        .where(Resource.id == Profile.resource_id)
-        .where(Profile.id == UserOAuth.profile_id)
-        .where(UserOAuth.id == user_id)
-    )
-    res = await db.execute(stm)
-    data = res.one_or_none()
-    if data is None:
-        return (None, None)
-    else:
-        return tuple(data)
-
-
 async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
     res = await db.execute(
         select(Resource.id)

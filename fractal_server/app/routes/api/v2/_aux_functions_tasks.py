@@ -12,6 +12,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -74,7 +75,7 @@ async def _get_task_group_read_access(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
             "Current user has no read access to TaskGroupV2 "
-            f"{task_group_id}.",
+            f"{task_group_id}."
         ),
     )
 
@@ -85,11 +86,16 @@ async def _get_task_group_read_access(
     else:
         stm = (
             select(LinkUserGroup)
+            .join(UserOAuth)
+            .join(Profile)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
             .where(LinkUserGroup.user_id == user_id)
+            .where(UserOAuth.id == user_id)
+            .where(Profile.id == UserOAuth.profile_id)
+            .where(task_group.resource_id == Profile.resource_id)
         )
         res = await db.execute(stm)
-        link = res.scalar_one_or_none()
+        link = res.unique().scalars().one_or_none()
         if link is None:
             raise forbidden_exception
         else:
@@ -276,16 +282,19 @@ async def _get_collection_task_group_activity_status_message(
 
 
 async def _verify_non_duplication_user_constraint(
+    *,
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
     version: str | None,
+    user_resource_id: int,
 ):
     stm = (
         select(TaskGroupV2)
         .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()

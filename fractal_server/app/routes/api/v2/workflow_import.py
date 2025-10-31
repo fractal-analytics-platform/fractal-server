@@ -15,6 +15,7 @@ from ....schemas.v2 import WorkflowReadV2WithWarnings
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from ._aux_functions_tasks import _check_type_filters_compatibility
@@ -40,20 +41,26 @@ logger = set_logger(__name__)
 async def _get_user_accessible_taskgroups(
     *,
     user_id: int,
+    user_resource_id: int,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
     Retrieve list of task groups that the user has access to.
     """
-    stm = select(TaskGroupV2).where(
-        or_(
-            TaskGroupV2.user_id == user_id,
-            TaskGroupV2.user_group_id.in_(
-                select(LinkUserGroup.group_id).where(
-                    LinkUserGroup.user_id == user_id
-                )
-            ),
+
+    stm = (
+        select(TaskGroupV2)
+        .where(
+            or_(
+                TaskGroupV2.user_id == user_id,
+                TaskGroupV2.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user_id
+                    )
+                ),
+            )
         )
+        .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
@@ -214,6 +221,8 @@ async def import_workflow(
     Import an existing workflow into a project and create required objects.
     """
 
+    user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+
     # Preliminary checks
     await _get_project_check_owner(
         project_id=project_id,
@@ -229,6 +238,7 @@ async def import_workflow(
     task_group_list = await _get_user_accessible_taskgroups(
         user_id=user.id,
         db=db,
+        user_resource_id=user_resource_id,
     )
     default_group_id = await _get_default_usergroup_id_or_none(db)
 
