@@ -36,6 +36,7 @@ The main content of this release is the introduction of the computational resour
     * Remove email-password encryption.
     * Introduce `init-db-data` command.
     * Set default `FRACTAL_API_MAX_JOB_LIST_LENGTH` to 25 (\#2928).
+    * Introduce `FRACTAL_DEFAULT_GROUP_NAME`, set to either `"All"` or `None` (\#2939).
 * Dependencies:
     * Bump `fastapi` to v0.120 (\#2921).
     * Bump `uvicorn` to v0.38 (\#2921).
