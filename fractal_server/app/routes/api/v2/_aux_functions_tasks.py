@@ -90,7 +90,7 @@ async def _get_task_group_read_access(
             .where(LinkUserGroup.user_id == user_id)
             .where(UserOAuth.id == user_id)
             .where(Profile.id == UserOAuth.profile_id)
-            .where(TaskGroupV2.resource_id == Profile.resource_id)
+            .where(task_group.resource_id == Profile.resource_id)
         )
         res = await db.execute(stm)
         link = res.unique().scalars().one_or_none()
