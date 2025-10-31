@@ -296,19 +296,15 @@ async def registered_superuser_client(
 async def default_user_group(
     db: AsyncSession, override_settings_factory
 ) -> UserGroup | None:
-    settings = Inject(get_settings)
-    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
-        override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
-        settings = Inject(get_settings)
+    override_data_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
+    _FRACTAL_DEFAULT_GROUP_NAME = "All"
     stm = select(UserGroup).where(
-        UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
+        UserGroup.name == _FRACTAL_DEFAULT_GROUP_NAME
     )
     res = await db.execute(stm)
     default_user_group = res.scalars().one_or_none()
     if default_user_group is None:
-        default_user_group = UserGroup(
-            name=settings.FRACTAL_DEFAULT_GROUP_NAME
-        )
+        default_user_group = UserGroup(name=_FRACTAL_DEFAULT_GROUP_NAME)
         db.add(default_user_group)
         await db.commit()
         await db.refresh(default_user_group)
