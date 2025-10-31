@@ -22,7 +22,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 from fractal_server.data_migrations.tools import _check_current_version
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.utils import get_timestamp
@@ -115,9 +114,7 @@ def get_users_mapping(db) -> dict[str, int]:
 
 
 def get_default_user_group_id(db):
-    stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
-    )
+    stm = select(UserGroup.id).where(UserGroup.name == "All")
     res = db.execute(stm)
     default_group_id = res.scalars().one_or_none()
     if default_group_id is None:

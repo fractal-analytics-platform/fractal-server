@@ -177,6 +177,13 @@ password_hash = PasswordHash(hashers=(BcryptHasher(),))
 password_helper = PasswordHelper(password_hash=password_hash)
 
 
+async def _get_default_usergroup_id_or_none(db: AsyncSession) -> int | None:
+    stm = select(UserGroup.id).where(UserGroup.name == "All")
+    res = await db.execute(stm)
+    user_group_id = res.scalars().one_or_none()
+    return user_group_id
+
+
 class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     def __init__(self, user_db):
         """
@@ -329,38 +336,21 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
     ):
-        settings = Inject(get_settings)
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
         async for db in get_async_db():
-            # Note: if `FRACTAL_DEFAULT_GROUP_NAME=None`, this query will
-            # result into `None`
-            settings = Inject(get_settings)
-            stm = select(UserGroup.id).where(
-                UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
-            )
-            res = await db.execute(stm)
-            default_group_id_or_none = res.scalars().one_or_none()
-            if default_group_id_or_none is not None:
+            default_group_id = await _get_default_usergroup_id_or_none(db)
+            if default_group_id is not None:
                 link = LinkUserGroup(
-                    user_id=user.id, group_id=default_group_id_or_none
+                    user_id=user.id,
+                    group_id=default_group_id,
                 )
                 db.add(link)
                 await db.commit()
                 logger.info(
-                    f"Added {user.email} user to group "
-                    f"{default_group_id_or_none=}."
+                    f"Added {user.email} user to group {default_group_id=}."
                 )
-            elif settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
-                logger.error(
-                    "No group found with name "
-                    f"{settings.FRACTAL_DEFAULT_GROUP_NAME}"
-                )
-            # NOTE: the `else` of this branch would simply be a `pass`. The
-            # "All" group was not found, but this is not worth a WARNING
-            # because `FRACTAL_DEFAULT_GROUP_NAME` is set to `None` in the
-            # settings.
 
 
 async def get_user_manager(

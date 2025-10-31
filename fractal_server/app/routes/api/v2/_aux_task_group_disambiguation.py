@@ -5,7 +5,7 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth._aux_auth import (
+from fractal_server.app.security import (
     _get_default_usergroup_id_or_none,
 )
 from fractal_server.exceptions import UnreachableBranchError
@@ -132,7 +132,6 @@ async def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int | None,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """

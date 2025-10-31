@@ -24,9 +24,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_default_usergroup_id_or_none,
-)
-from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
@@ -34,6 +31,9 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
+from fractal_server.app.security import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.logger import set_logger
 
 router = APIRouter()

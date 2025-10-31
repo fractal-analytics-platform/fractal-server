@@ -21,12 +21,12 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_user_resource_id,
 )
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_default_usergroup_id_or_none,
-)
-from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.security import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 

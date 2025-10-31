@@ -15,7 +15,7 @@ from . import current_superuser_act
 from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
-from ._aux_auth import _get_default_usergroup_id_or_none
+from ...security import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -25,10 +25,7 @@ from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserUpdateGroups
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
-
 
 router_users = APIRouter()
 
@@ -148,7 +145,6 @@ async def set_user_groups(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserRead:
-    settings = Inject(get_settings)
     # Preliminary check that all objects exist in the db
     user = await _user_or_404(user_id=user_id, db=db)
     target_group_ids = user_update.group_ids
@@ -171,10 +167,7 @@ async def set_user_groups(
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot remove user from "
-                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}' group.",
-            ),
+            detail="Cannot remove user from default user group.",
         )
 
     # Prepare lists of links to be removed
