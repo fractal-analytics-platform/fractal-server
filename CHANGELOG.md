@@ -7,7 +7,7 @@
 The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
 
 
-* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925):
+* API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925, \#2940, \#2941, \#2943):
     * Introduce API for `Resource` and `Profile` models.
     * Drop API for user settings.
     * Drop handling of deprecated `DatasetV2.filters` attribute when creating dataset dumps (\#2917).
@@ -15,7 +15,8 @@ The main content of this release is the introduction of the computational resour
     * Check matching-`resource_id` upon job submission (\#2896).
     * Treat `TaskGroupV2.resource_id` as not nullable (\#2896).
     * Split `/api/settings/` into smaller-scope endpoints.
-    * Only show `Task`s associated to current user's `Resource` (\#2906).
+    * Update rules for read access to task groups with resource information (\#2941).
+    * Only show tasks and task groups associated to current user's `Resource` (\#2906, \#2943).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner
@@ -36,6 +37,7 @@ The main content of this release is the introduction of the computational resour
     * Remove email-password encryption.
     * Introduce `init-db-data` command.
     * Set default `FRACTAL_API_MAX_JOB_LIST_LENGTH` to 25 (\#2928).
+    * Introduce `FRACTAL_DEFAULT_GROUP_NAME`, set to either `"All"` or `None` (\#2939).
 * Dependencies:
     * Bump `fastapi` to v0.120 (\#2921).
     * Bump `uvicorn` to v0.38 (\#2921).
@@ -47,6 +49,8 @@ The main content of this release is the introduction of the computational resour
 * Testing:
     * Introduce `pytest-env` dependency.
     * Update testing database to version 2.16.6 (\#2909).
+    * Test OAuth flow with `pytest` and remove OAuth GHA (\#2929).
+
 
 
 # 2.16.6

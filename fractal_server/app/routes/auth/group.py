@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from . import current_superuser_act
-from ._aux_auth import _get_default_usergroup_id
+from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_usergroup_with_user_ids
 from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
@@ -21,10 +21,12 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
+
 
 router_group = APIRouter()
 
@@ -138,18 +140,23 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Delete a user group.
+
+    If `FRACTAL_DEFAULT_GROUP_NAME="All"`, a group named `"All"` cannot be
+    deleted. If `FRACTAL_DEFAULT_GROUP_NAME=None`, any group can be deleted.
+    """
+    settings = Inject(get_settings)
     group = await _usergroup_or_404(group_id, db)
 
-    if group.name == FRACTAL_DEFAULT_GROUP_NAME:
+    if group.name == settings.FRACTAL_DEFAULT_GROUP_NAME:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot delete default UserGroup "
-                f"'{FRACTAL_DEFAULT_GROUP_NAME}'."
+                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'."
             ),
         )
-
-    # Delete
 
     await db.delete(group)
     await db.commit()
@@ -188,18 +195,21 @@ async def remove_user_from_group(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
+    settings = Inject(get_settings)
     # Check that user and group exist
     await _usergroup_or_404(group_id, db)
     user = await _user_or_404(user_id, db)
 
     # Check that group is not the default one
-    default_user_group_id = await _get_default_usergroup_id(db=db)
-    if default_user_group_id == group_id:
+    default_user_group_id_or_none = await _get_default_usergroup_id_or_none(
+        db=db
+    )
+    if default_user_group_id_or_none == group_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Cannot remove user from '{FRACTAL_DEFAULT_GROUP_NAME}' "
-                "group.",
+                f"Cannot remove user from "
+                f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}' group.",
             ),
         )
 

@@ -22,7 +22,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )  # noqa
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -247,7 +249,7 @@ async def task_factory_v2(db: AsyncSession):
             task_group_kwargs = dict()
 
         if "user_group_id" not in task_group_kwargs.keys():
-            user_group_id = await _get_default_usergroup_id(db=db)
+            user_group_id = await _get_default_usergroup_id_or_none(db=db)
         else:
             user_group_id = task_group_kwargs["user_group_id"]
             if user_group_id is not None:
@@ -257,20 +259,6 @@ async def task_factory_v2(db: AsyncSession):
 
         pkg_name = task_group_kwargs.get("pkg_name", task.name)
         version = task_group_kwargs.get("version", task.version)
-
-        await _verify_non_duplication_user_constraint(
-            db=db,
-            user_id=user_id,
-            pkg_name=pkg_name,
-            version=version,
-        )
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            user_group_id=user_group_id,
-            pkg_name=pkg_name,
-            version=version,
-        )
-
         res = await db.execute(
             select(Resource.id)
             .join(Profile)
@@ -280,6 +268,20 @@ async def task_factory_v2(db: AsyncSession):
             .where(UserOAuth.id == user_id)
         )
         resource_id = res.scalar_one()
+
+        await _verify_non_duplication_user_constraint(
+            db=db,
+            user_id=user_id,
+            pkg_name=pkg_name,
+            version=version,
+            user_resource_id=resource_id,
+        )
+        await _verify_non_duplication_group_constraint(
+            db=db,
+            user_group_id=user_group_id,
+            pkg_name=pkg_name,
+            version=version,
+        )
 
         task_group = TaskGroupV2(
             user_id=user_id,

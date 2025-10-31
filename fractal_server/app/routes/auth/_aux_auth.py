@@ -9,8 +9,10 @@ from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
+
 
 logger = set_logger(__name__)
 
@@ -29,6 +31,9 @@ async def _get_single_user_with_groups(
     Returns:
         A `UserRead` object with `group_ids_names` dict
     """
+
+    settings = Inject(get_settings)
+
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
@@ -39,25 +44,25 @@ async def _get_single_user_with_groups(
     groups = res.scalars().unique().all()
     group_ids_names = [(group.id, group.name) for group in groups]
 
-    # Check that Fractal Default Group is the first of the list. If not, fix.
+    # Identify the default-group position in the list of groups
     index = next(
         (
-            i
-            for i, group_tuple in enumerate(group_ids_names)
-            if group_tuple[1] == FRACTAL_DEFAULT_GROUP_NAME
+            ind
+            for ind, group_tuple in enumerate(group_ids_names)
+            if group_tuple[1] == settings.FRACTAL_DEFAULT_GROUP_NAME
         ),
         None,
     )
-    if index is None:
-        logger.warning(
-            f"User {user.id} not in "
-            f"default UserGroup '{FRACTAL_DEFAULT_GROUP_NAME}'"
-        )
-    elif index != 0:
+    if (index is None) or (index == 0):
+        # Either the default group does not exist, or it is already the first
+        # one. No action needed.
+        pass
+    else:
+        # Move the default group to the first position
         default_group = group_ids_names.pop(index)
         group_ids_names.insert(0, default_group)
-    else:
-        pass
+
+    # Create dump of `user.oauth_accounts` relationship
     oauth_accounts = [
         oauth_account.model_dump() for oauth_account in user.oauth_accounts
     ]
@@ -121,17 +126,31 @@ async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
     return user
 
 
-async def _get_default_usergroup_id(db: AsyncSession) -> int:
+async def _get_default_usergroup_id_or_none(db: AsyncSession) -> int | None:
+    """
+    Return the ID of the group named `"All"`, if `FRACTAL_DEFAULT_GROUP_NAME`
+    is set and such group exists. Return `None`, if
+    `FRACTAL_DEFAULT_GROUP_NAME=None` or if the `"All"` group does not exist.
+    """
+    settings = Inject(get_settings)
     stm = select(UserGroup.id).where(
-        UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+        UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
     )
     res = await db.execute(stm)
     user_group_id = res.scalars().one_or_none()
-    if user_group_id is None:
+
+    if (
+        settings.FRACTAL_DEFAULT_GROUP_NAME is not None
+        and user_group_id is None
+    ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User group '{FRACTAL_DEFAULT_GROUP_NAME}' not found.",
+            detail=(
+                f"User group '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
+                " not found.",
+            ),
         )
+
     return user_group_id
 
 

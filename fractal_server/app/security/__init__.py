@@ -51,12 +51,11 @@ from fractal_server.app.security.signup_email import (
 )
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
+from fractal_server.logger import close_logger
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
-
-FRACTAL_DEFAULT_GROUP_NAME = "All"
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -281,12 +280,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 )
 
                 # (1) Prepare user-facing error message
-                settings = Inject(get_settings)
                 error_msg = (
                     "Thank you for registering for the Fractal service. "
                     "Administrators have been informed to configure your "
                     "account and will get back to you."
                 )
+                settings = Inject(get_settings)
                 if settings.FRACTAL_HELP_URL is not None:
                     error_msg = (
                         f"{error_msg}\n"
@@ -329,28 +328,38 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
     ):
+        settings = Inject(get_settings)
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
         )
         async for db in get_async_db():
-            stm = select(UserGroup).where(
-                UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+            # Note: if `FRACTAL_DEFAULT_GROUP_NAME=None`, this query will
+            # result into `None`
+            settings = Inject(get_settings)
+            stm = select(UserGroup.id).where(
+                UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
             )
             res = await db.execute(stm)
-            default_group = res.scalar_one_or_none()
-            if default_group is None:
-                logger.warning(
-                    f"No group found with name {FRACTAL_DEFAULT_GROUP_NAME}"
-                )
-            else:
+            default_group_id_or_none = res.scalars().one_or_none()
+            if default_group_id_or_none is not None:
                 link = LinkUserGroup(
-                    user_id=user.id, group_id=default_group.id
+                    user_id=user.id, group_id=default_group_id_or_none
                 )
                 db.add(link)
                 await db.commit()
                 logger.info(
-                    f"Added {user.email} user to group {default_group.id=}."
+                    f"Added {user.email} user to group "
+                    f"{default_group_id_or_none=}."
                 )
+            elif settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
+                logger.error(
+                    "No group found with name "
+                    f"{settings.FRACTAL_DEFAULT_GROUP_NAME}"
+                )
+            # NOTE: the `else` of this branch would simply be a `pass`. The
+            # "All" group was not found, but this is not worth a WARNING
+            # because `FRACTAL_DEFAULT_GROUP_NAME` is set to `None` in the
+            # settings.
 
 
 async def get_user_manager(
@@ -437,30 +446,38 @@ async def _create_first_user(
 
 def _create_first_group():
     """
-    Create a `UserGroup` with `name=FRACTAL_DEFAULT_GROUP_NAME`, if missing.
+    Create a `UserGroup` named `FRACTAL_DEFAULT_GROUP_NAME`, if this variable
+    is set and if such a group does not already exist.
     """
+    settings = Inject(get_settings)
     function_logger = set_logger("fractal_server.create_first_group")
 
+    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
+        function_logger.info(
+            f"SKIP because '{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
+        )
+        return
+
     function_logger.info(
-        f"START _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
+        f"START, name '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
     )
     with next(get_sync_db()) as db:
         group_all = db.execute(
             select(UserGroup).where(
-                UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
+                UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
             )
         )
         if group_all.scalars().one_or_none() is None:
-            first_group = UserGroup(name=FRACTAL_DEFAULT_GROUP_NAME)
+            first_group = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
             db.add(first_group)
             db.commit()
             function_logger.info(
-                f"Created group '{FRACTAL_DEFAULT_GROUP_NAME}'"
+                f"Created group '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
             )
         else:
             function_logger.info(
-                f"Group '{FRACTAL_DEFAULT_GROUP_NAME}' already exists, skip."
+                f"Group '{settings.FRACTAL_DEFAULT_GROUP_NAME}' "
+                "already exists, skip."
             )
-    function_logger.info(
-        f"END   _create_first_group, with name '{FRACTAL_DEFAULT_GROUP_NAME}'"
-    )
+    function_logger.info("END")
+    close_logger(function_logger)

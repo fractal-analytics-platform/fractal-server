@@ -496,7 +496,7 @@ async def test_project_apply_slurm_account(
         )
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(
-            user_id=user.id,
+            user_id=user2.id,
             input_type="type2",
             output_type="type2",
             command="ls",

@@ -32,8 +32,13 @@ def n_images(n: int) -> list[dict]:
     ]
 
 
-async def test_new_dataset_v2(client, MockCurrentUser):
-    async with MockCurrentUser():
+async def test_new_dataset_v2(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         res = await client.post("api/v2/project/", json=dict(name="projectV2"))
         debug(res.json())
         assert res.status_code == 201

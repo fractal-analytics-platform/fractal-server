@@ -11,6 +11,7 @@ from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -22,7 +23,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -142,7 +145,14 @@ async def get_task_group_list(
                 )
             ),
         )
-    stm = select(TaskGroupV2).where(condition).order_by(TaskGroupV2.pkg_name)
+
+    user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+    stm = (
+        select(TaskGroupV2)
+        .where(TaskGroupV2.resource_id == user_resource_id)
+        .where(condition)
+        .order_by(TaskGroupV2.pkg_name)
+    )
     if only_active:
         stm = stm.where(TaskGroupV2.active)
 
@@ -155,7 +165,7 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
-    default_group_id = await _get_default_usergroup_id(db)
+    default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
         (
             pkg_name,

@@ -9,7 +9,7 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
-from ._aux_functions import _get_resource_and_profile_ids
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access
@@ -73,6 +73,7 @@ async def get_list_task(
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
 
+    stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = list(res.scalars().all())
     await db.close()
@@ -149,6 +150,13 @@ async def create_task(
     Create a new task
     """
 
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
+    resource_id = resource.id
+
     # Validate query parameters related to user-group ownership
     user_group_id = await _get_valid_user_group_id(
         user_group_id=user_group_id,
@@ -184,16 +192,17 @@ async def create_task(
     db_task = TaskV2(**task.model_dump(exclude_unset=True))
     pkg_name = db_task.name
     await _verify_non_duplication_user_constraint(
-        db=db, pkg_name=pkg_name, user_id=user.id, version=db_task.version
+        db=db,
+        pkg_name=pkg_name,
+        user_id=user.id,
+        version=db_task.version,
+        user_resource_id=resource_id,
     )
     await _verify_non_duplication_group_constraint(
         db=db,
         pkg_name=pkg_name,
         user_group_id=user_group_id,
         version=db_task.version,
-    )
-    resource_id, _ = await _get_resource_and_profile_ids(
-        user_id=user.id, db=db
     )
     db_task_group = TaskGroupV2(
         user_id=user.id,

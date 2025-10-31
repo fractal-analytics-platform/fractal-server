@@ -50,7 +50,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" tests/v2/test_03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -99,7 +99,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not container" --ignore tests/v2/test_03_api --durations 0
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -169,10 +169,99 @@ jobs:
           path: coverage-data-containers-${{ matrix.python-version }}*
 
 
+  tests_oauth:
+
+    name: "V2 - OAuth - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+
+
+    services:
+
+      dexidp:
+        image: ghcr.io/fractal-analytics-platform/oauth:0.1
+        ports:
+          - 5556:5556
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
+        env:
+          MP_SMTP_AUTH: "sender@example.org:fakepassword"
+          MP_SMTP_AUTH_ALLOW_INSECURE: true
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Install poetry
+        run: pipx install poetry==2.2.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev --no-interaction
+
+      - name: Test with pytest
+        env:
+          FRACTAL_RUNNER_BACKEND: local
+          JWT_SECRET_KEY: jwt_secret_key
+          JWT_EXPIRE_SECONDS: 1000
+          # Postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          # Dex (OAuth)
+          OAUTH_CLIENT_NAME: dexidp
+          OAUTH_CLIENT_ID: client_test_id
+          OAUTH_CLIENT_SECRET: client_test_secret
+          OAUTH_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
+          OAUTH_OIDC_CONFIG_ENDPOINT: http://127.0.0.1:5556/dex/.well-known/openid-configuration
+          # Email
+          FRACTAL_EMAIL_SENDER: sender@example.org
+          FRACTAL_EMAIL_SMTP_SERVER: localhost
+          FRACTAL_EMAIL_SMTP_PORT: 1025
+          FRACTAL_EMAIL_INSTANCE_NAME: test
+          FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
+          FRACTAL_EMAIL_USE_STARTTLS: false
+          FRACTAL_EMAIL_USE_LOGIN: true
+          FRACTAL_EMAIL_PASSWORD: fakepassword
+          FRACTAL_HELP_URL: https://example.org/info
+          # Coverage
+          COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-oauth-${{ matrix.python-version }}
+          path: coverage-data-oauth-${{ matrix.python-version }}*
+
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_api, tests_not_api, tests_containers]
+    needs: [tests_api, tests_not_api, tests_containers, tests_oauth]
 
     permissions:
       pull-requests: write

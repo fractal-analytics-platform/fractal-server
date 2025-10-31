@@ -5,8 +5,10 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.config import get_settings
 from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
@@ -16,7 +18,7 @@ async def _disambiguate_task_groups(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2 | None:
     """
@@ -49,21 +51,23 @@ async def _disambiguate_task_groups(
         )
 
     # Medium priority: task groups owned by default user group
-    list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
-    try:
-        ind_user_group_id = list_user_group_ids.index(default_group_id)
-        task_group = matching_task_groups[ind_user_group_id]
-        logger.debug(
-            "[_disambiguate_task_groups] "
-            f"Found task group {task_group.id} with {user_id=}, return."
-        )
-        return task_group
-    except ValueError:
-        logger.debug(
-            "[_disambiguate_task_groups] "
-            "No task group with user_group_id="
-            f"{default_group_id}, continue."
-        )
+    settings = Inject(get_settings)
+    if settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
+        list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
+        try:
+            ind_user_group_id = list_user_group_ids.index(default_group_id)
+            task_group = matching_task_groups[ind_user_group_id]
+            logger.debug(
+                "[_disambiguate_task_groups] "
+                f"Found task group {task_group.id} with {user_id=}, return."
+            )
+            return task_group
+        except ValueError:
+            logger.debug(
+                "[_disambiguate_task_groups] "
+                "No task group with user_group_id="
+                f"{default_group_id}, continue."
+            )
 
     # Lowest priority: task groups owned by other groups, sorted
     # according to age of the user/usergroup link
@@ -97,7 +101,7 @@ async def _disambiguate_task_groups_not_none(
     *,
     matching_task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -133,7 +137,7 @@ async def remove_duplicate_task_groups(
     *,
     task_groups: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int,
+    default_group_id: int | None,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """

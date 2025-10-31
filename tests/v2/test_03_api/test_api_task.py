@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
@@ -113,8 +115,13 @@ async def test_task_get_list(
         assert len(res.json()) == 2
 
 
-async def test_post_task(client, MockCurrentUser):
-    async with MockCurrentUser():
+async def test_post_task(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # Successful task creations
         task = TaskCreateV2(
             name="task_name",
@@ -234,8 +241,12 @@ async def test_post_task_user_group_id(
     default_user_group,
     MockCurrentUser,
     monkeypatch,
+    override_settings_factory,
     db,
+    local_resource_profile_db,
 ):
+    resource, profile = local_resource_profile_db
+
     # Create a usergroup
     team1_group = UserGroup(name="team1")
     db.add(team1_group)
@@ -244,8 +255,9 @@ async def test_post_task_user_group_id(
 
     args = dict(command_non_parallel="cmd", type="non_parallel")
 
-    async with MockCurrentUser():
-        # No query parameter
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ):  # No query parameter
         res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -285,23 +297,20 @@ async def test_post_task_user_group_id(
         debug(res.json())
 
         # Default group does not exist
-        monkeypatch.setattr(
-            (
-                "fractal_server.app.routes.auth._aux_auth."
-                "FRACTAL_DEFAULT_GROUP_NAME"
-            ),
-            "MONKEY",
-        )
-        res = await client.post(f"{PREFIX}/", json=dict(name="f", **args))
-        assert res.status_code == 404
+        with pytest.raises(ValidationError):
+            override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="Monkey")
 
 
 async def test_patch_task_auth(
     MockCurrentUser,
     client,
+    local_resource_profile_db,
 ):
+    resource, profile = local_resource_profile_db
     # POST-task as user_A
-    async with MockCurrentUser() as user_A:
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id)
+    ) as user_A:
         user_A_id = user_A.id
         payload_obj = TaskCreateV2(
             name="a", category="my-cat", command_parallel="c"
@@ -323,7 +332,7 @@ async def test_patch_task_auth(
         assert res.json()["category"] == "new-cat-1"
 
     # PATCH-task failure as a different user -> failure (task belongs to user)
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # PATCH-task failure (task does not belong to user)
         payload_obj = TaskUpdateV2(category="new-cat-2")
         res = await client.patch(

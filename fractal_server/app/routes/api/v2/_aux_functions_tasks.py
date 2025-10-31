@@ -12,6 +12,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -19,7 +20,9 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_user_resource_id,
 )
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -72,7 +75,7 @@ async def _get_task_group_read_access(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
             "Current user has no read access to TaskGroupV2 "
-            f"{task_group_id}.",
+            f"{task_group_id}."
         ),
     )
 
@@ -83,11 +86,16 @@ async def _get_task_group_read_access(
     else:
         stm = (
             select(LinkUserGroup)
+            .join(UserOAuth)
+            .join(Profile)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
             .where(LinkUserGroup.user_id == user_id)
+            .where(UserOAuth.id == user_id)
+            .where(Profile.id == UserOAuth.profile_id)
+            .where(task_group.resource_id == Profile.resource_id)
         )
         res = await db.execute(stm)
-        link = res.scalar_one_or_none()
+        link = res.unique().scalars().one_or_none()
         if link is None:
             raise forbidden_exception
         else:
@@ -231,7 +239,7 @@ async def _get_valid_user_group_id(
     elif private is True:
         user_group_id = None
     elif user_group_id is None:
-        user_group_id = await _get_default_usergroup_id(db=db)
+        user_group_id = await _get_default_usergroup_id_or_none(db=db)
     else:
         await _verify_user_belongs_to_group(
             user_id=user_id, user_group_id=user_group_id, db=db
@@ -274,16 +282,19 @@ async def _get_collection_task_group_activity_status_message(
 
 
 async def _verify_non_duplication_user_constraint(
+    *,
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
     version: str | None,
+    user_resource_id: int,
 ):
     stm = (
         select(TaskGroupV2)
         .where(TaskGroupV2.user_id == user_id)
         .where(TaskGroupV2.pkg_name == pkg_name)
         .where(TaskGroupV2.version == version)
+        .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
     duplicate = res.scalars().all()
@@ -361,7 +372,9 @@ async def _verify_non_duplication_group_constraint(
 
 
 async def _verify_non_duplication_group_path(
+    *,
     path: str | None,
+    resource_id: int,
     db: AsyncSession,
 ) -> None:
     """
@@ -369,7 +382,11 @@ async def _verify_non_duplication_group_path(
     """
     if path is None:
         return
-    stm = select(TaskGroupV2.id).where(TaskGroupV2.path == path)
+    stm = (
+        select(TaskGroupV2.id)
+        .where(TaskGroupV2.path == path)
+        .where(TaskGroupV2.resource_id == resource_id)
+    )
     res = await db.execute(stm)
     duplicate_ids = res.scalars().all()
     if duplicate_ids:
