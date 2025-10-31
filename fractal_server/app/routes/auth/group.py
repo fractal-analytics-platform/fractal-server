@@ -140,6 +140,12 @@ async def delete_single_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Delete a user group.
+
+    If `FRACTAL_DEFAULT_GROUP_NAME="All"`, a group named `"All"` cannot be
+    deleted. If `FRACTAL_DEFAULT_GROUP_NAME=None`, any group can be deleted.
+    """
     settings = Inject(get_settings)
     group = await _usergroup_or_404(group_id, db)
 
@@ -151,8 +157,6 @@ async def delete_single_group(
                 f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'."
             ),
         )
-
-    # Delete
 
     await db.delete(group)
     await db.commit()
