@@ -31,7 +31,7 @@ async def test_get_current_user(client, MockCurrentUser):
 
 
 async def test_get_current_user_group_ids_names_order(
-    client, MockCurrentUser, db, default_user_group
+    client, MockCurrentUser, db, create_default_group
 ):
     async with MockCurrentUser() as user:
         group1 = UserGroup(name="group1")
@@ -47,23 +47,25 @@ async def test_get_current_user_group_ids_names_order(
 
         res = await client.get(f"{PREFIX}?group_ids_names=True")
         assert res.json()["group_ids_names"] == [
-            [default_user_group.id, default_user_group.name],
+            [create_default_group.id, create_default_group.name],
             [group1.id, group1.name],
             [group2.id, group2.name],
         ]
 
         # Delete and reinsert default group
         link_to_delete = await db.get(
-            LinkUserGroup, (default_user_group.id, user.id)
+            LinkUserGroup, (create_default_group.id, user.id)
         )
         await db.delete(link_to_delete)
         await db.commit()
-        db.add(LinkUserGroup(group_id=default_user_group.id, user_id=user.id))
+        db.add(
+            LinkUserGroup(group_id=create_default_group.id, user_id=user.id)
+        )
         await db.commit()
 
         res = await client.get(f"{PREFIX}?group_ids_names=True")
         assert res.json()["group_ids_names"] == [
-            [default_user_group.id, default_user_group.name],
+            [create_default_group.id, create_default_group.name],
             [group1.id, group1.name],
             [group2.id, group2.name],
         ]
@@ -77,7 +79,7 @@ async def test_get_current_user_group_ids_names_order(
 
         res = await client.get(f"{PREFIX}?group_ids_names=True")
         assert res.json()["group_ids_names"] == [
-            [default_user_group.id, default_user_group.name],
+            [create_default_group.id, create_default_group.name],
             [group2.id, group2.name],
             [group1.id, group1.name],
         ]

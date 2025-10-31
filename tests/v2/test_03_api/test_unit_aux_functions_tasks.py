@@ -26,8 +26,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 async def test_get_task(
@@ -153,13 +151,15 @@ async def test_get_task(
 
 
 async def test_get_task_require_active(
-    db, task_factory_v2, local_resource_profile_db, override_settings_factory
+    db,
+    task_factory_v2,
+    local_resource_profile_db,
+    override_settings_factory,
+    create_default_group,
 ):
     """
     Test the `require_active` argument of `_get_task_read_access`.
     """
-    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
-    settings = Inject(get_settings)
     # Preliminary setup
     resource, profile = local_resource_profile_db
     user = UserOAuth(
@@ -168,10 +168,7 @@ async def test_get_task_require_active(
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    group_0 = UserGroup(name=settings.FRACTAL_DEFAULT_GROUP_NAME)
-    db.add(group_0)
-    await db.commit()
-    await db.refresh(group_0)
+    group_0 = create_default_group
     db.add(LinkUserGroup(user_id=user.id, group_id=group_0.id))
     await db.commit()
 
@@ -313,21 +310,18 @@ def test_get_new_workflow_task_meta():
     ) == {"cpus_per_task": 2}
 
 
-async def test_get_default_usergroup_id_or_none(
-    db, override_settings_factory, default_user_group
-):
-    # Case 1: FRACTAL_DEFAULT_GROUP_NAME=None
-    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME=None)
+async def test_get_default_usergroup_id_or_none(db):
     ug_id = await _get_default_usergroup_id_or_none(db)
     assert ug_id is None
 
-    # Case 2: FRACTAL_DEFAULT_GROUP_NAME="All"
-    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
+    db.add(UserGroup(name="All"))
+    await db.commit()
+
     ug_id = await _get_default_usergroup_id_or_none(db)
     assert ug_id is not None
 
-    # Case 3: FRACTAL_DEFAULT_GROUP_NAME="All" but group "All" does not exist
-    await db.execute(delete(UserGroup).where(UserGroup.id == ug_id))
+    await db.execute(delete(UserGroup))
     await db.commit()
-    with pytest.raises(HTTPException):
-        await _get_default_usergroup_id_or_none(db)
+
+    ug_id = await _get_default_usergroup_id_or_none(db)
+    assert ug_id is None

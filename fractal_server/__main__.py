@@ -49,9 +49,7 @@ openapi_parser.add_argument(
 # fractalctl set-db
 set_db_parser = subparsers.add_parser(
     "set-db",
-    description=(
-        "Initialise/upgrade database schemas and create first group&user."
-    ),
+    description="Initialise/upgrade database schemas.",
 )
 
 # fractalctl init-db-data
@@ -83,13 +81,18 @@ init_db_data_parser.add_argument(
     help="Password for the first admin user.",
     required=False,
 )
-
 init_db_data_parser.add_argument(
     "--admin-project-dir",
     type=str,
     help="Project_dir for the first admin user.",
     required=False,
 )
+init_db_data_parser.add_argument(
+    "--create-default-group",
+    action="store_true",
+    help="TBD",
+)
+
 
 # fractalctl update-db-data
 update_db_data_parser = subparsers.add_parser(
@@ -140,9 +143,10 @@ def init_db_data(
     admin_email: str | None = None,
     admin_password: str | None = None,
     admin_project_dir: str | None = None,
+    create_default_group: bool = False,
 ) -> None:
     from fractal_server.app.security import _create_first_user
-    from fractal_server.app.security import _create_first_group
+    from fractal_server.app.security import _create_default_group
     from fractal_server.app.db import get_sync_db
     from sqlalchemy import select, func
     from fractal_server.app.models.security import UserOAuth
@@ -150,11 +154,7 @@ def init_db_data(
     from fractal_server.app.schemas.v2.resource import cast_serialize_resource
     from fractal_server.app.schemas.v2.profile import cast_serialize_profile
 
-    # Create default group and user
     print()
-    _create_first_group()
-    print()
-
     # Create admin user if requested
     if not (
         (admin_email is None)
@@ -176,6 +176,11 @@ def init_db_data(
                 is_verified=True,
             )
         )
+        print()
+
+    # Create default group if requested
+    if create_default_group is True:
+        _create_default_group()
         print()
 
     # Create resource and profile if requested
@@ -347,6 +352,7 @@ def run():
             admin_email=args.admin_email,
             admin_password=args.admin_pwd,
             admin_project_dir=args.admin_project_dir,
+            create_default_group=args.create_default_group,
         )
     elif args.cmd == "update-db-data":
         update_db_data()

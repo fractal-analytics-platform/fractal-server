@@ -21,11 +21,8 @@ from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
+from fractal_server.app.security import _get_default_group_or_none
 
-
-FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
 
 with next(get_sync_db()) as db:
     # USERS
@@ -43,18 +40,9 @@ with next(get_sync_db()) as db:
         print(f"UserGroup {group.id} validated")
 
     # DEFAULT GROUP
-    default_group = next(
-        (
-            group
-            for group in groups
-            if group.name == FRACTAL_DEFAULT_GROUP_NAME
-        ),
-        None,
-    )
+    default_group = _get_default_group_or_none(db)
     if default_group is None:
-        raise ValueError(
-            f"Default group '{FRACTAL_DEFAULT_GROUP_NAME}' does not exist."
-        )
+        raise ValueError("Default group does not exist.")
 
     stm = (
         select(UserOAuth.id)
@@ -65,7 +53,7 @@ with next(get_sync_db()) as db:
     user_ids_in_default_group = set(db.execute(stm).scalars().unique().all())
     all_user_ids = set(user.id for user in users)
     if user_ids_in_default_group == all_user_ids:
-        print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}'")
+        print("All users are in default group.")
     else:
         user_ids_not_in_default_group = (
             all_user_ids - user_ids_in_default_group

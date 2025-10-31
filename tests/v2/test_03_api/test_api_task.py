@@ -1,8 +1,6 @@
 from pathlib import Path
 
-import pytest
 from devtools import debug
-from pydantic import ValidationError
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
@@ -57,7 +55,12 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
 
 
 async def test_task_get_list(
-    db, client, task_factory_v2, MockCurrentUser, user_group_factory
+    db,
+    client,
+    task_factory_v2,
+    MockCurrentUser,
+    user_group_factory,
+    create_default_group,
 ):
     async with MockCurrentUser() as user:
         new_group = await user_group_factory(
@@ -238,7 +241,7 @@ async def test_post_task(
 
 async def test_post_task_user_group_id(
     client,
-    default_user_group,
+    create_default_group,
     MockCurrentUser,
     monkeypatch,
     override_settings_factory,
@@ -261,7 +264,7 @@ async def test_post_task_user_group_id(
         res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
-        assert taskgroup.user_group_id == default_user_group.id
+        assert taskgroup.user_group_id == create_default_group.id
 
         # Private task
         res = await client.post(
@@ -273,12 +276,12 @@ async def test_post_task_user_group_id(
 
         # Specific usergroup id / OK
         res = await client.post(
-            f"{PREFIX}/?user_group_id={default_user_group.id}",
+            f"{PREFIX}/?user_group_id={create_default_group.id}",
             json=dict(name="c", **args),
         )
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
-        assert taskgroup.user_group_id == default_user_group.id
+        assert taskgroup.user_group_id == create_default_group.id
 
         # Specific usergroup id / not belonging
         res = await client.post(
@@ -290,15 +293,11 @@ async def test_post_task_user_group_id(
 
         # Conflicting query parameters
         res = await client.post(
-            f"{PREFIX}/?private=true&user_group_id={default_user_group.id}",
+            f"{PREFIX}/?private=true&user_group_id={create_default_group.id}",
             json=dict(name="e", **args),
         )
         assert res.status_code == 422
         debug(res.json())
-
-        # Default group does not exist
-        with pytest.raises(ValidationError):
-            override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="Monkey")
 
 
 async def test_patch_task_auth(

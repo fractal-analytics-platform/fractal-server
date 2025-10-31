@@ -26,9 +26,6 @@ from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     _disambiguate_task_groups,
 )
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.auth._aux_auth import (
-    _get_default_usergroup_id_or_none,
-)
 from fractal_server.app.schemas.v2 import TaskImportV2
 from fractal_server.logger import set_logger
 
@@ -102,7 +99,6 @@ async def _get_task_by_taskimport(
     task_import: TaskImportV2,
     task_groups_list: list[TaskGroupV2],
     user_id: int,
-    default_group_id: int | None,
     db: AsyncSession,
 ) -> int | None:
     """
@@ -112,7 +108,6 @@ async def _get_task_by_taskimport(
         task_import: Info on task to be imported.
         task_groups_list: Current list of valid task groups.
         user_id: ID of current user.
-        default_group_id: ID of default user group.
         db: Asynchronous database session.
 
     Return:
@@ -183,7 +178,6 @@ async def _get_task_by_taskimport(
             matching_task_groups=final_matching_task_groups,
             user_id=user_id,
             db=db,
-            default_group_id=default_group_id,
         )
         if final_task_group is None:
             logger.info(
@@ -240,7 +234,6 @@ async def import_workflow(
         db=db,
         user_resource_id=user_resource_id,
     )
-    default_group_id = await _get_default_usergroup_id_or_none(db)
 
     list_wf_tasks = []
     list_task_ids = []
@@ -255,7 +248,6 @@ async def import_workflow(
             task_id = await _get_task_by_taskimport(
                 task_import=task_import,
                 user_id=user.id,
-                default_group_id=default_group_id,
                 task_groups_list=task_group_list,
                 db=db,
             )

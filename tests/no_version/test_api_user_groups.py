@@ -84,7 +84,7 @@ async def test_update_group(registered_superuser_client):
 async def test_user_group_crud(
     registered_superuser_client,
     db,
-    default_user_group,
+    create_default_group,
     local_resource_profile_db,
 ):
     """
@@ -155,8 +155,12 @@ async def test_user_group_crud(
             assert set(group["user_ids"]) == {user_A_id, user_B_id}
         elif group["name"] == "group 2":
             assert group["user_ids"] == [user_B_id]
-        elif group["name"] == default_user_group.name:
-            assert set(group["user_ids"]) == {user_A_id, user_B_id}
+        elif group["name"] == create_default_group.name:
+            assert set(group["user_ids"]) == {
+                create_default_group.id,
+                user_A_id,
+                user_B_id,
+            }
         else:
             raise RuntimeError("Wrong branch.")
 
@@ -185,10 +189,12 @@ async def test_user_group_crud(
 
     # Try to remove user from 'All' group and fail
     res = await registered_superuser_client.post(
-        f"{PREFIX}/group/{default_user_group.id}/remove-user/{user_A_id}/"
+        f"{PREFIX}/group/{create_default_group.id}/remove-user/{user_A_id}/"
     )
     assert res.status_code == 422
-    assert "Cannot remove user from 'All' group" in str(res.json()["detail"])
+    assert "Cannot remove user from default user group" in str(
+        res.json()["detail"]
+    )
 
     # Remove users B from group 2, twice
     res = await registered_superuser_client.post(
@@ -223,7 +229,7 @@ async def test_user_group_crud(
     )
     assert res.status_code == 404
     res = await registered_superuser_client.delete(
-        f"{PREFIX}/group/{default_user_group.id}/"
+        f"{PREFIX}/group/{create_default_group.id}/"
     )
     assert res.status_code == 422
 
@@ -255,7 +261,7 @@ async def test_create_user_group_same_name(registered_superuser_client):
 
 
 async def test_get_user_optional_group_info(
-    MockCurrentUser, client, default_user_group
+    MockCurrentUser, client, create_default_group
 ):
     """
     Test that GET-ting a single user may be enriched with group IDs/names.
@@ -300,7 +306,7 @@ async def test_get_user_optional_group_info(
             (
                 "?group_ids_names=True",
                 [
-                    [default_user_group.id, default_user_group.name],
+                    [create_default_group.id, create_default_group.name],
                     [GROUP_A_ID, GROUP_A_NAME],
                 ],
             ),
@@ -317,7 +323,7 @@ async def test_get_user_optional_group_info(
             (
                 "",
                 [
-                    [default_user_group.id, default_user_group.name],
+                    [create_default_group.id, create_default_group.name],
                     [GROUP_A_ID, GROUP_A_NAME],
                 ],
             ),
@@ -325,7 +331,7 @@ async def test_get_user_optional_group_info(
             (
                 "?group_ids_names=True",
                 [
-                    [default_user_group.id, default_user_group.name],
+                    [create_default_group.id, create_default_group.name],
                     [GROUP_A_ID, GROUP_A_NAME],
                 ],
             ),

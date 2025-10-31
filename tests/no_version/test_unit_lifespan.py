@@ -12,7 +12,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v2,
 )
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.security import _create_first_group
+from fractal_server.app.security import _create_default_group
 from fractal_server.app.security import _create_first_user
 from fractal_server.main import lifespan
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
@@ -30,17 +30,14 @@ async def test_app_with_lifespan(
     tmp_path,
     local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO,
-        FRACTAL_DEFAULT_GROUP_NAME="All",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
 
     # create first user
     resource, profile = local_resource_profile_db
-    _create_first_group()
+    _create_default_group()
     await _create_first_user(
         email="admin@example.org",
         password="1234",

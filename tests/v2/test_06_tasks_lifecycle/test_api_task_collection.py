@@ -247,7 +247,11 @@ async def test_task_collection_failure_due_to_existing_path(
 
 
 async def test_contact_an_admin_message(
-    MockCurrentUser, client, db, default_user_group, local_resource_profile_db
+    MockCurrentUser,
+    client,
+    db,
+    create_default_group,
+    local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
@@ -259,7 +263,7 @@ async def test_contact_an_admin_message(
             db.add(
                 TaskGroupV2(
                     user_id=userA.id,
-                    user_group_id=default_user_group.id,
+                    user_group_id=create_default_group.id,
                     pkg_name="testing-tasks-mock",
                     version="0.1.2",
                     origin="pypi",

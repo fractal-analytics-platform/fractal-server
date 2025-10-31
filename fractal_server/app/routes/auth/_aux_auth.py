@@ -9,9 +9,7 @@ from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
-from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.syringe import Inject
 
 
 logger = set_logger(__name__)
@@ -32,8 +30,6 @@ async def _get_single_user_with_groups(
         A `UserRead` object with `group_ids_names` dict
     """
 
-    settings = Inject(get_settings)
-
     stm_groups = (
         select(UserGroup)
         .join(LinkUserGroup)
@@ -49,7 +45,7 @@ async def _get_single_user_with_groups(
         (
             ind
             for ind, group_tuple in enumerate(group_ids_names)
-            if group_tuple[1] == settings.FRACTAL_DEFAULT_GROUP_NAME
+            if group_tuple[1] == "All"
         ),
         None,
     )
@@ -124,34 +120,6 @@ async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
             detail=f"UserGroup {usergroup_id} not found.",
         )
     return user
-
-
-async def _get_default_usergroup_id_or_none(db: AsyncSession) -> int | None:
-    """
-    Return the ID of the group named `"All"`, if `FRACTAL_DEFAULT_GROUP_NAME`
-    is set and such group exists. Return `None`, if
-    `FRACTAL_DEFAULT_GROUP_NAME=None` or if the `"All"` group does not exist.
-    """
-    settings = Inject(get_settings)
-    stm = select(UserGroup.id).where(
-        UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
-    )
-    res = await db.execute(stm)
-    user_group_id = res.scalars().one_or_none()
-
-    if (
-        settings.FRACTAL_DEFAULT_GROUP_NAME is not None
-        and user_group_id is None
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                f"User group '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
-                " not found.",
-            ),
-        )
-
-    return user_group_id
 
 
 async def _verify_user_belongs_to_group(

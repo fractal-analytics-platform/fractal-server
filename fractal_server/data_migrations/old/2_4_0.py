@@ -8,7 +8,6 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.security import FRACTAL_DEFAULT_GROUP_NAME
 
 
 def _check_current_version(*, expected_version: str):
@@ -32,9 +31,7 @@ def fix_db():
 
     with next(get_sync_db()) as db:
         # Find default group
-        stm = select(UserGroup).where(
-            UserGroup.name == FRACTAL_DEFAULT_GROUP_NAME
-        )
+        stm = select(UserGroup).where(UserGroup.name == "All")
         res = db.execute(stm)
         default_group = res.scalar_one_or_none()
         if default_group is None:

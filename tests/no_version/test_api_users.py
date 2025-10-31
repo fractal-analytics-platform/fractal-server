@@ -284,7 +284,7 @@ async def test_delete_user_method_not_allowed(registered_superuser_client):
 
 async def test_set_groups_endpoint(
     registered_superuser_client,
-    default_user_group,
+    create_default_group,
 ):
     # Preliminary step: create a user
     res = await registered_superuser_client.post(
@@ -302,7 +302,7 @@ async def test_set_groups_endpoint(
     assert res.status_code == 200
     user = res.json()
     assert user["group_ids_names"] == [
-        [default_user_group.id, default_user_group.name]
+        [create_default_group.id, create_default_group.name]
     ]
 
     # Preliminary step: create a user group
@@ -345,7 +345,7 @@ async def test_set_groups_endpoint(
     invalid_user_id = 999999
     res = await registered_superuser_client.post(
         f"{PREFIX}/users/{invalid_user_id}/set-groups/",
-        json=dict(group_ids=[default_user_group.id]),
+        json=dict(group_ids=[create_default_group.id]),
     )
     assert res.status_code == 404
 
@@ -355,28 +355,29 @@ async def test_set_groups_endpoint(
         json=dict(group_ids=[group_id]),
     )
     assert res.status_code == 422
-    MSG = "Cannot remove user from 'All' group"
-    assert MSG in str(res.json()["detail"])
+    assert "Cannot remove user from default user group" in str(
+        res.json()["detail"]
+    )
 
     # Success
     res = await registered_superuser_client.post(
         f"{PREFIX}/users/{user_id}/set-groups/",
-        json=dict(group_ids=[group_id, default_user_group.id]),
+        json=dict(group_ids=[group_id, create_default_group.id]),
     )
     assert res.status_code == 200
     assert res.json()["group_ids_names"] == [
-        [default_user_group.id, default_user_group.name],
+        [create_default_group.id, create_default_group.name],
         [group_id, GROUP_NAME],
     ]
 
     # Success
     res = await registered_superuser_client.post(
         f"{PREFIX}/users/{user_id}/set-groups/",
-        json=dict(group_ids=[default_user_group.id]),
+        json=dict(group_ids=[create_default_group.id]),
     )
     assert res.status_code == 200
     assert res.json()["group_ids_names"] == [
-        [default_user_group.id, default_user_group.name],
+        [create_default_group.id, create_default_group.name],
     ]
 
 
