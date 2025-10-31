@@ -441,7 +441,7 @@ def _get_default_group_or_none(db: Session):
     return default_group
 
 
-def _create_default_group():
+def _create_default_group() -> UserGroup:
     """
     Create a `UserGroup` named 'All'
     """
@@ -451,11 +451,20 @@ def _create_default_group():
     with next(get_sync_db()) as db:
         default_group = _get_default_group_or_none(db)
         if default_group is None:
-            first_group = UserGroup(name="All")
-            db.add(first_group)
+            default_group = UserGroup(name="All")
+            db.add(default_group)
             db.commit()
+            db.refresh(default_group)
+
             function_logger.info("Created group 'All'")
+            res = db.execute(select(UserOAuth))
+            users = res.unique().scalars().all()
+            for user in users:
+                db.add(
+                    LinkUserGroup(group_id=default_group.id, user_id=user.id)
+                )
         else:
             function_logger.info("Group 'All' already exists, skip.")
     function_logger.info("END _create_default_group")
     close_logger(function_logger)
+    return default_group

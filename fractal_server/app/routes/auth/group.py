@@ -21,6 +21,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.user_group import UserGroupUpdate
+from fractal_server.app.security import _create_default_group
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -85,6 +86,15 @@ async def create_single_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> UserGroupRead:
+    if group_create == "All":
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "You are trying to create the default group named 'All'."
+                "Please use the appropriate endpoint"
+            ),
+        )
+
     # Check that name is not already in use
     existing_name_str = select(UserGroup).where(
         UserGroup.name == group_create.name
@@ -104,6 +114,24 @@ async def create_single_group(
     await db.commit()
 
     return dict(new_group.model_dump(), user_ids=[])
+
+
+@router_group.post(
+    "/group/default/",
+    response_model=UserGroupRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_default_group(
+    user: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> UserGroupRead:
+    default_group_id = await _get_default_usergroup_id_or_none(db)
+    if default_group_id is not None:
+        raise HTTPException(
+            status_code=422, detail="The default group already exists"
+        )
+    default_group = _create_default_group()
+    return default_group
 
 
 @router_group.patch(

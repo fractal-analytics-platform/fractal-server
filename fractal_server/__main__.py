@@ -154,12 +154,7 @@ def init_db_data(
     from fractal_server.app.schemas.v2.resource import cast_serialize_resource
     from fractal_server.app.schemas.v2.profile import cast_serialize_profile
 
-    # Create default group and user
     print()
-    if create_default_group is True:
-        _create_default_group()
-    print()
-
     # Create admin user if requested
     if not (
         (admin_email is None)
@@ -181,6 +176,11 @@ def init_db_data(
                 is_verified=True,
             )
         )
+        print()
+
+    # Create default group if requested
+    if create_default_group is True:
+        _create_default_group()
         print()
 
     # Create resource and profile if requested
