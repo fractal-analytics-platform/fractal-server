@@ -73,7 +73,7 @@ async def _get_task_group_read_access(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
             "Current user has no read access to TaskGroupV2 "
-            f"{task_group_id}.",
+            f"{task_group_id}."
         ),
     )
 
