@@ -46,15 +46,19 @@ async def _get_user_accessible_taskgroups(
     Retrieve list of task groups that the user has access to.
     """
 
-    stm = select(TaskGroupV2).where(
-        or_(
-            TaskGroupV2.user_id == user_id,
-            TaskGroupV2.user_group_id.in_(
-                select(LinkUserGroup.group_id).where(
-                    LinkUserGroup.user_id == user_id
-                )
-            ),
-        ).where(TaskGroupV2.resource_id == user_resource_id)
+    stm = (
+        select(TaskGroupV2)
+        .where(
+            or_(
+                TaskGroupV2.user_id == user_id,
+                TaskGroupV2.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user_id
+                    )
+                ),
+            )
+        )
+        .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
