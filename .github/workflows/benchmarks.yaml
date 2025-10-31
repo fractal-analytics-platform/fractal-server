@@ -44,7 +44,7 @@ jobs:
         export JWT_EXPIRE_SECONDS=84600
         cd benchmarks/
         poetry run fractalctl set-db
-        poetry run fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir "$(pwd)/project-dir"
+        poetry run fractalctl init-db-data --create-default-group --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir "$(pwd)/project-dir"
         poetry run python populate_db/populate_db_script.py
         poetry run sh serve.sh
 
