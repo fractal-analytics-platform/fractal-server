@@ -15,7 +15,7 @@ from . import current_superuser_act
 from ...db import get_async_db
 from ...schemas.user import UserRead
 from ...schemas.user import UserUpdate
-from ._aux_auth import _get_default_usergroup_id
+from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -164,7 +164,7 @@ async def set_user_groups(
         )
 
     # Check that default group is not being removed
-    default_group_id_or_None = await _get_default_usergroup_id(db=db)
+    default_group_id_or_None = await _get_default_usergroup_id_or_none(db=db)
     if (
         default_group_id_or_None is not None
         and default_group_id_or_None not in target_group_ids

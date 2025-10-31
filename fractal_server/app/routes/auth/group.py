@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from . import current_superuser_act
-from ._aux_auth import _get_default_usergroup_id
+from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_usergroup_with_user_ids
 from ._aux_auth import _user_or_404
 from ._aux_auth import _usergroup_or_404
@@ -201,8 +201,10 @@ async def remove_user_from_group(
     user = await _user_or_404(user_id, db)
 
     # Check that group is not the default one
-    default_user_group_id = await _get_default_usergroup_id(db=db)
-    if default_user_group_id == group_id:
+    default_user_group_id_or_none = await _get_default_usergroup_id_or_none(
+        db=db
+    )
+    if default_user_group_id_or_none == group_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(

@@ -25,7 +25,9 @@ from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     _disambiguate_task_groups,
 )
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.schemas.v2 import TaskImportV2
 from fractal_server.logger import set_logger
 
@@ -228,7 +230,7 @@ async def import_workflow(
         user_id=user.id,
         db=db,
     )
-    default_group_id = await _get_default_usergroup_id(db)
+    default_group_id = await _get_default_usergroup_id_or_none(db)
 
     list_wf_tasks = []
     list_task_ids = []

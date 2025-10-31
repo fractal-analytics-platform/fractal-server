@@ -23,7 +23,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -163,7 +165,7 @@ async def get_task_group_list(
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
-    default_group_id = await _get_default_usergroup_id(db)
+    default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
         (
             pkg_name,

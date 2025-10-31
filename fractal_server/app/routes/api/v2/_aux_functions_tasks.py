@@ -19,7 +19,9 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_user_resource_id,
 )
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -231,7 +233,7 @@ async def _get_valid_user_group_id(
     elif private is True:
         user_group_id = None
     elif user_group_id is None:
-        user_group_id = await _get_default_usergroup_id(db=db)
+        user_group_id = await _get_default_usergroup_id_or_none(db=db)
     else:
         await _verify_user_belongs_to_group(
             user_id=user_id, user_group_id=user_group_id, db=db

@@ -22,7 +22,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )  # noqa
-from fractal_server.app.routes.auth._aux_auth import _get_default_usergroup_id
+from fractal_server.app.routes.auth._aux_auth import (
+    _get_default_usergroup_id_or_none,
+)
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
@@ -247,7 +249,7 @@ async def task_factory_v2(db: AsyncSession):
             task_group_kwargs = dict()
 
         if "user_group_id" not in task_group_kwargs.keys():
-            user_group_id = await _get_default_usergroup_id(db=db)
+            user_group_id = await _get_default_usergroup_id_or_none(db=db)
         else:
             user_group_id = task_group_kwargs["user_group_id"]
             if user_group_id is not None:

@@ -126,7 +126,7 @@ async def _usergroup_or_404(usergroup_id: int, db: AsyncSession) -> UserGroup:
     return user
 
 
-async def _get_default_usergroup_id(db: AsyncSession) -> int | None:
+async def _get_default_usergroup_id_or_none(db: AsyncSession) -> int | None:
     """
     Return the ID of the group named `"All"`, if `FRACTAL_DEFAULT_GROUP_NAME`
     is set and such group exists. Return `None`, if
