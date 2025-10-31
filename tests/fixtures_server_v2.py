@@ -23,10 +23,10 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )  # noqa
 from fractal_server.app.routes.auth._aux_auth import (
-    _get_default_usergroup_id_or_none,
-)
-from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
+)
+from fractal_server.app.security import (
+    _get_default_usergroup_id_or_none,
 )
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,

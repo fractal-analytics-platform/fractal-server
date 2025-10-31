@@ -335,7 +335,12 @@ async def test_get_project_workflows(
 
 
 async def test_patch_workflow(
-    client, MockCurrentUser, project_factory_v2, db, task_factory_v2
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    db,
+    task_factory_v2,
+    create_default_group,
 ):
     """
     GIVEN a Workflow

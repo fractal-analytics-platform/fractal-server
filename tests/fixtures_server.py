@@ -21,6 +21,7 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_user
+from fractal_server.app.security import _get_default_usergroup_id_or_none
 from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import get_data_settings
@@ -293,30 +294,36 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def default_user_group(db: AsyncSession) -> UserGroup | None:
-    settings = Inject(get_settings)
-    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
-        return None
-    else:
-        stm = select(UserGroup).where(
-            UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
-        )
-        res = await db.execute(stm)
-        default_user_group = res.scalars().one_or_none()
-        if default_user_group is None:
-            default_user_group = UserGroup(
-                name=settings.FRACTAL_DEFAULT_GROUP_NAME
-            )
-            db.add(default_user_group)
-            await db.commit()
-            await db.refresh(default_user_group)
-        return default_user_group
+async def default_group_or_none(db: AsyncSession) -> UserGroup | None:
+    default_user_group_id = await _get_default_usergroup_id_or_none(db)
+    if default_user_group_id is not None:
+        return await db.get(UserGroup, default_user_group_id)
+    return None
 
 
 @pytest.fixture
-async def MockCurrentUser(
-    app: FastAPI, db, default_user_group: UserGroup | None
-):
+async def create_default_group(
+    db: AsyncSession, default_group_or_none
+) -> UserGroup:
+    if default_group_or_none is None:
+        # Create the default group
+        default_group = UserGroup(name="All")
+        db.add(default_group)
+        await db.commit()
+        await db.refresh(default_group)
+        # Add all users to the default group
+        res = await db.execute(select(UserOAuth))
+        users = res.scalars().unique().all()
+        for user in users:
+            db.add(LinkUserGroup(group_id=default_group.id, user_id=user.id))
+        await db.commit()
+        return default_group
+    else:
+        return default_group_or_none
+
+
+@pytest.fixture
+async def MockCurrentUser(app: FastAPI, db):
     from fractal_server.app.routes.auth import (
         current_user_act_ver_prof,
         current_user_act,
@@ -412,18 +419,19 @@ async def MockCurrentUser(
 
                 if self.debug:
                     debug("CREATED USER", self.user)
-                if default_user_group is not None:
+                default_group_id = await _get_default_usergroup_id_or_none(db)
+                if default_group_id is not None:
                     db.add(
                         LinkUserGroup(
                             user_id=self.user.id,
-                            group_id=default_user_group.id,
+                            group_id=default_group_id,
                         )
                     )
                     await db.commit()
                     if self.debug:
                         debug(
                             f"Created link between user_id={self.user.id} and "
-                            f"group_id={default_user_group.id}."
+                            "default group."
                         )
 
             # Removing objects from test db session, so that we can operate
@@ -486,7 +494,7 @@ async def MockCurrentUser(
 @pytest.fixture(scope="function")
 async def first_user(
     db: AsyncSession,
-    default_user_group: UserGroup | None,
+    default_group_or_none: UserGroup | None,
     local_resource_profile_db,
 ):
     """
@@ -507,9 +515,11 @@ async def first_user(
         await db.commit()
         db.expunge(user)
 
-        if default_user_group is not None:
+        if default_group_or_none is not None:
             db.add(
-                LinkUserGroup(user_id=user.id, group_id=default_user_group.id)
+                LinkUserGroup(
+                    user_id=user.id, group_id=default_group_or_none.id
+                )
             )
             await db.commit()
 

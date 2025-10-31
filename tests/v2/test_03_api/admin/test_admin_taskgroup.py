@@ -27,6 +27,7 @@ async def test_task_group_admin(
     workflow_factory_v2,
     workflowtask_factory_v2,
     task_factory_v2,
+    create_default_group,
 ):
     async with MockCurrentUser() as user1:
         task1 = await task_factory_v2(

@@ -379,7 +379,7 @@ async def test_unit_disambiguate_task_groups(
     MockCurrentUser,
     task_factory_v2,
     db,
-    default_user_group,
+    create_default_group,
 ):
     import time
     from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (  # noqa
@@ -417,7 +417,7 @@ async def test_unit_disambiguate_task_groups(
         task_group_kwargs=dict(
             pkg_name="pkg",
             version="1.0.0",
-            user_group_id=default_user_group.id,
+            user_group_id=create_default_group.id,
         ),
     )
 
@@ -451,7 +451,6 @@ async def test_unit_disambiguate_task_groups(
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[task_group_A, task_group_B],
         user_id=user1_id,
-        default_group_id=default_user_group.id,
         db=db,
     )
     debug(task_group)
@@ -461,7 +460,6 @@ async def test_unit_disambiguate_task_groups(
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[task_group_A, task_group_C],
         user_id=user2_id,
-        default_group_id=default_user_group.id,
         db=db,
     )
     debug(task_group)
@@ -474,7 +472,6 @@ async def test_unit_disambiguate_task_groups(
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[task_group_B, task_group_C],
         user_id=user1_id,
-        default_group_id=default_user_group.id,
         db=db,
     )
     debug(task_group)
@@ -486,7 +483,6 @@ async def test_unit_disambiguate_task_groups(
     task_group = await _disambiguate_task_groups(
         matching_task_groups=[],
         user_id=user2_id,
-        default_group_id=default_user_group.id,
         db=db,
     )
     debug(task_group)

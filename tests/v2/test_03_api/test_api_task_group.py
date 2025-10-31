@@ -50,7 +50,7 @@ async def test_get_task_group_list(
     client,
     MockCurrentUser,
     task_factory_v2,
-    default_user_group,
+    create_default_group,
     db,
 ):
     # Create a task-group that belongs to user1. This task group won't be part
@@ -62,7 +62,7 @@ async def test_get_task_group_list(
             task_group_kwargs=dict(
                 pkg_name="bbb",
                 version="1.0.0",
-                user_group_id=default_user_group.id,
+                user_group_id=create_default_group.id,
             ),
         )
 
@@ -190,7 +190,7 @@ async def test_patch_task_group(
     client,
     MockCurrentUser,
     task_factory_v2,
-    default_user_group,
+    create_default_group,
     user_group_factory,
 ):
     async with MockCurrentUser(debug=True) as another_user:
@@ -200,7 +200,7 @@ async def test_patch_task_group(
         taskA = await task_factory_v2(
             name="asd",
             user_id=user1.id,
-            task_group_kwargs=dict(user_group_id=default_user_group.id),
+            task_group_kwargs=dict(user_group_id=create_default_group.id),
         )
         group2 = await user_group_factory("team2", user1.id, another_user_id)
         taskB = await task_factory_v2(
@@ -210,16 +210,16 @@ async def test_patch_task_group(
         )
 
         res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["user_group_id"] == default_user_group.id
+        assert res.json()["user_group_id"] == create_default_group.id
 
         # Update: change `user_group_id`
         res = await client.patch(
             f"{PREFIX}/{taskA.taskgroupv2_id}/",
-            json=dict(user_group_id=default_user_group.id),
+            json=dict(user_group_id=create_default_group.id),
         )
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/{taskA.taskgroupv2_id}/")
-        assert res.json()["user_group_id"] == default_user_group.id
+        assert res.json()["user_group_id"] == create_default_group.id
 
         # Non existing TaskGroup
         res = await client.patch(f"{PREFIX}/9999999/", json={})
@@ -234,7 +234,7 @@ async def test_patch_task_group(
         # Re-link the task-group to its current usergroup
         res = await client.patch(
             f"{PREFIX}/{taskA.taskgroupv2_id}/",
-            json=dict(user_group_id=default_user_group.id),
+            json=dict(user_group_id=create_default_group.id),
         )
         assert res.status_code == 200
 
@@ -245,7 +245,7 @@ async def test_patch_task_group(
         # non-duplication constraint
         res = await client.patch(
             f"{PREFIX}/{taskB.taskgroupv2_id}/",
-            json=dict(user_group_id=default_user_group.id),
+            json=dict(user_group_id=create_default_group.id),
         )
         assert res.status_code == 422
         assert "already owns a task group" in res.json()["detail"]

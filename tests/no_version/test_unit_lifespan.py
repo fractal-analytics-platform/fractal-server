@@ -30,10 +30,7 @@ async def test_app_with_lifespan(
     tmp_path,
     local_resource_profile_db,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO,
-        FRACTAL_DEFAULT_GROUP_NAME="All",
-    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []

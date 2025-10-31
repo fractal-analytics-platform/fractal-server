@@ -92,7 +92,7 @@ def fractal_tasks_mock_db(
     fractal_tasks_mock_collection,
     db_sync: DBSyncSession,
     first_user: UserOAuth,
-    default_user_group: UserGroup,
+    create_default_group: UserGroup,
 ) -> dict[str, TaskV2]:
     res = db_sync.execute(
         select(Resource.id)
@@ -107,7 +107,7 @@ def fractal_tasks_mock_db(
         pkg_name="fractal_tasks_mock",
         user_id=first_user.id,
         resource_id=resource_id,
-        user_group_id=default_user_group.id,
+        user_group_id=create_default_group.id,
     )
     task_group = TaskGroupV2(**task_group_obj.model_dump())
     db_sync.add(task_group)
