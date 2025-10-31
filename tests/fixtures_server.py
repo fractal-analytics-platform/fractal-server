@@ -293,26 +293,28 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def default_user_group(
-    db: AsyncSession, override_settings_factory
-) -> UserGroup | None:
+async def default_user_group(db: AsyncSession) -> UserGroup | None:
     """
     Note: using this fixture also sets `FRACTAL_DEFAULT_GROUP_NAME="All"`
     in settings.
     """
-    override_data_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
-    _FRACTAL_DEFAULT_GROUP_NAME = "All"
-    stm = select(UserGroup).where(
-        UserGroup.name == _FRACTAL_DEFAULT_GROUP_NAME
-    )
-    res = await db.execute(stm)
-    default_user_group = res.scalars().one_or_none()
-    if default_user_group is None:
-        default_user_group = UserGroup(name=_FRACTAL_DEFAULT_GROUP_NAME)
-        db.add(default_user_group)
-        await db.commit()
-        await db.refresh(default_user_group)
-    return default_user_group
+    settings = Inject(get_settings)
+    if settings.FRACTAL_DEFAULT_GROUP_NAME is None:
+        return None
+    else:
+        stm = select(UserGroup).where(
+            UserGroup.name == settings.FRACTAL_DEFAULT_GROUP_NAME
+        )
+        res = await db.execute(stm)
+        default_user_group = res.scalars().one_or_none()
+        if default_user_group is None:
+            default_user_group = UserGroup(
+                name=settings.FRACTAL_DEFAULT_GROUP_NAME
+            )
+            db.add(default_user_group)
+            await db.commit()
+            await db.refresh(default_user_group)
+        return default_user_group
 
 
 @pytest.fixture
