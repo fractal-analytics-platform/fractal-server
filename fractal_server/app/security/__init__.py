@@ -352,7 +352,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                     f"{default_group_id_or_none=}."
                 )
             elif settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
-                logger.warning(
+                logger.error(
                     "No group found with name "
                     f"{settings.FRACTAL_DEFAULT_GROUP_NAME}"
                 )
