@@ -296,6 +296,10 @@ async def registered_superuser_client(
 async def default_user_group(
     db: AsyncSession, override_settings_factory
 ) -> UserGroup | None:
+    """
+    Note: using this fixture also sets `FRACTAL_DEFAULT_GROUP_NAME="All"`
+    in settings.
+    """
     override_data_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
     _FRACTAL_DEFAULT_GROUP_NAME = "All"
     stm = select(UserGroup).where(
