@@ -51,6 +51,7 @@ from fractal_server.app.security.signup_email import (
 )
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
+from fractal_server.logger import close_logger
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
@@ -480,3 +481,4 @@ def _create_first_group():
         "END   _create_first_group, with name "
         f"'{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
     )
+    close_logger(function_logger)
