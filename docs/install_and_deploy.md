@@ -20,30 +20,50 @@ Here we describe the basic steps for running Fractal Server.
 
 ### 1. Set up configuration variables
 
-For this command to work properly, a set of variables need to be specified,
-either as enviromnent variables or in a file like `.fractal_server.env`.
-An example of such file is
-```
-JWT_SECRET_KEY=XXX
-FRACTAL_RUNNER_BACKEND=local
-POSTGRES_DB=fractal-database-name
-```
+For the following commands to work, you must specify a set of variables,
+either as environment variables or in a file named `.fractal_server.env`.
 
-
-> ⚠️  **`JWT_SECRET_KEY=XXX` must be replaced with a more secure string, that
-> should not be disclosed.** ⚠️
-
-More details (including default values) are available in the [Configuration](configuration.md) page.
+See the [Configuration](configuration.md) page for details.
 
 
 ### 2. Set up the database
-After creating a PostgreSQL database for `fractal-server`, and after setting the proper `fractal-server` configuration variables (see the [database page](internals/database_interface.md)), the command
+With the proper configuration variables set and having a PostgreSQL database at your disposal (see the [database page](internals/database_interface.md)), run
 ```
 fractalctl set-db
 ```
-applies the appropriate schema migrations.
+to apply the appropriate schema migrations.
 
-### 3. Start the server
+FIXME
+If you also want to add the first data to the databse
+```
+fractalctl init-db-data
+```
+Here's the documentation
+```
+fractalctl init-db-data --help
+usage: fractalctl init-db-data [-h] [--resource RESOURCE] [--profile PROFILE] [--admin-email ADMIN_EMAIL] [--admin-pwd ADMIN_PWD]
+                               [--admin-project-dir ADMIN_PROJECT_DIR]
+
+Populate database with initial data.
+
+options:
+  -h, --help            show this help message and exit
+  --resource RESOURCE   Either `default` or path to the JSON file of the first resource.
+  --profile PROFILE     Either `default` or path to the JSON file of the first profile.
+  --admin-email ADMIN_EMAIL
+                        Email of the first admin user.
+  --admin-pwd ADMIN_PWD
+                        Password for the first admin user.
+  --admin-project-dir ADMIN_PROJECT_DIR
+                        Project_dir for the first admin user.
+
+```
+
+
+### 3. Initialize the database
+
+
+### 4. Start the server
 
 In the environment where Fractal Server is installed, you can run it via [`gunicorn`](https://gunicorn.org) with a command like
 ```
@@ -58,5 +78,5 @@ gunicorn fractal_server.main:app \
 To verify that the server is up, you can use the `/api/alive/` endpoint - as in
 ```console
 $ curl http://localhost:8000/api/alive/
-{"alive":true,"version":"2.15.6"}
+{"alive":true,"version":"2.17.0"}
 ```
