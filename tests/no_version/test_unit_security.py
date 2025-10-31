@@ -72,7 +72,6 @@ async def test_unit_create_first_user(db):
 
 
 async def test_unit_create_first_group(db, override_settings_factory):
-    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME="All")
     assert await count_groups(db) == 0
     # First call is effective
     _create_first_group()
@@ -80,3 +79,7 @@ async def test_unit_create_first_group(db, override_settings_factory):
     # Second call is a no-op
     _create_first_group()
     assert await count_groups(db) == 1
+
+    override_settings_factory(FRACTAL_DEFAULT_GROUP_NAME=None)
+    # Tests "SKIP because '{settings.FRACTAL_DEFAULT_GROUP_NAME=}'"
+    _create_first_group()
