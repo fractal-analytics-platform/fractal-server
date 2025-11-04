@@ -49,9 +49,7 @@ openapi_parser.add_argument(
 # fractalctl set-db
 set_db_parser = subparsers.add_parser(
     "set-db",
-    description=(
-        "Initialise/upgrade database schemas and create first group&user."
-    ),
+    description="Initialise/upgrade database schemas.",
 )
 
 # fractalctl init-db-data
