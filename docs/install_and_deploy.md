@@ -8,18 +8,20 @@ Some examples of typical deployment are available as container-based demos at ht
 
 ## Prerequisites
 
-The minimum supported Python version is 3.11.
+The following will assume that:
 
-The following will assume that we are working within an isolated Python environment, for example with `venv`:
-```
-python3 -m venv venv
-venv/bin/activate
-```
+- The Python version is greater or equal than 3.11
+- We are working within an isolated Python environment, for example with `venv`:
+  ```
+  python3 -m venv venv
+  venv/bin/activate
+  ```
 
-For the deployment phase, we also need:
+- The required environment variables are configured (see [configuration page](configuration.md)).
 
-  - to set some variables, either as environment variables or in a file `.fractal_server.env` (see [configuration page](configuration.md));
-  - a dedicated Postgres database (see the [database page](internals/database_interface.md)).
+  If you choose to declare the environment variables using the `.fractal_server.env` file, that file must be placed in the current working directory;
+
+- a dedicated Postgres database is available (see the [database page](internals/database_interface.md)).
 
 ## How to install
 
@@ -55,7 +57,7 @@ can do multiple things, depending on the environment variables and the flag prov
 
   - it creates the default user group, if `FRACTAL_DEFAULT_GROUP_NAME=All` is set;
   - it creates the first admin user, if the flags `--admin-*` are provided;
-  - it creates the first couple resource/profile, if `--resource` and `--profile` are provided.
+  - it creates the first couple resource/profile and it associates users to them, if `--resource` and `--profile` are provided.
 
 Its help message:
 ```
