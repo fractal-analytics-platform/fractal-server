@@ -40,7 +40,7 @@ async def get_list_user_groups(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[UserGroupRead]:
     # Get all groups
-    stm_all_groups = select(UserGroup)
+    stm_all_groups = select(UserGroup).order_by(UserGroup.id)
     res = await db.execute(stm_all_groups)
     groups = res.scalars().all()
 

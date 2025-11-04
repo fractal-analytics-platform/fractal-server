@@ -442,6 +442,7 @@ async def _create_first_user(
         raise e
     finally:
         function_logger.info(f"END   _create_first_user, with email '{email}'")
+        close_logger(function_logger)
 
 
 def _create_first_group():
