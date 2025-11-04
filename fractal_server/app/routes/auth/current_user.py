@@ -15,6 +15,7 @@ from fractal_server.app.models import Resource
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act
+from fractal_server.app.routes.auth import current_user_act_ver
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
@@ -111,7 +112,7 @@ async def get_current_user_profile_info(
     "/current-user/allowed-viewer-paths/", response_model=list[str]
 )
 async def get_current_user_allowed_viewer_paths(
-    current_user: UserOAuth = Depends(current_user_act),
+    current_user: UserOAuth = Depends(current_user_act_ver),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
