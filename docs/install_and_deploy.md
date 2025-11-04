@@ -41,13 +41,18 @@ Installing `fractal-server` will automatically install `fractalctl`, its compani
 
 ### 1. Set up the database
 
-Just use the command
+> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings).
+
+Use the command
 ```
 fractalctl set-db
 ```
 to apply the schema migrations to the database.
 
+
 ### 2. Initialize the database
+
+> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings) and, eventually, [FRACTAL_DEFAULT_GROUP_NAME](http://localhost:8000/configuration/#fractal_server.config._main.Settings.FRACTAL_DEFAULT_GROUP_NAME).
 
 With the command
 ```
@@ -57,7 +62,8 @@ you can do multiple things, depending on the environment variables set and on th
 
   - create the default user group, by settings `FRACTAL_DEFAULT_GROUP_NAME=All`;
   - create the first admin user, by providing the `--admin-*` flags;
-  - create the first couple resource/profile and associate users to them, proving the flags `--resource` and `--profile`.
+  - create the first couple resource/profile and associate users to them, providing `--resource` and `--profile`.
+
 
 **Help message**
 ```
@@ -105,6 +111,5 @@ options:
 To verify that the server is up, you can use the `/api/alive/` endpoint - as in
 ```
 curl http://localhost:8000/api/alive/
-
-  {"alive":true,"version":"2.17.0"}
+{"alive":true,"version":"2.17.0"}
 ```

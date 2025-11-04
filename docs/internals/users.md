@@ -20,10 +20,6 @@ A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/frac
 Most attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
 In the startup phase, `fractal-server` creates a default user, who also has the superuser privileges that are necessary for managing other users.
-The credentials for this user are defined via the environment variables
-[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@example.org`)
-and
-[`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../configuration.md/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
 > **⚠️ You should always modify the password of the default user after it's created;**
 > this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../openapi.md), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
