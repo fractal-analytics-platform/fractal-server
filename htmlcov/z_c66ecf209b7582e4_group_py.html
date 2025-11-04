@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_c66ecf209b7582e4_login_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-11-04 09:49 +0000
+            created at 2025-11-04 10:36 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -124,7 +124,7 @@
     <p class="run run2"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">UserGroupRead</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="com"># Get all groups</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="nam">stm_all_groups</span> <span class="op">=</span> <span class="nam">select</span><span class="op">(</span><span class="nam">UserGroup</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="nam">stm_all_groups</span> <span class="op">=</span> <span class="nam">select</span><span class="op">(</span><span class="nam">UserGroup</span><span class="op">)</span><span class="op">.</span><span class="nam">order_by</span><span class="op">(</span><span class="nam">UserGroup</span><span class="op">.</span><span class="nam">id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm_all_groups</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">    <span class="nam">groups</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -322,7 +322,7 @@
             <a class="nav" href="z_c66ecf209b7582e4_login_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-11-04 09:49 +0000
+            created at 2025-11-04 10:36 +0000
         </p>
     </div>
 </footer>
