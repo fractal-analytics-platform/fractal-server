@@ -10,18 +10,18 @@ Some examples of typical deployment are available as container-based demos at ht
 
 The following will assume that:
 
-- The Python version is greater or equal than 3.11
-- We are working within an isolated Python environment, for example with `venv`:
+- You are using a Python version greater or equal than 3.11
+- You are working within an isolated Python environment, for example with `venv`:
   ```
   python3 -m venv venv
   venv/bin/activate
   ```
 
-- The required environment variables are configured (see [configuration page](configuration.md)).
+- You have configured the required environment variables (see [configuration page](configuration.md)).
 
   If you choose to declare the environment variables using the `.fractal_server.env` file, that file must be placed in the current working directory;
 
-- a dedicated Postgres database is available (see the [database page](internals/database_interface.md)).
+- You have access to a dedicated Postgres database (see the [database page](internals/database_interface.md)).
 
 ## How to install
 
@@ -41,7 +41,7 @@ Installing `fractal-server` will automatically install `fractalctl`, its compani
 
 ### 1. Set up the database
 
-We use the command
+Just use the command
 ```
 fractalctl set-db
 ```
@@ -49,17 +49,17 @@ to apply the schema migrations to the database.
 
 ### 2. Initialize the database
 
-The command
+With the command
 ```
 fractalctl init-db-data
 ```
-can do multiple things, depending on the environment variables and the flag provided:
+you can do multiple things, depending on the environment variables set and on the flag provided:
 
-  - it creates the default user group, if `FRACTAL_DEFAULT_GROUP_NAME=All` is set;
-  - it creates the first admin user, if the flags `--admin-*` are provided;
-  - it creates the first couple resource/profile and it associates users to them, if `--resource` and `--profile` are provided.
+  - create the default user group, by settings `FRACTAL_DEFAULT_GROUP_NAME=All`;
+  - create the first admin user, by providing the `--admin-*` flags;
+  - create the first couple resource/profile and associate users to them, proving the flags `--resource` and `--profile`.
 
-Its help message:
+**Help message**
 ```
 usage: fractalctl init-db-data [-h] [--resource RESOURCE] [--profile PROFILE] [--admin-email ADMIN_EMAIL] [--admin-pwd ADMIN_PWD] [--admin-project-dir ADMIN_PROJECT_DIR]
 
@@ -86,7 +86,7 @@ fractalctl start
 ```
 to start the server using [Uvicorn](https://uvicorn.dev/).
 
-Its help message:
+**Help message**
 
 ```
 usage: fractalctl start [-h] [--host HOST] [-p PORT] [--reload]
@@ -103,7 +103,8 @@ options:
 ### 4. Test the server
 
 To verify that the server is up, you can use the `/api/alive/` endpoint - as in
-```console
-$ curl http://localhost:8000/api/alive/
-{"alive":true,"version":"2.17.0"}
+```
+curl http://localhost:8000/api/alive/
+
+  {"alive":true,"version":"2.17.0"}
 ```
