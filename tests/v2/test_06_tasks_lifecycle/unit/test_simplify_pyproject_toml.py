@@ -24,7 +24,7 @@ def test_simplify_pyproject_toml():
     )
     assert old == new
 
-    # Only workspace/platforms update / OLD PIXI SYNTAX
+    # Only project/platforms update
     old = tomli_w.dumps(
         dict(tool=dict(pixi=dict(project=dict(platforms=["a", "b", "c"]))))
     )
@@ -38,7 +38,7 @@ def test_simplify_pyproject_toml():
     )
     assert new == expected_new
 
-    # Only workspace/platforms update / OLD PIXI SYNTAX
+    # Only workspace/platforms update
     old = tomli_w.dumps(
         dict(tool=dict(pixi=dict(workspace=dict(platforms=["a", "b", "c"]))))
     )
