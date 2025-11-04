@@ -1,5 +1,7 @@
+import contextlib
 import logging
 
+import pytest
 from sqlmodel import select
 
 import fractal_server.app.security
@@ -19,27 +21,27 @@ async def count_groups(db):
     return len(res.unique().scalars().all())
 
 
-async def test_unit_create_first_user(db):
+async def test_unit_create_first_user(db, monkeypatch):
     assert await count_users(db) == 0
 
     # Calls that do create a new user
 
     await _create_first_user(
-        email="test1@fractal.com",
+        email="test1@example.org",
         password="xxxx",
         project_dir="/fake",
     )
     assert await count_users(db) == 1
 
     await _create_first_user(
-        email="test2@fractal.com",
+        email="test2@example.org",
         password="xxxx",
         project_dir="/fake",
     )
     assert await count_users(db) == 2
 
     await _create_first_user(
-        email="test3@fractal.com",
+        email="test3@example.org",
         password="xxxx",
         is_superuser=True,
         project_dir="/fake",
@@ -47,7 +49,7 @@ async def test_unit_create_first_user(db):
     assert await count_users(db) == 3
 
     await _create_first_user(
-        email="test4@fractal.com",
+        email="test4@example.org",
         password="xxxx",
         is_verified=True,
         project_dir="/fake",
@@ -58,7 +60,7 @@ async def test_unit_create_first_user(db):
 
     # Cannot create two users with the same email
     await _create_first_user(
-        email="test2@fractal.com",
+        email="test2@example.org",
         password="xxxx",
         project_dir="/fake",
     )
@@ -66,11 +68,31 @@ async def test_unit_create_first_user(db):
 
     # Cannot create more than one superuser
     await _create_first_user(
-        email="test5@fractal.com",
+        email="test5@example.org",
         password="xxxx",
         is_superuser=True,
         project_dir="/fake",
     )
+    assert await count_users(db) == 4
+
+    # Exception handling
+    import fractal_server.app.security
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("error message")
+
+    monkeypatch.setattr(
+        fractal_server.app.security,
+        "get_async_session_context",
+        contextlib.asynccontextmanager(fail),
+    )
+    with pytest.raises(RuntimeError, match="error message"):
+        await _create_first_user(
+            email="abc@example.org",
+            password="xxxx",
+            is_superuser=True,
+            project_dir="/fake",
+        )
     assert await count_users(db) == 4
 
 
