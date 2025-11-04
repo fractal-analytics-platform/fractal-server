@@ -28,7 +28,9 @@ Fractal Server is hosted on [PyPI](https://pypi.org/project/fractal-server), and
 pip install fractal-server
 ```
 
-For details on how to install Fractal Server in a development environment, see the [Development](development.md) page.
+Fractal Server is also available as a [Conda package](https://anaconda.org/conda-forge/fractal-server), but the PyPI version is the recommended one.
+
+For details on how to install Fractal Server in a development environment see the [Development](development.md) page.
 
 
 ## How to deploy
@@ -51,7 +53,7 @@ fractalctl init-db-data
 ```
 can do multiple things, depending on the environment variables and the flag provided:
 
-  - it creates the default user group, if `FRACTAL_DEFAULT_GROUP_NAME` is set;
+  - it creates the default user group, if `FRACTAL_DEFAULT_GROUP_NAME=All` is set;
   - it creates the first admin user, if the flags `--admin-*` are provided;
   - it creates the first couple resource/profile, if `--resource` and `--profile` are provided.
 
@@ -80,7 +82,7 @@ Finally, we use the command
 ```
 fractalctl start
 ```
-to start the server using Uvicorn.
+to start the server using [Uvicorn](https://uvicorn.dev/).
 
 Its help message:
 
