@@ -52,7 +52,7 @@ to apply the schema migrations to the database.
 
 ### 2. Initialize the database
 
-> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings) and, eventually, [FRACTAL_DEFAULT_GROUP_NAME](http://localhost:8000/configuration/#fractal_server.config._main.Settings.FRACTAL_DEFAULT_GROUP_NAME).
+> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings) and, possibly, [FRACTAL_DEFAULT_GROUP_NAME](http://localhost:8000/configuration/#fractal_server.config._main.Settings.FRACTAL_DEFAULT_GROUP_NAME).
 
 With the command
 ```
