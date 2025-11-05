@@ -7,20 +7,20 @@ Some are optional and sensible defaults are provided.
 
 There are two possibilities for setting the configuration variables:
 
-- defining them as *environment variables* in the same environment as Fractal Server
+- defining them as *environment variables*, in the same environment as Fractal Server:
     ```sh
     export VAR1=value1
     export VAR2=value2
-    fractalctl start
     ```
-- write them inside a file called `.fractal_server.env`, located in your current working directory
-    ```sh
-    echo "VAR1=value1
-    VAR2=value2" > .fractal_server.env
-    fractalctl start
+- write them inside a file called `.fractal_server.env`, located in your current working directory:
+    ```
+    VAR1=value1
+    VAR2=value2
     ```
 
 If the same variable is defined both in the environment and inside the env file, the value defined in the environment takes priority.
+
+Once the variables have been defined in one of these ways, they will be read automatically by the Fractal Server during the start-up phase.
 
 ## Minimal working example
 
