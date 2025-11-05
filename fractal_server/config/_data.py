@@ -32,7 +32,7 @@ class DataSettings(BaseSettings):
                 <ul>
                 <li> `"viewer-paths"`: The list of allowed viewer paths will
                     include the user's `project_dir` along with any path
-                    defined in  <user groups' `viewer_paths` attributes.
+                    defined in  UserGroups `viewer_paths` attributes.
                 </li>
                 <li> `"users-folders"`: The list will consist of the user's
                     `project_dir` and a user-specific folder. The user folder
@@ -49,7 +49,7 @@ class DataSettings(BaseSettings):
             Base path to Zarr files that will be served by
             fractal-vizarr-viewer.
             This variable is required and used only when
-            `FRACTAL_DATA_AUTHORIZATION_SCHEME` is set to "users-folders".
+            `FRACTAL_DATA_AUTHORIZATION_SCHEME` is set to `"users-folders"`.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)

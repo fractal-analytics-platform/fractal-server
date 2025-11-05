@@ -33,7 +33,7 @@ class OAuthSettings(BaseSettings):
         OAUTH_REDIRECT_URL:
             String to be used as `redirect_url` argument in
             `fastapi_users.get_oauth_router`, and then in
-            `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`
+            `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)

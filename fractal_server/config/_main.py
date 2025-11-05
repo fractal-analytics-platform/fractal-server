@@ -17,10 +17,8 @@ class Settings(BaseSettings):
         JWT_EXPIRE_SECONDS:
             JWT token lifetime, in seconds.
         JWT_SECRET_KEY:
-            JWT secret
-
-            ⚠️ **IMPORTANT**: set this variable to a secure string,
-            and do not disclose it.
+            JWT secret.<br>
+            ⚠️ Set this variable to a secure string, and do not disclose it.
         COOKIE_EXPIRE_SECONDS:
             Cookie token lifetime, in seconds.
         FRACTAL_RUNNER_BACKEND:
@@ -33,7 +31,7 @@ class Settings(BaseSettings):
             Number of ids that can be stored in the `jobsV2` attribute of
             `app.state`.
         FRACTAL_GRACEFUL_SHUTDOWN_TIME:
-            Waiting time for the shutdown phase of executors
+            Waiting time for the shutdown phase of executors, in seconds.
         FRACTAL_HELP_URL:
             The URL of an instance-specific Fractal help page.
         FRACTAL_DEFAULT_GROUP_NAME:

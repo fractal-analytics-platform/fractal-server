@@ -17,14 +17,14 @@ class PublicEmailSettings(BaseModel):
     Schema for `EmailSettings.public`, namely the ready-to-use settings.
 
     Attributes:
-        sender: Sender email address
-        recipients: List of recipients email address
-        smtp_server: SMTP server address
-        port: SMTP server port
-        password: Sender password
-        instance_name: Name of SMTP server instance
-        use_starttls: Whether to use the security protocol
-        use_login: Whether to use login
+        sender: Sender email address.
+        recipients: List of recipients email address.
+        smtp_server: SMTP server address.
+        port: SMTP server port.
+        password: Sender password.
+        instance_name: Name of SMTP server instance.
+        use_starttls: Whether to use the security protocol.
+        use_login: Whether to use login.
     """
 
     sender: EmailStr
@@ -56,11 +56,9 @@ class EmailSettings(BaseSettings):
             Comma-separated list of recipients of the OAuth-signup emails.
         FRACTAL_EMAIL_USE_STARTTLS:
             Whether to use StartTLS when using the SMTP server.
-            Accepted values: 'true', 'false'.
         FRACTAL_EMAIL_USE_LOGIN:
             Whether to use login when using the SMTP server.
             If 'true', FRACTAL_EMAIL_PASSWORD  must be provided.
-            Accepted values: 'true', 'false'.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
