@@ -78,7 +78,7 @@ plugins:
           - https://docs.pydantic.dev/latest/objects.inv
           options:
             show_signature_annotations: false
-            docstring_section_style: "table"
+            docstring_section_style: "spacy"
             docstring_style: "google"
             show_source: true
             filters: []

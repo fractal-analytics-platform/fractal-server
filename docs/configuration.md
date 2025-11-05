@@ -29,7 +29,7 @@ This is a minimal working example of a `.fractal_server.env`, with all the requi
 POSTGRES_DB=fractal_test
 JWT_SECRET_KEY=jwt_secret_key
 ```
-All the other configurations will take the default value.
+These are the only variables that must be mandatorily set by the user. All others, if not specified, will assume their default value.
 
 ---
 
