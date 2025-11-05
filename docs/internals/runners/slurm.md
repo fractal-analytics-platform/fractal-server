@@ -77,7 +77,7 @@ The logic for handling the batching parameters (that is, how many tasks can be c
 
 ### `sudo`-based impersonation
 
-The user who runs `fractal-server` must have sufficient priviliges for running some commands via `sudo -u` to impersonate other users of the SLURM cluster without any password. The required commands include `sbatch`, `scancel`, `cat`, `ls` and `mkdir`. An example of how to achieve this is to add this block to the `sudoers` file:
+The user who runs `fractal-server` must have sufficient privileges for running some commands via `sudo -u` to impersonate other users of the SLURM cluster without any password. The required commands include `sbatch`, `scancel`, `cat`, `ls` and `mkdir`. An example of how to achieve this is to add this block to the `sudoers` file:
 ```
 Runas_Alias FRACTAL_IMPERSONATE_USERS = fractal, user1, user2, user3
 Cmnd_Alias FRACTAL_CMD = /usr/bin/sbatch, /usr/bin/scancel, /usr/bin/cat, /usr/bin/ls, /usr/bin/mkdir

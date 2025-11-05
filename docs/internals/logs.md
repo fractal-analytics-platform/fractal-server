@@ -16,7 +16,7 @@ are defined as follows:
 
 * The minimum logging level for logs to appear in the console is set by
   [`FRACTAL_LOGGING_LEVEL`](../configuration/#fractal_server.config._main.Settings.FRACTAL_LOGGING_LEVEL);
-* The `FileHandler` logger handlers are alwasy set at the `DEBUG` level, that
+* The `FileHandler` logger handlers are always set at the `DEBUG` level, that
   is, they write all log records.
 
 This means that the `FRACTAL_LOGGING_LEVEL` offers a quick way to switch to

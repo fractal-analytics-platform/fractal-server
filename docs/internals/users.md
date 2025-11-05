@@ -204,7 +204,7 @@ We can now review how `fractal-server` handles these steps:
 - **Steps 9 &#8594; 10**<br>
     * The callback endpoint uses the Access Token to obtain the user's email address and an account identifier from the Resource Server (which, depending on the client, may coincide with the Authorization Server).
 
-After that, the callback endpoint performs some extra operations, which are not stricly part of the `OAuth2` protocol:
+After that, the callback endpoint performs some extra operations, which are not strictly part of the `OAuth2` protocol:
 
 - It checks that `state` is still valid;
 - If a user with the given email address doesn't already exist, it creates one with a random password;
@@ -351,7 +351,7 @@ The endpoints to manage users can be found under the route `/auth/`. On top of t
 
 🔐 *Restricted to superusers*.
 
-New users can be registred by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#register-router):
+New users can be registered by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#register-router):
 
 ```console
 $ curl \
@@ -379,7 +379,7 @@ Here we provided `email` and `password`, which are the only required fields of `
 
 🔐 *Restricted to superusers*.
 
-The route `/auth/userlist` returns the list of all registred users:
+The route `/auth/userlist` returns the list of all registered users:
 
 ```console
 $ curl \
@@ -413,7 +413,7 @@ $ curl \
 
 ### GET `/auth/current-user/`
 
-At `/auth/current-user/`, authenticated users can get informations about themself:
+At `/auth/current-user/`, authenticated users can get information about themself:
 ```
 curl \
     -X GET \
