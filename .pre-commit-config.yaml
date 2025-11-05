@@ -42,4 +42,4 @@ repos:
     hooks:
       - id: codespell
         args: ["--ignore-words", ".codespellignore"]
-        files: fractal_server/
+        files: ^(fractal_server/|docs/)

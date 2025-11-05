@@ -1,4 +1,4 @@
-Fractal Server is the core ingredient of more deployments of the [Fractal framework](https://fractal-analytics-platform.github.io/), which also includes several other Fractal components (e.g. a web client) and also relies on external resources being availble (e.g. a PostgreSQL database and a SLURM cluster).
+Fractal Server is the core ingredient of more deployments of the [Fractal framework](https://fractal-analytics-platform.github.io/), which also includes several other Fractal components (e.g. a web client) and also relies on external resources being available (e.g. a PostgreSQL database and a SLURM cluster).
 
 Here we just describe the basic procedure for a local deployment.
 Any production deployments will require greater attention and detail.
