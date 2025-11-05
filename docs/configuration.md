@@ -20,6 +20,8 @@ There are two possibilities for setting the configuration variables:
     fractalctl start
     ```
 
+If the same variable is defined both in the environment and inside the env file, the value defined in the environment takes priority.
+
 ## Minimal working example
 
 This is a minimal working example of a `.fractal_server.env`, with all the required configuration variables:
