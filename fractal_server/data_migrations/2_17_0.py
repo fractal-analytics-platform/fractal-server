@@ -30,6 +30,8 @@ from fractal_server.urls import normalize_url
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
 
+# FIXME: not actually logging, change level
+
 
 class UserUpdateInfo(BaseModel):
     user_id: int
