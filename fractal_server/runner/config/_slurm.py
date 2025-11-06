@@ -14,6 +14,9 @@ from fractal_server.types import NonEmptyStr
 MemMBType = Annotated[
     PositiveInt | NonEmptyStr, AfterValidator(slurm_mem_to_MB)
 ]
+"""
+Memory expressed in MB.
+"""
 
 
 class _SlurmConfigSet(BaseModel):
@@ -24,7 +27,6 @@ class _SlurmConfigSet(BaseModel):
         partition:
         cpus_per_task:
         mem:
-            See `_parse_mem_value` for details on allowed values.
         constraint:
         gres:
         time:
@@ -32,6 +34,7 @@ class _SlurmConfigSet(BaseModel):
         nodelist:
         account:
         extra_lines:
+        gpus:
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -58,9 +61,7 @@ class _BatchingConfigSet(BaseModel):
         target_cpus_per_job:
         max_cpus_per_job:
         target_mem_per_job:
-            (see `_parse_mem_value` for details on allowed values)
         max_mem_per_job:
-            (see `_parse_mem_value` for details on allowed values)
         target_num_jobs:
         max_num_jobs:
     """
