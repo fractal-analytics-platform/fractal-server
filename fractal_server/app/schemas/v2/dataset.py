@@ -8,22 +8,38 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectReadV2
 from fractal_server.images import SingleImage
-from fractal_server.types import AttributeFilters
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import ZarrDirStr
 
 
 class DatasetCreateV2(BaseModel):
+    """
+    DatasetCreateV2
+
+    Attributes:
+        name:
+        zarr_dir
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
-
     zarr_dir: ZarrDirStr | None = None
-
-    attribute_filters: AttributeFilters = Field(default_factory=dict)
 
 
 class DatasetReadV2(BaseModel):
+    """
+    DatasetReadV2
+
+    Attributes:
+        id:
+        name:
+        project_id:
+        project:
+        timestamp_created:
+        zarr_dir:
+    """
+
     id: int
     name: str
 
@@ -40,6 +56,13 @@ class DatasetReadV2(BaseModel):
 
 
 class DatasetUpdateV2(BaseModel):
+    """
+    DatasetUpdateV2
+
+    name:
+    zarr_dir:
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
