@@ -21,6 +21,15 @@ from fractal_server.types import NonEmptyStr
 
 
 class ResourceType(StrEnum):
+    """
+    Enum for the possible resource types.
+
+    Attributes:
+        SLURM_SUDO:
+        SLURM_SSH:
+        LOCAL:
+    """
+
     SLURM_SUDO = "slurm_sudo"
     SLURM_SSH = "slurm_ssh"
     LOCAL = "local"
@@ -68,6 +77,22 @@ class _ValidResourceBase(BaseModel):
 
 
 class ValidResourceLocal(_ValidResourceBase):
+    """
+    Valid local resource
+
+    Attributes:
+        type:
+        name:
+        tasks_python_config:
+        tasks_pixi_config:
+        tasks_local_dir:
+        jobs_local_dir:
+        jobs_runner_config:
+        jobs_poll_interval:
+        jobs_slurm_python_worker:
+        host:
+    """
+
     type: Literal[ResourceType.LOCAL]
     jobs_runner_config: JobRunnerConfigLocal
     jobs_slurm_python_worker: None = None
@@ -75,6 +100,22 @@ class ValidResourceLocal(_ValidResourceBase):
 
 
 class ValidResourceSlurmSudo(_ValidResourceBase):
+    """
+    Valid SLURM-sudo resource.
+
+    Attributes:
+        type:
+        name:
+        tasks_python_config:
+        tasks_pixi_config:
+        tasks_local_dir:
+        jobs_local_dir:
+        jobs_runner_config:
+        jobs_poll_interval:
+        jobs_slurm_python_worker:
+        host:
+    """
+
     type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
@@ -82,6 +123,22 @@ class ValidResourceSlurmSudo(_ValidResourceBase):
 
 
 class ValidResourceSlurmSSH(_ValidResourceBase):
+    """
+    Valid SLURM-SSH resource.
+
+    Attributes:
+        type:
+        name:
+        tasks_python_config:
+        tasks_pixi_config:
+        tasks_local_dir:
+        jobs_local_dir:
+        jobs_runner_config:
+        jobs_poll_interval:
+        jobs_slurm_python_worker:
+        host:
+    """
+
     type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
@@ -101,6 +158,9 @@ ResourceCreate = Annotated[
     | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)],
     Discriminator(get_discriminator_value),
 ]
+"""
+ResourceCreate
+"""
 
 
 class ResourceRead(BaseModel):
@@ -130,6 +190,9 @@ def cast_serialize_resource(_data: ResourceCreate) -> dict[str, Any]:
 
     We use `@validate_call` because `ResourceCreate` is a `Union` type and it
     cannot be instantiated directly.
+
+    Args:
+        _data:
 
     Return:
         Serialized version of a valid resource object.
