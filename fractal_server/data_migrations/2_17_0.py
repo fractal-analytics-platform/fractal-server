@@ -2,8 +2,9 @@
 
 PRELIMINARY CHECKS (TO DO WITH 2.16)
 * All users who are meant to actually use Fractal must be marked as active and verified.
-* All users who are not active and verified will still be able to log in, but they won't have acess to the rest of the API.
+* All users who are not active and verified will still be able to log in, but they won't have access to the rest of the API.
 * All active users must have `project_dir` set, in their user settings.
+* `FRACTAL_SLURM_WORKER_PYTHON` must be included explicitly in the old env file.
 
 DATA-MIGRATION REQUIREMENTS
 * Old `.fractal_server.env`, renamed into `.fractal_server.env.old`.
@@ -20,12 +21,13 @@ import json
 import logging
 import sys
 from typing import Any
-from fractal_server.urls import normalize_url
+
 from devtools import debug
 from dotenv.main import DotEnv
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.operators import is_,is_not
+from sqlalchemy.sql.operators import is_
+from sqlalchemy.sql.operators import is_not
 from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
@@ -43,6 +45,7 @@ from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import ListUniqueNonEmptyString
+from fractal_server.urls import normalize_url
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
@@ -91,7 +94,6 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
             .order_by(UserOAuth.id)
         )
         for user in res.unique().scalars().all():
-
             # Get user settings
             user_settings = _get_user_settings(user=user, db=db)
             assert_user_setting_key(user, user_settings, ["project_dir"])
@@ -115,7 +117,9 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
                 username = user_settings.ssh_username
                 new_profile_data.update(
                     ssh_key_path=user_settings.ssh_private_key_path,
-                    tasks_remote_dir=normalize_url(user_settings.ssh_tasks_dir),
+                    tasks_remote_dir=normalize_url(
+                        user_settings.ssh_tasks_dir
+                    ),
                     jobs_remote_dir=normalize_url(user_settings.ssh_jobs_dir),
                 )
 
@@ -165,8 +169,6 @@ def get_old_dotenv_variables() -> dict[str, str | None]:
     )
 
 
-
-
 def get_TasksPythonSettings(
     old_config: dict[str, str | None]
 ) -> dict[str, Any]:
@@ -208,7 +210,9 @@ def get_JobRunnerConfigSLURM(
 def get_ssh_host() -> str:
     with next(get_sync_db()) as db:
         res = db.execute(
-            select(UserSettings.ssh_host).where(is_not(UserSettings.ssh_host, None))
+            select(UserSettings.ssh_host).where(
+                is_not(UserSettings.ssh_host, None)
+            )
         )
         hosts = res.scalars().all()
     if len(set(hosts)) > 1:
@@ -225,17 +229,15 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
     resource_data = dict(
         type=settings.FRACTAL_RUNNER_BACKEND,
         name="Resource Name",
-
         tasks_python_config=get_TasksPythonSettings(old_config),
         tasks_pixi_config=get_TasksPixiSettings(old_config),
         jobs_runner_config=get_JobRunnerConfigSLURM(old_config),
-
         tasks_local_dir=old_config["FRACTAL_TASKS_DIR"],
         jobs_local_dir=old_config["FRACTAL_RUNNER_WORKING_BASE_DIR"],
-
         jobs_slurm_python_worker=old_config["FRACTAL_SLURM_WORKER_PYTHON"],
-        jobs_poll_interval=int(old_config.get("FRACTAL_SLURM_POLL_INTERVAL", 15)),
-
+        jobs_poll_interval=int(
+            old_config.get("FRACTAL_SLURM_POLL_INTERVAL", 15)
+        ),
     )
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         resource_data["host"] = get_ssh_host()
@@ -246,7 +248,6 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
 
 
 def fix_db():
-
     # READ-ONLY CHECK
 
     settings = get_settings()
@@ -254,12 +255,13 @@ def fix_db():
     # Verify that we are in a SLURM instance
     if settings.FRACTAL_RUNNER_BACKEND == "local":
         sys.exit(
-            "ERROR: FRACTAL_RUNNER_BACKEND='local' is not supported for this data migration."
+            "ERROR: FRACTAL_RUNNER_BACKEND='local' is not "
+            "supported for this data migration."
         )
-    
+
     # Read old env file
     old_config = get_old_dotenv_variables()
-    
+
     # Prepare resource data
     resource_data = prepare_resource_data(old_config)
 
