@@ -59,8 +59,9 @@ class DatasetUpdateV2(BaseModel):
     """
     DatasetUpdateV2
 
-    name:
-    zarr_dir:
+    Attributes:
+        name:
+        zarr_dir:
     """
 
     model_config = ConfigDict(extra="forbid")
