@@ -74,7 +74,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          import:
+          inventories:
           - https://docs.pydantic.dev/latest/objects.inv
           options:
             show_signature_annotations: false
