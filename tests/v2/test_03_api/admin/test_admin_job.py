@@ -57,7 +57,7 @@ async def test_view_job(
             working_dir=f"{tmp_path.as_posix()}/aaaa1111",
             working_dir_user=f"{tmp_path.as_posix()}/aaaa2222",
             project_id=project.id,
-            log="asdasd",
+            log="log-a",
             dataset_id=dataset.id,
             workflow_id=workflow1.id,
             start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
@@ -67,7 +67,7 @@ async def test_view_job(
             working_dir=f"{tmp_path.as_posix()}/bbbb1111",
             working_dir_user=f"{tmp_path.as_posix()}/bbbb2222",
             project_id=project.id,
-            log="asdasd",
+            log="log-b",
             dataset_id=dataset.id,
             workflow_id=workflow2.id,
             start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
@@ -75,59 +75,69 @@ async def test_view_job(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        # get all jobs
+        # get all jobs, with logs
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
-        assert len(res.json()) == 2
-        assert res.json()[0]["log"] == "asdasd"
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["log"] == "log-a"
+
+        # get all jobs, without logs
         res = await client.get(f"{PREFIX}/job/?log=false")
         assert res.status_code == 200
-        assert len(res.json()) == 2
-        assert res.json()[0]["log"] is None
+        assert res.json()["total_count"] == 2
+        assert res.json()["items"][0]["log"] is None
+
+        # get second page of all jobs
+        res = await client.get(f"{PREFIX}/job/?page_size=1&page=2")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 2
+        assert res.json()["page_size"] == 1
+        assert res.json()["current_page"] == 2
+        assert res.json()["items"][0]["log"] == "log-b"
 
         # get jobs by user_id
         res = await client.get(f"{PREFIX}/job/?user_id={user.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(f"{PREFIX}/job/?user_id={user.id + 1}")
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
 
         # get jobs by id
         res = await client.get(f"{PREFIX}/job/?id={job1.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         # get jobs by project_id
         res = await client.get(f"{PREFIX}/job/?project_id={project.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/job/?project_id={project.id + 123456789}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
 
         # get jobs by [input/output]_dataset_id
         res = await client.get(f"{PREFIX}/job/?dataset_id={dataset.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         # get jobs by workflow_id
         res = await client.get(f"{PREFIX}/job/?workflow_id={workflow2.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/job/?workflow_id=123456789")
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
 
         # get jobs by status
         res = await client.get(f"{PREFIX}/job/?status=failed")
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/job/?status=submitted")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         # get jobs by [start/end]_timestamp_[min/max]
 
@@ -142,13 +152,13 @@ async def test_view_job(
             f"{quote('1999-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01Z"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
@@ -161,20 +171,20 @@ async def test_view_job(
             f"{quote('1999-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
 
         res = await client.get(
             f"{PREFIX}/job/?end_timestamp_min="
             f"{quote('3000-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
 
         res = await client.get(
             f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01Z"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
 
 async def test_view_single_job(

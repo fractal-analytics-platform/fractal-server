@@ -7,6 +7,7 @@ from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from pydantic.types import AwareDatetime
+from sqlalchemy import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -19,6 +20,9 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
@@ -30,7 +34,7 @@ from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 router = APIRouter()
 
 
-@router.get("/", response_model=list[JobReadV2])
+@router.get("/", response_model=PaginationResponse[JobReadV2])
 async def view_job(
     id: int | None = None,
     user_id: int | None = None,
@@ -43,9 +47,10 @@ async def view_job(
     end_timestamp_min: AwareDatetime | None = None,
     end_timestamp_max: AwareDatetime | None = None,
     log: bool = True,
+    pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2]:
+) -> PaginationResponse[JobReadV2]:
     """
     Query `ApplyWorkflow` table.
 
@@ -68,43 +73,74 @@ async def view_job(
             `job.log` is set to `None`.
     """
 
-    stm = select(JobV2)
+    # Assign pagination parameters
+    page = pagination.page
+    page_size = pagination.page_size
 
+    # Prepare statements
+    stm = select(JobV2).order_by(JobV2.id)
+    stm_count = select(func.count(JobV2.id))
     if id is not None:
         stm = stm.where(JobV2.id == id)
+        stm_count = stm_count.where(JobV2.id == id)
     if user_id is not None:
         stm = stm.join(ProjectV2).where(
             ProjectV2.user_list.any(UserOAuth.id == user_id)
         )
+        stm_count = stm_count.join(ProjectV2).where(
+            ProjectV2.user_list.any(UserOAuth.id == user_id)
+        )
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
+        stm_count = stm_count.where(JobV2.project_id == project_id)
     if dataset_id is not None:
         stm = stm.where(JobV2.dataset_id == dataset_id)
+        stm_count = stm_count.where(JobV2.dataset_id == dataset_id)
     if workflow_id is not None:
         stm = stm.where(JobV2.workflow_id == workflow_id)
+        stm_count = stm_count.where(JobV2.workflow_id == workflow_id)
     if status is not None:
         stm = stm.where(JobV2.status == status)
+        stm_count = stm_count.where(JobV2.status == status)
     if start_timestamp_min is not None:
-        start_timestamp_min = start_timestamp_min
         stm = stm.where(JobV2.start_timestamp >= start_timestamp_min)
+        stm_count = stm_count.where(
+            JobV2.start_timestamp >= start_timestamp_min
+        )
     if start_timestamp_max is not None:
-        start_timestamp_max = start_timestamp_max
         stm = stm.where(JobV2.start_timestamp <= start_timestamp_max)
+        stm_count = stm_count.where(
+            JobV2.start_timestamp <= start_timestamp_max
+        )
     if end_timestamp_min is not None:
-        end_timestamp_min = end_timestamp_min
         stm = stm.where(JobV2.end_timestamp >= end_timestamp_min)
+        stm_count = stm_count.where(JobV2.end_timestamp >= end_timestamp_min)
     if end_timestamp_max is not None:
-        end_timestamp_max = end_timestamp_max
         stm = stm.where(JobV2.end_timestamp <= end_timestamp_max)
+        stm_count = stm_count.where(JobV2.end_timestamp <= end_timestamp_max)
 
+    # Find total number of elements
+    res_total_count = await db.execute(stm_count)
+    total_count = res_total_count.scalar()
+    if page_size is None:
+        page_size = total_count
+    else:
+        stm = stm.offset((page - 1) * page_size).limit(page_size)
+
+    # Get `page_size` rows
     res = await db.execute(stm)
     job_list = res.scalars().all()
-    await db.close()
+
     if not log:
         for job in job_list:
             setattr(job, "log", None)
 
-    return job_list
+    return PaginationResponse[JobReadV2](
+        total_count=total_count,
+        page_size=page_size,
+        current_page=page,
+        items=[job.model_dump() for job in job_list],
+    )
 
 
 @router.get("/{job_id}/", response_model=JobReadV2)
