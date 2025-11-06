@@ -18,7 +18,7 @@ class DatasetCreateV2(BaseModel):
 
     Attributes:
         name:
-        zarr_dir
+        zarr_dir:
     """
 
     model_config = ConfigDict(extra="forbid")
