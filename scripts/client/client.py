@@ -292,8 +292,10 @@ class FractalClient:
         is_superuser = me.is_superuser
         if is_superuser:
             endpoint = "admin/v2/job/"
+            use_pagination = True
         else:
             endpoint = "api/v2/job/"
+            use_pagination = False
         # Make repeated calls
         for _ in range(max_calls):
             res = self.make_request(
@@ -302,7 +304,11 @@ class FractalClient:
             )
             if res.status_code != 200:
                 raise ValueError(f"Original error: {response_json(res)}")
-            job_statuses = [job["status"] for job in response_json(res)]
+            if use_pagination:
+                actual_response_items = response_json(res)["items"]
+            else:
+                actual_response_items = response_json(res)
+            job_statuses = [job["status"] for job in actual_response_items]
             if "submitted" not in job_statuses:
                 print("No submitted job left.")
                 return None

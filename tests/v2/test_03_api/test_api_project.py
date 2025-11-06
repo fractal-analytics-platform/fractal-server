@@ -302,7 +302,7 @@ async def test_delete_project(
         res = await client.get("/admin/v2/job/")
         debug(res.json())
         assert res.status_code == 200
-        job = res.json()[0]
+        job = res.json()["items"][0]
         assert job["project_id"] is None
         assert job["dataset_id"] is None
         assert job["workflow_id"] is None
