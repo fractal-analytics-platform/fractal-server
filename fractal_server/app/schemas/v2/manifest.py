@@ -121,7 +121,7 @@ class ManifestV2(BaseModel):
             be used to read and validate the input.
         task_list:
             The list of tasks, represented as specified by subclasses of the
-            _TaskManifestBase (a.k.a. TaskManifestType)
+            `_TaskManifestBase` (a.k.a. `TaskManifestType`)
         has_args_schemas:
             `True` if the manifest includes JSON Schemas for the arguments of
             each task.
