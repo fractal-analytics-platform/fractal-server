@@ -74,6 +74,9 @@ def simplify_pyproject_toml(
         return original_toml_string
 
     # Use a single platform (or skip, if not set)
+    # Note: we look both for `[workspace.platforms]` and `[project.platforms]`,
+    # even though `[project]` is deprecated as of
+    # https://pixi.sh/dev/CHANGELOG/#0570-2025-10-20.
     try:
         pixi_data["workspace"]["platforms"] = [pixi_platform]
     except KeyError:
