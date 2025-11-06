@@ -52,8 +52,8 @@ async def _disambiguate_task_groups(
 
     # Medium priority: task groups owned by default user group
     settings = Inject(get_settings)
+    list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
     if settings.FRACTAL_DEFAULT_GROUP_NAME is not None:
-        list_user_group_ids = [tg.user_group_id for tg in matching_task_groups]
         try:
             ind_user_group_id = list_user_group_ids.index(default_group_id)
             task_group = matching_task_groups[ind_user_group_id]

@@ -200,8 +200,8 @@ async def collect_tasks_pip(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Python version {task_group_attrs['python_version']} is "
-                "not available for Fractal task collection."
+                f"Python version {task_group_attrs['python_version']} "
+                "is not available on this Fractal instance."
             ),
         )
 
