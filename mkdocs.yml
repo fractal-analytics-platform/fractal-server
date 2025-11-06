@@ -83,6 +83,8 @@ plugins:
             show_source: true
             filters: []
             show_root_full_path: false
+            signature_crossrefs: true
+            show_attribute_values: true
   - render_swagger
 
 extra_css:
