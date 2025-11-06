@@ -27,10 +27,7 @@ from fractal_server.types import AbsolutePathStr
 from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.urls import normalize_url
 
-logger = logging.getLogger("fix_db")
-logger.setLevel(logging.INFO)
-
-# FIXME: not actually logging, change level
+logging.basicConfig(level=logging.INFO)
 
 
 class UserUpdateInfo(BaseModel):
@@ -125,7 +122,7 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
                         f"{profiles_and_users[username].data=}\n"
                         f"{new_profile_data=}"
                     )
-                    logger.error(error_msg)
+                    logging.error(error_msg)
                     sys.exit(error_msg)
                 profiles_and_users[username].user_updates.append(
                     user_update_info
@@ -232,10 +229,8 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
 
 
 def fix_db():
-    # READ-ONLY CHECK
-
+    logging.info("START preliminary checks.")
     settings = get_settings()
-    logger.info("START preliminary checks.")
 
     # Verify that we are in a SLURM instance
     if settings.FRACTAL_RUNNER_BACKEND == "local":
@@ -248,16 +243,17 @@ def fix_db():
     old_config = get_old_dotenv_variables()
 
     # Prepare resource data
-    logger.info("START prepare_resource_data")
+    logging.info("START prepare_resource_data")
     resource_data = prepare_resource_data(old_config)
-    logger.info("END prepare_resource_data")
+    logging.info("END prepare_resource_data")
 
     # Prepare profile/users data
-    logger.info("START prepare_profile_and_user_updates")
+    logging.info("START prepare_profile_and_user_updates")
     profile_and_user_updates = prepare_profile_and_user_updates()
-    logger.info("END prepare_profile_and_user_updates")
+    logging.info("END prepare_profile_and_user_updates")
 
-    logger.info("END preliminary checks.")
+    logging.info("END preliminary checks.")
+    print()
 
     with next(get_sync_db()) as db:
         # Create new resource
@@ -267,7 +263,7 @@ def fix_db():
         db.refresh(resource)
         db.expunge(resource)
         resource_id = resource.id
-        logger.info(f"Created resource with {resource_id=}.")
+        logging.info(f"Created resource with {resource_id=}.")
 
         # Update task groups
         res = db.execute(select(TaskGroupV2).order_by(TaskGroupV2.id))
@@ -275,7 +271,7 @@ def fix_db():
             taskgroup.resource_id = resource_id
             db.add(taskgroup)
         db.commit()
-        logger.info(f"Set {resource_id=} foreign key for all task groups.")
+        logging.info(f"Set {resource_id=} foreign key for all task groups.")
 
         # Update projects
         res = db.execute(select(ProjectV2).order_by(ProjectV2.id))
@@ -283,7 +279,7 @@ def fix_db():
             project.resource_id = resource_id
             db.add(project)
         db.commit()
-        logger.info(f"Set {resource_id=} foreign key for all projects.")
+        logging.info(f"Set {resource_id=} foreign key for all projects.")
 
         db.expunge_all()
 
@@ -297,7 +293,9 @@ def fix_db():
             db.refresh(profile)
             db.expunge(profile)
             profile_id = profile.id
-            logger.info(f"Created profile {profile.name}, with {profile.id=}.")
+            logging.info(
+                f"Created profile '{profile.name}', with {profile.id=}."
+            )
 
             # Update users
             for user_update in info.user_updates:
@@ -306,10 +304,10 @@ def fix_db():
                 user.project_dir = user_update.project_dir
                 user.slurm_accounts = user_update.slurm_accounts
                 db.add(user)
-                logger.info(f"Updated {user.email} with {user.project_dir=}.")
-                logger.info(
+                logging.info(f"Updated {user.email} with {user.project_dir=}.")
+                logging.info(
                     f"Associated {user.email} to profile {profile.name}."
                 )
             db.commit()
 
-    logger.info("END - all ok.")
+    logging.info("END - all ok.")
