@@ -1,28 +1,8 @@
-"""
-
-PRELIMINARY CHECKS (TO DO WITH 2.16)
-* All users who are meant to actually use Fractal must be marked as active and verified.
-* All users who are not active and verified will still be able to log in, but they won't have access to the rest of the API.
-* All active users must have `project_dir` set, in their user settings.
-* `FRACTAL_SLURM_WORKER_PYTHON` must be included explicitly in the old env file.
-
-DATA-MIGRATION REQUIREMENTS
-* Old `.fractal_server.env`, renamed into `.fractal_server.env.old`.
-* New `.fractal_server.env` - see XXX for list of changes.
-* Old JSON file with SLURM configuration.
-* Old JSON file with pixi configuration - if applicable.
-
-
-MANUAL FIXES POST DATA MIGRATION:
-* Rename resource
-* Rename profiles - if needed
-"""
 import json
 import logging
 import sys
 from typing import Any
 
-from devtools import debug
 from dotenv.main import DotEnv
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -128,7 +108,6 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
                 username=username,
                 resource_type=settings.FRACTAL_RUNNER_BACKEND,
             )
-            debug(new_profile_data)
             cast_serialize_profile(new_profile_data)
 
             user_update_info = UserUpdateInfo(
@@ -139,10 +118,13 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
 
             if username in profiles_and_users.keys():
                 if profiles_and_users[username].data != new_profile_data:
-                    # FIXME
-                    debug(new_profile_data)
-                    debug(profiles_and_users[username].data)
-                    raise ValueError()
+                    error_msg = (
+                        "Profile data mismatch.\n"
+                        f"{profiles_and_users[username].data=}\n"
+                        f"{new_profile_data=}"
+                    )
+                    logger.error(error_msg)
+                    sys.exit(error_msg)
                 profiles_and_users[username].user_updates.append(
                     user_update_info
                 )
@@ -251,6 +233,7 @@ def fix_db():
     # READ-ONLY CHECK
 
     settings = get_settings()
+    logger.info("START preliminary checks.")
 
     # Verify that we are in a SLURM instance
     if settings.FRACTAL_RUNNER_BACKEND == "local":
@@ -263,14 +246,16 @@ def fix_db():
     old_config = get_old_dotenv_variables()
 
     # Prepare resource data
+    logger.info("START prepare_resource_data")
     resource_data = prepare_resource_data(old_config)
+    logger.info("END prepare_resource_data")
 
     # Prepare profile/users data
+    logger.info("START prepare_profile_and_user_updates")
     profile_and_user_updates = prepare_profile_and_user_updates()
+    logger.info("END prepare_profile_and_user_updates")
 
-    # ---------------------------------------
-
-    # WRITES
+    logger.info("END preliminary checks.")
 
     with next(get_sync_db()) as db:
         # Create new resource
@@ -280,7 +265,7 @@ def fix_db():
         db.refresh(resource)
         db.expunge(resource)
         resource_id = resource.id
-        debug(f"CREATED RESOURCE with {resource_id=}")
+        logger.info(f"Created resource with {resource_id=}.")
 
         # Update task groups
         res = db.execute(select(TaskGroupV2).order_by(TaskGroupV2.id))
@@ -288,6 +273,7 @@ def fix_db():
             taskgroup.resource_id = resource_id
             db.add(taskgroup)
         db.commit()
+        logger.info(f"Set {resource_id=} foreign key for all task groups.")
 
         # Update projects
         res = db.execute(select(ProjectV2).order_by(ProjectV2.id))
@@ -295,12 +281,11 @@ def fix_db():
             project.resource_id = resource_id
             db.add(project)
         db.commit()
+        logger.info(f"Set {resource_id=} foreign key for all projects.")
 
         db.expunge_all()
 
         for _, info in profile_and_user_updates.items():
-            debug(info)
-
             # Create profile
             profile_data = info.data
             profile_data["resource_id"] = resource_id
@@ -310,6 +295,7 @@ def fix_db():
             db.refresh(profile)
             db.expunge(profile)
             profile_id = profile.id
+            logger.info(f"Created profile {profile.name}, with {profile.id=}.")
 
             # Update users
             for user_update in info.user_updates:
@@ -318,4 +304,10 @@ def fix_db():
                 user.project_dir = user_update.project_dir
                 user.slurm_accounts = user_update.slurm_accounts
                 db.add(user)
+                logger.info(f"Updated {user.email} with {user.project_dir=}.")
+                logger.info(
+                    f"Associated {user.email} to profile {profile.name}."
+                )
             db.commit()
+
+    logger.info("END - all ok.")
