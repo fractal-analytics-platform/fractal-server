@@ -42,7 +42,8 @@ def deactivate_ssh(
     Args:
         task_group_id:
         task_group_activity_id:
-        ssh_config:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"

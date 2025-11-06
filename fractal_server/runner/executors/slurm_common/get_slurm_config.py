@@ -33,7 +33,6 @@ def _get_slurm_config_internal(
         which_type:
             Whether we should look at the non-parallel or parallel part
             of `wftask`.
-        tot_tasks: Not used here, only present as a common interface.
 
     Returns:
         A ready-to-use `SlurmConfig` object.
@@ -162,6 +161,15 @@ def get_slurm_config(
     which_type: Literal["non_parallel", "parallel"],
     tot_tasks: int = 1,
 ) -> SlurmConfig:
+    """
+    Get `SlurmConfig` object.
+
+    Args:
+        shared_config:
+        wftask:
+        which_type:
+        tot_tasks:
+    """
     config = _get_slurm_config_internal(
         shared_config=shared_config,
         wftask=wftask,

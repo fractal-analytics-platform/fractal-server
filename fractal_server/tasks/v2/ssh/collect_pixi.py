@@ -52,8 +52,9 @@ def collect_ssh_pixi(
     Args:
         task_group_id:
         task_group_activity_id:
-        ssh_config:
         tar_gz_file:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
