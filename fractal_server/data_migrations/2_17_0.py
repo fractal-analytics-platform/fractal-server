@@ -1,7 +1,8 @@
 """
 Preliminary checks:
-1. Env variables (how should they be set?)
-2. All non-relevant users must be marked as non-active in advance.
+In 2.16.x:
+All active users have project directory set.
+
 
 NEEDED
 New .env
@@ -12,14 +13,17 @@ Old pixi config
 
 POST UPDATE:
 * Rename resource
-* Rename profile
+* Rename profiles - if needed
 """
 import json
 import logging
+import sys
 from typing import Any
 
 from devtools import debug
 from dotenv.main import DotEnv
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.operators import is_
 from sqlmodel import select
 
@@ -36,74 +40,107 @@ from fractal_server.config import get_settings
 from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
-
+from fractal_server.types import AbsolutePathStr
+from fractal_server.types import ListUniqueNonEmptyString
 
 logger = logging.getLogger("fix_db")
 logger.setLevel(logging.INFO)
 
 
-def update_profiles_slurm_ssh(
-    *,
-    resource_id: int,
-    users: list[UserOAuth],
-):
+class UserUpdateInfo(BaseModel):
+    user_id: int
+    project_dir: AbsolutePathStr
+    slurm_accounts: ListUniqueNonEmptyString
+
+
+class ProfileUsersUpdateInfo(BaseModel):
+    data: dict[str, Any]
+    user_updates: list[UserUpdateInfo]
+
+
+def _get_user_settings(user: UserOAuth, db: Session) -> UserSettings:
+    if user.user_settings_id is None:
+        sys.exit(f"User {user.email} is active but {user.user_settings_id=}.")
+    user_settings = db.get(UserSettings, user.user_settings_id)
+    return user_settings
+
+
+def assert_user_setting_key(
+    user: UserOAuth,
+    user_settings: UserSettings,
+    keys: list[str],
+) -> None:
+    for key in keys:
+        if getattr(user_settings, key) is None:
+            sys.exit(
+                f"User {user.email} is active but has settings.{key}=None."
+            )
+
+
+def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
+    settings = get_settings()
+    profiles_and_users: dict[str, ProfileUsersUpdateInfo] = {}
     with next(get_sync_db()) as db:
-        for user in users:
-            debug("OLD", user)
-            if user.user_settings_id is None:
-                logger.warning(f"{user.email=} has {user.user_settings_id=}")
-                user.project_dir = "/PLACEHOLDER"
+        # Get active users
+        res = db.execute(
+            select(UserOAuth)
+            .where(is_(UserOAuth.is_active, True))
+            .order_by(UserOAuth.id)
+        )
+        for user in res.unique().scalars().all():
+            # Get user settings
+            user_settings = _get_user_settings(user=user, db=db)
+            assert_user_setting_key(user, user_settings, ["project_dir"])
+
+            # Prepare profile data and user update
+            new_profile_data = dict()
+            if settings.FRACTAL_RUNNER_BACKEND == "slurm_sudo":
+                assert_user_setting_key(user, user_settings, ["slurm_user"])
+                username = user_settings.slurm_user
+            elif settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+                assert_user_setting_key(
+                    user,
+                    user_settings,
+                    [
+                        "ssh_username",
+                        "ssh_private_key_path",
+                        "ssh_tasks_dir",
+                        "ssh_jobs_dir",
+                    ],
+                )
+                username = user_settings.ssh_username
+                new_profile_data.update(
+                    ssh_key_path=user_settings.ssh_private_key_path,
+                    tasks_remote_dir=user_settings.ssh_tasks_dir,
+                    jobs_remote_dir=user_settings.ssh_jobs_dir,
+                )
+
+            new_profile_data.update(
+                name=f"Profile {username}",
+                username=username,
+                resource_type=settings.FRACTAL_RUNNER_BACKEND,
+            )
+            debug(new_profile_data)
+            cast_serialize_profile(new_profile_data)
+
+            user_update_info = UserUpdateInfo(
+                user_id=user.id,
+                project_dir=user_settings.project_dir,
+                slurm_accounts=user_settings.slurm_accounts or [],
+            )
+
+            if username in profiles_and_users.keys():
+                # TODO: verify consistency
+                profiles_and_users[username].user_updates.append(
+                    user_update_info
+                )
             else:
-                user_settings = db.get(UserSettings, user.user_settings_id)
-                debug(user_settings)
-                if user_settings.project_dir is None:
-                    logger.warning(
-                        f"User {user.email} has {user_settings.project_dir=}."
-                    )
-                    user.project_dir = "/PLACEHOLDER"
-                else:
-                    user.project_dir = user_settings.project_dir
-                user.slurm_accounts = user_settings.slurm_accounts or []
-            debug("NEW", user)
-            db.merge(user)
-        db.commit()
+                profiles_and_users[username] = ProfileUsersUpdateInfo(
+                    data=new_profile_data,
+                    user_updates=[user_update_info],
+                )
 
-    # PROFILES = [dict(data=..., user_ids=[1, 2, 3])]
-    #     print(f"START updating user {user.email}")
-
-    #     # profile_id
-    #     if user_settings.ssh_username is None:
-    #         sys.exit(f"User {user.email} has {user_settings.ssh_username=}. Exit.")
-    #     if user_settings.ssh_private_key_path is None:
-    #         sys.exit(
-    #             f"User {user.email} has "
-    #             f"{user_settings.ssh_private_key_path=}. "
-    #             "Exit."
-    #         )
-    #     if user_settings.ssh_host is None:
-    #         sys.exit(f"User {user.email} has {user_settings.ssh_host=}. Exit.")
-
-    #     profile_id = PROFILE_IDS.get(user_settings.ssh_username, None)
-    #     if profile_id is None:
-    #         profile = Profile(
-    #             resource_id=resource_id,
-    #             resource_type=settings.FRACTAL_RUNNER_BACKEND,
-    #             username=user_settings.ssh_username,
-    #             host=user_settings.ssh_host,
-    #             ssh_key_path=user_settings.ssh_private_key_path,
-    #             name=f"{user_settings.ssh_username} profile",
-    #             jobs_remote_dir="/fake",  # FIXME
-    #             tasks_remote_dir="/fake",  # FIXME
-    #         )
-    #         db.add(profile)
-    #         db.commit()
-    #         db.refresh(profile)
-    #         db.expunge(profile)
-    #         profile_id = profile.id
-    #         PROFILE_IDS[user_settings.ssh_username] = profile_id
-    #     user.profile_id = profile_id
-    #     db.add(user)
-    #     print(f"END   updating user {user.email}")
+    return profiles_and_users
 
 
 def get_old_dotenv_variables() -> dict[str, str | None]:
@@ -193,7 +230,10 @@ def fix_db():
         raise NotImplementedError()
     old_config = get_old_dotenv_variables()
     debug(old_config)
+
+    # Prepare data
     resource_data = get_Resource(old_config)
+    profile_and_user_updates = prepare_profile_and_user_updates()
 
     with next(get_sync_db()) as db:
         # Create new resource
@@ -219,15 +259,26 @@ def fix_db():
             db.add(project)
         db.commit()
 
-        # Get active users
-        res = db.execute(
-            select(UserOAuth)
-            .where(is_(UserOAuth.is_active, True))
-            .order_by(UserOAuth.id)
-        )
-        users = list(res.unique().scalars().all())
+        db.expunge_all()
 
-        update_profiles_slurm_ssh(
-            users=users,
-            resource_id=resource_id,
-        )
+        for _, info in profile_and_user_updates.items():
+            debug(info)
+
+            # Create profile
+            profile_data = info.data
+            profile_data["resource_id"] = resource_id
+            profile = Profile(**profile_data)
+            db.add(profile)
+            db.commit()
+            db.refresh(profile)
+            db.expunge(profile)
+            profile_id = profile.id
+
+            # Update users
+            for user_update in info.user_updates:
+                user = db.get(UserOAuth, user_update.user_id)
+                user.profile_id = profile_id
+                user.project_dir = user_update.project_dir
+                user.slurm_accounts = user_update.slurm_accounts
+                db.add(user)
+            db.commit()
