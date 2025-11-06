@@ -30,7 +30,7 @@ poetry install --with dev --with docs
 ```
 will initialise a Python virtual environment and install Fractal Server and all its dependencies, including optional dependencies. Note that to run commands from within this environment you should prepend them with `poetry run` (as in `poetry run fractalctl set-db`).
 
-## Update database schema during development
+## Update database schema
 
 Whenever the models are modified (either in
 [`app/models`](reference/fractal_server/app/models/index.md) or in
