@@ -280,6 +280,7 @@ def fix_db():
             db.add(project)
         db.commit()
         logging.info(f"Set {resource_id=} foreign key for all projects.")
+        print()
 
         db.expunge_all()
 
@@ -308,6 +309,7 @@ def fix_db():
                 logging.info(
                     f"Associated {user.email} to profile {profile.name}."
                 )
+            print()
             db.commit()
 
     logging.info("END - all ok.")
