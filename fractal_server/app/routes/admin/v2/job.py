@@ -78,7 +78,7 @@ async def view_job(
     page_size = pagination.page_size
 
     # Prepare statements
-    stm = select(JobV2).order_by(JobV2.id)
+    stm = select(JobV2).order_by(JobV2.start_timestamp.desc())
     stm_count = select(func.count(JobV2.id))
     if id is not None:
         stm = stm.where(JobV2.id == id)
