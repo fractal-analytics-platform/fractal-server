@@ -22,6 +22,10 @@ If the same variable is defined both in the environment and inside the env file,
 
 Once the variables have been defined in one of these ways, they will be read automatically by the Fractal Server during the start-up phase.
 
+## How to get configuration
+
+Admins can retrieve the settings values through the appropriate endpoints [`GET /api/settings/`](../openapi.md/#operations-default-view_settings_api_settings_app__get).
+
 ## Minimal working example
 
 This is a minimal working example of a `.fractal_server.env`, with all the required configuration variables:
@@ -30,6 +34,8 @@ POSTGRES_DB=fractal_test
 JWT_SECRET_KEY=jwt_secret_key
 ```
 These are the only variables that must be mandatorily set by the user. All others, if not specified, will assume their default value.
+
+
 
 ---
 
