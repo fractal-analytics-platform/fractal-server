@@ -45,7 +45,7 @@ class TasksPythonSettings(BaseModel):
         if self.default_version not in self.versions.keys():
             raise ValueError(
                 f"The default Python version ('{self.default_version}') is "
-                f"not available versions in {list(self.versions.keys())}."
+                f"not available in {list(self.versions.keys())}."
             )
 
         return self

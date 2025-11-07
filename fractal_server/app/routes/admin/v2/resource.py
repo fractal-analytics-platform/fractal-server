@@ -180,7 +180,9 @@ async def get_resource_profiles(
     await _get_resource_or_404(resource_id=resource_id, db=db)
 
     res = await db.execute(
-        select(Profile).where(Profile.resource_id == resource_id)
+        select(Profile)
+        .where(Profile.resource_id == resource_id)
+        .order_by(Profile.id)
     )
     profiles = res.scalars().all()
 
