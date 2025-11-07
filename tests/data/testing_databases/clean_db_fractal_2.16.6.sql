@@ -998,8 +998,8 @@ COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_
 COPY public.user_settings (id, slurm_accounts, ssh_host, ssh_username, ssh_private_key_path, ssh_tasks_dir, ssh_jobs_dir, slurm_user, project_dir) FROM stdin;
 1	[]	\N	\N	\N	\N	\N	\N	\N
 2	[]	\N	\N	\N	\N	\N	__REDACTED_SLURM_USER_	\N
-3	[]	\N	\N	\N	\N	\N	slurm	\N
-4	[]	\N	\N	\N	\N	\N	vanilla-slurm	\N
+3	[]	\N	\N	\N	\N	\N	slurm	/placeholder
+4	[]	\N	\N	\N	\N	\N	vanilla-slurm	/placeholder
 \.
 
 
