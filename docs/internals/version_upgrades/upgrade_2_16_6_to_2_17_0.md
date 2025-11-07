@@ -29,6 +29,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
     - Edit the `FRACTAL_RUNNER_BACKEND` value so that it is one of `slurm_sudo` or `slurm_ssh`.
     - Rename `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` into `FRACTAL_DATA_AUTH_SCHEME` - if present.
     - Rename `FRACTAL_VIEWER_BASE_FOLDER` into `FRACTAL_DATA_BASE_FOLDER` - if present.
+    - Add `FRACTAL_DEFAULT_GROUP_NAME=All` (note: the same variable must be set also in the `fractal-web` environment file).
     - Update OAuth-related variables to comply with [the new expected ones](../../../reference/fractal_server/config/_oauth/#fractal_server.config._oauth.OAuthSettings).
         - Add the `OAUTH_CLIENT_NAME` variable.
         - Remove the client name from the names of all other variables, e.g. as in `OAUTH_XXX_CLIENT_ID --> OAUTH_CLIENT_ID` (if `OAUTH_CLIENT_NAME="XXX"`).
@@ -58,7 +59,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 
 ## Post-upgrade cleanup
 
-* Upgrade `fractal-web` to version 1.21 and restart it.
+* Upgrade `fractal-web` to version 1.21, add `FRACTAL_DEFAULT_GROUP_NAME=All` to the environment file, and restart the process.
 * Verify that log-in still works (including via OAuth).
 * Review the names of resources/profiles.
 * Review the association between users and profiles.
