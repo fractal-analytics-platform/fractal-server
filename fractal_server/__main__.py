@@ -7,7 +7,6 @@ from pathlib import Path
 import uvicorn
 from pydantic import ValidationError
 
-from fractal_server.app.schemas.v2 import ResourceType
 
 parser = ap.ArgumentParser(description="fractal-server commands")
 
@@ -149,6 +148,7 @@ def init_db_data(
     from fractal_server.app.models import Resource, Profile
     from fractal_server.app.schemas.v2.resource import cast_serialize_resource
     from fractal_server.app.schemas.v2.profile import cast_serialize_profile
+    from fractal_server.app.schemas.v2 import ResourceType
 
     # Create default group and user
     print()
