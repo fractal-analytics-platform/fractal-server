@@ -17,6 +17,8 @@ The main content of this release is the introduction of the computational resour
     * Split `/api/settings/` into smaller-scope endpoints.
     * Update rules for read access to task groups with resource information (\#2941).
     * Only show tasks and task groups associated to current user's `Resource` (\#2906, \#2943).
+    * Add pagination to admin job and task endpoints (\#2958).
+    * Add `task_type` query parameter to admin task endpoint (\#2958).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner
