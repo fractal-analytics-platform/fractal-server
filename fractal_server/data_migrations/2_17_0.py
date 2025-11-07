@@ -195,8 +195,8 @@ def get_JobRunnerConfigSLURM(
 def get_JobRunnerConfigLocal(
     old_config: dict[str, str | None]
 ) -> dict[str, Any]:
-    local_file = old_config["FRACTAL_LOCAL_CONFIG_FILE"]
-    if not Path(local_file).exists():
+    local_file = old_config.get("FRACTAL_LOCAL_CONFIG_FILE", None)
+    if local_file is None or not Path(local_file).exists():
         return JobRunnerConfigLocal().model_dump()
     else:
         with open(local_file) as f:
