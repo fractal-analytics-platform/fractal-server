@@ -67,6 +67,7 @@ jobs:
       - name: Apply migration and fix-db script (postgres)
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          cp $ROOTDIR/.fractal_server.env.old .
           export FRACTAL_DEFAULT_GROUP_NAME=All
           poetry run fractalctl set-db
           echo -e "yes\nyes\nyes\nyes\nyes"| poetry run fractalctl update-db-data
