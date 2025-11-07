@@ -79,7 +79,7 @@ async def test_view_job(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 2
-        assert res.json()["items"][0]["log"] == "log-a"
+        assert res.json()["items"][0]["log"] == "log-b"
 
         # get all jobs, without logs
         res = await client.get(f"{PREFIX}/job/?log=false")
@@ -93,7 +93,7 @@ async def test_view_job(
         assert res.json()["total_count"] == 2
         assert res.json()["page_size"] == 1
         assert res.json()["current_page"] == 2
-        assert res.json()["items"][0]["log"] == "log-b"
+        assert res.json()["items"][0]["log"] == "log-a"
 
         # get jobs by user_id
         res = await client.get(f"{PREFIX}/job/?user_id={user.id}")
