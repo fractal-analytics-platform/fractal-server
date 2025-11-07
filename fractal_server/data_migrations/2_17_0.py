@@ -231,7 +231,6 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
         tasks_pixi_config=get_TasksPixiSettings(old_config),
         tasks_local_dir=old_config["FRACTAL_TASKS_DIR"],
         jobs_local_dir=old_config["FRACTAL_RUNNER_WORKING_BASE_DIR"],
-        jobs_slurm_python_worker=old_config["FRACTAL_SLURM_WORKER_PYTHON"],
         jobs_poll_interval=int(
             old_config.get("FRACTAL_SLURM_POLL_INTERVAL", 15)
         ),
@@ -241,10 +240,16 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
             old_config
         )
     elif settings.FRACTAL_RUNNER_BACKEND == "slurm_sudo":
+        resource_data["jobs_slurm_python_worker"] = old_config[
+            "FRACTAL_SLURM_WORKER_PYTHON"
+        ]
         resource_data["jobs_runner_config"] = get_JobRunnerConfigSLURM(
             old_config
         )
     else:
+        resource_data["jobs_slurm_python_worker"] = old_config[
+            "FRACTAL_SLURM_WORKER_PYTHON"
+        ]
         resource_data["jobs_runner_config"] = get_JobRunnerConfigSLURM(
             old_config
         )
