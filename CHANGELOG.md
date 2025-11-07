@@ -29,6 +29,7 @@ The main content of this release is the introduction of the computational resour
     * Move `project_dir` and `slurm_accounts` from `UserSettings` to `UserOAuth`.
     * Make `project_dir` required.
     * Discontinue usage of `UserSettings` table.
+    * Add data-migration script for version 2.17.0 (\#2933).
 * Authentication API:
     * Drop OAuth-based self registration (\#2890).
 * App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#2922):
