@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from pathlib import Path
 from typing import Any
 
 from dotenv.main import DotEnv
@@ -20,6 +21,7 @@ from fractal_server.app.models import UserSettings
 from fractal_server.app.schemas.v2.profile import cast_serialize_profile
 from fractal_server.app.schemas.v2.resource import cast_serialize_resource
 from fractal_server.config import get_settings
+from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
@@ -79,6 +81,8 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
 
             # Prepare profile data and user update
             new_profile_data = dict()
+            if settings.FRACTAL_RUNNER_BACKEND == "local":
+                username = None
             if settings.FRACTAL_RUNNER_BACKEND == "slurm_sudo":
                 assert_user_setting_key(user, user_settings, ["slurm_user"])
                 username = user_settings.slurm_user
@@ -188,6 +192,19 @@ def get_JobRunnerConfigSLURM(
     return old_slurm_config
 
 
+def get_JobRunnerConfigLocal(
+    old_config: dict[str, str | None]
+) -> dict[str, Any]:
+    local_file = old_config["FRACTAL_LOCAL_CONFIG_FILE"]
+    if not Path(local_file).exists():
+        return JobRunnerConfigLocal().model_dump()
+    else:
+        with open(local_file) as f:
+            old_local_config = json.load(f)
+        JobRunnerConfigLocal(**old_local_config)
+        return old_local_config
+
+
 def get_ssh_host() -> str:
     with next(get_sync_db()) as db:
         res = db.execute(
@@ -212,7 +229,6 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
         name="Resource Name",
         tasks_python_config=get_TasksPythonSettings(old_config),
         tasks_pixi_config=get_TasksPixiSettings(old_config),
-        jobs_runner_config=get_JobRunnerConfigSLURM(old_config),
         tasks_local_dir=old_config["FRACTAL_TASKS_DIR"],
         jobs_local_dir=old_config["FRACTAL_RUNNER_WORKING_BASE_DIR"],
         jobs_slurm_python_worker=old_config["FRACTAL_SLURM_WORKER_PYTHON"],
@@ -220,7 +236,18 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
             old_config.get("FRACTAL_SLURM_POLL_INTERVAL", 15)
         ),
     )
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+    if settings.FRACTAL_RUNNER_BACKEND == "local":
+        resource_data["jobs_runner_config"] = get_JobRunnerConfigLocal(
+            old_config
+        )
+    elif settings.FRACTAL_RUNNER_BACKEND == "slurm_sudo":
+        resource_data["jobs_runner_config"] = get_JobRunnerConfigSLURM(
+            old_config
+        )
+    else:
+        resource_data["jobs_runner_config"] = get_JobRunnerConfigSLURM(
+            old_config
+        )
         resource_data["host"] = get_ssh_host()
 
     resource_data = cast_serialize_resource(resource_data)
@@ -230,14 +257,6 @@ def prepare_resource_data(old_config: dict[str, str | None]) -> dict[str, Any]:
 
 def fix_db():
     logging.info("START preliminary checks.")
-    settings = get_settings()
-
-    # Verify that we are in a SLURM instance
-    if settings.FRACTAL_RUNNER_BACKEND == "local":
-        sys.exit(
-            "ERROR: FRACTAL_RUNNER_BACKEND='local' is not "
-            "supported for this data migration."
-        )
 
     # Read old env file
     old_config = get_old_dotenv_variables()
