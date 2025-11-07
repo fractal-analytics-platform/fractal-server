@@ -109,6 +109,13 @@ async def test_task_query(
         assert res.status_code == 200
         assert res.json()["total_count"] == 3
 
+        # Query Tasks with given type
+        res = await client.get(
+            f"{PREFIX}/task/?task_type=converter_non_parallel"
+        )
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 0
+
         # Query first page of all Tasks
         res = await client.get(f"{PREFIX}/task/?page_size=1&page=1")
         assert res.status_code == 200

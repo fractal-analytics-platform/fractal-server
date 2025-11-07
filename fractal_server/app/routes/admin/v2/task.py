@@ -17,6 +17,7 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas.v2.task import TaskType
 
 router = APIRouter()
 
@@ -56,6 +57,7 @@ async def query_tasks(
     source: str | None = None,
     version: str | None = None,
     name: str | None = None,
+    task_type: TaskType | None = None,
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
@@ -87,6 +89,9 @@ async def query_tasks(
     if name is not None:
         stm = stm.where(TaskV2.name.icontains(name))
         stm_count = stm_count.where(TaskV2.name.icontains(name))
+    if task_type is not None:
+        stm = stm.where(TaskV2.type == task_type)
+        stm_count = stm_count.where(TaskV2.type == task_type)
     if category is not None:
         stm = stm.where(func.lower(TaskV2.category) == category.lower())
         stm_count = stm_count.where(
