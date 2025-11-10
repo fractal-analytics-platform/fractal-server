@@ -21,6 +21,7 @@ The main content of this release is the introduction of the computational resour
     * Add `task_type` query parameter to admin task endpoint (\#2958).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
+    * Fix postponed commit after task-group deletion (\#2964).
 * Runner
     * Rely on resource and profile rather than user settings (\#2809).
     * Make `extra_lines` a non-optional list in SLURM configuration (\#2893).
