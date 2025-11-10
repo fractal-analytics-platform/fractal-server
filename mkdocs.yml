@@ -64,7 +64,8 @@ watch:
 
 plugins:
   - search
-  - autorefs
+  - autorefs:
+      resolve_closest: true
   - gen-files:
       scripts:
         - docs/scripts/gen_ref_pages.py
