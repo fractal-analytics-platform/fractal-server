@@ -17,6 +17,8 @@ The main content of this release is the introduction of the computational resour
     * Split `/api/settings/` into smaller-scope endpoints.
     * Update rules for read access to task groups with resource information (\#2941).
     * Only show tasks and task groups associated to current user's `Resource` (\#2906, \#2943).
+    * Add pagination to admin job and task endpoints (\#2958).
+    * Add `task_type` query parameter to admin task endpoint (\#2958).
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
 * Runner
@@ -29,6 +31,7 @@ The main content of this release is the introduction of the computational resour
     * Move `project_dir` and `slurm_accounts` from `UserSettings` to `UserOAuth`.
     * Make `project_dir` required.
     * Discontinue usage of `UserSettings` table.
+    * Add data-migration script for version 2.17.0 (\#2933).
 * Authentication API:
     * Drop OAuth-based self registration (\#2890).
 * App settings (\#2874, \#2882, \#2895, \#2898, \#2916, \#2922):
