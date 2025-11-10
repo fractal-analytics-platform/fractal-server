@@ -33,8 +33,8 @@ will initialise a Python virtual environment and install Fractal Server and all 
 ## Update database schema
 
 Whenever the models are modified (either in
-[`app/models`](reference/fractal_server/app/models/index.md) or in
-[`app/schemas`](reference/fractal_server/app/schemas/index.md)), you should
+[`app/models`](./reference/app/models/index.md) or in
+[`app/schemas`](./reference/app/schemas/index.md)), you should
 update them via a migration. To check whether this is needed, run
 ```
 poetry run alembic check

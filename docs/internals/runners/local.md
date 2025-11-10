@@ -3,7 +3,7 @@
 ## Configuration
 
 The logic for setting up the local-backend configuration of a given `WorkflowTask` is implemented in the
-[get_local_config](../../reference/fractal_server/app/runner/executors/local/get_local_config.md)
+[get_local_config](../../reference/app/runner/executors/local/get_local_config.md)
 submodule.
 
 This configuration includes a single (optional) parameter, namely the integer variable `parallel_tasks_per_job`. This parameter is related to tasks that needs to be run in parallel over several inputs: When `parallel_tasks_per_job` is set, it will represent the maximum number of tasks that the backend will run at the same time.

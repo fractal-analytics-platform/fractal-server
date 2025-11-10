@@ -15,7 +15,7 @@ The different sources for SLURM configuration options (like `partition`, `cpus_p
 
 ### Example
 
-The configuration file could be the one defined [here](../../reference/fractal_server/app/runner/executors/slurm_common/_slurm_config.md#fractal_server.app.runner.executors.slurm_common._slurm_config.SlurmConfigFile), while a certain `WorkflowTask` could have
+The configuration file could be the one defined [here](../../reference/app/runner/executors/slurm_common/_slurm_config.md#fractal_server.app.runner.executors.slurm_common._slurm_config.SlurmConfigFile), while a certain `WorkflowTask` could have
 ```python
 workflow_task.meta = {"cpus_per_task": 3}
 workflow_task.task.meta = {"cpus_per_task": 2, "mem": "10G"}
@@ -44,7 +44,7 @@ The `fractal-server` admin may need to set some global variables that need to be
 ```
 
 There exists another use case where the value of a variable depends on the user who runs a certain task. A relevant example is that user A (who will run the task via SLURM) needs to define the cache-directory paths for some libraries they use (and those must be paths where user A can write).  This use case is also supported in the specs of `fractal-server` [SLURM configuration
-file](../../reference/fractal_server/app/runner/executors/slurm_common/_slurm_config.md#fractal_server.app.runner.executors.slurm_common._slurm_config.SlurmConfigFile):
+file](../../reference/app/runner/executors/slurm_common/_slurm_config.md#fractal_server.app.runner.executors.slurm_common._slurm_config.SlurmConfigFile):
 If this file includes a block like
 ```JSON
 {
@@ -70,7 +70,7 @@ Also note that in this case `fractal-server` only compiles the configuration opt
 The SLURM backend in `fractal-server` may combine multiple tasks in the same SLURM job (AKA batching), in order to reduce the total number of SLURM jobs
 that are submitted. This is especially relevant for clusters with constraints on the number of jobs that a user is allowed to submit over a certain timespan.
 
-The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this submodule](../../reference/fractal_server/app/runner/executors/slurm_common/_batching.md).
+The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this submodule](../../reference/app/runner/executors/slurm_common/_batching.md).
 
 
 ## User impersonation

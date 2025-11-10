@@ -5,7 +5,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## User Model
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/fractal_server/app/models/security.md#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
+A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/app/models/security.md#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
 | Attribute | Type | Nullable | Default |
 | :--- | :---: | :---: | :---: |
@@ -28,7 +28,7 @@ In the startup phase, `fractal-server` creates a default user, who also has the 
 The most common use cases for `fractal-server` are:
 
 1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)); in this case you may simply customize and use the default user.
-2. The server has multiple users, and it is connected to a SLURM cluster. For `fractal-server` to execute jobs on the SLURM cluster each Fractal must be associated to a cluster user via additional properties defined in the [`UserSettings` table](../reference/fractal_server/app/models/user_settings.md). See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
+2. The server has multiple users, and it is connected to a SLURM cluster. For `fractal-server` to execute jobs on the SLURM cluster each Fractal must be associated to a cluster user via additional properties defined in the [`UserSettings` table](../reference/app/models/user_settings.md). See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
 
 More details about user management are provided in the [User Management section](#user-management) below.
 
