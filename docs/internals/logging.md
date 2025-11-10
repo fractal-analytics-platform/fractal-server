@@ -1,4 +1,4 @@
-# Logs
+# Logging
 
 Logging in `fractal-server` is based on the standard
 [`logging`](https://docs.python.org/3/library/logging.html) library, and its
@@ -69,17 +69,3 @@ def my_function():
 ```
 Note that only logs with level equal or higher to `FRACTAL_LOGGING_LEVEL` will
 be shown in the console, but *all* logs will be written to `"/tmp/this.log"`.
-
-## Future plans
-
-The current page concerns the logs that are emitted from `fractal-sever`, but
-not the ones coming from other sources (e.g. `fastapi` or `uvicorn/gunicorn`).
-In a [future
-refactor](https://github.com/fractal-analytics-platform/fractal-server/issues/620)
-we may address this point, with the twofold goal of
-
-1. Integrating different log sources, so that they can be shown in a
-   homogeneous way (e.g. all with same format);
-2. Redirecting all console logs (from different sources) to a rotating file
-   (e.g. via a
-[RotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#rotatingfilehandler)).
