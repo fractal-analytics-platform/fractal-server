@@ -22,6 +22,7 @@ The main content of this release is the introduction of the computational resour
 * Task-group lifecycle:
     * Rely on resource and profile rather than user settings (\#2809).
     * Fix postponed commit after task-group deletion (\#2964).
+    * Add Python3.14 option for task collection (\#2965).
 * Runner
     * Rely on resource and profile rather than user settings (\#2809).
     * Make `extra_lines` a non-optional list in SLURM configuration (\#2893).
