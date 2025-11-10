@@ -66,8 +66,8 @@ plugins:
   - autorefs
   - gen-files:
       scripts:
-        - docs/gen_ref_pages.py
-        - docs/validate_assets.py
+        - docs/scripts/gen_ref_pages.py
+        - docs/scripts/validate_assets.py
   - literate-nav:
       nav_file: SUMMARY.md
   - section-index
