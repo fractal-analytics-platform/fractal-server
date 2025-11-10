@@ -51,8 +51,8 @@ def delete_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                db.commit()
                 db.delete(task_group)
+                db.commit()
                 logger.debug("Task group removed from database.")
 
                 if task_group.origin != TaskGroupV2OriginEnum.OTHER:
