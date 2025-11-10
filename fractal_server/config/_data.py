@@ -19,6 +19,8 @@ class DataSettings(BaseSettings):
     """
     Settings for the `fractal-data` integration.
 
+    See https://github.com/fractal-analytics-platform/fractal-data.
+
     Attributes:
         FRACTAL_DATA_AUTH_SCHEME:
             Defines how the list of allowed viewer paths is built.
