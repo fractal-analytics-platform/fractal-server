@@ -52,7 +52,7 @@ async def view_job(
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[JobReadV2]:
     """
-    Query `ApplyWorkflow` table.
+    Query `JobV2` table.
 
     Args:
         id: If not `None`, select a given `applyworkflow.id`.
