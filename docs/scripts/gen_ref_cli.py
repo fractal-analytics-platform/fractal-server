@@ -7,7 +7,6 @@ import mkdocs_gen_files
 output_path = Path("cli_reference.md")
 
 COMMAND = "fractalctl"
-SUBCOMMANDS = ["start", "set-db", "init-db-data", "update-db-data"]
 
 
 def log_help(cmd: list[str]) -> str:
@@ -23,12 +22,16 @@ with mkdocs_gen_files.open(output_path, "w") as fd:
     )
 
     fd.write(f"## `{COMMAND}`\n\n")
-    help_text = log_help([COMMAND])
+    main_help = log_help([COMMAND])
     fd.write("```\n")
-    fd.write(help_text)
+    fd.write(main_help)
     fd.write("\n```\n\n")
 
-    for sub in SUBCOMMANDS:
+    subcommands = main_help[
+        main_help.index("{") + 1 : main_help.index("}")
+    ].split(",")
+
+    for sub in subcommands:
         fd.write(f"## `{COMMAND} {sub}`\n\n")
         help_text = log_help([COMMAND, sub])
         fd.write("```\n")
