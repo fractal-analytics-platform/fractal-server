@@ -33,17 +33,8 @@ class DatabaseSettings(BaseSettings):
     DB_ECHO: bool = False
     POSTGRES_USER: NonEmptyStr | None = None
     POSTGRES_PASSWORD: SecretStr | None = None
-    """
-    Password to use when connecting to the PostgreSQL database.
-    """
     POSTGRES_HOST: NonEmptyStr = "localhost"
-    """
-    URL to the PostgreSQL server or path to a UNIX domain socket.
-    """
     POSTGRES_PORT: NonNegativeInt = 5432
-    """
-    Port number to use when connecting to the PostgreSQL server.
-    """
     POSTGRES_DB: NonEmptyStr
 
     @property
