@@ -52,9 +52,10 @@ class UserOAuth(SQLModel, table=True):
     """
     ORM model for the `user_oauth` database table.
 
-    This class is a modification of SQLModelBaseUserDB from from
-    fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
-    released under MIT licence.
+    This class is a modification of
+    [`SQLModelBaseUserDB`](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/83980d7f20886120f4636a102ab1822b4c366f63/fastapi_users_db_sqlmodel/__init__.py#L15-L32)
+    from `fastapi_users_db_sqlmodel`.
+    Original Copyright: 2022 François Voron, released under MIT licence.
 
     Attributes:
         id:

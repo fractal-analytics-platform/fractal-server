@@ -5,32 +5,25 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## User Model
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/app/models/security.md#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
-
-| Attribute | Type | Nullable | Default |
-| :--- | :---: | :---: | :---: |
-| id | integer | | incremental |
-| email | email | | - |
-| hashed_password | string | | - |
-| is_active | bool | | true |
-| is_superuser | bool | | false |
-| is_verified | bool | | false |
-
+A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/app/models/security.md#fractal_server.app.models.security.UserOAuth) class:
+::: fractal_server.app.models.security.UserOAuth
+    options:
+      show_root_toc_entry: false
 
 Most attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
-In the startup phase, `fractal-server` creates a default user, who also has the superuser privileges that are necessary for managing other users.
-
-> **⚠️ You should always modify the password of the default user after it's created;**
-> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../openapi.md), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
-> <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
+To manage `fractal-server` you need to create a first user with superuser privileges.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email` and `--admin-pwd` flags, either during the [startup phase](http://localhost:8000/install_and_deploy/#2-initialize-the-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
-1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)); in this case you may simply customize and use the default user.
-2. The server has multiple users, and it is connected to a SLURM cluster. For `fractal-server` to execute jobs on the SLURM cluster each Fractal must be associated to a cluster user via additional properties defined in the [`UserSettings` table](../reference/app/models/user_settings.md). See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
+1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)).
+    In this case you may simply use the first (and only) user.
 
-More details about user management are provided in the [User Management section](#user-management) below.
+2. The server has multiple users, and it is connected to one or more SLURM clusters.
+    To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`](../computational/app/models/user_settings.md).
+    See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
+
 
 ## Authentication
 <a name="authentication"></a>
@@ -119,60 +112,45 @@ During app registration, you should provide two endpoints:
 
 and at the end of this procedure, you will kwnow the _Client ID_ and _Client Secret_ for the app.
 
-> Note 1: You have to enable the "Email addresses" permission for your GitHub registered app, at https://github.com/settings/apps/{registered-app}/permissions.
-. And a similar setting may be required for Google.
+> Note: You have to enable the "Email addresses" permission for your GitHub registered app, at https://github.com/settings/apps/{registered-app}/permissions. A similar setting may be required for Google.
 
-> Note 2: You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
 
-To add an `OAuth2` client, the following environment variables must be added to [`fractal-server` configuration](../configuration.md):
+To add an `OAuth2` client, you must provide valid a [`OAuthSettings`](../configuration.md#fractal_server.config._oauth.OAuthSettings):
 
-=== "OIDC (single client)"
+=== "OIDC"
 
     ```console
-    OAUTH_MYCLIENT_CLIENT_ID=...
-    OAUTH_MYCLIENT_CLIENT_SECRET=...
-    OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT=https://client.com/.well-known/openid-configuration
-    OAUTH_MYCLIENT_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
-    ```
-
-=== "OIDC (multiple clients)"
-
-    ```console
-    OAUTH_MYCLIENT1_CLIENT_ID=...
-    OAUTH_MYCLIENT1_CLIENT_SECRET=...
-    OAUTH_MYCLIENT1_OIDC_CONFIGURATION_ENDPOINT=https://client1.com/.well-known/openid-configuration
-    OAUTH_MYCLIENT1_REDIRECT_URL=...   # e.g. https://fractal-web.1.example.org/auth/login/oauth2
-
-    OAUTH_MYCLIENT2_CLIENT_ID=...
-    OAUTH_MYCLIENT2_CLIENT_SECRET=...
-    OAUTH_MYCLIENT2_OIDC_CONFIGURATION_ENDPOINT=https://client2.com/.well-known/openid-configuration
-    OAUTH_MYCLIENT2_REDIRECT_URL=...   # e.g. https://fractal-web.2.example.org/auth/login/oauth2
+    OAUTH_CLIENT_NAME=any-name-except-github-or-google
+    OAUTH_CLIENT_ID=...
+    OAUTH_CLIENT_SECRET=...
+    OAUTH_OIDC_CONFIG_ENDPOINT=...  # e.g. https://client.com/.well-known/openid-configuration
+    OAUTH_REDIRECT_URL=...          # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
 === "GitHub"
 
     ```console
-    OAUTH_GITHUB_CLIENT_ID=...
-    OAUTH_GITHUB_CLIENT_SECRET=...
-    OAUTH_GITHUB_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
+    OAUTH_CLIENT_NAME=github
+    OAUTH_CLIENT_ID=...
+    OAUTH_CLIENT_SECRET=...
+    OAUTH_REDIRECT_URL=...  # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
 === "Google"
 
     ```console
-    OAUTH_GOOGLE_CLIENT_ID=...
-    OAUTH_GOOGLE_CLIENT_SECRET=...
-    OAUTH_GOOGLE_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
+    OAUTH_CLIENT_NAME=google
+    OAUTH_CLIENT_ID=...
+    OAUTH_CLIENT_SECRET=...
+    OAUTH_REDIRECT_URL=...  # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
-When `fractal-server` starts, two new routes will be generated for each client:
+When `fractal-server` starts with proper `OAuthSettings`, two new routes will be generated:
 
-- `/auth/client-name/authorize` ,
-- `/auth/client-name/callback` (the `Authorization callback URL` of the client).
+- `/auth/{OAUTH_CLIENT_NAME}/authorize` ,
+- `/auth/{OAUTH_CLIENT_NAME}/callback` (the `Authorization callback URL` of the client).
 
-> For `GitHub` and `Google` clients the `client-name` is `github` or `google`, while for `OIDC` clients it comes from the environment variables (e.g. for `OAUTH_MYCLIENT_CLIENT_ID` the `client-name` is `MYCLIENT`).
-
-> Note that the `OAUTH_*_REDIRECT_URL` environment variable is optional. It is
+> Note that the `OAUTH_REDIRECT_URL` environment variable is optional. It is
 > not relevant for the examples described in this page, since they are all in
 > the command-line interface. However, it is required when OAuth authentication
 > is performed starting from a browser (e.g. through the [`fractal-web`
@@ -297,7 +275,7 @@ async def am_i_active(
 
 Being an _active user_ (i.e. `user.is_active==True`) is required by
 
-- all `/api/v1/...` endpoints
+- all `/api/v2/...` endpoints
 - all `/auth/users/...`,
 - POST `/auth/register/`,
 - GET `/auth/userlist/`,
@@ -311,8 +289,8 @@ Being a _superuser_ (i.e. `user.is_superuser==True`) is required by
 
 and it also gives full access (without further checks) to
 
-- PATCH `/api/v1/task/{task_id}/`
-- DELETE `/api/v1/task/{task_id}/`
+- PATCH `/api/v2/task/{task_id}/`
+- DELETE `/api/v2/task/{task_id}/`
 
 No endpoint currently requires the user to be _verified_ (i.e. having `user.is_verified==True`).
 
@@ -338,141 +316,5 @@ The [User Model](#user-model) includes additional attributes `username` and `slu
 When a `Task` is created, the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
 The following endpoints require a non-superuser user to be the owner of the Task:
 
-- PATCH `/api/v1/task/{task_id}/`,
-- DELETE `/api/v1/task/{task_id}/`.
-
-
-## User Management
-<a name="user-management"></a>
-
-The endpoints to manage users can be found under the route `/auth/`. On top of the `login/logout` ones ([described above](#login)), several other endpoints are available, including all the ones exposed by FastAPI Users (see [here](https://fastapi-users.github.io/fastapi-users/latest/usage/routes)). Here are more details for the most relevant endpoints.
-
-### POST `/auth/register`
-
-🔐 *Restricted to superusers*.
-
-New users can be registered by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/latest/usage/routes/#register-router):
-
-```console
-$ curl \
-    -X POST \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ey..." \
-    -d '{"email": "user@example.com", "password": "password"}' \
-    http://127.0.0.1:8000/auth/register/
-
-{
-    "id":2,
-    "email":"user@example.com",
-    "is_active":true,
-    "is_superuser":false,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":null,
-    "username":null
-}
-```
-
-Here we provided `email` and `password`, which are the only required fields of `UserCreate`; we could also provide the following attributes: `is_active`, `is_superuser`, `is_verified`, `slurm_user`, `cache_dir`, `username`.
-
-### GET `/auth/userlist`
-
-🔐 *Restricted to superusers*.
-
-The route `/auth/userlist` returns the list of all registered users:
-
-```console
-$ curl \
-    -X GET \
-    -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/userlist/
-
-[
-    {
-        "id":1,
-        "email":"admin@example.org",
-        "is_active":true,
-        "is_superuser":true,
-        "is_verified":false,
-        "slurm_user":null,
-        "cache_dir":null,
-        "username":"admin"
-    },
-    {
-        "id":2,
-        "email":"user@example.com",
-        "is_active":true,
-        "is_superuser":false,
-        "is_verified":false,
-        "slurm_user":null,
-        "cache_dir":null,
-        "username":null
-    }
-]
-```
-
-### GET `/auth/current-user/`
-
-At `/auth/current-user/`, authenticated users can get information about themself:
-```
-curl \
-    -X GET \
-    -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/current-user/
-
-{
-    "id":2,
-    "email":"user@example.com",
-    "is_active":true,
-    "is_superuser":false,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":null,
-    "username":null
-}
-```
-
-### PATCH `/auth/current-user/`
-
-At `/auth/current-user/`, authenticated users can modify some of their
-attributes (namely `cache_dir`, as of fractal-server 1.4.0):
-```
-curl \
-    -X PATCH \
-    -H "Authorization: Bearer ey..." \
-    -H "Content-Type: application/json" \
-    -d '{"cache_dir": "/tmp/somewhere"}' \
-    http://127.0.0.1:8000/auth/current-user/
-
-{
-    "id":2,
-    "email":"user@example.com",
-    "is_active":true,
-    "is_superuser":false,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":"/tmp/somewhere",
-    "username":null
-}
-```
-
-
-### `/users` endpoints
-
-🔐 *Restricted to superusers*.
-
-The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/latest/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
-
-**GET `/{id}/`**
-
-Return the user with a given `id`.
-
-**PATCH `/{id}/`**
-
-Update the user with a given `id`.
-
-Requires a `UserUpdate` payload.
-
-**DELETE `/{id}/`**
-
-Delete the user with the given `id`.
+- PATCH `/api/v2/task/{task_id}/`,
+- DELETE `/api/v2/task/{task_id}/`.
