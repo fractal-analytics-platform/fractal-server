@@ -1,0 +1,8 @@
+{
+  "resource_type": "slurm_sudo",
+  "name": "profile sudo",
+  "username": "test01",
+  "ssh_key_path": null,
+  "jobs_remote_dir": null,
+  "tasks_remote_dir": null
+}

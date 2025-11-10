@@ -1,0 +1,20 @@
+{
+  "type": "local",
+  "name": "local resource",
+  "jobs_local_dir": "/somewhere/jobs",
+  "jobs_runner_config": {
+    "parallel_tasks_per_job": 1
+  },
+  "jobs_poll_interval": 0,
+  "tasks_local_dir": "/somewhere/tasks",
+  "tasks_python_config": {
+    "default_version": "3.12",
+    "versions": {
+      "3.12": "/over-the-rainbow/bin/python"
+    }
+  },
+  "tasks_pixi_config": {},
+  "host": null,
+  "jobs_slurm_python_worker": null,
+  "tasks_pip_cache_dir": null
+}
