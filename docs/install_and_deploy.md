@@ -1,9 +1,6 @@
-Fractal Server is the core ingredient of more deployments of the [Fractal framework](https://fractal-analytics-platform.github.io/), which also includes several other Fractal components (e.g. a web client) and also relies on external resources being available (e.g. a PostgreSQL database and a SLURM cluster).
+Fractal Server is the core ingredient of the [Fractal framework](https://fractal-analytics-platform.github.io/), which includes several other Fractal components (e.g. a web client) and also relies on external resources being available (e.g. a PostgreSQL database and a SLURM cluster).
 
-Here we just describe the basic procedure for a local deployment.
-Any production deployments will require greater attention and detail.
-
-Some examples of typical deployment are available as container-based demos at https://github.com/fractal-analytics-platform/fractal-containers/tree/main/examples.
+This page describes the basic procedure to setup and maintain a _local_ `fractal-server` deployment, which is useful for testing and development, but a full-fledged deployment involves many more aspects. Some examples of deployment setups are available as container-based demos at https://github.com/fractal-analytics-platform/fractal-containers/tree/main/examples.
 
 
 ## Prerequisites
@@ -11,17 +8,17 @@ Some examples of typical deployment are available as container-based demos at ht
 The following will assume that:
 
 - You are using a Python version greater or equal than 3.11
-- You are working within an isolated Python environment, for example with `venv`:
-  ```
+- You are working within an isolated Python environment, for example a virtual environment created through `venv` as in
+  ```bash
   python3 -m venv venv
-  venv/bin/activate
+  ./venv/bin/activate
   ```
 
 - You have configured the required environment variables (see [configuration page](configuration.md)).
 
-  If you choose to declare the environment variables using the `.fractal_server.env` file, that file must be placed in the current working directory;
+- If you choose to declare the environment variables using the `.fractal_server.env` file, that file must be placed in the current working directory;
 
-- You have access to a dedicated Postgres database (see the [database page](internals/database_interface.md)).
+- You have access to a dedicated PostgreSQL database (see the [database page](internals/database_interface.md)).
 
 ## How to install
 
@@ -39,47 +36,52 @@ For details on how to install Fractal Server in a development environment see th
 
 Installing `fractal-server` will automatically install [`fractalctl`](./cli_reference.md#fractalctl), its companion command-line utility that provides the basic commands for deploying Fractal Server.
 
-### 1. Set up the database
-
-> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings).
+### 1. Set up the database schemas
 
 Use the command
 ```
 fractalctl set-db
 ```
-to apply the schema migrations to the database.
+to apply the schema migrations to the database. This command uses the configuration variables described in [DatabaseSettings](./configuration/#fractal_server.config._database.DatabaseSettings) - notably including the database name `POSTGRES_DB`.
+
+> **Note**: the corresponding PostgreSQL database must already exist, since it won't be created by `fractalctl set-db`. You can often create it directly through [`createdb`](https://www.postgresql.org/docs/current/app-createdb.html).
 
 
-### 2. Initialize the database
-
-> This only requires [DatabaseSettings](http://localhost:8000/configuration/#fractal_server.config._database.DatabaseSettings) and, possibly, [FRACTAL_DEFAULT_GROUP_NAME](http://localhost:8000/configuration/#fractal_server.config._main.Settings.FRACTAL_DEFAULT_GROUP_NAME).
+### 2. Initialize the database data
 
 With the command
 ```
 fractalctl init-db-data
 ```
-you can do multiple things, depending on the environment variables set and on the flag provided:
+you can initialize several relevant database tables. Its behaviors depends on the environment variables and command-line arguments (see the [`fractalctl init-db-data` documentation](./cli_reference.md#fractalctl-init-db-data), and it can optionally
 
-  - create the default user group, by settings `FRACTAL_DEFAULT_GROUP_NAME=All`;
+  - create the default user group (if `FRACTAL_DEFAULT_GROUP_NAME=All`);
   - create the first admin user, by providing the `--admin-*` flags;
-  - create the first couple resource/profile and associate users to them, providing `--resource` and `--profile`.
+  - create the first resource/profile pair and associate users to them, providing `--resource` and `--profile`.
 
-See the [reference documentation](./cli_reference.md#fractalctl-init-db-data).
 
 ### 3. Start the server
 
-Finally, we use the command
+Use the command
 ```
 fractalctl start
 ```
 to start the server using [Uvicorn](https://uvicorn.dev/).
-
-See the [reference documentation](./cli_reference.md#fractalctl-start).
-
-### 4. Test the server
 
 To verify that the server is up, you can use the `/api/alive/` endpoint - as in
 ```
 curl http://localhost:8000/api/alive/
 {"alive":true,"version":"2.17.0"}
 ```
+
+### 4. Upgrade `fractal-server`
+
+The high-level procedure for upgrading `fractal-server` on an existing instance is as follows:
+
+* Stop the running `fractal-server` process.
+* Create a backup dump of the current database data (see [database page](internals/database_interface.md/#backup-and-restore)).
+* Review the [CHANGELOG](./changelog/), and check whether this version upgrade requires any special procedure.
+* Upgrade `fractal-server` (e.g. as in `pip install fractal-server==1.2.3`).
+* Update the database schemas (as in `fractalctl set-db`).
+* If the CHANGELOG requires it, run the data-migration command (`fractalctl update-db-data`). Depending on the specific upgrade, this may require additional actions or information.
+* Restart the `fractal-server` process.
