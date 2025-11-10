@@ -1,6 +1,6 @@
 # Database Interface
 
-Fractal Server only allows _PostgreSQL_ to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md)).
+Fractal Server only allows _PostgreSQL_ to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md#fractal_server.config._database.DatabaseSettings)).
 
 To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
 `1`.
