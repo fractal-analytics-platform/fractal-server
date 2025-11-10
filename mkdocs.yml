@@ -52,6 +52,7 @@ nav:
   - Home page: index.md
   - Install and deploy: install_and_deploy.md
   - Configuration: configuration.md
+  - CLI reference: cli_reference.md
   - Internals: internals/
   - Code reference: reference/
   - Changelog: changelog.md
@@ -67,6 +68,7 @@ plugins:
   - gen-files:
       scripts:
         - docs/scripts/gen_ref_pages.py
+        - docs/scripts/gen_ref_cli.py
         - docs/scripts/validate_assets.py
   - literate-nav:
       nav_file: SUMMARY.md
