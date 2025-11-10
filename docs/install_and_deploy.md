@@ -53,7 +53,7 @@ With the command
 ```
 fractalctl init-db-data
 ```
-you can initialize several relevant database tables. Its behaviors depends on the environment variables and command-line arguments (see the [`fractalctl init-db-data` documentation](./cli_reference.md#fractalctl-init-db-data), and it can optionally
+you can initialize several relevant database tables. Its behaviors depends on the environment variables and command-line arguments (see the [`fractalctl init-db-data` documentation](./cli_reference.md#fractalctl-init-db-data)), and it can optionally
 
   - create the default user group (if `FRACTAL_DEFAULT_GROUP_NAME=All`);
   - create the first admin user, by providing the `--admin-*` flags;

@@ -38,7 +38,7 @@ $ createdb \
 All options of this command (and of the ones below) should be aligned with the
 configuration of a specific PostgreSQL instance. Within `fractal-server`, this
 is done by setting the following configuration variables (before running
-`fractalctl set-db` or `fractalctl start`):
+[`fractalctl`](../cli_reference.md#fractalctl) commands):
 
 - Required:
 
@@ -51,26 +51,12 @@ is done by setting the following configuration variables (before running
     ```
     POSTGRES_HOST=localhost             # default: localhost
     POSTGRES_PORT=5432                  # default: 5432
-    POSTGRES_USER=fractal               # example: fractal
-    POSTGRES_PASSWORD=
+    POSTGRES_USER=fractal               # default: None
+    POSTGRES_PASSWORD=secret            # default: None
     ```
 
-`fractal-server` will then use the [`URL.create`
-function](https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.engine.URL.create)
-from `SQLalchemy` to generate the appropriate URL to connect to:
-
-```python
-URL.create(
-    drivername="postgresql+psycopg",
-    username=self.POSTGRES_USER,
-    password=self.POSTGRES_PASSWORD,
-    host=self.POSTGRES_HOST,
-    port=self.POSTGRES_PORT,
-    database=self.POSTGRES_DB,
-)
-```
-Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket (e.g.
-`/var/run/postgresql`).
+Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain
+socket (e.g. `/var/run/postgresql`).
 
 
 ### Backup and restore
