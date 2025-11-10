@@ -102,7 +102,7 @@
 | fractal\_server/app/shutdown.py                                              |       34 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/config/\_\_init\_\_.py                                       |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_data.py                                             |       22 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/config/\_database.py                                         |       26 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/config/\_database.py                                         |       27 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_email.py                                            |       47 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/config/\_main.py                                             |       26 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_oauth.py                                            |       29 |        0 |        2 |        0 |    100% |           |
@@ -199,7 +199,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       67 |        0 |       18 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9791** |  **234** | **1770** |   **97** | **97%** |           |
+|                                                                    **TOTAL** | **9792** |  **234** | **1770** |   **97** | **97%** |           |
 
 
 ## Setup coverage badge
