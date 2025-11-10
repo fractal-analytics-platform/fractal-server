@@ -72,4 +72,8 @@ jobs:
           OAUTH_OAUTH2EXAMPLE_OIDC_CONFIGURATION_ENDPOINT: https://accounts.google.com/.well-known/openid-configuration
         run: poetry run fractalctl openapi -f docs/openapi.json
 
-      - run: poetry run mkdocs build --config-file mkdocs.yml
+      - name: build documentation
+        env:
+          JWT_SECRET_KEY: secret
+          POSTGRES_DB: fake
+        run: poetry run mkdocs build --config-file mkdocs.yml
