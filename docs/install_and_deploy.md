@@ -37,7 +37,7 @@ For details on how to install Fractal Server in a development environment see th
 
 ## How to deploy
 
-Installing `fractal-server` will automatically install `fractalctl`, its companion command-line utility that provides the basic commands for deploying Fractal Server.
+Installing `fractal-server` will automatically install [`fractalctl`](./cli_reference.md#fractalctl), its companion command-line utility that provides the basic commands for deploying Fractal Server.
 
 ### 1. Set up the database
 
@@ -64,25 +64,7 @@ you can do multiple things, depending on the environment variables set and on th
   - create the first admin user, by providing the `--admin-*` flags;
   - create the first couple resource/profile and associate users to them, providing `--resource` and `--profile`.
 
-
-**Help message**
-```
-usage: fractalctl init-db-data [-h] [--resource RESOURCE] [--profile PROFILE] [--admin-email ADMIN_EMAIL] [--admin-pwd ADMIN_PWD] [--admin-project-dir ADMIN_PROJECT_DIR]
-
-Populate database with initial data.
-
-options:
-  -h, --help            show this help message and exit
-  --resource RESOURCE   Either `default` or path to the JSON file of the first resource.
-  --profile PROFILE     Either `default` or path to the JSON file of the first profile.
-  --admin-email ADMIN_EMAIL
-                        Email of the first admin user.
-  --admin-pwd ADMIN_PWD
-                        Password for the first admin user.
-  --admin-project-dir ADMIN_PROJECT_DIR
-                        Project_dir for the first admin user.
-
-```
+See the [reference documentation](./cli_reference.md#fractalctl-init-db-data).
 
 ### 3. Start the server
 
@@ -92,19 +74,7 @@ fractalctl start
 ```
 to start the server using [Uvicorn](https://uvicorn.dev/).
 
-**Help message**
-
-```
-usage: fractalctl start [-h] [--host HOST] [-p PORT] [--reload]
-
-Start the server (with uvicorn)
-
-options:
-  -h, --help            show this help message and exit
-  --host HOST           bind socket to this host (default: 127.0.0.1)
-  -p PORT, --port PORT  bind socket to this port (default: 8000)
-  --reload              enable auto-reload
-```
+See the [reference documentation](./cli_reference.md#fractalctl-start).
 
 ### 4. Test the server
 
