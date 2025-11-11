@@ -114,7 +114,7 @@ and at the end of this procedure, you will kwnow the _Client ID_ and _Client Sec
 > Note: You have to enable the "Email addresses" permission for your GitHub registered app, at https://github.com/settings/apps/{registered-app}/permissions. A similar setting may be required for Google.
 
 
-To add an `OAuth2` client, you must provide valid a [`OAuthSettings`](../configuration.md#fractal_server.config._oauth.OAuthSettings):
+To add an `OAuth2` client, you must provide valid [`OAuthSettings`](../configuration.md#fractal_server.config._oauth.OAuthSettings) variables:
 
 === "OIDC"
 

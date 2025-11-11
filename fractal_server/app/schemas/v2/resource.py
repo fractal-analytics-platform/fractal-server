@@ -48,8 +48,7 @@ def cast_serialize_pixi_settings(
 
 class ValidResourceBase(BaseModel):
     """
-    FIXME
-
+    Base resource schema.
     """
 
     type: ResourceType
@@ -83,7 +82,7 @@ class ValidResourceBase(BaseModel):
 
 class ValidResourceLocal(ValidResourceBase):
     """
-    Valid local resource
+    Valid local resource.
 
     Attributes:
         type:
@@ -164,13 +163,13 @@ ResourceCreate = Annotated[
     Discriminator(get_discriminator_value),
 ]
 """
-ResourceCreate
+Schema for resources in API request bodies.
 """
 
 
 class ResourceRead(BaseModel):
     """
-    FIXME
+    Schema for resources in API response bodies.
     """
 
     id: int
