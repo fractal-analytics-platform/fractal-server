@@ -56,4 +56,4 @@ mock*.tar.gz
 pixi_collection_test.sh
 
 tmp-test-2.17-data-migration
-docs/assets/resource_and_profile/snippet.md
+_docs_resource_and_profile_snippet.md

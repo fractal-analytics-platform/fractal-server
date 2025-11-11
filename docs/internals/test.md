@@ -1,6 +1,5 @@
 PRE
 
-
---8<-- "docs/assets/resource_and_profile/snippet.md"
+--8<-- "_docs_resource_and_profile_snippet.md"
 
 POST

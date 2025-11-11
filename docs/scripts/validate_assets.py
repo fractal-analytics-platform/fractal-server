@@ -9,7 +9,7 @@ from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 
 assets_dir = Path("docs/assets/resource_and_profile")
-output_path = Path("docs/assets/resource_and_profile/snippet.md")
+output_path = Path("_docs_resource_and_profile_snippet.md")
 
 with open(output_path, "w") as fd:
 
