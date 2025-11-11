@@ -190,7 +190,19 @@ After that, the callback endpoint performs some extra operations, which are not 
 
 #### Full example
 
-A given `fractal-server` instance is registered as a GitHub App, and `fractal-server` is configured accordingly. A new user comes in, who wants to sign up using her GitHub account (associated to `person@university.edu`).
+A given `fractal-server` instance is registered as a GitHub App, and `fractal-server` is configured accordingly:
+```
+OAUTH_CLIENT_NAME=github
+OAUTH_CLIENT_ID=...
+OAUTH_CLIENT_SECRET=...
+```
+
+There is a single user, created with the command
+```sh
+fractalctl init-db-data --admin-email person@university.edu --admin-pwd 1234 --admin-project-dir=/tmp/fractal
+```
+
+Now the user wants to log in using her GitHub account associated to the same email.
 
 First, she makes a call to `/auth/github/authorize`:
 ```
@@ -237,13 +249,22 @@ curl \
     http://127.0.0.1:8000/auth/current-user/
 
 {
-    "id":3,
-    "email":"person@university.edu",
-    "is_active":true,
-    "is_superuser":false,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":null
+  "id": 1,
+  "email": "person@university.edu",
+  "is_active": true,
+  "is_superuser": true,
+  "is_verified": true,
+  "group_ids_names": null,
+  "oauth_accounts": [
+    {
+      "id": 1,
+      "account_email": "person@university.edu",
+      "oauth_name": "github"
+    }
+  ],
+  "profile_id": null,
+  "project_dir": "/tmp/fractal",
+  "slurm_accounts": []
 }
 ```
 
