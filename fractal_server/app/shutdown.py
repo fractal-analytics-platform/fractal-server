@@ -40,7 +40,7 @@ async def cleanup_after_shutdown(*, jobsV2: list[int], logger_name: str):
         ) <= settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME:
             job_ids = (await session.execute(stm_ids)).scalars().all()
             if len(job_ids) == 0:
-                logger.info("All jobs app are either done or failed. Exit.")
+                logger.info("All jobs are either done or failed. Exit.")
                 return
             else:
                 logger.info(f"Some jobs are still 'submitted': {job_ids=}")
