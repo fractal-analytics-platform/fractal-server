@@ -1,7 +1,6 @@
 import logging
 import os
 
-import pytest
 from fastapi import FastAPI
 from sqlmodel import select
 
@@ -140,14 +139,7 @@ async def test_lifespan_shutdown_raise_error(
     assert any(record.message == log_text for record in caplog.records)
 
 
-@pytest.mark.container
-@pytest.mark.ssh
-async def test_lifespan_slurm_ssh(
-    override_settings_factory,
-    slurmlogin_ip,
-    ssh_keys: dict[str, str],
-    db,
-):
+async def test_lifespan_slurm_ssh(override_settings_factory, db):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     app = FastAPI()
     async with lifespan(app):
