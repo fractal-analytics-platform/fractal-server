@@ -54,9 +54,6 @@ async def test_app_with_lifespan(
     res = await db.execute(select(UserGroup))
     res.scalars().unique().one()  # assert only one group
 
-    # db.add(LinkUserGroup(user_id=user.id, group_id=group.id))
-    # await db.commit()
-
     async with lifespan(app):
         # verify shutdown
         assert len(app.state.jobsV2) == 0
@@ -109,9 +106,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
         logger = logging.getLogger("fractal_server.lifespan")
         logger.propagate = True
 
-    log_text = (
-        "All jobs associated to this app are either done or failed. Exit."
-    )
+    log_text = "All jobs are either done or failed. Exit."
     assert any(record.message == log_text for record in caplog.records)
 
 
@@ -142,9 +137,6 @@ async def test_lifespan_shutdown_raise_error(
         "some of running jobs are not shutdown properly. "
         "Original error: ERROR"
     )
-    from devtools import debug
-
-    debug(caplog.records)
     assert any(record.message == log_text for record in caplog.records)
 
 
