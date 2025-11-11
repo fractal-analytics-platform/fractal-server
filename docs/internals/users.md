@@ -1,19 +1,18 @@
-# Fractal Users
+# Users
 
 Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview).
 
-## User Model
+
+## ::: fractal_server.app.models.security.UserOAuth
+    options:
+      show_root_heading: true
+      show_root_toc_entry: false
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](../reference/app/models/security.md#fractal_server.app.models.security.UserOAuth) class:
-::: fractal_server.app.models.security.UserOAuth
-    options:
-      show_root_toc_entry: false
-
-Most attributes are [the default ones from `fastapi-users`](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
+## First user
 
 To manage `fractal-server` you need to create a first user with superuser privileges.
-This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email` and `--admin-pwd` flags, either during the [startup phase](http://localhost:8000/install_and_deploy/#2-initialize-the-database-data) or at a later stage.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email` and `--admin-pwd` flags, either during the [startup phase](../../install_and_deploy/#2-initialize-the-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
@@ -97,7 +96,7 @@ $ curl \
 
 Fractal Server also allows a different authentication procedure, not based on the knowledge of a user's password but on external `OAuth2` authentication clients.
 
-Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [many more clients](https://frankie567.github.io/httpx-oauth/oauth2/#provided-clients) can be readily included).
+Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/reference/httpx_oauth.clients/) can be readily included).
 
 #### Configuration
 
@@ -123,7 +122,7 @@ To add an `OAuth2` client, you must provide valid a [`OAuthSettings`](../configu
     OAUTH_CLIENT_NAME=any-name-except-github-or-google
     OAUTH_CLIENT_ID=...
     OAUTH_CLIENT_SECRET=...
-    OAUTH_OIDC_CONFIG_ENDPOINT=...  # e.g. https://client.com/.well-known/openid-configuration
+    OAUTH_OIDC_CONFIG_ENDPOINT=...  # e.g. https://example.org/.well-known/openid-configuration
     OAUTH_REDIRECT_URL=...          # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
@@ -145,7 +144,7 @@ To add an `OAuth2` client, you must provide valid a [`OAuthSettings`](../configu
     OAUTH_REDIRECT_URL=...  # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
-When `fractal-server` starts with proper `OAuthSettings`, two new routes will be generated:
+When `fractal-server` starts with proper [`OAuthSettings`](../configuration.md#fractal_server.config._oauth.OAuthSettings), two new routes will be generated:
 
 - `/auth/{OAUTH_CLIENT_NAME}/authorize` ,
 - `/auth/{OAUTH_CLIENT_NAME}/callback` (the `Authorization callback URL` of the client).
@@ -154,13 +153,13 @@ When `fractal-server` starts with proper `OAuthSettings`, two new routes will be
 > not relevant for the examples described in this page, since they are all in
 > the command-line interface. However, it is required when OAuth authentication
 > is performed starting from a browser (e.g. through the [`fractal-web`
-> client](https://github.com/fractal-analytics-platform/fractal-web)), since
+> client](https://fractal-analytics-platform.github.io/fractal-web/oauth2/)), since
 > the callback URL should be opened in the browser itself.
 
 
 #### Authorization Code Flow
 
-Authentication via OAuth2 client is based on the [Authorizion Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
+Authentication via OAuth2 client is based on the [Authorization Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
 <figure markdown>
   ![Authorization Code Flow](../assets/auth.png)
   <figcaption markdown>(adapted from https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow, © 2023 Okta, Inc.)
