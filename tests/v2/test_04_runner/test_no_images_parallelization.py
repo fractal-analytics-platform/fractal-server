@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from .execute_tasks_v2 import execute_tasks_v2_mod
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.local.runner import LocalRunner
 
 
@@ -38,12 +39,9 @@ async def test_parallelize_on_no_images(
     Run parallel&compound tasks on a dataset with no images.
     """
     # Preliminary setup
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, zarr_dir=zarr_dir
-        )
+        dataset = await dataset_factory_v2(project_id=project.id)
         workflow = await workflow_factory_v2(project_id=project.id)
 
         task = await task_factory_v2(
@@ -64,14 +62,15 @@ async def test_parallelize_on_no_images(
             working_dir="/foo",
             status="done",
         )
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset,
-            workflow_dir_local=tmp_path / "job0",
-            runner=local_runner,
-            user_id=user.id,
-            job_id=job.id,
-        )
+        with pytest.raises(JobExecutionError, match="empty image list"):
+            execute_tasks_v2_mod(
+                wf_task_list=[wftask],
+                dataset=dataset,
+                workflow_dir_local=tmp_path / "job0",
+                runner=local_runner,
+                user_id=user.id,
+                job_id=job.id,
+            )
 
         task = await task_factory_v2(
             name="name-2",
@@ -85,11 +84,12 @@ async def test_parallelize_on_no_images(
             task_id=task.id,
             order=0,
         )
-        execute_tasks_v2_mod(
-            wf_task_list=[wftask],
-            dataset=dataset,
-            workflow_dir_local=tmp_path / "job1",
-            runner=local_runner,
-            user_id=user.id,
-            job_id=job.id,
-        )
+        with pytest.raises(JobExecutionError, match="empty image list"):
+            execute_tasks_v2_mod(
+                wf_task_list=[wftask],
+                dataset=dataset,
+                workflow_dir_local=tmp_path / "job1",
+                runner=local_runner,
+                user_id=user.id,
+                job_id=job.id,
+            )
