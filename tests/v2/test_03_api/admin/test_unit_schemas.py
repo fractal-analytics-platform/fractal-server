@@ -3,10 +3,10 @@ import pytest
 from fractal_server.app.schemas.v2.profile import (
     get_discriminator_value as get_2,
 )
-from fractal_server.app.schemas.v2.resource import _ValidResourceBase
 from fractal_server.app.schemas.v2.resource import (
     get_discriminator_value as get_1,
 )
+from fractal_server.app.schemas.v2.resource import ValidResourceBase
 
 
 def test_get_discriminator_value():
@@ -26,4 +26,4 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
         versions={"0.54.1": "/fake/0.54.1"},
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
-        _ValidResourceBase(**res.model_dump())
+        ValidResourceBase(**res.model_dump())

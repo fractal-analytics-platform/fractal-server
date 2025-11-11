@@ -19,7 +19,7 @@ Memory expressed in MB.
 """
 
 
-class _SlurmConfigSet(BaseModel):
+class SlurmConfigSet(BaseModel):
     """
     Options for the default or gpu SLURM config.
 
@@ -52,7 +52,7 @@ class _SlurmConfigSet(BaseModel):
     gpus: NonEmptyStr | None = None
 
 
-class _BatchingConfigSet(BaseModel):
+class BatchingConfigSet(BaseModel):
     """
     Options to configure the batching strategy (that is, how to combine
     several tasks in a single SLURM job).
@@ -124,7 +124,7 @@ class JobRunnerConfigSLURM(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    default_slurm_config: _SlurmConfigSet
-    gpu_slurm_config: _SlurmConfigSet | None = None
-    batching_config: _BatchingConfigSet
+    default_slurm_config: SlurmConfigSet
+    gpu_slurm_config: SlurmConfigSet | None = None
+    batching_config: BatchingConfigSet
     user_local_exports: DictStrStr = Field(default_factory=dict)

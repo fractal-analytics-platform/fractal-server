@@ -46,7 +46,12 @@ def cast_serialize_pixi_settings(
     return v
 
 
-class _ValidResourceBase(BaseModel):
+class ValidResourceBase(BaseModel):
+    """
+    FIXME
+
+    """
+
     type: ResourceType
     name: NonEmptyStr
 
@@ -76,7 +81,7 @@ class _ValidResourceBase(BaseModel):
         return self
 
 
-class ValidResourceLocal(_ValidResourceBase):
+class ValidResourceLocal(ValidResourceBase):
     """
     Valid local resource
 
@@ -99,7 +104,7 @@ class ValidResourceLocal(_ValidResourceBase):
     host: None = None
 
 
-class ValidResourceSlurmSudo(_ValidResourceBase):
+class ValidResourceSlurmSudo(ValidResourceBase):
     """
     Valid SLURM-sudo resource.
 
@@ -122,7 +127,7 @@ class ValidResourceSlurmSudo(_ValidResourceBase):
     host: None = None
 
 
-class ValidResourceSlurmSSH(_ValidResourceBase):
+class ValidResourceSlurmSSH(ValidResourceBase):
     """
     Valid SLURM-SSH resource.
 
@@ -164,6 +169,10 @@ ResourceCreate
 
 
 class ResourceRead(BaseModel):
+    """
+    FIXME
+    """
+
     id: int
 
     type: str
