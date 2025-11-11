@@ -660,19 +660,11 @@
     },
     {
       "name": "dummy_insert_single_image",
-      "type": "non_parallel",
+      "type": "converter_non_parallel",
       "executable_non_parallel": "dummy_insert_single_image.py",
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "zarr_urls": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Zarr Urls",
-            "type": "array",
-            "description": "description"
-          },
           "zarr_dir": {
             "title": "Zarr Dir",
             "type": "string",
@@ -716,7 +708,6 @@
           }
         },
         "required": [
-          "zarr_urls",
           "zarr_dir"
         ],
         "type": "object",

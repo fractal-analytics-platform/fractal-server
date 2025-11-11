@@ -9,7 +9,6 @@ from pydantic import validate_call
 @validate_call
 def dummy_insert_single_image(
     *,
-    zarr_urls: list[str],
     zarr_dir: str,
     attributes: Optional[dict[str, Any]] = None,
     types: Optional[dict[str, Any]] = None,
@@ -22,7 +21,6 @@ def dummy_insert_single_image(
     Remove images
 
     Args:
-        zarr_urls: description
         fail: If `True`, make new_zarr_url not relative to zarr_dir
         fail_2: If `True`, make new_zarr_url equal to zarr_dir
         trailing_slash: If `True`, add 10 trailing slashes to zarr_urls
