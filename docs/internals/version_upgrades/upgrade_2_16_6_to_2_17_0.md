@@ -33,6 +33,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
     - Update OAuth-related variables to comply with [the new expected ones](../../../reference/config/_oauth/#fractal_server.config._oauth.OAuthSettings).
         - Add the `OAUTH_CLIENT_NAME` variable.
         - Remove the client name from the names of all other variables, e.g. as in `OAUTH_XXX_CLIENT_ID --> OAUTH_CLIENT_ID` (if `OAUTH_CLIENT_NAME="XXX"`).
+    - If `FRACTAL_EMAIL_PASSWORD` is set, replace its value with the non-encrypted password.
     - Drop all following variables (if set):
         - `FRACTAL_DEFAULT_ADMIN_EMAIL`
         - `FRACTAL_DEFAULT_ADMIN_PASSWORD`
@@ -47,6 +48,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
         - `FRACTAL_PIXI_CONFIG_FILE`.
         - `FRACTAL_SLURM_POLL_INTERVAL`.
         - `FRACTAL_PIP_CACHE_DIR`
+        - `FRACTAL_EMAIL_PASSWORD_KEY`
 6. Verify that the following files are available in the current directory:
    * `.fractal_server.env.old`
    * `.fractal_server.env`
