@@ -58,8 +58,8 @@ class UserOAuth(SQLModel, table=True):
     Original Copyright: 2022 François Voron, released under MIT licence.
 
     Note that several class attributes are
-    [the default ones from `fastapi-users`]
-    (https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
+    [the default ones from `fastapi-users`
+    ](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
     Attributes:
         id:
