@@ -31,6 +31,14 @@ async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
     return last_history_unit
 
 
+async def _find_last_history_run(db: AsyncSession) -> HistoryUnit:
+    res = await db.execute(
+        select(HistoryRun).order_by(HistoryRun.timestamp_started.desc())
+    )
+    last_history_run = res.scalars().first()
+    return last_history_run
+
+
 async def add_history_image_cache(
     db,
     dataset_id: int,
@@ -950,6 +958,10 @@ async def test_status_based_submission(
                 IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
             },
         )
+
+    # Validate latest `HistoryRun` object
+    last_history_run = await _find_last_history_run(db)
+    assert last_history_run.status == HistoryUnitStatus.FAILED
 
     # Case 1: Run and succeed for no images (by requiring the UNSET ones)
     job = await job_factory_v2(
