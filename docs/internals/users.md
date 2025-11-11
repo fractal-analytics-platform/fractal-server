@@ -199,7 +199,10 @@ OAUTH_CLIENT_SECRET=...
 
 There is a single user, created with the command
 ```sh
-fractalctl init-db-data --admin-email person@university.edu --admin-pwd 1234 --admin-project-dir=/tmp/fractal
+fractalctl init-db-data \
+    --admin-email person@university.edu \
+    --admin-pwd 1234 \
+    --admin-project-dir=/tmp/fractal
 ```
 
 Now the user wants to log in using her GitHub account associated to the same email.
