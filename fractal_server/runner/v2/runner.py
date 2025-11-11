@@ -155,6 +155,16 @@ def execute_tasks_v2(
                 images=type_filtered_images,
                 attribute_filters=job_attribute_filters,
             )
+
+            # Fail when running a non-converter on an empty image list
+            if len(filtered_images) == 0:
+                error_msg = (
+                    f"Cannot run task '{task.name}' for an empty image list "
+                    f"(obtained after applying {type_filters=} and "
+                    f"attribute_filters={job_attribute_filters})."
+                )
+                logger.info(error_msg)
+                raise JobExecutionError(error_msg)
         else:
             # Converter task
             filtered_images = []
