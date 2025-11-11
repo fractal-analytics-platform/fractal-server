@@ -204,6 +204,7 @@ async def test_dummy_insert_single_image(
     debug(dataset_case_2.images)
     assert dataset_case_2.images[0] == {
         "zarr_url": zarr_url_3D,
+        "origin": None,
         "attributes": {"well": "B03"},
         "types": {
             "is_3D": True,
@@ -340,6 +341,7 @@ async def test_dummy_remove_images(
     dataset_pre_fail = await dataset_factory_v2(
         project_id=project.id,
         zarr_dir=zarr_dir,
+        images=[dict(zarr_url=Path(zarr_dir, "another-image").as_posix())],
     )
     wftask = await workflowtask_factory_v2(
         workflow_id=workflow.id,
@@ -936,24 +938,20 @@ async def test_status_based_submission(
         workflow_id=workflow.id,
         working_dir="/foo",
     )
-    execute_tasks_v2_mod(
-        wf_task_list=[wftask_ok],
-        dataset=dataset,
-        workflow_dir_local=tmp_path / str(job.id),
-        job_id=job.id,
-        runner=local_runner,
-        user_id=user_id,
-        job_attribute_filters={
-            IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
-        },
-    )
+    with pytest.raises(JobExecutionError, match="empty image list"):
+        execute_tasks_v2_mod(
+            wf_task_list=[wftask_ok],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / str(job.id),
+            job_id=job.id,
+            runner=local_runner,
+            user_id=user_id,
+            job_attribute_filters={
+                IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
+            },
+        )
 
-    # Validate latest `HistoryUnit` object
-    last_history_unit = await _find_last_history_unit(db)
-    assert last_history_unit.zarr_urls == []
-    assert last_history_unit.status == HistoryUnitStatusWithUnset.DONE
-
-    # Case 1: Run and succeed for no images (by requiring the DONE ones)
+    # Case 1: Run and succeed for no images (by requiring the UNSET ones)
     job = await job_factory_v2(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -968,7 +966,7 @@ async def test_status_based_submission(
         runner=local_runner,
         user_id=user_id,
         job_attribute_filters={
-            IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
+            IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.UNSET],
         },
     )
 

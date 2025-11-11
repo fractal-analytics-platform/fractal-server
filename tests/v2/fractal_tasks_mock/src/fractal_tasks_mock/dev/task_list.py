@@ -90,7 +90,8 @@ TASK_LIST = [
         executable="generic_task.py",
     ),
     NonParallelTask(
-        name="dummy_remove_images", executable="dummy_remove_images.py"
+        name="dummy_remove_images",
+        executable="dummy_remove_images.py",
     ),
     ConverterNonParallelTask(
         name="dummy_insert_single_image",
