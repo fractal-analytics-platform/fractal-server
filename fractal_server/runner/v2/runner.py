@@ -156,15 +156,6 @@ def execute_tasks_v2(
                 attribute_filters=job_attribute_filters,
             )
 
-            # Fail when running a non-converter on an empty image list
-            if len(filtered_images) == 0:
-                error_msg = (
-                    f"Cannot run task '{task.name}' for an empty image list "
-                    f"(obtained after applying {type_filters=} and "
-                    f"attribute_filters={job_attribute_filters})."
-                )
-                logger.info(error_msg)
-                raise JobExecutionError(error_msg)
         else:
             # Converter task
             filtered_images = []
@@ -202,6 +193,30 @@ def execute_tasks_v2(
             job_db.executor_error_log = None
             db.merge(job_db)
             db.commit()
+            db.expunge_all()
+
+        # Fail when running a non-converter on an empty image list
+        if (
+            wftask.task_type
+            in [
+                TaskType.COMPOUND,
+                TaskType.PARALLEL,
+                TaskType.NON_PARALLEL,
+            ]
+            and len(filtered_images) == 0
+        ):
+            error_msg = (
+                f"Cannot run task '{task.name}' for an empty image list "
+                f"(obtained after applying {type_filters=} and "
+                f"attribute_filters={job_attribute_filters})."
+            )
+            logger.info(error_msg)
+            update_status_of_history_run(
+                history_run_id=history_run_id,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db,
+            )
+            raise JobExecutionError(error_msg)
 
         # TASK EXECUTION (V2)
         try:
