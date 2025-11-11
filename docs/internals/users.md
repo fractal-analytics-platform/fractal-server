@@ -251,69 +251,8 @@ curl \
 
 On top of being authenticated, a user must be _authorized_ in order to perform specific actions in `fratal-server`:
 
-1. Some endpoints require the user to have a specific attribute (e.g. being `active` or being `superuser`);
-2. Access control is in-place for some database resources, and encode via database relationships with the User table (e.g. for `Project``);
-3. Additional business logic to regulate access may be defined within specific endpoints (e.g. for patching or removing a Task).
-
-The three cases are described more in detail below.
-
-### User attributes
-
-Some endpoints require the user to have a specific attribute.
-This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/latest/usage/current-user/#current_user):
-```python
-current_active_user = fastapi_users.current_user(active=True)
-
-# fake endpoint
-@router.get("/am/i/active/")
-async def am_i_active(
-    user: UserOAuth = Depends(current_active_user)
-):
-    return {f"User {user.id}":  "you are active"}
-```
-
-Being an _active user_ (i.e. `user.is_active==True`) is required by
-
-- all `/api/v2/...` endpoints
-- all `/auth/users/...`,
-- POST `/auth/register/`,
-- GET `/auth/userlist/`,
-- GET `/auth/current-user/`.
-
-Being a _superuser_ (i.e. `user.is_superuser==True`) is required by
-
-- all `/auth/users/...`,
-- POST `/auth/register/`,
-- GET `/auth/userlist/`.
-
-and it also gives full access (without further checks) to
-
-- PATCH `/api/v2/task/{task_id}/`
-- DELETE `/api/v2/task/{task_id}/`
-
-No endpoint currently requires the user to be _verified_ (i.e. having `user.is_verified==True`).
-
-### Database relationships
-
-The following resources in the `fractal-server` database are always related to a single `Project` (via their foreign key `project_id`):
-
-- `Dataset`,
-- `Workflow`,
-- `WorkflowTask` (through `Workflow`).
-- `ApplyWorkflow` (i.e. a workflow-execution job),
-
-Each endpoint that operates on one of these resources (or directly on a `Project`) requires the user to be in the `Project.user_list`.
-
-> The `fractal-server` database structure is general, and the user/project relationships is a many-to-many one. However the API does not currently expose a feature to easily associate multiple users to the same project.
-
-### Endpoint logic
-
-The [User Model](#user-model) includes additional attributes `username` and `slurm_user`, which are optional and default to `None`. Apart from `slurm_user` being needed for [User Impersonation in SLURM](runners/slurm.md#user-impersonation), these two attributes are also used for additional access control to `Task` resources.
-
-> ⚠️ This is an experimental feature, which will likely evolve in the future (possibly towards the implementation of user groups/roles).
-
-When a `Task` is created, the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
-The following endpoints require a non-superuser user to be the owner of the Task:
-
-- PATCH `/api/v2/task/{task_id}/`,
-- DELETE `/api/v2/task/{task_id}/`.
+* `/api/alive/` is public, and accessible without authentication.
+* `/auth/current-user/` endpoints (including `/auth/current-user/profile-info/`) require authentication and the user must be active.
+    * `GET /current-user/allowed-viewer-paths/` requires that the user is both active and verified.
+* `/api/v2/` endpoints require authentication, and the user must be active and verified and they must have a non-null `profile_id`.
+* Active superusers can access all `/admin/` and `/auth/` endpoints.
