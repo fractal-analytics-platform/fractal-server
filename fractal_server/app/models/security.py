@@ -95,14 +95,7 @@ class UserOAuth(SQLModel, table=True):
         ondelete="RESTRICT",
     )
 
-    # TODO-2.17.1: update to `project_dir: str`
-    project_dir: str = Field(
-        sa_column=Column(
-            String,
-            server_default="/PLACEHOLDER",
-            nullable=False,
-        )
-    )
+    project_dir: str
     slurm_accounts: list[str] = Field(
         sa_column=Column(ARRAY(String), server_default="{}"),
     )
