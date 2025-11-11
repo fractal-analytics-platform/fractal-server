@@ -24,43 +24,40 @@ def add_to_snippet(title: str, obj: dict, snippet: str) -> str:
 
 
 SNIPPET = ""
-SNIPPET += "## Resource example\n\n"
 
-# Local
+# Resource
+SNIPPET += "## Resource example\n\n"
 with (assets_dir / "resource_local.json").open("r") as f:
     resource = json.load(f)
     ValidResourceLocal(**resource)
 SNIPPET = add_to_snippet("Local", resource, SNIPPET)
-
-# SLURM sudo
 with (assets_dir / "resource_sudo.json").open("r") as f:
     resource = json.load(f)
     ValidResourceSlurmSudo(**resource)
 SNIPPET = add_to_snippet("SLURM sudo", resource, SNIPPET)
-
-# SLURM ssh
 with (assets_dir / "resource_ssh.json").open("r") as f:
     resource = json.load(f)
     ValidResourceSlurmSSH(**resource)
 SNIPPET = add_to_snippet("SLURM ssh", resource, SNIPPET)
 
-SNIPPET += "## Profile example\n\n"
 
+# Profile
+SNIPPET += "## Profile example\n\n"
 with (assets_dir / "profile_local.json").open("r") as f:
     profile = json.load(f)
     ValidProfileLocal(**profile)
 SNIPPET = add_to_snippet("Local", profile, SNIPPET)
-
 with (assets_dir / "profile_sudo.json").open("r") as f:
     profile = json.load(f)
     ValidProfileSlurmSudo(**profile)
 SNIPPET = add_to_snippet("SLURM sudo", profile, SNIPPET)
-
 with (assets_dir / "profile_ssh.json").open("r") as f:
     profile = json.load(f)
     ValidProfileSlurmSSH(**profile)
 SNIPPET = add_to_snippet("SLURM ssh", profile, SNIPPET)
 
+
+SNIPPET += "\n"
 if not output_path.exists():
     with open(output_path, "w") as fd:
         fd.write(SNIPPET)
@@ -71,4 +68,4 @@ else:
     if current_snippet != SNIPPET:
         print(current_snippet)
         print(SNIPPET)
-        raise ValueError("different")
+        raise ValueError("Snippets are different.")
