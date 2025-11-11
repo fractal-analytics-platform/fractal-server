@@ -12,18 +12,18 @@ assets_dir = Path("docs/assets/resource_and_profile")
 output_path = Path("docs/assets/resource_and_profile/snippet.md")
 
 
+INDENT = "    "
+SNIPPET = ""
+
+
 def add_to_snippet(title: str, obj: dict, snippet: str) -> str:
-    indent = "    "
     snippet += f'=== "{title}"\n\n'
-    snippet += f"{indent}```json\n"
-    snippet += (
-        indent + json.dumps(obj, indent=4).replace("\n", "\n" + indent) + "\n"
-    )
-    snippet += f"{indent}```\n\n"
+    snippet += f"{INDENT}```json\n"
+    snippet += INDENT
+    snippet += json.dumps(obj, indent=4).replace("\n", "\n" + INDENT)
+    snippet += f"\n{INDENT}```\n\n"
     return snippet
 
-
-SNIPPET = ""
 
 # Resource
 SNIPPET += "## Resource example\n\n"
@@ -56,8 +56,6 @@ with (assets_dir / "profile_ssh.json").open("r") as f:
     ValidProfileSlurmSSH(**profile)
 SNIPPET = add_to_snippet("SLURM ssh", profile, SNIPPET)
 
-
-SNIPPET += "\n"
 if not output_path.exists():
     with open(output_path, "w") as fd:
         fd.write(SNIPPET)
@@ -65,7 +63,7 @@ else:
     with open(output_path) as fd:
         current_snippet = fd.read()
 
-    if current_snippet != SNIPPET:
+    if current_snippet.strip("\n") != SNIPPET.strip("\n"):
         print(current_snippet)
         print(SNIPPET)
         raise ValueError("Snippets are different.")
