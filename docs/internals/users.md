@@ -12,7 +12,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## First user
 
 To manage `fractal-server` you need to create a first user with superuser privileges.
-This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email` and `--admin-pwd` flags, either during the [startup phase](../../install_and_deploy/#2-initialize-the-database-data) or at a later stage.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../../install_and_deploy/#2-initialize-the-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
@@ -153,8 +153,8 @@ To add an `OAuth2` client, you must provide valid [`OAuthSettings`](../configura
 
 When `fractal-server` starts with proper [`OAuthSettings`](../configuration.md#fractal_server.config._oauth.OAuthSettings), two new routes will be generated:
 
-- `/auth/{OAUTH_CLIENT_NAME}/authorize` ,
-- `/auth/{OAUTH_CLIENT_NAME}/callback` (the `Authorization callback URL` of the client).
+- `/auth/{OAUTH_CLIENT_NAME}/authorize/` ,
+- `/auth/{OAUTH_CLIENT_NAME}/callback/` (the `Authorization callback URL` of the client).
 
 > Note that the `OAUTH_REDIRECT_URL` environment variable is optional. It is
 > not relevant for the examples described in this page, since they are all in
@@ -176,13 +176,13 @@ Authentication via OAuth2 client is based on the [Authorization Code Flow](https
 We can now review how `fractal-server` handles these steps:
 
 - **Steps 1 &#8594; 4**<br>
-    * The starting point is [`/auth/client-name/authorize`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L59);
+    * The starting point is [`/auth/client-name/authorize/`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L59);
     * Here an `authorization_url` is generated and provided to the user;
     * This URL will redirect the user to the Authorization Server (which is e.g. GitHub or Google, and not related to `fractal-server`), together with a `state` code for increased security;
     * The user must authenticate and grant `fractal-server` the permissions it requires.
 
 - **Steps 5 &#8594; 8**<br>
-    * The flow comes back to `fractal-server` at [`/auth/client-name/callback`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L101), together with the Authorization Code.
+    * The flow comes back to `fractal-server` at [`/auth/client-name/callback/`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L101), together with the Authorization Code.
     * A FastAPI dependency of the callback endpoint, [`oauth2_authorize_callback`](https://github.com/frankie567/httpx-oauth/blob/2e82654559b1687a6b25c86e31dc9290ae06cdba/httpx_oauth/integrations/fastapi.py#L10), takes care of exchanging this code for the Access Token.
 
 - **Steps 9 &#8594; 10**<br>
@@ -191,8 +191,9 @@ We can now review how `fractal-server` handles these steps:
 After that, the callback endpoint performs some extra operations, which are not strictly part of the `OAuth2` protocol:
 
 - It checks that `state` is still valid;
-- If a user with the given email address doesn't already exist, it creates one with a random password;
-- If the user has never authenticated with this `OAuth2` client before, it adds in the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table`; at subsequent logins that entry will just be updated;
+- If the user has never authenticated with `OAuth2` before:
+    - it adds to the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table; at subsequent logins that entry will just be updated.
+    - it sends a notification of the login to the addresses indicated in [`FRACTAL_EMAIL_RECIPIENTS`](../changelog.md/#fractal_server.config._email.EmailSettings).
 - It prepares a JWT token for the user and serves it in the Response Cookie.
 
 #### Full example
@@ -214,7 +215,7 @@ fractalctl init-db-data \
 
 Now the user wants to log in using her GitHub account associated to the same email.
 
-First, she makes a call to `/auth/github/authorize`:
+First, she makes a call to `/auth/github/authorize/`:
 ```
 $ curl \
     -X GET \
@@ -233,7 +234,7 @@ $ curl \
 Now the `authorization_url` must be visited using a browser.
 After logging in to GitHub, she is asked to grant the app the permissions it requires.
 
-After that, she is redirected back to `fractal-server` at `/auth/github/callback`, together with two query parameters:
+After that, she is redirected back to `fractal-server` at `/auth/github/callback/`, together with two query parameters:
 ```
 http://127.0.0.1:8000/auth/github/callback/?
     code=...&
