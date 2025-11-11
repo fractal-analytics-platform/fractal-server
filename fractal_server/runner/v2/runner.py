@@ -155,7 +155,6 @@ def execute_tasks_v2(
                 images=type_filtered_images,
                 attribute_filters=job_attribute_filters,
             )
-
         else:
             # Converter task
             filtered_images = []
@@ -195,7 +194,7 @@ def execute_tasks_v2(
             db.commit()
             db.expunge_all()
 
-        # Fail when running a non-converter on an empty image list
+        # Fail when running a non-converter task on an empty image list
         if (
             wftask.task_type
             in [
