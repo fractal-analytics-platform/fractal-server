@@ -1,8 +1,4 @@
 {
-  "resource_type": "local",
-  "name": "profile local",
-  "username": null,
-  "ssh_key_path": null,
-  "jobs_remote_dir": null,
-  "tasks_remote_dir": null
+  "name": "Local profile",
+  "resource_type": "local"
 }

@@ -1,11 +1,11 @@
-## Resource example
+## Resource examples
 
 === "Local"
 
     ```json
     {
         "type": "local",
-        "name": "local resource",
+        "name": "Local resource",
         "jobs_local_dir": "/somewhere/jobs",
         "jobs_runner_config": {
             "parallel_tasks_per_job": 1
@@ -15,12 +15,10 @@
         "tasks_python_config": {
             "default_version": "3.12",
             "versions": {
-                "3.12": "/over-the-rainbow/bin/python"
+                "3.12": "/some-venv/bin/python"
             }
         },
         "tasks_pixi_config": {},
-        "host": null,
-        "jobs_slurm_python_worker": null,
         "tasks_pip_cache_dir": null
     }
     ```
@@ -30,11 +28,11 @@
     ```json
     {
         "type": "slurm_sudo",
-        "name": "SLURM cluster A",
+        "name": "SLURM cluster",
         "jobs_local_dir": "/somewhere/local-jobs",
         "jobs_runner_config": {
             "default_slurm_config": {
-                "partition": "main",
+                "partition": "partition-name",
                 "cpus_per_task": 1,
                 "mem": "100M"
             },
@@ -48,19 +46,17 @@
                 "max_num_jobs": 4
             }
         },
-        "jobs_slurm_python_worker": "/.venv3.12/bin/python3.12",
-        "jobs_poll_interval": 0,
+        "jobs_slurm_python_worker": "/some/venv/bin/python3.12",
+        "jobs_poll_interval": 10,
         "tasks_local_dir": "/somewhere/local-tasks",
         "tasks_python_config": {
             "default_version": "3.12",
             "versions": {
-                "3.10": "/.venv3.10/bin/python3.10",
-                "3.11": "/.venv3.11/bin/python3.11",
-                "3.12": "/.venv3.12/bin/python3.12"
+                "3.11": "/some/venv/bin/python3.11",
+                "3.12": "/some/venv/bin/python3.12"
             }
         },
         "tasks_pixi_config": {},
-        "host": null,
         "tasks_pip_cache_dir": null
     }
     ```
@@ -70,12 +66,12 @@
     ```json
     {
         "type": "slurm_ssh",
-        "name": "SLURM cluster A",
-        "host": "localhost",
+        "name": "Remote SLURM cluster",
+        "host": "slurm-cluster.example.org",
         "jobs_local_dir": "/somewhere/local-jobs",
         "jobs_runner_config": {
             "default_slurm_config": {
-                "partition": "main",
+                "partition": "partition-name",
                 "cpus_per_task": 1,
                 "mem": "100M"
             },
@@ -89,15 +85,14 @@
                 "max_num_jobs": 4
             }
         },
-        "jobs_slurm_python_worker": "/.venv3.12/bin/python3.12",
-        "jobs_poll_interval": 0,
+        "jobs_slurm_python_worker": "/some/venv/bin/python3.12",
+        "jobs_poll_interval": 10,
         "tasks_local_dir": "/somewhere/local-tasks",
         "tasks_python_config": {
             "default_version": "3.12",
             "versions": {
-                "3.10": "/.venv3.10/bin/python3.10",
-                "3.11": "/.venv3.11/bin/python3.11",
-                "3.12": "/.venv3.12/bin/python3.12"
+                "3.11": "/some/venv/bin/python3.11",
+                "3.12": "/some/venv/bin/python3.12"
             }
         },
         "tasks_pixi_config": {},
@@ -105,18 +100,14 @@
     }
     ```
 
-## Profile example
+## Profile examples
 
 === "Local"
 
     ```json
     {
-        "resource_type": "local",
-        "name": "profile local",
-        "username": null,
-        "ssh_key_path": null,
-        "jobs_remote_dir": null,
-        "tasks_remote_dir": null
+        "name": "Local profile",
+        "resource_type": "local"
     }
     ```
 
@@ -124,12 +115,9 @@
 
     ```json
     {
+        "name": "SLURM/sudo profile",
         "resource_type": "slurm_sudo",
-        "name": "profile sudo",
-        "username": "test01",
-        "ssh_key_path": null,
-        "jobs_remote_dir": null,
-        "tasks_remote_dir": null
+        "username": "slurm-username"
     }
     ```
 
@@ -137,11 +125,11 @@
 
     ```json
     {
+        "name": "SLURM/SSH profile",
         "resource_type": "slurm_ssh",
-        "name": "profile ssh",
-        "username": "test01",
-        "ssh_key_path": "/fake/key",
-        "jobs_remote_dir": "/fake/jobs",
-        "tasks_remote_dir": "/fake/tasks"
+        "username": "slurm-username",
+        "ssh_key_path": "/somewhere/private.key",
+        "jobs_remote_dir": "/somewhere/jobs",
+        "tasks_remote_dir": "/somewhere/tasks"
     }
     ```

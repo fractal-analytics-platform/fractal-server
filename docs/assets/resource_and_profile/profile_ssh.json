@@ -1,8 +1,8 @@
 {
+  "name": "SLURM/SSH profile",
   "resource_type": "slurm_ssh",
-  "name": "profile ssh",
-  "username": "test01",
-  "ssh_key_path": "/fake/key",
-  "jobs_remote_dir": "/fake/jobs",
-  "tasks_remote_dir": "/fake/tasks"
+  "username": "slurm-username",
+  "ssh_key_path": "/somewhere/private.key",
+  "jobs_remote_dir": "/somewhere/jobs",
+  "tasks_remote_dir": "/somewhere/tasks"
 }

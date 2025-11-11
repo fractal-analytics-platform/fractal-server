@@ -26,7 +26,7 @@ def add_to_snippet(title: str, obj: dict, snippet: str) -> str:
 
 
 # Resource
-SNIPPET += "## Resource example\n\n"
+SNIPPET += "## Resource examples\n\n"
 with (assets_dir / "resource_local.json").open("r") as f:
     resource = json.load(f)
     ValidResourceLocal(**resource)
@@ -42,7 +42,7 @@ SNIPPET = add_to_snippet("SLURM ssh", resource, SNIPPET)
 
 
 # Profile
-SNIPPET += "## Profile example\n\n"
+SNIPPET += "## Profile examples\n\n"
 with (assets_dir / "profile_local.json").open("r") as f:
     profile = json.load(f)
     ValidProfileLocal(**profile)
