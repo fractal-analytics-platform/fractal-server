@@ -49,7 +49,11 @@ async def project_factory_v2(db):
             .where(Profile.id == user.profile_id)
         )
         resource_id = res.scalar_one()
-        args = dict(name="project", resource_id=resource_id)
+        args = dict(
+            name="project",
+            resource_id=resource_id,
+            project_dir="/fake",
+        )
         args.update(kwargs)
         project = ProjectV2(**args)
         project.user_list.append(user)
