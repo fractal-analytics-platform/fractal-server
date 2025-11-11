@@ -28,9 +28,11 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.images.models import SingleImage
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
+from fractal_server.urls import normalize_url
 
 
 @pytest.fixture
@@ -67,10 +69,19 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
 
     async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
         defaults = dict(
-            name="My Dataset", project_id=1, zarr_dir=f"{tmp_path}/zarr"
+            name="My Dataset",
+            project_id=1,
+            zarr_dir=f"{tmp_path}/zarr",
         )
         args = dict(**defaults)
         args.update(kwargs)
+
+        # Make sure that `zarr_dir` and images are valid
+        args["zarr_dir"] = normalize_url(args["zarr_dir"])
+        old_images = args.get("images", [])
+        args["images"] = [
+            SingleImage(**img).model_dump() for img in old_images
+        ]
 
         project_id = args["project_id"]
         project = await db.get(ProjectV2, project_id)
