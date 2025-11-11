@@ -23,7 +23,7 @@
     }
     ```
 
-=== "SLURM sudo"
+=== "SLURM/sudo"
 
     ```json
     {
@@ -61,7 +61,7 @@
     }
     ```
 
-=== "SLURM ssh"
+=== "SLURM/SSH"
 
     ```json
     {
@@ -111,7 +111,7 @@
     }
     ```
 
-=== "SLURM sudo"
+=== "SLURM/sudo"
 
     ```json
     {
@@ -121,7 +121,7 @@
     }
     ```
 
-=== "SLURM ssh"
+=== "SLURM/SSH"
 
     ```json
     {

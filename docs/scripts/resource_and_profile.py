@@ -34,11 +34,11 @@ SNIPPET = add_to_snippet("Local", resource, SNIPPET)
 with (assets_dir / "resource_sudo.json").open("r") as f:
     resource = json.load(f)
     ValidResourceSlurmSudo(**resource)
-SNIPPET = add_to_snippet("SLURM sudo", resource, SNIPPET)
+SNIPPET = add_to_snippet("SLURM/sudo", resource, SNIPPET)
 with (assets_dir / "resource_ssh.json").open("r") as f:
     resource = json.load(f)
     ValidResourceSlurmSSH(**resource)
-SNIPPET = add_to_snippet("SLURM ssh", resource, SNIPPET)
+SNIPPET = add_to_snippet("SLURM/SSH", resource, SNIPPET)
 
 
 # Profile
@@ -50,11 +50,11 @@ SNIPPET = add_to_snippet("Local", profile, SNIPPET)
 with (assets_dir / "profile_sudo.json").open("r") as f:
     profile = json.load(f)
     ValidProfileSlurmSudo(**profile)
-SNIPPET = add_to_snippet("SLURM sudo", profile, SNIPPET)
+SNIPPET = add_to_snippet("SLURM/sudo", profile, SNIPPET)
 with (assets_dir / "profile_ssh.json").open("r") as f:
     profile = json.load(f)
     ValidProfileSlurmSSH(**profile)
-SNIPPET = add_to_snippet("SLURM ssh", profile, SNIPPET)
+SNIPPET = add_to_snippet("SLURM/SSH", profile, SNIPPET)
 
 if not output_path.exists():
     with open(output_path, "w") as fd:
