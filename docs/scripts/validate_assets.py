@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import mkdocs_gen_files
-
 from fractal_server.app.schemas.v2 import ValidProfileLocal
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
@@ -11,9 +9,9 @@ from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 
 assets_dir = Path("docs/assets/resource_and_profile")
-output_path = Path("internals/computational_area.md")
+output_path = Path("docs/assets/resource_and_profile/snippet.md")
 
-with mkdocs_gen_files.open(output_path, "w") as fd:
+with open(output_path, "w") as fd:
 
     def add_to_switch(title: str, json_item: dict) -> None:
         indent = "    "
