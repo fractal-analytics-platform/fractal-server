@@ -1,11 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.17.0 - prereleases
+# 2.17.0
 
-> This version requires a data-migration script (`fractalctl update-db-data`), see instructions at TBD.
+> This version requires running a data-migration script (`fractalctl update-db-data`),
+> see [detailed
+> instructions](https://fractal-analytics-platform.github.io/fractal-server/internals/version_upgrades/upgrade_2_16_6_to_2_17_0/).
 
-The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
-
+The main content of this release is the introduction of the computational
+resource&profile concepts, and a review of the application settings.
 
 * API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925, \#2940, \#2941, \#2943, \#2956):
     * Introduce API for `Resource` and `Profile` models.
