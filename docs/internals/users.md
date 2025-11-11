@@ -241,6 +241,8 @@ The callback function does not return anything, but the response cookie contains
 }
 ```
 
+> The response cookie can be found using the developer tools of the browser, inspecting the response on the network page.
+
 The user can now make [authenticated calls](#authenticated-calls) using this token, as in
 ```
 curl \
