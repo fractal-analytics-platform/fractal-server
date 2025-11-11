@@ -14,14 +14,13 @@ class FakeEnum(StrEnum):
     BAR = "bar"
 
 
-async def test_unit_enum_in_db_queries(db, local_resource_profile_db):
-    resource, _ = local_resource_profile_db
+async def test_unit_enum_in_db_queries(db):
     db.add_all(
         [
-            ProjectV2(name="foo", resource_id=resource.id),
-            ProjectV2(name="foo", resource_id=resource.id),
-            ProjectV2(name="bar", resource_id=resource.id),
-            ProjectV2(name="name", resource_id=resource.id),
+            ProjectV2(name="foo"),
+            ProjectV2(name="foo"),
+            ProjectV2(name="bar"),
+            ProjectV2(name="name"),
         ]
     )
     await db.commit()

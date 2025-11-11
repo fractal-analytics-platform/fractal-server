@@ -360,6 +360,7 @@ async def valid_user_id(db: AsyncSession) -> int:
     user = UserOAuth(
         email="fake@example.org",
         hashed_password="fake-hashed-password",
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()

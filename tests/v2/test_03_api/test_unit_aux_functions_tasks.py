@@ -46,16 +46,28 @@ async def test_get_task(
     resource2, profile2 = slurm_sudo_resource_profile_db
 
     user_A1 = UserOAuth(
-        email="a1@a.a", hashed_password="xxx", profile_id=profile.id
+        email="a1@a.a",
+        hashed_password="xxx",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     user_A2 = UserOAuth(
-        email="a2@a.a", hashed_password="xxx", profile_id=profile.id
+        email="a2@a.a",
+        hashed_password="xxx",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     user_B = UserOAuth(
-        email="b@b.b", hashed_password="xxx", profile_id=profile.id
+        email="b@b.b",
+        hashed_password="xxx",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     user_C = UserOAuth(
-        email="c@c.c", hashed_password="xxx", profile_id=profile2.id
+        email="c@c.c",
+        hashed_password="xxx",
+        profile_id=profile2.id,
+        project_dir="/fake",
     )
     group_0 = UserGroup(name="All")
     group_A = UserGroup(name="A")
@@ -163,7 +175,10 @@ async def test_get_task_require_active(
     # Preliminary setup
     resource, profile = local_resource_profile_db
     user = UserOAuth(
-        email="a@a.a", hashed_password="xxx", profile_id=profile.id
+        email="a@a.a",
+        hashed_password="xxx",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()

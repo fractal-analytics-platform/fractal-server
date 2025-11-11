@@ -37,6 +37,7 @@ async def test_get_task_group_read_access(
         is_verified=True,
         profile_id=profile_local.id,
         email="userA@example.org",
+        project_dir="/fake",
     )
     user_B = UserOAuth(
         hashed_password="x",
@@ -45,6 +46,7 @@ async def test_get_task_group_read_access(
         is_verified=True,
         profile_id=profile_local.id,
         email="userB@example.org",
+        project_dir="/fake",
     )
     user_C = UserOAuth(
         hashed_password="x",
@@ -53,6 +55,7 @@ async def test_get_task_group_read_access(
         is_verified=True,
         profile_id=profile_slurm_sudo.id,
         email="userC@example.org",
+        project_dir="/fake",
     )
     user_group = UserGroup(name="team")
     db.add(user_A)
