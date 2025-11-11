@@ -19,7 +19,7 @@ SNIPPET = ""
 def add_to_snippet(title: str, obj: dict, snippet: str) -> str:
     snippet += f'=== "{title}"\n\n'
     snippet += f"{INDENT}```json\n"
-    snippet += {INDENT}
+    snippet += INDENT
     snippet += json.dumps(obj, indent=4).replace("\n", "\n" + INDENT)
     snippet += f"\n{INDENT}```\n\n"
     return snippet
