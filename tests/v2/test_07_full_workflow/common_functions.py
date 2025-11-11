@@ -455,6 +455,8 @@ async def non_executable_task_command(
         dataset = await dataset_factory_v2(
             project_id=project_id,
             name="input",
+            zarr_dir="/fake",
+            images=[dict(zarr_url="/fake/1")],
         )
         # Submit workflow
         res = await client.post(
@@ -502,6 +504,8 @@ async def failing_workflow_UnknownError(
         dataset = await dataset_factory_v2(
             project_id=project_id,
             name="dataset",
+            zarr_dir="/fake",
+            images=[dict(zarr_url="/fake/1")],
         )
         dataset_id = dataset.id
         workflow = await workflow_factory_v2(
@@ -511,7 +515,9 @@ async def failing_workflow_UnknownError(
 
         # Create task
         task = await task_factory_v2(
-            user_id=user.id, command_non_parallel="echo", type="non_parallel"
+            user_id=user.id,
+            command_non_parallel="echo",
+            type="non_parallel",
         )
 
         res = await client.post(
@@ -571,7 +577,7 @@ async def failing_workflow_UnknownError(
         assert res.json() == {
             f"{workflow_task_id}": {
                 "status": "failed",
-                "num_available_images": 0,
+                "num_available_images": 1,
                 "num_submitted_images": 0,
                 "num_done_images": 0,
                 "num_failed_images": 0,
@@ -641,7 +647,10 @@ async def workflow_with_non_python_task(
 
         # Create datasets
         dataset = await dataset_factory_v2(
-            project_id=project_id, name="dataset"
+            project_id=project_id,
+            name="dataset",
+            zarr_dir="/fake",
+            images=[dict(zarr_url="/fake/1")],
         )
 
         # Submit workflow
