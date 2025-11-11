@@ -57,7 +57,8 @@ with (assets_dir / "profile_ssh.json").open("r") as f:
 SNIPPET = add_to_snippet("SLURM ssh", profile, SNIPPET)
 
 
-SNIPPET += "\n"
+SNIPPET.strip("\n")
+
 if not output_path.exists():
     with open(output_path, "w") as fd:
         fd.write(SNIPPET)
