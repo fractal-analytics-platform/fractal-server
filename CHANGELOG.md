@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.17.1
+
+* Runner:
+    * Raise an error for a non-converter task running on an empty image list (\#2971).
+
 # 2.17.0
 
 > This version requires running a data-migration script (`fractalctl update-db-data`),
