@@ -107,12 +107,6 @@ class UserOAuth(SQLModel, table=True):
         sa_column=Column(ARRAY(String), server_default="{}"),
     )
 
-    # TODO-2.17.1: remove
-    user_settings_id: int | None = Field(
-        foreign_key="user_settings.id",
-        default=None,
-    )
-
 
 class UserGroup(SQLModel, table=True):
     """
