@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -22,6 +24,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -444,11 +447,23 @@ async def get_image_log(
         db=db,
     )
 
+    history_run = await get_history_run_or_404(
+        history_run_id=history_unit.history_run_id, db=db
+    )
+    check_historyrun_related_to_dataset_and_wftask(
+        history_run=history_run,
+        dataset_id=request_data.dataset_id,
+        workflowtask_id=request_data.workflowtask_id,
+    )
+
+    job = await db.get(JobV2, history_run.job_id)
+
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
         wftask=wftask,
         dataset_id=request_data.dataset_id,
+        archive_path=Path(job.working_dir).as_posix() + ".zip",
     )
     return JSONResponse(content=log)
 
@@ -495,11 +510,14 @@ async def get_history_unit_log(
         workflowtask_id=workflowtask_id,
     )
 
+    job = await db.get(JobV2, history_run.job_id)
+
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
         wftask=wftask,
         dataset_id=dataset_id,
+        archive_path=Path(job.working_dir).as_posix() + ".zip",
     )
     return JSONResponse(content=log)
 

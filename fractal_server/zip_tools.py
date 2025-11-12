@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess  # nosec
 from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
@@ -144,3 +145,36 @@ def _zip_folder_to_file_and_remove(folder: str) -> None:
         logger.info(f"Removing folder '{folder}'.")
         shutil.rmtree(folder)
         logger.info("Folder removed.")
+
+
+def _read_single_file_using_zipfile(
+    *, logfile_path: str, archive_path: str
+) -> str:
+    with ZipFile(archive_path, "r") as z:
+        try:
+            with z.open(logfile_path, "r") as f:
+                return f.read().decode()
+        except KeyError:
+            raise FileNotFoundError(
+                f"Logfile '{logfile_path}' not found "
+                f"inside archive '{archive_path}'."
+            )
+
+
+def _read_single_file_using_unzip(
+    *, logfile_path: str, archive_path: str
+) -> str:
+    result = subprocess.run(  # nosec
+        ["unzip", "-p", archive_path, logfile_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        raise FileNotFoundError(
+            f"Logfile '{logfile_path}' not found "
+            f"inside archive '{archive_path}'."
+        )
+
+    return result.stdout

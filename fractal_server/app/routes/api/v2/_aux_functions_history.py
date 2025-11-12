@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Literal
 
 from fastapi import HTTPException
@@ -21,6 +20,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
 from fractal_server.logger import set_logger
+from fractal_server.zip_tools import _read_single_file_using_unzip
+from fractal_server.zip_tools import _read_single_file_using_zipfile
 
 
 logger = set_logger(__name__)
@@ -66,11 +67,12 @@ async def get_history_run_or_404(
 
 def read_log_file(
     *,
-    logfile: str | None,
     wftask: WorkflowTaskV2,
     dataset_id: int,
+    logfile: str | None,
+    archive_path: str | None = None,
 ):
-    if logfile is None or not Path(logfile).exists():
+    if logfile is None:
         logger.debug(
             f"Logs for task '{wftask.task.name}' in dataset "
             f"{dataset_id} are not available ({logfile=})."
@@ -83,10 +85,27 @@ def read_log_file(
     try:
         with open(logfile) as f:
             return f.read()
-    except Exception as e:
+    except OSError as e1:
+        if archive_path is not None:
+            try:
+                # FIXME choose one
+                if True:
+                    return _read_single_file_using_zipfile(
+                        logfile_path=logfile, archive_path=archive_path
+                    )
+                else:
+                    return _read_single_file_using_unzip(
+                        logfile_path=logfile, archive_path=archive_path
+                    )
+            except FileNotFoundError as e2:
+                return (
+                    "Error while retrieving logs for task "
+                    f"'{wftask.task.name}' in dataset {dataset_id}. "
+                    f"Original error: {str(e2)}."
+                )
         return (
             f"Error while retrieving logs for task '{wftask.task.name}' "
-            f"in dataset {dataset_id}. Original error: {str(e)}."
+            f"in dataset {dataset_id}. Original error: {str(e1)}."
         )
 
 
