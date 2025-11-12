@@ -76,7 +76,7 @@ jobs:
           echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
 
       - name: Validate new database
-          poetry run python scripts/validate_db_data_with_read_schemas.py
+        run: poetry run python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
     name: "Alembic downgrade"
