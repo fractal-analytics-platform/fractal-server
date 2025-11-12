@@ -34,7 +34,7 @@ from fractal_server.runner.v2.db_tools import update_status_of_history_unit
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
-STDERR_EXCLUDE_PATTERNS = [
+STDERR_IGNORE_PATTERNS = [
     "step creation temporarily disabled, retrying",
     "step creation still disabled, retrying",
     "srun: step created for stepid=",
@@ -54,7 +54,7 @@ def ignore_stderr_line(line: str) -> bool:
         line: The line to be considered.
     """
     line_lower = line.lower()
-    for pattern in STDERR_EXCLUDE_PATTERNS:
+    for pattern in STDERR_IGNORE_PATTERNS:
         if pattern in line_lower:
             return True
     return False
