@@ -20,7 +20,7 @@ If the same variable is defined twice, both as an environment variable and insid
 
 ## How to get current configuration
 
-Admins can retrieve the current settings through the appropriate endpoints [`GET /api/settings/`](../openapi.md/#operations-default-view_settings_api_settings_app__get).
+Admins can retrieve the current settings through the appropriate endpoints [`GET /api/settings/`](openapi.md#operations-default-view_settings_api_settings_app__get).
 
 
 ## List of configuration variables

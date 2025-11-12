@@ -42,7 +42,7 @@ Use the command
 ```
 fractalctl set-db
 ```
-to apply the schema migrations to the database. This command uses the configuration variables described in [DatabaseSettings](./configuration/#fractal_server.config._database.DatabaseSettings) - notably including the database name `POSTGRES_DB`.
+to apply the schema migrations to the database. This command uses the configuration variables described in [DatabaseSettings](configuration.md/#fractal_server.config._database.DatabaseSettings) - notably including the database name `POSTGRES_DB`.
 
 > **Note**: the corresponding PostgreSQL database must already exist, since it won't be created by `fractalctl set-db`. You can often create it directly through [`createdb`](https://www.postgresql.org/docs/current/app-createdb.html).
 
@@ -80,7 +80,7 @@ The high-level procedure for upgrading `fractal-server` on an existing instance 
 
 * Stop the running `fractal-server` process.
 * Create a backup dump of the current database data (see [database page](internals/database_interface.md/#backup-and-restore)).
-* Review the [CHANGELOG](./changelog/), and check whether this version upgrade requires any special procedure.
+* Review the [CHANGELOG](changelog.md), and check whether this version upgrade requires any special procedure.
 * Upgrade `fractal-server` (e.g. as in `pip install fractal-server==1.2.3`).
 * Update the database schemas (as in `fractalctl set-db`).
 * If the CHANGELOG requires it, run the data-migration command (`fractalctl update-db-data`). Depending on the specific upgrade, this may require additional actions or information.

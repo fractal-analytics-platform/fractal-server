@@ -12,7 +12,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## First user
 
 To manage `fractal-server` you need to create a first user with superuser privileges.
-This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../../install_and_deploy/#2-initialize-the-database-data) or at a later stage.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../install_and_deploy.md/#2-initialize-the-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
@@ -20,8 +20,7 @@ The most common use cases for `fractal-server` are:
     In this case you may simply use the first (and only) user.
 
 2. The server has multiple users, and it is connected to one or more SLURM clusters.
-    To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`](../computational/app/models/user_settings.md).
-    See [here](runners/slurm.md/#user-impersonation) for more details about SLURM users.
+    To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`] (more details [here](./integrations/index.md)).
 
 
 ## Authentication
@@ -193,7 +192,7 @@ After that, the callback endpoint performs some extra operations, which are not 
 - It checks that `state` is still valid;
 - If the user has never authenticated with `OAuth2` before:
     - it adds to the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table; at subsequent logins that entry will just be updated.
-    - it sends a notification of the login to the addresses indicated in [`FRACTAL_EMAIL_RECIPIENTS`](../changelog.md/#fractal_server.config._email.EmailSettings).
+    - it sends a notification of the login to the addresses indicated in [`FRACTAL_EMAIL_RECIPIENTS`](../configuration.md/#fractal_server.config._email.EmailSettings).
 - It prepares a JWT token for the user and serves it in the Response Cookie.
 
 #### Full example

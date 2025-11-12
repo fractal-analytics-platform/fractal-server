@@ -23,14 +23,14 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 
 1. Make a copy of the current `.fractal-server.env` file and name it `.fractal-server.env.old`.
 2. Make sure that `.fractal_server.env.old` includes the `FRACTAL_SLURM_WORKER_PYTHON` variable. If this variable is not set, add it and set it to the absolute path of the Python interpreter which runs `fractal-server`.
-3. Make a backup of the current database with `pg_dump` (see [example](../../database_interface/#backup-and-restore)).
+3. Make a backup of the current database with `pg_dump` (see [example](../database_interface.md/#backup-and-restore)).
 4. Stop the fractal-server running process (e.g. via `systemctl stop fractal-server`).
 5. Edit `.fractal_server.env` to align with the new version. List of changes:
     - Edit the `FRACTAL_RUNNER_BACKEND` value so that it is one of `slurm_sudo` or `slurm_ssh`.
     - Rename `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` into `FRACTAL_DATA_AUTH_SCHEME` - if present.
     - Rename `FRACTAL_VIEWER_BASE_FOLDER` into `FRACTAL_DATA_BASE_FOLDER` - if present.
     - Add `FRACTAL_DEFAULT_GROUP_NAME=All` (note: the same variable must be set also in the `fractal-web` environment file).
-    - Update OAuth-related variables to comply with [the new expected ones](../../../reference/config/_oauth/#fractal_server.config._oauth.OAuthSettings).
+    - Update OAuth-related variables to comply with [the new expected ones](../../reference/config/_oauth.md/#fractal_server.config._oauth.OAuthSettings).
         - Add the `OAUTH_CLIENT_NAME` variable.
         - Remove the client name from the names of all other variables, e.g. as in `OAUTH_XXX_CLIENT_ID --> OAUTH_CLIENT_ID` (if `OAUTH_CLIENT_NAME="XXX"`).
     - If `FRACTAL_EMAIL_PASSWORD` is set, replace its value with the non-encrypted password.

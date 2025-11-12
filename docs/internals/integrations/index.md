@@ -20,15 +20,15 @@ The configuration variable `FRACTAL_RUNNER_BACKEND` determines which one of the 
 
 The specific configuration for each computational resource is defined in the `Resource` database table, with the following creation schemas:
 
-* [Local resource](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.resource.ValidResourceLocal)
-* [SLURM/sudo resource](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.resource.ValidResourceSlurmSudo)
-* [SLURM/SSH resource](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.resource.ValidResourceSlurmSSH)
+* [Local resource](../../reference/app/schemas/v2/resource.md/#fractal_server.app.schemas.v2.resource.ValidResourceLocal)
+* [SLURM/sudo resource](../../reference/app/schemas/v2/resource.md/#fractal_server.app.schemas.v2.resource.ValidResourceSlurmSudo)
+* [SLURM/SSH resource](../../reference/app/schemas/v2/resource.md/#fractal_server.app.schemas.v2.resource.ValidResourceSlurmSSH)
 
 For each resource, there may be one or many computational _profiles_, with the following creation schemas:
 
-* [Local profile](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.profile.ValidProfileLocal)
-* [SLURM/sudo profile](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.profile.ValidProfileeSlurmSudo)
-* [SLURM/SSH profile](../../reference/app/schemas/v2/resource/#fractal_server.app.schemas.v2.profile.ValidProfileSlurmSSH)
+* [Local profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileLocal)
+* [SLURM/sudo profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileeSlurmSudo)
+* [SLURM/SSH profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileSlurmSSH)
 
 
 Here are some minimal examples of how to configure resources and profiles in the three different cases:
