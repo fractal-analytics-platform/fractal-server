@@ -14,6 +14,7 @@ from fractal_server.app.routes.api.v2._aux_functions_history import (
 from fractal_server.app.routes.api.v2._aux_functions_history import (
     read_log_file,
 )
+from fractal_server.zip_tools import _create_zip
 
 
 async def test_get_history_unit_or_404(db):
@@ -44,8 +45,9 @@ def test_read_log_file(tmp_path: Path):
     )
     assert "not available" in log
 
+    LOG = "some keyword\n"
     with open(logfile, "w") as f:
-        f.write("some keyword\n")
+        f.write(LOG)
     # Case 2: logfile exists and can be read
     log = read_log_file(
         logfile=logfile,
@@ -53,7 +55,7 @@ def test_read_log_file(tmp_path: Path):
         dataset_id=1,
         job_working_dir="/foo.zip",
     )
-    assert "some keyword" in log
+    assert log == LOG
 
     # Case 3: File exists but cannot be read
     os.chmod(logfile, 0o000)
@@ -64,6 +66,17 @@ def test_read_log_file(tmp_path: Path):
         job_working_dir="/foo.zip",
     )
     assert "Permission denied" in log
+
+    os.chmod(logfile, 0o777)
+    _create_zip(tmp_path.as_posix(), f"{tmp_path}.zip")
+    os.unlink(logfile)
+    log = read_log_file(
+        logfile=logfile,
+        wftask=wftask,
+        dataset_id=1,
+        job_working_dir=tmp_path.as_posix(),
+    )
+    assert log == LOG
 
 
 async def test_verify_workflow_and_dataset_access(
