@@ -15,6 +15,7 @@
     * Accept float values for `FRACTAL_GRACEFUL_SHUTDOWN_TIME` (\#2972).
 * Testing:
     * Update testing database with 2.17.0 data migration (\#2974).
+    * Introduce `generic_task_converter` in `fractal-tasks-mock` (\#2976).
 
 # 2.17.0
 
