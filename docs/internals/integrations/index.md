@@ -1,6 +1,7 @@
 # Computational integrations
 
 On top of exposing a web API, a Fractal instance must be integrated to at least one computational resource which is used mainly for two goals:
+
 * Setting up Python environments for task groups - see [more details](./tasks.md).
 * Executing scientific tasks - see [more details](./runners.md).
 
