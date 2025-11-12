@@ -70,9 +70,10 @@ jobs:
           poetry run fractalctl set-db
 
       - name: Apply data migration
+        env:
+          FRACTAL_DEFAULT_GROUP_NAME: All
         run: |
           cp $ROOTDIR/.fractal_server.env.old .
-          export FRACTAL_DEFAULT_GROUP_NAME=All
           echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
 
       - name: Validate new database
