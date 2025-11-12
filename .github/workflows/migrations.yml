@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.16.6
+  SOURCE_VERSION: 2.17.0
   ROOTDIR: tests/data/testing_databases
   JWT_SECRET_KEY: fake
 
