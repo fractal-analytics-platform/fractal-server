@@ -67,6 +67,7 @@ def test_read_log_file(tmp_path: Path):
     )
     assert "Permission denied" in log
 
+    # Case 4: File exists inside an archive
     os.chmod(logfile, 0o777)
     _create_zip(tmp_path.as_posix(), f"{tmp_path}.zip")
     os.unlink(logfile)
@@ -77,6 +78,15 @@ def test_read_log_file(tmp_path: Path):
         job_working_dir=tmp_path.as_posix(),
     )
     assert log == LOG
+
+    # Case 5: File doesn't exist even inside the archive
+    log = read_log_file(
+        logfile=logfile + "xxx",
+        wftask=wftask,
+        dataset_id=1,
+        job_working_dir=tmp_path.as_posix(),
+    )
+    assert "not found inside archive" in log
 
 
 async def test_verify_workflow_and_dataset_access(
