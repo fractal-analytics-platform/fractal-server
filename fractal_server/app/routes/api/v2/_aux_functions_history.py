@@ -70,23 +70,14 @@ def read_log_file(
     *,
     wftask: WorkflowTaskV2,
     dataset_id: int,
-    logfile: str | None,
-    archive_path: str | None,
+    logfile: str,
+    archive_path: str,
 ):
     try:
-        if logfile is None:
-            logger.debug(
-                f"Logs for task '{wftask.task.name}' in dataset "
-                f"{dataset_id} are not available ({logfile=})."
-            )
-            return (
-                f"Logs for task '{wftask.task.name}' in dataset "
-                f"{dataset_id} are not available."
-            )
-        elif Path(logfile).exists():
+        if Path(logfile).exists():
             with open(logfile) as f:
                 return f.read()
-        else:
+        elif Path(archive_path).exists():
             if True:  # FIXME choose one
                 return _read_single_file_using_zipfile(
                     logfile_path=logfile, archive_path=archive_path
@@ -95,11 +86,25 @@ def read_log_file(
                 return _read_single_file_using_unzip(
                     logfile_path=logfile, archive_path=archive_path
                 )
+        else:
+            logger.error(
+                f"Error while retrieving logs for {logfile=} and "
+                f"{archive_path=}: both files do not exist."
+            )
+            return (
+                f"Logs for task '{wftask.task.name}' in dataset "
+                f"{dataset_id} are not available:\n"
+                f"both {logfile=} and {archive_path=} do not exist."
+            )
     except Exception as e:
+        logger.error(
+            f"Error while retrieving logs for {logfile=} and {archive_path=}. "
+            f"Original error: {str(e)}"
+        )
         return (
             "Error while retrieving logs for task "
-            f"'{wftask.task.name}' in dataset {dataset_id}. "
-            f"Original error: {str(e)}."
+            f"'{wftask.task.name}' in dataset {dataset_id}.\n"
+            f"Original error:\n{str(e)}."
         )
 
 
