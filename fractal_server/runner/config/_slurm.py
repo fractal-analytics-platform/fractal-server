@@ -78,34 +78,38 @@ class BatchingConfigSet(BaseModel):
 
 class JobRunnerConfigSLURM(BaseModel):
     """
-    Common SLURM configuration.
+    Runner-configuration specifications, for a `slurm_sudo` or
+    `slurm_ssh` resource.
 
-    Note: this is a common and abstract class, which gets transformed into
-    more specific configuration objects during job execution.
+    Note: this is a common class, which is processed and transformed into more
+    specific configuration objects during job execution.
 
     Valid JSON example
-    ```JSON
+    ```json
     {
-      "default_slurm_config": {
-          "partition": "main",
-          "cpus_per_task": 1
-      },
-      "gpu_slurm_config": {
-          "partition": "gpu",
-          "extra_lines": ["#SBATCH --gres=gpu:v100:1"]
-      },
-      "batching_config": {
-          "target_cpus_per_job": 1,
-          "max_cpus_per_job": 1,
-          "target_mem_per_job": 200,
-          "max_mem_per_job": 500,
-          "target_num_jobs": 2,
-          "max_num_jobs": 4
-      },
-      "user_local_exports": {
-          "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
-          "NAPARI_CONFIG": "napari_config.json"
-      }
+        "default_slurm_config": {
+            "partition": "partition-name",
+            "cpus_per_task": 1,
+            "mem": "100M"
+        },
+        "gpu_slurm_config": {
+            "partition": "gpu",
+            "extra_lines": [
+                "#SBATCH --gres=gpu:v100:1"
+            ]
+        },
+        "user_local_exports": {
+            "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
+            "NAPARI_CONFIG": "napari_config.json"
+        },
+        "batching_config": {
+            "target_cpus_per_job": 1,
+            "max_cpus_per_job": 1,
+            "target_mem_per_job": 200,
+            "max_mem_per_job": 500,
+            "target_num_jobs": 2,
+            "max_num_jobs": 4
+        }
     }
     ```
 

@@ -4,7 +4,11 @@ from pydantic import ConfigDict
 
 class JobRunnerConfigLocal(BaseModel):
     """
-    Specifications of the local-backend configuration
+    Runner-configuration specifications, for a `local` resource.
+
+    The typical use case is that setting `parallel_tasks_per_job` to a
+    small number (e.g. 1) will limit parallelism when executing tasks
+    requiring a large amount of resources (e.g. memory) on a local machine.
 
     Attributes:
         parallel_tasks_per_job:
