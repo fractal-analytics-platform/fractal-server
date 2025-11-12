@@ -40,7 +40,7 @@ Note that all paths in the values of `user_local_exports` are interpreted as rel
 
 The SLURM backend in `fractal-server` may combine multiple tasks in the same SLURM job (AKA batching), in order to reduce the total number of SLURM jobs that are submitted. This is especially relevant for SLURM clusters with constraints on the number of jobs that a user is allowed to submit over a certain timespan.
 
-The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this configuration block](../../../reference/runner/config/_slurm/#fractal_server.runner.config._slurm.BatchingConfigSet) and in [this submodule](../../../reference/runner/executors/slurm_common/_batching).
+The logic for handling the batching parameters (that is, how many tasks can be combined in the same SLURM job, and how many of them can run in parallel) is implemented in [this configuration block](../../reference/runner/config/_slurm.md/#fractal_server.runner.config._slurm.BatchingConfigSet) and in [this submodule](../../reference/runner/executors/slurm_common/_batching.md).
 
 
 ## User impersonation

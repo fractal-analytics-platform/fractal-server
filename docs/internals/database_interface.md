@@ -1,19 +1,12 @@
 # Database Interface
 
-Fractal Server only allows _PostgreSQL_ to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md#fractal_server.config._database.DatabaseSettings)).
+Fractal Server only allows PostgreSQL to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md#fractal_server.config._database.DatabaseSettings)).
 
-To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
-`1`.
-
-### Requirements
-
-To use PostgreSQL as a database, Fractal Server relies on `sqlalchemy` and `psycopg[binary]`.
+To use PostgreSQL as a database, `fractal-server` depends on [`sqlalchemy`](https://www.sqlalchemy.org/) and [`psycopg[binary]`](https://www.psycopg.org/psycopg3/docs/).
 
 ### Setup
 
-We assume that a PostgreSQL is active, with some _host_ (this can be e.g.
-`localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the
-default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
+We assume that a PostgreSQL service is active, with some _host_ (this can be e.g. `localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
 
 > ⚠️ Notes:
 >

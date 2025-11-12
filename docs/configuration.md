@@ -1,4 +1,4 @@
-## How to set configuration variables
+## Set configuration variables
 
 There are two possibilities for setting the configuration variables that determine the settings for `fractal-server`:
 
@@ -18,12 +18,12 @@ Once the variables have been defined in one of these ways, they will be read aut
 If the same variable is defined twice, both as an environment variable and inside the `.fractal_server.env` file, the value defined in the environment takes priority.
 
 
-## How to get current configuration
+## Get current configuration
 
 Admins can retrieve the current settings through the appropriate endpoints [`GET /api/settings/`](openapi.md#operations-default-view_settings_api_settings_app__get).
 
 
-## List of configuration variables
+## Configuration variables
 
 Here are all the configuration variables with their description (note: expand the "Source code" blocks to see the default values).
 
