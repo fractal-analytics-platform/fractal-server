@@ -6,6 +6,7 @@
     * Raise an error for a non-converter task running on an empty image list (\#2971).
 * Testing:
     * Update testing database with 2.17.0 data migration (\#2974).
+    * Introduce `generic_task_converter` in `fractal-tasks-mock` (\#2976).
 
 # 2.17.0
 
