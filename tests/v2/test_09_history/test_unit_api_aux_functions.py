@@ -36,31 +36,26 @@ def test_read_log_file(tmp_path: Path):
 
     wftask = MockWorkflowTaskV2(task=MockTaskV2())
 
-    # Case 1: Undefined logfile
+    logfile = (tmp_path / "logs.txt").as_posix()
+
+    # Case 1: files do not exist
     log = read_log_file(
-        logfile=None, wftask=wftask, dataset_id=1, archive_path=None
+        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
     )
     assert "not available" in log
 
-    # Case 2: File does not exist and archive_path not provided
-    logfile = (tmp_path / "logs.txt").as_posix()
-    log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path=None
-    )
-    assert "'NoneType' object has no attribute 'seek'" in log
-
-    # Case 3: File exists and can be read
     with open(logfile, "w") as f:
         f.write("some keyword\n")
+    # Case 2: logfile exists and can be read
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path=None
+        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
     )
     assert "some keyword" in log
 
     # Case 4: File exists but cannot be read
     os.chmod(logfile, 0o000)
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path=None
+        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
     )
     assert "Permission denied" in log
 
