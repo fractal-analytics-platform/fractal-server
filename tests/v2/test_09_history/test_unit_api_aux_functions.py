@@ -52,7 +52,7 @@ def test_read_log_file(tmp_path: Path):
     )
     assert "some keyword" in log
 
-    # Case 4: File exists but cannot be read
+    # Case 3: File exists but cannot be read
     os.chmod(logfile, 0o000)
     log = read_log_file(
         logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
