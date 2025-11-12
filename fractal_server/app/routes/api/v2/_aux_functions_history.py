@@ -21,6 +21,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
 from fractal_server.logger import set_logger
+from fractal_server.urls import normalize_url
 from fractal_server.zip_tools import _read_single_file_using_unzip
 from fractal_server.zip_tools import _read_single_file_using_zipfile
 
@@ -73,7 +74,7 @@ def read_log_file(
     logfile: str,
     job_working_dir: str,
 ):
-    archive_path = Path(job_working_dir).as_posix() + ".zip"
+    archive_path = normalize_url(job_working_dir) + ".zip"
     try:
         if Path(logfile).exists():
             with open(logfile) as f:
