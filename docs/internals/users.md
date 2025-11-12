@@ -17,11 +17,8 @@ This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-ini
 
 The most common use cases for `fractal-server` are:
 
-1. The server is used by a single user (e.g. on their own machine, with the [local backend](runners/local.md)).
-    In this case you may simply use the first (and only) user.
-
-2. The server has multiple users, and it is connected to one or more SLURM clusters.
-    To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`] (more details [here](./integrations/index.md)).
+1. The server is used by a single user (e.g. on their own machine). In this case you may simply use the first (and only) user.
+2. The server has multiple users, and it is connected to one or more SLURM clusters. To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`] (more details [here](./integrations/index.md)).
 
 
 ## Authentication

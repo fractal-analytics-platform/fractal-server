@@ -119,7 +119,7 @@ def cast_serialize_profile(_data: ProfileCreate) -> dict[str, Any]:
     """
     Cast/serialize round-trip for `Profile` data.
 
-    We use `@validate_call` because `ProfileeCreate` is a `Union` type and it
+    We use `@validate_call` because `ProfileCreate` is a `Union` type and it
     cannot be instantiated directly.
 
     Return:

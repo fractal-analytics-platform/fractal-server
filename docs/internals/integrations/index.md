@@ -28,7 +28,7 @@ The specific configuration for each computational resource is defined in the `Re
 For each resource, there may be one or many computational _profiles_, with the following creation schemas:
 
 * [Local profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileLocal)
-* [SLURM/sudo profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileeSlurmSudo)
+* [SLURM/sudo profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileSlurmSudo)
 * [SLURM/SSH profile](../../reference/app/schemas/v2/profile.md/#fractal_server.app.schemas.v2.profile.ValidProfileSlurmSSH)
 
 
