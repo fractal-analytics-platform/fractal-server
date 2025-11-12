@@ -621,6 +621,33 @@
       "docs_info": "## generic_task\nDummy task description.\n"
     },
     {
+      "name": "generic_task_converter",
+      "type": "converter_non_parallel",
+      "executable_non_parallel": "generic_task_converter.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "description"
+          },
+          "raise_error": {
+            "default": false,
+            "title": "Raise Error",
+            "type": "boolean",
+            "description": "If true, the task raises a ValueError"
+          }
+        },
+        "required": [
+          "zarr_dir"
+        ],
+        "type": "object",
+        "title": "GenericTaskConverter"
+      },
+      "docs_info": "## generic_task_converter\nDummy task description.\n"
+    },
+    {
       "name": "dummy_remove_images",
       "type": "non_parallel",
       "executable_non_parallel": "dummy_remove_images.py",
