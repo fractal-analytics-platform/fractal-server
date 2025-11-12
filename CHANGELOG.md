@@ -7,6 +7,7 @@
 * Runner:
     * Handle default `batch_size` value for local runner (\#2949).
     * Rename `SudoSlurmRunner` into `SlurmSudoRunner` (\#2980).
+    * Ignore some SLURM/stderr patterns when populating `executor_error_log` (\#2984).
 
 # 2.17.1
 
