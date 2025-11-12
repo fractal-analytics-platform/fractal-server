@@ -3,7 +3,7 @@ from devtools import debug
 
 from .aux_unit_runner import *  # noqa
 from fractal_server.runner.executors.slurm_sudo.runner import (
-    SudoSlurmRunner,
+    SlurmSudoRunner,
 )
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
@@ -21,7 +21,7 @@ async def test_executor_error(
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    class SudoSlurmRunnerMod(SudoSlurmRunner):
+    class SlurmSudoRunnerMod(SlurmSudoRunner):
         def _prepare_single_slurm_job(self, *args, **kwargs) -> str:
             # Inject a failing command in the SLURM submission script, so that
             # the SLURM-job stder file gets filled
@@ -34,7 +34,7 @@ async def test_executor_error(
                 f.write(contents)
             return submit_command
 
-    with SudoSlurmRunnerMod(
+    with SlurmSudoRunnerMod(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         resource=resource,
