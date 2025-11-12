@@ -6,7 +6,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 
 
-async def test_project_and_workflows(db):
+async def test_project_and_workflows(db, local_resource_profile_db):
     with pytest.raises(IntegrityError):
         # missing relatioship with project
         broken_workflow = WorkflowV2(name="broken")
@@ -14,7 +14,9 @@ async def test_project_and_workflows(db):
         await db.commit()
     await db.rollback()
 
-    project = ProjectV2(name="project")
+    resource, profile = local_resource_profile_db
+
+    project = ProjectV2(name="project", resource_id=resource.id)
 
     # using `.project` relationship
     workflow1 = WorkflowV2(name="workflow1", project=project)

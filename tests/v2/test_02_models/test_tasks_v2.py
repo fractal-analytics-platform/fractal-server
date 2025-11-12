@@ -11,7 +11,10 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 async def test_task_group_v2(db, local_resource_profile_db):
     resource, profile = local_resource_profile_db
     user = UserOAuth(
-        email="user@example.org", hashed_password="1234", profile_id=profile.id
+        email="user@example.org",
+        hashed_password="1234",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()
@@ -107,7 +110,10 @@ async def test_task_group_v2(db, local_resource_profile_db):
 async def test_collection_state(db, local_resource_profile_db):
     resource, profile = local_resource_profile_db
     user = UserOAuth(
-        email="user@example.org", hashed_password="1234", profile_id=profile.id
+        email="user@example.org",
+        hashed_password="1234",
+        profile_id=profile.id,
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()

@@ -502,6 +502,7 @@ async def first_user(
             is_active=True,
             is_verified=True,
             profile_id=profile.id,
+            project_dir="/fake",
         )
         db.add(user)
         await db.commit()

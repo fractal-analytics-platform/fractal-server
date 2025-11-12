@@ -716,7 +716,10 @@ async def failing_workflow_post_task_execution(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory_v2(
+            user,
+            resource_id=resource_id,
+        )
         project_id = project.id
 
         zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")

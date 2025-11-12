@@ -1,7 +1,6 @@
 import logging
 import os
 
-import pytest
 from fastapi import FastAPI
 from sqlmodel import select
 
@@ -53,9 +52,6 @@ async def test_app_with_lifespan(
     user = res.scalars().unique().one()  # assert only one user
     res = await db.execute(select(UserGroup))
     res.scalars().unique().one()  # assert only one group
-
-    # db.add(LinkUserGroup(user_id=user.id, group_id=group.id))
-    # await db.commit()
 
     async with lifespan(app):
         # verify shutdown
@@ -109,9 +105,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
         logger = logging.getLogger("fractal_server.lifespan")
         logger.propagate = True
 
-    log_text = (
-        "All jobs associated to this app are either done or failed. Exit."
-    )
+    log_text = "All jobs are either done or failed. Exit."
     assert any(record.message == log_text for record in caplog.records)
 
 
@@ -142,20 +136,10 @@ async def test_lifespan_shutdown_raise_error(
         "some of running jobs are not shutdown properly. "
         "Original error: ERROR"
     )
-    from devtools import debug
-
-    debug(caplog.records)
     assert any(record.message == log_text for record in caplog.records)
 
 
-@pytest.mark.container
-@pytest.mark.ssh
-async def test_lifespan_slurm_ssh(
-    override_settings_factory,
-    slurmlogin_ip,
-    ssh_keys: dict[str, str],
-    db,
-):
+async def test_lifespan_slurm_ssh(override_settings_factory, db):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     app = FastAPI()
     async with lifespan(app):
