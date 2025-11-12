@@ -20,7 +20,7 @@ The following will assume that:
 
 - You have access to a dedicated PostgreSQL database (see the [database page](internals/database.md)).
 
-## How to install
+## Install
 
 Fractal Server is hosted on [PyPI](https://pypi.org/project/fractal-server), and can be installed with `pip`:
 ```
@@ -36,7 +36,7 @@ For details on how to install Fractal Server in a development environment see th
 
 Installing `fractal-server` will automatically install [`fractalctl`](./cli_reference.md#fractalctl), its companion command-line utility that provides the basic commands for deploying Fractal Server.
 
-### 1. Set up the database schemas
+### Set up database schemas
 
 Use the command
 ```
@@ -47,7 +47,7 @@ to apply the schema migrations to the database. This command uses the configurat
 > **Note**: the corresponding PostgreSQL database must already exist, since it won't be created by `fractalctl set-db`. You can often create it directly through [`createdb`](https://www.postgresql.org/docs/current/app-createdb.html).
 
 
-### 2. Initialize the database data
+### Initialize database data
 
 With the command
 ```
@@ -60,7 +60,7 @@ you can initialize several relevant database tables. Its behaviors depends on th
   - create the first resource/profile pair and associate users to them, providing `--resource` and `--profile`.
 
 
-### 3. Start the server
+### Start `fractal-server`
 
 Use the command
 ```
@@ -74,7 +74,7 @@ curl http://localhost:8000/api/alive/
 {"alive":true,"version":"2.17.0"}
 ```
 
-### 4. Upgrade `fractal-server`
+### Upgrade `fractal-server`
 
 The high-level procedure for upgrading `fractal-server` on an existing instance is as follows:
 
