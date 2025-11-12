@@ -46,9 +46,8 @@ def ignore_stderr_line(line: str) -> bool:
     Whether to ignore a SLURM-job stderr line, based on
     `STDERR_EXCLUDE_PATTERNS`.
 
-    The goal is to not flag some stderr files as relevant
-    `executor_error_log`, when they only include lines matching a given set
-    of patterns to ignore. See
+    The goal is not to flag some stderr files as relevant `executor_error_log`
+    if they only include lines matching a given set of patterns to ignore. See
     https://github.com/fractal-analytics-platform/fractal-server/issues/2835
 
     Args:
