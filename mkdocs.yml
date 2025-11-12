@@ -22,12 +22,18 @@ markdown_extensions:
 
 theme:
   name: "material"
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.prune
+    - toc.integrate
+    - navigation.top
+    - content.code.annotate
+    - content.code.copy
   logo: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png
   favicon: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_favicon.png
   custom_dir: "docs/overrides"
-  features:
-    - content.code.annotate
-    - content.code.copy
   palette:
   - media: "(prefers-color-scheme: light)"
     scheme: default
