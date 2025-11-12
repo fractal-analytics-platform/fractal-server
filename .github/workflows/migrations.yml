@@ -50,8 +50,7 @@ jobs:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
+      - run: pipx install poetry==2.2.1
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
