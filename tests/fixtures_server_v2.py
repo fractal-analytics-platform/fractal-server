@@ -28,9 +28,11 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.images.models import SingleImage
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
+from fractal_server.urls import normalize_url
 
 
 @pytest.fixture
@@ -40,14 +42,20 @@ async def project_factory_v2(db):
     """
 
     async def __project_factory(user, **kwargs):
-        res = await db.execute(
-            select(Resource.id)
-            .join(Profile)
-            .where(Resource.id == Profile.resource_id)
-            .where(Profile.id == user.profile_id)
+        resource_id = kwargs.get("resource_id", None)
+        if resource_id is None:
+            res = await db.execute(
+                select(Resource.id)
+                .join(Profile)
+                .where(Resource.id == Profile.resource_id)
+                .where(Profile.id == user.profile_id)
+            )
+            resource_id = res.scalar_one()
+        args = dict(
+            name="project",
+            resource_id=resource_id,
+            project_dir="/fake",
         )
-        resource_id = res.scalar_one()
-        args = dict(name="project", resource_id=resource_id)
         args.update(kwargs)
         project = ProjectV2(**args)
         project.user_list.append(user)
@@ -67,10 +75,19 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
 
     async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
         defaults = dict(
-            name="My Dataset", project_id=1, zarr_dir=f"{tmp_path}/zarr"
+            name="My Dataset",
+            project_id=1,
+            zarr_dir=f"{tmp_path}/zarr",
         )
         args = dict(**defaults)
         args.update(kwargs)
+
+        # Make sure that `zarr_dir` and images are valid
+        args["zarr_dir"] = normalize_url(args["zarr_dir"])
+        old_images = args.get("images", [])
+        args["images"] = [
+            SingleImage(**img).model_dump() for img in old_images
+        ]
 
         project_id = args["project_id"]
         project = await db.get(ProjectV2, project_id)
@@ -349,6 +366,7 @@ async def valid_user_id(db: AsyncSession) -> int:
     user = UserOAuth(
         email="fake@example.org",
         hashed_password="fake-hashed-password",
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()

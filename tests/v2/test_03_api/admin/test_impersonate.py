@@ -16,7 +16,11 @@ async def test_impersonate(
     registered_superuser_client,
 ):
     # Create user u1
-    u1 = UserOAuth(email="user1@email.com", hashed_password="abc1")
+    u1 = UserOAuth(
+        email="user1@email.com",
+        hashed_password="abc1",
+        project_dir="/fake",
+    )
     db.add(u1)
     await db.commit()
     await db.refresh(u1)

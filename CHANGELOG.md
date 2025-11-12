@@ -1,11 +1,29 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.17.0 - prereleases
+# 2.17.1
 
-> This version requires a data-migration script (`fractalctl update-db-data`), see instructions at TBD.
+* Runner:
+    * Raise an error for a non-converter task running on an empty image list (\#2971).
+* Database:
+    * Apply all database-schema changes made possible by 2.17.0 data migration (\#2972), namely:
+        * Drop `user_settings` table and corresponding `UserOAuth.user_settings_id` foreign key.
+        * Make `resource_id` foreign key non nullable in `ProjectV2` and `TaskGroupV2` tables.
+        * Drop `server_default="/PLACEHOLDER` for `UserOAuth.project_dir`.
+* App:
+    * Streamline graceful-shutdown logic in lifespan (\#2972).
+* Settings:
+    * Accept float values for `FRACTAL_GRACEFUL_SHUTDOWN_TIME` (\#2972).
+* Testing:
+    * Update testing database with 2.17.0 data migration (\#2974).
 
-The main content of this release is the introduction of the computational resource&profile concepts, and a review of the application settings.
+# 2.17.0
 
+> This version requires running a data-migration script (`fractalctl update-db-data`),
+> see [detailed
+> instructions](https://fractal-analytics-platform.github.io/fractal-server/internals/version_upgrades/upgrade_2_16_6_to_2_17_0/).
+
+The main content of this release is the introduction of the computational
+resource&profile concepts, and a review of the application settings.
 
 * API (main PRs: \#2809, \#2870, \#2877, \#2884, \#2911, \#2915, \#2925, \#2940, \#2941, \#2943, \#2956):
     * Introduce API for `Resource` and `Profile` models.

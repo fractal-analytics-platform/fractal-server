@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict UFeLsxWLfUOdmFZHAh4GpZLTFKJlONtX9T1MNAVXB9nIfyq7nfiQkLOwJpUyivV
+\restrict x7mZmUUgaJzAS1nsrFckZFuq3netSagLhMFnOpLIHjPfNWLgHCcfHROdoHwfr61
 
--- Dumped from database version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+-- Dumped from database version 14.19 (Ubuntu 14.19-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.19 (Ubuntu 14.19-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -50,7 +50,7 @@ CREATE SEQUENCE public.accountingrecord_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.accountingrecord_id_seq OWNER TO postgres;
+ALTER TABLE public.accountingrecord_id_seq OWNER TO postgres;
 
 --
 -- Name: accountingrecord_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -86,7 +86,7 @@ CREATE SEQUENCE public.accountingrecordslurm_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.accountingrecordslurm_id_seq OWNER TO postgres;
+ALTER TABLE public.accountingrecordslurm_id_seq OWNER TO postgres;
 
 --
 -- Name: accountingrecordslurm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -136,7 +136,7 @@ CREATE SEQUENCE public.datasetv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.datasetv2_id_seq OWNER TO postgres;
+ALTER TABLE public.datasetv2_id_seq OWNER TO postgres;
 
 --
 -- Name: datasetv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -192,7 +192,7 @@ CREATE SEQUENCE public.historyrun_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.historyrun_id_seq OWNER TO postgres;
+ALTER TABLE public.historyrun_id_seq OWNER TO postgres;
 
 --
 -- Name: historyrun_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -229,7 +229,7 @@ CREATE SEQUENCE public.historyunit_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.historyunit_id_seq OWNER TO postgres;
+ALTER TABLE public.historyunit_id_seq OWNER TO postgres;
 
 --
 -- Name: historyunit_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -282,7 +282,7 @@ CREATE SEQUENCE public.jobv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.jobv2_id_seq OWNER TO postgres;
+ALTER TABLE public.jobv2_id_seq OWNER TO postgres;
 
 --
 -- Name: jobv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -347,7 +347,7 @@ CREATE SEQUENCE public.oauthaccount_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.oauthaccount_id_seq OWNER TO postgres;
+ALTER TABLE public.oauthaccount_id_seq OWNER TO postgres;
 
 --
 -- Name: oauthaccount_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -357,13 +357,54 @@ ALTER SEQUENCE public.oauthaccount_id_seq OWNED BY public.oauthaccount.id;
 
 
 --
+-- Name: profile; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.profile (
+    id integer NOT NULL,
+    resource_id integer NOT NULL,
+    resource_type character varying NOT NULL,
+    name character varying NOT NULL,
+    username character varying,
+    ssh_key_path character varying,
+    jobs_remote_dir character varying,
+    tasks_remote_dir character varying
+);
+
+
+ALTER TABLE public.profile OWNER TO postgres;
+
+--
+-- Name: profile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.profile_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.profile_id_seq OWNER TO postgres;
+
+--
+-- Name: profile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.profile_id_seq OWNED BY public.profile.id;
+
+
+--
 -- Name: projectv2; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.projectv2 (
     id integer NOT NULL,
     name character varying NOT NULL,
-    timestamp_created timestamp with time zone NOT NULL
+    timestamp_created timestamp with time zone NOT NULL,
+    resource_id integer
 );
 
 
@@ -382,13 +423,59 @@ CREATE SEQUENCE public.projectv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.projectv2_id_seq OWNER TO postgres;
+ALTER TABLE public.projectv2_id_seq OWNER TO postgres;
 
 --
 -- Name: projectv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.projectv2_id_seq OWNED BY public.projectv2.id;
+
+
+--
+-- Name: resource; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.resource (
+    id integer NOT NULL,
+    type character varying NOT NULL,
+    name character varying NOT NULL,
+    timestamp_created timestamp with time zone NOT NULL,
+    host character varying,
+    jobs_local_dir character varying NOT NULL,
+    jobs_runner_config jsonb DEFAULT '{}'::jsonb NOT NULL,
+    jobs_slurm_python_worker character varying,
+    jobs_poll_interval integer NOT NULL,
+    tasks_local_dir character varying NOT NULL,
+    tasks_python_config jsonb DEFAULT '{}'::jsonb NOT NULL,
+    tasks_pixi_config jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT ck_resource_correct_type CHECK (((type)::text = ANY ((ARRAY['local'::character varying, 'slurm_sudo'::character varying, 'slurm_ssh'::character varying])::text[]))),
+    CONSTRAINT ck_resource_jobs_slurm_python_worker_set CHECK ((((type)::text = 'local'::text) OR (jobs_slurm_python_worker IS NOT NULL)))
+);
+
+
+ALTER TABLE public.resource OWNER TO postgres;
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.resource_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.resource_id_seq OWNER TO postgres;
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.resource_id_seq OWNED BY public.resource.id;
 
 
 --
@@ -424,7 +511,7 @@ CREATE SEQUENCE public.taskgroupactivityv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.taskgroupactivityv2_id_seq OWNER TO postgres;
+ALTER TABLE public.taskgroupactivityv2_id_seq OWNER TO postgres;
 
 --
 -- Name: taskgroupactivityv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -457,7 +544,8 @@ CREATE TABLE public.taskgroupv2 (
     venv_file_number integer,
     timestamp_last_used timestamp with time zone NOT NULL,
     pixi_version character varying,
-    pinned_package_versions_pre jsonb DEFAULT '{}'::jsonb
+    pinned_package_versions_pre jsonb DEFAULT '{}'::jsonb,
+    resource_id integer
 );
 
 
@@ -476,7 +564,7 @@ CREATE SEQUENCE public.taskgroupv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.taskgroupv2_id_seq OWNER TO postgres;
+ALTER TABLE public.taskgroupv2_id_seq OWNER TO postgres;
 
 --
 -- Name: taskgroupv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -529,7 +617,7 @@ CREATE SEQUENCE public.taskv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.taskv2_id_seq OWNER TO postgres;
+ALTER TABLE public.taskv2_id_seq OWNER TO postgres;
 
 --
 -- Name: taskv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -549,8 +637,10 @@ CREATE TABLE public.user_oauth (
     is_active boolean NOT NULL,
     is_superuser boolean NOT NULL,
     is_verified boolean NOT NULL,
-    username character varying,
-    user_settings_id integer
+    user_settings_id integer,
+    profile_id integer,
+    project_dir character varying DEFAULT '/PLACEHOLDER'::character varying NOT NULL,
+    slurm_accounts character varying[] DEFAULT '{}'::character varying[]
 );
 
 
@@ -569,7 +659,7 @@ CREATE SEQUENCE public.user_oauth_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.user_oauth_id_seq OWNER TO postgres;
+ALTER TABLE public.user_oauth_id_seq OWNER TO postgres;
 
 --
 -- Name: user_oauth_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -610,7 +700,7 @@ CREATE SEQUENCE public.user_settings_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.user_settings_id_seq OWNER TO postgres;
+ALTER TABLE public.user_settings_id_seq OWNER TO postgres;
 
 --
 -- Name: user_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -646,7 +736,7 @@ CREATE SEQUENCE public.usergroup_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.usergroup_id_seq OWNER TO postgres;
+ALTER TABLE public.usergroup_id_seq OWNER TO postgres;
 
 --
 -- Name: usergroup_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -688,7 +778,7 @@ CREATE SEQUENCE public.workflowtaskv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.workflowtaskv2_id_seq OWNER TO postgres;
+ALTER TABLE public.workflowtaskv2_id_seq OWNER TO postgres;
 
 --
 -- Name: workflowtaskv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -724,7 +814,7 @@ CREATE SEQUENCE public.workflowv2_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.workflowv2_id_seq OWNER TO postgres;
+ALTER TABLE public.workflowv2_id_seq OWNER TO postgres;
 
 --
 -- Name: workflowv2_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -783,10 +873,24 @@ ALTER TABLE ONLY public.oauthaccount ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- Name: profile id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile ALTER COLUMN id SET DEFAULT nextval('public.profile_id_seq'::regclass);
+
+
+--
 -- Name: projectv2 id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projectv2 ALTER COLUMN id SET DEFAULT nextval('public.projectv2_id_seq'::regclass);
+
+
+--
+-- Name: resource id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.resource ALTER COLUMN id SET DEFAULT nextval('public.resource_id_seq'::regclass);
 
 
 --
@@ -866,7 +970,7 @@ COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids) FROM
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-981d588fe248
+83bc2ad3ffcc
 \.
 
 
@@ -942,11 +1046,29 @@ COPY public.oauthaccount (id, user_id, oauth_name, access_token, expires_at, ref
 
 
 --
+-- Data for Name: profile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.profile (id, resource_id, resource_type, name, username, ssh_key_path, jobs_remote_dir, tasks_remote_dir) FROM stdin;
+1	1	local	Profile None	\N	\N	\N	\N
+\.
+
+
+--
 -- Data for Name: projectv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.projectv2 (id, name, timestamp_created) FROM stdin;
-1	MyProject_uv	2024-04-24 12:54:43.995984+02
+COPY public.projectv2 (id, name, timestamp_created, resource_id) FROM stdin;
+1	MyProject_uv	2024-04-24 12:54:43.995984+02	1
+\.
+
+
+--
+-- Data for Name: resource; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.resource (id, type, name, timestamp_created, host, jobs_local_dir, jobs_runner_config, jobs_slurm_python_worker, jobs_poll_interval, tasks_local_dir, tasks_python_config, tasks_pixi_config) FROM stdin;
+1	local	Resource Name	2025-11-12 08:54:00.357128+01	\N	/fake	{"parallel_tasks_per_job": null}	\N	15	/fake	{"versions": {"3.10": "/something"}, "pip_cache_dir": null, "default_version": "3.10"}	{}
 \.
 
 
@@ -963,9 +1085,9 @@ COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started,
 -- Data for Name: taskgroupv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, archive_path, pip_extras, pinned_package_versions_post, active, timestamp_created, env_info, "venv_size_in_kB", venv_file_number, timestamp_last_used, pixi_version, pinned_package_versions_pre) FROM stdin;
-1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	\N	\N	2024-10-29 09:05:04.891366+01	\N	{}
-2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	\N	\N	2024-10-29 09:05:04.91603+01	\N	{}
+COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, archive_path, pip_extras, pinned_package_versions_post, active, timestamp_created, env_info, "venv_size_in_kB", venv_file_number, timestamp_last_used, pixi_version, pinned_package_versions_pre, resource_id) FROM stdin;
+1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	\N	\N	2024-10-29 09:05:04.891366+01	\N	{}	1
+2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	\N	\N	2024-10-29 09:05:04.91603+01	\N	{}	1
 \.
 
 
@@ -983,11 +1105,11 @@ COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, sour
 -- Data for Name: user_oauth; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, username, user_settings_id) FROM stdin;
-1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	admin	1
-6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	__REDACTED_OWNER__	2
-28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	\N	4
-27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	admin_123	3
+COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, user_settings_id, profile_id, project_dir, slurm_accounts) FROM stdin;
+1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	1	\N	/PLACEHOLDER	{}
+6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	2	\N	/PLACEHOLDER	{}
+27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	3	1	/placeholder	{}
+28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	4	1	/placeholder	{}
 \.
 
 
@@ -1080,10 +1202,24 @@ SELECT pg_catalog.setval('public.oauthaccount_id_seq', 1, false);
 
 
 --
+-- Name: profile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.profile_id_seq', 1, true);
+
+
+--
 -- Name: projectv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.projectv2_id_seq', 1, true);
+
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.resource_id_seq', 1, true);
 
 
 --
@@ -1231,11 +1367,27 @@ ALTER TABLE ONLY public.linkuserprojectv2
 
 
 --
+-- Name: profile pk_profile; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile
+    ADD CONSTRAINT pk_profile PRIMARY KEY (id);
+
+
+--
 -- Name: projectv2 pk_projectv2; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.projectv2
     ADD CONSTRAINT pk_projectv2 PRIMARY KEY (id);
+
+
+--
+-- Name: resource pk_resource; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.resource
+    ADD CONSTRAINT pk_resource PRIMARY KEY (id);
 
 
 --
@@ -1292,6 +1444,22 @@ ALTER TABLE ONLY public.workflowtaskv2
 
 ALTER TABLE ONLY public.workflowv2
     ADD CONSTRAINT pk_workflowv2 PRIMARY KEY (id);
+
+
+--
+-- Name: profile uq_profile_name; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile
+    ADD CONSTRAINT uq_profile_name UNIQUE (name);
+
+
+--
+-- Name: resource uq_resource_name; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.resource
+    ADD CONSTRAINT uq_resource_name UNIQUE (name);
 
 
 --
@@ -1490,6 +1658,22 @@ ALTER TABLE ONLY public.linkuserprojectv2
 
 
 --
+-- Name: profile fk_profile_resource_id_resource; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile
+    ADD CONSTRAINT fk_profile_resource_id_resource FOREIGN KEY (resource_id) REFERENCES public.resource(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: projectv2 fk_projectv2_resource_id_resource; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.projectv2
+    ADD CONSTRAINT fk_projectv2_resource_id_resource FOREIGN KEY (resource_id) REFERENCES public.resource(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: taskgroupactivityv2 fk_taskgroupactivityv2_taskgroupv2_id_taskgroupv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1503,6 +1687,14 @@ ALTER TABLE ONLY public.taskgroupactivityv2
 
 ALTER TABLE ONLY public.taskgroupactivityv2
     ADD CONSTRAINT fk_taskgroupactivityv2_user_id_user_oauth FOREIGN KEY (user_id) REFERENCES public.user_oauth(id);
+
+
+--
+-- Name: taskgroupv2 fk_taskgroupv2_resource_id_resource; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.taskgroupv2
+    ADD CONSTRAINT fk_taskgroupv2_resource_id_resource FOREIGN KEY (resource_id) REFERENCES public.resource(id) ON DELETE RESTRICT;
 
 
 --
@@ -1527,6 +1719,14 @@ ALTER TABLE ONLY public.taskgroupv2
 
 ALTER TABLE ONLY public.taskv2
     ADD CONSTRAINT fk_taskv2_taskgroupv2_id_taskgroupv2 FOREIGN KEY (taskgroupv2_id) REFERENCES public.taskgroupv2(id);
+
+
+--
+-- Name: user_oauth fk_user_oauth_profile_id_profile; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_oauth
+    ADD CONSTRAINT fk_user_oauth_profile_id_profile FOREIGN KEY (profile_id) REFERENCES public.profile(id) ON DELETE RESTRICT;
 
 
 --
@@ -1573,4 +1773,4 @@ ALTER TABLE ONLY public.oauthaccount
 -- PostgreSQL database dump complete
 --
 
-\unrestrict UFeLsxWLfUOdmFZHAh4GpZLTFKJlONtX9T1MNAVXB9nIfyq7nfiQkLOwJpUyivV
+\unrestrict x7mZmUUgaJzAS1nsrFckZFuq3netSagLhMFnOpLIHjPfNWLgHCcfHROdoHwfr61

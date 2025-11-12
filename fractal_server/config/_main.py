@@ -54,6 +54,15 @@ class Settings(BaseSettings):
     ] = "local"
     FRACTAL_LOGGING_LEVEL: int = logging.INFO
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
-    FRACTAL_GRACEFUL_SHUTDOWN_TIME: int = 30
+    """
+    Number of ids that can be stored in the `jobsV2` attribute of
+    `app.state`.
+    """
+
+    FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
+    """
+    Waiting time for the shutdown phase of executors
+    """
+
     FRACTAL_HELP_URL: HttpUrl | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None

@@ -29,6 +29,7 @@ async def test_loss_of_access_to_task(
             is_superuser=False,
             is_verified=True,
             profile_id=profile.id,
+            project_dir="/fake",
         )
         user_A = UserOAuth(email=f"a{i}@a.a", **attrs)
         user_B = UserOAuth(email=f"b{i}@b.b", **attrs)
@@ -61,7 +62,11 @@ async def test_loss_of_access_to_task(
         async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
             # Prepare all objects
             project = await project_factory_v2(user)
-            dataset = await dataset_factory_v2(project_id=project.id)
+            dataset = await dataset_factory_v2(
+                project_id=project.id,
+                zarr_dir="/fake/",
+                images=[dict(zarr_url="/fake/1")],
+            )
             workflow = await workflow_factory_v2(project_id=project.id)
             await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task_A.id, db=db
