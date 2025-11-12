@@ -106,7 +106,6 @@ def _folder_can_be_deleted(folder: str) -> bool:
         )
         return False
 
-    raise RuntimeError
     return True
 
 
