@@ -18,7 +18,7 @@ The following will assume that:
 
 - If you choose to declare the environment variables using the `.fractal_server.env` file, that file must be placed in the current working directory;
 
-- You have access to a dedicated PostgreSQL database (see the [database page](internals/database_interface.md)).
+- You have access to a dedicated PostgreSQL database (see the [database page](internals/database.md)).
 
 ## How to install
 
@@ -79,7 +79,7 @@ curl http://localhost:8000/api/alive/
 The high-level procedure for upgrading `fractal-server` on an existing instance is as follows:
 
 * Stop the running `fractal-server` process.
-* Create a backup dump of the current database data (see [database page](internals/database_interface.md/#backup-and-restore)).
+* Create a backup dump of the current database data (see [database page](internals/database.md/#backup-and-restore)).
 * Review the [CHANGELOG](changelog.md), and check whether this version upgrade requires any special procedure.
 * Upgrade `fractal-server` (e.g. as in `pip install fractal-server==1.2.3`).
 * Update the database schemas (as in `fractalctl set-db`).

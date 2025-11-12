@@ -23,7 +23,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 
 1. Make a copy of the current `.fractal-server.env` file and name it `.fractal-server.env.old`.
 2. Make sure that `.fractal_server.env.old` includes the `FRACTAL_SLURM_WORKER_PYTHON` variable. If this variable is not set, add it and set it to the absolute path of the Python interpreter which runs `fractal-server`.
-3. Make a backup of the current database with `pg_dump` (see [example](../database_interface.md/#backup-and-restore)).
+3. Make a backup of the current database with `pg_dump` (see [example](../database.md/#backup-and-restore)).
 4. Stop the fractal-server running process (e.g. via `systemctl stop fractal-server`).
 5. Edit `.fractal_server.env` to align with the new version. List of changes:
     - Edit the `FRACTAL_RUNNER_BACKEND` value so that it is one of `slurm_sudo` or `slurm_ssh`.

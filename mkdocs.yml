@@ -31,6 +31,7 @@ theme:
     - navigation.top
     - content.code.annotate
     - content.code.copy
+    - navigation.path
   logo: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png
   favicon: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_favicon.png
   custom_dir: "docs/overrides"
@@ -54,12 +55,25 @@ theme:
   navigation:
     expand: true
 
+
 nav:
   - Home page: index.md
   - Install and deploy: install_and_deploy.md
   - Configuration: configuration.md
   - CLI reference: cli_reference.md
-  - Internals: internals/
+  - Internals:
+      - internals/index.md
+      - Users: internals/users.md
+      - Integrations:
+        - internals/integrations/index.md
+        - internals/integrations/runners.md
+        - internals/integrations/tasks.md
+      - Database: internals/database.md
+      - Logging: internals/logging.md
+      - Version upgrades:
+        - internals/version_upgrades/index.md
+        - internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md
+        - internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md
   - Code reference: reference/
   - Changelog: changelog.md
   - Web API: openapi.md
