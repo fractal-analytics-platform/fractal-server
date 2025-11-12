@@ -53,8 +53,9 @@ def ignore_stderr_line(line: str) -> bool:
     Args:
         line: The line to be considered.
     """
+    line_lower = line.lower()
     for pattern in STDERR_EXCLUDE_PATTERNS:
-        if pattern in line.lower():
+        if pattern in line_lower:
             return True
     return False
 
