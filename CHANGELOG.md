@@ -4,6 +4,15 @@
 
 * Runner:
     * Raise an error for a non-converter task running on an empty image list (\#2971).
+* Database:
+    * Apply all database-schema changes made possible by 2.17.0 data migration (\#2972), namely:
+        * Drop `user_settings` table and corresponding `UserOAuth.user_settings_id` foreign key.
+        * Make `resource_id` foreign key non nullable in `ProjectV2` and `TaskGroupV2` tables.
+        * Drop `server_default="/PLACEHOLDER` for `UserOAuth.project_dir`.
+* App:
+    * Streamline graceful-shutdown logic in lifespan (\#2972).
+* Settings:
+    * Accept float values for `FRACTAL_GRACEFUL_SHUTDOWN_TIME` (\#2972).
 * Testing:
     * Update testing database with 2.17.0 data migration (\#2974).
 

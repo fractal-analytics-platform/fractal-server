@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     `app.state`.
     """
 
-    FRACTAL_GRACEFUL_SHUTDOWN_TIME: int = 30
+    FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
     """
     Waiting time for the shutdown phase of executors
     """
