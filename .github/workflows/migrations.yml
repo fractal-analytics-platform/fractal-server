@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v5
@@ -64,13 +64,18 @@ jobs:
           poetry install --no-interaction
           poetry add setuptools # required for py3.12
 
-      - name: Apply migration and fix-db script (postgres)
+      - name: Apply schema migration
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          poetry run fractalctl set-db
+
+      - name: Apply data migration
+        run: |
           cp $ROOTDIR/.fractal_server.env.old .
           export FRACTAL_DEFAULT_GROUP_NAME=All
-          poetry run fractalctl set-db
-          echo -e "yes\nyes\nyes\nyes\nyes"| poetry run fractalctl update-db-data
+          echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
+
+      - name: Validate new database
           poetry run python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
