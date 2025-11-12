@@ -14,9 +14,12 @@ from fractal_server.types import NonEmptyStr
 MemMBType = Annotated[
     PositiveInt | NonEmptyStr, AfterValidator(slurm_mem_to_MB)
 ]
+"""
+Memory expressed in MB.
+"""
 
 
-class _SlurmConfigSet(BaseModel):
+class SlurmConfigSet(BaseModel):
     """
     Options for the default or gpu SLURM config.
 
@@ -24,7 +27,6 @@ class _SlurmConfigSet(BaseModel):
         partition:
         cpus_per_task:
         mem:
-            See `_parse_mem_value` for details on allowed values.
         constraint:
         gres:
         time:
@@ -32,6 +34,7 @@ class _SlurmConfigSet(BaseModel):
         nodelist:
         account:
         extra_lines:
+        gpus:
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -49,7 +52,7 @@ class _SlurmConfigSet(BaseModel):
     gpus: NonEmptyStr | None = None
 
 
-class _BatchingConfigSet(BaseModel):
+class BatchingConfigSet(BaseModel):
     """
     Options to configure the batching strategy (that is, how to combine
     several tasks in a single SLURM job).
@@ -58,9 +61,7 @@ class _BatchingConfigSet(BaseModel):
         target_cpus_per_job:
         max_cpus_per_job:
         target_mem_per_job:
-            (see `_parse_mem_value` for details on allowed values)
         max_mem_per_job:
-            (see `_parse_mem_value` for details on allowed values)
         target_num_jobs:
         max_num_jobs:
     """
@@ -77,34 +78,38 @@ class _BatchingConfigSet(BaseModel):
 
 class JobRunnerConfigSLURM(BaseModel):
     """
-    Common SLURM configuration.
+    Runner-configuration specifications, for a `slurm_sudo` or
+    `slurm_ssh` resource.
 
-    Note: this is a common and abstract class, which gets transformed into
-    more specific configuration objects during job execution.
+    Note: this is a common class, which is processed and transformed into more
+    specific configuration objects during job execution.
 
     Valid JSON example
-    ```JSON
+    ```json
     {
-      "default_slurm_config": {
-          "partition": "main",
-          "cpus_per_task": 1
-      },
-      "gpu_slurm_config": {
-          "partition": "gpu",
-          "extra_lines": ["#SBATCH --gres=gpu:v100:1"]
-      },
-      "batching_config": {
-          "target_cpus_per_job": 1,
-          "max_cpus_per_job": 1,
-          "target_mem_per_job": 200,
-          "max_mem_per_job": 500,
-          "target_num_jobs": 2,
-          "max_num_jobs": 4
-      },
-      "user_local_exports": {
-          "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
-          "NAPARI_CONFIG": "napari_config.json"
-      }
+        "default_slurm_config": {
+            "partition": "partition-name",
+            "cpus_per_task": 1,
+            "mem": "100M"
+        },
+        "gpu_slurm_config": {
+            "partition": "gpu",
+            "extra_lines": [
+                "#SBATCH --gres=gpu:v100:1"
+            ]
+        },
+        "user_local_exports": {
+            "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
+            "NAPARI_CONFIG": "napari_config.json"
+        },
+        "batching_config": {
+            "target_cpus_per_job": 1,
+            "max_cpus_per_job": 1,
+            "target_mem_per_job": 200,
+            "max_mem_per_job": 500,
+            "target_num_jobs": 2,
+            "max_num_jobs": 4
+        }
     }
     ```
 
@@ -123,7 +128,7 @@ class JobRunnerConfigSLURM(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    default_slurm_config: _SlurmConfigSet
-    gpu_slurm_config: _SlurmConfigSet | None = None
-    batching_config: _BatchingConfigSet
+    default_slurm_config: SlurmConfigSet
+    gpu_slurm_config: SlurmConfigSet | None = None
+    batching_config: BatchingConfigSet
     user_local_exports: DictStrStr = Field(default_factory=dict)

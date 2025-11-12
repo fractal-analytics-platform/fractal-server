@@ -1,19 +1,12 @@
 # Database Interface
 
-Fractal Server only allows _PostgreSQL_ to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md)).
+Fractal Server only allows PostgreSQL to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md#fractal_server.config._database.DatabaseSettings)).
 
-To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
-`1`.
-
-### Requirements
-
-To use PostgreSQL as a database, Fractal Server relies on `sqlalchemy` and `psycopg[binary]`.
+To use PostgreSQL as a database, `fractal-server` depends on [`sqlalchemy`](https://www.sqlalchemy.org/) and [`psycopg[binary]`](https://www.psycopg.org/psycopg3/docs/).
 
 ### Setup
 
-We assume that a PostgreSQL is active, with some _host_ (this can be e.g.
-`localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the
-default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
+We assume that a PostgreSQL service is active, with some _host_ (this can be e.g. `localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
 
 > ⚠️ Notes:
 >
@@ -38,7 +31,7 @@ $ createdb \
 All options of this command (and of the ones below) should be aligned with the
 configuration of a specific PostgreSQL instance. Within `fractal-server`, this
 is done by setting the following configuration variables (before running
-`fractalctl set-db` or `fractalctl start`):
+[`fractalctl`](../cli_reference.md#fractalctl) commands):
 
 - Required:
 
@@ -51,26 +44,12 @@ is done by setting the following configuration variables (before running
     ```
     POSTGRES_HOST=localhost             # default: localhost
     POSTGRES_PORT=5432                  # default: 5432
-    POSTGRES_USER=fractal               # example: fractal
-    POSTGRES_PASSWORD=
+    POSTGRES_USER=fractal               # default: None
+    POSTGRES_PASSWORD=secret            # default: None
     ```
 
-`fractal-server` will then use the [`URL.create`
-function](https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.engine.URL.create)
-from `SQLalchemy` to generate the appropriate URL to connect to:
-
-```python
-URL.create(
-    drivername="postgresql+psycopg",
-    username=self.POSTGRES_USER,
-    password=self.POSTGRES_PASSWORD,
-    host=self.POSTGRES_HOST,
-    port=self.POSTGRES_PORT,
-    database=self.POSTGRES_DB,
-)
-```
-Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket (e.g.
-`/var/run/postgresql`).
+Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain
+socket (e.g. `/var/run/postgresql`).
 
 
 ### Backup and restore

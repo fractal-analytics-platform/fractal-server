@@ -119,9 +119,9 @@ class ManifestV2(BaseModel):
             manifests as the schema evolves. This is for instance used by
             Fractal to determine which subclass of the present base class needs
             be used to read and validate the input.
-        task_list : list[TaskManifestType]
+        task_list:
             The list of tasks, represented as specified by subclasses of the
-            _TaskManifestBase (a.k.a. TaskManifestType)
+            `_TaskManifestBase` (a.k.a. `TaskManifestType`)
         has_args_schemas:
             `True` if the manifest includes JSON Schemas for the arguments of
             each task.

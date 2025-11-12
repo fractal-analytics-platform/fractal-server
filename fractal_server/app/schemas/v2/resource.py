@@ -21,23 +21,46 @@ from fractal_server.types import NonEmptyStr
 
 
 class ResourceType(StrEnum):
+    """
+    Enum for the possible resource types.
+    """
+
     SLURM_SUDO = "slurm_sudo"
+    """
+    Enum entry for resource type `slurm_sudo`.
+    """
+
     SLURM_SSH = "slurm_ssh"
+    """
+    Enum entry for resource type `slurm_ssh`.
+    """
+
     LOCAL = "local"
+    """
+    Enum entry for resource type `local`.
+    """
 
 
 def cast_serialize_pixi_settings(
-    v: dict[NonEmptyStr, Any],
+    value: dict[NonEmptyStr, Any],
 ) -> dict[NonEmptyStr, Any]:
     """
-    Validate current value, and enrich it with default values.
+    Cast/serialize round trip for `tasks_pixi_config` through the
+    `TasksPixiSettings` schema.
+
+    Arguments:
+        value: Current `tasks_pixi_config` value.
     """
-    if v != {}:
-        v = TasksPixiSettings(**v).model_dump()
-    return v
+    if value != {}:
+        value = TasksPixiSettings(**value).model_dump()
+    return value
 
 
-class _ValidResourceBase(BaseModel):
+class ValidResourceBase(BaseModel):
+    """
+    Base resource schema.
+    """
+
     type: ResourceType
     name: NonEmptyStr
 
@@ -67,21 +90,86 @@ class _ValidResourceBase(BaseModel):
         return self
 
 
-class ValidResourceLocal(_ValidResourceBase):
+class ValidResourceLocal(ValidResourceBase):
+    """
+    Valid local resource.
+
+    Attributes:
+        name: Resource name.
+        type: Resource type.
+        tasks_python_config:
+            Configuration of Python interpreters used for task collection.
+        tasks_pixi_config:
+            Configuration of `pixi` interpreters used for task collection.
+        tasks_local_dir:
+            Local base folder for task environments.
+        jobs_local_dir:
+            Local base folder for job folders.
+        jobs_runner_config:
+            Runner configuration.
+
+    """
+
     type: Literal[ResourceType.LOCAL]
     jobs_runner_config: JobRunnerConfigLocal
     jobs_slurm_python_worker: None = None
     host: None = None
 
 
-class ValidResourceSlurmSudo(_ValidResourceBase):
+class ValidResourceSlurmSudo(ValidResourceBase):
+    """
+    Valid SLURM-sudo resource.
+
+    Attributes:
+        name: Resource name.
+        type: Resource type.
+        tasks_python_config:
+            Configuration of Python interpreters used for task collection.
+        tasks_pixi_config:
+            Configuration of `pixi` interpreters used for task collection.
+        tasks_local_dir:
+            Local base folder for task environments.
+        jobs_local_dir:
+            Local base folder for job folders.
+        jobs_runner_config:
+            Runner configuration.
+        jobs_poll_interval:
+            `squeue` polling interval.
+        jobs_slurm_python_worker:
+            Python worker to be used in SLURM jobs.
+    """
+
     type: Literal[ResourceType.SLURM_SUDO]
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
     host: None = None
 
 
-class ValidResourceSlurmSSH(_ValidResourceBase):
+class ValidResourceSlurmSSH(ValidResourceBase):
+    """
+    Valid SLURM-SSH resource.
+
+    Attributes:
+        name: Resource name
+        type: Resource type.
+        tasks_python_config:
+            Configuration of Python interpreters used for task collection.
+        tasks_pixi_config:
+            Configuration of `pixi` interpreters used for task collection.
+        tasks_local_dir:
+            Local base folder for task environments.
+        jobs_local_dir:
+            Local base folder for job folders.
+        jobs_runner_config:
+            Runner configuration.
+        jobs_poll_interval:
+            `squeue` polling interval.
+        jobs_slurm_python_worker:
+            Python worker to be used in SLURM jobs.
+        host:
+            Hostname or IP address of remote SLURM cluster.
+    """
+
     type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
@@ -101,9 +189,16 @@ ResourceCreate = Annotated[
     | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)],
     Discriminator(get_discriminator_value),
 ]
+"""
+Schema for resources in API request bodies.
+"""
 
 
 class ResourceRead(BaseModel):
+    """
+    Schema for resources in API response bodies.
+    """
+
     id: int
 
     type: str
@@ -130,6 +225,9 @@ def cast_serialize_resource(_data: ResourceCreate) -> dict[str, Any]:
 
     We use `@validate_call` because `ResourceCreate` is a `Union` type and it
     cannot be instantiated directly.
+
+    Args:
+        _data:
 
     Return:
         Serialized version of a valid resource object.

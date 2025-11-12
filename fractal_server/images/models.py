@@ -9,7 +9,7 @@ from fractal_server.types import ZarrDirStr
 from fractal_server.types import ZarrUrlStr
 
 
-class _SingleImageBase(BaseModel):
+class SingleImageBase(BaseModel):
     """
     Base for SingleImage and SingleImageTaskOutput.
 
@@ -27,7 +27,7 @@ class _SingleImageBase(BaseModel):
     types: ImageTypes = Field(default_factory=dict)
 
 
-class SingleImageTaskOutput(_SingleImageBase):
+class SingleImageTaskOutput(SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` included).
     """
@@ -35,7 +35,7 @@ class SingleImageTaskOutput(_SingleImageBase):
     attributes: ImageAttributesWithNone = Field(default_factory=dict)
 
 
-class SingleImage(_SingleImageBase):
+class SingleImage(SingleImageBase):
     """
     `SingleImageBase`, with scalar `attributes` values (`None` excluded).
     """

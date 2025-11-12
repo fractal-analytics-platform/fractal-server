@@ -17,14 +17,14 @@ class PublicEmailSettings(BaseModel):
     Schema for `EmailSettings.public`, namely the ready-to-use settings.
 
     Attributes:
-        sender: Sender email address
-        recipients: List of recipients email address
-        smtp_server: SMTP server address
-        port: SMTP server port
-        password: Sender password
-        instance_name: Name of SMTP server instance
-        use_starttls: Whether to use the security protocol
-        use_login: Whether to use login
+        sender: Sender email address.
+        recipients: List of recipients email address.
+        smtp_server: SMTP server address.
+        port: SMTP server port.
+        password: Sender password.
+        instance_name: Name of SMTP server instance.
+        use_starttls: Whether to use the security protocol.
+        use_login: Whether to use login.
     """
 
     sender: EmailStr
@@ -40,50 +40,42 @@ class PublicEmailSettings(BaseModel):
 class EmailSettings(BaseSettings):
     """
     Class with settings for email-sending feature.
+
+    Attributes:
+        FRACTAL_EMAIL_SENDER:
+            Address of the OAuth-signup email sender.
+        FRACTAL_EMAIL_PASSWORD:
+            Password for the OAuth-signup email sender.
+        FRACTAL_EMAIL_SMTP_SERVER:
+            SMTP server for the OAuth-signup emails.
+        FRACTAL_EMAIL_SMTP_PORT:
+            SMTP server port for the OAuth-signup emails.
+        FRACTAL_EMAIL_INSTANCE_NAME:
+            Fractal instance name, to be included in the OAuth-signup emails.
+        FRACTAL_EMAIL_RECIPIENTS:
+            Comma-separated list of recipients of the OAuth-signup emails.
+        FRACTAL_EMAIL_USE_STARTTLS:
+            Whether to use StartTLS when using the SMTP server.
+        FRACTAL_EMAIL_USE_LOGIN:
+            Whether to use login when using the SMTP server.
+            If 'true', FRACTAL_EMAIL_PASSWORD  must be provided.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
     FRACTAL_EMAIL_SENDER: EmailStr | None = None
-    """
-    Address of the OAuth-signup email sender.
-    """
     FRACTAL_EMAIL_PASSWORD: SecretStr | None = None
-    """
-    Password for the OAuth-signup email sender.
-    """
     FRACTAL_EMAIL_SMTP_SERVER: str | None = None
-    """
-    SMTP server for the OAuth-signup emails.
-    """
     FRACTAL_EMAIL_SMTP_PORT: int | None = None
-    """
-    SMTP server port for the OAuth-signup emails.
-    """
     FRACTAL_EMAIL_INSTANCE_NAME: str | None = None
-    """
-    Fractal instance name, to be included in the OAuth-signup emails.
-    """
     FRACTAL_EMAIL_RECIPIENTS: str | None = None
-    """
-    Comma-separated list of recipients of the OAuth-signup emails.
-    """
     FRACTAL_EMAIL_USE_STARTTLS: Literal["true", "false"] = "true"
-    """
-    Whether to use StartTLS when using the SMTP server.
-    Accepted values: 'true', 'false'.
-    """
     FRACTAL_EMAIL_USE_LOGIN: Literal["true", "false"] = "true"
-    """
-    Whether to use login when using the SMTP server.
-    If 'true', FRACTAL_EMAIL_PASSWORD  must be provided.
-    Accepted values: 'true', 'false'.
-    """
 
     public: PublicEmailSettings | None = None
     """
-    The validated field which is actually used in `fractal-server
-    (automatically populated upon creation).
+    The validated field which is actually used in `fractal-server`,
+    automatically populated upon creation.
     """
 
     @model_validator(mode="after")

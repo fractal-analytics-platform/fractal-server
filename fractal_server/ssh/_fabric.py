@@ -374,8 +374,6 @@ class FractalSSH:
         Args:
             cmd: Command to be run
             allow_char: Forbidden chars to allow for this command
-            max_attempts:
-            base_interval:
             lock_timeout:
 
         Returns:

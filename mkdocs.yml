@@ -22,12 +22,19 @@ markdown_extensions:
 
 theme:
   name: "material"
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.prune
+    - toc.integrate
+    - navigation.top
+    - content.code.annotate
+    - content.code.copy
+    - navigation.path
   logo: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png
   favicon: https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_favicon.png
   custom_dir: "docs/overrides"
-  features:
-    - content.code.annotate
-    - content.code.copy
   palette:
   - media: "(prefers-color-scheme: light)"
     scheme: default
@@ -48,11 +55,25 @@ theme:
   navigation:
     expand: true
 
+
 nav:
   - Home page: index.md
   - Install and deploy: install_and_deploy.md
   - Configuration: configuration.md
-  - Internals: internals/
+  - CLI reference: cli_reference.md
+  - Internals:
+      - internals/index.md
+      - Users: internals/users.md
+      - Integrations:
+        - internals/integrations/index.md
+        - internals/integrations/runners.md
+        - internals/integrations/tasks.md
+      - Database: internals/database.md
+      - Logging: internals/logging.md
+      - Version upgrades:
+        - internals/version_upgrades/index.md
+        - internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md
+        - internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md
   - Code reference: reference/
   - Changelog: changelog.md
   - Web API: openapi.md
@@ -63,10 +84,13 @@ watch:
 
 plugins:
   - search
-  - autorefs
+  - autorefs:
+      resolve_closest: true
   - gen-files:
       scripts:
-        - docs/gen_ref_pages.py
+        - docs/scripts/gen_ref_pages.py
+        - docs/scripts/gen_ref_cli.py
+        - docs/scripts/resource_and_profile.py
   - literate-nav:
       nav_file: SUMMARY.md
   - section-index
@@ -74,13 +98,17 @@ plugins:
       default_handler: python
       handlers:
         python:
+          inventories:
+          - https://docs.pydantic.dev/latest/objects.inv
           options:
             show_signature_annotations: false
-            docstring_section_style: "table"
+            docstring_section_style: "spacy"
             docstring_style: "google"
             show_source: true
             filters: []
             show_root_full_path: false
+            signature_crossrefs: true
+            show_attribute_values: true
   - render_swagger
 
 extra_css:

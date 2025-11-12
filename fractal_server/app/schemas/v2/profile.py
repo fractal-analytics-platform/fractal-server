@@ -12,6 +12,14 @@ from fractal_server.types import NonEmptyStr
 
 
 class ValidProfileLocal(BaseModel):
+    """
+    Valid local profile.
+
+    Attributes:
+        name: Profile name.
+        resource_type: Type of the corresponding resource.
+    """
+
     name: NonEmptyStr
     resource_type: ResourceType
     username: None = None
@@ -21,6 +29,17 @@ class ValidProfileLocal(BaseModel):
 
 
 class ValidProfileSlurmSudo(BaseModel):
+    """
+    Valid SLURM/sudo profile.
+
+    Attributes:
+        name: Profile name.
+        resource_type: Type of the corresponding resource.
+        username:
+            SLURM user to impersonate (e.g. as in
+            `sudo -u username sbatch /some/script.sh`).
+    """
+
     name: NonEmptyStr
     resource_type: ResourceType
     username: NonEmptyStr
@@ -30,6 +49,23 @@ class ValidProfileSlurmSudo(BaseModel):
 
 
 class ValidProfileSlurmSSH(BaseModel):
+    """
+    Valid SLURM/sudo profile.
+
+    Attributes:
+        name: Profile name.
+        resource_type: Type of the corresponding resource.
+        username:
+            SLURM user to impersonate (e.g. as in
+            `ssh username@cluster sbatch /some/script.sh`).
+        ssh_key_path:
+            Local path of SSH private key for user `username`.
+        tasks_remote_dir:
+            Base folder for task environments on the remote SLURM cluster.
+        jobs_remote_dir:
+            Base folder for job directories on the remote SLURM cluster.
+    """
+
     name: NonEmptyStr
     resource_type: ResourceType
     username: NonEmptyStr
@@ -54,6 +90,20 @@ ProfileCreate = Annotated[
 
 
 class ProfileRead(BaseModel):
+    """
+    Profile schema for GET endpoints.
+
+    Attributes:
+        id:
+        name:
+        resource_id:
+        resource_type:
+        username:
+        ssh_key_path:
+        jobs_remote_dir:
+        tasks_remote_dir:
+    """
+
     id: int
     name: str
     resource_id: int
@@ -69,7 +119,7 @@ def cast_serialize_profile(_data: ProfileCreate) -> dict[str, Any]:
     """
     Cast/serialize round-trip for `Profile` data.
 
-    We use `@validate_call` because `ProfileeCreate` is a `Union` type and it
+    We use `@validate_call` because `ProfileCreate` is a `Union` type and it
     cannot be instantiated directly.
 
     Return:

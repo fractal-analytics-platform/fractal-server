@@ -119,7 +119,7 @@ def submit_workflow(
             Computational resource to be used for this job (e.g. a SLURM
             cluster).
         profile:
-           Computational profile to be used for this job.
+            Computational profile to be used for this job.
         fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
     """
     # Declare runner backend and set `process_workflow` function

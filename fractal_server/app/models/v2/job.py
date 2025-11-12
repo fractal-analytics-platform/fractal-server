@@ -13,6 +13,10 @@ from fractal_server.utils import get_timestamp
 
 
 class JobV2(SQLModel, table=True):
+    """
+    Job table.
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: int | None = Field(default=None, primary_key=True)

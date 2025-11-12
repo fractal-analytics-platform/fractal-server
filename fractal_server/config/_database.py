@@ -12,34 +12,30 @@ class DatabaseSettings(BaseSettings):
     """
     Minimal set of configurations needed for operating on the database (e.g
     for schema migrations).
+
+    Attributes:
+        DB_ECHO:
+            If `True`, make database operations verbose.
+        POSTGRES_USER:
+            User to use when connecting to the PostgreSQL database.
+        POSTGRES_PASSWORD:
+            Password to use when connecting to the PostgreSQL database.
+        POSTGRES_HOST:
+            URL to the PostgreSQL server or path to a UNIX domain socket.
+        POSTGRES_PORT:
+            Port number to use when connecting to the PostgreSQL server.
+        POSTGRES_DB:
+            Name of the PostgreSQL database to connect to.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
     DB_ECHO: bool = False
-    """
-    If `True`, make database operations verbose.
-    """
     POSTGRES_USER: NonEmptyStr | None = None
-    """
-    User to use when connecting to the PostgreSQL database.
-    """
     POSTGRES_PASSWORD: SecretStr | None = None
-    """
-    Password to use when connecting to the PostgreSQL database.
-    """
     POSTGRES_HOST: NonEmptyStr = "localhost"
-    """
-    URL to the PostgreSQL server or path to a UNIX domain socket.
-    """
     POSTGRES_PORT: NonNegativeInt = 5432
-    """
-    Port number to use when connecting to the PostgreSQL server.
-    """
     POSTGRES_DB: NonEmptyStr
-    """
-    Name of the PostgreSQL database to connect to.
-    """
 
     @property
     def DATABASE_URL(self) -> URL:

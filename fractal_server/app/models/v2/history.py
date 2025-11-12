@@ -14,6 +14,10 @@ from ....utils import get_timestamp
 
 
 class HistoryRun(SQLModel, table=True):
+    """
+    HistoryRun table.
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: int | None = Field(default=None, primary_key=True)
@@ -45,6 +49,10 @@ class HistoryRun(SQLModel, table=True):
 
 
 class HistoryUnit(SQLModel, table=True):
+    """
+    HistoryUnit table.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     history_run_id: int = Field(
         foreign_key="historyrun.id",
@@ -60,6 +68,10 @@ class HistoryUnit(SQLModel, table=True):
 
 
 class HistoryImageCache(SQLModel, table=True):
+    """
+    HistoryImageCache table.
+    """
+
     zarr_url: str = Field(primary_key=True)
     dataset_id: int = Field(
         primary_key=True,

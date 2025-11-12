@@ -65,6 +65,10 @@ def create_accounting_record_slurm(
 
 
 class BaseSlurmRunner(BaseRunner):
+    """
+    Base class for SLURM runners.
+    """
+
     shutdown_file: Path
     common_script_lines: list[str]
     user_cache_dir: str

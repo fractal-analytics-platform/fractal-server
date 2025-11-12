@@ -56,6 +56,13 @@ def run_single_task(
 
 
 class LocalRunner(BaseRunner):
+    """
+    Runner implementation for a computational `local` resource.
+
+    Tasks are executed through a `concurrent.futures.ThreadPoolExecutor`
+    executor.
+    """
+
     executor: ThreadPoolExecutor
     root_dir_local: Path
     shared_config: JobRunnerConfigLocal

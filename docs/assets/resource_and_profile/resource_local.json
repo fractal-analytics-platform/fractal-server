@@ -1,0 +1,18 @@
+{
+  "type": "local",
+  "name": "Local resource",
+  "jobs_local_dir": "/somewhere/jobs",
+  "jobs_runner_config": {
+    "parallel_tasks_per_job": 1
+  },
+  "jobs_poll_interval": 0,
+  "tasks_local_dir": "/somewhere/tasks",
+  "tasks_python_config": {
+    "default_version": "3.12",
+    "versions": {
+      "3.12": "/some-venv/bin/python"
+    }
+  },
+  "tasks_pixi_config": {},
+  "tasks_pip_cache_dir": null
+}

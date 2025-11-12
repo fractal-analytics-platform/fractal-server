@@ -14,12 +14,25 @@ class TasksPythonSettings(BaseModel):
 
     For task collection to work, there must be one or more base Python
     interpreters available on your system.
+
+    Attributes:
+        default_version:
+            Default task-collection Python version (must be a key of
+            `versions`).
+        versions:
+            Dictionary mapping Python versions to the corresponding
+            interpreters. Example:
+            ```json
+            {
+              "3.11": "/path/to/python3.11",
+              "3.13": "/path/to/python3.13"
+            }
+            ```
+        pip_cache_dir:
+            Argument for `--cache-dir` option of `pip install`, if set.
     """
 
     default_version: NonEmptyStr
-    """
-    Default task-collection Python version (must be a key of `versions`).
-    """
     versions: dict[
         Literal[
             "3.9",
@@ -31,14 +44,8 @@ class TasksPythonSettings(BaseModel):
         ],
         AbsolutePathStr,
     ]
-    """
-    Dictionary mapping Python versions to the corresponding interpreters.
-    """
 
     pip_cache_dir: AbsolutePathStr | None = None
-    """
-    Argument for `--cache-dir` option of `pip install`, if set.
-    """
 
     @model_validator(mode="after")
     def _validate_versions(self) -> Self:

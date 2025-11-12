@@ -18,69 +18,143 @@ NonEmptyStr = Annotated[
     str,
     StringConstraints(min_length=1, strip_whitespace=True),
 ]
+"""
+A non-empty string, with no leading/trailing whitespaces.
+"""
+
 
 AbsolutePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_absolute_path),
 ]
+"""
+String representing an absolute path.
+"""
+
+
 HttpUrlStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_http_url),
 ]
+"""
+String representing an URL.
+"""
+
+
 ZarrUrlStr = Annotated[
     NonEmptyStr,
     AfterValidator(normalize_url),
 ]
+"""
+String representing a zarr URL/path.
+"""
+
+
 ZarrDirStr = Annotated[
     NonEmptyStr,
     AfterValidator(normalize_url),
 ]
+"""
+String representing a `zarr_dir` path.
+"""
 
 DictStrAny = Annotated[
     dict[str, Any],
     AfterValidator(valdict_keys),
 ]
+"""
+Dictionary where keys are strings with no leading/trailing whitespaces.
+"""
+
+
 DictStrStr = Annotated[
     dict[str, NonEmptyStr],
     AfterValidator(valdict_keys),
 ]
+"""
+Dictionary where keys are strings with no leading/trailing whitespaces and
+values are non-empty strings.
+"""
 
 ListUniqueNonEmptyString = Annotated[
     list[NonEmptyStr],
     AfterValidator(val_unique_list),
 ]
+"""
+List of unique non-empty-string items.
+"""
+
+
 ListUniqueNonNegativeInt = Annotated[
     list[NonNegativeInt],
     AfterValidator(val_unique_list),
 ]
+"""
+List of unique non-negative-integer items.
+"""
+
+
 ListUniqueAbsolutePathStr = Annotated[
     list[AbsolutePathStr],
     AfterValidator(val_unique_list),
 ]
+"""
+List of unique absolute-path-string items.
+"""
 
 WorkflowTaskArgument = Annotated[
     DictStrAny,
     AfterValidator(validate_wft_args),
 ]
+"""
+Dictionary with no keys from a given forbid-list.
+"""
 
 ImageAttributeValue = Union[int, float, str, bool]
+"""
+Possible values for image attributes.
+"""
+
 ImageAttributes = Annotated[
     dict[str, ImageAttributeValue],
     AfterValidator(valdict_keys),
 ]
+"""
+Image-attributes dictionary.
+"""
+
+
 ImageAttributesWithNone = Annotated[
     dict[str, ImageAttributeValue | None],
     AfterValidator(valdict_keys),
 ]
+"""
+Image-attributes dictionary, including `None` attributes.
+"""
+
+
 AttributeFilters = Annotated[
     dict[str, list[ImageAttributeValue]],
     AfterValidator(validate_attribute_filters),
 ]
+"""
+Image-attributes filters.
+"""
+
+
 TypeFilters = Annotated[
     dict[str, bool],
     AfterValidator(valdict_keys),
 ]
+"""
+Image-type filters.
+"""
+
+
 ImageTypes = Annotated[
     dict[str, bool],
     AfterValidator(valdict_keys),
 ]
+"""
+Image types.
+"""
