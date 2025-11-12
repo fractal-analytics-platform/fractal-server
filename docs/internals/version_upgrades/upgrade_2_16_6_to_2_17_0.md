@@ -57,11 +57,14 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 7. Replace the current `fractal-server` version with 2.17.0 (e.g. via `pip install fractal-server==2.17.0` - within the appropriate Python environment).
 8. Run the database-schema-migration command `fractalctl set-db`.
 9. Run the database-data-migration command `fractalctl update-db-data`.
-10. Restart the fractal-server process (e.g. via `systemctl start fractal-server`).
+10. It is recommended to also upgrade to version 2.17.1, right after the previous steps, because this patch release completes the migration process (by applying some schema migrations which could not be included in 2.17.0). This version update is much simpler than the previous one, since it only involves two steps:
+    * `pip install fractal-server==2.17.1`
+    * `fractalctl set-db`
+11. Restart the fractal-server process (e.g. via `systemctl start fractal-server`).
 
 ## Post-upgrade cleanup
 
-* Upgrade `fractal-web` to version 1.21, add `FRACTAL_DEFAULT_GROUP_NAME=All` to the environment file, and restart the process.
+* Upgrade `fractal-web` to version 1.21.1, add `FRACTAL_DEFAULT_GROUP_NAME=All` to the environment file, and restart the process.
 * Verify that log-in still works (including via OAuth).
 * Review the names of resources/profiles.
 * Review the association between users and profiles.

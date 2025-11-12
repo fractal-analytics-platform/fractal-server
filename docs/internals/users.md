@@ -4,9 +4,10 @@ Fractal Server's user model and authentication/authorization systems are powered
 
 
 ## ::: fractal_server.app.models.security.UserOAuth
-    options:
-      show_root_heading: true
-      show_root_toc_entry: false
+       options:
+         show_root_heading: true
+         show_root_toc_entry: false
+
 <a name="user-model"></a>
 
 ## First user

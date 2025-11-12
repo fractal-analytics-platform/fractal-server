@@ -9,7 +9,16 @@
       "cpus_per_task": 1,
       "mem": "100M"
     },
-    "gpu_slurm_config": {},
+    "gpu_slurm_config": {
+      "partition": "gpu",
+      "extra_lines": [
+        "#SBATCH --gres=gpu:v100:1"
+      ]
+    },
+    "user_local_exports": {
+      "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
+      "NAPARI_CONFIG": "napari_config.json"
+    },
     "batching_config": {
       "target_cpus_per_job": 1,
       "max_cpus_per_job": 1,

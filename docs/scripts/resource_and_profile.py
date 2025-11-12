@@ -66,4 +66,9 @@ else:
     if current_snippet.strip("\n") != SNIPPET.strip("\n"):
         print(current_snippet)
         print(SNIPPET)
-        raise ValueError("Snippets are different.")
+        raise ValueError(
+            "Snippets are different. If this is expected, due to some recent "
+            "updates, remove the current snippet ("
+            "`rm docs/assets/resource_and_profile/snippet.md`) and re-build "
+            "the documentation."
+        )
