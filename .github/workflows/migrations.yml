@@ -19,7 +19,7 @@ env:
   # with the SOURCE_VERSION of fractal-server.
   # Here we test the script that upgrades the DB from SOURCE_VERSION to the
   #current version.
-  SOURCE_VERSION: 2.16.6
+  SOURCE_VERSION: 2.17.0
   ROOTDIR: tests/data/testing_databases
   JWT_SECRET_KEY: fake
 
@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v5
@@ -50,8 +50,7 @@ jobs:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
+      - run: pipx install poetry==2.2.1
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -62,16 +61,23 @@ jobs:
       - name: Install fractal-server
         run: |
           poetry install --no-interaction
-          poetry add setuptools # required for py3.12
 
-      - name: Apply migration and fix-db script (postgres)
+      - name: Apply schema migration
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
-          cp $ROOTDIR/.fractal_server.env.old .
-          export FRACTAL_DEFAULT_GROUP_NAME=All
           poetry run fractalctl set-db
-          echo -e "yes\nyes\nyes\nyes\nyes"| poetry run fractalctl update-db-data
-          poetry run python scripts/validate_db_data_with_read_schemas.py
+
+      - name: Apply data migration
+        env:
+          FRACTAL_DEFAULT_GROUP_NAME: All
+        run: |
+          cp $ROOTDIR/.fractal_server.env.old .
+          echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
+
+      - name: Validate new database
+        env:
+          FRACTAL_DEFAULT_GROUP_NAME: All
+        run: poetry run python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
     name: "Alembic downgrade"
