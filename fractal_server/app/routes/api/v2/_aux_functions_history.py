@@ -71,20 +71,24 @@ def read_log_file(
     wftask: WorkflowTaskV2,
     dataset_id: int,
     logfile: str,
-    archive_path: str,
+    job_working_dir: str,
 ):
+    archive_path = Path(job_working_dir).as_posix() + ".zip"
     try:
         if Path(logfile).exists():
             with open(logfile) as f:
                 return f.read()
         elif Path(archive_path).exists():
+            relative_logfile = (
+                Path(logfile).relative_to(job_working_dir).as_posix()
+            )
             if True:  # FIXME choose one
                 return _read_single_file_using_zipfile(
-                    logfile_path=logfile, archive_path=archive_path
+                    logfile_path=relative_logfile, archive_path=archive_path
                 )
             else:
                 return _read_single_file_using_unzip(
-                    logfile_path=logfile, archive_path=archive_path
+                    logfile_path=relative_logfile, archive_path=archive_path
                 )
         else:
             logger.error(

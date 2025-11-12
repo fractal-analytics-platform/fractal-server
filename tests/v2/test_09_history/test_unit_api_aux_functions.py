@@ -40,7 +40,7 @@ def test_read_log_file(tmp_path: Path):
 
     # Case 1: files do not exist
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
+        logfile=logfile, wftask=wftask, dataset_id=1, job_working_dir="/foo"
     )
     assert "not available" in log
 
@@ -48,14 +48,20 @@ def test_read_log_file(tmp_path: Path):
         f.write("some keyword\n")
     # Case 2: logfile exists and can be read
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
+        logfile=logfile,
+        wftask=wftask,
+        dataset_id=1,
+        job_working_dir="/foo.zip",
     )
     assert "some keyword" in log
 
     # Case 3: File exists but cannot be read
     os.chmod(logfile, 0o000)
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, archive_path="/foo.zip"
+        logfile=logfile,
+        wftask=wftask,
+        dataset_id=1,
+        job_working_dir="/foo.zip",
     )
     assert "Permission denied" in log
 

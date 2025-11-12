@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -463,7 +461,7 @@ async def get_image_log(
         logfile=history_unit.logfile,
         wftask=wftask,
         dataset_id=request_data.dataset_id,
-        archive_path=Path(job.working_dir).as_posix() + ".zip",
+        job_working_dir=job.working_dir,
     )
     return JSONResponse(content=log)
 
@@ -517,7 +515,7 @@ async def get_history_unit_log(
         logfile=history_unit.logfile,
         wftask=wftask,
         dataset_id=dataset_id,
-        archive_path=Path(job.working_dir).as_posix() + ".zip",
+        job_working_dir=job.working_dir,
     )
     return JSONResponse(content=log)
 
