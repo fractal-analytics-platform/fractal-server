@@ -37,7 +37,7 @@ SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
 STDERR_EXCLUDE_PATTERNS = [
     "step creation temporarily disabled, retrying",
     "step creation still disabled, retrying",
-    "srun: step created for stepd=",
+    "srun: step created for stepid=",
 ]
 
 
