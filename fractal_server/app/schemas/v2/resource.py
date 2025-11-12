@@ -95,8 +95,8 @@ class ValidResourceLocal(ValidResourceBase):
     Valid local resource.
 
     Attributes:
-        type: Resource type.
         name: Resource name.
+        type: Resource type.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
@@ -121,8 +121,8 @@ class ValidResourceSlurmSudo(ValidResourceBase):
     Valid SLURM-sudo resource.
 
     Attributes:
-        type: Resource type.
         name: Resource name.
+        type: Resource type.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
@@ -150,8 +150,8 @@ class ValidResourceSlurmSSH(ValidResourceBase):
     Valid SLURM-SSH resource.
 
     Attributes:
-        type: Resource type.
         name: Resource name
+        type: Resource type.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
