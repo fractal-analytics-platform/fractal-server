@@ -245,15 +245,18 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
         "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
         "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
+        "   \n"
         "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
         "srun: Job 23547409 step creation still disabled, retrying ..\n"
         "srun: Job 23547409 step creation still disabled, retrying ..\n"
+        "   \n"
         "srun: Job 23547409 step creation still disabled, retrying ..\n"
         "srun: Job 23547409 step creation still disabled, retrying ..\n"
         "srun: Step created for StepId=23547409.1\n"
         "srun: Step created for StepId=23547409.2\n"
         "srun: Step created for StepId=23547409.3\n"
         "srun: Step created for StepId=23547409.4\n"
+        "          \n"
     )
 
     # Create stderr files with different content
