@@ -62,7 +62,6 @@ jobs:
       - name: Install fractal-server
         run: |
           poetry install --no-interaction
-          poetry add setuptools # required for py3.12
 
       - name: Apply schema migration
         run: |
