@@ -34,6 +34,31 @@ from fractal_server.runner.v2.db_tools import update_status_of_history_unit
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
+STDERR_EXCLUDE_PATTERNS = [
+    "step creation temporarily disabled, retrying",
+    "step creation still disabled, retrying",
+    "srun: step created for stepd=",
+]
+
+
+def ignore_stderr_line(line: str) -> bool:
+    """
+    Whether to ignore a SLURM-job stderr line, based on
+    `STDERR_EXCLUDE_PATTERNS`.
+
+    The goal is to not flag some stderr files as relevant
+    `executor_error_log`, when they only include lines matching a given set
+    of patterns to ignore. See
+    https://github.com/fractal-analytics-platform/fractal-server/issues/2835
+
+    Args:
+        line: The line to be considered.
+    """
+    for pattern in STDERR_EXCLUDE_PATTERNS:
+        if pattern in line.lower():
+            return True
+    return False
+
 
 logger = set_logger(__name__)
 
@@ -532,7 +557,13 @@ class BaseSlurmRunner(BaseRunner):
 
         try:
             with open(stderr_path) as f:
-                stderr_content = f.read().strip()
+                stderr_lines = [
+                    line
+                    for line in f.readlines()
+                    if not ignore_stderr_line(line)
+                ]
+                stderr_content = "\n".join(stderr_lines)
+                stderr_content = stderr_content.strip()
             if stderr_content:
                 return stderr_content
         except Exception as e:
