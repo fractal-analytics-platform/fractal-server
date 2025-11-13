@@ -9,7 +9,7 @@
     * Rename `SudoSlurmRunner` into `SlurmSudoRunner` (\#2980).
     * Ignore some SLURM/stderr patterns when populating `executor_error_log` (\#2984).
 * App Settings:
-    * Remove boolean configuration variables (\#2985).
+    * Transform `DB_ECHO` configuration variable from boolean to `Literal['true', 'false']` (\#2985).
 
 # 2.17.1
 
