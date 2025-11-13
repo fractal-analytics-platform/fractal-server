@@ -46,7 +46,7 @@ class DB:
 
         cls._engine_async = create_async_engine(
             db_settings.DATABASE_URL,
-            echo=db_settings.DB_ECHO,
+            echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
         )
@@ -63,7 +63,7 @@ class DB:
 
         cls._engine_sync = create_engine(
             db_settings.DATABASE_URL,
-            echo=db_settings.DB_ECHO,
+            echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
         )
