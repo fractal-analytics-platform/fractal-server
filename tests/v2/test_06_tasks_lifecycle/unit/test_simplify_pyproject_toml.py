@@ -1,7 +1,6 @@
-import tomllib
-
 import pytest
 import tomli_w
+import tomllib
 
 from fractal_server.tasks.v2.utils_pixi import simplify_pyproject_toml
 
