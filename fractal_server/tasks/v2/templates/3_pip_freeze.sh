@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e
 
 # Variables to be filled within fractal-server
