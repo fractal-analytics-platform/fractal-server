@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -21,6 +22,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
 from fractal_server.logger import set_logger
+from fractal_server.zip_tools import _read_single_file_from_zip
 
 
 logger = set_logger(__name__)
@@ -66,27 +68,51 @@ async def get_history_run_or_404(
 
 def read_log_file(
     *,
-    logfile: str | None,
-    wftask: WorkflowTaskV2,
+    task_name: str,
     dataset_id: int,
-):
-    if logfile is None or not Path(logfile).exists():
-        logger.debug(
-            f"Logs for task '{wftask.task.name}' in dataset "
-            f"{dataset_id} are not available ({logfile=})."
-        )
-        return (
-            f"Logs for task '{wftask.task.name}' in dataset "
-            f"{dataset_id} are not available."
-        )
+    logfile: str,
+    job_working_dir: str,
+) -> str:
+    """
+    Returns the contents of a Job's log file, either directly from the working
+    directory or from the corresponding ZIP archive.
 
+    The function first checks if `logfile` exists on disk.
+
+    If not, it checks if the Job working directory has been zipped and tries to
+    read `logfile` from within the archive.
+    (Note: it is assumed that `logfile` is relative to `job_working_dir`)
+    """
+    archive_path = os.path.normpath(job_working_dir) + ".zip"
     try:
-        with open(logfile) as f:
-            return f.read()
+        if Path(logfile).exists():
+            with open(logfile) as f:
+                return f.read()
+        elif Path(archive_path).exists():
+            relative_logfile = (
+                Path(logfile).relative_to(job_working_dir).as_posix()
+            )
+            return _read_single_file_from_zip(
+                file_path=relative_logfile, archive_path=archive_path
+            )
+
+        else:
+            logger.error(
+                f"Error while retrieving logs for {logfile=} and "
+                f"{archive_path=}: both files do not exist."
+            )
+            return (
+                f"Logs for task '{task_name}' in dataset "
+                f"{dataset_id} are not available."
+            )
     except Exception as e:
+        logger.error(
+            f"Error while retrieving logs for {logfile=} and {archive_path=}. "
+            f"Original error: {str(e)}"
+        )
         return (
-            f"Error while retrieving logs for task '{wftask.task.name}' "
-            f"in dataset {dataset_id}. Original error: {str(e)}."
+            f"Error while retrieving logs for task '{task_name}' "
+            f"in dataset {dataset_id}."
         )
 
 

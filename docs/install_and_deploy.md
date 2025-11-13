@@ -20,6 +20,8 @@ The following will assume that:
 
 - You have access to a dedicated PostgreSQL database (see the [database page](internals/database.md)).
 
+- A few common UNIX tools are available, including `du`, `find`, `cut`, `cat`, `wc`, `bash`, `ls`, `tar` and `unzip`.
+
 ## Install
 
 Fractal Server is hosted on [PyPI](https://pypi.org/project/fractal-server), and can be installed with `pip`:

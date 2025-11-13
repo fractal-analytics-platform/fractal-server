@@ -14,6 +14,7 @@ from fractal_server.app.routes.api.v2._aux_functions_history import (
 from fractal_server.app.routes.api.v2._aux_functions_history import (
     read_log_file,
 )
+from fractal_server.zip_tools import _create_zip
 
 
 async def test_get_history_unit_or_404(db):
@@ -36,25 +37,59 @@ def test_read_log_file(tmp_path: Path):
 
     wftask = MockWorkflowTaskV2(task=MockTaskV2())
 
-    # Case 1: Undefined logfile
-    log = read_log_file(logfile=None, wftask=wftask, dataset_id=1)
-    assert "not available" in log
-
-    # Case 2: File does not exist
     logfile = (tmp_path / "logs.txt").as_posix()
-    log = read_log_file(logfile=logfile, wftask=wftask, dataset_id=1)
+
+    # Case 1: files do not exist
+    log = read_log_file(
+        logfile=logfile,
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir="/foo",
+    )
     assert "not available" in log
 
-    # Case 3: File exists and can be read
+    LOG = "some keyword\n"
     with open(logfile, "w") as f:
-        f.write("some keyword\n")
-    log = read_log_file(logfile=logfile, wftask=wftask, dataset_id=1)
-    assert "some keyword" in log
+        f.write(LOG)
+    # Case 2: logfile exists and can be read
+    log = read_log_file(
+        logfile=logfile,
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir="/foo.zip",
+    )
+    assert log == LOG
 
-    # Case 4: File exists but cannot be read
+    # Case 3: File exists but cannot be read
     os.chmod(logfile, 0o000)
-    log = read_log_file(logfile=logfile, wftask=wftask, dataset_id=1)
-    assert "Permission denied" in log
+    log = read_log_file(
+        logfile=logfile,
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir="/foo.zip",
+    )
+    assert "Error while retrieving logs for task" in log
+
+    # Case 4: File exists inside an archive
+    os.chmod(logfile, 0o777)
+    _create_zip(tmp_path.as_posix(), f"{tmp_path}.zip")
+    os.unlink(logfile)
+    log = read_log_file(
+        logfile=logfile,
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir=tmp_path.as_posix(),
+    )
+    assert log == LOG
+
+    # Case 5: File doesn't exist even inside the archive
+    log = read_log_file(
+        logfile=logfile + "xxx",
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir=tmp_path.as_posix(),
+    )
+    assert "Error while retrieving logs for task" in log
 
 
 async def test_verify_workflow_and_dataset_access(
