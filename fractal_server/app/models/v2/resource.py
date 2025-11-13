@@ -13,6 +13,10 @@ from fractal_server.utils import get_timestamp
 
 
 class Resource(SQLModel, table=True):
+    """
+    Resource table.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
 
     type: str

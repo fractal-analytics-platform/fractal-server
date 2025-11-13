@@ -40,7 +40,11 @@ def _subprocess_run_or_raise(
         raise JobExecutionError(info=error_msg)
 
 
-class SudoSlurmRunner(BaseSlurmRunner):
+class SlurmSudoRunner(BaseSlurmRunner):
+    """
+    Runner implementation for a computational `sudo_slurm` resource.
+    """
+
     slurm_user: str
     slurm_account: str | None = None
 

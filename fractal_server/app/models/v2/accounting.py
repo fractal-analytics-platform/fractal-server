@@ -11,6 +11,10 @@ from ....utils import get_timestamp
 
 
 class AccountingRecord(SQLModel, table=True):
+    """
+    AccountingRecord table.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     timestamp: datetime = Field(
@@ -22,6 +26,10 @@ class AccountingRecord(SQLModel, table=True):
 
 
 class AccountingRecordSlurm(SQLModel, table=True):
+    """
+    AccountingRecordSlurm table.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     timestamp: datetime = Field(

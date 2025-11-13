@@ -29,6 +29,7 @@ async def test_loss_of_access_to_task(
             is_superuser=False,
             is_verified=True,
             profile_id=profile.id,
+            project_dir="/fake",
         )
         user_A = UserOAuth(email=f"a{i}@a.a", **attrs)
         user_B = UserOAuth(email=f"b{i}@b.b", **attrs)

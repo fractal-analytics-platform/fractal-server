@@ -52,21 +52,39 @@ class UserOAuth(SQLModel, table=True):
     """
     ORM model for the `user_oauth` database table.
 
-    This class is a modification of SQLModelBaseUserDB from from
-    fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
-    released under MIT licence.
+    This class is a modification of
+    [`SQLModelBaseUserDB`](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/83980d7f20886120f4636a102ab1822b4c366f63/fastapi_users_db_sqlmodel/__init__.py#L15-L32)
+    from `fastapi_users_db_sqlmodel`.
+    Original Copyright: 2022 François Voron, released under MIT licence.
+
+    Note that several class attributes are
+    [the default ones from `fastapi-users`
+    ](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
 
     Attributes:
         id:
         email:
         hashed_password:
         is_active:
+            If this is `False`, the user has no access to the `/api/v2/`
+            endpoints.
         is_superuser:
         is_verified:
+            If this is `False`, the user has no access to the `/api/v2/`
+            endpoints.
         oauth_accounts:
         profile_id:
+            Foreign key linking the user to a `Profile`. If this is unset,
+            the user has no access to the `/api/v2/` endpoints.
         project_dir:
+            Absolute path of the user's project directory. This is used (A) as
+            a default base folder for the `zarr_dir` of new datasets (where
+            the output Zarr are located), and (B) as a folder which is included
+            by default in the paths that a user is allowed to stream (if the
+            `fractal-data` integration is set up).
+            two goals:
         slurm_accounts:
+            List of SLURM accounts that the user can select upon running a job.
     """
 
     model_config = ConfigDict(from_attributes=True)
@@ -95,22 +113,9 @@ class UserOAuth(SQLModel, table=True):
         ondelete="RESTRICT",
     )
 
-    # TODO-2.17.1: update to `project_dir: str`
-    project_dir: str = Field(
-        sa_column=Column(
-            String,
-            server_default="/PLACEHOLDER",
-            nullable=False,
-        )
-    )
+    project_dir: str
     slurm_accounts: list[str] = Field(
         sa_column=Column(ARRAY(String), server_default="{}"),
-    )
-
-    # TODO-2.17.1: remove
-    user_settings_id: int | None = Field(
-        foreign_key="user_settings.id",
-        default=None,
     )
 
 

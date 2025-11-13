@@ -141,7 +141,15 @@ def enrich_task_files_multisubmit(
 ) -> list[TaskFiles]:
     """
     Expand `TaskFiles` objects with `component` and `prefix`.
+
+    Args:
+        tot_tasks: Total number of images to process.
+        batch_size: Batch size, where `0` means `batch_size=tot_tasks`.
+        base_task_files: Original `TaskFiles` object to be enriched.
     """
+
+    # Replace `batch_size=0` with `batch_size=tot_tasks`
+    batch_size = batch_size or tot_tasks
 
     new_list_task_files: list[TaskFiles] = []
     for absolute_index in range(tot_tasks):

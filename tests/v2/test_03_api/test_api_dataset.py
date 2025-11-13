@@ -253,9 +253,9 @@ async def test_delete_dataset_cascade_jobs(
     client,
 ):
     """
-    GIVEN a Dataset in a relationship with an ApplyWorkflow
+    GIVEN a Dataset in a relationship with an JobV2
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN if the ApplyWorkflow is running the delete will fail,
+    THEN if the JobV2 is running the delete will fail,
          else the corresponding `dataset_id` is set None
     """
     async with MockCurrentUser() as user:

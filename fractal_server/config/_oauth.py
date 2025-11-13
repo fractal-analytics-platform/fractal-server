@@ -13,8 +13,20 @@ from fractal_server.types import NonEmptyStr
 
 class OAuthSettings(BaseSettings):
     """
-    Minimal set of configurations needed for operating on the database (e.g
-    for schema migrations).
+    Settings for integration with an OAuth identity provider.
+
+    Attributes:
+        OAUTH_CLIENT_NAME: Name of the client.
+        OAUTH_CLIENT_ID: ID of client.
+        OAUTH_CLIENT_SECRET:
+            Secret to authorise against the identity provider.
+        OAUTH_OIDC_CONFIG_ENDPOINT:
+            OpenID Connect configuration endpoint, for autodiscovery of
+            relevant endpoints.
+        OAUTH_REDIRECT_URL:
+            String to be used as `redirect_url` argument in
+            `fastapi_users.get_oauth_router`, and then in
+            `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -26,27 +38,10 @@ class OAuthSettings(BaseSettings):
         ]
         | None
     ) = None
-    """
-    The name of the client.
-    """
     OAUTH_CLIENT_ID: SecretStr | None = None
-    """
-    ID of client.
-    """
     OAUTH_CLIENT_SECRET: SecretStr | None = None
-    """
-    Secret to authorise against the identity provider.
-    """
     OAUTH_OIDC_CONFIG_ENDPOINT: SecretStr | None = None
-    """
-    OpenID configuration endpoint, for autodiscovery of relevant endpoints.
-    """
     OAUTH_REDIRECT_URL: str | None = None
-    """
-    String to be used as `redirect_url` argument in
-    `fastapi_users.get_oauth_router`, and then in
-    `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`
-    """
 
     @model_validator(mode="after")
     def check_configuration(self: Self) -> Self:

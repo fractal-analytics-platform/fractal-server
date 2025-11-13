@@ -14,7 +14,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_sudo.runner import (
-    SudoSlurmRunner,
+    SlurmSudoRunner,
 )
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
@@ -68,7 +68,7 @@ async def test_submit_shutdown(
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -128,7 +128,7 @@ async def test_multisubmit_shutdown(
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -198,7 +198,7 @@ async def test_shutdown_before_submit(
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -251,7 +251,7 @@ async def test_shutdown_before_multisubmit(
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),

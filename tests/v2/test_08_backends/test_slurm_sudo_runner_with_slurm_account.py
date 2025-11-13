@@ -6,7 +6,7 @@ from devtools import debug
 from .aux_unit_runner import *  # noqa
 from .aux_unit_runner import ZARR_URLS
 from fractal_server.runner.executors.slurm_sudo.runner import (
-    SudoSlurmRunner,
+    SlurmSudoRunner,
 )
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
@@ -30,7 +30,7 @@ async def test_submit_with_slurm_account_and_worker_init(
 
     resource, profile = slurm_sudo_resource_profile_objects[:]
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),

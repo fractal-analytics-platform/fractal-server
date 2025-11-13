@@ -11,7 +11,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.slurm_sudo.runner import (
-    SudoSlurmRunner,
+    SlurmSudoRunner,
 )
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
 from tests.v2._aux_runner import get_default_slurm_config
@@ -45,7 +45,7 @@ async def test_submit_success(
     else:
         parameters = dict(zarr_urls=ZARR_URLS)
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -113,7 +113,7 @@ async def test_submit_fail(
     else:
         parameters = {}
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -164,7 +164,7 @@ async def test_multisubmit_parallel(
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -222,7 +222,7 @@ async def test_multisubmit_compound(
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
@@ -296,7 +296,7 @@ async def test_multisubmit_parallel_partial_failure(
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),

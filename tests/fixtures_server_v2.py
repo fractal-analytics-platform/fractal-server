@@ -42,14 +42,20 @@ async def project_factory_v2(db):
     """
 
     async def __project_factory(user, **kwargs):
-        res = await db.execute(
-            select(Resource.id)
-            .join(Profile)
-            .where(Resource.id == Profile.resource_id)
-            .where(Profile.id == user.profile_id)
+        resource_id = kwargs.get("resource_id", None)
+        if resource_id is None:
+            res = await db.execute(
+                select(Resource.id)
+                .join(Profile)
+                .where(Resource.id == Profile.resource_id)
+                .where(Profile.id == user.profile_id)
+            )
+            resource_id = res.scalar_one()
+        args = dict(
+            name="project",
+            resource_id=resource_id,
+            project_dir="/fake",
         )
-        resource_id = res.scalar_one()
-        args = dict(name="project", resource_id=resource_id)
         args.update(kwargs)
         project = ProjectV2(**args)
         project.user_list.append(user)
@@ -360,6 +366,7 @@ async def valid_user_id(db: AsyncSession) -> int:
     user = UserOAuth(
         email="fake@example.org",
         hashed_password="fake-hashed-password",
+        project_dir="/fake",
     )
     db.add(user)
     await db.commit()

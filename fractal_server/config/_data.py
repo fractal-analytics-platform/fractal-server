@@ -18,37 +18,47 @@ class DataAuthScheme(StrEnum):
 class DataSettings(BaseSettings):
     """
     Settings for the `fractal-data` integration.
+
+    See https://github.com/fractal-analytics-platform/fractal-data.
+
+    Attributes:
+        FRACTAL_DATA_AUTH_SCHEME:
+            Defines how the list of allowed viewer paths is built.
+
+            This variable affects the
+            `GET /auth/current-user/allowed-viewer-paths/` response, which is
+            then consumed by
+            [fractal-data](https://github.com/fractal-analytics-platform/fractal-data).
+
+            Options:
+                <ul>
+                <li> `"viewer-paths"`: The list of allowed viewer paths will
+                    include the user's `project_dir` along with any path
+                    defined in  UserGroups `viewer_paths` attributes.
+                </li>
+                <li> `"users-folders"`: The list will consist of the user's
+                    `project_dir` and a user-specific folder. The user folder
+                    is constructed by concatenating the base folder
+                    `FRACTAL_DATA_BASE_FOLDER` with the user's profile
+                    `username`.
+                </li>
+                <li> `"none"`: An empty list will be returned, indicating no
+                    access to viewer paths. Useful when vizarr viewer is not
+                    used.
+                </li>
+                </ul>
+        FRACTAL_DATA_BASE_FOLDER:
+            Base path to Zarr files that will be served by
+            fractal-vizarr-viewer.
+            This variable is required and used only when
+            `FRACTAL_DATA_AUTHORIZATION_SCHEME` is set to `"users-folders"`.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
     FRACTAL_DATA_AUTH_SCHEME: DataAuthScheme = "none"
-    """
-    Defines how the list of allowed viewer paths is built.
-
-    This variable affects the `GET /auth/current-user/allowed-viewer-paths/`
-    response, which is then consumed by
-    [fractal-data](https://github.com/fractal-analytics-platform/fractal-data).
-
-    Options:
-
-    - "viewer-paths": The list of allowed viewer paths will include the user's
-      `project_dir` along with any path defined in user groups' `viewer_paths`
-      attributes.
-    - "users-folders": The list will consist of the user's `project_dir` and a
-       user-specific folder. The user folder is constructed by concatenating
-       the base folder `FRACTAL_DATA_BASE_FOLDER` with the user's profile
-       `username`.
-    - "none": An empty list will be returned, indicating no access to
-       viewer paths. Useful when vizarr viewer is not used.
-    """
 
     FRACTAL_DATA_BASE_FOLDER: AbsolutePathStr | None = None
-    """
-    Base path to Zarr files that will be served by fractal-vizarr-viewer;
-    This variable is required and used only when
-    FRACTAL_DATA_AUTHORIZATION_SCHEME is set to "users-folders".
-    """
 
     @model_validator(mode="after")
     def check(self: Self) -> Self:

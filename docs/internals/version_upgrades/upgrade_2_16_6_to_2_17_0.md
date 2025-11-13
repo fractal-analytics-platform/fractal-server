@@ -23,16 +23,17 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 
 1. Make a copy of the current `.fractal-server.env` file and name it `.fractal-server.env.old`.
 2. Make sure that `.fractal_server.env.old` includes the `FRACTAL_SLURM_WORKER_PYTHON` variable. If this variable is not set, add it and set it to the absolute path of the Python interpreter which runs `fractal-server`.
-3. Make a backup of the current database with `pg_dump` (see [example](../../database_interface/#backup-and-restore)).
+3. Make a backup of the current database with `pg_dump` (see [example](../database.md/#backup-and-restore)).
 4. Stop the fractal-server running process (e.g. via `systemctl stop fractal-server`).
 5. Edit `.fractal_server.env` to align with the new version. List of changes:
     - Edit the `FRACTAL_RUNNER_BACKEND` value so that it is one of `slurm_sudo` or `slurm_ssh`.
     - Rename `FRACTAL_VIEWER_AUTHORIZATION_SCHEME` into `FRACTAL_DATA_AUTH_SCHEME` - if present.
     - Rename `FRACTAL_VIEWER_BASE_FOLDER` into `FRACTAL_DATA_BASE_FOLDER` - if present.
     - Add `FRACTAL_DEFAULT_GROUP_NAME=All` (note: the same variable must be set also in the `fractal-web` environment file).
-    - Update OAuth-related variables to comply with [the new expected ones](../../../reference/fractal_server/config/_oauth/#fractal_server.config._oauth.OAuthSettings).
+    - Update OAuth-related variables to comply with [the new expected ones](../../reference/config/_oauth.md/#fractal_server.config._oauth.OAuthSettings).
         - Add the `OAUTH_CLIENT_NAME` variable.
         - Remove the client name from the names of all other variables, e.g. as in `OAUTH_XXX_CLIENT_ID --> OAUTH_CLIENT_ID` (if `OAUTH_CLIENT_NAME="XXX"`).
+    - If `FRACTAL_EMAIL_PASSWORD` is set, replace its value with the non-encrypted password.
     - Drop all following variables (if set):
         - `FRACTAL_DEFAULT_ADMIN_EMAIL`
         - `FRACTAL_DEFAULT_ADMIN_PASSWORD`
@@ -47,6 +48,7 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
         - `FRACTAL_PIXI_CONFIG_FILE`.
         - `FRACTAL_SLURM_POLL_INTERVAL`.
         - `FRACTAL_PIP_CACHE_DIR`
+        - `FRACTAL_EMAIL_PASSWORD_KEY`
 6. Verify that the following files are available in the current directory:
    * `.fractal_server.env.old`
    * `.fractal_server.env`
@@ -55,11 +57,14 @@ These checks should be performed on a working 2.16 Fractal instance, _before_ st
 7. Replace the current `fractal-server` version with 2.17.0 (e.g. via `pip install fractal-server==2.17.0` - within the appropriate Python environment).
 8. Run the database-schema-migration command `fractalctl set-db`.
 9. Run the database-data-migration command `fractalctl update-db-data`.
-10. Restart the fractal-server process (e.g. via `systemctl start fractal-server`).
+10. It is recommended to also upgrade to version 2.17.1, right after the previous steps, because this patch release completes the migration process (by applying some schema migrations which could not be included in 2.17.0). This version update is much simpler than the previous one, since it only involves two steps:
+    * `pip install fractal-server==2.17.1`
+    * `fractalctl set-db`
+11. Restart the fractal-server process (e.g. via `systemctl start fractal-server`).
 
 ## Post-upgrade cleanup
 
-* Upgrade `fractal-web` to version 1.21, add `FRACTAL_DEFAULT_GROUP_NAME=All` to the environment file, and restart the process.
+* Upgrade `fractal-web` to version 1.21.1, add `FRACTAL_DEFAULT_GROUP_NAME=All` to the environment file, and restart the process.
 * Verify that log-in still works (including via OAuth).
 * Review the names of resources/profiles.
 * Review the association between users and profiles.

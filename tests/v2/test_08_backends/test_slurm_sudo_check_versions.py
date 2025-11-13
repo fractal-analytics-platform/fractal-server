@@ -2,7 +2,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.runner.executors.slurm_sudo.runner import (
-    SudoSlurmRunner,
+    SlurmSudoRunner,
 )
 
 
@@ -15,7 +15,7 @@ async def test_check_fractal_server_versions_executable(
 ):
     debug(slurm_sudo_resource_profile_objects)
 
-    with SudoSlurmRunner(
+    with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),

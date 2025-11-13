@@ -9,13 +9,32 @@ from fractal_server.runner.task_files import TaskFiles
 
 
 class SubmitTaskType(StrEnum):
-    COMPOUND = TaskType.COMPOUND
+    """
+    Valid task types for `BaseRunner.submit`.
+
+    Attributes:
+        NON_PARALLEL: Non-parallel task.
+        COMPOUND: Compound task.
+        CONVERTER_NON_PARALLEL: Non-parallel converter task.
+        CONVERTER_COMPOUND: Compound converter task.
+    """
+
     NON_PARALLEL = TaskType.NON_PARALLEL
+    COMPOUND = TaskType.COMPOUND
     CONVERTER_NON_PARALLEL = TaskType.CONVERTER_NON_PARALLEL
     CONVERTER_COMPOUND = TaskType.CONVERTER_COMPOUND
 
 
 class MultisubmitTaskType(StrEnum):
+    """
+    Valid task types for `BaseRunner.multisubmit`.
+
+    Attributes:
+        PARALLEL: Parallel task.
+        COMPOUND: Compound task.
+        CONVERTER_COMPOUND: Compound converter task.
+    """
+
     PARALLEL = TaskType.PARALLEL
     COMPOUND = TaskType.COMPOUND
     CONVERTER_COMPOUND = TaskType.CONVERTER_COMPOUND
@@ -27,11 +46,18 @@ TASK_TYPES_SUBMIT: list[TaskType] = [
     TaskType.NON_PARALLEL,
     TaskType.CONVERTER_NON_PARALLEL,
 ]
+"""
+List of valid task types for `BaseRunner.submit`.
+"""
+
 TASK_TYPES_MULTISUBMIT: list[TaskType] = [
     TaskType.COMPOUND,
     TaskType.CONVERTER_COMPOUND,
     TaskType.PARALLEL,
 ]
+"""
+List of valid task types for `BaseRunner.multisubmit`.
+"""
 
 logger = set_logger(__name__)
 
@@ -125,7 +151,7 @@ class BaseRunner:
 
         Args:
             parameters: Parameters dictionary.
-            task_type: Task type.s
+            task_type: Task type.
         """
         logger.info("[validate_submit_parameters] START")
         if task_type not in TASK_TYPES_SUBMIT:

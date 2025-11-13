@@ -4,13 +4,16 @@ from pydantic import ConfigDict
 
 class JobRunnerConfigLocal(BaseModel):
     """
-    Specifications of the local-backend configuration
+    Runner-configuration specifications, for a `local` resource.
+
+    The typical use case is that setting `parallel_tasks_per_job` to a
+    small number (e.g. 1) will limit parallelism when executing tasks
+    requiring a large amount of resources (e.g. memory) on a local machine.
 
     Attributes:
         parallel_tasks_per_job:
-            Maximum number of tasks to be run in parallel as part of a call to
-            `FractalThreadPoolExecutor.map`; if `None`, then all tasks will
-            start at the same time.
+            Maximum number of tasks to be run in parallel within a local
+            runner. If `None`, then all tasks may start at the same time.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -18,4 +21,4 @@ class JobRunnerConfigLocal(BaseModel):
 
     @property
     def batch_size(self) -> int:
-        return self.parallel_tasks_per_job or 1
+        return self.parallel_tasks_per_job or 0

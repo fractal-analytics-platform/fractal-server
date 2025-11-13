@@ -40,4 +40,4 @@ jobs:
           poetry install --with dev --no-interaction
 
       - name: Test with pytest
-        run: poetry run pytest -vv --durations 0 --marker "no oauth"
+        run: poetry run pytest -vv --durations 0 -m "not oauth"

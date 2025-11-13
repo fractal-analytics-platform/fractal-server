@@ -13,6 +13,10 @@ from ....utils import get_timestamp
 
 
 class DatasetV2(SQLModel, table=True):
+    """
+    Dataset table.
+    """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: int | None = Field(default=None, primary_key=True)

@@ -225,14 +225,40 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         workdir_remote=tmp_path / "remote/job4",
         tasks=[],
     )
+    job5 = SlurmJob(
+        slurm_job_id="7123",
+        prefix="job5",
+        workdir_local=tmp_path / "job5",
+        workdir_remote=tmp_path / "remote/job5",
+        tasks=[],
+    )
 
-    for job in [job1, job2, job3, job4]:
+    for job in [job1, job2, job3, job4, job5]:
         job.workdir_local.mkdir(parents=True, exist_ok=True)
 
     err_msg = (
         "sbatch: error: Unable to allocate resources: "
         "Invalid account or account/partition combination specified\n"
     )
+
+    err_msg_to_be_skipped = (
+        "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
+        "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
+        "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
+        "   \n"
+        "srun: Job 23547409 step creation temporarily disabled, retrying ..\n"
+        "srun: Job 23547409 step creation still disabled, retrying ..\n"
+        "srun: Job 23547409 step creation still disabled, retrying ..\n"
+        "   \n"
+        "srun: Job 23547409 step creation still disabled, retrying ..\n"
+        "srun: Job 23547409 step creation still disabled, retrying ..\n"
+        "srun: Step created for StepId=23547409.1\n"
+        "srun: Step created for StepId=23547409.2\n"
+        "srun: Step created for StepId=23547409.3\n"
+        "srun: Step created for StepId=23547409.4\n"
+        "          \n"
+    )
+
     # Create stderr files with different content
     # Job 1: Has SLURM error
     stderr1_path = job1.slurm_stderr_local_path
@@ -246,6 +272,10 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
 
     # Job 4: Exception (it is a directory)
     job4.slurm_stderr_local_path.mkdir()
+
+    # Job 5: Only has lines to be skipped
+    stderr5_path = job5.slurm_stderr_local_path
+    stderr5_path.write_text(err_msg_to_be_skipped)
 
     with MockBaseSlurmRunner(
         root_dir_local=tmp_path / "server",
@@ -266,6 +296,9 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
 
         error4 = runner._extract_slurm_error(job4)
         assert error4 is None  # Exception while reading
+
+        error5 = runner._extract_slurm_error(job5)
+        assert error5 is None  # All lines to be skipped
 
         # Test _set_executor_error_log with multiple jobs
         assert runner.executor_error_log is None
