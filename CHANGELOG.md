@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.17.2
+
+> Starting from this version, the `unzip` command-line tool must be available (see \#2978).
+
+* API:
+    * Allow reading logs from zipped job folders (\#2978).
+
 # 2.17.1
 
 * Runner:
