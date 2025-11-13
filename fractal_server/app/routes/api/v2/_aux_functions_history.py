@@ -83,7 +83,7 @@ def read_log_file(
                 Path(logfile).relative_to(job_working_dir).as_posix()
             )
             return _read_single_file_from_zip(
-                logfile_path=relative_logfile, archive_path=archive_path
+                file_path=relative_logfile, archive_path=archive_path
             )
 
         else:
