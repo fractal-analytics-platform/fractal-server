@@ -102,9 +102,8 @@ def read_log_file(
             f"Original error: {str(e)}"
         )
         return (
-            "Error while retrieving logs for task "
-            f"'{wftask.task.name}' in dataset {dataset_id}.\n"
-            f"Original error:\n{str(e)}."
+            f"Error while retrieving logs for task '{wftask.task.name}' "
+            f"in dataset {dataset_id}."
         )
 
 
