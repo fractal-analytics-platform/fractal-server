@@ -1,7 +1,7 @@
-import tomllib
 from typing import TypedDict
 
 import tomli_w
+import tomllib
 
 from fractal_server.logger import set_logger
 
