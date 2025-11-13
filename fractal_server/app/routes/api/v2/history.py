@@ -448,11 +448,6 @@ async def get_image_log(
     history_run = await get_history_run_or_404(
         history_run_id=history_unit.history_run_id, db=db
     )
-    check_historyrun_related_to_dataset_and_wftask(
-        history_run=history_run,
-        dataset_id=request_data.dataset_id,
-        workflowtask_id=request_data.workflowtask_id,
-    )
 
     job = await db.get(JobV2, history_run.job_id)
 
