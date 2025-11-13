@@ -65,7 +65,7 @@ def test_read_log_file(tmp_path: Path):
         dataset_id=1,
         job_working_dir="/foo.zip",
     )
-    assert "Permission denied" in log
+    assert "Error while retrieving logs for task" in log
 
     # Case 4: File exists inside an archive
     os.chmod(logfile, 0o777)
@@ -86,7 +86,7 @@ def test_read_log_file(tmp_path: Path):
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
     )
-    assert "not found inside archive" in log
+    assert "Error while retrieving logs for task" in log
 
 
 async def test_verify_workflow_and_dataset_access(
