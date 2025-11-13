@@ -10,6 +10,8 @@
     * Ignore some SLURM/stderr patterns when populating `executor_error_log` (\#2984).
 * App Settings:
     * Transform `DB_ECHO` configuration variable from boolean to `Literal['true', 'false']` (\#2985).
+* Development:
+    *  Add `shellcheck` to precommit, for `fractal-server/` files (\#2986).
 
 # 2.17.1
 
