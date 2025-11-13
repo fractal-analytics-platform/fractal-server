@@ -103,8 +103,7 @@ def read_log_file(
             )
             return (
                 f"Logs for task '{task_name}' in dataset "
-                f"{dataset_id} are not available:\n"
-                f"both {logfile=} and {archive_path=} do not exist."
+                f"{dataset_id} are not available."
             )
     except Exception as e:
         logger.error(
