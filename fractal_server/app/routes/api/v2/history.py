@@ -445,18 +445,21 @@ async def get_image_log(
         db=db,
     )
 
-    history_run = await get_history_run_or_404(
-        history_run_id=history_unit.history_run_id, db=db
+    # Get job.working_dir
+    res = await db.execute(
+        select(JobV2.working_dir)
+        .join(HistoryRun)
+        .where(HistoryRun.job_id == JobV2.id)
+        .where(HistoryRun.id == history_unit.history_run_id)
     )
-
-    job = await db.get(JobV2, history_run.job_id)
+    job_working_dir = res.scalar_one_or_none()
 
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
         wftask=wftask,
         dataset_id=request_data.dataset_id,
-        job_working_dir=job.working_dir,
+        job_working_dir=job_working_dir,
     )
     return JSONResponse(content=log)
 
