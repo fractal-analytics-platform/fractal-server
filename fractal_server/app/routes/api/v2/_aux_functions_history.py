@@ -22,8 +22,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.logger import set_logger
 from fractal_server.urls import normalize_url
-from fractal_server.zip_tools import _read_single_file_using_unzip
-from fractal_server.zip_tools import _read_single_file_using_zipfile
+from fractal_server.zip_tools import _read_single_file_from_zip
 
 
 logger = set_logger(__name__)
@@ -83,14 +82,10 @@ def read_log_file(
             relative_logfile = (
                 Path(logfile).relative_to(job_working_dir).as_posix()
             )
-            if True:  # FIXME choose one
-                return _read_single_file_using_zipfile(
-                    logfile_path=relative_logfile, archive_path=archive_path
-                )
-            else:
-                return _read_single_file_using_unzip(
-                    logfile_path=relative_logfile, archive_path=archive_path
-                )
+            return _read_single_file_from_zip(
+                logfile_path=relative_logfile, archive_path=archive_path
+            )
+
         else:
             logger.error(
                 f"Error while retrieving logs for {logfile=} and "

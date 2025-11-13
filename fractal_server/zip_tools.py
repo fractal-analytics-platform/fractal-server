@@ -147,28 +147,12 @@ def _zip_folder_to_file_and_remove(folder: str) -> None:
         logger.info("Folder removed.")
 
 
-def _read_single_file_using_zipfile(
-    *, logfile_path: str, archive_path: str
-) -> str:
-    with ZipFile(archive_path, "r") as z:
-        try:
-            with z.open(logfile_path, "r") as f:
-                return f.read().decode()
-        except KeyError:
-            raise FileNotFoundError(
-                f"Logfile '{logfile_path}' not found "
-                f"inside archive '{archive_path}'."
-            )
-
-
-def _read_single_file_using_unzip(
-    *, logfile_path: str, archive_path: str
-) -> str:
+def _read_single_file_from_zip(*, logfile_path: str, archive_path: str) -> str:
     result = subprocess.run(  # nosec
         ["unzip", "-p", archive_path, logfile_path],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
+        capture_output=True,
+        encoding="utf-8",
+        check=False,
     )
 
     if result.returncode != 0:
