@@ -72,7 +72,17 @@ def read_log_file(
     dataset_id: int,
     logfile: str,
     job_working_dir: str,
-):
+) -> str:
+    """
+    Returns the contents of a Job's log file, either directly from the working
+    directory or from the corresponding ZIP archive.
+
+    The function first checks if `logfile` exists on disk.
+
+    If not, it checks if the Job working directory has been zipped and tries to
+    read `logfile` from within the archive.
+    (Note: it is assumed that `logfile` is relative to `job_working_dir`)
+    """
     archive_path = normalize_url(job_working_dir) + ".zip"
     try:
         if Path(logfile).exists():
