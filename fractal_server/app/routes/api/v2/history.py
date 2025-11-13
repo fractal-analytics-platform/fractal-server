@@ -457,7 +457,7 @@ async def get_image_log(
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=request_data.dataset_id,
         job_working_dir=job_working_dir,
     )
@@ -511,7 +511,7 @@ async def get_history_unit_log(
     # Get log or placeholder text
     log = read_log_file(
         logfile=history_unit.logfile,
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=dataset_id,
         job_working_dir=job.working_dir,
     )

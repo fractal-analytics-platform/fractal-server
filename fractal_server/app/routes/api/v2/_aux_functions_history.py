@@ -68,7 +68,7 @@ async def get_history_run_or_404(
 
 def read_log_file(
     *,
-    wftask: WorkflowTaskV2,
+    task_name: str,
     dataset_id: int,
     logfile: str,
     job_working_dir: str,
@@ -102,7 +102,7 @@ def read_log_file(
                 f"{archive_path=}: both files do not exist."
             )
             return (
-                f"Logs for task '{wftask.task.name}' in dataset "
+                f"Logs for task '{task_name}' in dataset "
                 f"{dataset_id} are not available:\n"
                 f"both {logfile=} and {archive_path=} do not exist."
             )
@@ -112,7 +112,7 @@ def read_log_file(
             f"Original error: {str(e)}"
         )
         return (
-            f"Error while retrieving logs for task '{wftask.task.name}' "
+            f"Error while retrieving logs for task '{task_name}' "
             f"in dataset {dataset_id}."
         )
 

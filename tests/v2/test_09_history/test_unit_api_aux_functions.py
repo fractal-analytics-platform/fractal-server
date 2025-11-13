@@ -41,7 +41,10 @@ def test_read_log_file(tmp_path: Path):
 
     # Case 1: files do not exist
     log = read_log_file(
-        logfile=logfile, wftask=wftask, dataset_id=1, job_working_dir="/foo"
+        logfile=logfile,
+        task_name=wftask.task.name,
+        dataset_id=1,
+        job_working_dir="/foo",
     )
     assert "not available" in log
 
@@ -51,7 +54,7 @@ def test_read_log_file(tmp_path: Path):
     # Case 2: logfile exists and can be read
     log = read_log_file(
         logfile=logfile,
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo.zip",
     )
@@ -61,7 +64,7 @@ def test_read_log_file(tmp_path: Path):
     os.chmod(logfile, 0o000)
     log = read_log_file(
         logfile=logfile,
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo.zip",
     )
@@ -73,7 +76,7 @@ def test_read_log_file(tmp_path: Path):
     os.unlink(logfile)
     log = read_log_file(
         logfile=logfile,
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
     )
@@ -82,7 +85,7 @@ def test_read_log_file(tmp_path: Path):
     # Case 5: File doesn't exist even inside the archive
     log = read_log_file(
         logfile=logfile + "xxx",
-        wftask=wftask,
+        task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
     )
