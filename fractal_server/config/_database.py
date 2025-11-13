@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import SecretStr
 from pydantic.types import NonNegativeInt
 from pydantic_settings import BaseSettings
@@ -15,7 +17,7 @@ class DatabaseSettings(BaseSettings):
 
     Attributes:
         DB_ECHO:
-            If `True`, make database operations verbose.
+            If `"true"`, make database operations verbose.
         POSTGRES_USER:
             User to use when connecting to the PostgreSQL database.
         POSTGRES_PASSWORD:
@@ -30,7 +32,7 @@ class DatabaseSettings(BaseSettings):
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
-    DB_ECHO: bool = False
+    DB_ECHO: Literal["true", "false"] = "false"
     POSTGRES_USER: NonEmptyStr | None = None
     POSTGRES_PASSWORD: SecretStr | None = None
     POSTGRES_HOST: NonEmptyStr = "localhost"
