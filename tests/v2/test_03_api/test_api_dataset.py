@@ -64,19 +64,14 @@ async def test_new_dataset_v2(
         assert res.status_code == 201
         dataset2 = res.json()
 
-        # GET (3 different ones)
+        # GET (2 different ones)
 
         # 1
-        res = await client.get("api/v2/dataset/")
-        assert res.status_code == 200
-        user_dataset_list = res.json()
-
-        # 2
         res = await client.get(f"api/v2/project/{p2_id}/dataset/")
         assert res.status_code == 200
         project_dataset_list = res.json()
 
-        # 3
+        # 2
         res = await client.get(
             f"api/v2/project/{p2_id}/dataset/{dataset1['id']}/"
         )
@@ -88,7 +83,7 @@ async def test_new_dataset_v2(
         assert res.status_code == 200
         ds2 = res.json()
 
-        assert user_dataset_list == project_dataset_list == [ds1, ds2]
+        assert project_dataset_list == [ds1, ds2]
 
         # UPDATE
 
@@ -150,23 +145,6 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
         debug(datasets[0]["timestamp_created"])
-
-
-async def test_get_user_datasets(
-    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
-):
-    async with MockCurrentUser(user_kwargs={}) as user:
-        project1 = await project_factory_v2(user, name="p1")
-        project2 = await project_factory_v2(user, name="p2")
-        await dataset_factory_v2(project_id=project1.id, name="ds1a")
-        await dataset_factory_v2(project_id=project1.id, name="ds1b")
-        await dataset_factory_v2(project_id=project2.id, name="ds2a")
-
-        res = await client.get(f"{PREFIX}/dataset/")
-        assert res.status_code == 200
-        datasets = res.json()
-        assert len(res.json()) == 3
-        assert {ds["name"] for ds in datasets} == {"ds1a", "ds1b", "ds2a"}
 
 
 async def test_post_dataset(client, MockCurrentUser, project_factory_v2):

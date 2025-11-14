@@ -271,29 +271,6 @@ async def test_get_workflow(
         assert workflows[0]["project"] == EXPECTED_PROJECT
 
 
-async def test_get_user_workflows(
-    client, MockCurrentUser, project_factory_v2, workflow_factory_v2
-):
-    """
-    Test /api/v2/workflow/
-    """
-
-    async with MockCurrentUser(user_kwargs={}) as user:
-        debug(user)
-
-        project1 = await project_factory_v2(user, name="p1")
-        project2 = await project_factory_v2(user, name="p2")
-        await workflow_factory_v2(project_id=project1.id, name="wf1a")
-        await workflow_factory_v2(project_id=project1.id, name="wf1b")
-        await workflow_factory_v2(project_id=project2.id, name="wf2a")
-
-        res = await client.get(f"{PREFIX}/workflow/")
-        assert res.status_code == 200
-        debug(res.json())
-        assert len(res.json()) == 3
-        assert {wf["name"] for wf in res.json()} == {"wf1a", "wf1b", "wf2a"}
-
-
 async def test_get_project_workflows(
     db, client, MockCurrentUser, project_factory_v2
 ):

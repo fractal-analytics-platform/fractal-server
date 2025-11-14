@@ -11,7 +11,6 @@ from sqlmodel import select
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....models.v2 import ProjectV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
@@ -273,23 +272,6 @@ async def export_workflow(
         task_list=wf_task_list,
     )
     return wf
-
-
-@router.get("/workflow/", response_model=list[WorkflowReadV2])
-async def get_user_workflows(
-    user: UserOAuth = Depends(current_user_act_ver_prof),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowReadV2]:
-    """
-    Returns all the workflows of the current user
-    """
-    stm = select(WorkflowV2)
-    stm = stm.join(ProjectV2).where(
-        ProjectV2.user_list.any(UserOAuth.id == user.id)
-    )
-    res = await db.execute(stm)
-    workflow_list = res.scalars().all()
-    return workflow_list
 
 
 class WorkflowTaskTypeFiltersInfo(BaseModel):
