@@ -57,6 +57,7 @@ class HistoryUnit(SQLModel, table=True):
     history_run_id: int = Field(
         foreign_key="historyrun.id",
         ondelete="CASCADE",
+        index=True,
     )
 
     logfile: str
@@ -89,4 +90,5 @@ class HistoryImageCache(SQLModel, table=True):
     latest_history_unit_id: int = Field(
         foreign_key="historyunit.id",
         ondelete="CASCADE",
+        index=True,
     )
