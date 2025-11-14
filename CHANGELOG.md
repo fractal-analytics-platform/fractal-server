@@ -6,6 +6,7 @@
 
 * API:
     * Allow reading logs from zipped job folders (\#2978).
+    * Do not raise 422 from check-owner functions (\#2988).
 * Runner:
     * Handle default `batch_size` value for local runner (\#2949).
     * Rename `SudoSlurmRunner` into `SlurmSudoRunner` (\#2980).
