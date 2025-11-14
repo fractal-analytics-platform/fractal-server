@@ -6,6 +6,7 @@
 
 * API:
     * Allow reading logs from zipped job folders (\#2978).
+    * Do not raise 422 from check-owner functions (\#2988).
 * Database:
     * Add indexes to `HistoryImageCache` and `HistoryUnit` foreign keys to improve `DatasetV2` deletion time (\#2987).
 * Runner:

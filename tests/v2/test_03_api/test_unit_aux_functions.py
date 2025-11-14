@@ -119,11 +119,8 @@ async def test_get_workflow_check_owner(
                 user_id=user.id,
                 db=db,
             )
-        assert err.value.status_code == 422
-        assert err.value.detail == (
-            f"Invalid project_id={project.id} "
-            f"for workflow_id={other_workflow.id}."
-        )
+        assert err.value.status_code == 404
+        assert err.value.detail == "Workflow not found"
 
 
 async def test_get_workflow_task_check_owner(
@@ -176,11 +173,8 @@ async def test_get_workflow_task_check_owner(
                 user_id=user.id,
                 db=db,
             )
-        assert err.value.status_code == 422
-        assert err.value.detail == (
-            f"Invalid workflow_id={workflow.id} "
-            f"for workflow_task_id={other_wftask.id}"
-        )
+        assert err.value.status_code == 404
+        assert err.value.detail == "WorkflowTask not found"
 
 
 async def test_check_workflow_exists(
@@ -260,11 +254,8 @@ async def test_get_dataset_check_owner(
                 user_id=user.id,
                 db=db,
             )
-        assert err.value.status_code == 422
-        assert err.value.detail == (
-            f"Invalid project_id={other_project.id} "
-            f"for dataset_id={dataset.id}"
-        )
+        assert err.value.status_code == 404
+        assert err.value.detail == "Dataset not found"
 
 
 async def test_get_job_check_owner(
@@ -325,10 +316,8 @@ async def test_get_job_check_owner(
                 user_id=user.id,
                 db=db,
             )
-        assert err.value.status_code == 422
-        assert err.value.detail == (
-            f"Invalid project_id={other_project.id} for job_id={job.id}"
-        )
+        assert err.value.status_code == 404
+        assert err.value.detail == "Job not found"
 
 
 async def test_get_submitted_jobs_statement():

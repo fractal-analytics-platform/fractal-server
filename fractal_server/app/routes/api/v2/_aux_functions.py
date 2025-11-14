@@ -88,28 +88,28 @@ async def _get_workflow_check_owner(
 
     Raises:
         HTTPException(status_code=404_NOT_FOUND):
-            If the workflow does not exist
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
-            If the workflow is not associated to the project
+            If the project or the workflow do not exist or if they are not
+            associated
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user is not a member of the project
     """
 
     # Access control for project
-    project = await _get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
 
-    # Get workflow
-    # (See issue 1087 for 'populate_existing=True')
-    workflow = await db.get(WorkflowV2, workflow_id, populate_existing=True)
+    res = await db.execute(
+        select(WorkflowV2)
+        .where(WorkflowV2.id == workflow_id)
+        .where(WorkflowV2.project_id == project_id)
+        .execution_options(populate_existing=True)  # See issue 1087
+    )
+    workflow = res.scalars().one_or_none()
 
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    if workflow.project_id != project.id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(f"Invalid {project_id=} for {workflow_id=}."),
         )
 
     return workflow
@@ -138,9 +138,10 @@ async def _get_workflow_task_check_owner(
 
     Raises:
         HTTPException(status_code=404_NOT_FOUND):
-            If the WorkflowTask does not exist
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
-            If the WorkflowTask is not associated to the Workflow
+            If the project, the workflow or the workflowtask do not exist or
+            if they are not associated
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user is not a member of the project
     """
 
     # Access control for workflow
@@ -151,19 +152,17 @@ async def _get_workflow_task_check_owner(
         db=db,
     )
 
-    # If WorkflowTask is not in the db, exit
-    workflow_task = await db.get(WorkflowTaskV2, workflow_task_id)
-    if not workflow_task:
+    res = await db.execute(
+        select(WorkflowTaskV2)
+        .where(WorkflowTaskV2.id == workflow_task_id)
+        .where(WorkflowTaskV2.workflow_id == workflow_id)
+    )
+    workflow_task = res.scalars().one_or_none()
+
+    if workflow_task is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="WorkflowTask not found",
-        )
-
-    # If WorkflowTask is not part of the expected Workflow, exit
-    if workflow_id != workflow_task.workflow_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Invalid {workflow_id=} for {workflow_task_id=}",
         )
 
     return workflow_task, workflow
@@ -253,26 +252,28 @@ async def _get_dataset_check_owner(
             `project`).
 
     Raises:
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
-            If the dataset is not associated to the project
+        HTTPException(status_code=404_UNPROCESSABLE_ENTITY):
+            If the project or the dataset do not exist or if they are not
+            associated
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user is not a member of the project
     """
     # Access control for project
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
 
-    # Get dataset
-    # (See issue 1087 for 'populate_existing=True')
-    dataset = await db.get(DatasetV2, dataset_id, populate_existing=True)
+    res = await db.execute(
+        select(DatasetV2)
+        .where(DatasetV2.id == dataset_id)
+        .where(DatasetV2.project_id == project_id)
+        .execution_options(populate_existing=True)  # See issue 1087
+    )
+    dataset = res.scalars().one_or_none()
 
-    if not dataset:
+    if dataset is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
-        )
-    if dataset.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Invalid {project_id=} for {dataset_id=}",
         )
 
     return dict(dataset=dataset, project=project)
@@ -299,8 +300,11 @@ async def _get_job_check_owner(
             `project`).
 
     Raises:
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
-            If the job is not associated to the project
+        HTTPException(status_code=404_UNPROCESSABLE_ENTITY):
+            If the project or the job do not exist or if they are not
+            associated
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user is not a member of the project
     """
     # Access control for project
     project = await _get_project_check_owner(
@@ -308,17 +312,19 @@ async def _get_job_check_owner(
         user_id=user_id,
         db=db,
     )
-    # Get dataset
-    job = await db.get(JobV2, job_id)
-    if not job:
+
+    res = await db.execute(
+        select(JobV2)
+        .where(JobV2.id == job_id)
+        .where(JobV2.project_id == project_id)
+    )
+    job = res.scalars().one_or_none()
+
+    if job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    if job.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Invalid {project_id=} for {job_id=}",
-        )
+
     return dict(job=job, project=project)
 
 
@@ -411,8 +417,11 @@ async def _workflow_insert_task(
     flag_modified(db_workflow, "task_list")
     await db.commit()
 
-    # See issue 1087 for 'populate_existing=True'
-    wf_task = await db.get(WorkflowTaskV2, wf_task.id, populate_existing=True)
+    wf_task = await db.get(
+        WorkflowTaskV2,
+        wf_task.id,
+        populate_existing=True,  # See issue 1087
+    )
 
     return wf_task
 
