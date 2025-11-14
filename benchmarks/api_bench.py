@@ -181,6 +181,7 @@ class Benchmark:
         # list of dicts made by get_metrics()
         verb = endpoint.get("verb")
         path = endpoint.get("path")
+        path = self._replace_path_params(headers, path)
         if verb == "GET":
             metrics_list = [
                 self.get_metrics(
@@ -191,7 +192,6 @@ class Benchmark:
                 for n in range(n_requests)
             ]
         elif verb == "POST":
-            path = self._replace_path_params(headers, path)
             request_json = endpoint.get("json")
             request_data = endpoint.get("data")
             metrics_list = [
