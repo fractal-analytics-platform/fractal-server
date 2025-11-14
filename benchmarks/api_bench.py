@@ -36,12 +36,12 @@ N_REQUESTS = 25
 
 ENDPOINTS = [
     dict(verb="GET", path="/api/alive/"),
-    # dict(verb="GET", path="/api/v2/dataset/"),
+    dict(verb="GET", path="/api/v2/project/$project_id$/dataset/"),
     dict(verb="GET", path="/api/v2/job/"),
     dict(verb="GET", path="/api/v2/project/"),
     dict(verb="GET", path="/api/v2/task/"),
     dict(verb="GET", path="/api/v2/task-group/"),
-    # dict(verb="GET", path="/api/v2/workflow/"),
+    dict(verb="GET", path="/api/v2/project/$project_id$/workflow/"),
     dict(
         verb="POST",
         path="/api/v2/project/$project_id$/dataset/$dataset_id$/images/query/",
