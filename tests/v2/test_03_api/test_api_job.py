@@ -96,7 +96,7 @@ async def test_submit_job_failures(
             json={},
         )
         debug(res.json())
-        assert res.status_code == 422
+        assert res.status_code == 404
 
         # (C) Not existing dataset
         res = await client.post(
