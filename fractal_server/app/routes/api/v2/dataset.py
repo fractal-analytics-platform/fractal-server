@@ -9,7 +9,6 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
-from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
@@ -206,25 +205,6 @@ async def delete_dataset(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get("/dataset/", response_model=list[DatasetReadV2])
-async def get_user_datasets(
-    user: UserOAuth = Depends(current_user_act_ver_prof),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetReadV2]:
-    """
-    Returns all the datasets of the current user
-    """
-    stm = select(DatasetV2)
-    stm = stm.join(ProjectV2).where(
-        ProjectV2.user_list.any(UserOAuth.id == user.id)
-    )
-
-    res = await db.execute(stm)
-    dataset_list = res.scalars().all()
-    await db.close()
-    return dataset_list
 
 
 @router.get(
