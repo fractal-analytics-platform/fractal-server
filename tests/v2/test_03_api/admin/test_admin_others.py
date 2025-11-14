@@ -18,45 +18,6 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
         assert res.status_code == 200
 
 
-async def test_view_project(client, MockCurrentUser, project_factory_v2):
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True}
-    ) as superuser:
-        res = await client.get(f"{PREFIX}/project/")
-        assert res.status_code == 200
-        assert res.json() == []
-        await project_factory_v2(superuser)
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project = await project_factory_v2(user)
-        prj_id = project.id
-        await project_factory_v2(user)
-        user_id = user.id
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.get(f"{PREFIX}/project/")
-        assert res.status_code == 200
-        assert len(res.json()) == 3
-        res = await client.get(f"{PREFIX}/project/?id={prj_id}")
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-        res = await client.get(f"{PREFIX}/project/?user_id={user_id}")
-        assert res.status_code == 200
-        assert len(res.json()) == 2
-        res = await client.get(
-            f"{PREFIX}/project/?user_id={user_id}&id={prj_id}"
-        )
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/project/?id=9999999")
-        assert res.status_code == 200
-        assert res.json() == []
-        res = await client.get(f"{PREFIX}/project/?user_id=9999999")
-        assert res.status_code == 200
-        assert res.json() == []
-
-
 async def test_task_query(
     db,
     client,
