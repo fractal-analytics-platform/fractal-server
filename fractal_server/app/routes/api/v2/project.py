@@ -3,7 +3,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import delete
 from sqlmodel import select
 
 from .....logger import reset_logger_handlers
@@ -154,12 +153,6 @@ async def delete_project(
             ),
         )
 
-    logger.info(f"Delete LinkUserProjectV2 linked to Project[{project.id}].")
-    await db.execute(
-        delete(LinkUserProjectV2).where(
-            LinkUserProjectV2.project_id == project_id
-        )
-    )
     logger.info(f"Adding Project[{project.id}] to deletion.")
     await db.delete(project)
 
