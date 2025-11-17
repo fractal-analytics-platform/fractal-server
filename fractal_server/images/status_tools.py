@@ -37,10 +37,12 @@ def _prepare_query(
     """
     stm = (
         select(HistoryImageCache.zarr_url, HistoryUnit.status)
-        .join(HistoryUnit)
+        .join(
+            HistoryUnit,
+            HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
+        )
         .where(HistoryImageCache.dataset_id == dataset_id)
         .where(HistoryImageCache.workflowtask_id == workflowtask_id)
-        .where(HistoryImageCache.latest_history_unit_id == HistoryUnit.id)
     )
     return stm
 

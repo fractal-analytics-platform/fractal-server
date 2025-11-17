@@ -17,7 +17,7 @@ PREFIX = "/api/v2"
 async def _project_list_v2(user: UserOAuth, db):
     stm = (
         select(ProjectV2)
-        .join(LinkUserProjectV2)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
@@ -285,14 +285,14 @@ async def test_delete_project(
         assert len(data) == 0
 
         # Check that project-related datasets were deleted
-        stm = select(DatasetV2).join(ProjectV2).where(ProjectV2.id == p["id"])
+        stm = select(DatasetV2).where(DatasetV2.project_id == p["id"])
         res = await db.execute(stm)
         datasets = list(res)
         debug(datasets)
         assert len(datasets) == 0
 
         # Check that project-related workflows were deleted
-        stm = select(WorkflowV2).join(ProjectV2).where(ProjectV2.id == p["id"])
+        stm = select(WorkflowV2).where(WorkflowV2.project_id == p["id"])
         res = await db.execute(stm)
         workflows = list(res)
         debug(workflows)

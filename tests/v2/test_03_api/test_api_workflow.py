@@ -123,11 +123,7 @@ async def test_delete_workflow(
         assert res.status_code == 201
 
         # Verify that the WorkflowTask was correctly inserted into the Workflow
-        stm = (
-            select(WorkflowTaskV2)
-            .join(WorkflowV2)
-            .where(WorkflowTaskV2.workflow_id == wf_id)
-        )
+        stm = select(WorkflowTaskV2).where(WorkflowTaskV2.workflow_id == wf_id)
         res = await db.execute(stm)
         res = list(res)
         assert len(res) == 1

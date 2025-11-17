@@ -143,12 +143,12 @@ async def get_workflow_tasks_statuses(
         for target_status in HistoryUnitStatus:
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
-                .join(HistoryUnit)
+                .join(
+                    HistoryUnit,
+                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
+                )
                 .where(HistoryImageCache.dataset_id == dataset_id)
                 .where(HistoryImageCache.workflowtask_id == wftask.id)
-                .where(
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id
-                )
                 .where(HistoryUnit.status == target_status)
             )
             res = await db.execute(stm)
@@ -448,8 +448,7 @@ async def get_image_log(
     # Get job.working_dir
     res = await db.execute(
         select(JobV2.working_dir)
-        .join(HistoryRun)
-        .where(HistoryRun.job_id == JobV2.id)
+        .join(HistoryRun, HistoryRun.job_id == JobV2.id)
         .where(HistoryRun.id == history_unit.history_run_id)
     )
     job_working_dir = res.scalar_one_or_none()

@@ -107,16 +107,12 @@ async def query_tasks(
         stm = stm.where(TaskV2.authors.icontains(author))
         stm_count = stm_count.where(TaskV2.authors.icontains(author))
     if resource_id is not None:
-        stm = (
-            stm.join(TaskGroupV2)
-            .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-            .where(TaskGroupV2.resource_id == resource_id)
-        )
-        stm_count = (
-            stm_count.join(TaskGroupV2)
-            .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-            .where(TaskGroupV2.resource_id == resource_id)
-        )
+        stm = stm.join(
+            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+        ).where(TaskGroupV2.resource_id == resource_id)
+        stm_count = stm_count.join(
+            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+        ).where(TaskGroupV2.resource_id == resource_id)
 
     # Find total number of elements
     res_total_count = await db.execute(stm_count)

@@ -86,13 +86,11 @@ async def _get_task_group_read_access(
     else:
         stm = (
             select(LinkUserGroup)
-            .join(UserOAuth)
-            .join(Profile)
+            .join(UserOAuth, UserOAuth.id == LinkUserGroup.user_id)
+            .join(Profile, Profile.id == UserOAuth.profile_id)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
-            .where(LinkUserGroup.user_id == user_id)
             .where(UserOAuth.id == user_id)
-            .where(Profile.id == UserOAuth.profile_id)
-            .where(task_group.resource_id == Profile.resource_id)
+            .where(Profile.resource_id == task_group.resource_id)
         )
         res = await db.execute(stm)
         link = res.unique().scalars().one_or_none()

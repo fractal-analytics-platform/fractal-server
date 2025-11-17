@@ -36,7 +36,7 @@ async def _get_single_user_with_groups(
 
     stm_groups = (
         select(UserGroup)
-        .join(LinkUserGroup)
+        .join(LinkUserGroup, LinkUserGroup.group_id == UserGroup.id)
         .where(LinkUserGroup.user_id == user.id)
         .order_by(asc(LinkUserGroup.timestamp_created))
     )
