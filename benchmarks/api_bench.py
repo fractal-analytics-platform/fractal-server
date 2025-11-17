@@ -130,7 +130,7 @@ class Benchmark:
             rendered_md = (
                 "There was an exception in `template.render`, within "
                 "`make_md_diff`.\n"
-                f"Original error:s{str(e)}\n"
+                f"Original error:\n{str(e)}\n"
                 "Main branch:\n"
                 f"```json\n{json.dumps(agg_values_main, indent=2)}\n```\n"
                 "Current branch:\n"
