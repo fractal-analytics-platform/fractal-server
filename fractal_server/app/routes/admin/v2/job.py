@@ -84,16 +84,12 @@ async def view_job(
         stm = stm.where(JobV2.id == id)
         stm_count = stm_count.where(JobV2.id == id)
     if user_id is not None:
-        stm = (
-            stm.join(LinkUserProjectV2)
-            .where(LinkUserProjectV2.project_id == JobV2.project_id)
-            .where(LinkUserProjectV2.user_id == user_id)
-        )
-        stm_count = (
-            stm_count.join(LinkUserProjectV2)
-            .where(LinkUserProjectV2.project_id == JobV2.project_id)
-            .where(LinkUserProjectV2.user_id == user_id)
-        )
+        stm = stm.join(
+            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
+        ).where(LinkUserProjectV2.user_id == user_id)
+        stm_count = stm_count.join(
+            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
+        ).where(LinkUserProjectV2.user_id == user_id)
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
         stm_count = stm_count.where(JobV2.project_id == project_id)

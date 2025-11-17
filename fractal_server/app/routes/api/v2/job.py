@@ -48,8 +48,9 @@ async def get_user_jobs(
     """
     stm = (
         select(JobV2)
-        .join(LinkUserProjectV2)
-        .where(LinkUserProjectV2.project_id == JobV2.project_id)
+        .join(
+            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
+        )
         .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
