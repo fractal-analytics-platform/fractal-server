@@ -76,8 +76,6 @@ async def create_project(
     await db.commit()
     await db.refresh(db_project)
 
-    await db.close()
-
     return db_project
 
 
