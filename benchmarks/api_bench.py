@@ -240,6 +240,13 @@ class Benchmark:
         )
 
     def run_benchmark(self, n_requests: int) -> list:
+        """
+
+        Note that the following endpoints are only tested for the
+        `dataset@example.org` user:
+        1. POST /api/v2/project/$project_id$/dataset/$dataset_id$/images/query/
+        2. GET /api/v2/project/$project_id$/dataset/
+        """
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
         user_metrics: list[dict] = []
@@ -249,6 +256,11 @@ class Benchmark:
                 headers = {"Authorization": f"Bearer {user.token}"}
                 if (
                     endpoint["verb"] == "POST"
+                    and user.name != "dataset@example.org"
+                ):
+                    pass
+                elif (
+                    endpoint["path"] == "/api/v2/project/$project_id$/dataset/"
                     and user.name != "dataset@example.org"
                 ):
                     pass
