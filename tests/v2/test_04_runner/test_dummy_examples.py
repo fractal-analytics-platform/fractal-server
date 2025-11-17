@@ -23,8 +23,7 @@ from fractal_server.urls import normalize_url
 async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
     res = await db.execute(
         select(HistoryUnit)
-        .join(HistoryRun)
-        .where(HistoryRun.id == HistoryUnit.history_run_id)
+        .join(HistoryRun, HistoryRun.id == HistoryUnit.history_run_id)
         .order_by(HistoryRun.timestamp_started.desc())
     )
     last_history_unit = res.scalars().first()

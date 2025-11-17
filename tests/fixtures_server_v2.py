@@ -47,8 +47,7 @@ async def project_factory_v2(db):
         if resource_id is None:
             res = await db.execute(
                 select(Resource.id)
-                .join(Profile)
-                .where(Resource.id == Profile.resource_id)
+                .join(Profile, Resource.id == Profile.resource_id)
                 .where(Profile.id == user.profile_id)
             )
             resource_id = res.scalar_one()
@@ -284,10 +283,8 @@ async def task_factory_v2(db: AsyncSession):
         version = task_group_kwargs.get("version", task.version)
         res = await db.execute(
             select(Resource.id)
-            .join(Profile)
-            .join(UserOAuth)
-            .where(Resource.id == Profile.resource_id)
-            .where(Profile.id == UserOAuth.profile_id)
+            .join(Profile, Resource.id == Profile.resource_id)
+            .join(UserOAuth, Profile.id == UserOAuth.profile_id)
             .where(UserOAuth.id == user_id)
         )
         resource_id = res.scalar_one()

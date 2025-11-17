@@ -35,7 +35,7 @@ async def get_list_project(
     """
     stm = (
         select(ProjectV2)
-        .join(LinkUserProjectV2)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)

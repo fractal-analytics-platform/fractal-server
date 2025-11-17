@@ -96,9 +96,8 @@ def fractal_tasks_mock_db(
 ) -> dict[str, TaskV2]:
     res = db_sync.execute(
         select(Resource.id)
-        .join(Profile)
-        .where(Profile.resource_id == Resource.id)
-        .where(first_user.profile_id == Profile.id)
+        .join(Profile, Profile.resource_id == Resource.id)
+        .where(Profile.id == first_user.profile_id)
     )
     resource_id = res.scalar_one()
 

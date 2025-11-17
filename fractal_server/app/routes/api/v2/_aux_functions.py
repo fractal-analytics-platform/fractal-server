@@ -219,7 +219,7 @@ async def _check_project_exists(
     """
     stm = (
         select(ProjectV2)
-        .join(LinkUserProjectV2)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(ProjectV2.name == project_name)
         .where(LinkUserProjectV2.user_id == user_id)
     )
@@ -555,10 +555,8 @@ async def _get_submitted_job_or_none(
 async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
     res = await db.execute(
         select(Resource.id)
-        .join(Profile)
-        .join(UserOAuth)
-        .where(Resource.id == Profile.resource_id)
-        .where(Profile.id == UserOAuth.profile_id)
+        .join(Profile, Resource.id == Profile.resource_id)
+        .join(UserOAuth, Profile.id == UserOAuth.profile_id)
         .where(UserOAuth.id == user_id)
     )
     resource_id = res.scalar_one_or_none()

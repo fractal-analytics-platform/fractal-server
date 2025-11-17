@@ -58,8 +58,7 @@ with next(get_sync_db()) as db:
 
     stm = (
         select(UserOAuth.id)
-        .join(LinkUserGroup)
-        .where(LinkUserGroup.user_id == UserOAuth.id)
+        .join(LinkUserGroup, LinkUserGroup.user_id == UserOAuth.id)
         .where(LinkUserGroup.group_id == default_group.id)
     )
     user_ids_in_default_group = set(db.execute(stm).scalars().unique().all())

@@ -87,9 +87,8 @@ async def get_current_user_profile_info(
 ) -> UserProfileInfo:
     stm = (
         select(Resource, Profile)
-        .join(UserOAuth)
+        .join(UserOAuth, Profile.id == UserOAuth.profile_id)
         .where(Resource.id == Profile.resource_id)
-        .where(Profile.id == UserOAuth.profile_id)
         .where(UserOAuth.id == current_user.id)
     )
     res = await db.execute(stm)
@@ -146,8 +145,7 @@ async def get_current_user_allowed_viewer_paths(
         # Returns the union of `viewer_paths` for all user's groups
         cmd = (
             select(UserGroup.viewer_paths)
-            .join(LinkUserGroup)
-            .where(LinkUserGroup.group_id == UserGroup.id)
+            .join(LinkUserGroup, LinkUserGroup.group_id == UserGroup.id)
             .where(LinkUserGroup.user_id == current_user.id)
         )
         res = await db.execute(cmd)

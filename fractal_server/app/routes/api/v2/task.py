@@ -52,8 +52,7 @@ async def get_list_task(
 
     stm = (
         select(TaskV2)
-        .join(TaskGroupV2)
-        .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
         .where(TaskGroupV2.resource_id == user_resource_id)
         .where(
             or_(
