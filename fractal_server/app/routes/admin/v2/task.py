@@ -149,7 +149,10 @@ async def query_tasks(
                 .where(LinkUserProjectV2.project_id == workflow.project_id)
                 .where(LinkUserProjectV2.user_id == UserOAuth.id)
             )
-            project_users[workflow.project_id] = res.scalars().all()
+            project_users[workflow.project_id] = [
+                ProjectUser(id=p_user[0], email=p_user[1])
+                for p_user in res.all()
+            ]
 
         task_info_list.append(
             dict(
@@ -166,7 +169,6 @@ async def query_tasks(
                 ],
             )
         )
-
     return PaginationResponse[TaskV2Info](
         total_count=total_count,
         page_size=page_size,
