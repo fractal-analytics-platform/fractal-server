@@ -42,7 +42,7 @@
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_history.py               |       55 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_task\_lifecycle.py       |       87 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_task\_version\_update.py |       12 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/\_aux\_functions\_tasks.py                 |      135 |        1 |       46 |        1 |     99% |       204 |
+| fractal\_server/app/routes/api/v2/\_aux\_functions\_tasks.py                 |      135 |        1 |       46 |        1 |     99% |       202 |
 | fractal\_server/app/routes/api/v2/\_aux\_task\_group\_disambiguation.py      |       46 |        3 |        4 |        2 |     90% |56->74, 126-131 |
 | fractal\_server/app/routes/api/v2/dataset.py                                 |       99 |        4 |       12 |        0 |     96% |   223-233 |
 | fractal\_server/app/routes/api/v2/history.py                                 |      175 |        2 |       34 |        2 |     98% |  207, 438 |
@@ -64,7 +64,7 @@
 | fractal\_server/app/routes/api/v2/workflowtask.py                            |       76 |        2 |       28 |        2 |     96% |  183, 193 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                              |       30 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                               |       61 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/current\_user.py                             |       68 |        0 |       12 |        1 |     99% |  140->145 |
+| fractal\_server/app/routes/auth/current\_user.py                             |       68 |        0 |       12 |        1 |     99% |  139->144 |
 | fractal\_server/app/routes/auth/group.py                                     |       95 |        0 |       16 |        1 |     99% |  125->130 |
 | fractal\_server/app/routes/auth/login.py                                     |       10 |        0 |        4 |        1 |     93% |    24->23 |
 | fractal\_server/app/routes/auth/oauth.py                                     |       39 |        0 |       10 |        1 |     98% |    79->78 |
