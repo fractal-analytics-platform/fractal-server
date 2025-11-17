@@ -131,8 +131,8 @@ class Benchmark:
                 "There was an exception in `template.render`, within "
                 "`make_md_diff`.\n"
                 f"Original error:s{str(e)}\n"
-                f"{agg_values_main=}\n"
-                f"{agg_values_curr=}\n"
+                f"```json\n{json.dumps(agg_values_main,indent=2)}```\n"
+                f"```json\n{json.dumps(agg_values_curr,indent=2)}```\n"
             )
 
         with open("bench_diff.md", "w") as output_file:
