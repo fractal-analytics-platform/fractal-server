@@ -77,37 +77,3 @@ jobs:
          push_options: '--force'
          skip_checkout: true
          file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
-
-  benchmark_runner:
-    if: false
-    name: Benchmark Runner
-    runs-on: ubuntu-24.04
-
-    steps:
-
-     - uses: actions/checkout@v5
-       with:
-        persist-credentials: false
-
-     - name: Start Postgres
-       run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-     - name: Install poetry
-       run: pipx install poetry==2.2.1
-
-     - name: Set up Python 3.12
-       uses: actions/setup-python@v5
-       with:
-        python-version: "3.12"
-        cache: "poetry"
-
-     - name: Install dependencies
-       run: poetry install --with dev --no-interaction
-
-     - name: Benchmark
-       run: |
-        cd benchmarks/runner/
-        poetry run python benchmark_runner.py
