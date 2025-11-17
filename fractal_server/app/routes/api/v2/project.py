@@ -69,8 +69,11 @@ async def create_project(
 
     db_project = ProjectV2(**project.model_dump(), resource_id=resource_id)
     db.add(db_project)
+    await db.flush()
+
     link = LinkUserProjectV2(project_id=db_project.id, user_id=user.id)
     db.add(link)
+
     await db.commit()
     await db.refresh(db_project)
 

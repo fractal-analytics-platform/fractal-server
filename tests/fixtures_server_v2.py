@@ -60,8 +60,11 @@ async def project_factory_v2(db):
         args.update(kwargs)
         project = ProjectV2(**args)
         db.add(project)
+        await db.flush()
+
         link = LinkUserProjectV2(project_id=project.id, user_id=user.id)
         db.add(link)
+
         await db.commit()
         await db.refresh(project)
 
