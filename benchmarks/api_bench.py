@@ -246,6 +246,7 @@ class Benchmark:
         `dataset@example.org` user:
         1. POST /api/v2/project/$project_id$/dataset/$dataset_id$/images/query/
         2. GET /api/v2/project/$project_id$/dataset/
+        2. GET /api/v2/project/$project_id$/workflow/
         """
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
@@ -262,6 +263,12 @@ class Benchmark:
                 elif (
                     endpoint["path"] == "/api/v2/project/$project_id$/dataset/"
                     and user.name != "dataset@example.org"
+                ):
+                    pass
+                elif (
+                    endpoint["path"]
+                    == "/api/v2/project/$project_id$/workflow/"
+                    and user.name != "power@example.org"
                 ):
                     pass
                 else:
