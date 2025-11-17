@@ -2,11 +2,11 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import ConfigDict
-from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
+from sqlalchemy import Column
 from sqlmodel import SQLModel
 
 from fractal_server.utils import get_timestamp
