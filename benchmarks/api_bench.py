@@ -120,10 +120,22 @@ class Benchmark:
         )
         template = env.get_template("bench_diff_template.md")
 
-        rendered_md = template.render(
-            zip=zip(agg_values_main.items(), agg_values_curr.items()),
-            exceptions=self.exceptions,
-        )
+        try:
+            rendered_md = template.render(
+                zip=zip(agg_values_main.items(), agg_values_curr.items()),
+                exceptions=self.exceptions,
+            )
+        except Exception as e:
+            print(f"ERROR in template.render. Original error {str(e)}")
+            rendered_md = (
+                "There was an exception in `template.render`, within "
+                "`make_md_diff`.\n"
+                f"Original error:\n{str(e)}\n"
+                "Main branch:\n"
+                f"```json\n{json.dumps(agg_values_main, indent=2)}\n```\n"
+                "Current branch:\n"
+                f"```json\n{json.dumps(agg_values_curr, indent=2)}\n```\n"
+            )
 
         with open("bench_diff.md", "w") as output_file:
             output_file.write(rendered_md)
@@ -168,6 +180,8 @@ class Benchmark:
             updated_path = re.sub(pattern, lambda x: next(id_list), path)
         else:
             updated_path = path
+
+        print(f"OLD PATH: {path}\nNEW PATH: {updated_path}")
         return updated_path
 
     def make_user_metrics(
@@ -226,6 +240,13 @@ class Benchmark:
         )
 
     def run_benchmark(self, n_requests: int) -> list:
+        """
+
+        Note that the following endpoints are only tested for the
+        `dataset@example.org` user:
+        1. POST /api/v2/project/$project_id$/dataset/$dataset_id$/images/query/
+        2. GET /api/v2/project/$project_id$/dataset/
+        """
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
         user_metrics: list[dict] = []
@@ -235,6 +256,11 @@ class Benchmark:
                 headers = {"Authorization": f"Bearer {user.token}"}
                 if (
                     endpoint["verb"] == "POST"
+                    and user.name != "dataset@example.org"
+                ):
+                    pass
+                elif (
+                    endpoint["path"] == "/api/v2/project/$project_id$/dataset/"
                     and user.name != "dataset@example.org"
                 ):
                     pass
