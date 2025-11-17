@@ -8,6 +8,7 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
@@ -140,6 +141,16 @@ async def query_tasks(
         res = await db.execute(stm)
         wf_list = res.scalars().all()
 
+        project_users = {}
+        for workflow in wf_list:
+            res = await db.execute(
+                select(UserOAuth.id, UserOAuth.email)
+                .join(LinkUserProjectV2)
+                .where(LinkUserProjectV2.project_id == workflow.project_id)
+                .where(LinkUserProjectV2.user_id == UserOAuth.id)
+            )
+            project_users[workflow.project_id] = res.scalars().all()
+
         task_info_list.append(
             dict(
                 task=task.model_dump(),
@@ -149,10 +160,7 @@ async def query_tasks(
                         workflow_name=workflow.name,
                         project_id=workflow.project.id,
                         project_name=workflow.project.name,
-                        project_users=[
-                            dict(id=user.id, email=user.email)
-                            for user in workflow.project.user_list
-                        ],
+                        project_users=project_users[workflow.project_id],
                     )
                     for workflow in wf_list
                 ],

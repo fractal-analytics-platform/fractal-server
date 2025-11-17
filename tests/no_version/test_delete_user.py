@@ -12,6 +12,15 @@ async def user_list(db):
     return res.scalars().unique().all()
 
 
+async def project_user_list(project_id, db):
+    res = await db.execute(
+        select(UserOAuth)
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.project_id == project_id)
+    )
+    return res.scalars().unique().all()
+
+
 async def test_delete_user(
     db,
     MockCurrentUser,
@@ -20,14 +29,14 @@ async def test_delete_user(
     assert len(await user_list(db)) == 0
 
     async with MockCurrentUser() as user:
-        project_v2 = await project_factory_v2(user)
+        project1 = await project_factory_v2(user)
 
     async with MockCurrentUser() as user2:
-        project_v2_2 = await project_factory_v2(user2)
+        project2 = await project_factory_v2(user2)
 
     assert len(await user_list(db)) == 2
-    assert len(project_v2.user_list) == 1
-    assert len(project_v2_2.user_list) == 1
+    assert len(await project_user_list(project1.id, db)) == 1
+    assert len(await project_user_list(project2.id, db)) == 1
 
     await db.execute(
         delete(LinkUserProjectV2).where(LinkUserProjectV2.user_id == user.id)
@@ -40,9 +49,9 @@ async def test_delete_user(
     await db.delete(user)
     await db.commit()
 
-    await db.refresh(project_v2)
-    await db.refresh(project_v2_2)
+    await db.refresh(project1)
+    await db.refresh(project2)
 
     assert len(await user_list(db)) == 1
-    assert len(project_v2.user_list) == 0
-    assert len(project_v2_2.user_list) == 1
+    assert len(await project_user_list(project1.id, db)) == 0
+    assert len(await project_user_list(project2.id, db)) == 1

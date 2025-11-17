@@ -206,7 +206,7 @@ async def apply_workflow(
             workflow.model_dump_json(exclude={"task_list"})
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"user_list", "resource_id"})
+            project.model_dump_json(exclude={"resource_id"})
         ),
         **job_create.model_dump(),
     )

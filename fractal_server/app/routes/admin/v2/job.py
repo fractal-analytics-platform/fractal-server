@@ -12,11 +12,11 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
@@ -84,11 +84,15 @@ async def view_job(
         stm = stm.where(JobV2.id == id)
         stm_count = stm_count.where(JobV2.id == id)
     if user_id is not None:
-        stm = stm.join(ProjectV2).where(
-            ProjectV2.user_list.any(UserOAuth.id == user_id)
+        stm = (
+            stm.join(LinkUserProjectV2)
+            .where(LinkUserProjectV2.project_id == JobV2.project_id)
+            .where(LinkUserProjectV2.user_id == user_id)
         )
-        stm_count = stm_count.join(ProjectV2).where(
-            ProjectV2.user_list.any(UserOAuth.id == user_id)
+        stm_count = (
+            stm_count.join(LinkUserProjectV2)
+            .where(LinkUserProjectV2.project_id == JobV2.project_id)
+            .where(LinkUserProjectV2.user_id == user_id)
         )
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
