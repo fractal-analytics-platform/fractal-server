@@ -146,41 +146,6 @@
         "size": 0.7
     },
     {
-        "path": "/api/v2/workflow/",
-        "verb": "GET",
-        "username": "vanilla",
-        "time": 10.0,
-        "size": 0.8
-    },
-    {
-        "path": "/api/v2/workflow/",
-        "verb": "GET",
-        "username": "power",
-        "time": 18.1,
-        "size": 27.2
-    },
-    {
-        "path": "/api/v2/workflow/",
-        "verb": "GET",
-        "username": "dataset",
-        "time": 14.2,
-        "size": 15.8
-    },
-    {
-        "path": "/api/v2/workflow/",
-        "verb": "GET",
-        "username": "project",
-        "time": 16.9,
-        "size": 19.9
-    },
-    {
-        "path": "/api/v2/workflow/",
-        "verb": "GET",
-        "username": "job",
-        "time": 9.2,
-        "size": 0.8
-    },
-    {
         "path": "/api/v2/project/3/dataset/420/images/query/",
         "verb": "POST",
         "username": "dataset",
