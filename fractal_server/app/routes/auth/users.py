@@ -12,9 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
 
-from . import current_superuser_act
-from ._aux_auth import _get_default_usergroup_id_or_none
-from ._aux_auth import _get_single_user_with_groups
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -24,12 +21,15 @@ from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateGroups
-from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.app.security import get_user_manager
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
+from . import current_superuser_act
+from ._aux_auth import _get_default_usergroup_id_or_none
+from ._aux_auth import _get_single_user_with_groups
 
 router_users = APIRouter()
 

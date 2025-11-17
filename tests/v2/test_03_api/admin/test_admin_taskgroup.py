@@ -15,7 +15,6 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
-
 PREFIX = "/admin/v2"
 
 

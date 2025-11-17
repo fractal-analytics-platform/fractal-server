@@ -1,7 +1,8 @@
 import logging
 
-import fractal_tasks_mock  # noqa
 from pydantic import validate_call
+
+import fractal_tasks_mock  # noqa
 
 
 @validate_call

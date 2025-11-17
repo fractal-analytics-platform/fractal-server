@@ -4,7 +4,6 @@ from httpx import AsyncClient
 
 from fractal_server.app.models.security import UserOAuth
 
-
 PREFIX = "/admin/v2"
 
 

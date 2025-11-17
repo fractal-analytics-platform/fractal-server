@@ -8,7 +8,6 @@ from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskImportV2
 
-
 PREFIX = "api/v2"
 
 
@@ -377,6 +376,7 @@ async def test_unit_disambiguate_task_groups(
     default_user_group,
 ):
     import time
+
     from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (  # noqa
         _disambiguate_task_groups,
     )

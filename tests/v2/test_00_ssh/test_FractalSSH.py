@@ -8,11 +8,10 @@ from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
-
+from fractal_server.ssh._fabric import _acquire_lock_with_timeout
 
 logger = set_logger(__file__)
 

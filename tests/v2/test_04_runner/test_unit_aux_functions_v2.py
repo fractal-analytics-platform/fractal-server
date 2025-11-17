@@ -6,19 +6,17 @@ from fractal_server.images import SingleImageTaskOutput
 from fractal_server.runner.exceptions import TaskOutputValidationError
 from fractal_server.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.runner.v2.merge_outputs import merge_outputs
-from fractal_server.runner.v2.runner_functions import (
-    _process_init_task_output,
-)
+from fractal_server.runner.v2.runner_functions import _process_init_task_output
 from fractal_server.runner.v2.runner_functions import _process_task_output
+from fractal_server.runner.v2.task_interface import InitArgsModel
+from fractal_server.runner.v2.task_interface import InitTaskOutput
+from fractal_server.runner.v2.task_interface import TaskOutput
 from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_InitTaskOutput,
 )
 from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
-from fractal_server.runner.v2.task_interface import InitArgsModel
-from fractal_server.runner.v2.task_interface import InitTaskOutput
-from fractal_server.runner.v2.task_interface import TaskOutput
 
 
 def test_deduplicate_list_of_dicts():

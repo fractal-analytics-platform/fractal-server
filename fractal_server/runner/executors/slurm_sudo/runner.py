@@ -5,8 +5,6 @@ import subprocess  # nosec
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from ._subprocess_run_as_user import _mkdir_as_user
-from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
@@ -18,6 +16,9 @@ from fractal_server.runner.executors.slurm_common.base_slurm_runner import (
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
 )
+
+from ._subprocess_run_as_user import _mkdir_as_user
+from ._subprocess_run_as_user import _run_command_as_user
 
 logger = set_logger(__name__)
 

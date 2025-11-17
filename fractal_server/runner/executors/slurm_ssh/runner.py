@@ -1,9 +1,6 @@
 import time
 from pathlib import Path
 
-from .run_subprocess import run_subprocess
-from .tar_commands import get_tar_compression_cmd
-from .tar_commands import get_tar_extraction_cmd
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
@@ -17,6 +14,10 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
+
+from .run_subprocess import run_subprocess
+from .tar_commands import get_tar_compression_cmd
+from .tar_commands import get_tar_extraction_cmd
 
 logger = set_logger(__name__)
 

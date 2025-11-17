@@ -9,7 +9,6 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 
-
 PREFIX = "api/v2/task"
 
 

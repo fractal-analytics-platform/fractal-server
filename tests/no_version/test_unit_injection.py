@@ -3,7 +3,6 @@ from devtools import debug
 
 from fractal_server.syringe import Inject
 
-
 THE_ANSWER = 42
 
 

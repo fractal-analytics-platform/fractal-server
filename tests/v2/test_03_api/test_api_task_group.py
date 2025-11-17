@@ -6,7 +6,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
-
 PREFIX = "/api/v2/task-group"
 
 

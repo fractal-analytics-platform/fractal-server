@@ -1,9 +1,6 @@
 import pytest
 from devtools import debug
 
-from .aux_unit_runner import *  # noqa
-from .aux_unit_runner import ZARR_URLS
-from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import Profile
@@ -13,6 +10,10 @@ from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.local.runner import LocalRunner
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
+from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 
 
 def get_default_local_backend_config():
@@ -350,9 +351,7 @@ async def test_multisubmit_parallel_fail(
     def _fake_submit(*args, **kwargs):
         raise ValueError("Error")
 
-    from fractal_server.runner.executors.local.runner import (
-        ThreadPoolExecutor,
-    )
+    from fractal_server.runner.executors.local.runner import ThreadPoolExecutor
 
     monkeypatch.setattr(ThreadPoolExecutor, "submit", _fake_submit)
 

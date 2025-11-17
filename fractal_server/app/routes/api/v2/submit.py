@@ -10,10 +10,6 @@ from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import clean_app_job_list_v2
-from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
@@ -38,6 +34,11 @@ from fractal_server.runner.set_start_and_last_task_index import (
 )
 from fractal_server.runner.v2.submit_workflow import submit_workflow
 from fractal_server.syringe import Inject
+
+from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions_tasks import _check_type_filters_compatibility
 
 FRACTAL_CACHE_DIR = ".fractal_cache"
 router = APIRouter()

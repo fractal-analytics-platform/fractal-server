@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
 
-from fractal_tasks_mock.utils import _group_zarr_urls_by_well
 from pydantic import validate_call
+
+from fractal_tasks_mock.utils import _group_zarr_urls_by_well
 
 
 @validate_call

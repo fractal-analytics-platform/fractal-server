@@ -12,7 +12,6 @@ from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
-
 PREFIX = "api/v2/task"
 
 

@@ -12,7 +12,6 @@ from fractal_server.app.security import get_user_manager
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-
 bearer_transport = BearerTransport(tokenUrl="/auth/token/login")
 cookie_transport = CookieTransport(cookie_samesite="none")
 

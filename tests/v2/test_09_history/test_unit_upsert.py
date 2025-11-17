@@ -10,9 +10,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.runner.v2.db_tools import (
-    bulk_upsert_image_cache_fast,
-)
+from fractal_server.runner.v2.db_tools import bulk_upsert_image_cache_fast
 
 
 def bulk_upsert_image_cache_slow(

@@ -7,7 +7,6 @@ from pathlib import Path
 import uvicorn
 from pydantic import ValidationError
 
-
 parser = ap.ArgumentParser(description="fractal-server commands")
 
 subparsers = parser.add_subparsers(title="Commands", dest="cmd", required=True)
@@ -112,12 +111,13 @@ def set_db():
     Call alembic to upgrade to the latest migration.
     Ref: https://stackoverflow.com/a/56683030/283972
     """
-    from fractal_server.syringe import Inject
-    from fractal_server.config import get_db_settings
+    from pathlib import Path
 
     import alembic.config
-    from pathlib import Path
+
     import fractal_server
+    from fractal_server.config import get_db_settings
+    from fractal_server.syringe import Inject
 
     # Validate DB settings
     Inject(get_db_settings)
@@ -138,15 +138,18 @@ def init_db_data(
     admin_password: str | None = None,
     admin_project_dir: str | None = None,
 ) -> None:
-    from fractal_server.app.security import _create_first_user
-    from fractal_server.app.security import _create_first_group
+    from sqlalchemy import func
+    from sqlalchemy import select
+
     from fractal_server.app.db import get_sync_db
-    from sqlalchemy import select, func
+    from fractal_server.app.models import Profile
+    from fractal_server.app.models import Resource
     from fractal_server.app.models.security import UserOAuth
-    from fractal_server.app.models import Resource, Profile
-    from fractal_server.app.schemas.v2.resource import cast_serialize_resource
-    from fractal_server.app.schemas.v2.profile import cast_serialize_profile
     from fractal_server.app.schemas.v2 import ResourceType
+    from fractal_server.app.schemas.v2.profile import cast_serialize_profile
+    from fractal_server.app.schemas.v2.resource import cast_serialize_resource
+    from fractal_server.app.security import _create_first_group
+    from fractal_server.app.security import _create_first_user
 
     # Create default group and user
     print()
@@ -266,10 +269,12 @@ def update_db_data():
     Apply data migrations.
     """
 
-    import fractal_server
-    from importlib import import_module
-    from packaging.version import parse
     import os
+    from importlib import import_module
+
+    from packaging.version import parse
+
+    import fractal_server
 
     def _slugify_version(raw_version: str) -> str:
         v = parse(raw_version)

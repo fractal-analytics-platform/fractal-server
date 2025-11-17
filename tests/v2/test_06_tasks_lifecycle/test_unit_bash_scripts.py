@@ -3,9 +3,7 @@ from devtools import debug
 
 from fractal_server.tasks.v2.local.collect import _customize_and_run_template
 from fractal_server.tasks.v2.utils_templates import customize_template
-from fractal_server.tasks.v2.utils_templates import (
-    parse_script_pip_show_stdout,
-)
+from fractal_server.tasks.v2.utils_templates import parse_script_pip_show_stdout
 from fractal_server.utils import execute_command_sync
 
 

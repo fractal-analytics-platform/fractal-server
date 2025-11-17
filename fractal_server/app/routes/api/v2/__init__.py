@@ -4,6 +4,9 @@
 
 from fastapi import APIRouter
 
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 from .dataset import router as dataset_router_v2
 from .history import router as history_router_v2
 from .images import router as images_routes_v2
@@ -22,9 +25,6 @@ from .task_version_update import router as task_version_update_router_v2
 from .workflow import router as workflow_router_v2
 from .workflow_import import router as workflow_import_router_v2
 from .workflowtask import router as workflowtask_router_v2
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
-
 
 router_api_v2 = APIRouter()
 

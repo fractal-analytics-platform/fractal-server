@@ -13,7 +13,6 @@ from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from pydantic import BaseModel
 
-
 FRACTAL_SERVER_URL = "http://localhost:8000"
 
 

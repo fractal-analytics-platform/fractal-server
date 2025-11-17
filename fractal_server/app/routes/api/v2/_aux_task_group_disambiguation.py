@@ -10,7 +10,6 @@ from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
-
 logger = set_logger(__name__)
 
 

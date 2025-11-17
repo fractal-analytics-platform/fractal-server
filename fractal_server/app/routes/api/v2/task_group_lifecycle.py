@@ -5,10 +5,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
-from ._aux_functions_task_lifecycle import check_no_ongoing_activity
-from ._aux_functions_task_lifecycle import check_no_related_workflowtask
-from ._aux_functions_task_lifecycle import check_no_submitted_job
-from ._aux_functions_tasks import _get_task_group_full_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -35,6 +31,11 @@ from fractal_server.tasks.v2.ssh import delete_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.utils import get_timestamp
+
+from ._aux_functions_task_lifecycle import check_no_ongoing_activity
+from ._aux_functions_task_lifecycle import check_no_related_workflowtask
+from ._aux_functions_task_lifecycle import check_no_submitted_job
+from ._aux_functions_tasks import _get_task_group_full_access
 
 router = APIRouter()
 

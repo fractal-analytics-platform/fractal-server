@@ -20,7 +20,6 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
-
 PREFIX = "/admin/v2"
 
 

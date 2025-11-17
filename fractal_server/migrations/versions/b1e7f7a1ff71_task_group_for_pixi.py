@@ -10,7 +10,6 @@ import sqlalchemy as sa
 import sqlmodel
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision = "b1e7f7a1ff71"
 down_revision = "791ce783d3d8"

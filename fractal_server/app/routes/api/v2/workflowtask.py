@@ -6,12 +6,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _get_workflow_task_check_owner
-from ._aux_functions import _workflow_has_submitted_job
-from ._aux_functions import _workflow_insert_task
-from ._aux_functions_tasks import _check_type_filters_compatibility
-from ._aux_functions_tasks import _get_task_read_access
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -20,6 +14,13 @@ from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
+
+from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _workflow_has_submitted_job
+from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _check_type_filters_compatibility
+from ._aux_functions_tasks import _get_task_read_access
 
 router = APIRouter()
 

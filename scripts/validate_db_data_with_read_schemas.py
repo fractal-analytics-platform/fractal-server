@@ -24,7 +24,6 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-
 FRACTAL_DEFAULT_GROUP_NAME = Inject(get_settings).FRACTAL_DEFAULT_GROUP_NAME
 
 with next(get_sync_db()) as db:

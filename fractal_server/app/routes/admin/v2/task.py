@@ -15,9 +15,9 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_superuser_act
-from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
 
 router = APIRouter()

@@ -8,12 +8,6 @@ from fastapi import status
 from pydantic import BaseModel
 from sqlmodel import select
 
-from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_submitted_jobs_statement
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _workflow_has_submitted_job
-from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -27,6 +21,13 @@ from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
 from fractal_server.app.schemas.v2 import WorkflowUpdateV2
 from fractal_server.images.tools import merge_type_filters
+
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
+from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _workflow_has_submitted_job
+from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 
 router = APIRouter()
 

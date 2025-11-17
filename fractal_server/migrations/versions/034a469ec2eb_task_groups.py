@@ -13,7 +13,6 @@ import sqlalchemy as sa
 import sqlmodel
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision = "034a469ec2eb"
 down_revision = "da2cb2ac4255"
@@ -120,8 +119,8 @@ def upgrade() -> None:
     except BaseException as e:
         if op.get_bind().dialect.name != "sqlite":
             raise e
-        import sqlite3
         import logging
+        import sqlite3
 
         logger = logging.getLogger("alembic.runtime.migration")
         logger.warning(

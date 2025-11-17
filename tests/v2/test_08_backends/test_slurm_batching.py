@@ -1,6 +1,4 @@
-from fractal_server.runner.executors.slurm_common._batching import (
-    heuristics,
-)
+from fractal_server.runner.executors.slurm_common._batching import heuristics
 
 
 def test_heuristics_many_tasks():

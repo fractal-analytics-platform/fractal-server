@@ -1,9 +1,10 @@
 import logging
 from pathlib import Path
 
+from pydantic import validate_call
+
 from fractal_tasks_mock.input_models import InitArgsCellVoyager
 from fractal_tasks_mock.utils import _check_zarr_url_is_absolute
-from pydantic import validate_call
 
 
 @validate_call

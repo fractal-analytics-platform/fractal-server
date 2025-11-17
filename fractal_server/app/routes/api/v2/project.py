@@ -5,9 +5,6 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -23,6 +20,10 @@ from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import ProjectUpdateV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+
+from ._aux_functions import _check_project_exists
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
 

@@ -31,12 +31,11 @@ from sqlmodel import select
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth.oauth import _create_client_oidc
+from fractal_server.config import OAuthSettings
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
-from fractal_server.config import OAuthSettings
 from fractal_server.syringe import Inject
-
 
 DEX_URL = "http://127.0.0.1:5556"
 MAILPIT_URL = "http://localhost:8025"

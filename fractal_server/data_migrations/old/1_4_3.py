@@ -2,6 +2,11 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
+from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
+from fractal_server.app.schemas.v1 import WorkflowReadV1
+from fractal_server.app.schemas.v1.dataset import DatasetReadV1
+from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
 from packaging.version import parse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -12,12 +17,6 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
-from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
-from fractal_server.app.schemas.v1 import WorkflowReadV1
-from fractal_server.app.schemas.v1.dataset import DatasetReadV1
-from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
-from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
-
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 

@@ -16,7 +16,6 @@ from tests.v2.test_07_full_workflow.common_functions import (
     workflow_with_non_python_task,
 )
 
-
 FRACTAL_RUNNER_BACKEND = ResourceType.LOCAL
 
 

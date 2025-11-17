@@ -19,9 +19,7 @@ from fractal_server.runner.executors.call_command_wrapper import (
     call_command_wrapper,
 )
 from fractal_server.runner.task_files import TaskFiles
-from fractal_server.runner.v2.db_tools import (
-    bulk_update_status_of_history_unit,
-)
+from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
 
 logger = set_logger(__name__)

@@ -4,12 +4,13 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from .aux_get_dataset_attrs import _get_dataset_attrs
-from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.runner.executors.local.runner import LocalRunner
+
+from .aux_get_dataset_attrs import _get_dataset_attrs
+from .execute_tasks_v2 import execute_tasks_v2_mod
 
 
 @pytest.fixture()

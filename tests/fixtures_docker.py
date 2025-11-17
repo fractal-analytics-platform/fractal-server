@@ -62,8 +62,9 @@ def docker_compose_file(
     ssh_keys: dict[str, str],
     current_py_version: str,
 ):
-    import fractal_server
     import tarfile
+
+    import fractal_server
 
     # Provide a tar.gz archive with fractal-server package
     CODE_ROOT = Path(fractal_server.__file__).parent.parent

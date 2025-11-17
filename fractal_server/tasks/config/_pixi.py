@@ -3,8 +3,8 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 from pydantic import BaseModel
-from pydantic import model_validator
 from pydantic import PositiveInt
+from pydantic import model_validator
 
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr

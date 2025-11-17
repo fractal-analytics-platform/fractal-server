@@ -3,7 +3,6 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
-
 output_path = Path("cli_reference.md")
 
 COMMAND = "fractalctl"

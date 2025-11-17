@@ -23,14 +23,13 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
+from fractal_server.config import OAuthSettings
+from fractal_server.config import Settings
 from fractal_server.config import get_data_settings
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
-from fractal_server.config import OAuthSettings
-from fractal_server.config import Settings
 from fractal_server.syringe import Inject
-
 
 PROJECT_DIR_PLACEHOLDER = "/fake/placeholder"
 
@@ -166,8 +165,9 @@ def override_data_settings_factory():
 
 @pytest.fixture(scope="function")
 async def db_create_tables():
-    from fractal_server.app.db import DB
     from sqlmodel import SQLModel
+
+    from fractal_server.app.db import DB
 
     # Calling both set_sync_db and set_async_db guarantees that a new pair of
     # sync/async engines is created every time.
@@ -317,12 +317,10 @@ async def default_user_group(db: AsyncSession) -> UserGroup | None:
 async def MockCurrentUser(
     app: FastAPI, db, default_user_group: UserGroup | None
 ):
-    from fractal_server.app.routes.auth import (
-        current_user_act_ver_prof,
-        current_user_act,
-        current_user_act_ver,
-        current_superuser_act,
-    )
+    from fractal_server.app.routes.auth import current_superuser_act
+    from fractal_server.app.routes.auth import current_user_act
+    from fractal_server.app.routes.auth import current_user_act_ver
+    from fractal_server.app.routes.auth import current_user_act_ver_prof
 
     def _new_mail():
         return f"{time.perf_counter_ns()}@example.org"

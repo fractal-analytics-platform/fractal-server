@@ -18,7 +18,6 @@ This backend runs fractal workflows in a SLURM cluster.
 
 from pathlib import Path
 
-from .runner import execute_tasks_v2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
@@ -32,6 +31,8 @@ from fractal_server.runner.set_start_and_last_task_index import (
 )
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
+
+from .runner import execute_tasks_v2
 
 
 def process_workflow(

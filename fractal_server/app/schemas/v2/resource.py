@@ -7,8 +7,8 @@ from typing import Self
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Discriminator
-from pydantic import model_validator
 from pydantic import Tag
+from pydantic import model_validator
 from pydantic import validate_call
 from pydantic.types import AwareDatetime
 

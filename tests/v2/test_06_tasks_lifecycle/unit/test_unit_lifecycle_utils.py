@@ -1,9 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from fractal_server.tasks.v2.local._utils import (
-    check_task_files_exist,
-)
+from fractal_server.tasks.v2.local._utils import check_task_files_exist
 
 
 class _MockTaskCreateV2(BaseModel):

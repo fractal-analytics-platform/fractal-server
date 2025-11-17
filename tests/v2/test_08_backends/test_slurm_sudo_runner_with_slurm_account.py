@@ -3,13 +3,12 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from .aux_unit_runner import *  # noqa
-from .aux_unit_runner import ZARR_URLS
-from fractal_server.runner.executors.slurm_sudo.runner import (
-    SlurmSudoRunner,
-)
+from fractal_server.runner.executors.slurm_sudo.runner import SlurmSudoRunner
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
 
 
 @pytest.mark.container

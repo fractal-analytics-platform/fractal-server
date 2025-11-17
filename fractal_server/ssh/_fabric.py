@@ -21,7 +21,6 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
-
 SSH_MONITORING_LOGGER_NAME = "ssh-log"
 
 

@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
 
-from fractal_tasks_mock.utils import _extract_common_root
 from pydantic import validate_call
+
+from fractal_tasks_mock.utils import _extract_common_root
 
 
 @validate_call

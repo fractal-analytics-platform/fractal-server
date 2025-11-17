@@ -39,7 +39,6 @@ from collections.abc import Callable
 from typing import Any
 from typing import TypeVar
 
-
 T = TypeVar("T")
 _instance_count = 0
 

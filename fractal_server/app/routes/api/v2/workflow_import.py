@@ -5,12 +5,6 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
-from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_user_resource_id
-from ._aux_functions import _workflow_insert_task
-from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
-from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -31,6 +25,13 @@ from fractal_server.app.schemas.v2 import WorkflowImportV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.logger import set_logger
+
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_user_resource_id
+from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
+from ._aux_functions_tasks import _check_type_filters_compatibility
 
 router = APIRouter()
 

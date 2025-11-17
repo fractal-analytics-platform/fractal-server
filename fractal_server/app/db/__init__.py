@@ -16,7 +16,6 @@ from fractal_server.config import get_db_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
-
 logger = set_logger(__name__)
 
 

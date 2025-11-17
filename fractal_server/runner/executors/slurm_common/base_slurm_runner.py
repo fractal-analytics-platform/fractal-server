@@ -9,8 +9,6 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ._job_states import STATES_FINISHED
-from .slurm_config import SlurmConfig
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
@@ -31,10 +29,11 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 )
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
-from fractal_server.runner.v2.db_tools import (
-    bulk_update_status_of_history_unit,
-)
+from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+
+from ._job_states import STATES_FINISHED
+from .slurm_config import SlurmConfig
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)

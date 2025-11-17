@@ -11,7 +11,6 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
-
 PREFIX = "api/v2"
 
 

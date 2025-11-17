@@ -5,9 +5,6 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_submitted_jobs_statement
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -21,6 +18,10 @@ from fractal_server.app.schemas.v2.dataset import DatasetExportV2
 from fractal_server.app.schemas.v2.dataset import DatasetImportV2
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
+
+from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
 

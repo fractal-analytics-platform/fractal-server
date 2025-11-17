@@ -1,9 +1,7 @@
 import pytest
 from devtools import debug
 
-from fractal_server.runner.executors.slurm_sudo.runner import (
-    SlurmSudoRunner,
-)
+from fractal_server.runner.executors.slurm_sudo.runner import SlurmSudoRunner
 
 
 @pytest.mark.container

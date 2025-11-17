@@ -1,8 +1,9 @@
 import logging
 import shutil
 
-from fractal_tasks_mock.input_models import InitArgsMIP
 from pydantic import validate_call
+
+from fractal_tasks_mock.input_models import InitArgsMIP
 
 
 @validate_call
