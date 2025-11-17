@@ -275,7 +275,7 @@ if __name__ == "__main__":
     # get the bench_diff.json from the bechmark-api branch
     url = (
         "https://raw.githubusercontent.com/fractal-analytics-platform/"
-        "fractal-server/test-benchmark/benchmarks/bench.json"
+        "fractal-server/benchmark-api/benchmarks/bench.json"
     )
     response = httpx.get(url)
 
