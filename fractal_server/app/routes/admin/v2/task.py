@@ -144,7 +144,7 @@ async def query_tasks(
         wf_list = res.scalars().all()
 
         project_users = {}
-        for project_id in [workflow.project_id for workflow in wf_list]:
+        for project_id in set([workflow.project_id for workflow in wf_list]):
             res = await db.execute(
                 select(UserOAuth.id, UserOAuth.email)
                 .join(
