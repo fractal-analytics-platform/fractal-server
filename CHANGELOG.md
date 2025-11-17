@@ -8,6 +8,7 @@
     * Allow reading logs from zipped job folders (\#2978).
     * Do not raise 422 from check-owner functions (\#2988).
     * Remove `GET /admin/v2/project/`, `GET /api/v2/dataset/` and `GET /api/v2/workflow/` (\#2989).
+    * Adopt `onclause` on `JOIN` statements (\#2993).
 * Database:
     * Add indexes to `HistoryImageCache` and `HistoryUnit` foreign keys to improve `DatasetV2` deletion time (\#2987).
     * Drop `ProjectV2.user_list` relationship (\#2991).
