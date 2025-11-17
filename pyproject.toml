@@ -139,7 +139,8 @@ FRACTAL_DEFAULT_GROUP_NAME="All"
 line-length = 79
 
 [tool.ruff.lint]
-ignore = ["E203","W503","E226"]
+select = ["E", "W", "F", "TID"]
+ignore = ["E203","W505","E226"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
