@@ -127,7 +127,13 @@ class Benchmark:
             )
         except Exception as e:
             print(f"ERROR in template.render. Original error {str(e)}")
-            rendered_md = f"error in `template.rendere`.\n{str(e)}"
+            rendered_md = (
+                "There was an exception in `template.render`, within "
+                "`make_md_diff`.\n"
+                f"Original error:s{str(e)}\n"
+                f"{agg_values_main=}\n"
+                f"{agg_values_curr=}\n"
+            )
 
         with open("bench_diff.md", "w") as output_file:
             output_file.write(rendered_md)
