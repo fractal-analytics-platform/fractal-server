@@ -132,9 +132,9 @@ class Benchmark:
                 "`make_md_diff`.\n"
                 f"Original error:s{str(e)}\n"
                 "Main branch:\n"
-                f"```json\n{json.dumps(agg_values_main, indent=2)}```\n"
+                f"```json\n{json.dumps(agg_values_main, indent=2)}\n```\n"
                 "Current branch:\n"
-                f"```json\n{json.dumps(agg_values_curr, indent=2)}```\n"
+                f"```json\n{json.dumps(agg_values_curr, indent=2)}\n```\n"
             )
 
         with open("bench_diff.md", "w") as output_file:
