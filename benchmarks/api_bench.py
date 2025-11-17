@@ -120,10 +120,14 @@ class Benchmark:
         )
         template = env.get_template("bench_diff_template.md")
 
-        rendered_md = template.render(
-            zip=zip(agg_values_main.items(), agg_values_curr.items()),
-            exceptions=self.exceptions,
-        )
+        try:
+            rendered_md = template.render(
+                zip=zip(agg_values_main.items(), agg_values_curr.items()),
+                exceptions=self.exceptions,
+            )
+        except Exception as e:
+            print(f"ERROR in template.render. Original error {str(e)}")
+            rendered_md = f"error in `template.rendere`.\n{str(e)}"
 
         with open("bench_diff.md", "w") as output_file:
             output_file.write(rendered_md)
