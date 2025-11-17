@@ -536,9 +536,7 @@ async def user_group_factory(db: AsyncSession):
 
         db.add(LinkUserGroup(user_id=user_id, group_id=user_group.id))
         for other_user_id in other_users_id:
-            db.add(
-                LinkUserGroup(user_id=other_user_id, group_id=user_group.id)
-            )
+            db.add(LinkUserGroup(user_id=other_user_id, group_id=user_group.id))
 
         await db.commit()
 

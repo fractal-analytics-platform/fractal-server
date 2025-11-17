@@ -194,9 +194,7 @@ async def test_get_current_user_allowed_viewer_paths(
         }
 
     # Verify that scheme "none" returns an empty list
-    override_data_settings_factory(
-        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.NONE
-    )
+    override_data_settings_factory(FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.NONE)
     async with MockCurrentUser(user_kwargs=dict(id=user_id)):
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
         assert res.status_code == 200

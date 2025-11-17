@@ -34,6 +34,7 @@ or popped from the directory.
     >>> bar()
     42
 """
+
 from collections.abc import Callable
 from typing import Any
 from typing import TypeVar

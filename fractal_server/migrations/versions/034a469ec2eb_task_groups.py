@@ -5,6 +5,7 @@ Revises: da2cb2ac4255
 Create Date: 2024-10-10 16:14:13.976231
 
 """
+
 from datetime import datetime
 from datetime import timezone
 
@@ -26,15 +27,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column(
-            "origin", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("origin", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column(
-            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column(
             "python_version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),

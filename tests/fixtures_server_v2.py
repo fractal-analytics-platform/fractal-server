@@ -90,9 +90,7 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
         # Make sure that `zarr_dir` and images are valid
         args["zarr_dir"] = normalize_url(args["zarr_dir"])
         old_images = args.get("images", [])
-        args["images"] = [
-            SingleImage(**img).model_dump() for img in old_images
-        ]
+        args["images"] = [SingleImage(**img).model_dump() for img in old_images]
 
         project_id = args["project_id"]
         project = await db.get(ProjectV2, project_id)

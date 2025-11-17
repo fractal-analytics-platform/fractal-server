@@ -9,7 +9,6 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
@@ -17,6 +16,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.app.schemas.v2 import TaskCreateV2

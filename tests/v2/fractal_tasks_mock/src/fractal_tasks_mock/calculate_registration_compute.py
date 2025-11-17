@@ -29,11 +29,7 @@ def calculate_registration_compute(
     )
 
     with table_path.open("w") as f:
-        f.write(
-            "Calculate registration for\n"
-            f"{zarr_url=}\n"
-            f"{ref_zarr_url=}\n"
-        )
+        f.write(f"Calculate registration for\n{zarr_url=}\n{ref_zarr_url=}\n")
     print("[calculate_registration_compute] END")
 
 

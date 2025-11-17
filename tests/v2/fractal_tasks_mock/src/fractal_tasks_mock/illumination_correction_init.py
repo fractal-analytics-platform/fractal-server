@@ -32,8 +32,7 @@ def illumination_correction_init(
             Path(new_zarr_url).mkdir()
             with (Path(new_zarr_url) / "data").open("w") as f:
                 f.write(
-                    f"{prefix} Creating current zarr "
-                    f"({overwrite_input=})\n"
+                    f"{prefix} Creating current zarr ({overwrite_input=})\n"
                 )
         else:
             new_zarr_url = zarr_url

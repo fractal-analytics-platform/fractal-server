@@ -1,7 +1,7 @@
 """
 v2 `models` module
 """
-from ..linkuserproject import LinkUserProjectV2
+
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2
@@ -17,6 +17,7 @@ from .task_group import TaskGroupActivityV2
 from .task_group import TaskGroupV2
 from .workflow import WorkflowV2
 from .workflowtask import WorkflowTaskV2
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 
 __all__ = [
     "AccountingRecord",

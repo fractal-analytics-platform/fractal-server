@@ -312,9 +312,7 @@ def execute_tasks_v2(
             # history status.
             for image_obj in current_task_output.image_list_updates:
                 image = image_obj.model_dump()
-                if image["zarr_url"] in [
-                    img["zarr_url"] for img in tmp_images
-                ]:
+                if image["zarr_url"] in [img["zarr_url"] for img in tmp_images]:
                     img_search = find_image_by_zarr_url(
                         images=tmp_images,
                         zarr_url=image["zarr_url"],
@@ -418,9 +416,7 @@ def execute_tasks_v2(
 
             # Update type_filters based on task-manifest output_types
             type_filters_from_task_manifest = task.output_types
-            current_dataset_type_filters.update(
-                type_filters_from_task_manifest
-            )
+            current_dataset_type_filters.update(type_filters_from_task_manifest)
         except Exception as e:
             logger.error(
                 "Unexpected error in post-task-execution block. "

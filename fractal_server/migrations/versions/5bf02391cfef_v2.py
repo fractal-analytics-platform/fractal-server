@@ -5,6 +5,7 @@ Revises: 9fd26a2b0de4
 Create Date: 2024-04-18 10:35:19.067833
 
 """
+
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
@@ -50,9 +51,7 @@ def upgrade() -> None:
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
-        sa.Column(
-            "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "meta_non_parallel", sa.JSON(), server_default="{}", nullable=False
         ),
@@ -60,9 +59,7 @@ def upgrade() -> None:
             "meta_parallel", sa.JSON(), server_default="{}", nullable=False
         ),
         sa.Column("owner", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("args_schema_non_parallel", sa.JSON(), nullable=True),
         sa.Column("args_schema_parallel", sa.JSON(), nullable=True),
         sa.Column(
@@ -166,9 +163,7 @@ def upgrade() -> None:
             "start_timestamp", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("log", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["dataset_id"],

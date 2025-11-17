@@ -15,18 +15,23 @@ Slurm Backend
 
 This backend runs fractal workflows in a SLURM cluster.
 """
+
 from pathlib import Path
 
-from ...ssh._fabric import FractalSSH
-from ..executors.slurm_common.get_slurm_config import get_slurm_config
-from ..executors.slurm_ssh.runner import SlurmSSHRunner
-from ..set_start_and_last_task_index import set_start_and_last_task_index
 from .runner import execute_tasks_v2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.logger import set_logger
+from fractal_server.runner.executors.slurm_common.get_slurm_config import (
+    get_slurm_config,
+)
+from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
+from fractal_server.runner.set_start_and_last_task_index import (
+    set_start_and_last_task_index,
+)
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
 
 logger = set_logger(__name__)

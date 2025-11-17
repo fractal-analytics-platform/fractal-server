@@ -183,9 +183,7 @@ def init_db_data(
     if resource and profile:
         with next(get_sync_db()) as db:
             # Preliminary check
-            num_resources = db.execute(
-                select(func.count(Resource.id))
-            ).scalar()
+            num_resources = db.execute(select(func.count(Resource.id))).scalar()
             if num_resources != 0:
                 print(f"There exist already {num_resources=} resources. Exit.")
                 sys.exit(1)

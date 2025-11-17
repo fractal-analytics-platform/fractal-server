@@ -2,10 +2,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_background import add_commit_refresh
-from ..utils_background import fail_and_cleanup
-from ..utils_background import get_activity_and_task_group
-from ..utils_templates import get_collection_replacements
 from ._utils import _customize_and_run_template
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
@@ -18,10 +14,16 @@ from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import fail_and_cleanup
+from fractal_server.tasks.v2.utils_background import (
+    get_activity_and_task_group,
+)
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
 )
+from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
@@ -183,9 +185,7 @@ def reactivate_ssh(
                 except Exception as reactivate_e:
                     # Delete corrupted venv_path
                     try:
-                        logger.info(
-                            f"Now delete folder {task_group.venv_path}"
-                        )
+                        logger.info(f"Now delete folder {task_group.venv_path}")
                         fractal_ssh.remove_folder(
                             folder=task_group.venv_path,
                             safe_root=profile.tasks_remote_dir,

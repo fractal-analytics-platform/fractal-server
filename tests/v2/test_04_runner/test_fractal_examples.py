@@ -68,9 +68,7 @@ async def test_fractal_demos_01(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(
@@ -228,9 +226,7 @@ async def test_fractal_demos_01_no_overwrite(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(
@@ -435,9 +431,7 @@ async def test_registration_no_overwrite(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(
@@ -499,9 +493,7 @@ async def test_registration_no_overwrite(
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
-            assert not os.path.isfile(
-                f"{image['zarr_url']}/registration_table"
-            )
+            assert not os.path.isfile(f"{image['zarr_url']}/registration_table")
         else:
             assert os.path.isfile(f"{image['zarr_url']}/registration_table")
 
@@ -561,9 +553,7 @@ async def test_registration_overwrite(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(
@@ -625,9 +615,7 @@ async def test_registration_overwrite(
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
-            assert not os.path.isfile(
-                f"{image['zarr_url']}/registration_table"
-            )
+            assert not os.path.isfile(f"{image['zarr_url']}/registration_table")
         else:
             assert os.path.isfile(f"{image['zarr_url']}/registration_table")
 
@@ -689,9 +677,7 @@ async def test_channel_parallelization_with_overwrite(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(
@@ -760,9 +746,7 @@ async def test_channel_parallelization_no_overwrite(
         user_id = user.id
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
 
     wftask0 = await workflowtask_factory_v2(

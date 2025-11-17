@@ -71,8 +71,7 @@ async def current_user_act_ver_prof(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                f"Forbidden access "
-                f"({user.is_verified=} {user.profile_id=})."
+                f"Forbidden access ({user.is_verified=} {user.profile_id=})."
             ),
         )
     return user

@@ -1,6 +1,7 @@
 """
 Definition of `/auth/current-user/` endpoints
 """
+
 import os
 
 from fastapi import APIRouter

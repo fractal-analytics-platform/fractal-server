@@ -61,9 +61,7 @@ async def history_run_mock(
 
 
 @pytest.fixture
-async def history_mock_for_submit(
-    db, history_run_mock
-) -> tuple[int, int, int]:
+async def history_mock_for_submit(db, history_run_mock) -> tuple[int, int, int]:
     unit = HistoryUnit(
         history_run_id=history_run_mock.id,
         status=HistoryUnitStatus.SUBMITTED,

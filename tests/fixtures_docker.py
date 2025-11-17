@@ -199,12 +199,10 @@ def slurm_alive(slurmlogin_ip, slurmlogin_container) -> None:
             encoding="utf-8",
         )
         logging.info(
-            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, "
-            f"{res.stdout=}"
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, {res.stdout=}"
         )
         logging.info(
-            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, "
-            f"{res.stderr=}"
+            f"[slurm_alive] Attempt {attempt + 1}/{max_attempts}, {res.stderr=}"
         )
 
         if "Slurmctld(primary) at slurm is UP" in res.stdout:

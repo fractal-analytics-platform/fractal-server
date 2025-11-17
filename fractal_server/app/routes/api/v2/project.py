@@ -5,22 +5,24 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from .....logger import reset_logger_handlers
-from .....logger import set_logger
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v2 import JobV2
-from ....models.v2 import LinkUserProjectV2
-from ....models.v2 import ProjectV2
-from ....schemas.v2 import ProjectCreateV2
-from ....schemas.v2 import ProjectReadV2
-from ....schemas.v2 import ProjectUpdateV2
-from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import LinkUserProjectV2
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
+from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import ProjectUpdateV2
+from fractal_server.logger import reset_logger_handlers
+from fractal_server.logger import set_logger
 
 router = APIRouter()
 

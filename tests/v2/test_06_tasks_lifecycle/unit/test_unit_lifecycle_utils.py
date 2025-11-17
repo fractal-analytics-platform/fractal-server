@@ -35,8 +35,6 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
     with pytest.raises(FileNotFoundError) as e:
         check_task_files_exist(
-            task_list=[
-                _MockTaskCreateV2(command_parallel=f"py {missing_path}")
-            ]
+            task_list=[_MockTaskCreateV2(command_parallel=f"py {missing_path}")]
         )
     assert "missing file" in str(e.value)

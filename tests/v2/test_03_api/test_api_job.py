@@ -30,8 +30,7 @@ async def test_submit_job_failures_non_verified_user(
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
         res = await client.post(
-            f"{PREFIX}/project/123/job/submit/"
-            "?workflow_id=123&dataset_id=123",
+            f"{PREFIX}/project/123/job/submit/?workflow_id=123&dataset_id=123",
             json={},
         )
         assert res.status_code == 401
@@ -165,9 +164,7 @@ async def test_submit_job_ssh_connection_failure(
             json={},
         )
         assert res.status_code == 422
-        assert (
-            res.json()["detail"] == "Error in setting up the SSH connection."
-        )
+        assert res.json()["detail"] == "Error in setting up the SSH connection."
 
 
 async def test_submit_incompatible_filters(
@@ -331,12 +328,8 @@ async def test_project_apply_workflow_subset(
 
         task12 = await task_factory_v2(user_id=user.id, name="1to2")
         task23 = await task_factory_v2(user_id=user.id, name="2to3")
-        await _workflow_insert_task(
-            workflow_id=wf.id, task_id=task12.id, db=db
-        )
-        await _workflow_insert_task(
-            workflow_id=wf.id, task_id=task23.id, db=db
-        )
+        await _workflow_insert_task(workflow_id=wf.id, task_id=task12.id, db=db)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=task23.id, db=db)
 
         # This job (with no first_task_index or last_task_index) is submitted
         # correctly (and then fails, because tasks have invalid `command`

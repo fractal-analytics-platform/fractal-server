@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ...models.v2 import JobV2
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 
 

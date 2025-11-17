@@ -1,8 +1,6 @@
 import time
 from pathlib import Path
 
-from ..slurm_common.base_slurm_runner import BaseSlurmRunner
-from ..slurm_common.slurm_job_task_models import SlurmJob
 from .run_subprocess import run_subprocess
 from .tar_commands import get_tar_compression_cmd
 from .tar_commands import get_tar_extraction_cmd
@@ -10,6 +8,12 @@ from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.executors.slurm_common.base_slurm_runner import (
+    BaseSlurmRunner,
+)
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmJob,
+)
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
@@ -43,9 +47,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         different SLURM jobs/tasks.
         """
         self.fractal_ssh = fractal_ssh
-        self.shared_config = JobRunnerConfigSLURM(
-            **resource.jobs_runner_config
-        )
+        self.shared_config = JobRunnerConfigSLURM(**resource.jobs_runner_config)
         logger.warning(self.fractal_ssh)
 
         # Check SSH connection and try to recover from a closed-socket error
@@ -84,9 +86,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             return None
 
         t_0 = time.perf_counter()
-        logger.debug(
-            f"[_fetch_artifacts] START ({len(finished_slurm_jobs)=})."
-        )
+        logger.debug(f"[_fetch_artifacts] START ({len(finished_slurm_jobs)=}).")
 
         # Extract `workdir_remote` and `workdir_local`
         self.validate_slurm_jobs_workdirs(finished_slurm_jobs)

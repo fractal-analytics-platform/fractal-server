@@ -12,6 +12,7 @@
 """
 This module provides logging utilities
 """
+
 import logging
 from pathlib import Path
 

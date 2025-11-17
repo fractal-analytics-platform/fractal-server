@@ -7,8 +7,8 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ....utils import get_timestamp
 from .workflowtask import WorkflowTaskV2
+from fractal_server.utils import get_timestamp
 
 
 class WorkflowV2(SQLModel, table=True):

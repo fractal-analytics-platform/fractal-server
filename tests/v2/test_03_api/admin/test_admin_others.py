@@ -101,8 +101,7 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?id={task1.id}")
         assert len(res.json()["items"]) == 1
         assert (
-            res.json()["items"][0]["task"].items()
-            <= task1.model_dump().items()
+            res.json()["items"][0]["task"].items() <= task1.model_dump().items()
         )
         assert len(res.json()["items"][0]["relationships"]) == 2
         _common_args = dict(
@@ -229,8 +228,7 @@ async def test_task_query(
             res = await client.get(f"{PREFIX}/task/?id={t.id}")
             assert len(res.json()["items"]) == 1
             assert (
-                res.json()["items"][0]["task"].items()
-                <= t.model_dump().items()
+                res.json()["items"][0]["task"].items() <= t.model_dump().items()
             )
             assert res.json()["items"][0]["task"]["id"] == t.id
             assert len(res.json()["items"][0]["relationships"]) == 0

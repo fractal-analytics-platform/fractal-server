@@ -266,8 +266,7 @@ class Benchmark:
                 ):
                     pass
                 elif (
-                    endpoint["path"]
-                    == "/api/v2/project/$project_id$/workflow/"
+                    endpoint["path"] == "/api/v2/project/$project_id$/workflow/"
                     and user.name != "power@example.org"
                 ):
                     pass

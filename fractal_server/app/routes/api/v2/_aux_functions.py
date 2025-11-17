@@ -1,6 +1,7 @@
 """
 Auxiliary functions to get object from the database or perform simple checks
 """
+
 from typing import Any
 from typing import Literal
 
@@ -11,18 +12,18 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
-from ....models.v2 import DatasetV2
-from ....models.v2 import JobV2
-from ....models.v2 import LinkUserProjectV2
-from ....models.v2 import ProjectV2
-from ....models.v2 import TaskV2
-from ....models.v2 import WorkflowTaskV2
-from ....models.v2 import WorkflowV2
-from ....schemas.v2 import JobStatusTypeV2
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import LinkUserProjectV2
+from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -542,8 +543,7 @@ async def _get_submitted_job_or_none(
         return res.scalars().one_or_none()
     except MultipleResultsFound as e:
         error_msg = (
-            "Multiple running jobs found for "
-            f"{dataset_id=} and {workflow_id=}."
+            f"Multiple running jobs found for {dataset_id=} and {workflow_id=}."
         )
         logger.error(f"{error_msg} Original error: {str(e)}.")
         raise HTTPException(

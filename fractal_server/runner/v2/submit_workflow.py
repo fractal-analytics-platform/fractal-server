@@ -5,6 +5,7 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subsystems should only import this module and not its submodules or
 the individual backends.
 """
+
 import os
 import traceback
 from pathlib import Path
@@ -53,8 +54,7 @@ class ProcessWorkflowType(Protocol):
         resource: Resource,
         profile: Profile,
         user_cache_dir: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 def fail_job(

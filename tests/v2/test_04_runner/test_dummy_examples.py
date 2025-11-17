@@ -120,9 +120,7 @@ async def test_dummy_insert_single_image(
         )
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
     wftask = await workflowtask_factory_v2(
         workflow_id=workflow.id,

@@ -136,9 +136,9 @@ async def get_workflow_tasks_statuses(
                 logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
                 response[wftask.id] = dict(status=latest_run.status)
 
-        response[wftask.id][
-            "num_available_images"
-        ] = latest_run.num_available_images
+        response[wftask.id]["num_available_images"] = (
+            latest_run.num_available_images
+        )
 
         for target_status in HistoryUnitStatus:
             stm = (

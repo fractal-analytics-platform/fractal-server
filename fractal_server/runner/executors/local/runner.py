@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from ..call_command_wrapper import call_command_wrapper
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -16,6 +15,9 @@ from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.base_runner import MultisubmitTaskType
 from fractal_server.runner.executors.base_runner import SubmitTaskType
+from fractal_server.runner.executors.call_command_wrapper import (
+    call_command_wrapper,
+)
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import (
     bulk_update_status_of_history_unit,
@@ -77,9 +79,7 @@ class LocalRunner(BaseRunner):
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
         logger.debug("Create LocalRunner")
-        self.shared_config = JobRunnerConfigLocal(
-            **resource.jobs_runner_config
-        )
+        self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
 
     def __enter__(self):
         logger.debug("Enter LocalRunner")
@@ -242,9 +242,7 @@ class LocalRunner(BaseRunner):
                 f"Original error {str(e)}"
             )
             exception = TaskExecutionError(str(e))
-            exceptions = {
-                ind: exception for ind in range(len(list_parameters))
-            }
+            exceptions = {ind: exception for ind in range(len(list_parameters))}
             if task_type == TaskType.PARALLEL:
                 with next(get_sync_db()) as db:
                     bulk_update_status_of_history_unit(
@@ -276,9 +274,7 @@ class LocalRunner(BaseRunner):
                         "[multisubmit] Unexpected exception during submission."
                         f" Original error {str(e)}"
                     )
-                    current_history_unit_id = history_unit_ids[
-                        positional_index
-                    ]
+                    current_history_unit_id = history_unit_ids[positional_index]
                     exceptions[positional_index] = TaskExecutionError(str(e))
                     if task_type == TaskType.PARALLEL:
                         with next(get_sync_db()) as db:

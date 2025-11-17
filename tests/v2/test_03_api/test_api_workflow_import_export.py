@@ -30,12 +30,8 @@ async def test_import_export(
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
-    wf_file_task_source_0 = workflow_from_file["task_list"][0]["task"][
-        "source"
-    ]
-    wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"][
-        "source"
-    ]
+    wf_file_task_source_0 = workflow_from_file["task_list"][0]["task"]["source"]
+    wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"]["source"]
 
     async with MockCurrentUser() as user:
         prj = await project_factory_v2(user)
@@ -68,8 +64,7 @@ async def test_import_export(
 
         # Export the workflow we just imported
         res = await client.get(
-            f"/api/v2/project/{prj.id}/workflow/"
-            f"{workflow_imported_id}/export/"
+            f"/api/v2/project/{prj.id}/workflow/{workflow_imported_id}/export/"
         )
         workflow_exported = res.json()
         assert len(workflow_exported["task_list"]) == len(

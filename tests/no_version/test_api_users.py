@@ -383,13 +383,9 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-    async with MockCurrentUser(
-        user_kwargs=dict(email="user1@email.org")
-    ) as u1:
+    async with MockCurrentUser(user_kwargs=dict(email="user1@email.org")) as u1:
         u1_id = u1.id
-    async with MockCurrentUser(
-        user_kwargs=dict(email="user2@email.org")
-    ) as u2:
+    async with MockCurrentUser(user_kwargs=dict(email="user2@email.org")) as u2:
         u2_id = u2.id
 
     oauth1 = OAuthAccount(

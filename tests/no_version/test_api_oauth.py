@@ -18,6 +18,7 @@ FRACTAL_EMAIL_PASSWORD=fakepassword
 FRACTAL_HELP_URL=https://example.org/info
 ```
 """
+
 import httpx
 import pytest
 from httpx import AsyncClient

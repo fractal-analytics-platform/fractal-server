@@ -137,9 +137,7 @@ def _get_slurm_config_internal(
     # Job-batching parameters (if None, they will be determined heuristically)
     if wftask_meta is not None:
         tasks_per_job = wftask_meta.get("tasks_per_job", None)
-        parallel_tasks_per_job = wftask_meta.get(
-            "parallel_tasks_per_job", None
-        )
+        parallel_tasks_per_job = wftask_meta.get("parallel_tasks_per_job", None)
     else:
         tasks_per_job = None
         parallel_tasks_per_job = None

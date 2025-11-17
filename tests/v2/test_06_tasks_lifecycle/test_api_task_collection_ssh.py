@@ -107,8 +107,7 @@ async def test_task_collection_ssh_from_pypi(
         assert res.status_code == 422
         debug(res.json())
         expected_error = (
-            "Could not get https://pypi.org/simple/"
-            "testing-tasks-mock-invalid/"
+            "Could not get https://pypi.org/simple/testing-tasks-mock-invalid/"
         )
         assert expected_error in str(res.json()["detail"])
 

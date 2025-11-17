@@ -130,9 +130,7 @@ def fix_db():
                 project_timestamp = project.timestamp_created
 
             # WORKFLOW DUMP
-            workflow_dump_timestamp = job.workflow_dump.get(
-                "timestamp_created"
-            )
+            workflow_dump_timestamp = job.workflow_dump.get("timestamp_created")
             if workflow_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> workflow_dump['timestamp_created'] "
@@ -168,9 +166,7 @@ def fix_db():
                 db.refresh(job)
 
             # INPUT DATASET DUMP
-            ids_dump_timestamp = job.input_dataset_dump.get(
-                "timestamp_created"
-            )
+            ids_dump_timestamp = job.input_dataset_dump.get("timestamp_created")
             if ids_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> "

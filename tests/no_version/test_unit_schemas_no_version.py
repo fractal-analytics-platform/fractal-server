@@ -59,9 +59,7 @@ def test_user_group_read():
     from fractal_server.utils import get_timestamp
 
     XX = get_timestamp()
-    g = UserGroupRead(
-        id=1, name="group", timestamp_created=XX, viewer_paths=[]
-    )
+    g = UserGroupRead(id=1, name="group", timestamp_created=XX, viewer_paths=[])
     assert g.user_ids is None
     g = UserGroupRead(
         id=1,

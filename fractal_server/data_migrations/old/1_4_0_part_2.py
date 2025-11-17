@@ -2,6 +2,7 @@
 Loop over jobs, check that the corresponding project exists and is linked to a
 single user, then set the user_email job attribute.
 """
+
 import logging
 
 from sqlalchemy import select

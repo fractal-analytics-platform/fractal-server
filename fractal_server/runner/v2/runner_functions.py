@@ -6,8 +6,6 @@ from typing import Protocol
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..exceptions import JobExecutionError
-from ..exceptions import TaskOutputValidationError
 from .db_tools import update_status_of_history_unit
 from .deduplicate_list import deduplicate_list
 from .task_interface import InitTaskOutput
@@ -22,6 +20,8 @@ from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.exceptions import TaskOutputValidationError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
@@ -48,8 +48,7 @@ class GetRunnerConfigTypeLocal(Protocol):
         wftask: WorkflowTaskV2,
         which_type: Literal["non_parallel", "parallel"],
         tot_tasks: int,
-    ) -> JobRunnerConfigLocal:
-        ...
+    ) -> JobRunnerConfigLocal: ...
 
 
 class GetRunnerConfigTypeSLURM(Protocol):
@@ -59,8 +58,7 @@ class GetRunnerConfigTypeSLURM(Protocol):
         wftask: WorkflowTaskV2,
         which_type: Literal["non_parallel", "parallel"],
         tot_tasks: int,
-    ) -> SlurmConfig:
-        ...
+    ) -> SlurmConfig: ...
 
 
 GetRunnerConfigType = GetRunnerConfigTypeLocal | GetRunnerConfigTypeSLURM

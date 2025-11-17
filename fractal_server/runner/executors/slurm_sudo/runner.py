@@ -5,8 +5,6 @@ import subprocess  # nosec
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from ..slurm_common.base_slurm_runner import BaseSlurmRunner
-from ..slurm_common.slurm_job_task_models import SlurmJob
 from ._subprocess_run_as_user import _mkdir_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server.app.models import Profile
@@ -14,6 +12,12 @@ from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
 from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.slurm_common.base_slurm_runner import (
+    BaseSlurmRunner,
+)
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmJob,
+)
 
 logger = set_logger(__name__)
 
@@ -67,9 +71,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
         """
 
         self.slurm_user = profile.username
-        self.shared_config = JobRunnerConfigSLURM(
-            **resource.jobs_runner_config
-        )
+        self.shared_config = JobRunnerConfigSLURM(**resource.jobs_runner_config)
 
         super().__init__(
             slurm_runner_type="sudo",
@@ -94,9 +96,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
         """
         Fetch artifacts for a single SLURM jobs.
         """
-        logger.debug(
-            f"[_fetch_artifacts_single_job] {job.slurm_job_id=} START"
-        )
+        logger.debug(f"[_fetch_artifacts_single_job] {job.slurm_job_id=} START")
         source_target_list = [
             (job.slurm_stdout_remote, job.slurm_stdout_local),
             (job.slurm_stderr_remote, job.slurm_stderr_local),

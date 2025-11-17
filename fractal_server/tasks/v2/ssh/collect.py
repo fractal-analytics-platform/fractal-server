@@ -2,10 +2,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_background import fail_and_cleanup
-from ..utils_background import get_activity_and_task_group
-from ..utils_background import prepare_tasks_metadata
-from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import check_ssh_or_fail_and_cleanup
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
@@ -20,7 +16,15 @@ from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import fail_and_cleanup
+from fractal_server.tasks.v2.utils_background import (
+    get_activity_and_task_group,
+)
 from fractal_server.tasks.v2.utils_background import get_current_log
+from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group_sync,
+)
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
@@ -136,9 +140,7 @@ def collect_ssh(
                         tmp_archive_path = (
                             Path(tmpdir) / wheel_filename
                         ).as_posix()
-                        logger.info(
-                            f"Write wheel file into {tmp_archive_path}"
-                        )
+                        logger.info(f"Write wheel file into {tmp_archive_path}")
                         with open(tmp_archive_path, "wb") as f:
                             f.write(wheel_file.contents)
                         fractal_ssh.send_file(
@@ -267,9 +269,7 @@ def collect_ssh(
                     )
                     logger.info("_prepare_tasks_metadata - end")
 
-                    logger.info(
-                        "create_db_tasks_and_update_task_group - " "start"
-                    )
+                    logger.info("create_db_tasks_and_update_task_group - start")
                     create_db_tasks_and_update_task_group_sync(
                         task_list=task_list,
                         task_group_id=task_group.id,
@@ -310,9 +310,7 @@ def collect_ssh(
                             folder=task_group.path,
                             safe_root=profile.tasks_remote_dir,
                         )
-                        logger.info(
-                            f"Deleted remoted folder {task_group.path}"
-                        )
+                        logger.info(f"Deleted remoted folder {task_group.path}")
                     except Exception as e_rm:
                         logger.error(
                             "Removing folder failed. "

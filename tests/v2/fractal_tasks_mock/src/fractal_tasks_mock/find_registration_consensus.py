@@ -44,8 +44,7 @@ def find_registration_consensus(
         for zarr_url in well_zarr_urls:
             table_path = Path(zarr_url) / "registration_table_final"
             logging.info(
-                "[find_registration_consensus]"
-                f"   Write {table_path.as_posix()}"
+                f"[find_registration_consensus]   Write {table_path.as_posix()}"
             )
             with table_path.open("w") as f:
                 f.write("This is the consensus-based new table.\n")

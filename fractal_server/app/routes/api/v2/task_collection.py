@@ -14,30 +14,32 @@ from pydantic import BaseModel
 from pydantic import model_validator
 from pydantic import ValidationError
 
-from .....logger import reset_logger_handlers
-from .....logger import set_logger
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v2 import TaskGroupV2
-from ....schemas.v2 import FractalUploadedFile
-from ....schemas.v2 import TaskCollectPipV2
-from ....schemas.v2 import TaskGroupActivityStatusV2
-from ....schemas.v2 import TaskGroupActivityV2Read
-from ....schemas.v2 import TaskGroupCreateV2Strict
-from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
+from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.app.schemas.v2 import TaskCollectPipV2
 from fractal_server.app.schemas.v2 import (
     TaskGroupActivityActionV2,
 )
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
+from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.logger import reset_logger_handlers
+from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local.collect import (
     collect_local,
 )
@@ -211,13 +213,13 @@ async def collect_tasks_pip(
 
     # Set pinned_package_versions
     if task_collect.pinned_package_versions_pre is not None:
-        task_group_attrs[
-            "pinned_package_versions_pre"
-        ] = task_collect.pinned_package_versions_pre
+        task_group_attrs["pinned_package_versions_pre"] = (
+            task_collect.pinned_package_versions_pre
+        )
     if task_collect.pinned_package_versions_post is not None:
-        task_group_attrs[
-            "pinned_package_versions_post"
-        ] = task_collect.pinned_package_versions_post
+        task_group_attrs["pinned_package_versions_post"] = (
+            task_collect.pinned_package_versions_post
+        )
 
     # Initialize wheel_file_content as None
     wheel_file = None

@@ -44,11 +44,7 @@ with next(get_sync_db()) as db:
 
     # DEFAULT GROUP
     default_group = next(
-        (
-            group
-            for group in groups
-            if group.name == FRACTAL_DEFAULT_GROUP_NAME
-        ),
+        (group for group in groups if group.name == FRACTAL_DEFAULT_GROUP_NAME),
         None,
     )
     if default_group is None:
@@ -66,9 +62,7 @@ with next(get_sync_db()) as db:
     if user_ids_in_default_group == all_user_ids:
         print(f"All users are in default group '{FRACTAL_DEFAULT_GROUP_NAME}'")
     else:
-        user_ids_not_in_default_group = (
-            all_user_ids - user_ids_in_default_group
-        )
+        user_ids_not_in_default_group = all_user_ids - user_ids_in_default_group
         raise ValueError(
             "The following users are not in defualt group:\n"
             f"{user_ids_not_in_default_group}"

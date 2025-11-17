@@ -1,6 +1,7 @@
 """
 Definition of `/auth/users/` routes
 """
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -12,16 +13,16 @@ from sqlmodel import func
 from sqlmodel import select
 
 from . import current_superuser_act
-from ...db import get_async_db
-from ...schemas.user import UserRead
-from ...schemas.user import UserUpdate
 from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_user_with_groups
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
+from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateGroups
 from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
@@ -197,13 +198,12 @@ async def set_user_groups(
     # Remove/create links as needed
     for link in links_to_remove:
         logger.info(
-            f"Removing LinkUserGroup with {link.user_id=} "
-            f"and {link.group_id=}."
+            f"Removing LinkUserGroup with {link.user_id=} and {link.group_id=}."
         )
         await db.delete(link)
     for group_id in ids_links_to_add:
         logger.info(
-            f"Creating new LinkUserGroup with {user_id=} " f"and {group_id=}."
+            f"Creating new LinkUserGroup with {user_id=} and {group_id=}."
         )
         db.add(LinkUserGroup(user_id=user_id, group_id=group_id))
     await db.commit()

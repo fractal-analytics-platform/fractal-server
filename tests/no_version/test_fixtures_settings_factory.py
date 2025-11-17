@@ -2,6 +2,7 @@
 These two tests simply check that the fixture `override_settings_factory`
 restores the settings to the original values, so as to guarantee statelessness.
 """
+
 import pytest
 
 from fractal_server.app.schemas.v2 import ResourceType

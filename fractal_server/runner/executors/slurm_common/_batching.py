@@ -11,6 +11,7 @@
 """
 Submodule to determine the number of total/parallel tasks per SLURM job.
 """
+
 import math
 
 from fractal_server.logger import set_logger
@@ -130,16 +131,12 @@ def heuristics(
         raise SlurmHeuristicsError(msg)
     if cpus_per_task > max_cpus_per_job:
         msg = (
-            f"[heuristics] Requested {cpus_per_task=} "
-            f"but {max_cpus_per_job=}."
+            f"[heuristics] Requested {cpus_per_task=} but {max_cpus_per_job=}."
         )
         logger.error(msg)
         raise SlurmHeuristicsError(msg)
     if mem_per_task > max_mem_per_job:
-        msg = (
-            f"[heuristics] Requested {mem_per_task=} "
-            f"but {max_mem_per_job=}."
-        )
+        msg = f"[heuristics] Requested {mem_per_task=} but {max_mem_per_job=}."
         logger.error(msg)
         raise SlurmHeuristicsError(msg)
 
@@ -177,8 +174,7 @@ def heuristics(
             )
         if mem_per_job > max_mem_per_job:
             msg = (
-                f"[heuristics] Requested {mem_per_job=} "
-                f"but {max_mem_per_job=}."
+                f"[heuristics] Requested {mem_per_job=} but {max_mem_per_job=}."
             )
             logger.error(msg)
             raise SlurmHeuristicsError(msg)
@@ -187,8 +183,7 @@ def heuristics(
         num_jobs = math.ceil(tot_tasks / tasks_per_job)
         if num_jobs > target_num_jobs:
             logger.debug(
-                f"[heuristics] Requested {num_jobs=} "
-                f"but {target_num_jobs=}."
+                f"[heuristics] Requested {num_jobs=} but {target_num_jobs=}."
             )
         if num_jobs > max_num_jobs:
             msg = f"[heuristics] Requested {num_jobs=} but {max_num_jobs=}."

@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_database import create_db_tasks_and_update_task_group_sync
 from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
@@ -25,6 +24,9 @@ from fractal_server.tasks.v2.utils_background import (
 )
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group_sync,
+)
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
@@ -234,7 +236,7 @@ def collect_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.info("create_db_tasks_and_update_task_group - " "start")
+                logger.info("create_db_tasks_and_update_task_group - start")
                 create_db_tasks_and_update_task_group_sync(
                     task_list=task_list,
                     task_group_id=task_group.id,
@@ -274,8 +276,7 @@ def collect_local(
                     logger.info(f"Deleted folder {task_group.path}")
                 except Exception as rm_e:
                     logger.error(
-                        "Removing folder failed.\n"
-                        f"Original error:\n{str(rm_e)}"
+                        f"Removing folder failed.\nOriginal error:\n{str(rm_e)}"
                     )
 
                 fail_and_cleanup(
