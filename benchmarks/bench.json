@@ -35,41 +35,12 @@
         "size": 0.0
     },
     {
-        "path": "/api/v2/dataset/",
-        "verb": "GET",
-        "username": "vanilla",
-        "time": 7.9,
-        "size": 0.6
-    },
-    {
-        "path": "/api/v2/dataset/",
-        "verb": "GET",
-        "username": "power",
-        "time": 281.0,
-        "size": 389.0
-    },
-    {
-        "path": "/api/v2/dataset/",
-        "verb": "GET",
-        "username": "dataset",
-        "time": 108.1,
-        "size": 145.6
-    },
-    {
-        "path": "/api/v2/dataset/",
-        "verb": "GET",
-        "username": "project",
-        "time": 34.0,
-        "size": 50.9
-    },
-    {
-        "path": "/api/v2/dataset/",
-        "verb": "GET",
-        "username": "job",
-        "time": 20.0,
-        "size": 35.3
-    },
-    {
+
+
+
+
+
+
         "path": "/api/v2/job/",
         "verb": "GET",
         "username": "vanilla",
