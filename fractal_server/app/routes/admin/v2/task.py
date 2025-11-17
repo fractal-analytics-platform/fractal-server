@@ -134,22 +134,26 @@ async def query_tasks(
     for task in task_list:
         stm = (
             select(WorkflowV2)
-            .join(WorkflowTaskV2)
-            .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
+            .join(
+                WorkflowTaskV2,
+                WorkflowTaskV2.workflow_id == WorkflowV2.id,
+            )
             .where(WorkflowTaskV2.task_id == task.id)
         )
         res = await db.execute(stm)
         wf_list = res.scalars().all()
 
         project_users = {}
-        for workflow in wf_list:
+        for project_id in [workflow.project_id for workflow in wf_list]:
             res = await db.execute(
                 select(UserOAuth.id, UserOAuth.email)
-                .join(LinkUserProjectV2)
-                .where(LinkUserProjectV2.project_id == workflow.project_id)
-                .where(LinkUserProjectV2.user_id == UserOAuth.id)
+                .join(
+                    LinkUserProjectV2,
+                    LinkUserProjectV2.user_id == UserOAuth.id,
+                )
+                .where(LinkUserProjectV2.project_id == project_id)
             )
-            project_users[workflow.project_id] = [
+            project_users[project_id] = [
                 ProjectUser(id=p_user[0], email=p_user[1])
                 for p_user in res.all()
             ]
