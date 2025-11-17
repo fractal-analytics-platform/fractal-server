@@ -418,9 +418,7 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDumpV2(
-            **json.loads(
-                project.model_dump_json(exclude={"user_list", "resource_id"})
-            )
+            **json.loads(project.model_dump_json(exclude={"resource_id"}))
         ).model_dump()
         expected_workflow_dump = WorkflowDumpV2(
             **json.loads(wf.model_dump_json(exclude={"task_list"}))

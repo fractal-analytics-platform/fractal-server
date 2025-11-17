@@ -14,7 +14,7 @@ from .....zip_tools import _zip_folder_to_byte_stream_iterator
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....models.v2 import ProjectV2
+from ....models.v2 import LinkUserProjectV2
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
 from ...aux._job import _write_shutdown_file
@@ -48,8 +48,10 @@ async def get_user_jobs(
     """
     stm = (
         select(JobV2)
-        .join(ProjectV2)
-        .where(ProjectV2.user_list.any(UserOAuth.id == user.id))
+        .join(
+            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
+        )
+        .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()

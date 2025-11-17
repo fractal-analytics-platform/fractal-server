@@ -9,6 +9,7 @@ from sqlmodel import select
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
@@ -58,10 +59,15 @@ async def project_factory_v2(db):
         )
         args.update(kwargs)
         project = ProjectV2(**args)
-        project.user_list.append(user)
         db.add(project)
+        await db.flush()
+
+        link = LinkUserProjectV2(project_id=project.id, user_id=user.id)
+        db.add(link)
+
         await db.commit()
         await db.refresh(project)
+
         return project
 
     return __project_factory
@@ -188,7 +194,7 @@ async def job_factory_v2(db: AsyncSession):
                 workflow.model_dump_json(exclude={"task_list"})
             ),
             project_dump=json.loads(
-                project.model_dump_json(exclude={"user_list", "resource_id"})
+                project.model_dump_json(exclude={"resource_id"})
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
