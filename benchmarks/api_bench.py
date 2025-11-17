@@ -180,6 +180,8 @@ class Benchmark:
             updated_path = re.sub(pattern, lambda x: next(id_list), path)
         else:
             updated_path = path
+
+        print(f"OLD PATH: {path}\nNEW PATH: {updated_path}")
         return updated_path
 
     def make_user_metrics(
