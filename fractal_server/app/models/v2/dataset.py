@@ -9,7 +9,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ....utils import get_timestamp
+from fractal_server.utils import get_timestamp
 
 
 class DatasetV2(SQLModel, table=True):

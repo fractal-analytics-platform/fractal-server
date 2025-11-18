@@ -5,6 +5,7 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subsystems should only import this module and not its submodules or
 the individual backends.
 """
+
 import os
 import traceback
 from pathlib import Path
@@ -12,9 +13,6 @@ from typing import Protocol
 
 from sqlalchemy.orm import Session as DBSyncSession
 
-from ._local import process_workflow as local_process_workflow
-from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
-from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
 from fractal_server.app.models.v2 import DatasetV2
@@ -33,6 +31,10 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
+
+from ._local import process_workflow as local_process_workflow
+from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
+from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 
 
 class ProcessWorkflowType(Protocol):
@@ -53,8 +55,7 @@ class ProcessWorkflowType(Protocol):
         resource: Resource,
         profile: Profile,
         user_cache_dir: str,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 def fail_job(

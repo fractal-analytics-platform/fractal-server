@@ -1,6 +1,7 @@
 """
 Definition of `/auth/group/` routes
 """
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -9,11 +10,6 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from . import current_superuser_act
-from ._aux_auth import _get_default_usergroup_id_or_none
-from ._aux_auth import _get_single_usergroup_with_user_ids
-from ._aux_auth import _user_or_404
-from ._aux_auth import _usergroup_or_404
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
@@ -24,6 +20,12 @@ from fractal_server.app.schemas.user_group import UserGroupUpdate
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+
+from . import current_superuser_act
+from ._aux_auth import _get_default_usergroup_id_or_none
+from ._aux_auth import _get_single_usergroup_with_user_ids
+from ._aux_auth import _user_or_404
+from ._aux_auth import _usergroup_or_404
 
 logger = set_logger(__name__)
 

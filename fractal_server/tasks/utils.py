@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 COLLECTION_FILENAME = "collection.json"
 COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"

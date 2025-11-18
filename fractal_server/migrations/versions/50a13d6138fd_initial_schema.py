@@ -5,10 +5,10 @@ Revises:
 Create Date: 2023-05-29 12:14:56.670243
 
 """
+
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision = "50a13d6138fd"
@@ -37,9 +37,7 @@ def upgrade() -> None:
         "task",
         sa.Column("default_args", sa.JSON(), nullable=True),
         sa.Column("meta", sa.JSON(), nullable=True),
-        sa.Column(
-            "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
@@ -52,9 +50,7 @@ def upgrade() -> None:
             "output_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("owner", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source"),
     )
@@ -163,9 +159,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "applyworkflow",
-        sa.Column(
-            "start_timestamp", sa.DateTime(timezone=True), nullable=True
-        ),
+        sa.Column("start_timestamp", sa.DateTime(timezone=True), nullable=True),
         sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "worker_init", sqlmodel.sql.sqltypes.AutoString(), nullable=True
@@ -183,9 +177,7 @@ def upgrade() -> None:
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
-        sa.Column(
-            "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("log", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["input_dataset_id"],
@@ -243,12 +235,8 @@ def downgrade() -> None:
     op.drop_table("resource")
     op.drop_table("applyworkflow")
     op.drop_table("workflow")
-    op.drop_index(
-        op.f("ix_oauthaccount_oauth_name"), table_name="oauthaccount"
-    )
-    op.drop_index(
-        op.f("ix_oauthaccount_account_id"), table_name="oauthaccount"
-    )
+    op.drop_index(op.f("ix_oauthaccount_oauth_name"), table_name="oauthaccount")
+    op.drop_index(op.f("ix_oauthaccount_account_id"), table_name="oauthaccount")
     op.drop_table("oauthaccount")
     op.drop_table("linkuserproject")
     op.drop_table("dataset")

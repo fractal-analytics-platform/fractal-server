@@ -3,11 +3,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_background import add_commit_refresh
-from ..utils_background import fail_and_cleanup
-from ..utils_background import get_activity_and_task_group
-from ..utils_templates import get_collection_replacements
-from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -18,9 +13,15 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import FORBIDDEN_DEPENDENCY_STRINGS
 from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2.utils_background import add_commit_refresh
+from fractal_server.tasks.v2.utils_background import fail_and_cleanup
+from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.utils import get_timestamp
+
+from ._utils import _customize_and_run_template
 
 
 def deactivate_local(
@@ -172,9 +173,7 @@ def deactivate_local(
                             / Path(task_group.archive_path).name
                         ).as_posix()
                         shutil.copy(task_group.archive_path, new_archive_path)
-                        logger.info(
-                            f"Copied wheel file to {new_archive_path}."
-                        )
+                        logger.info(f"Copied wheel file to {new_archive_path}.")
 
                         task_group.archive_path = new_archive_path
                         new_pip_freeze = task_group.env_info.replace(

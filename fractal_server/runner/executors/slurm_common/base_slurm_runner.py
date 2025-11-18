@@ -9,10 +9,6 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from ..slurm_common.slurm_job_task_models import SlurmJob
-from ..slurm_common.slurm_job_task_models import SlurmTask
-from ._job_states import STATES_FINISHED
-from .slurm_config import SlurmConfig
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
@@ -25,12 +21,19 @@ from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.base_runner import MultisubmitTaskType
 from fractal_server.runner.executors.base_runner import SubmitTaskType
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmJob,
+)
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmTask,
+)
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
-from fractal_server.runner.v2.db_tools import (
-    bulk_update_status_of_history_unit,
-)
+from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+
+from ._job_states import STATES_FINISHED
+from .slurm_config import SlurmConfig
 
 SHUTDOWN_ERROR_MESSAGE = "Failed due to job-execution shutdown."
 SHUTDOWN_EXCEPTION = JobExecutionError(SHUTDOWN_ERROR_MESSAGE)
@@ -336,8 +339,7 @@ class BaseSlurmRunner(BaseRunner):
                 json.dump(task.parameters, f, indent=2)
 
             logger.debug(
-                "[_prepare_single_slurm_job] Written "
-                f"{task.input_file_local=}"
+                f"[_prepare_single_slurm_job] Written {task.input_file_local=}"
             )
 
         # Prepare commands to be included in SLURM submission script
@@ -381,9 +383,7 @@ class BaseSlurmRunner(BaseRunner):
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
         script_lines.append('echo "Current directory: $(pwd)"')
-        script_lines.append(
-            'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
-        )
+        script_lines.append('echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"')
 
         # Complete script preamble
         script_lines.append("\n")
@@ -397,9 +397,7 @@ class BaseSlurmRunner(BaseRunner):
                 f"{cmd} &"
             )
         script_lines.append("wait\n\n")
-        script_lines.append(
-            'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
-        )
+        script_lines.append('echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"')
         script = "\n".join(script_lines)
 
         # Write submission script
@@ -630,8 +628,7 @@ class BaseSlurmRunner(BaseRunner):
     def _check_no_active_jobs(self):
         if self.jobs != {}:
             raise JobExecutionError(
-                "Unexpected branch: jobs must be empty before new "
-                "submissions."
+                "Unexpected branch: jobs must be empty before new submissions."
             )
 
     def submit(
@@ -746,9 +743,7 @@ class BaseSlurmRunner(BaseRunner):
             scancelled_job_ids = []
             while len(self.jobs) > 0:
                 # Look for finished jobs
-                finished_job_ids = self._get_finished_jobs(
-                    job_ids=self.job_ids
-                )
+                finished_job_ids = self._get_finished_jobs(job_ids=self.job_ids)
                 logger.debug(f"[submit] {finished_job_ids=}")
                 finished_jobs = [
                     self.jobs[_slurm_job_id]
@@ -895,9 +890,7 @@ class BaseSlurmRunner(BaseRunner):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(
-                tot_tasks / config.tasks_per_job
-            ):
+            if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
                 raise RuntimeError("Something wrong here while batching tasks")
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
@@ -1010,9 +1003,7 @@ class BaseSlurmRunner(BaseRunner):
                     logger.debug(f"[multisubmit] Now process {slurm_job_id=}")
                     slurm_job = self.jobs.pop(slurm_job_id)
                     for task in slurm_job.tasks:
-                        logger.debug(
-                            f"[multisubmit] Now process {task.index=}"
-                        )
+                        logger.debug(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
                         if fetch_artifacts_exception is not None:
                             result = None

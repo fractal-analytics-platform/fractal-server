@@ -7,8 +7,8 @@ from typing import Self
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import Discriminator
-from pydantic import model_validator
 from pydantic import Tag
+from pydantic import model_validator
 from pydantic import validate_call
 from pydantic.types import AwareDatetime
 
@@ -84,9 +84,7 @@ class ValidResourceBase(BaseModel):
             and self.type == ResourceType.SLURM_SSH
             and self.tasks_pixi_config["SLURM_CONFIG"] is None
         ):
-            raise ValueError(
-                "`tasks_pixi_config` must include `SLURM_CONFIG`."
-            )
+            raise ValueError("`tasks_pixi_config` must include `SLURM_CONFIG`.")
         return self
 
 

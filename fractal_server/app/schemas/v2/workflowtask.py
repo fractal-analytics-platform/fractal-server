@@ -5,14 +5,15 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
+from fractal_server.types import DictStrAny
+from fractal_server.types import TypeFilters
+from fractal_server.types import WorkflowTaskArgument
+
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskImportV2Legacy
 from .task import TaskReadV2
 from .task import TaskType
-from fractal_server.types import DictStrAny
-from fractal_server.types import TypeFilters
-from fractal_server.types import WorkflowTaskArgument
 
 
 class WorkflowTaskCreateV2(BaseModel):

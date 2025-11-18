@@ -12,9 +12,7 @@ from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
-from fractal_server.tasks.v2.utils_background import (
-    get_activity_and_task_group,
-)
+from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.utils import get_timestamp
 

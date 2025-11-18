@@ -12,12 +12,12 @@
 """
 This module provides logging utilities
 """
+
 import logging
 from pathlib import Path
 
 from .config import get_settings
 from .syringe import Inject
-
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)

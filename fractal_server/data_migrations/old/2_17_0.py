@@ -100,9 +100,7 @@ def prepare_profile_and_user_updates() -> dict[str, ProfileUsersUpdateInfo]:
                 username = user_settings.ssh_username
                 new_profile_data.update(
                     ssh_key_path=user_settings.ssh_private_key_path,
-                    tasks_remote_dir=normalize_url(
-                        user_settings.ssh_tasks_dir
-                    ),
+                    tasks_remote_dir=normalize_url(user_settings.ssh_tasks_dir),
                     jobs_remote_dir=normalize_url(user_settings.ssh_jobs_dir),
                 )
 
@@ -155,7 +153,7 @@ def get_old_dotenv_variables() -> dict[str, str | None]:
 
 
 def get_TasksPythonSettings(
-    old_config: dict[str, str | None]
+    old_config: dict[str, str | None],
 ) -> dict[str, Any]:
     versions = {}
     for version_underscore in ["3_9", "3_10", "3_11", "3_12"]:
@@ -183,7 +181,7 @@ def get_TasksPixiSettings(old_config: dict[str, str | None]) -> dict[str, Any]:
 
 
 def get_JobRunnerConfigSLURM(
-    old_config: dict[str, str | None]
+    old_config: dict[str, str | None],
 ) -> dict[str, Any]:
     slurm_file = old_config["FRACTAL_SLURM_CONFIG_FILE"]
     with open(slurm_file) as f:
@@ -193,7 +191,7 @@ def get_JobRunnerConfigSLURM(
 
 
 def get_JobRunnerConfigLocal(
-    old_config: dict[str, str | None]
+    old_config: dict[str, str | None],
 ) -> dict[str, Any]:
     local_file = old_config.get("FRACTAL_LOCAL_CONFIG_FILE", None)
     if local_file is None or not Path(local_file).exists():

@@ -62,8 +62,7 @@ def compare_package_names(
         return
 
     logger.warning(
-        f"Package name mismatch: "
-        f"{pkg_name_task_group=}, {pkg_name_pip_show=}."
+        f"Package name mismatch: {pkg_name_task_group=}, {pkg_name_pip_show=}."
     )
     normalized_pkg_name_pip = normalize_package_name(pkg_name_pip_show)
     normalized_pkg_name_taskgroup = normalize_package_name(pkg_name_task_group)

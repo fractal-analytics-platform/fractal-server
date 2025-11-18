@@ -9,7 +9,7 @@ repos:
     rev: v0.14.5
     hooks:
       - id: ruff-check
-        args: ["--fix"]
+        args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
 -   repo: https://github.com/PyCQA/bandit
     rev: '1.9.1'

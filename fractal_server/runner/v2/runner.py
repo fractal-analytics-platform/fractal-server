@@ -7,13 +7,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 from sqlmodel import update
 
-from .merge_outputs import merge_outputs
-from .runner_functions import GetRunnerConfigType
-from .runner_functions import run_v2_task_compound
-from .runner_functions import run_v2_task_non_parallel
-from .runner_functions import run_v2_task_parallel
-from .runner_functions import SubmissionOutcome
-from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
@@ -28,8 +21,8 @@ from fractal_server.app.schemas.v2 import TaskDumpV2
 from fractal_server.app.schemas.v2 import TaskGroupDumpV2
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images import SingleImage
-from fractal_server.images.status_tools import enrich_images_unsorted_sync
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+from fractal_server.images.status_tools import enrich_images_unsorted_sync
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import merge_type_filters
@@ -38,6 +31,14 @@ from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.types import AttributeFilters
+
+from .merge_outputs import merge_outputs
+from .runner_functions import GetRunnerConfigType
+from .runner_functions import SubmissionOutcome
+from .runner_functions import run_v2_task_compound
+from .runner_functions import run_v2_task_non_parallel
+from .runner_functions import run_v2_task_parallel
+from .task_interface import TaskOutput
 
 
 def _remove_status_from_attributes(
@@ -312,9 +313,7 @@ def execute_tasks_v2(
             # history status.
             for image_obj in current_task_output.image_list_updates:
                 image = image_obj.model_dump()
-                if image["zarr_url"] in [
-                    img["zarr_url"] for img in tmp_images
-                ]:
+                if image["zarr_url"] in [img["zarr_url"] for img in tmp_images]:
                     img_search = find_image_by_zarr_url(
                         images=tmp_images,
                         zarr_url=image["zarr_url"],
@@ -418,9 +417,7 @@ def execute_tasks_v2(
 
             # Update type_filters based on task-manifest output_types
             type_filters_from_task_manifest = task.output_types
-            current_dataset_type_filters.update(
-                type_filters_from_task_manifest
-            )
+            current_dataset_type_filters.update(type_filters_from_task_manifest)
         except Exception as e:
             logger.error(
                 "Unexpected error in post-task-execution block. "
