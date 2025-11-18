@@ -4,8 +4,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_database import create_db_tasks_and_update_task_group_sync
-from ._utils import _customize_and_run_template
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -20,21 +18,22 @@ from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
-from fractal_server.tasks.v2.utils_background import (
-    get_activity_and_task_group,
-)
+from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group_sync,
+)
 from fractal_server.tasks.v2.utils_package_names import compare_package_names
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
 )
-from fractal_server.tasks.v2.utils_templates import get_collection_replacements
-from fractal_server.tasks.v2.utils_templates import (
-    parse_script_pip_show_stdout,
-)
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.tasks.v2.utils_templates import get_collection_replacements
+from fractal_server.tasks.v2.utils_templates import parse_script_pip_show_stdout
 from fractal_server.utils import get_timestamp
+
+from ._utils import _customize_and_run_template
 
 
 def collect_local(
@@ -234,7 +233,7 @@ def collect_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                logger.info("create_db_tasks_and_update_task_group - " "start")
+                logger.info("create_db_tasks_and_update_task_group - start")
                 create_db_tasks_and_update_task_group_sync(
                     task_list=task_list,
                     task_group_id=task_group.id,
@@ -274,8 +273,7 @@ def collect_local(
                     logger.info(f"Deleted folder {task_group.path}")
                 except Exception as rm_e:
                     logger.error(
-                        "Removing folder failed.\n"
-                        f"Original error:\n{str(rm_e)}"
+                        f"Removing folder failed.\nOriginal error:\n{str(rm_e)}"
                     )
 
                 fail_and_cleanup(

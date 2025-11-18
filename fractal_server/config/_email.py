@@ -4,8 +4,8 @@ from typing import Self
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import model_validator
 from pydantic import SecretStr
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 

@@ -1,7 +1,9 @@
 """
 v2 `models` module
 """
-from ..linkuserproject import LinkUserProjectV2
+
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
+
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2

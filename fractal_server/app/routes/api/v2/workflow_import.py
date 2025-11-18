@@ -5,23 +5,13 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v2 import TaskV2
-from ....models.v2 import WorkflowV2
-from ....schemas.v2 import TaskImportV2Legacy
-from ....schemas.v2 import WorkflowImportV2
-from ....schemas.v2 import WorkflowReadV2WithWarnings
-from ....schemas.v2 import WorkflowTaskCreateV2
-from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_user_resource_id
-from ._aux_functions import _workflow_insert_task
-from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
-from ._aux_functions_tasks import _check_type_filters_compatibility
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     _disambiguate_task_groups,
 )
@@ -30,7 +20,18 @@ from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
 from fractal_server.app.schemas.v2 import TaskImportV2
+from fractal_server.app.schemas.v2 import TaskImportV2Legacy
+from fractal_server.app.schemas.v2 import WorkflowImportV2
+from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
+from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.logger import set_logger
+
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_user_resource_id
+from ._aux_functions import _workflow_insert_task
+from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
+from ._aux_functions_tasks import _check_type_filters_compatibility
 
 router = APIRouter()
 
@@ -127,8 +128,7 @@ async def _get_task_by_taskimport(
         for task_group in task_groups_list
         if (
             task_group.pkg_name == task_import.pkg_name
-            and task_import.name
-            in [task.name for task in task_group.task_list]
+            and task_import.name in [task.name for task in task_group.task_list]
         )
     ]
     if len(matching_task_groups) < 1:
@@ -146,9 +146,7 @@ async def _get_task_by_taskimport(
             "[_get_task_by_taskimport] "
             "No version requested, looking for latest."
         )
-        latest_task = max(
-            matching_task_groups, key=lambda tg: tg.version or ""
-        )
+        latest_task = max(matching_task_groups, key=lambda tg: tg.version or "")
         version = latest_task.version
         logger.info(
             f"[_get_task_by_taskimport] Latest version set to {version}."

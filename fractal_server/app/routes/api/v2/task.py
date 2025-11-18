@@ -9,7 +9,9 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
-from ...aux.validate_user_profile import validate_user_profile
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access
 from ._aux_functions_tasks import _get_task_read_access

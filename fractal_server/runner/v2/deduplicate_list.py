@@ -1,8 +1,9 @@
 from typing import TypeVar
 
-from .task_interface import InitArgsModel
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageTaskOutput
+
+from .task_interface import InitArgsModel
 
 T = TypeVar("T", SingleImage, SingleImageTaskOutput, InitArgsModel)
 

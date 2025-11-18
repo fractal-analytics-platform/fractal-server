@@ -10,7 +10,6 @@ from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
-
 logger = set_logger(__name__)
 
 
@@ -84,7 +83,7 @@ async def _disambiguate_task_groups(
     res = await db.execute(stm)
     oldest_user_group_id = res.scalars().first()
     logger.debug(
-        "[_disambiguate_task_groups] " f"Result: {oldest_user_group_id=}."
+        f"[_disambiguate_task_groups] Result: {oldest_user_group_id=}."
     )
     task_group = next(
         iter(

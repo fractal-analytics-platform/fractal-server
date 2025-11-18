@@ -2,6 +2,7 @@
 Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
+
 from typing import Any
 
 from fastapi import HTTPException
@@ -74,8 +75,7 @@ async def _get_task_group_read_access(
     forbidden_exception = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
-            "Current user has no read access to TaskGroupV2 "
-            f"{task_group_id}."
+            f"Current user has no read access to TaskGroupV2 {task_group_id}."
         ),
     )
 

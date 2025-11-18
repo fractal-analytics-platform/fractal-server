@@ -6,8 +6,6 @@ from fastapi import status
 from sqlmodel import func
 from sqlmodel import select
 
-from ._aux_functions import _check_profile_name
-from ._aux_functions import _get_profile_or_404
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
@@ -15,6 +13,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.schemas.v2 import ProfileCreate
 from fractal_server.app.schemas.v2 import ProfileRead
+
+from ._aux_functions import _check_profile_name
+from ._aux_functions import _get_profile_or_404
 
 router = APIRouter()
 

@@ -5,6 +5,7 @@ Revises: 19eca0dd47a9
 Create Date: 2024-11-20 15:01:52.659832
 
 """
+
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
@@ -33,16 +34,10 @@ def upgrade() -> None:
         sa.Column(
             "version", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column(
-            "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "action", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("action", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("log", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "timestamp_ended", sa.DateTime(timezone=True), nullable=True
-        ),
+        sa.Column("timestamp_ended", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["taskgroupv2_id"],
             ["taskgroupv2.id"],

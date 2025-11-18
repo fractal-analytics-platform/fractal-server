@@ -10,7 +10,6 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
 
-
 _CHUNK_SIZE = 2_000
 
 logger = set_logger(__name__)

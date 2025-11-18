@@ -4,10 +4,11 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
-from .task import TaskType
 from fractal_server.types import DictStrAny
 from fractal_server.types import HttpUrlStr
 from fractal_server.types import NonEmptyStr
+
+from .task import TaskType
 
 
 class TaskManifestV2(BaseModel):

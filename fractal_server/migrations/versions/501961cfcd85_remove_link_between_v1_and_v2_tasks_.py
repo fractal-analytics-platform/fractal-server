@@ -5,6 +5,7 @@ Revises: 5bf02391cfef
 Create Date: 2024-09-09 14:15:34.415926
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -36,8 +37,8 @@ def upgrade() -> None:
     # NOTE: in sqlite, the `drop_index` command fails if the existing table
     # has zero rows, while it succeeds if there are already some rows
     if op.get_bind().dialect.name == "sqlite":
-        import sqlite3
         import logging
+        import sqlite3
 
         logger = logging.getLogger("alembic.runtime.migration")
         logger.warning(

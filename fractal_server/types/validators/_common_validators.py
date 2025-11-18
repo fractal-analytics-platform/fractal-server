@@ -13,9 +13,7 @@ def valdict_keys(d: dict[str, Any]) -> dict[str, Any]:
     if any(k == "" for k in new_keys):
         raise ValueError(f"Empty string in {new_keys}.")
     if len(new_keys) != len(set(new_keys)):
-        raise ValueError(
-            f"Dictionary contains multiple identical keys: '{d}'."
-        )
+        raise ValueError(f"Dictionary contains multiple identical keys: '{d}'.")
     for old_key, new_key in zip(old_keys, new_keys):
         if new_key != old_key:
             d[new_key] = d.pop(old_key)

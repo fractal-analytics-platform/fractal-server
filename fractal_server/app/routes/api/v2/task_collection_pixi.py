@@ -7,8 +7,8 @@ from fastapi import Depends
 from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Response
-from fastapi import status
 from fastapi import UploadFile
+from fastapi import status
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -42,7 +42,6 @@ from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.types import NonEmptyStr
-
 
 router = APIRouter()
 

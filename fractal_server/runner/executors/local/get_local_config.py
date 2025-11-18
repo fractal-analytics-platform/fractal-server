@@ -1,6 +1,7 @@
 """
 Submodule to handle the local-backend configuration for a WorkflowTask
 """
+
 from typing import Literal
 
 from fractal_server.app.models.v2 import WorkflowTaskV2

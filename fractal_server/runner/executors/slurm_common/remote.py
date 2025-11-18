@@ -3,8 +3,10 @@ import json
 import os
 import sys
 
-from ..call_command_wrapper import call_command_wrapper
 from fractal_server import __VERSION__
+from fractal_server.runner.executors.call_command_wrapper import (
+    call_command_wrapper,
+)
 
 
 class FractalVersionMismatch(RuntimeError):

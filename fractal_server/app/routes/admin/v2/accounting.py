@@ -14,9 +14,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.routes.auth import current_superuser_act
-from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import AccountingRecordRead
 
 
