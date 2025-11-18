@@ -355,3 +355,21 @@ async def test_contact_an_admin_message(
         )
         assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
+
+
+async def test_task_collection_from_pypi_with_extras(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    _, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
+        await client.post(
+            f"{PREFIX}/collect/pip/?private=true",
+            data=dict(
+                package="uvicorn[standard]",
+                package_version="0.22.0",
+            ),
+        )
