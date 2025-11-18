@@ -140,7 +140,6 @@ line-length = 80
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "TID"]
-ignore = ["E203","W505","E226"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
