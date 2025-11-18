@@ -6,7 +6,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
-
 PREFIX = "/api/v2/task-group"
 
 
@@ -87,15 +86,11 @@ async def test_get_task_group_list(
         )
         await task_factory_v2(
             user_id=user2.id,
-            task_group_kwargs=dict(
-                active=False, pkg_name="bbb", version="xxx"
-            ),
+            task_group_kwargs=dict(active=False, pkg_name="bbb", version="xxx"),
         )
         await task_factory_v2(
             user_id=user2.id,
-            task_group_kwargs=dict(
-                active=False, pkg_name="bbb", version="abc"
-            ),
+            task_group_kwargs=dict(active=False, pkg_name="bbb", version="abc"),
         )
         await task_factory_v2(
             user_id=user2.id,
@@ -291,9 +286,7 @@ async def test_get_task_group_activity_list(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         task = await task_factory_v2(
             user_id=user.id,
             task_group_kwargs=dict(resource_id=resource.id),

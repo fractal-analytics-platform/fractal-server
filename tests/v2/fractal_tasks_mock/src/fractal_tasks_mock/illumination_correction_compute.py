@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from fractal_tasks_mock.input_models import InitArgsIllumination
 from pydantic import validate_call
+
+from fractal_tasks_mock.input_models import InitArgsIllumination
 
 
 @validate_call

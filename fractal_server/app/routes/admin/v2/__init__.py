@@ -1,6 +1,7 @@
 """
 `admin/v2` module
 """
+
 from fastapi import APIRouter
 
 from .accounting import router as accounting_router

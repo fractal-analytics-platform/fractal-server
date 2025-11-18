@@ -1,6 +1,7 @@
 """
 Definition of `/auth/current-user/` endpoints
 """
+
 import os
 
 from fastapi import APIRouter
@@ -23,8 +24,8 @@ from fractal_server.app.schemas import UserProfileInfo
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateStrict
-from fractal_server.app.security import get_user_manager
 from fractal_server.app.security import UserManager
+from fractal_server.app.security import get_user_manager
 from fractal_server.config import DataAuthScheme
 from fractal_server.config import get_data_settings
 from fractal_server.syringe import Inject

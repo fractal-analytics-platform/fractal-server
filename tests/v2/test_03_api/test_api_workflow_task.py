@@ -11,7 +11,6 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
-
 PREFIX = "api/v2"
 
 
@@ -56,9 +55,7 @@ async def test_post_worfkflow_task(
     THEN the new WorkflowTask is inserted in Workflow.task_list
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create project and workflow
         proj = await project_factory_v2(user)
         wf = await workflow_factory_v2(project_id=proj.id)
@@ -246,9 +243,7 @@ async def test_delete_workflow_task(
         from Workflow.task_list
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         project = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",
@@ -274,8 +269,7 @@ async def test_delete_workflow_task(
             wftasks.append(res.json())
 
         assert (
-            len((await db.execute(select(WorkflowTaskV2))).scalars().all())
-            == 3
+            len((await db.execute(select(WorkflowTaskV2))).scalars().all()) == 3
         )
         workflow = await get_workflow(client, project.id, wf_id)
         assert len(workflow["task_list"]) == 3
@@ -316,8 +310,7 @@ async def test_delete_workflow_task(
         assert res.status_code == 204
 
         assert (
-            len((await db.execute(select(WorkflowTaskV2))).scalars().all())
-            == 2
+            len((await db.execute(select(WorkflowTaskV2))).scalars().all()) == 2
         )
         workflow = await get_workflow(client, project.id, wf_id)
         assert len(workflow["task_list"]) == 2
@@ -338,9 +331,7 @@ async def test_patch_workflow_task(
     THEN the WorkflowTask is updated
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         project = await project_factory_v2(user)
         workflow = {"name": "WF"}
         res = await client.post(
@@ -610,9 +601,7 @@ async def test_patch_workflow_task_failures(
     """
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Prepare two workflows, with one task each
         project = await project_factory_v2(user)
         workflow1 = {"name": "WF1"}
@@ -705,9 +694,7 @@ async def test_reorder_task_list(
     ]
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create a main project and a pool of available tasks
         project = await project_factory_v2(user)
         tasks = [(await post_task(client, f"task-{ind}")) for ind in range(5)]
@@ -792,9 +779,7 @@ async def test_reorder_task_list_fail(
     num_tasks = 3
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory_v2(user)
         res = await client.post(
@@ -891,9 +876,7 @@ async def test_read_workflowtask(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         project = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",
@@ -1082,9 +1065,7 @@ async def test_replace_task_in_workflowtask(
         debug(res.json())
 
         # Test type filters compatibility
-        task6 = await task_factory_v2(
-            user_id=user.id, input_types={"a": False}
-        )
+        task6 = await task_factory_v2(user_id=user.id, input_types={"a": False})
         task7 = await task_factory_v2(
             user_id=user.id,
             input_types={"a": True},

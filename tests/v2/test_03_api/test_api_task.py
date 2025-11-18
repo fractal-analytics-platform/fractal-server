@@ -431,9 +431,7 @@ async def test_get_task(
     resource, profile = local_resource_profile_db
     resource2, profile2 = slurm_sudo_resource_profile_db
 
-    async with MockCurrentUser(
-        user_kwargs={"profile_id": profile.id}
-    ) as user1:
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
         task1 = await task_factory_v2(user_id=user1.id, name="name1")
 
     async with MockCurrentUser(

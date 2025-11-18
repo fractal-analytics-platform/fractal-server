@@ -7,9 +7,7 @@ from sqlmodel import select
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.runner.v2.db_tools import (
-    bulk_update_status_of_history_unit,
-)
+from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
 from fractal_server.runner.v2.db_tools import update_status_of_history_unit
 
 

@@ -43,9 +43,7 @@ async def test_post_and_get_project(
     async with MockCurrentUser(
         user_kwargs=dict(profile_id=profile.id)
     ) as userA:
-        res = await client.post(
-            f"{PREFIX}/project/", json=dict(name="project")
-        )
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 201
         assert len(await _project_list_v2(userA, db)) == 1
         other_project = res.json()
@@ -55,16 +53,12 @@ async def test_post_and_get_project(
         assert res.status_code == 200
         assert res.json() == await _project_list_v2(userB, db) == []
 
-        res = await client.post(
-            f"{PREFIX}/project/", json=dict(name="project")
-        )
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 201
         assert len(await _project_list_v2(userB, db)) == 1
 
         # a user can't create two projectsV2 with the same name
-        res = await client.post(
-            f"{PREFIX}/project/", json=dict(name="project")
-        )
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 422
         assert len(await _project_list_v2(userB, db)) == 1
 

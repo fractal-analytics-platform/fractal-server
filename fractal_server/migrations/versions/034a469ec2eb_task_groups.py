@@ -5,13 +5,13 @@ Revises: da2cb2ac4255
 Create Date: 2024-10-10 16:14:13.976231
 
 """
+
 from datetime import datetime
 from datetime import timezone
 
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision = "034a469ec2eb"
@@ -26,15 +26,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column(
-            "origin", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("origin", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column(
-            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column(
             "python_version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
@@ -123,8 +119,8 @@ def upgrade() -> None:
     except BaseException as e:
         if op.get_bind().dialect.name != "sqlite":
             raise e
-        import sqlite3
         import logging
+        import sqlite3
 
         logger = logging.getLogger("alembic.runtime.migration")
         logger.warning(

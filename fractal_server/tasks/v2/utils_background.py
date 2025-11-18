@@ -112,9 +112,9 @@ def prepare_tasks_metadata(
         if package_version is not None:
             task_attributes["version"] = package_version
         if package_manifest.has_args_schemas:
-            task_attributes[
-                "args_schema_version"
-            ] = package_manifest.args_schema_version
+            task_attributes["args_schema_version"] = (
+                package_manifest.args_schema_version
+            )
         # Set command attributes
         if _task.executable_non_parallel is not None:
             non_parallel_path = package_root / _task.executable_non_parallel

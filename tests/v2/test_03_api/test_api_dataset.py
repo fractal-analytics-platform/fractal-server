@@ -271,9 +271,7 @@ async def test_delete_dataset_cascade_jobs(
 
         # Assert tha we cannot stop a dataset linked to a running job
         ds_deletable = await dataset_factory_v2(id=2, project_id=project.id)
-        ds_not_deletable = await dataset_factory_v2(
-            id=3, project_id=project.id
-        )
+        ds_not_deletable = await dataset_factory_v2(id=3, project_id=project.id)
 
         common_args = {
             "project_id": project.id,

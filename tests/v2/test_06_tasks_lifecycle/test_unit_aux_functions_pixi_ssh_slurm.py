@@ -6,15 +6,13 @@ import pytest
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
-    _log_change_of_job_state,
+    FRACTAL_SQUEUE_ERROR_STATE,
 )
+from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import _log_change_of_job_state
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import _read_file_if_exists
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import _run_squeue
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _verify_success_file_exists,
-)
-from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
-    FRACTAL_SQUEUE_ERROR_STATE,
 )
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     run_script_on_remote_slurm,

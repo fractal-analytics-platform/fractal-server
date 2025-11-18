@@ -7,7 +7,6 @@ import time
 import pytest
 from devtools import debug
 
-
 commands = [
     "fractalctl start --reload --host 0.0.0.0 --port 8000",
     (

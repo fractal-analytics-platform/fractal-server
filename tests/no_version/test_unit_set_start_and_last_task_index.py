@@ -5,7 +5,6 @@ from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
 
-
 cases = [
     [10, None, None, (0, 9)],
     [10, 2, None, (2, 9)],

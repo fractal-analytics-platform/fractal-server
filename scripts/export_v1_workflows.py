@@ -2,17 +2,16 @@ import json
 import sys
 from pathlib import Path
 
+from fractal_server.app.models.v1 import LinkUserProject
+from fractal_server.app.models.v1 import Project
+from fractal_server.app.models.v1 import Workflow
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v1 import LinkUserProject
-from fractal_server.app.models.v1 import Project
-from fractal_server.app.models.v1 import Workflow
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import sanitize_string
 from fractal_server.utils import get_timestamp
-
 
 logger = set_logger(sys.argv[0])
 

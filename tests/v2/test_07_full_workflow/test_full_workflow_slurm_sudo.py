@@ -21,7 +21,6 @@ from tests.v2.test_07_full_workflow.common_functions import (
     non_executable_task_command,
 )
 
-
 FRACTAL_RUNNER_BACKEND = ResourceType.SLURM_SUDO
 
 

@@ -12,7 +12,6 @@ from fractal_server.app.security import get_user_manager
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-
 bearer_transport = BearerTransport(tokenUrl="/auth/token/login")
 cookie_transport = CookieTransport(cookie_samesite="none")
 
@@ -71,8 +70,7 @@ async def current_user_act_ver_prof(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                f"Forbidden access "
-                f"({user.is_verified=} {user.profile_id=})."
+                f"Forbidden access ({user.is_verified=} {user.profile_id=})."
             ),
         )
     return user

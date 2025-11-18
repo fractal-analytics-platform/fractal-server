@@ -58,9 +58,7 @@ async def test_deactivate_task_group_api(
     else:
         resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
         non_active_task = await task_factory_v2(
             user_id=user.id,
@@ -161,9 +159,7 @@ async def test_reactivate_task_group_api(
         app.state.fractal_ssh_list = MockFractalSSHList()
     else:
         resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
         active_task = await task_factory_v2(user_id=user.id, name="task2")
         task_other = await task_factory_v2(
@@ -302,12 +298,11 @@ async def _aux_test_lifecycle(
         env_info = task_group.env_info
         task_group_archive_path = task_group.archive_path
         assert (
-            f"fractal-tasks-mock @ file://{task_group_archive_path}"
-            in env_info
+            f"fractal-tasks-mock @ file://{task_group_archive_path}" in env_info
         )
-        assert (
-            Path(task_group.path) / Path(archive_path).name
-        ).as_posix() == (Path(task_group_archive_path).as_posix())
+        assert (Path(task_group.path) / Path(archive_path).name).as_posix() == (
+            Path(task_group_archive_path).as_posix()
+        )
 
         # STEP 2: Deactivate task group
         res = await client.post(
@@ -495,9 +490,7 @@ async def test_fail_due_to_ongoing_activities(
     activities for the same task group are ongoing.
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock objects
         task = await task_factory_v2(user_id=user.id, name="task")
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
@@ -547,9 +540,7 @@ async def test_lifecycle_actions_with_submitted_jobs(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
         active_task = await task_factory_v2(
             user_id=user.id,

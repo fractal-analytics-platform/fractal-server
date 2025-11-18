@@ -12,7 +12,6 @@ from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 
-
 PREFIX = "api/v2/task"
 
 
@@ -252,9 +251,7 @@ async def test_contact_an_admin_message(
     resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
     # default UserGroup (this is NOT ALLOWED using the API).
-    async with MockCurrentUser(
-        user_kwargs={"profile_id": profile.id}
-    ) as userA:
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as userA:
         for _ in range(2):
             db.add(
                 TaskGroupV2(
@@ -334,8 +331,7 @@ async def test_contact_an_admin_message(
         )
         assert res.status_code == 422
         assert (
-            "There exists another task-group collection"
-            in res.json()["detail"]
+            "There exists another task-group collection" in res.json()["detail"]
         )
 
         # Create a new CollectionState associated to the same TaskGroup

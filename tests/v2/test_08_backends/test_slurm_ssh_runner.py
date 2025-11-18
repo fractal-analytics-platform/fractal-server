@@ -4,22 +4,21 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from .aux_unit_runner import *  # noqa
-from .aux_unit_runner import ZARR_URLS
-from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import TaskExecutionError
-from fractal_server.runner.executors.slurm_ssh.runner import (
-    SlurmSSHRunner,
-)
+from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
+from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 
 
 def _reset_permissions(remote_folder: str, fractal_ssh: FractalSSH):

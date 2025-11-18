@@ -1,6 +1,7 @@
+from pydantic import validate_call
+
 from fractal_tasks_mock.utils import _extract_common_root
 from fractal_tasks_mock.utils import _group_zarr_urls_by_well
-from pydantic import validate_call
 
 
 def _read_acquisition_index_from_ngff_metadata(path: str) -> int:

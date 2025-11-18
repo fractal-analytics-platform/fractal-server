@@ -13,7 +13,6 @@ from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from pydantic import BaseModel
 
-
 FRACTAL_SERVER_URL = "http://localhost:8000"
 
 
@@ -266,8 +265,7 @@ class Benchmark:
                 ):
                     pass
                 elif (
-                    endpoint["path"]
-                    == "/api/v2/project/$project_id$/workflow/"
+                    endpoint["path"] == "/api/v2/project/$project_id$/workflow/"
                     and user.name != "power@example.org"
                 ):
                     pass

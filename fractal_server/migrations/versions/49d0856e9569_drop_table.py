@@ -5,6 +5,7 @@ Revises: 45fbb391d7af
 Create Date: 2025-11-11 16:39:41.497832
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
@@ -34,9 +35,7 @@ def downgrade() -> None:
             autoincrement=False,
             nullable=False,
         ),
-        sa.Column(
-            "ssh_host", sa.VARCHAR(), autoincrement=False, nullable=True
-        ),
+        sa.Column("ssh_host", sa.VARCHAR(), autoincrement=False, nullable=True),
         sa.Column(
             "ssh_username", sa.VARCHAR(), autoincrement=False, nullable=True
         ),

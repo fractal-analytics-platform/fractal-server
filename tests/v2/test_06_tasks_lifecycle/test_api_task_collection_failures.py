@@ -94,9 +94,7 @@ async def test_wheel_collection_failures(
     with open(archive_path, "rb") as f:
         wheel_file_content = f.read()
 
-    files = {
-        "file": (archive_path.name, wheel_file_content, "application/zip")
-    }
+    files = {"file": (archive_path.name, wheel_file_content, "application/zip")}
 
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(

@@ -2,6 +2,7 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
+
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
@@ -14,7 +15,6 @@ from sqlalchemy.orm import sessionmaker
 from fractal_server.config import get_db_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
-
 
 logger = set_logger(__name__)
 

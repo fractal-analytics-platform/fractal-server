@@ -86,9 +86,7 @@ class TaskFiles(BaseModel):
     @property
     def log_file_remote_path(self) -> Path:
         self._check_component()
-        return (
-            self.wftask_subfolder_remote / f"{self.prefix_component}-log.txt"
-        )
+        return self.wftask_subfolder_remote / f"{self.prefix_component}-log.txt"
 
     @property
     def log_file_remote(self) -> str:

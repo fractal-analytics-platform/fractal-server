@@ -1,17 +1,16 @@
 import pytest
 from devtools import debug
 
-from .aux_unit_runner import *  # noqa
-from .aux_unit_runner import ZARR_URLS
-from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.runner.executors.slurm_sudo.runner import (
-    SlurmSudoRunner,
-)
+from fractal_server.runner.executors.slurm_sudo.runner import SlurmSudoRunner
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
+from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 
 
 @pytest.mark.container

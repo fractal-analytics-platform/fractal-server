@@ -4,10 +4,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..utils_database import create_db_tasks_and_update_task_group_sync
-from ..utils_pixi import parse_collect_stdout
-from ..utils_pixi import SOURCE_DIR_NAME
-from ._utils import edit_pyproject_toml_in_place_local
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -22,14 +18,19 @@ from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
-from fractal_server.tasks.v2.utils_background import (
-    get_activity_and_task_group,
-)
+from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
+from fractal_server.tasks.v2.utils_database import (
+    create_db_tasks_and_update_task_group_sync,
+)
+from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
+from fractal_server.tasks.v2.utils_pixi import parse_collect_stdout
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
+
+from ._utils import edit_pyproject_toml_in_place_local
 
 
 def collect_local_pixi(
@@ -177,9 +178,7 @@ def collect_local_pixi(
                 package_root = parsed_output["package_root"]
                 venv_size = parsed_output["venv_size"]
                 venv_file_number = parsed_output["venv_file_number"]
-                project_python_wrapper = parsed_output[
-                    "project_python_wrapper"
-                ]
+                project_python_wrapper = parsed_output["project_python_wrapper"]
 
                 # Make task folder 755
                 command = f"chmod -R 755 {source_dir}"

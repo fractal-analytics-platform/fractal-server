@@ -3,10 +3,10 @@ import pytest
 from fractal_server.app.schemas.v2.profile import (
     get_discriminator_value as get_2,
 )
+from fractal_server.app.schemas.v2.resource import ValidResourceBase
 from fractal_server.app.schemas.v2.resource import (
     get_discriminator_value as get_1,
 )
-from fractal_server.app.schemas.v2.resource import ValidResourceBase
 
 
 def test_get_discriminator_value():

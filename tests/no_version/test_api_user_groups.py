@@ -177,9 +177,7 @@ async def test_user_group_crud(
 
     # After the previous 422, verify that user A was not added to group 2
     # (that is, verify that `db.commit` is atomic)
-    res = await registered_superuser_client.get(
-        f"{PREFIX}/group/{group_2_id}/"
-    )
+    res = await registered_superuser_client.get(f"{PREFIX}/group/{group_2_id}/")
     assert res.status_code == 200
     assert user_A_id not in res.json()["user_ids"]
 

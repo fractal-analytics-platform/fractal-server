@@ -5,7 +5,6 @@ from pydantic import Field
 
 from fractal_server.types import AttributeFilters
 
-
 VALID_ATTRIBUTE_FILTERS = (
     {},
     {"key1": ["A"]},

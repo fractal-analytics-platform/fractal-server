@@ -117,6 +117,5 @@ async def test_unit_create_first_group(
     with caplog.at_level(logging.INFO, logger=LOGGER_NAME):
         _create_first_group()
     assert (
-        "SKIP because 'settings.FRACTAL_DEFAULT_GROUP_NAME=None'"
-        in caplog.text
+        "SKIP because 'settings.FRACTAL_DEFAULT_GROUP_NAME=None'" in caplog.text
     )

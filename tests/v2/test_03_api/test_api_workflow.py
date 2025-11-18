@@ -11,7 +11,6 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
-
 PREFIX = "api/v2"
 
 

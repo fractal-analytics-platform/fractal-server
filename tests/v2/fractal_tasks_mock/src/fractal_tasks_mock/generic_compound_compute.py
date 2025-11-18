@@ -1,7 +1,8 @@
 from typing import Optional
 
-from fractal_tasks_mock.input_models import InitArgsGeneric
 from pydantic import validate_call
+
+from fractal_tasks_mock.input_models import InitArgsGeneric
 
 
 @validate_call

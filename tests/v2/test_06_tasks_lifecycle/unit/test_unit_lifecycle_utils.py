@@ -1,9 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from fractal_server.tasks.v2.local._utils import (
-    check_task_files_exist,
-)
+from fractal_server.tasks.v2.local._utils import check_task_files_exist
 
 
 class _MockTaskCreateV2(BaseModel):
@@ -35,8 +33,6 @@ def test_check_task_files_exist(tmp_path):
     assert "missing file" in str(e.value)
     with pytest.raises(FileNotFoundError) as e:
         check_task_files_exist(
-            task_list=[
-                _MockTaskCreateV2(command_parallel=f"py {missing_path}")
-            ]
+            task_list=[_MockTaskCreateV2(command_parallel=f"py {missing_path}")]
         )
     assert "missing file" in str(e.value)

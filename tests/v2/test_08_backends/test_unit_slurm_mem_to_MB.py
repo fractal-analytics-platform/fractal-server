@@ -1,7 +1,7 @@
 import pytest
 
-from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
 from fractal_server.runner.config.slurm_mem_to_MB import SlurmConfigError
+from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
 
 
 def test_slurm_mem_to_MB():

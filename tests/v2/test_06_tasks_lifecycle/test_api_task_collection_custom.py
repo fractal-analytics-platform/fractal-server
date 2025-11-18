@@ -5,7 +5,6 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 
-
 PREFIX = "api/v2/task"
 
 

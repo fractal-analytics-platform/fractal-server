@@ -15,7 +15,6 @@ from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 from tests.fixtures_slurm import SLURM_USER
 
-
 SLURM_CONFIG = {
     "default_slurm_config": {
         "partition": "main",

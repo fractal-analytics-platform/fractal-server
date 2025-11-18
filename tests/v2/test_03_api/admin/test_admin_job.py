@@ -20,7 +20,6 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
-
 PREFIX = "/admin/v2"
 
 
@@ -497,9 +496,7 @@ async def test_download_job_logs(
         # Test that the endpoint returns a list with the new job
         res = await client.get(f"{PREFIX}/job/{job.id}/download/")
         assert res.status_code == 200
-        assert (
-            res.headers.get("content-type") == "application/x-zip-compressed"
-        )
+        assert res.headers.get("content-type") == "application/x-zip-compressed"
 
         # Write response into a zipped file
         zipped_archive_path = tmp_path / "logs.zip"

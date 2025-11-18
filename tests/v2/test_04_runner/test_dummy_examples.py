@@ -6,8 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
 from sqlmodel import select
 
-from .aux_get_dataset_attrs import _get_dataset_attrs
-from .execute_tasks_v2 import execute_tasks_v2_mod
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
@@ -18,6 +16,9 @@ from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.local.runner import LocalRunner
 from fractal_server.urls import normalize_url
+
+from .aux_get_dataset_attrs import _get_dataset_attrs
+from .execute_tasks_v2 import execute_tasks_v2_mod
 
 
 async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
@@ -120,9 +121,7 @@ async def test_dummy_insert_single_image(
         )
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(
-        project_id=project.id, zarr_dir=zarr_dir
-    )
+    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
     workflow = await workflow_factory_v2(project_id=project.id)
     wftask = await workflowtask_factory_v2(
         workflow_id=workflow.id,

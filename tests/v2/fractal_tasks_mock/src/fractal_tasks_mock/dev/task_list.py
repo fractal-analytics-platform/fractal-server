@@ -4,7 +4,6 @@ from fractal_task_tools.task_models import ConverterNonParallelTask
 from fractal_task_tools.task_models import NonParallelTask
 from fractal_task_tools.task_models import ParallelTask
 
-
 TASK_LIST = [
     ConverterCompoundTask(
         name="create_ome_zarr_compound",

@@ -8,9 +8,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _get_dataset_check_owner,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_job_check_owner,
-)
+from fractal_server.app.routes.api.v2._aux_functions import _get_job_check_owner
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_project_check_owner,
 )
@@ -20,9 +18,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_owner,
 )
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_workflow_or_404,
-)
+from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_task_check_owner,
 )

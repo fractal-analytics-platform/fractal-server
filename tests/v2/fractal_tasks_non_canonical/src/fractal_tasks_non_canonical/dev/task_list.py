@@ -1,6 +1,5 @@
 from fractal_task_tools.task_models import NonParallelTask
 
-
 TASK_LIST = [
     NonParallelTask(
         name="generic_task",
