@@ -23,21 +23,15 @@ async def test_linkuserproject_constraints(
         hashed_password="hashed_password_2",
         project_dir=(tmp_path / "p2").as_posix(),
     )
-    u3 = UserOAuth(
-        email="u3@xy.z",
-        hashed_password="hashed_password_3",
-        project_dir=(tmp_path / "p3").as_posix(),
-    )
 
     p1 = ProjectV2(name="p1", resource_id=resource.id)
     p2 = ProjectV2(name="p2", resource_id=resource.id)
 
-    db.add_all([u1, u2, u3, p1, p2])
+    db.add_all([u1, u2, p1, p2])
     await db.commit()
 
     await db.refresh(u1)
     await db.refresh(u2)
-    await db.refresh(u3)
     await db.refresh(p1)
     await db.refresh(p2)
 
@@ -104,7 +98,7 @@ async def test_linkuserproject_constraints(
     db.add(
         LinkUserProjectV2(
             project_id=p2.id,
-            user_id=u3.id,
+            user_id=u1.id,
             is_owner=False,
             is_verified=True,
             permissions="foo",
