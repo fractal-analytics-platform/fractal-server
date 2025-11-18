@@ -61,7 +61,13 @@ async def project_factory_v2(db):
         db.add(project)
         await db.flush()
 
-        link = LinkUserProjectV2(project_id=project.id, user_id=user.id)
+        link = LinkUserProjectV2(
+            project_id=project.id,
+            user_id=user.id,
+            is_owner=True,
+            is_verified=True,
+            permissions="rwx",
+        )
         db.add(link)
 
         await db.commit()
