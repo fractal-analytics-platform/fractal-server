@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 'v5.0.0'
+    rev: 'v6.0.0'
     hooks:
     - id: check-yaml
     - id: end-of-file-fixer
@@ -12,7 +12,7 @@ repos:
         args: [ --fix ]
       - id: ruff-format
 -   repo: https://github.com/PyCQA/bandit
-    rev: '1.8.6'
+    rev: '1.9.1'
     hooks:
     - id: bandit
       args: ["--exclude", "tests/*", "benchmarks/*", "example/*"]
