@@ -5,7 +5,6 @@ Revises: af1ef1c83c9b
 Create Date: 2025-03-14 15:25:01.083619
 
 """
-
 import sqlalchemy as sa
 import sqlmodel
 from alembic import op
@@ -38,7 +37,9 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.Column("num_available_images", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["dataset_id"],
@@ -58,8 +59,12 @@ def upgrade() -> None:
         "historyunit",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("history_run_id", sa.Integer(), nullable=False),
-        sa.Column("logfile", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "logfile", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.Column("zarr_urls", postgresql.ARRAY(sa.String()), nullable=True),
         sa.ForeignKeyConstraint(
             ["history_run_id"],

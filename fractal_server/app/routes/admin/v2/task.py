@@ -8,15 +8,16 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_superuser_act
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
 
 router = APIRouter()
@@ -106,16 +107,12 @@ async def query_tasks(
         stm = stm.where(TaskV2.authors.icontains(author))
         stm_count = stm_count.where(TaskV2.authors.icontains(author))
     if resource_id is not None:
-        stm = (
-            stm.join(TaskGroupV2)
-            .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-            .where(TaskGroupV2.resource_id == resource_id)
-        )
-        stm_count = (
-            stm_count.join(TaskGroupV2)
-            .where(TaskGroupV2.id == TaskV2.taskgroupv2_id)
-            .where(TaskGroupV2.resource_id == resource_id)
-        )
+        stm = stm.join(
+            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+        ).where(TaskGroupV2.resource_id == resource_id)
+        stm_count = stm_count.join(
+            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+        ).where(TaskGroupV2.resource_id == resource_id)
 
     # Find total number of elements
     res_total_count = await db.execute(stm_count)
@@ -133,12 +130,29 @@ async def query_tasks(
     for task in task_list:
         stm = (
             select(WorkflowV2)
-            .join(WorkflowTaskV2)
-            .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
+            .join(
+                WorkflowTaskV2,
+                WorkflowTaskV2.workflow_id == WorkflowV2.id,
+            )
             .where(WorkflowTaskV2.task_id == task.id)
         )
         res = await db.execute(stm)
         wf_list = res.scalars().all()
+
+        project_users = {}
+        for project_id in set([workflow.project_id for workflow in wf_list]):
+            res = await db.execute(
+                select(UserOAuth.id, UserOAuth.email)
+                .join(
+                    LinkUserProjectV2,
+                    LinkUserProjectV2.user_id == UserOAuth.id,
+                )
+                .where(LinkUserProjectV2.project_id == project_id)
+            )
+            project_users[project_id] = [
+                ProjectUser(id=p_user[0], email=p_user[1])
+                for p_user in res.all()
+            ]
 
         task_info_list.append(
             dict(
@@ -149,16 +163,12 @@ async def query_tasks(
                         workflow_name=workflow.name,
                         project_id=workflow.project.id,
                         project_name=workflow.project.name,
-                        project_users=[
-                            dict(id=user.id, email=user.email)
-                            for user in workflow.project.user_list
-                        ],
+                        project_users=project_users[workflow.project_id],
                     )
                     for workflow in wf_list
                 ],
             )
         )
-
     return PaginationResponse[TaskV2Info](
         total_count=total_count,
         page_size=page_size,

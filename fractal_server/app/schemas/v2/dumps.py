@@ -7,7 +7,6 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of Job models;
 2. In the history items, to trim their size.
 """
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field

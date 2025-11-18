@@ -35,7 +35,9 @@ def fix_db():
                     logger.warning(f"TaskV2[{task_id}] not found")
             else:
                 hr.task_id = wft.task_id
-                logger.info(f"HistoryRun[{hr.id}].task_id set to {wft.task_id}")
+                logger.info(
+                    f"HistoryRun[{hr.id}].task_id set to {wft.task_id}"
+                )
 
             db.add(hr)
             logger.info(f"HistoryRun[{hr.id}] END")

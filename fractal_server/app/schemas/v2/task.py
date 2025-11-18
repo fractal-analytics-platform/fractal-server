@@ -14,6 +14,7 @@ from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
+
 logger = set_logger(__name__)
 
 

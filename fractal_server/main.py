@@ -4,9 +4,6 @@ from itertools import chain
 
 from fastapi import FastAPI
 
-from fractal_server import __VERSION__
-from fractal_server.app.schemas.v2 import ResourceType
-
 from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.shutdown import cleanup_after_shutdown
 from .config import get_data_settings
@@ -18,6 +15,8 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+from fractal_server import __VERSION__
+from fractal_server.app.schemas.v2 import ResourceType
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -28,9 +27,9 @@ def collect_routers(app: FastAPI) -> None:
         app:
             The application to register the routers to.
     """
-    from .app.routes.admin.v2 import router_admin_v2
     from .app.routes.api import router_api
     from .app.routes.api.v2 import router_api_v2
+    from .app.routes.admin.v2 import router_admin_v2
     from .app.routes.auth.router import router_auth
 
     app.include_router(router_api, prefix="/api")

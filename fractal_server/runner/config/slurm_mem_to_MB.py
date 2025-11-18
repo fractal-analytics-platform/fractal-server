@@ -1,6 +1,7 @@
 from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import SlurmConfigError
 
+
 logger = set_logger(__name__)
 
 

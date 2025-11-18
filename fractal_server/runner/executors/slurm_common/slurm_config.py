@@ -1,7 +1,6 @@
 """
 Submodule to handle the SLURM configuration for a WorkflowTask
 """
-
 from pathlib import Path
 
 from pydantic import BaseModel

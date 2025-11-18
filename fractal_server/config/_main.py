@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: SecretStr
     COOKIE_EXPIRE_SECONDS: int = 86400
     # Note: we do not use ResourceType here to avoid circular imports
-    FRACTAL_RUNNER_BACKEND: Literal["local", "slurm_ssh", "slurm_sudo"] = (
-        "local"
-    )
+    FRACTAL_RUNNER_BACKEND: Literal[
+        "local", "slurm_ssh", "slurm_sudo"
+    ] = "local"
     FRACTAL_LOGGING_LEVEL: int = logging.INFO
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0

@@ -5,9 +5,8 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
-from fractal_server.types import AbsolutePathStr
-
 from ._settings_config import SETTINGS_CONFIG_DICT
+from fractal_server.types import AbsolutePathStr
 
 
 class DataAuthScheme(StrEnum):

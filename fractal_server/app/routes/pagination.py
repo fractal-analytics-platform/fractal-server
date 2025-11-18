@@ -4,8 +4,8 @@ from typing import TypeVar
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import ValidationError
 from pydantic import model_validator
+from pydantic import ValidationError
 
 T = TypeVar("T")
 

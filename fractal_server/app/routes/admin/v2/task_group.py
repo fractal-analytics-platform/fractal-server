@@ -24,6 +24,7 @@ from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
 from fractal_server.logger import set_logger
 
+
 router = APIRouter()
 
 logger = set_logger(__name__)

@@ -10,22 +10,21 @@ from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
-from fractal_server.app.db import AsyncSession
-from fractal_server.app.db import get_async_db
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.aux._job import _write_shutdown_file
-from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
-
+from .....zip_tools import _zip_folder_to_byte_stream_iterator
+from ....db import AsyncSession
+from ....db import get_async_db
+from ....models.v2 import JobV2
+from ....models.v2 import LinkUserProjectV2
+from ....schemas.v2 import JobReadV2
+from ....schemas.v2 import JobStatusTypeV2
+from ...aux._job import _write_shutdown_file
+from ...aux._runner import _check_shutdown_is_supported
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 # https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread
@@ -49,8 +48,10 @@ async def get_user_jobs(
     """
     stm = (
         select(JobV2)
-        .join(ProjectV2)
-        .where(ProjectV2.user_list.any(UserOAuth.id == user.id))
+        .join(
+            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
+        )
+        .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()

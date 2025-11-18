@@ -15,12 +15,15 @@ from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_project_check_owner,
 )
-from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_workflow_or_404,
+)
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
 from fractal_server.logger import set_logger
 from fractal_server.zip_tools import _read_single_file_from_zip
+
 
 logger = set_logger(__name__)
 

@@ -36,9 +36,9 @@ def send_fractal_email_or_log_failure(
                 for recipient in email_settings.recipients
             ]
         )
-        mail_msg["Subject"] = (
-            f"[Fractal, {email_settings.instance_name}] {subject}"
-        )
+        mail_msg[
+            "Subject"
+        ] = f"[Fractal, {email_settings.instance_name}] {subject}"
         with smtplib.SMTP(
             email_settings.smtp_server,
             email_settings.port,
@@ -61,5 +61,6 @@ def send_fractal_email_or_log_failure(
 
     except Exception as e:
         logger.error(
-            f"Could not send self-registration email, original error: {str(e)}."
+            "Could not send self-registration email, "
+            f"original error: {str(e)}."
         )

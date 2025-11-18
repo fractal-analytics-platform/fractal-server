@@ -16,10 +16,11 @@ from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 from pydantic import BaseModel
 
-from fractal_server.logger import close_logger
-from fractal_server.logger import get_logger
-from fractal_server.logger import set_logger
+from ..logger import close_logger
+from ..logger import get_logger
+from ..logger import set_logger
 from fractal_server.string_tools import validate_cmd
+
 
 SSH_MONITORING_LOGGER_NAME = "ssh-log"
 
@@ -98,7 +99,8 @@ def _acquire_lock_with_timeout(
         if not result:
             logger.error(f"Lock for '{label}' was *not* acquired.")
             raise FractalSSHTimeoutError(
-                f"Failed to acquire lock for '{label}' within {timeout} seconds"
+                f"Failed to acquire lock for '{label}' within "
+                f"{timeout} seconds"
             )
         t_lock_acquisition = time.perf_counter()
         elapsed = t_lock_acquisition - t_lock_request
@@ -454,7 +456,9 @@ class FractalSSH:
                 logger_name=self.logger_name,
             ):
                 self._sftp_unsafe().put(local, remote)
-            self.logger.info(f"[send_file] END transfer of '{local}' over SSH.")
+            self.logger.info(
+                f"[send_file] END transfer of '{local}' over SSH."
+            )
         except Exception as e:
             self.log_and_raise(
                 e=e,
@@ -760,7 +764,8 @@ class FractalSSHList:
             logger_name=self._logger_name,
         ):
             self.logger.info(
-                f"Removing FractalSSH object for {user}@{host} from collection."
+                f"Removing FractalSSH object for {user}@{host} "
+                "from collection."
             )
             fractal_ssh_obj = self._data.pop(key)
             self.logger.info(

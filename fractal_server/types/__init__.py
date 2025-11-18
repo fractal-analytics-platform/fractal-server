@@ -6,8 +6,7 @@ from pydantic import AfterValidator
 from pydantic.types import NonNegativeInt
 from pydantic.types import StringConstraints
 
-from fractal_server.urls import normalize_url
-
+from ..urls import normalize_url
 from .validators import val_absolute_path
 from .validators import val_http_url
 from .validators import val_unique_list

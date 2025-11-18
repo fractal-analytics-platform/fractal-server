@@ -2,21 +2,21 @@
 Loop over jobs.
 If the corresponding project still exists, set the project_dump.
 """
-
 import json
 import logging
 from datetime import datetime
 from datetime import timezone
 
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v1.project import Project
 from fractal_server.app.schemas.v1.applyworkflow import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1.dumps import ProjectDumpV1
 from fractal_server.app.schemas.v1.project import ProjectReadV1
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 
-from fractal_server.app.db import get_sync_db
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 REFERENCE_TIMESTAMP_STRING = str(REFERENCE_TIMESTAMP)

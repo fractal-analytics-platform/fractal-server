@@ -8,9 +8,8 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from fractal_server.utils import get_timestamp
-
 from .task import TaskV2
+from fractal_server.utils import get_timestamp
 
 
 def _check_origin_not_pixi(origin: str):

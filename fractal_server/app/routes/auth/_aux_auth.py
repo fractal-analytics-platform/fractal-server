@@ -13,6 +13,7 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
+
 logger = set_logger(__name__)
 
 
@@ -35,7 +36,7 @@ async def _get_single_user_with_groups(
 
     stm_groups = (
         select(UserGroup)
-        .join(LinkUserGroup)
+        .join(LinkUserGroup, LinkUserGroup.group_id == UserGroup.id)
         .where(LinkUserGroup.user_id == user.id)
         .order_by(asc(LinkUserGroup.timestamp_created))
     )

@@ -95,7 +95,9 @@ def simplify_pyproject_toml(
             if key == pixi_environment
         }
         if pixi_data["environments"] == {}:
-            raise ValueError(f"No '{pixi_environment}' pixi environment found.")
+            raise ValueError(
+                f"No '{pixi_environment}' pixi environment found."
+            )
     except KeyError:
         logger.info("KeyError for workspace/platforms - skip.")
 

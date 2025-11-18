@@ -1,10 +1,11 @@
+from sqlalchemy import select
+
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v1.dataset import Dataset
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v1.workflow import Workflow
 from fractal_server.app.schemas.v1.workflow import WorkflowReadV1
-from sqlalchemy import select
 
-from fractal_server.app.db import get_sync_db
 
 with next(get_sync_db()) as db:
     stm = select(ApplyWorkflow)

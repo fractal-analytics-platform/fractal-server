@@ -2,7 +2,6 @@
 Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
-
 from typing import Any
 
 from fastapi import HTTPException
@@ -75,7 +74,8 @@ async def _get_task_group_read_access(
     forbidden_exception = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
-            f"Current user has no read access to TaskGroupV2 {task_group_id}."
+            "Current user has no read access to TaskGroupV2 "
+            f"{task_group_id}."
         ),
     )
 
@@ -86,13 +86,11 @@ async def _get_task_group_read_access(
     else:
         stm = (
             select(LinkUserGroup)
-            .join(UserOAuth)
-            .join(Profile)
+            .join(UserOAuth, UserOAuth.id == LinkUserGroup.user_id)
+            .join(Profile, Profile.id == UserOAuth.profile_id)
             .where(LinkUserGroup.group_id == task_group.user_group_id)
-            .where(LinkUserGroup.user_id == user_id)
             .where(UserOAuth.id == user_id)
-            .where(Profile.id == UserOAuth.profile_id)
-            .where(task_group.resource_id == Profile.resource_id)
+            .where(Profile.resource_id == task_group.resource_id)
         )
         res = await db.execute(stm)
         link = res.unique().scalars().one_or_none()

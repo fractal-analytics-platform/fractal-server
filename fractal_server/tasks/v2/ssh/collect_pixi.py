@@ -2,6 +2,15 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from ..utils_background import fail_and_cleanup
+from ..utils_background import get_activity_and_task_group
+from ..utils_background import prepare_tasks_metadata
+from ..utils_database import create_db_tasks_and_update_task_group_sync
+from ..utils_pixi import parse_collect_stdout
+from ..utils_pixi import SOURCE_DIR_NAME
+from ._pixi_slurm_ssh import run_script_on_remote_slurm
+from ._utils import check_ssh_or_fail_and_cleanup
+from ._utils import edit_pyproject_toml_in_place_ssh
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -16,21 +25,9 @@ from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
-from fractal_server.tasks.v2.utils_background import fail_and_cleanup
-from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
-from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
-from fractal_server.tasks.v2.utils_database import (
-    create_db_tasks_and_update_task_group_sync,
-)
-from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
-from fractal_server.tasks.v2.utils_pixi import parse_collect_stdout
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
-
-from ._pixi_slurm_ssh import run_script_on_remote_slurm
-from ._utils import check_ssh_or_fail_and_cleanup
-from ._utils import edit_pyproject_toml_in_place_ssh
 
 
 def collect_ssh_pixi(
@@ -251,7 +248,9 @@ def collect_ssh_pixi(
                             remote_script3_path,
                             f"chmod -R 755 {source_dir}",
                         ],
-                        slurm_config=resource.tasks_pixi_config["SLURM_CONFIG"],
+                        slurm_config=resource.tasks_pixi_config[
+                            "SLURM_CONFIG"
+                        ],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                         prefix=common_args["prefix"],
@@ -292,7 +291,9 @@ def collect_ssh_pixi(
                     )
                     logger.info("_prepare_tasks_metadata - end")
 
-                    logger.info("create_db_tasks_and_update_task_group - start")
+                    logger.info(
+                        "create_db_tasks_and_update_task_group - " "start"
+                    )
                     create_db_tasks_and_update_task_group_sync(
                         task_list=task_list,
                         task_group_id=task_group.id,
@@ -344,7 +345,9 @@ def collect_ssh_pixi(
                             folder=task_group.path,
                             safe_root=profile.tasks_remote_dir,
                         )
-                        logger.info(f"Deleted remoted folder {task_group.path}")
+                        logger.info(
+                            f"Deleted remoted folder {task_group.path}"
+                        )
                     except Exception as e_rm:
                         logger.error(
                             "Removing folder failed. "

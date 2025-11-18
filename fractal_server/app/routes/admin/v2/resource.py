@@ -6,6 +6,9 @@ from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ._aux_functions import _check_resource_name
+from ._aux_functions import _get_resource_or_404
+from .profile import _check_profile_name
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -18,10 +21,6 @@ from fractal_server.app.schemas.v2 import ResourceCreate
 from fractal_server.app.schemas.v2 import ResourceRead
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-
-from ._aux_functions import _check_resource_name
-from ._aux_functions import _get_resource_or_404
-from .profile import _check_profile_name
 
 router = APIRouter()
 
@@ -48,7 +47,8 @@ def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"{settings.FRACTAL_RUNNER_BACKEND=} != {new_resource.type=}"
+                f"{settings.FRACTAL_RUNNER_BACKEND=} != "
+                f"{new_resource.type=}"
             ),
         )
 

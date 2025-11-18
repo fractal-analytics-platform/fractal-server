@@ -7,7 +7,7 @@ from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from fractal_server.utils import get_timestamp
+from ....utils import get_timestamp
 
 
 class AccountingRecord(SQLModel, table=True):

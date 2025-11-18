@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from fastapi import status
 
+from ....config import get_settings
+from ....syringe import Inject
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 
 def _backend_supports_shutdown(backend: str) -> bool:

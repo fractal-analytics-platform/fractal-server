@@ -4,13 +4,12 @@ from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.openid import OpenID
 from httpx_oauth.clients.openid import OpenIDConfigurationError
 
-from fractal_server.config import OAuthSettings
-from fractal_server.config import get_oauth_settings
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
-
 from . import cookie_backend
 from . import fastapi_users
+from fractal_server.config import get_oauth_settings
+from fractal_server.config import get_settings
+from fractal_server.config import OAuthSettings
+from fractal_server.syringe import Inject
 
 
 def _create_client_github(cfg: OAuthSettings) -> GitHubOAuth2:

@@ -2,32 +2,31 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
-from packaging.version import Version
 from packaging.version import parse
+from packaging.version import Version
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlmodel import String
 from sqlmodel import cast
 from sqlmodel import or_
 from sqlmodel import select
+from sqlmodel import String
 
-from fractal_server.app.db import AsyncSession
-from fractal_server.app.db import get_async_db
-from fractal_server.app.models import LinkUserGroup
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
-
+from ....db import AsyncSession
+from ....db import get_async_db
+from ....models import LinkUserGroup
+from ....models.v2 import TaskV2
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 from ._aux_functions_task_version_update import get_new_workflow_task_meta
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_group_or_404
 from ._aux_functions_tasks import _get_task_read_access
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
 
 router = APIRouter()
 

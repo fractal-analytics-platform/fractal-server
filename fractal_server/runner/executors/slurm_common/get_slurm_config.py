@@ -1,14 +1,13 @@
 from typing import Literal
 
+from ._batching import heuristics
+from .slurm_config import logger
+from .slurm_config import SlurmConfig
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
 from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.string_tools import interpret_as_bool
-
-from ._batching import heuristics
-from .slurm_config import SlurmConfig
-from .slurm_config import logger
 
 
 def _get_slurm_config_internal(
@@ -138,7 +137,9 @@ def _get_slurm_config_internal(
     # Job-batching parameters (if None, they will be determined heuristically)
     if wftask_meta is not None:
         tasks_per_job = wftask_meta.get("tasks_per_job", None)
-        parallel_tasks_per_job = wftask_meta.get("parallel_tasks_per_job", None)
+        parallel_tasks_per_job = wftask_meta.get(
+            "parallel_tasks_per_job", None
+        )
     else:
         tasks_per_job = None
         parallel_tasks_per_job = None

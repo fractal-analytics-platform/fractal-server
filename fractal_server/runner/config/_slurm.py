@@ -10,6 +10,7 @@ from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
+
 MemMBType = Annotated[
     PositiveInt | NonEmptyStr, AfterValidator(slurm_mem_to_MB)
 ]

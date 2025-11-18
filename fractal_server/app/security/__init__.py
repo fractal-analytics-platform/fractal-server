@@ -15,7 +15,6 @@ registers the client and the relative routes.
 
 All routes are registered under the `auth/` prefix.
 """
-
 import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -40,7 +39,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import func
 from sqlmodel import select
 
-from fractal_server.app.db import get_async_db
+from ..db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import OAuthAccount
@@ -276,7 +275,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 )
             except exceptions.UserNotExists:
                 # (0) Log
-                logger.warning(f"Self-registration attempt by {account_email}.")
+                logger.warning(
+                    f"Self-registration attempt by {account_email}."
+                )
 
                 # (1) Prepare user-facing error message
                 error_msg = (
@@ -458,7 +459,9 @@ def _create_first_group():
         )
         return
 
-    function_logger.info(f"START, name '{settings.FRACTAL_DEFAULT_GROUP_NAME}'")
+    function_logger.info(
+        f"START, name '{settings.FRACTAL_DEFAULT_GROUP_NAME}'"
+    )
     with next(get_sync_db()) as db:
         group_all = db.execute(
             select(UserGroup).where(
