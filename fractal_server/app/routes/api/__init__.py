@@ -1,6 +1,9 @@
 """
 `api` module
 """
+import logging
+import os
+
 from fastapi import APIRouter
 from fastapi import Depends
 
@@ -29,6 +32,7 @@ async def alive():
 async def view_settings(
     user: UserOAuth = Depends(current_superuser_act),
 ):
+    logging.warning(f"PID view_settings: {os.getpid()}")
     settings = Inject(get_settings)
     return settings.model_dump()
 

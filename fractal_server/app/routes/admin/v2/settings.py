@@ -1,3 +1,6 @@
+import logging
+import os
+
 from fastapi import APIRouter
 from fastapi import Depends
 from pydantic import BaseModel
@@ -24,6 +27,8 @@ async def patch_settings_app(
     """
     Patch `Settings`.
     """
+
+    logging.warning(f"PID patch_settings_app: {os.getpid()}")
 
     settings = Inject(get_settings)
 
