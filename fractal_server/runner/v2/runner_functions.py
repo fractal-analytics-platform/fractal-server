@@ -6,6 +6,12 @@ from typing import Protocol
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
+from ..exceptions import JobExecutionError
+from ..exceptions import TaskOutputValidationError
+from .db_tools import update_status_of_history_unit
+from .deduplicate_list import deduplicate_list
+from .task_interface import InitTaskOutput
+from .task_interface import TaskOutput
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import TaskV2
@@ -16,16 +22,16 @@ from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import set_logger
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
-from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.runner.exceptions import TaskOutputValidationError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
 )
+from fractal_server.runner.task_files import enrich_task_files_multisubmit
 from fractal_server.runner.task_files import SUBMIT_PREFIX
 from fractal_server.runner.task_files import TaskFiles
-from fractal_server.runner.task_files import enrich_task_files_multisubmit
-from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    bulk_update_status_of_history_unit,
+)
 from fractal_server.runner.v2.db_tools import bulk_upsert_image_cache_fast
 from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_InitTaskOutput,
@@ -33,11 +39,6 @@ from fractal_server.runner.v2.task_interface import (
 from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
-
-from .db_tools import update_status_of_history_unit
-from .deduplicate_list import deduplicate_list
-from .task_interface import InitTaskOutput
-from .task_interface import TaskOutput
 
 
 class GetRunnerConfigTypeLocal(Protocol):
@@ -47,7 +48,8 @@ class GetRunnerConfigTypeLocal(Protocol):
         wftask: WorkflowTaskV2,
         which_type: Literal["non_parallel", "parallel"],
         tot_tasks: int,
-    ) -> JobRunnerConfigLocal: ...
+    ) -> JobRunnerConfigLocal:
+        ...
 
 
 class GetRunnerConfigTypeSLURM(Protocol):
@@ -57,7 +59,8 @@ class GetRunnerConfigTypeSLURM(Protocol):
         wftask: WorkflowTaskV2,
         which_type: Literal["non_parallel", "parallel"],
         tot_tasks: int,
-    ) -> SlurmConfig: ...
+    ) -> SlurmConfig:
+        ...
 
 
 GetRunnerConfigType = GetRunnerConfigTypeLocal | GetRunnerConfigTypeSLURM

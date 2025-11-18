@@ -15,7 +15,6 @@ This module provides a set of tools similar to `subprocess.run`, `glob.glob` or
 `os.path.exists`, but extended so that they can be executed on behalf of
 another user. Note that this requires appropriate sudo permissions.
 """
-
 import shlex
 import subprocess  # nosec
 

@@ -24,7 +24,9 @@ class SlurmTask(BaseModel):
 
     @property
     def input_file_local_path(self) -> Path:
-        return self.workdir_local / f"{self.prefix}-{self.component}-input.json"
+        return (
+            self.workdir_local / f"{self.prefix}-{self.component}-input.json"
+        )
 
     @property
     def input_file_remote_path(self) -> Path:

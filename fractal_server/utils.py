@@ -13,7 +13,6 @@
 This module provides general purpose utilities that are not specific to any
 subsystem.
 """
-
 import shlex
 import subprocess  # nosec
 from datetime import datetime

@@ -1,15 +1,13 @@
 """
 Definition of `/auth/register/` routes.
 """
-
 from fastapi import APIRouter
 from fastapi import Depends
 
-from fractal_server.app.schemas.user import UserCreate
-from fractal_server.app.schemas.user import UserRead
-
 from . import current_superuser_act
 from . import fastapi_users
+from ...schemas.user import UserCreate
+from ...schemas.user import UserRead
 
 router_register = APIRouter()
 

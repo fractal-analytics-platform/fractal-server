@@ -201,7 +201,8 @@ class BaseRunner:
 
         if len(list_parameters) != len(list_task_files):
             raise ValueError(
-                f"{len(list_task_files)=} differs from {len(list_parameters)=}."
+                f"{len(list_task_files)=} differs from "
+                f"{len(list_parameters)=}."
             )
         if len(history_unit_ids) != len(list_parameters):
             raise ValueError(

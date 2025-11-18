@@ -99,7 +99,8 @@ async def get_package_version_from_pypi(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Could not get {url} (status_code {res.status_code}).\n{hint}"
+                f"Could not get {url} (status_code {res.status_code})."
+                f"\n{hint}"
             ),
         )
     try:
@@ -143,7 +144,8 @@ async def get_package_version_from_pypi(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=(
-                        f"No version starting with {version} found.\n{hint}"
+                        f"No version starting with {version} found.\n"
+                        f"{hint}"
                     ),
                 )
             else:

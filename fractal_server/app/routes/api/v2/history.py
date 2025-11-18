@@ -6,31 +6,6 @@ from fastapi.responses import JSONResponse
 from sqlmodel import func
 from sqlmodel import select
 
-from fractal_server.app.db import AsyncSession
-from fractal_server.app.db import get_async_db
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import HistoryImageCache
-from fractal_server.app.models.v2 import HistoryRun
-from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.pagination import PaginationRequest
-from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.schemas.v2 import HistoryRunRead
-from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
-from fractal_server.app.schemas.v2 import HistoryUnitRead
-from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
-from fractal_server.app.schemas.v2 import ImageLogsRequest
-from fractal_server.images.status_tools import IMAGE_STATUS_KEY
-from fractal_server.images.status_tools import enrich_images_unsorted_async
-from fractal_server.images.tools import aggregate_attributes
-from fractal_server.images.tools import aggregate_types
-from fractal_server.images.tools import filter_image_list
-from fractal_server.logger import set_logger
-
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_submitted_job_or_none
 from ._aux_functions import _get_workflow_check_owner
@@ -41,6 +16,30 @@ from ._aux_functions_history import get_wftask_check_owner
 from ._aux_functions_history import read_log_file
 from .images import ImagePage
 from .images import ImageQuery
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import HistoryImageCache
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.schemas.v2 import HistoryRunRead
+from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
+from fractal_server.app.schemas.v2 import HistoryUnitRead
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
+from fractal_server.app.schemas.v2 import ImageLogsRequest
+from fractal_server.images.status_tools import enrich_images_unsorted_async
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+from fractal_server.images.tools import aggregate_attributes
+from fractal_server.images.tools import aggregate_types
+from fractal_server.images.tools import filter_image_list
+from fractal_server.logger import set_logger
 
 
 def check_historyrun_related_to_dataset_and_wftask(
@@ -137,19 +136,19 @@ async def get_workflow_tasks_statuses(
                 logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
                 response[wftask.id] = dict(status=latest_run.status)
 
-        response[wftask.id]["num_available_images"] = (
-            latest_run.num_available_images
-        )
+        response[wftask.id][
+            "num_available_images"
+        ] = latest_run.num_available_images
 
         for target_status in HistoryUnitStatus:
             stm = (
                 select(func.count(HistoryImageCache.zarr_url))
-                .join(
-                    HistoryUnit,
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
-                )
+                .join(HistoryUnit)
                 .where(HistoryImageCache.dataset_id == dataset_id)
                 .where(HistoryImageCache.workflowtask_id == wftask.id)
+                .where(
+                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id
+                )
                 .where(HistoryUnit.status == target_status)
             )
             res = await db.execute(stm)
@@ -449,7 +448,8 @@ async def get_image_log(
     # Get job.working_dir
     res = await db.execute(
         select(JobV2.working_dir)
-        .join(HistoryRun, HistoryRun.job_id == JobV2.id)
+        .join(HistoryRun)
+        .where(HistoryRun.job_id == JobV2.id)
         .where(HistoryRun.id == history_unit.history_run_id)
     )
     job_working_dir = res.scalar_one_or_none()

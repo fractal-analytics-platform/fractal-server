@@ -199,7 +199,8 @@ async def reactivate_task_group(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Cannot reactivate a task group with {task_group.env_info=}."
+                "Cannot reactivate a task group with "
+                f"{task_group.env_info=}."
             ),
         )
 

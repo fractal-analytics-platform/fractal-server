@@ -2,11 +2,6 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
-from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
-from fractal_server.app.schemas.v1 import WorkflowReadV1
-from fractal_server.app.schemas.v1.dataset import DatasetReadV1
-from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
-from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
 from packaging.version import parse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +12,12 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
+from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
+from fractal_server.app.schemas.v1 import WorkflowReadV1
+from fractal_server.app.schemas.v1.dataset import DatasetReadV1
+from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
+
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
@@ -129,7 +130,9 @@ def fix_db():
                 project_timestamp = project.timestamp_created
 
             # WORKFLOW DUMP
-            workflow_dump_timestamp = job.workflow_dump.get("timestamp_created")
+            workflow_dump_timestamp = job.workflow_dump.get(
+                "timestamp_created"
+            )
             if workflow_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> workflow_dump['timestamp_created'] "
@@ -165,7 +168,9 @@ def fix_db():
                 db.refresh(job)
 
             # INPUT DATASET DUMP
-            ids_dump_timestamp = job.input_dataset_dump.get("timestamp_created")
+            ids_dump_timestamp = job.input_dataset_dump.get(
+                "timestamp_created"
+            )
             if ids_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> "

@@ -8,14 +8,15 @@ from pydantic import Field
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import delete
 
+from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.tools import aggregate_attributes
@@ -25,8 +26,6 @@ from fractal_server.images.tools import match_filter
 from fractal_server.types import AttributeFilters
 from fractal_server.types import ImageAttributeValue
 from fractal_server.types import TypeFilters
-
-from ._aux_functions import _get_dataset_check_owner
 
 router = APIRouter()
 

@@ -4,6 +4,7 @@ def validate_wft_args(value: dict) -> dict:
     intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
     if intersect_keys:
         raise ValueError(
-            f"`args` contains the following forbidden keys: {intersect_keys}"
+            "`args` contains the following forbidden keys: "
+            f"{intersect_keys}"
         )
     return value

@@ -1,15 +1,14 @@
 from typing import Annotated
 from typing import Self
 
+from pydantic import model_validator
 from pydantic import SecretStr
 from pydantic import StringConstraints
-from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
-from fractal_server.types import NonEmptyStr
-
 from ._settings_config import SETTINGS_CONFIG_DICT
+from fractal_server.types import NonEmptyStr
 
 
 class OAuthSettings(BaseSettings):

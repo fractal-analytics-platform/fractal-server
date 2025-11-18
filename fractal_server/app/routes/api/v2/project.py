@@ -5,25 +5,22 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from fractal_server.app.db import AsyncSession
-from fractal_server.app.db import get_async_db
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2 import LinkUserProjectV2
-from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.aux.validate_user_profile import (
-    validate_user_profile,
-)
-from fractal_server.app.schemas.v2 import ProjectCreateV2
-from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import ProjectUpdateV2
-from fractal_server.logger import reset_logger_handlers
-from fractal_server.logger import set_logger
-
+from .....logger import reset_logger_handlers
+from .....logger import set_logger
+from ....db import AsyncSession
+from ....db import get_async_db
+from ....models.v2 import JobV2
+from ....models.v2 import LinkUserProjectV2
+from ....models.v2 import ProjectV2
+from ....schemas.v2 import ProjectCreateV2
+from ....schemas.v2 import ProjectReadV2
+from ....schemas.v2 import ProjectUpdateV2
+from ...aux.validate_user_profile import validate_user_profile
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth import current_user_act_ver_prof
 
 router = APIRouter()
 
@@ -38,7 +35,7 @@ async def get_list_project(
     """
     stm = (
         select(ProjectV2)
-        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .join(LinkUserProjectV2)
         .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
@@ -70,14 +67,12 @@ async def create_project(
     )
 
     db_project = ProjectV2(**project.model_dump(), resource_id=resource_id)
+    db_project.user_list.append(user)
+
     db.add(db_project)
-    await db.flush()
-
-    link = LinkUserProjectV2(project_id=db_project.id, user_id=user.id)
-    db.add(link)
-
     await db.commit()
     await db.refresh(db_project)
+    await db.close()
 
     return db_project
 

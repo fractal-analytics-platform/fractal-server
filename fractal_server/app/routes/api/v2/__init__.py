@@ -1,11 +1,7 @@
 """
 `api/v2` module
 """
-
 from fastapi import APIRouter
-
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 from .dataset import router as dataset_router_v2
 from .history import router as history_router_v2
@@ -25,6 +21,9 @@ from .task_version_update import router as task_version_update_router_v2
 from .workflow import router as workflow_router_v2
 from .workflow_import import router as workflow_import_router_v2
 from .workflowtask import router as workflowtask_router_v2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 
 router_api_v2 = APIRouter()
 
@@ -35,7 +34,9 @@ router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
 router_api_v2.include_router(submit_job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(history_router_v2, tags=["V2 History"])
-router_api_v2.include_router(status_legacy_router_v2, tags=["V2 Status Legacy"])
+router_api_v2.include_router(
+    status_legacy_router_v2, tags=["V2 Status Legacy"]
+)
 
 
 settings = Inject(get_settings)

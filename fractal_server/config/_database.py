@@ -6,9 +6,8 @@ from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
-from fractal_server.types import NonEmptyStr
-
 from ._settings_config import SETTINGS_CONFIG_DICT
+from fractal_server.types import NonEmptyStr
 
 
 class DatabaseSettings(BaseSettings):

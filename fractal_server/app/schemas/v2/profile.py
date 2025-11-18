@@ -6,10 +6,9 @@ from pydantic import Discriminator
 from pydantic import Tag
 from pydantic import validate_call
 
+from .resource import ResourceType
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
-
-from .resource import ResourceType
 
 
 class ValidProfileLocal(BaseModel):

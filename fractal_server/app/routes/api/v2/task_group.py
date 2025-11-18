@@ -5,12 +5,17 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from packaging.version import InvalidVersion
-from packaging.version import Version
 from packaging.version import parse
+from packaging.version import Version
 from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
 
+from ._aux_functions import _get_user_resource_id
+from ._aux_functions_tasks import _get_task_group_full_access
+from ._aux_functions_tasks import _get_task_group_read_access
+from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -30,12 +35,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
 from fractal_server.app.schemas.v2 import TaskGroupReadV2
 from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
 from fractal_server.logger import set_logger
-
-from ._aux_functions import _get_user_resource_id
-from ._aux_functions_tasks import _get_task_group_full_access
-from ._aux_functions_tasks import _get_task_group_read_access
-from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 
 router = APIRouter()
 

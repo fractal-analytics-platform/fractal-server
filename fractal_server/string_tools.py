@@ -1,5 +1,6 @@
 import string
 
+
 __SPECIAL_CHARACTERS__ = f"{string.punctuation}{string.whitespace}"
 
 # List of invalid characters discussed here:

@@ -1,14 +1,14 @@
 import logging
 
-from fractal_server.app.models.v1 import ApplyWorkflow
-from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from packaging.version import parse
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
 import fractal_server
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v2 import JobReadV2
 
 

@@ -2,14 +2,14 @@
 Loop over jobs, check that the corresponding project exists and is linked to a
 single user, then set the user_email job attribute.
 """
-
 import logging
 
-from fractal_server.app.models.v1.job import ApplyWorkflow
-from fractal_server.app.models.v1.project import Project
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.v1.job import ApplyWorkflow
+from fractal_server.app.models.v1.project import Project
+
 
 with next(get_sync_db()) as db:
     # Get list of jobs

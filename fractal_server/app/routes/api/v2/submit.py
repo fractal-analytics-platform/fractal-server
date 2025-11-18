@@ -10,6 +10,11 @@ from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
+from ...aux.validate_user_profile import validate_user_profile
+from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions_tasks import _check_type_filters_compatibility
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
@@ -20,9 +25,6 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.routes.aux.validate_user_profile import (
-    validate_user_profile,
-)
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
@@ -34,11 +36,6 @@ from fractal_server.runner.set_start_and_last_task_index import (
 )
 from fractal_server.runner.v2.submit_workflow import submit_workflow
 from fractal_server.syringe import Inject
-
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import clean_app_job_list_v2
-from ._aux_functions_tasks import _check_type_filters_compatibility
 
 FRACTAL_CACHE_DIR = ".fractal_cache"
 router = APIRouter()
@@ -66,7 +63,10 @@ async def apply_workflow(
     # requests take place at the same time and `clean_app_job_list_v2` is
     # somewhat slow.
     settings = Inject(get_settings)
-    if len(request.app.state.jobsV2) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
+    if (
+        len(request.app.state.jobsV2)
+        > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH
+    ):
         new_jobs_list = await clean_app_job_list_v2(
             db, request.app.state.jobsV2
         )
@@ -153,7 +153,8 @@ async def apply_workflow(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"Dataset {dataset_id} is already in use in submitted job(s)."
+                f"Dataset {dataset_id} is already in use "
+                "in submitted job(s)."
             ),
         )
 
@@ -205,7 +206,7 @@ async def apply_workflow(
             workflow.model_dump_json(exclude={"task_list"})
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id"})
+            project.model_dump_json(exclude={"user_list", "resource_id"})
         ),
         **job_create.model_dump(),
     )

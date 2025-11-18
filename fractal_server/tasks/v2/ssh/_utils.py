@@ -3,14 +3,14 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from ..utils_background import fail_and_cleanup
+from ..utils_pixi import simplify_pyproject_toml
 from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.v2.utils_background import fail_and_cleanup
-from fractal_server.tasks.v2.utils_pixi import simplify_pyproject_toml
 from fractal_server.tasks.v2.utils_templates import customize_template
 
 logger = set_logger(__name__)
@@ -156,7 +156,7 @@ def check_ssh_or_fail_and_cleanup(
     except Exception as e:
         logger = get_logger(logger_name=logger_name)
         logger.error(
-            f"Cannot establish SSH connection. Original error: {str(e)}"
+            "Cannot establish SSH connection. " f"Original error: {str(e)}"
         )
         fail_and_cleanup(
             task_group=task_group,
