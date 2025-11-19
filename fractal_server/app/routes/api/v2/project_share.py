@@ -9,9 +9,11 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import LinkUserProjectV2
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ProjectShareCreate
-from fractal_server.app.schemas.v2 import ProjectShareRead
+from fractal_server.app.schemas.v2 import ProjectShareReadGuest
+from fractal_server.app.schemas.v2 import ProjectShareReadOwner
 from fractal_server.app.schemas.v2 import ProjectShareUpdate
 
 router = APIRouter(prefix="/project/share")
@@ -120,13 +122,13 @@ async def get_user_email_from_id(
 
 
 @router.get(
-    "/project/{project_id}/link/", response_model=list[ProjectShareRead]
+    "/project/{project_id}/link/", response_model=list[ProjectShareReadOwner]
 )
 async def get_project_linked_users(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareRead]:
+) -> list[ProjectShareReadOwner]:
     """
     Get the list of all users linked to your project.
     """
@@ -148,7 +150,7 @@ async def get_project_linked_users(
     links = res.scalars().all()
 
     return [
-        ProjectShareRead(
+        ProjectShareReadOwner(
             user_email=link[0],
             is_verified=link[1],
             permissions=link[2],
@@ -262,6 +264,59 @@ async def kick_out_guest(
 
 
 # GUEST
+
+
+@router.get("/project/invitation/", response_model=list[ProjectShareReadGuest])
+async def see_current_invitations(
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProjectShareReadGuest]:
+    """
+    See current invitations
+    """
+    # Get (project_id, project_name, permissions) tuples
+    res = await db.execute(
+        select(
+            ProjectV2.id,
+            ProjectV2.name,
+            LinkUserProjectV2.permissions,
+        )
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_verified.is_(False))
+    )
+    id_name_permissions = res.scalars().all()
+
+    # Find owners email
+    emails = []
+    for _id, name, permissions in id_name_permissions:
+        res = await db.execute(
+            select(UserOAuth.email)
+            .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
+            .where(LinkUserProjectV2.project_id == _id)
+            .where(LinkUserProjectV2.is_owner.is_(True))
+        )
+        emails.append(res.scalar_one_or_none())
+
+    return [
+        ProjectShareReadGuest(
+            project_id=_id,
+            project_name=name,
+            permissions=permissions,
+            owner_email=email,
+        )
+        for (_id, name, permissions), email in zip(id_name_permissions, emails)
+    ]
+
+
+# ## Accept invite
+# PATCH /api/v2/project/{project_id}/guest-link/
+# 	is_verified = True
+# [options: 200, 404]
+
+# ## Reject invite or unsubscribe from project
+# DELETE /api/v2/project/{project_id}/guest-link/
+# [options: 204, 404, 422 (e.g. I am the owner)]
 
 
 @router.patch("/accept/", status_code=200)

@@ -22,9 +22,16 @@ class ProjectShareCreate(BaseModel):
     permissions: ProjectPermissions = ProjectPermissions.READ
 
 
-class ProjectShareRead(BaseModel):
+class ProjectShareReadOwner(BaseModel):
     user_email: EmailStr
     is_verified: bool
+    permissions: ProjectPermissions
+
+
+class ProjectShareReadGuest(BaseModel):
+    project_name: str
+    project_id: int
+    owner_email: EmailStr
     permissions: ProjectPermissions
 
 
