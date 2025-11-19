@@ -17,6 +17,14 @@ from fractal_server.app.schemas.v2 import ProjectShareUpdate
 router = APIRouter(prefix="/project/share")
 
 
+def check_not_owner_id(*, user_id: int, owner_id: int) -> None:
+    if user_id == owner_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Cannot perform this operation on project owner.",
+        )
+
+
 async def check_user_is_project_owner(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
@@ -54,6 +62,30 @@ async def check_user_has_pending_invitation(
             ),
         )
     return link
+
+
+async def check_user_is_linked_to_project(
+    *, user_id: int, project_id: int, db: AsyncSession
+) -> LinkUserProjectV2:
+    link = await db.get(LinkUserProjectV2, (project_id, user_id))
+    if link is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User '{user_id}' is not linked to project {project_id}.",
+        )
+    return link
+
+
+async def check_user_is_not_linked_to_project(
+    *, user_id: int, project_id: int, db: AsyncSession
+) -> None:
+    link = await db.get(LinkUserProjectV2, (project_id, user_id))
+    if link is not None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link already exists.",
+        )
+    return
 
 
 async def get_user_id_from_email(
@@ -142,14 +174,11 @@ async def share_a_project(
     invited_user_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check if link already exists
-    existing_link = await db.get(
-        LinkUserProjectV2, (project_id, invited_user_id)
+    await check_user_is_not_linked_to_project(
+        user_id=invited_user_id,
+        project_id=project_id,
+        db=db,
     )
-    if existing_link is not None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Link already exists.",
-        )
 
     # Create new link
     db.add(
@@ -183,16 +212,50 @@ async def patch_project_permissions(
     linked_user_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check you're not changing your own permissions
-    if linked_user_id == user.id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Cannot change owner permissions.",
-        )
+    check_not_owner_id(user_id=linked_user_id, owner_id=user.id)
 
-    # Get and update the link
-    link = await db.get(LinkUserProjectV2, (project_id, linked_user_id))
+    # Get the link to patch
+    link = await check_user_is_linked_to_project(
+        user_id=linked_user_id,
+        project_id=project_id,
+        db=db,
+    )
+
+    # Update and commit
     for key, value in update.model_dump(exclude_unset=True).items():
         setattr(link, key, value)
+    await db.commit()
+
+    return
+
+
+@router.delete("/project/{project_id}/link/", status_code=204)
+async def kick_out_guest(
+    project_id: int,
+    email: EmailStr,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+):
+    # Check current user is project owner
+    await check_user_is_project_owner(
+        user_id=user.id, project_id=project_id, db=db
+    )
+
+    # Get the ID of the linked user
+    linked_user_id = await get_user_id_from_email(user_email=email, db=db)
+
+    # Check you're not removing yourself
+    check_not_owner_id(user_id=linked_user_id, owner_id=user.id)
+
+    # Get the link to remove
+    link = await check_user_is_linked_to_project(
+        user_id=linked_user_id,
+        project_id=project_id,
+        db=db,
+    )
+
+    # Delete
+    await db.delete(link)
     await db.commit()
 
     return
