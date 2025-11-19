@@ -33,6 +33,7 @@ router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
 router_api_v2.include_router(pre_submission_checks_router, tags=["V2 Job"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
+router_api_v2.include_router(sharing_router_v2, tags=["Project Sharing"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
 router_api_v2.include_router(submit_job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(history_router_v2, tags=["V2 History"])
@@ -71,8 +72,3 @@ router_api_v2.include_router(
     workflow_import_router_v2, tags=["V2 Workflow Import"]
 )
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
-
-router_api_v2.include_router(
-    sharing_router_v2,
-    tags=["Project Sharing"],
-)
