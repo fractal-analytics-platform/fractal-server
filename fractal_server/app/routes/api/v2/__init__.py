@@ -13,6 +13,7 @@ from .images import router as images_routes_v2
 from .job import router as job_router_v2
 from .pre_submission_checks import router as pre_submission_checks_router
 from .project import router as project_router_v2
+from .project_share import router as project_share_router_v2
 from .status_legacy import router as status_legacy_router_v2
 from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
@@ -70,3 +71,8 @@ router_api_v2.include_router(
     workflow_import_router_v2, tags=["V2 Workflow Import"]
 )
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
+
+router_api_v2.include_router(
+    project_share_router_v2,
+    tags=["V2 Project Share"],
+)
