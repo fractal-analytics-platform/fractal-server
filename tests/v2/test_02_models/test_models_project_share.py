@@ -101,7 +101,7 @@ async def test_linkuserproject_constraints(
             user_id=u1.id,
             is_owner=False,
             is_verified=True,
-            permissions="foo",
+            permissions="rx",
         )
     )
     with pytest.raises(IntegrityError) as e:
