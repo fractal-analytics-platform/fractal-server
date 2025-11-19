@@ -22,7 +22,7 @@ router = APIRouter()
 
 def raise_422_if_owner(*, user_id: int, owner_id: int) -> None:
     if user_id == owner_id:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot perform this operation on project owner.",
         )
@@ -39,7 +39,7 @@ async def get_link_check_owner(
     )
     link = res.scalars().one_or_none()
     if link is None:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{user_id}' is not the owner of project {project_id}",
         )
@@ -57,7 +57,7 @@ async def get_pending_invitation_or_404(
     )
     link = res.scalars().one_or_none()
     if link is None:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(
                 f"User '{user_id}' has no pending invitation "
@@ -72,7 +72,7 @@ async def get_link_or_404(
 ) -> LinkUserProjectV2:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is None:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{user_id}' is not linked to project {project_id}.",
         )
@@ -84,7 +84,7 @@ async def raise_422_if_link_exists(
 ) -> None:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is not None:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Link already exists.",
         )
@@ -99,7 +99,7 @@ async def get_user_id_from_email_or_404(
     )
     user_id = res.scalar_one_or_none()
     if user_id is None:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return user_id
@@ -315,7 +315,7 @@ async def reject_project_invitation(
     link = await get_link_or_404(user_id=user.id, project_id=project_id, db=db)
 
     if link.is_owner:
-        raise HTTPException(
+        raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"You are the owner of project {project_id}.",
         )
