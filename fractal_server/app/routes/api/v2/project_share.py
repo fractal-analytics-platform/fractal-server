@@ -12,6 +12,7 @@ from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ProjectShareCreate
 from fractal_server.app.schemas.v2 import ProjectShareRead
+from fractal_server.app.schemas.v2 import ProjectShareUpdate
 
 router = APIRouter(prefix="/project/share")
 
@@ -83,6 +84,9 @@ async def get_user_email_from_id(
     return user_email
 
 
+# OWNER
+
+
 @router.get(
     "/project/{project_id}/link/", response_model=list[ProjectShareRead]
 )
@@ -122,7 +126,7 @@ async def get_project_linked_users(
 
 
 @router.post("/project/{project_id}/link/", status_code=201)
-async def send_project_invitation(
+async def share_a_project(
     project_id: int,
     email: EmailStr,
     project_invitation: ProjectShareCreate,
@@ -160,6 +164,41 @@ async def send_project_invitation(
     await db.commit()
 
     return
+
+
+@router.patch("/project/{project_id}/link/", status_code=200)
+async def patch_project_permissions(
+    project_id: int,
+    email: EmailStr,
+    update: ProjectShareUpdate,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+):
+    # Check current user is project owner
+    await check_user_is_project_owner(
+        user_id=user.id, project_id=project_id, db=db
+    )
+
+    # Get the ID of the linked user
+    linked_user_id = await get_user_id_from_email(user_email=email, db=db)
+
+    # Check you're not changing your own permissions
+    if linked_user_id == user.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Cannot change owner permissions.",
+        )
+
+    # Get and update the link
+    link = await db.get(LinkUserProjectV2, (project_id, linked_user_id))
+    for key, value in update.model_dump(exclude_unset=True).items():
+        setattr(link, key, value)
+    await db.commit()
+
+    return
+
+
+# GUEST
 
 
 @router.patch("/accept/", status_code=200)

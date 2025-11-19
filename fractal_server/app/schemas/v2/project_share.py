@@ -26,3 +26,7 @@ class ProjectShareRead(BaseModel):
     user_email: EmailStr
     is_verified: bool
     permissions: ProjectPermissions
+
+
+class ProjectShareUpdate(BaseModel):
+    permissions: ProjectPermissions = None
