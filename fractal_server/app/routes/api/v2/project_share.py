@@ -11,28 +11,50 @@ from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ProjectInvitation
 
-router = APIRouter()
+router = APIRouter(prefix="/project/share")
 
 
 async def check_user_is_project_owner(
     *, user_id: int, project_id: int, db: AsyncSession
-):
+) -> LinkUserProjectV2:
     res = await db.execute(
         select(LinkUserProjectV2)
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.user_id == user_id)
         .where(LinkUserProjectV2.is_owner.is_(True))
     )
-    current_user_link = res.scalars().one_or_none()
-    if current_user_link is None:
+    link = res.scalars().one_or_none()
+    if link is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{user_id}' is not the owner of project {project_id}",
         )
+    return link
 
 
-@router.post("/linkuserproject/", status_code=201)
-async def invite_user_to_project(
+async def check_user_has_pending_invitation(
+    *, user_id: int, project_id: int, db: AsyncSession
+) -> LinkUserProjectV2:
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.user_id == user_id)
+        .where(LinkUserProjectV2.is_verified.is_(False))
+    )
+    link = res.scalars().one_or_none()
+    if link is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"User '{user_id}' has no pending invitation "
+                f"to project {project_id}"
+            ),
+        )
+    return link
+
+
+@router.post("/invite/", status_code=201)
+async def send_project_invitation(
     project_id: int,
     project_invitation: ProjectInvitation,
     user: UserOAuth = Depends(current_user_act_ver_prof),
@@ -68,11 +90,47 @@ async def invite_user_to_project(
     return
 
 
-# # Approve pending invitation
-# PATCH /api/v2/linkuserproject/set-verified/?project_id=123
-# [response only includes a 200 status, with no body]
-# [TBD - or perhaps we can use a POST]
+@router.patch("/accept/", status_code=200)
+async def accept_project_invitation(
+    project_id: int,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+):
+    link = await check_user_has_pending_invitation(
+        user_id=user.id, project_id=project_id, db=db
+    )
 
-# # Reject invitation
-# DELETE /api/v2/linkuserproject/?project_id=123
-# [204 or 404 or 422 if I am the project owner]
+    link.is_verified = True
+    db.add(link)
+    await db.commit()
+    return
+
+
+@router.delete("/reject/", status_code=204)
+async def reject_project_invitation(
+    project_id: int,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+):
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.user_id == user.id)
+    )
+    link = res.scalars().one_or_none()
+
+    if link is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User '{user.id}' is not invited to project {project_id}.",
+        )
+
+    if link.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"You are the owner of project {project_id}.",
+        )
+
+    await db.delete(link)
+    await db.commit()
+    return
