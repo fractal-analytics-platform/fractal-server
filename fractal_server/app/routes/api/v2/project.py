@@ -30,6 +30,7 @@ router = APIRouter()
 
 @router.get("/project/", response_model=list[ProjectReadV2])
 async def get_list_project(
+    is_owner: bool = True,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectV2]:
@@ -40,6 +41,8 @@ async def get_list_project(
         select(ProjectV2)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner.is_(is_owner))
+        .where(LinkUserProjectV2.is_verified.is_(True))
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
