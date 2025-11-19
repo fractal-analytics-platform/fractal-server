@@ -374,10 +374,10 @@ async def test_task_collection_from_pypi_with_extras(
                 package="devtools",
                 package_version="99.99.99",
                 pinned_package_versions_pre=json.dumps(
-                    {"fastapi[standard]": "0.121.1"}
+                    {"fastapi[standard]": "99.99.99"}
                 ),
                 pinned_package_versions_post=json.dumps(
-                    {"uvicorn[standard]": "0.22.0"}
+                    {"uvicorn[standard]": "99.99.99"}
                 ),
             ),
         )
