@@ -23,6 +23,8 @@
 * Development:
     * Add `shellcheck` to precommit, for `fractal-server/` files (\#2986).
     * Replace `reorder_python_imports`, `flake8` and `black` with `ruff` in pre-commit (\#2994).
+* Task-group lifecycle:
+    * Support extras in pinned packages names (\#3000).
 * Testing:
     * Update benchmarks (\#2990).
     * Drop `benchmarks_runner` (\#2990).
