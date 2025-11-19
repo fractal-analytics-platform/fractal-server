@@ -46,7 +46,7 @@ async def get_link_check_owner(
     return link
 
 
-async def check_user_has_pending_invitation(
+async def get_pending_invitation_or_404(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
     res = await db.execute(
@@ -67,7 +67,7 @@ async def check_user_has_pending_invitation(
     return link
 
 
-async def check_user_is_linked_to_project(
+async def get_link_or_404(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
@@ -79,19 +79,19 @@ async def check_user_is_linked_to_project(
     return link
 
 
-async def check_user_is_not_linked_to_project(
+async def raise_422_if_link_exists(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> None:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is not None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Link already exists.",
         )
     return
 
 
-async def get_user_id_from_email(
+async def get_user_id_from_email_or_404(
     *, user_email: EmailStr, db: AsyncSession
 ) -> int:
     res = await db.execute(
@@ -103,20 +103,6 @@ async def get_user_id_from_email(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return user_id
-
-
-async def get_user_email_from_id(
-    *, user_id: int, db: AsyncSession
-) -> str | None:
-    res = await db.execute(
-        select(UserOAuth.email).where(UserOAuth.id == user_id)
-    )
-    user_email = res.scalar_one_or_none()
-    if user_email is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-    return user_email
 
 
 # OWNER
@@ -170,10 +156,10 @@ async def share_a_project(
     await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the user to invite
-    guest_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
     # Check if link already exists
-    await check_user_is_not_linked_to_project(
+    await raise_422_if_link_exists(
         user_id=guest_id,
         project_id=project_id,
         db=db,
@@ -206,13 +192,13 @@ async def patch_project_permissions(
     await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the linked user
-    guest_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
     # Check you're not changing your own permissions
     raise_422_if_owner(user_id=guest_id, owner_id=owner.id)
 
     # Get the link to update
-    link = await check_user_is_linked_to_project(
+    link = await get_link_or_404(
         user_id=guest_id,
         project_id=project_id,
         db=db,
@@ -237,13 +223,13 @@ async def kick_out_guest(
     await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the linked user
-    guest_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
     # Check you're not removing yourself
     raise_422_if_owner(user_id=guest_id, owner_id=owner.id)
 
     # Get the link to remove
-    link = await check_user_is_linked_to_project(
+    link = await get_link_or_404(
         user_id=guest_id,
         project_id=project_id,
         db=db,
@@ -309,7 +295,7 @@ async def accept_project_invitation(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    link = await check_user_has_pending_invitation(
+    link = await get_pending_invitation_or_404(
         user_id=user.id, project_id=project_id, db=db
     )
 
@@ -327,9 +313,7 @@ async def reject_project_invitation(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    link = await check_user_is_linked_to_project(
-        user_id=user.id, project_id=project_id, db=db
-    )
+    link = await get_link_or_404(user_id=user.id, project_id=project_id, db=db)
 
     if link.is_owner:
         raise HTTPException(
