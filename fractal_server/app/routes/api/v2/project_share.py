@@ -127,7 +127,7 @@ async def get_user_email_from_id(
 )
 async def get_project_linked_users(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectShareReadOwner]:
     """
@@ -135,7 +135,7 @@ async def get_project_linked_users(
     """
     # Check current user is project owner
     await check_user_is_project_owner(
-        user_id=user.id, project_id=project_id, db=db
+        user_id=owner.id, project_id=project_id, db=db
     )
     # Get (email, is_verified, permissions) for all linked users except owner
     res = await db.execute(
@@ -148,15 +148,15 @@ async def get_project_linked_users(
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.is_owner.is_(False))
     )
-    links = res.scalars().all()
+    guests = res.scalars().all()
 
     return [
         ProjectShareReadOwner(
-            user_email=link[0],
-            is_verified=link[1],
-            permissions=link[2],
+            user_email=guest[0],
+            is_verified=guest[1],
+            permissions=guest[2],
         )
-        for link in links
+        for guest in guests
     ]
 
 
@@ -165,20 +165,20 @@ async def share_a_project(
     project_id: int,
     email: EmailStr,
     project_invitation: ProjectShareCreate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
     await check_user_is_project_owner(
-        user_id=user.id, project_id=project_id, db=db
+        user_id=owner.id, project_id=project_id, db=db
     )
 
     # Get the ID of the user to invite
-    invited_user_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check if link already exists
     await check_user_is_not_linked_to_project(
-        user_id=invited_user_id,
+        user_id=guest_id,
         project_id=project_id,
         db=db,
     )
@@ -187,7 +187,7 @@ async def share_a_project(
     db.add(
         LinkUserProjectV2(
             project_id=project_id,
-            user_id=invited_user_id,
+            user_id=guest_id,
             is_owner=False,
             is_verified=False,
             permissions=project_invitation.permissions,
@@ -203,23 +203,23 @@ async def patch_project_permissions(
     project_id: int,
     email: EmailStr,
     update: ProjectShareUpdatePermissions,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
     await check_user_is_project_owner(
-        user_id=user.id, project_id=project_id, db=db
+        user_id=owner.id, project_id=project_id, db=db
     )
 
     # Get the ID of the linked user
-    linked_user_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check you're not changing your own permissions
-    check_not_owner_id(user_id=linked_user_id, owner_id=user.id)
+    check_not_owner_id(user_id=guest_id, owner_id=owner.id)
 
-    # Get the link to patch
+    # Get the link to update
     link = await check_user_is_linked_to_project(
-        user_id=linked_user_id,
+        user_id=guest_id,
         project_id=project_id,
         db=db,
     )
@@ -236,23 +236,23 @@ async def patch_project_permissions(
 async def kick_out_guest(
     project_id: int,
     email: EmailStr,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
     await check_user_is_project_owner(
-        user_id=user.id, project_id=project_id, db=db
+        user_id=owner.id, project_id=project_id, db=db
     )
 
     # Get the ID of the linked user
-    linked_user_id = await get_user_id_from_email(user_email=email, db=db)
+    guest_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check you're not removing yourself
-    check_not_owner_id(user_id=linked_user_id, owner_id=user.id)
+    check_not_owner_id(user_id=guest_id, owner_id=owner.id)
 
     # Get the link to remove
     link = await check_user_is_linked_to_project(
-        user_id=linked_user_id,
+        user_id=guest_id,
         project_id=project_id,
         db=db,
     )
