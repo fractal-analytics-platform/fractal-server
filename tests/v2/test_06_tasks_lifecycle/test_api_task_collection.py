@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -355,3 +356,38 @@ async def test_contact_an_admin_message(
         )
         assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
+
+
+async def test_task_collection_from_pypi_with_extras(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    ERROR_MESSAGE = "Command must not contain any of this characters"
+    _, profile = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+    ):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(
+                package="fractal-tasks-core",
+                package_version="99.99.99",
+                pinned_package_versions_pre=json.dumps(
+                    {"fastapi[standard]": "99.99.99"}
+                ),
+                pinned_package_versions_post=json.dumps(
+                    {"uvicorn[standard]": "99.99.99"}
+                ),
+            ),
+        )
+        assert ERROR_MESSAGE not in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(
+                package="fractal-tasks-core[standard]",
+                package_version="99.99.99",
+            ),
+        )
+        assert ERROR_MESSAGE in res.json()["detail"]

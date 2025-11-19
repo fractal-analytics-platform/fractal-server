@@ -56,8 +56,8 @@ def test_pinned_package_versions_string():
         pinned_package_versions_pre=dict(pkg1="v1", pkg2="v2"),
         pinned_package_versions_post=dict(A="1.2.3a", B="3.2.1b"),
     )
-    assert tg.pinned_package_versions_pre_string == "pkg1==v1 pkg2==v2"
-    assert tg.pinned_package_versions_post_string == "A==1.2.3a B==3.2.1b"
+    assert tg.pinned_package_versions_pre_string == '"pkg1==v1" "pkg2==v2"'
+    assert tg.pinned_package_versions_post_string == '"A==1.2.3a" "B==3.2.1b"'
 
 
 def test_properties_for_pixi_task_group():
