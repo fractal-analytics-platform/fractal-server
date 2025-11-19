@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import EmailStr
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -54,6 +55,34 @@ async def check_user_has_pending_invitation(
     return link
 
 
+async def get_user_id_from_email(
+    *, user_email: EmailStr, db: AsyncSession
+) -> int:
+    res = await db.execute(
+        select(UserOAuth.id).where(UserOAuth.email == user_email)
+    )
+    user_id = res.scalar_one_or_none()
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    return user_id
+
+
+async def get_user_email_from_id(
+    *, user_id: int, db: AsyncSession
+) -> str | None:
+    res = await db.execute(
+        select(UserOAuth.email).where(UserOAuth.id == user_id)
+    )
+    user_email = res.scalar_one_or_none()
+    if user_email is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    return user_email
+
+
 @router.get(
     "/project/{project_id}/link/", response_model=list[ProjectShareRead]
 )
@@ -62,10 +91,14 @@ async def get_project_linked_users(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectShareRead]:
+    """
+    Get the list of all users linked to your project.
+    """
+    # Check current user is project owner
     await check_user_is_project_owner(
         user_id=user.id, project_id=project_id, db=db
     )
-
+    # Get (email, is_verified, permissions) for all linked users except owner
     res = await db.execute(
         select(
             UserOAuth.email,
@@ -88,29 +121,33 @@ async def get_project_linked_users(
     ]
 
 
-@router.post("/invite/", status_code=201)
+@router.post("/project/{project_id}/link/", status_code=201)
 async def send_project_invitation(
     project_id: int,
+    email: EmailStr,
     project_invitation: ProjectShareCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
+    # Check current user is project owner
     await check_user_is_project_owner(
         user_id=user.id, project_id=project_id, db=db
     )
 
-    res = await db.execute(
-        select(UserOAuth.id).where(
-            UserOAuth.email == project_invitation.user_email
-        )
+    # Get the ID of the user to invite
+    invited_user_id = await get_user_id_from_email(user_email=email, db=db)
+
+    # Check if link already exists
+    existing_link = await db.get(
+        LinkUserProjectV2, (project_id, invited_user_id)
     )
-    invited_user_id = res.scalar_one_or_none()
-    if invited_user_id is None:
+    if existing_link is not None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"User '{project_invitation.user_email}' not found.",
+            detail="Link already exists.",
         )
 
+    # Create new link
     db.add(
         LinkUserProjectV2(
             project_id=project_id,

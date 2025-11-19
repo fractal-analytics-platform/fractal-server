@@ -19,11 +19,10 @@ class ProjectPermissions(StrEnum):
 
 
 class ProjectShareCreate(BaseModel):
-    user_email: EmailStr
     permissions: ProjectPermissions = ProjectPermissions.READ
 
 
 class ProjectShareRead(BaseModel):
     user_email: EmailStr
-    permissions: ProjectPermissions
     is_verified: bool
+    permissions: ProjectPermissions
