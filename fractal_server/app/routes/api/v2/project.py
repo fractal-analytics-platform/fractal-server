@@ -16,6 +16,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import ProjectUpdateV2
 from fractal_server.logger import reset_logger_handlers
@@ -81,7 +82,7 @@ async def create_project(
         user_id=user.id,
         is_owner=True,
         is_verified=True,
-        permissions="rwx",
+        permissions=ProjectPermissions.EXECUTE,
     )
     db.add(link)
 

@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.schemas.v2 import ProjectPermissions
 
 
 async def test_linkuserproject_constraints(
@@ -43,7 +44,7 @@ async def test_linkuserproject_constraints(
             user_id=u1.id,
             is_owner=True,
             is_verified=True,
-            permissions="rwx",
+            permissions=ProjectPermissions.EXECUTE,
         )
     )
     await db.commit()
@@ -55,7 +56,7 @@ async def test_linkuserproject_constraints(
             user_id=u2.id,
             is_owner=True,
             is_verified=True,
-            permissions="rwx",
+            permissions=ProjectPermissions.EXECUTE,
         )
     )
     with pytest.raises(IntegrityError) as e:
@@ -70,7 +71,7 @@ async def test_linkuserproject_constraints(
             user_id=u2.id,
             is_owner=True,
             is_verified=False,
-            permissions="rwx",
+            permissions=ProjectPermissions.EXECUTE,
         )
     )
     with pytest.raises(IntegrityError) as e:
@@ -79,7 +80,7 @@ async def test_linkuserproject_constraints(
     await db.rollback()
 
     # Test "ck_linkuserprojectv2_owner_full_permissions"
-    for permissions in ["r", "rw"]:
+    for permissions in [ProjectPermissions.READ, ProjectPermissions.WRITE]:
         db.add(
             LinkUserProjectV2(
                 project_id=p2.id,
@@ -116,7 +117,7 @@ async def test_linkuserproject_constraints(
             user_id=u2.id,
             is_owner=True,
             is_verified=True,
-            permissions="rwx",
+            permissions=ProjectPermissions.EXECUTE,
         )
     )
     await db.commit()

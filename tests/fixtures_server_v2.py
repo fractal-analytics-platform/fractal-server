@@ -29,6 +29,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.images.models import SingleImage
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
@@ -66,7 +67,7 @@ async def project_factory_v2(db):
             user_id=user.id,
             is_owner=True,
             is_verified=True,
-            permissions="rwx",
+            permissions=ProjectPermissions.EXECUTE,
         )
         db.add(link)
 
