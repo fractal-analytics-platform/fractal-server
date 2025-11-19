@@ -132,8 +132,7 @@ async def get_project_linked_users(
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.is_owner.is_(False))
     )
-    guests = res.scalars().all()
-
+    guests = res.all()
     return [
         ProjectShareReadOwner(
             user_email=guest[0],
@@ -264,7 +263,7 @@ async def see_current_invitations(
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
     )
-    id_name_permissions = res.scalars().all()
+    id_name_permissions = res.all()
 
     # Find owners email
     emails = []
