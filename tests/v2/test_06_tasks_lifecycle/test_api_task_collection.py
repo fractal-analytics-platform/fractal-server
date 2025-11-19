@@ -362,7 +362,6 @@ async def test_task_collection_from_pypi_with_extras(
     client,
     MockCurrentUser,
     local_resource_profile_db,
-    db,
 ):
     ERROR_MESSAGE = "Command must not contain any of this characters"
     _, profile = local_resource_profile_db
@@ -392,38 +391,3 @@ async def test_task_collection_from_pypi_with_extras(
             ),
         )
         assert ERROR_MESSAGE in res.json()["detail"]
-
-    # TEST TO REMOVE
-
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(
-                package="testing-tasks-mock",
-                pinned_package_versions_post=json.dumps({"uvicorn": "0.22.0"}),
-            ),
-        )
-        assert res.status_code == 202
-        group = await db.get(TaskGroupV2, int(res.json()["taskgroupv2_id"]))
-        debug(group.env_info)
-        assert "PyYAML" not in group.env_info
-
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(
-                package="testing-tasks-mock",
-                package_version="0.1.1",
-                pinned_package_versions_post=json.dumps(
-                    {"uvicorn[standard]": "0.22.0"}
-                ),
-            ),
-        )
-        assert res.status_code == 202
-        group = await db.get(TaskGroupV2, int(res.json()["taskgroupv2_id"]))
-        debug(group.env_info)
-        assert "PyYAML" in group.env_info
