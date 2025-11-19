@@ -35,5 +35,9 @@ class ProjectShareReadGuest(BaseModel):
     permissions: ProjectPermissions
 
 
-class ProjectShareUpdate(BaseModel):
+class ProjectShareUpdatePermissions(BaseModel):
     permissions: ProjectPermissions = None
+
+
+class ProjectShareUpdateAccept(BaseModel):
+    is_verified: bool = None

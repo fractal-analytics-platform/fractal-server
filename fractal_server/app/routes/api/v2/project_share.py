@@ -14,9 +14,10 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ProjectShareCreate
 from fractal_server.app.schemas.v2 import ProjectShareReadGuest
 from fractal_server.app.schemas.v2 import ProjectShareReadOwner
-from fractal_server.app.schemas.v2 import ProjectShareUpdate
+from fractal_server.app.schemas.v2 import ProjectShareUpdateAccept
+from fractal_server.app.schemas.v2 import ProjectShareUpdatePermissions
 
-router = APIRouter(prefix="/project/share")
+router = APIRouter()
 
 
 def check_not_owner_id(*, user_id: int, owner_id: int) -> None:
@@ -201,7 +202,7 @@ async def share_a_project(
 async def patch_project_permissions(
     project_id: int,
     email: EmailStr,
-    update: ProjectShareUpdate,
+    update: ProjectShareUpdatePermissions,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -309,19 +310,10 @@ async def see_current_invitations(
     ]
 
 
-# ## Accept invite
-# PATCH /api/v2/project/{project_id}/guest-link/
-# 	is_verified = True
-# [options: 200, 404]
-
-# ## Reject invite or unsubscribe from project
-# DELETE /api/v2/project/{project_id}/guest-link/
-# [options: 204, 404, 422 (e.g. I am the owner)]
-
-
-@router.patch("/accept/", status_code=200)
+@router.patch("/project/{project_id}/guest-link/", status_code=200)
 async def accept_project_invitation(
     project_id: int,
+    update: ProjectShareUpdateAccept,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -329,25 +321,23 @@ async def accept_project_invitation(
         user_id=user.id, project_id=project_id, db=db
     )
 
-    link.is_verified = True
-    db.add(link)
+    # Update and commit
+    for key, value in update.model_dump(exclude_unset=True).items():
+        setattr(link, key, value)
     await db.commit()
+
     return
 
 
-@router.delete("/reject/", status_code=204)
+@router.delete("/project/{project_id}/guest-link/", status_code=204)
 async def reject_project_invitation(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    link = await db.get(LinkUserProjectV2, (project_id, user.id))
-
-    if link is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User '{user.id}' is not invited to project {project_id}.",
-        )
+    link = await check_user_is_linked_to_project(
+        user_id=user.id, project_id=project_id, db=db
+    )
 
     if link.is_owner:
         raise HTTPException(
@@ -357,4 +347,5 @@ async def reject_project_invitation(
 
     await db.delete(link)
     await db.commit()
+
     return
