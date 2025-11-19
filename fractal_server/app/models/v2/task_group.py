@@ -23,7 +23,7 @@ def _check_origin_not_pixi(origin: str):
 
 def _create_dependency_string(pinned_versions: dict[str, str]) -> str:
     """
-    Expand e.g. `{"a": "1.2", "b": "3"}` into `"a==1.2 b==3"`.
+    Expand e.g. `{"a": "1.2", "b": "3"}` into `'"a==1.2" "b==3"'`.
     """
     output = " ".join(
         [f'"{key}=={value}"' for key, value in pinned_versions.items()]
