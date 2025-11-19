@@ -86,7 +86,7 @@ class TaskCollectPipV2(BaseModel):
     def validate_pinned_package_versions(cls, value):
         if value is not None:
             for pkg, version in value.items():
-                validate_cmd(pkg)
+                validate_cmd(pkg, allow_char="[]")
                 validate_cmd(version)
         return value
 
