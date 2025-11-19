@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -362,14 +363,31 @@ async def test_task_collection_from_pypi_with_extras(
     MockCurrentUser,
     local_resource_profile_db,
 ):
+    ERROR_MESSAGE = "Command must not contain any of this characters"
     _, profile = local_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ):
-        await client.post(
-            f"{PREFIX}/collect/pip/?private=true",
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
             data=dict(
-                package="uvicorn[standard]",
-                package_version="0.22.0",
+                package="devtools",
+                package_version="99.99.99",
+                pinned_package_versions_pre=json.dumps(
+                    {"fastapi[standard]": "0.121.1"}
+                ),
+                pinned_package_versions_post=json.dumps(
+                    {"uvicorn[standard]": "0.22.0"}
+                ),
             ),
         )
+        assert ERROR_MESSAGE not in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(
+                package="fastapi[standard]",
+                package_version="99.99.99",
+            ),
+        )
+        assert ERROR_MESSAGE in res.json()["detail"]

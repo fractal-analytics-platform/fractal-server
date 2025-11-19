@@ -74,7 +74,7 @@ class TaskCollectPipV2(BaseModel):
     @classmethod
     def validate_commands(cls, value):
         if value is not None:
-            validate_cmd(value, allow_char="[]")
+            validate_cmd(value)
         return value
 
     @field_validator(
@@ -87,7 +87,7 @@ class TaskCollectPipV2(BaseModel):
         if value is not None:
             for pkg, version in value.items():
                 validate_cmd(pkg, allow_char="[]")
-                validate_cmd(version, allow_char="[]")
+                validate_cmd(version)
         return value
 
 
