@@ -18,6 +18,12 @@ class ProjectPermissions(StrEnum):
     EXECUTE = "rwx"
 
 
-class ProjectInvitation(BaseModel):
+class ProjectShareCreate(BaseModel):
     user_email: EmailStr
     permissions: ProjectPermissions = ProjectPermissions.READ
+
+
+class ProjectShareRead(BaseModel):
+    user_email: EmailStr
+    permissions: ProjectPermissions
+    is_verified: bool

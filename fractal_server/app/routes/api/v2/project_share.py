@@ -9,7 +9,8 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import ProjectInvitation
+from fractal_server.app.schemas.v2 import ProjectShareCreate
+from fractal_server.app.schemas.v2 import ProjectShareRead
 
 router = APIRouter(prefix="/project/share")
 
@@ -53,10 +54,44 @@ async def check_user_has_pending_invitation(
     return link
 
 
+@router.get(
+    "/project/{project_id}/link/", response_model=list[ProjectShareRead]
+)
+async def get_project_linked_users(
+    project_id: int,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProjectShareRead]:
+    await check_user_is_project_owner(
+        user_id=user.id, project_id=project_id, db=db
+    )
+
+    res = await db.execute(
+        select(
+            UserOAuth.email,
+            LinkUserProjectV2.is_verified,
+            LinkUserProjectV2.permissions,
+        )
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.is_owner.is_(False))
+    )
+    links = res.scalars().all()
+
+    return [
+        ProjectShareRead(
+            user_email=link[0],
+            is_verified=link[1],
+            permissions=link[2],
+        )
+        for link in links
+    ]
+
+
 @router.post("/invite/", status_code=201)
 async def send_project_invitation(
     project_id: int,
-    project_invitation: ProjectInvitation,
+    project_invitation: ProjectShareCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
