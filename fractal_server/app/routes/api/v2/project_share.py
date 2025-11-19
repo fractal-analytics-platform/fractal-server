@@ -112,12 +112,7 @@ async def reject_project_invitation(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    res = await db.execute(
-        select(LinkUserProjectV2)
-        .where(LinkUserProjectV2.project_id == project_id)
-        .where(LinkUserProjectV2.user_id == user.id)
-    )
-    link = res.scalars().one_or_none()
+    link = await db.get(LinkUserProjectV2, (project_id, user.id))
 
     if link is None:
         raise HTTPException(
