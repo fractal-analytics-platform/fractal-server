@@ -20,7 +20,7 @@ from fractal_server.app.schemas.v2 import ProjectShareUpdatePermissions
 router = APIRouter()
 
 
-def check_not_owner_id(*, user_id: int, owner_id: int) -> None:
+def raise_422_if_owner(*, user_id: int, owner_id: int) -> None:
     if user_id == owner_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -215,7 +215,7 @@ async def patch_project_permissions(
     guest_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check you're not changing your own permissions
-    check_not_owner_id(user_id=guest_id, owner_id=owner.id)
+    raise_422_if_owner(user_id=guest_id, owner_id=owner.id)
 
     # Get the link to update
     link = await check_user_is_linked_to_project(
@@ -248,7 +248,7 @@ async def kick_out_guest(
     guest_id = await get_user_id_from_email(user_email=email, db=db)
 
     # Check you're not removing yourself
-    check_not_owner_id(user_id=guest_id, owner_id=owner.id)
+    raise_422_if_owner(user_id=guest_id, owner_id=owner.id)
 
     # Get the link to remove
     link = await check_user_is_linked_to_project(
