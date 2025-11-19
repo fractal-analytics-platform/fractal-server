@@ -232,6 +232,26 @@ async def test_project_sharing(
             ),
         ]
 
+        # Change permissions of User4
+        res = await client.patch(
+            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
+            json=dict(permissions=ProjectPermissions.WRITE),
+        )
+        assert res.status_code == 200
+
+        # Get list of all users linked to Project1
+        res = await client.get(
+            f"/api/v2/project/{project1_id}/link/",
+        )
+        assert res.status_code == 200
+        assert res.json() == [
+            dict(
+                user_email=user4.email,
+                is_verified=True,
+                permissions=ProjectPermissions.WRITE,
+            ),
+        ]
+
         # Kick out User4
         res = await client.delete(
             f"/api/v2/project/{project1_id}/link/?email={user4.email}",
