@@ -28,7 +28,7 @@ def raise_422_if_owner(*, user_id: int, owner_id: int) -> None:
         )
 
 
-async def check_user_is_project_owner(
+async def get_link_check_owner(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
     res = await db.execute(
@@ -134,9 +134,7 @@ async def get_project_linked_users(
     Get the list of all users linked to your project.
     """
     # Check current user is project owner
-    await check_user_is_project_owner(
-        user_id=owner.id, project_id=project_id, db=db
-    )
+    await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
     # Get (email, is_verified, permissions) for all linked users except owner
     res = await db.execute(
         select(
@@ -169,9 +167,7 @@ async def share_a_project(
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
-    await check_user_is_project_owner(
-        user_id=owner.id, project_id=project_id, db=db
-    )
+    await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the user to invite
     guest_id = await get_user_id_from_email(user_email=email, db=db)
@@ -207,9 +203,7 @@ async def patch_project_permissions(
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
-    await check_user_is_project_owner(
-        user_id=owner.id, project_id=project_id, db=db
-    )
+    await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the linked user
     guest_id = await get_user_id_from_email(user_email=email, db=db)
@@ -240,9 +234,7 @@ async def kick_out_guest(
     db: AsyncSession = Depends(get_async_db),
 ):
     # Check current user is project owner
-    await check_user_is_project_owner(
-        user_id=owner.id, project_id=project_id, db=db
-    )
+    await get_link_check_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the linked user
     guest_id = await get_user_id_from_email(user_email=email, db=db)
