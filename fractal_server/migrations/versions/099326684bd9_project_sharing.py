@@ -25,6 +25,7 @@ def upgrade() -> None:
                 "is_owner",
                 sa.Boolean(),
                 nullable=False,
+                # TODO-2.18.1 drop server_default
                 server_default=sa.text("true"),
             )
         )
@@ -33,6 +34,7 @@ def upgrade() -> None:
                 "is_verified",
                 sa.Boolean(),
                 nullable=False,
+                # TODO-2.18.1 drop server_default
                 server_default=sa.text("true"),
             )
         )
@@ -41,6 +43,7 @@ def upgrade() -> None:
                 "permissions",
                 sqlmodel.sql.sqltypes.AutoString(),
                 nullable=False,
+                # TODO-2.18.1 drop server_default
                 server_default=sa.text("'rwx'"),
             )
         )
