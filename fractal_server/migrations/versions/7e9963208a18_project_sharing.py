@@ -1,17 +1,16 @@
 """Project sharing
 
-Revision ID: 099326684bd9
+Revision ID: 7e9963208a18
 Revises: e0e717ae2f26
-Create Date: 2025-11-18 17:25:43.549056
+Create Date: 2025-11-20 11:27:21.734842
 
 """
 
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "099326684bd9"
+revision = "7e9963208a18"
 down_revision = "e0e717ae2f26"
 branch_labels = None
 depends_on = None
@@ -22,29 +21,20 @@ def upgrade() -> None:
     with op.batch_alter_table("linkuserprojectv2", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "is_owner",
-                sa.Boolean(),
-                nullable=False,
-                # TODO-2.18.1 drop server_default
-                server_default=sa.text("true"),
+                "is_owner", sa.BOOLEAN(), server_default="true", nullable=False
             )
         )
         batch_op.add_column(
             sa.Column(
                 "is_verified",
-                sa.Boolean(),
+                sa.BOOLEAN(),
+                server_default="true",
                 nullable=False,
-                # TODO-2.18.1 drop server_default
-                server_default=sa.text("true"),
             )
         )
         batch_op.add_column(
             sa.Column(
-                "permissions",
-                sqlmodel.sql.sqltypes.AutoString(),
-                nullable=False,
-                # TODO-2.18.1 drop server_default
-                server_default=sa.text("'rwx'"),
+                "permissions", sa.String(), server_default="rwx", nullable=False
             )
         )
         batch_op.create_index(
