@@ -44,7 +44,18 @@ def upgrade() -> None:
             postgresql_where=sa.text("is_owner IS true"),
         )
 
-    # ### end Alembic commands ###
+        # ### end Alembic commands ###
+
+        # Manually add check constraints
+        batch_op.create_check_constraint(
+            "owner_is_verified", "NOT (is_owner AND NOT is_verified)"
+        )
+        batch_op.create_check_constraint(
+            "owner_full_permissions", "NOT (is_owner AND permissions <> 'rwx')"
+        )
+        batch_op.create_check_constraint(
+            "valid_permissions", "permissions IN ('r', 'rw', 'rwx')"
+        )
 
 
 def downgrade() -> None:
