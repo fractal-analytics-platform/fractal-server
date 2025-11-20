@@ -31,7 +31,7 @@ class ProjectShareReadGuest(BaseModel):
     project_id: int
     project_name: str
     owner_email: str
-    permissions: str
+    guest_permissions: str
 
 
 class ProjectShareUpdatePermissions(BaseModel):

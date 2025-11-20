@@ -259,28 +259,30 @@ async def get_pending_invitations(
 
     # FIXME: add some order by
 
-    id_name_permissions = res.all()
+    guest_project_info = res.all()
 
     # Find owners email
-    emails = []
-    for _id, name, permissions in id_name_permissions:
+    project_owner_emails = []
+    for project_id, project_name, guest_permissions in guest_project_info:
         # Get single project-owner email
         res = await db.execute(
             select(UserOAuth.email)
             .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
-            .where(LinkUserProjectV2.project_id == _id)
+            .where(LinkUserProjectV2.project_id == project_id)
             .where(LinkUserProjectV2.is_owner.is_(True))
         )
-        emails.append(res.scalar_one_or_none())
+        project_owner_emails.append(res.scalar_one_or_none())
 
     return [
         dict(
-            project_id=_id,
-            project_name=name,
-            permissions=permissions,
-            owner_email=email,
+            project_id=project_id,
+            project_name=project_name,
+            guest_permissions=guest_permissions,
+            owner_email=owner_email,
         )
-        for (_id, name, permissions), email in zip(id_name_permissions, emails)
+        for (project_id, project_name, guest_permissions), owner_email in zip(
+            guest_project_info, project_owner_emails
+        )
     ]
 
 
