@@ -48,7 +48,8 @@ async def test_project_sharing(
 
         # Invite User2
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email={user2.email}", json={}
+            f"/api/v2/project/{project1_id}/link/?email={user2.email}",
+            json=dict(permissions=ProjectPermissions.READ),
         )
         assert res.status_code == 201
 
@@ -73,17 +74,17 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                user_email=user2.email,
+                guest_email=user2.email,
                 is_verified=False,
                 permissions=ProjectPermissions.READ,
             ),
             dict(
-                user_email=user3.email,
+                guest_email=user3.email,
                 is_verified=False,
                 permissions=ProjectPermissions.WRITE,
             ),
             dict(
-                user_email=user4.email,
+                guest_email=user4.email,
                 is_verified=False,
                 permissions=ProjectPermissions.EXECUTE,
             ),
@@ -109,9 +110,8 @@ async def test_project_sharing(
         ]
 
         # Accept invitation
-        res = await client.patch(
-            f"/api/v2/project/{project1_id}/guest-link/",
-            json=dict(is_verified=True),
+        res = await client.post(
+            f"/api/v2/project/{project1_id}/guest-link/accept/",
         )
         assert res.status_code == 200
 
@@ -143,17 +143,17 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                user_email=user2.email,
+                guest_email=user2.email,
                 is_verified=True,
                 permissions=ProjectPermissions.READ,
             ),
             dict(
-                user_email=user3.email,
+                guest_email=user3.email,
                 is_verified=False,
                 permissions=ProjectPermissions.WRITE,
             ),
             dict(
-                user_email=user4.email,
+                guest_email=user4.email,
                 is_verified=False,
                 permissions=ProjectPermissions.EXECUTE,
             ),
@@ -191,12 +191,12 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                user_email=user2.email,
+                guest_email=user2.email,
                 is_verified=True,
                 permissions=ProjectPermissions.READ,
             ),
             dict(
-                user_email=user4.email,
+                guest_email=user4.email,
                 is_verified=False,
                 permissions=ProjectPermissions.EXECUTE,
             ),
@@ -211,10 +211,8 @@ async def test_project_sharing(
 
     async with MockCurrentUser(user_kwargs={"id": user4.id}):
         # Accept invitation
-        # Accept invitation
-        res = await client.patch(
-            f"/api/v2/project/{project1_id}/guest-link/",
-            json=dict(is_verified=True),
+        res = await client.post(
+            f"/api/v2/project/{project1_id}/guest-link/accept/",
         )
         assert res.status_code == 200
 
@@ -226,7 +224,7 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                user_email=user4.email,
+                guest_email=user4.email,
                 is_verified=True,
                 permissions=ProjectPermissions.EXECUTE,
             ),
@@ -246,7 +244,7 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                user_email=user4.email,
+                guest_email=user4.email,
                 is_verified=True,
                 permissions=ProjectPermissions.WRITE,
             ),
