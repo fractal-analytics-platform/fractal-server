@@ -21,6 +21,12 @@ class ProjectShareCreate(BaseModel):
     permissions: ProjectPermissions
 
 
+class ProjectShareAccessInfo(BaseModel):
+    is_owner: bool
+    permissions: str
+    owner_email: str
+
+
 class ProjectShareReadOwner(BaseModel):
     guest_email: str
     is_verified: bool

@@ -27,6 +27,7 @@ from fractal_server.app.routes.api.v2._aux_functions_sharing import (
     raise_422_if_link_exists,
 )
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.schemas.v2 import ProjectShareAccessInfo
 from fractal_server.app.schemas.v2 import ProjectShareCreate
 from fractal_server.app.schemas.v2 import ProjectShareReadGuest
 from fractal_server.app.schemas.v2 import ProjectShareReadOwner
@@ -227,6 +228,55 @@ async def get_pending_invitations(
             owner_email,
         ) in guest_project_info
     ]
+
+
+@router.get(
+    "/project/{project_id}/guest-link/", response_model=ProjectShareAccessInfo
+)
+async def get_project_link(
+    project_id: int,
+    user: UserOAuth = Depends(current_user_act_ver_prof),
+    db: AsyncSession = Depends(get_async_db),
+) -> ProjectShareAccessInfo:
+    owner_subquery = (
+        select(
+            LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
+        )
+        .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+        .subquery()
+    )
+
+    res = await db.execute(
+        select(
+            LinkUserProjectV2.is_owner,
+            LinkUserProjectV2.permissions,
+            owner_subquery.c.owner_email,
+        )
+        .join(
+            owner_subquery,
+            owner_subquery.c.project_id == LinkUserProjectV2.project_id,
+        )
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_verified.is_(True))
+    )
+
+    guest_project_info = res.one_or_none()
+
+    if guest_project_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User has no access to project {project_id}.",
+        )
+
+    is_owner, permissions, owner_email = guest_project_info
+
+    return dict(
+        is_owner=is_owner,
+        permissions=permissions,
+        owner_email=owner_email,
+    )
 
 
 @router.post("/project/{project_id}/guest-link/accept/", status_code=200)
