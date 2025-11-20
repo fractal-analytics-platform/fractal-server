@@ -1,7 +1,6 @@
 from enum import StrEnum
 
 from pydantic import BaseModel
-from pydantic import EmailStr
 
 
 class ProjectPermissions(StrEnum):
@@ -23,16 +22,16 @@ class ProjectShareCreate(BaseModel):
 
 
 class ProjectShareReadOwner(BaseModel):
-    guest_email: EmailStr
+    guest_email: str
     is_verified: bool
-    permissions: ProjectPermissions
+    permissions: str
 
 
 class ProjectShareReadGuest(BaseModel):
-    project_name: str
     project_id: int
-    owner_email: EmailStr
-    permissions: ProjectPermissions
+    project_name: str
+    owner_email: str
+    permissions: str
 
 
 class ProjectShareUpdatePermissions(BaseModel):
