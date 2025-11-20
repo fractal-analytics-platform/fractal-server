@@ -268,3 +268,78 @@ async def test_project_sharing(
         )
         assert res.status_code == 200
         assert res.json() == []
+
+    # From now on: TESTING FAILURES
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        # Not project owner
+        res = await client.get(
+            f"/api/v2/project/{project2_id}/link/",
+        )
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Current user is not the project owner."
+
+        # Not existing email
+        res = await client.post(
+            f"/api/v2/project/{project1_id}/link/?email=foo@example.org",
+            json=dict(permissions=ProjectPermissions.READ),
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == "User not found."
+
+        # Link already exists
+        res = await client.post(
+            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
+            json=dict(permissions=ProjectPermissions.READ),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "User is already associated to project."
+
+        # Link already exists
+        res = await client.patch(
+            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
+            json=dict(),
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"]
+            == "Cannot perform this operation on project owner."
+        )
+
+        # Link not existing
+        res = await client.patch(
+            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
+            json=dict(),
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == "User is not linked to project."
+
+        # Revoke access to owner
+        res = await client.delete(
+            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"]
+            == "Cannot perform this operation on project owner."
+        )
+
+        # No pending invitation
+        res = await client.post(
+            f"/api/v2/project/{project1_id}/guest-link/accept/",
+        )
+        assert res.status_code == 404
+        assert (
+            res.json()["detail"]
+            == "No pending invitation for user on this project."
+        )
+
+        # Owner cannot unsubscribe
+        res = await client.delete(
+            f"/api/v2/project/{project1_id}/guest-link/",
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"]
+            == f"You are the owner of project {project1_id}."
+        )

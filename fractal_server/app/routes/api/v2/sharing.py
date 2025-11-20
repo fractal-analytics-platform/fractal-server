@@ -124,7 +124,7 @@ async def patch_guest_permissions(
 
     # Check you're not changing your own permissions
     if guest_id == owner.id:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot perform this operation on project owner.",
         )
@@ -157,7 +157,7 @@ async def revoke_guest_access(
 
     # Check you're not removing yourself
     if guest_id == owner.id:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot perform this operation on project owner.",
         )
@@ -258,7 +258,7 @@ async def delete_guest_link(
     link = await get_link_or_404(user_id=user.id, project_id=project_id, db=db)
 
     if link.is_owner:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"You are the owner of project {project_id}.",
         )

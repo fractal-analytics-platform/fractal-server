@@ -21,7 +21,7 @@ async def raise_403_if_not_owner(
     )
     link = res.scalars().one_or_none()
     if link is None:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Current user is not the project owner.",
         )
@@ -33,7 +33,7 @@ async def get_link_or_404(
 ) -> LinkUserProjectV2:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is None:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User is not linked to project.",
         )
@@ -45,7 +45,7 @@ async def get_pending_invitation_or_404(
 ) -> LinkUserProjectV2:
     link = await get_link_or_404(user_id=user_id, project_id=project_id, db=db)
     if link.is_verified:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No pending invitation for user on this project.",
         )
@@ -57,7 +57,7 @@ async def raise_422_if_link_exists(
 ) -> None:
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is not None:
-        raise HTTPException(  # FIXME coverage
+        raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="User is already associated to project.",
         )
@@ -72,7 +72,7 @@ async def get_user_id_from_email_or_404(
     )
     user_id = res.scalar_one_or_none()
     if user_id is None:
-        raise HTTPException(  # FIXME coverage
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
         )
     return user_id
