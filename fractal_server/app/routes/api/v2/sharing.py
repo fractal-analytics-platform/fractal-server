@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from pydantic import EmailStr
 from sqlmodel import select
@@ -79,7 +80,7 @@ async def share_a_project(
     project_invitation: ProjectShareCreate,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
     # Get the ID of the user to invite
@@ -103,9 +104,8 @@ async def share_a_project(
         )
     )
     await db.commit()
-    # FIXME:  maybe return Response(status_code=status.HTTP_201...)
 
-    return
+    return Response(status_code=status.HTTP_201_CREATED)
 
 
 @router.patch("/project/{project_id}/link/", status_code=200)
@@ -115,7 +115,7 @@ async def patch_guest_permissions(
     update: ProjectShareUpdatePermissions,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     # Check current user is project owner
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
@@ -141,7 +141,7 @@ async def patch_guest_permissions(
         setattr(link, key, value)
     await db.commit()
 
-    return  # FIXME add 200 response?
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete("/project/{project_id}/link/", status_code=204)
@@ -150,7 +150,7 @@ async def revoke_guest_access(
     email: EmailStr,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
@@ -173,7 +173,7 @@ async def revoke_guest_access(
     await db.delete(link)
     await db.commit()
 
-    return  # FIXME: 204 explicit?
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # GUEST
@@ -235,7 +235,7 @@ async def accept_project_invitation(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     link = await get_pending_invitation_or_404(
         user_id=user.id, project_id=project_id, db=db
     )
@@ -243,7 +243,7 @@ async def accept_project_invitation(
     db.add(link)  # FIXME: needed?
     await db.commit()
 
-    return  # add response?
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete("/project/{project_id}/guest-link/", status_code=204)
@@ -251,7 +251,7 @@ async def delete_guest_link(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     """
     FIXME: mention the two ways to use
     """
@@ -266,4 +266,4 @@ async def delete_guest_link(
     await db.delete(link)
     await db.commit()
 
-    return  # add response?
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
