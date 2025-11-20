@@ -231,7 +231,6 @@ async def accept_project_invitation(
         user_id=user.id, project_id=project_id, db=db
     )
     link.is_verified = True
-    db.add(link)  # FIXME: needed?
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
