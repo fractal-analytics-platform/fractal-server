@@ -2,7 +2,7 @@
 
 # 2.17.2
 
-> Starting from this version, the `unzip` command-line tool must be available (see \#2978).
+> NOTE: Starting from this version, the `unzip` command-line tool must be available (see \#2978).
 
 * API:
     * Allow reading logs from zipped job folders (\#2978).
