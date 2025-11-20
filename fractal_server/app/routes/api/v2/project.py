@@ -42,8 +42,8 @@ async def get_list_project(
         select(ProjectV2)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_owner == is_owner)
-        .where(LinkUserProjectV2.is_verified == True)  # noqa
+        .where(LinkUserProjectV2.is_owner.is_(is_owner))
+        .where(LinkUserProjectV2.is_verified.is_(True))
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
