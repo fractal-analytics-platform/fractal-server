@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.v2 import ProjectPermissions
@@ -10,21 +8,20 @@ async def test_project_sharing(
     db: AsyncSession,
     MockCurrentUser,
     local_resource_profile_db,
-    tmp_path: Path,
 ):
     resource, profile = local_resource_profile_db
 
     # Create 3 users
     args = dict(
         hashed_password="12345",
-        project_dir=tmp_path.as_posix(),
+        project_dir="/fake",
         is_verified=True,
         profile_id=profile.id,
     )
-    user1 = UserOAuth(email="user1@test.org", **args)
-    user2 = UserOAuth(email="user2@test.org", **args)
-    user3 = UserOAuth(email="user3@test.org", **args)
-    user4 = UserOAuth(email="user4@test.org", **args)
+    user1 = UserOAuth(email="user1@example.org", **args)
+    user2 = UserOAuth(email="user2@example.org", **args)
+    user3 = UserOAuth(email="user3@example.org", **args)
+    user4 = UserOAuth(email="user4@example.org", **args)
     db.add_all([user1, user2, user3, user4])
     await db.commit()
     await db.refresh(user1)
@@ -123,7 +120,7 @@ async def test_project_sharing(
         assert res.json()[0]["id"] == project1_id
 
         # Create Project2
-        res = await client.post("/api/v2/project/", json=dict(name="Project3"))
+        res = await client.post("/api/v2/project/", json=dict(name="Project2"))
         assert res.status_code == 201
         project2_id = res.json()["id"]
 

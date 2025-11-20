@@ -15,14 +15,14 @@ async def test_linkuserproject_constraints(
     resource, profile = local_resource_profile_db
 
     u1 = UserOAuth(
-        email="u1@xy.z",
+        email="u1@example.org",
         hashed_password="hashed_password_1",
-        project_dir=(tmp_path / "p1").as_posix(),
+        project_dir="/fake",
     )
     u2 = UserOAuth(
-        email="u2@xy.z",
+        email="u2@example.org",
         hashed_password="hashed_password_2",
-        project_dir=(tmp_path / "p2").as_posix(),
+        project_dir="/fake",
     )
 
     p1 = ProjectV2(name="p1", resource_id=resource.id)
