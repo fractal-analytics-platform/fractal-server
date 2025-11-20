@@ -105,7 +105,7 @@ async def test_project_sharing(
                 project_name=project1["name"],
                 project_id=project1_id,
                 owner_email=user1.email,
-                permissions=ProjectPermissions.READ,
+                guest_permissions=ProjectPermissions.READ,
             )
         ]
 
@@ -168,7 +168,7 @@ async def test_project_sharing(
                 project_name=project1["name"],
                 project_id=project1_id,
                 owner_email=user1.email,
-                permissions=ProjectPermissions.WRITE,
+                guest_permissions=ProjectPermissions.WRITE,
             )
         ]
 
