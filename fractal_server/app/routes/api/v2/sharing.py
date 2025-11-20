@@ -59,6 +59,7 @@ async def get_project_guests(
         .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.is_owner.is_(False))
+        .order_by(UserOAuth.email)
     )
     guest_tuples = res.all()
     return [
@@ -199,9 +200,8 @@ async def get_pending_invitations(
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
+        .order_by(ProjectV2.name)
     )
-
-    # FIXME: add some order by
 
     guest_project_info = res.all()
 
