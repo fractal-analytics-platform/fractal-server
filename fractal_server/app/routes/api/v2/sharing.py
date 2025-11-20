@@ -189,24 +189,24 @@ async def get_pending_invitations(
     See your current invitations.
     """
 
+    owner_subquery = (
+        select(
+            LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
+        )
+        .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+        .subquery()
+    )
+
     res = await db.execute(
         select(
             ProjectV2.id,
             ProjectV2.name,
             LinkUserProjectV2.permissions,
-            (
-                select(UserOAuth.email)
-                .join(
-                    LinkUserProjectV2,
-                    UserOAuth.id == LinkUserProjectV2.user_id,
-                )
-                .where(LinkUserProjectV2.is_owner.is_(True))
-                .where(LinkUserProjectV2.project_id == ProjectV2.id)
-                .scalar_subquery()
-                .correlate(ProjectV2)
-            ),
+            owner_subquery.c.owner_email,
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .join(owner_subquery, owner_subquery.c.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
         .order_by(ProjectV2.name)
