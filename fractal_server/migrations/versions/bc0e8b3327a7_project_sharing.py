@@ -1,8 +1,8 @@
 """Project sharing
 
-Revision ID: 7e9963208a18
+Revision ID: bc0e8b3327a7
 Revises: e0e717ae2f26
-Create Date: 2025-11-20 11:27:21.734842
+Create Date: 2025-11-20 11:40:03.796112
 
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "7e9963208a18"
+revision = "bc0e8b3327a7"
 down_revision = "e0e717ae2f26"
 branch_labels = None
 depends_on = None

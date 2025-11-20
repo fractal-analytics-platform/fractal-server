@@ -40,14 +40,14 @@ class LinkUserProjectV2(SQLModel, table=True):
         ),
         CheckConstraint(
             "NOT (is_owner AND NOT is_verified)",
-            name="ck_linkuserprojectv2_owner_is_verified",
+            name="owner_is_verified",
         ),
         CheckConstraint(
             "NOT (is_owner AND permissions <> 'rwx')",
-            name="ck_linkuserprojectv2_owner_full_permissions",
+            name="owner_full_permissions",
         ),
         CheckConstraint(
             "permissions IN ('r', 'rw', 'rwx')",
-            name="ck_linkuserprojectv2_valid_permissions",
+            name="valid_permissions",
         ),
     )
