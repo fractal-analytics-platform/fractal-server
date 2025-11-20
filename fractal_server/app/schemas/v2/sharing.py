@@ -19,7 +19,7 @@ class ProjectPermissions(StrEnum):
 
 
 class ProjectShareCreate(BaseModel):
-    permissions: ProjectPermissions = ProjectPermissions.READ
+    permissions: ProjectPermissions
 
 
 class ProjectShareReadOwner(BaseModel):
@@ -37,7 +37,3 @@ class ProjectShareReadGuest(BaseModel):
 
 class ProjectShareUpdatePermissions(BaseModel):
     permissions: ProjectPermissions = None
-
-
-class ProjectShareUpdateAccept(BaseModel):
-    is_verified: bool = None
