@@ -83,17 +83,14 @@ async def share_a_project(
 ) -> Response:
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
-    # Get the ID of the user to invite
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
-    # Check if link already exists
     await raise_422_if_link_exists(
         user_id=guest_id,
         project_id=project_id,
         db=db,
     )
 
-    # Create new link
     db.add(
         LinkUserProjectV2(
             project_id=project_id,
@@ -116,27 +113,23 @@ async def patch_guest_permissions(
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    # Check current user is project owner
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
-    # Get the ID of the linked user
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
-    # Check you're not changing your own permissions
     if guest_id == owner.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot perform this operation on project owner.",
         )
 
-    # Get the link to update
     link = await get_link_or_404(
         user_id=guest_id,
         project_id=project_id,
         db=db,
     )
 
-    # Update and commit
+    # Update link and commit
     for key, value in update.model_dump(exclude_unset=True).items():
         setattr(link, key, value)
     await db.commit()
@@ -155,21 +148,19 @@ async def revoke_guest_access(
 
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
 
-    # Check you're not removing yourself
     if guest_id == owner.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot perform this operation on project owner.",
         )
 
-    # Get the link to remove
     link = await get_link_or_404(
         user_id=guest_id,
         project_id=project_id,
         db=db,
     )
 
-    # Delete
+    # Delete link and commit
     await db.delete(link)
     await db.commit()
 
