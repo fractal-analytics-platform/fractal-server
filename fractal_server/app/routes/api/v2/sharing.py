@@ -188,34 +188,30 @@ async def get_pending_invitations(
     See your current invitations.
     """
 
-    # FIXME: explore query optimization
+    owner_subquery = (
+        select(
+            LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
+        )
+        .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+        .subquery()
+    )
 
-    # Get (project_id, project_name, permissions) tuples
     res = await db.execute(
         select(
             ProjectV2.id,
             ProjectV2.name,
             LinkUserProjectV2.permissions,
+            owner_subquery.c.owner_email,
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .join(owner_subquery, owner_subquery.c.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
         .order_by(ProjectV2.name)
     )
 
     guest_project_info = res.all()
-
-    # Find owners email
-    project_owner_emails = []
-    for project_id, project_name, guest_permissions in guest_project_info:
-        # Get single project-owner email
-        res = await db.execute(
-            select(UserOAuth.email)
-            .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
-            .where(LinkUserProjectV2.project_id == project_id)
-            .where(LinkUserProjectV2.is_owner.is_(True))
-        )
-        project_owner_emails.append(res.scalar_one_or_none())
 
     return [
         dict(
@@ -224,9 +220,12 @@ async def get_pending_invitations(
             guest_permissions=guest_permissions,
             owner_email=owner_email,
         )
-        for (project_id, project_name, guest_permissions), owner_email in zip(
-            guest_project_info, project_owner_emails
-        )
+        for (
+            project_id,
+            project_name,
+            guest_permissions,
+            owner_email,
+        ) in guest_project_info
     ]
 
 
