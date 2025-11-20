@@ -43,6 +43,17 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == []
 
+        # Check User1 access to Project1
+        res = await client.get(
+            f"/api/v2/project/{project1_id}/guest-link/",
+        )
+        assert res.status_code == 200
+        assert res.json() == dict(
+            is_owner=True,
+            permissions=ProjectPermissions.EXECUTE,
+            owner_email=user1.email,
+        )
+
         # Invite User2
         res = await client.post(
             f"/api/v2/project/{project1_id}/link/?email={user2.email}",
@@ -109,6 +120,15 @@ async def test_project_sharing(
             )
         ]
 
+        # Check User2 access to Project1
+        res = await client.get(
+            f"/api/v2/project/{project1_id}/guest-link/",
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == (
+            f"User has no access to project {project1_id}."
+        )
+
         # Accept invitation
         res = await client.post(
             f"/api/v2/project/{project1_id}/guest-link/accept/",
@@ -121,6 +141,17 @@ async def test_project_sharing(
         res = await client.get("/api/v2/project/?is_owner=false")
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == project1_id
+
+        # Check User2 access to Project1
+        res = await client.get(
+            f"/api/v2/project/{project1_id}/guest-link/",
+        )
+        assert res.status_code == 200
+        assert res.json() == dict(
+            is_owner=False,
+            permissions=ProjectPermissions.READ,
+            owner_email=user1.email,
+        )
 
         # Create Project2
         res = await client.post("/api/v2/project/", json=dict(name="ProjectY"))
