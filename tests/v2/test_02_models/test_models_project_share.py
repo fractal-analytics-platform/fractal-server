@@ -64,7 +64,7 @@ async def test_linkuserproject_constraints(
     assert "ix_linkuserprojectv2_one_owner_per_project" in e.value.args[0]
     await db.rollback()
 
-    # Test "ck_linkuserprojectv2_owner_is_verified"
+    # Test "owner_is_verified"
     db.add(
         LinkUserProjectV2(
             project_id=p2.id,
@@ -76,10 +76,10 @@ async def test_linkuserproject_constraints(
     )
     with pytest.raises(IntegrityError) as e:
         await db.commit()
-    assert "ck_linkuserprojectv2_owner_is_verified" in e.value.args[0]
+    assert "owner_is_verified" in e.value.args[0]
     await db.rollback()
 
-    # Test "ck_linkuserprojectv2_owner_full_permissions"
+    # Test "owner_full_permissions"
     for permissions in [ProjectPermissions.READ, ProjectPermissions.WRITE]:
         db.add(
             LinkUserProjectV2(
@@ -92,10 +92,10 @@ async def test_linkuserproject_constraints(
         )
         with pytest.raises(IntegrityError) as e:
             await db.commit()
-        assert "ck_linkuserprojectv2_owner_full_permissions" in e.value.args[0]
+        assert "owner_full_permissions" in e.value.args[0]
         await db.rollback()
 
-    # Test "ck_linkuserprojectv2_valid_permissions"
+    # Test "valid_permissions"
     db.add(
         LinkUserProjectV2(
             project_id=p2.id,
@@ -107,7 +107,7 @@ async def test_linkuserproject_constraints(
     )
     with pytest.raises(IntegrityError) as e:
         await db.commit()
-    assert "ck_linkuserprojectv2_valid_permissions" in e.value.args[0]
+    assert "valid_permissions" in e.value.args[0]
     await db.rollback()
 
     # OK
