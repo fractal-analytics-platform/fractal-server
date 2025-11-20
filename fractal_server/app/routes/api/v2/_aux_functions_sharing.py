@@ -13,6 +13,10 @@ async def raise_403_if_not_owner(
     project_id: int,
     db: AsyncSession,
 ) -> None:
+    """
+    Raises 403 if User[`user_id`] is not owner of Project[`project_id`],
+    regardless of whether the User or Project exists.
+    """
     res = await db.execute(
         select(LinkUserProjectV2)
         .where(LinkUserProjectV2.project_id == project_id)
@@ -31,6 +35,10 @@ async def raise_403_if_not_owner(
 async def get_link_or_404(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
+    """
+    Raises 404 if User[`user_id`] is not linked to Project[`project_id`],
+    regardless of whether the User or Project exists.
+    """
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is None:
         raise HTTPException(
@@ -43,6 +51,10 @@ async def get_link_or_404(
 async def get_pending_invitation_or_404(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
+    """
+    Raises 404 if User[`user_id`] has not a pending invitation to
+    Project[`project_id`], regardless of whether the User or Project exists.
+    """
     link = await get_link_or_404(user_id=user_id, project_id=project_id, db=db)
     if link.is_verified:
         raise HTTPException(
@@ -55,6 +67,10 @@ async def get_pending_invitation_or_404(
 async def raise_422_if_link_exists(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> None:
+    """
+    Raises 422 if User[`user_id`] is linked Project[`project_id`], regardless
+    of whether the User or Project exists.
+    """
     link = await db.get(LinkUserProjectV2, (project_id, user_id))
     if link is not None:
         raise HTTPException(
@@ -67,6 +83,9 @@ async def raise_422_if_link_exists(
 async def get_user_id_from_email_or_404(
     *, user_email: str, db: AsyncSession
 ) -> int:
+    """
+    Raises 404 if there is no User with email `user_email`.
+    """
     res = await db.execute(
         select(UserOAuth.id).where(UserOAuth.email == user_email)
     )

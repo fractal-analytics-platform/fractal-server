@@ -47,7 +47,7 @@ async def get_project_guests(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectShareReadOwner]:
     """
-    Get the list of all users linked to your project.
+    Get the list of all the guests of your project (verified or not).
     """
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
     # Get (email, is_verified, permissions) for all guests
@@ -81,6 +81,9 @@ async def share_a_project(
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Add a guest to your project.
+    """
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
@@ -113,6 +116,9 @@ async def patch_guest_permissions(
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Change guest's permissions on your project.
+    """
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
@@ -144,6 +150,9 @@ async def revoke_guest_access(
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Remove a guest from your project.
+    """
     await raise_403_if_not_owner(user_id=owner.id, project_id=project_id, db=db)
 
     guest_id = await get_user_id_from_email_or_404(user_email=email, db=db)
@@ -176,7 +185,7 @@ async def get_pending_invitations(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectShareReadGuest]:
     """
-    See current invitations
+    See your current invitations.
     """
 
     # FIXME: explore query optimization
@@ -227,6 +236,9 @@ async def accept_project_invitation(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
+    """
+    Accept invitation to project `project_id`.
+    """
     link = await get_pending_invitation_or_404(
         user_id=user.id, project_id=project_id, db=db
     )
@@ -243,7 +255,8 @@ async def delete_guest_link(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
-    FIXME: mention the two ways to use
+    Decline invitation to project `project_id` or stop being a guest of that
+    project.
     """
     link = await get_link_or_404(user_id=user.id, project_id=project_id, db=db)
 
