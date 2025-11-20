@@ -180,10 +180,8 @@ async def revoke_guest_access(
 # GUEST
 
 
-@router.get(
-    "/project/invitation/A/", response_model=list[ProjectShareInvitation]
-)
-async def get_pending_invitationsA(
+@router.get("/project/invitation/", response_model=list[ProjectShareInvitation])
+async def get_pending_invitations(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectShareInvitation]:
@@ -209,58 +207,6 @@ async def get_pending_invitationsA(
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .join(owner_subquery, owner_subquery.c.project_id == ProjectV2.id)
-        .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_verified.is_(False))
-        .order_by(ProjectV2.name)
-    )
-
-    guest_project_info = res.all()
-
-    return [
-        dict(
-            project_id=project_id,
-            project_name=project_name,
-            guest_permissions=guest_permissions,
-            owner_email=owner_email,
-        )
-        for (
-            project_id,
-            project_name,
-            guest_permissions,
-            owner_email,
-        ) in guest_project_info
-    ]
-
-
-@router.get(
-    "/project/invitation/B/", response_model=list[ProjectShareInvitation]
-)
-async def get_pending_invitationsB(
-    user: UserOAuth = Depends(current_user_act_ver_prof),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareInvitation]:
-    """
-    See your current invitations.
-    """
-
-    res = await db.execute(
-        select(
-            ProjectV2.id,
-            ProjectV2.name,
-            LinkUserProjectV2.permissions,
-            (
-                select(UserOAuth.email)
-                .join(
-                    LinkUserProjectV2,
-                    UserOAuth.id == LinkUserProjectV2.user_id,
-                )
-                .where(LinkUserProjectV2.is_owner.is_(True))
-                .where(LinkUserProjectV2.project_id == ProjectV2.id)
-                .scalar_subquery()
-                .correlate(ProjectV2)
-            ),
-        )
-        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
         .order_by(ProjectV2.name)

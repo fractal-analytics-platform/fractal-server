@@ -1,7 +1,5 @@
 from fractal_server.app.db import AsyncSession
-from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models.security import UserOAuth
-from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import ProjectPermissions
 
 
@@ -111,7 +109,7 @@ async def test_project_sharing(
         assert res.json() == []
 
         # Get list of invitations
-        res = await client.get("/api/v2/project/invitation/A/")
+        res = await client.get("/api/v2/project/invitation/")
         assert res.status_code == 200
         assert res.json() == [
             dict(
@@ -197,7 +195,7 @@ async def test_project_sharing(
 
     async with MockCurrentUser(user_kwargs={"id": user3.id}):
         # Get list of invitations
-        res = await client.get("/api/v2/project/invitation/A/")
+        res = await client.get("/api/v2/project/invitation/")
         assert res.status_code == 200
         assert res.json() == [
             dict(
@@ -215,7 +213,7 @@ async def test_project_sharing(
         assert res.status_code == 204
 
         # Get list of invitations
-        res = await client.get("/api/v2/project/invitation/A/")
+        res = await client.get("/api/v2/project/invitation/")
         assert res.status_code == 200
         assert res.json() == []
 
@@ -376,94 +374,3 @@ async def test_project_sharing(
             res.json()["detail"]
             == f"You are the owner of project {project1_id}."
         )
-
-
-async def test_subqueries(
-    db: AsyncSession,
-    MockCurrentUser,
-    local_resource_profile_db,
-):
-    N = 200
-
-    resource, profile = local_resource_profile_db
-
-    # Create N users, each with one project
-    db.add_all(
-        [
-            UserOAuth(
-                id=i,
-                email=f"user{i}@example.org",
-                hashed_password="12345",
-                project_dir="/fake",
-                is_verified=True,
-                profile_id=profile.id,
-            )
-            for i in range(N)
-        ]
-    )
-    await db.flush()
-    db.add_all(
-        [
-            ProjectV2(id=i, name=f"project{i}", resource_id=resource.id)
-            for i in range(N)
-        ]
-    )
-    await db.flush()
-    db.add_all(
-        [
-            LinkUserProjectV2(
-                project_id=i,
-                user_id=i,
-                is_owner=True,
-                is_verified=True,
-                permissions=ProjectPermissions.EXECUTE,
-            )
-            for i in range(N)
-        ]
-    )
-    await db.commit()
-
-    # Invite every user to every project
-    db.add_all(
-        [
-            LinkUserProjectV2(
-                project_id=i,
-                user_id=j,
-                is_owner=False,
-                is_verified=False,
-                permissions=ProjectPermissions.READ,
-            )
-            for i in range(N)
-            for j in range(N)
-            if i != j
-        ]
-    )
-    await db.commit()
-
-    import time
-
-    from fractal_server.app.routes.api.v2.sharing import (
-        get_pending_invitationsA,
-    )
-    from fractal_server.app.routes.api.v2.sharing import (
-        get_pending_invitationsB,
-    )
-
-    timeA = 0.0
-    timeB = 0.0
-
-    for i in range(N):
-        async with MockCurrentUser(user_kwargs={"id": i}) as user:
-            start = time.perf_counter()
-            await get_pending_invitationsA(user=user, db=db)
-            stop = time.perf_counter()
-            timeA += stop - start
-
-            start = time.perf_counter()
-            await get_pending_invitationsB(user=user, db=db)
-            stop = time.perf_counter()
-            timeB += stop - start
-
-    print(f"Total users (N): {N}")
-    print(f"Time A / N: {timeA / N}")
-    print(f"Time B / N: {timeB / N}")
