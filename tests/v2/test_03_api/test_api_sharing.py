@@ -18,10 +18,10 @@ async def test_project_sharing(
         is_verified=True,
         profile_id=profile.id,
     )
-    user1 = UserOAuth(email="user1@example.org", **args)
-    user2 = UserOAuth(email="user2@example.org", **args)
-    user3 = UserOAuth(email="user3@example.org", **args)
-    user4 = UserOAuth(email="user4@example.org", **args)
+    user1 = UserOAuth(email="zzz@example.org", **args)
+    user2 = UserOAuth(email="yyy@example.org", **args)
+    user3 = UserOAuth(email="xxx@example.org", **args)
+    user4 = UserOAuth(email="www@example.org", **args)
     db.add_all([user1, user2, user3, user4])
     await db.commit()
     await db.refresh(user1)
@@ -31,7 +31,7 @@ async def test_project_sharing(
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # Create Project1
-        res = await client.post("/api/v2/project/", json=dict(name="Project1"))
+        res = await client.post("/api/v2/project/", json=dict(name="ProjectZ"))
         assert res.status_code == 201
         project1 = res.json()
         project1_id = project1["id"]
@@ -69,23 +69,26 @@ async def test_project_sharing(
             f"/api/v2/project/{project1_id}/link/",
         )
         assert res.status_code == 200
-        assert res.json() == [
-            dict(
-                guest_email=user2.email,
-                is_verified=False,
-                permissions=ProjectPermissions.READ,
-            ),
-            dict(
-                guest_email=user3.email,
-                is_verified=False,
-                permissions=ProjectPermissions.WRITE,
-            ),
-            dict(
-                guest_email=user4.email,
-                is_verified=False,
-                permissions=ProjectPermissions.EXECUTE,
-            ),
-        ]
+        assert res.json() == sorted(
+            [
+                dict(
+                    guest_email=user2.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.READ,
+                ),
+                dict(
+                    guest_email=user3.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.WRITE,
+                ),
+                dict(
+                    guest_email=user4.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.EXECUTE,
+                ),
+            ],
+            key=lambda item: item["guest_email"],
+        )
 
     async with MockCurrentUser(user_kwargs={"id": user2.id}):
         # Get list of projects
@@ -120,7 +123,7 @@ async def test_project_sharing(
         assert res.json()[0]["id"] == project1_id
 
         # Create Project2
-        res = await client.post("/api/v2/project/", json=dict(name="Project2"))
+        res = await client.post("/api/v2/project/", json=dict(name="ProjectY"))
         assert res.status_code == 201
         project2_id = res.json()["id"]
 
@@ -138,23 +141,26 @@ async def test_project_sharing(
             f"/api/v2/project/{project1_id}/link/",
         )
         assert res.status_code == 200
-        assert res.json() == [
-            dict(
-                guest_email=user2.email,
-                is_verified=True,
-                permissions=ProjectPermissions.READ,
-            ),
-            dict(
-                guest_email=user3.email,
-                is_verified=False,
-                permissions=ProjectPermissions.WRITE,
-            ),
-            dict(
-                guest_email=user4.email,
-                is_verified=False,
-                permissions=ProjectPermissions.EXECUTE,
-            ),
-        ]
+        assert res.json() == sorted(
+            [
+                dict(
+                    guest_email=user2.email,
+                    is_verified=True,
+                    permissions=ProjectPermissions.READ,
+                ),
+                dict(
+                    guest_email=user3.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.WRITE,
+                ),
+                dict(
+                    guest_email=user4.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.EXECUTE,
+                ),
+            ],
+            key=lambda item: item["guest_email"],
+        )
 
     async with MockCurrentUser(user_kwargs={"id": user3.id}):
         # Get list of invitations
@@ -186,18 +192,21 @@ async def test_project_sharing(
             f"/api/v2/project/{project1_id}/link/",
         )
         assert res.status_code == 200
-        assert res.json() == [
-            dict(
-                guest_email=user2.email,
-                is_verified=True,
-                permissions=ProjectPermissions.READ,
-            ),
-            dict(
-                guest_email=user4.email,
-                is_verified=False,
-                permissions=ProjectPermissions.EXECUTE,
-            ),
-        ]
+        assert res.json() == sorted(
+            [
+                dict(
+                    guest_email=user2.email,
+                    is_verified=True,
+                    permissions=ProjectPermissions.READ,
+                ),
+                dict(
+                    guest_email=user4.email,
+                    is_verified=False,
+                    permissions=ProjectPermissions.EXECUTE,
+                ),
+            ],
+            key=lambda item: item["guest_email"],
+        )
 
     async with MockCurrentUser(user_kwargs={"id": user2.id}):
         # Exit project
