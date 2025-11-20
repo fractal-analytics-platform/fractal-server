@@ -233,11 +233,14 @@ async def get_pending_invitations(
 @router.get(
     "/project/{project_id}/guest-link/", response_model=ProjectShareAccessInfo
 )
-async def get_project_link(
+async def get_guest_link(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectShareAccessInfo:
+    """
+    Returns information on your relationship with Project[`project_id`].
+    """
     owner_subquery = (
         select(
             LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
