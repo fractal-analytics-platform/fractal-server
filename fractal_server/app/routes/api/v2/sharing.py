@@ -29,7 +29,7 @@ async def raise_403_if_not_owner(
         select(LinkUserProjectV2)
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.user_id == user_id)
-        .where(LinkUserProjectV2.is_owner.is_(True))
+        .where(LinkUserProjectV2.is_owner)
     )
     link = res.scalars().one_or_none()
     if link is None:
@@ -114,16 +114,16 @@ async def get_project_guests(
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
         .where(LinkUserProjectV2.project_id == project_id)
-        .where(LinkUserProjectV2.is_owner.is_(False))
+        .where(not LinkUserProjectV2.is_owner)
     )
-    guests = res.all()
+    guest_tuples = res.all()
     return [
         dict(
-            guest_email=guest[0],
-            is_verified=guest[1],
-            permissions=guest[2],
+            guest_email=guest_email,
+            is_verified=is_verified,
+            permissions=permissions,
         )
-        for guest in guests
+        for guest_email, is_verified, permissions in guest_tuples
     ]
 
 
@@ -254,7 +254,7 @@ async def get_pending_invitations(
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_verified.is_(False))
+        .where(not LinkUserProjectV2.is_verified)
     )
 
     # FIXME: add some order by
@@ -269,7 +269,7 @@ async def get_pending_invitations(
             select(UserOAuth.email)
             .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
             .where(LinkUserProjectV2.project_id == _id)
-            .where(LinkUserProjectV2.is_owner.is_(True))
+            .where(LinkUserProjectV2.is_owner)
         )
         emails.append(res.scalar_one_or_none())
 
