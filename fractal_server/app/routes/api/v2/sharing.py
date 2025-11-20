@@ -29,7 +29,7 @@ async def raise_403_if_not_owner(
         select(LinkUserProjectV2)
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.user_id == user_id)
-        .where(LinkUserProjectV2.is_owner)
+        .where(LinkUserProjectV2.is_owner.is_(True))
     )
     link = res.scalars().one_or_none()
     if link is None:
@@ -44,7 +44,7 @@ async def get_pending_invitation_or_404(
     *, user_id: int, project_id: int, db: AsyncSession
 ) -> LinkUserProjectV2:
     link = await get_link_or_404(user_id=user_id, project_id=project_id, db=db)
-    if not link.is_verified:
+    if link.is_verified:
         raise HTTPException(  # FIXME coverage
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No pending invitation for user on this project.",
@@ -114,7 +114,7 @@ async def get_project_guests(
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
         .where(LinkUserProjectV2.project_id == project_id)
-        .where(not LinkUserProjectV2.is_owner)
+        .where(LinkUserProjectV2.is_owner.is_(False))
     )
     guest_tuples = res.all()
     return [
@@ -254,7 +254,7 @@ async def get_pending_invitations(
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .where(not LinkUserProjectV2.is_verified)
+        .where(LinkUserProjectV2.is_verified.is_(False))
     )
 
     # FIXME: add some order by
@@ -269,7 +269,7 @@ async def get_pending_invitations(
             select(UserOAuth.email)
             .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
             .where(LinkUserProjectV2.project_id == _id)
-            .where(LinkUserProjectV2.is_owner)
+            .where(LinkUserProjectV2.is_owner.is_(True))
         )
         emails.append(res.scalar_one_or_none())
 
@@ -309,7 +309,6 @@ async def delete_guest_link(
     """
     FIXME: mention the two ways to use
     """
-
     link = await get_link_or_404(user_id=user.id, project_id=project_id, db=db)
 
     if link.is_owner:
