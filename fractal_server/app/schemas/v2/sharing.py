@@ -27,13 +27,13 @@ class ProjectShareAccessInfo(BaseModel):
     owner_email: str
 
 
-class ProjectShareReadOwner(BaseModel):
+class ProjectShareGuest(BaseModel):
     guest_email: str
     is_verified: bool
     permissions: str
 
 
-class ProjectShareReadGuest(BaseModel):
+class ProjectShareInvitation(BaseModel):
     project_id: int
     project_name: str
     owner_email: str

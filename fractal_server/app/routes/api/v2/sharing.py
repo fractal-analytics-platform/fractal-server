@@ -29,8 +29,8 @@ from fractal_server.app.routes.api.v2._aux_functions_sharing import (
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import ProjectShareAccessInfo
 from fractal_server.app.schemas.v2 import ProjectShareCreate
-from fractal_server.app.schemas.v2 import ProjectShareReadGuest
-from fractal_server.app.schemas.v2 import ProjectShareReadOwner
+from fractal_server.app.schemas.v2 import ProjectShareGuest
+from fractal_server.app.schemas.v2 import ProjectShareInvitation
 from fractal_server.app.schemas.v2 import ProjectShareUpdatePermissions
 
 router = APIRouter()
@@ -40,13 +40,13 @@ router = APIRouter()
 
 
 @router.get(
-    "/project/{project_id}/link/", response_model=list[ProjectShareReadOwner]
+    "/project/{project_id}/link/", response_model=list[ProjectShareGuest]
 )
 async def get_project_guests(
     project_id: int,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareReadOwner]:
+) -> list[ProjectShareGuest]:
     """
     Get the list of all the guests of your project (verified or not).
     """
@@ -180,11 +180,11 @@ async def revoke_guest_access(
 # GUEST
 
 
-@router.get("/project/invitation/", response_model=list[ProjectShareReadGuest])
+@router.get("/project/invitation/", response_model=list[ProjectShareInvitation])
 async def get_pending_invitations(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareReadGuest]:
+) -> list[ProjectShareInvitation]:
     """
     See your current invitations.
     """
