@@ -94,6 +94,6 @@ class LinkUserProjectRead(BaseModel):
     project_id: int
     project_name: str
     # Permissions
-    is_verifed: bool
+    is_verified: bool
     is_owner: bool
     permissions: str
