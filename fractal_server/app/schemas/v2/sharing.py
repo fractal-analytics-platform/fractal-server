@@ -86,16 +86,14 @@ class ProjectInvitationRead(BaseModel):
     guest_permissions: str
 
 
-class ProjectShareReadAdmin(BaseModel):
+class LinkUserProjectRead(BaseModel):
     # Project info
     project_id: int
     project_name: str
-    # Owner info
-    owner_id: str
-    owner_email: str
     # Guest info
     guest_id: int
     guest_email: str
-    is_owner: bool
+    # Permissions
     is_verifed: bool
+    is_owner: bool
     permissions: str
