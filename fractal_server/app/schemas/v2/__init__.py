@@ -35,6 +35,7 @@ from .sharing import ProjectShareCreate  # noqa F401
 from .sharing import ProjectShareAccessInfo  # noqa F401
 from .sharing import ProjectShareInvitation  # noqa F401
 from .sharing import ProjectShareGuest  # noqa F401
+from .sharing import ProjectShareReadAdmin  # noqa F401
 from .sharing import ProjectShareUpdatePermissions  # noqa F401
 from .resource import ResourceCreate  # noqa F401
 from .resource import ResourceRead  # noqa F401

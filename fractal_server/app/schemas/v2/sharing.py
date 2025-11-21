@@ -42,3 +42,18 @@ class ProjectShareInvitation(BaseModel):
 
 class ProjectShareUpdatePermissions(BaseModel):
     permissions: ProjectPermissions = None
+
+
+class ProjectShareReadAdmin(BaseModel):
+    # Project info
+    project_id: int
+    project_name: str
+    # Owner info
+    owner_id: str
+    owner_email: str
+    # Guest info
+    guest_id: int
+    guest_email: str
+    is_owner: bool
+    is_verifed: bool
+    permissions: str
