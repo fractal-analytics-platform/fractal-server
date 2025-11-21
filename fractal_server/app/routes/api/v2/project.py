@@ -16,6 +16,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import ProjectUpdateV2
 from fractal_server.logger import reset_logger_handlers
@@ -30,6 +31,7 @@ router = APIRouter()
 
 @router.get("/project/", response_model=list[ProjectReadV2])
 async def get_list_project(
+    is_owner: bool = True,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectV2]:
@@ -40,6 +42,8 @@ async def get_list_project(
         select(ProjectV2)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner == is_owner)
+        .where(LinkUserProjectV2.is_verified.is_(True))
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -73,7 +77,13 @@ async def create_project(
     db.add(db_project)
     await db.flush()
 
-    link = LinkUserProjectV2(project_id=db_project.id, user_id=user.id)
+    link = LinkUserProjectV2(
+        project_id=db_project.id,
+        user_id=user.id,
+        is_owner=True,
+        is_verified=True,
+        permissions=ProjectPermissions.EXECUTE,
+    )
     db.add(link)
 
     await db.commit()
