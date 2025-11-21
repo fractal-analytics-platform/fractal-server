@@ -87,12 +87,12 @@ class ProjectInvitationRead(BaseModel):
 
 
 class LinkUserProjectRead(BaseModel):
+    # User info
+    user_id: int
+    user_email: str
     # Project info
     project_id: int
     project_name: str
-    # Guest info
-    guest_id: int
-    guest_email: str
     # Permissions
     is_verifed: bool
     is_owner: bool
