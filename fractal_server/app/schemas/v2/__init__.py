@@ -31,12 +31,12 @@ from .project import ProjectCreateV2  # noqa F401
 from .project import ProjectReadV2  # noqa F401
 from .project import ProjectUpdateV2  # noqa F401
 from .sharing import ProjectPermissions  # noqa F401
-from .sharing import ProjectShareCreate  # noqa F401
-from .sharing import ProjectShareAccessInfo  # noqa F401
-from .sharing import ProjectShareInvitation  # noqa F401
-from .sharing import ProjectShareGuest  # noqa F401
+from .sharing import ProjectGuestCreate  # noqa F401
+from .sharing import ProjectAccessRead  # noqa F401
+from .sharing import ProjectInvitationRead  # noqa F401
+from .sharing import ProjectGuestRead  # noqa F401
+from .sharing import ProjectGuestUpdate  # noqa F401
 from .sharing import ProjectShareReadAdmin  # noqa F401
-from .sharing import ProjectShareUpdatePermissions  # noqa F401
 from .resource import ResourceCreate  # noqa F401
 from .resource import ResourceRead  # noqa F401
 from .resource import ResourceType  # noqa F401

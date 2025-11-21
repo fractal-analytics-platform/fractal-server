@@ -38,14 +38,14 @@ async def test_project_sharing(
 
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == []
 
         # Check User1 access to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 200
         assert res.json() == dict(
@@ -56,49 +56,49 @@ async def test_project_sharing(
 
         # Invite User2
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email={user2.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user2.email}",
             json=dict(permissions=ProjectPermissions.READ),
         )
         assert res.status_code == 201
 
         # Invite User3
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email={user3.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user3.email}",
             json=dict(permissions=ProjectPermissions.WRITE),
         )
         assert res.status_code == 201
 
         # Invite User4
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user4.email}",
             json=dict(permissions=ProjectPermissions.EXECUTE),
         )
         assert res.status_code == 201
 
         # Get the same list as above
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == sorted(
             [
                 dict(
-                    guest_email=user2.email,
+                    email=user2.email,
                     is_verified=False,
                     permissions=ProjectPermissions.READ,
                 ),
                 dict(
-                    guest_email=user3.email,
+                    email=user3.email,
                     is_verified=False,
                     permissions=ProjectPermissions.WRITE,
                 ),
                 dict(
-                    guest_email=user4.email,
+                    email=user4.email,
                     is_verified=False,
                     permissions=ProjectPermissions.EXECUTE,
                 ),
             ],
-            key=lambda item: item["guest_email"],
+            key=lambda item: item["email"],
         )
 
     async with MockCurrentUser(user_kwargs={"id": user2.id}):
@@ -122,7 +122,7 @@ async def test_project_sharing(
 
         # Check User2 access to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 404
         assert res.json()["detail"] == (
@@ -131,7 +131,7 @@ async def test_project_sharing(
 
         # Accept invitation
         res = await client.post(
-            f"/api/v2/project/{project1_id}/guest-link/accept/",
+            f"/api/v2/project/{project1_id}/access/accept/",
         )
         assert res.status_code == 200
 
@@ -144,7 +144,7 @@ async def test_project_sharing(
 
         # Check User2 access to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 200
         assert res.json() == dict(
@@ -169,28 +169,28 @@ async def test_project_sharing(
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == sorted(
             [
                 dict(
-                    guest_email=user2.email,
+                    email=user2.email,
                     is_verified=True,
                     permissions=ProjectPermissions.READ,
                 ),
                 dict(
-                    guest_email=user3.email,
+                    email=user3.email,
                     is_verified=False,
                     permissions=ProjectPermissions.WRITE,
                 ),
                 dict(
-                    guest_email=user4.email,
+                    email=user4.email,
                     is_verified=False,
                     permissions=ProjectPermissions.EXECUTE,
                 ),
             ],
-            key=lambda item: item["guest_email"],
+            key=lambda item: item["email"],
         )
 
     async with MockCurrentUser(user_kwargs={"id": user3.id}):
@@ -208,7 +208,7 @@ async def test_project_sharing(
 
         # Reject invitation
         res = await client.delete(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 204
 
@@ -220,48 +220,48 @@ async def test_project_sharing(
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == sorted(
             [
                 dict(
-                    guest_email=user2.email,
+                    email=user2.email,
                     is_verified=True,
                     permissions=ProjectPermissions.READ,
                 ),
                 dict(
-                    guest_email=user4.email,
+                    email=user4.email,
                     is_verified=False,
                     permissions=ProjectPermissions.EXECUTE,
                 ),
             ],
-            key=lambda item: item["guest_email"],
+            key=lambda item: item["email"],
         )
 
     async with MockCurrentUser(user_kwargs={"id": user2.id}):
         # Exit project
         res = await client.delete(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 204
 
     async with MockCurrentUser(user_kwargs={"id": user4.id}):
         # Accept invitation
         res = await client.post(
-            f"/api/v2/project/{project1_id}/guest-link/accept/",
+            f"/api/v2/project/{project1_id}/access/accept/",
         )
         assert res.status_code == 200
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                guest_email=user4.email,
+                email=user4.email,
                 is_verified=True,
                 permissions=ProjectPermissions.EXECUTE,
             ),
@@ -269,19 +269,19 @@ async def test_project_sharing(
 
         # Change permissions of User4
         res = await client.patch(
-            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user4.email}",
             json=dict(permissions=ProjectPermissions.WRITE),
         )
         assert res.status_code == 200
 
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == [
             dict(
-                guest_email=user4.email,
+                email=user4.email,
                 is_verified=True,
                 permissions=ProjectPermissions.WRITE,
             ),
@@ -289,13 +289,13 @@ async def test_project_sharing(
 
         # Kick out User4
         res = await client.delete(
-            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user4.email}",
         )
         assert res.status_code == 204
 
         # Get list of all users linked to Project1
         res = await client.get(
-            f"/api/v2/project/{project1_id}/link/",
+            f"/api/v2/project/{project1_id}/guest/",
         )
         assert res.status_code == 200
         assert res.json() == []
@@ -305,14 +305,14 @@ async def test_project_sharing(
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # Not project owner
         res = await client.get(
-            f"/api/v2/project/{project2_id}/link/",
+            f"/api/v2/project/{project2_id}/guest/",
         )
         assert res.status_code == 403
         assert res.json()["detail"] == "Current user is not the project owner."
 
         # Not existing email
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email=foo@example.org",
+            f"/api/v2/project/{project1_id}/guest/?email=foo@example.org",
             json=dict(permissions=ProjectPermissions.READ),
         )
         assert res.status_code == 404
@@ -320,7 +320,7 @@ async def test_project_sharing(
 
         # Link already exists
         res = await client.post(
-            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user1.email}",
             json=dict(permissions=ProjectPermissions.READ),
         )
         assert res.status_code == 422
@@ -328,8 +328,8 @@ async def test_project_sharing(
 
         # Link already exists
         res = await client.patch(
-            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
-            json=dict(),
+            f"/api/v2/project/{project1_id}/guest/?email={user1.email}",
+            json=dict(permissions="rw"),
         )
         assert res.status_code == 422
         assert (
@@ -339,15 +339,15 @@ async def test_project_sharing(
 
         # Link not existing
         res = await client.patch(
-            f"/api/v2/project/{project1_id}/link/?email={user4.email}",
-            json=dict(),
+            f"/api/v2/project/{project1_id}/guest/?email={user4.email}",
+            json=dict(permissions="r"),
         )
         assert res.status_code == 404
         assert res.json()["detail"] == "User is not linked to project."
 
         # Revoke access to owner
         res = await client.delete(
-            f"/api/v2/project/{project1_id}/link/?email={user1.email}",
+            f"/api/v2/project/{project1_id}/guest/?email={user1.email}",
         )
         assert res.status_code == 422
         assert (
@@ -357,7 +357,7 @@ async def test_project_sharing(
 
         # No pending invitation
         res = await client.post(
-            f"/api/v2/project/{project1_id}/guest-link/accept/",
+            f"/api/v2/project/{project1_id}/access/accept/",
         )
         assert res.status_code == 404
         assert (
@@ -367,7 +367,7 @@ async def test_project_sharing(
 
         # Owner cannot unsubscribe
         res = await client.delete(
-            f"/api/v2/project/{project1_id}/guest-link/",
+            f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 422
         assert (

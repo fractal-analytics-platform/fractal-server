@@ -11,42 +11,31 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.api.v2._aux_functions_sharing import (
-    get_link_or_404,
-)
-from fractal_server.app.routes.api.v2._aux_functions_sharing import (
-    get_pending_invitation_or_404,
-)
-from fractal_server.app.routes.api.v2._aux_functions_sharing import (
-    get_user_id_from_email_or_404,
-)
-from fractal_server.app.routes.api.v2._aux_functions_sharing import (
-    raise_403_if_not_owner,
-)
-from fractal_server.app.routes.api.v2._aux_functions_sharing import (
-    raise_422_if_link_exists,
-)
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import ProjectShareAccessInfo
-from fractal_server.app.schemas.v2 import ProjectShareCreate
-from fractal_server.app.schemas.v2 import ProjectShareGuest
-from fractal_server.app.schemas.v2 import ProjectShareInvitation
-from fractal_server.app.schemas.v2 import ProjectShareUpdatePermissions
+from fractal_server.app.schemas.v2 import ProjectAccessRead
+from fractal_server.app.schemas.v2 import ProjectGuestCreate
+from fractal_server.app.schemas.v2 import ProjectGuestRead
+from fractal_server.app.schemas.v2 import ProjectGuestUpdate
+from fractal_server.app.schemas.v2 import ProjectInvitationRead
+
+from ._aux_functions_sharing import get_link_or_404
+from ._aux_functions_sharing import get_pending_invitation_or_404
+from ._aux_functions_sharing import get_user_id_from_email_or_404
+from ._aux_functions_sharing import raise_403_if_not_owner
+from ._aux_functions_sharing import raise_422_if_link_exists
 
 router = APIRouter()
 
 
-# OWNER
-
-
 @router.get(
-    "/project/{project_id}/link/", response_model=list[ProjectShareGuest]
+    "/project/{project_id}/guest/",
+    response_model=list[ProjectGuestRead],
 )
 async def get_project_guests(
     project_id: int,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareGuest]:
+) -> list[ProjectGuestRead]:
     """
     Get the list of all the guests of your project (verified or not).
     """
@@ -66,7 +55,7 @@ async def get_project_guests(
     guest_tuples = res.all()
     return [
         dict(
-            guest_email=guest_email,
+            email=guest_email,
             is_verified=is_verified,
             permissions=permissions,
         )
@@ -74,11 +63,11 @@ async def get_project_guests(
     ]
 
 
-@router.post("/project/{project_id}/link/", status_code=201)
-async def share_a_project(
+@router.post("/project/{project_id}/guest/", status_code=201)
+async def invite_guest(
     project_id: int,
     email: EmailStr,
-    project_invitation: ProjectShareCreate,
+    project_invitation: ProjectGuestCreate,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -109,11 +98,11 @@ async def share_a_project(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.patch("/project/{project_id}/link/", status_code=200)
-async def patch_guest_permissions(
+@router.patch("/project/{project_id}/guest/", status_code=200)
+async def patch_guest(
     project_id: int,
     email: EmailStr,
-    update: ProjectShareUpdatePermissions,
+    update: ProjectGuestUpdate,
     owner: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -144,7 +133,7 @@ async def patch_guest_permissions(
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router.delete("/project/{project_id}/link/", status_code=204)
+@router.delete("/project/{project_id}/guest/", status_code=204)
 async def revoke_guest_access(
     project_id: int,
     email: EmailStr,
@@ -177,14 +166,14 @@ async def revoke_guest_access(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# GUEST
-
-
-@router.get("/project/invitation/", response_model=list[ProjectShareInvitation])
+@router.get(
+    "/project/invitation/",
+    response_model=list[ProjectInvitationRead],
+)
 async def get_pending_invitations(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectShareInvitation]:
+) -> list[ProjectInvitationRead]:
     """
     See your current invitations.
     """
@@ -231,13 +220,14 @@ async def get_pending_invitations(
 
 
 @router.get(
-    "/project/{project_id}/guest-link/", response_model=ProjectShareAccessInfo
+    "/project/{project_id}/access/",
+    response_model=ProjectAccessRead,
 )
-async def get_guest_link(
+async def get_access_info(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectShareAccessInfo:
+) -> ProjectAccessRead:
     """
     Returns information on your relationship with Project[`project_id`].
     """
@@ -282,7 +272,7 @@ async def get_guest_link(
     )
 
 
-@router.post("/project/{project_id}/guest-link/accept/", status_code=200)
+@router.post("/project/{project_id}/access/accept/", status_code=200)
 async def accept_project_invitation(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
@@ -300,8 +290,8 @@ async def accept_project_invitation(
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router.delete("/project/{project_id}/guest-link/", status_code=204)
-async def delete_guest_link(
+@router.delete("/project/{project_id}/access/", status_code=204)
+async def leave_project(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
