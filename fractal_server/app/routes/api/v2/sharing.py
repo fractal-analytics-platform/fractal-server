@@ -1,5 +1,3 @@
-from typing import Literal
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -274,10 +272,9 @@ async def get_access_info(
     )
 
 
-@router.patch("/project/{project_id}/access/", status_code=200)
+@router.post("/project/{project_id}/access/accept/", status_code=200)
 async def accept_project_invitation(
     project_id: int,
-    is_verified: Literal[True],
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -287,7 +284,7 @@ async def accept_project_invitation(
     link = await get_pending_invitation_or_404(
         user_id=user.id, project_id=project_id, db=db
     )
-    link.is_verified = is_verified
+    link.is_verified = True
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
