@@ -6,8 +6,6 @@ from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import ProjectPermissions
 
-PREFIX = "/admin/v2"
-
 
 async def test_view_link_user_project(
     db: AsyncSession,
