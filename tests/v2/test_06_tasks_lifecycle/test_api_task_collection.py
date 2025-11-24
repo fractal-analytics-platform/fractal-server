@@ -214,11 +214,11 @@ async def test_task_collection_failure_due_to_existing_path(
     ) as user:
         path = (
             Path(resource.tasks_local_dir)
-            / f"{user.id}/testing-tasks-mock/0.1.3/"
+            / f"{user.id}/testing-tasks-mock/0.1.4/"
         ).as_posix()
         venv_path = (
             Path(resource.tasks_local_dir)
-            / f"{user.id}/testing-tasks-mock/0.1.3/venv/"
+            / f"{user.id}/testing-tasks-mock/0.1.4/venv/"
         ).as_posix()
 
         # Create fake task group
