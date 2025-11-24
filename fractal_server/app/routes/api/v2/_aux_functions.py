@@ -58,7 +58,7 @@ async def _get_project_check_access(
             If the project does not exist
     """
     project = await db.get(ProjectV2, project_id)
-    if not project:
+    if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
