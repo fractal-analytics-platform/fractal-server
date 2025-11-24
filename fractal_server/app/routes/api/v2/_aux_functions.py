@@ -69,20 +69,16 @@ async def _get_project_check_owner(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not allowed on project {project_id}",
         )
-    if not link_user_project.is_verified:
+    if (
+        not link_user_project.is_verified
+        or target_permissions not in link_user_project.permissions
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                "You must accept the invitation before accessing the project."
-            ),
-        )
-    if target_permissions not in link_user_project.permissions:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "You do not have the necessary permissions: "
-                f"required '{target_permissions}',  "
-                f"owned '{link_user_project.permissions}'."
+                "You are not authorized to perform this action. "
+                "If you think this is by mistake, "
+                "please contact the project owner."
             ),
         )
 
