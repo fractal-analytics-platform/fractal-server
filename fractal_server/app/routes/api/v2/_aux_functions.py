@@ -241,6 +241,7 @@ async def _check_project_exists(
         select(ProjectV2)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(ProjectV2.name == project_name)
+        .where(LinkUserProjectV2.user_id == user_id)
         .where(LinkUserProjectV2.is_owner.is_(True))
     )
     res = await db.execute(stm)
