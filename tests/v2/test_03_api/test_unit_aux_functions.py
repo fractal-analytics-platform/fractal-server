@@ -28,6 +28,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 
 async def test_404_functions(db):
@@ -52,13 +53,19 @@ async def test_get_project_check_owner(
 
         # Test success
         await _get_project_check_owner(
-            project_id=project.id, user_id=user.id, db=db
+            project_id=project.id,
+            user_id=user.id,
+            target_permissions=ProjectPermissions.EXECUTE,
+            db=db,
         )
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
             await _get_project_check_owner(
-                project_id=project.id + 1, user_id=user.id, db=db
+                project_id=project.id + 1,
+                user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
+                db=db,
             )
         assert err.value.status_code == 404
         assert err.value.detail == "Project not found"
@@ -66,7 +73,10 @@ async def test_get_project_check_owner(
         # Test fail 2
         with pytest.raises(HTTPException) as err:
             await _get_project_check_owner(
-                project_id=other_project.id, user_id=user.id, db=db
+                project_id=other_project.id,
+                user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
+                db=db,
             )
         assert err.value.status_code == 403
         assert err.value.detail == f"Not allowed on project {other_project.id}"
@@ -91,6 +101,7 @@ async def test_get_workflow_check_owner(
             project_id=project.id,
             workflow_id=workflow.id,
             user_id=user.id,
+            target_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         assert workflow.project is not None
@@ -101,6 +112,7 @@ async def test_get_workflow_check_owner(
                 project_id=project.id,
                 workflow_id=workflow.id + 1,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -112,6 +124,7 @@ async def test_get_workflow_check_owner(
                 project_id=project.id,
                 workflow_id=other_workflow.id,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -145,6 +158,7 @@ async def test_get_workflow_task_check_owner(
             workflow_id=workflow.id,
             workflow_task_id=wftask.id,
             user_id=user.id,
+            target_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         # Test fail 1
@@ -154,6 +168,7 @@ async def test_get_workflow_task_check_owner(
                 workflow_id=workflow.id,
                 workflow_task_id=wftask.id + other_wftask.id,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -166,6 +181,7 @@ async def test_get_workflow_task_check_owner(
                 workflow_id=workflow.id,
                 workflow_task_id=other_wftask.id,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -224,6 +240,7 @@ async def test_get_dataset_check_owner(
             project_id=project.id,
             dataset_id=dataset.id,
             user_id=user.id,
+            target_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         dataset = res["dataset"]
@@ -235,6 +252,7 @@ async def test_get_dataset_check_owner(
                 project_id=project.id,
                 dataset_id=dataset.id + 1,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -246,6 +264,7 @@ async def test_get_dataset_check_owner(
                 project_id=other_project.id,
                 dataset_id=dataset.id,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -288,7 +307,11 @@ async def test_get_job_check_owner(
 
         # Test success
         await _get_job_check_owner(
-            project_id=project.id, job_id=job.id, user_id=user.id, db=db
+            project_id=project.id,
+            job_id=job.id,
+            user_id=user.id,
+            target_permissions=ProjectPermissions.EXECUTE,
+            db=db,
         )
 
         # Test fail 1
@@ -297,6 +320,7 @@ async def test_get_job_check_owner(
                 project_id=project.id,
                 job_id=job.id + 1,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -308,6 +332,7 @@ async def test_get_job_check_owner(
                 project_id=other_project.id,
                 job_id=job.id,
                 user_id=user.id,
+                target_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404

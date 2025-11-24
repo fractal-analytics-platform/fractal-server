@@ -20,6 +20,7 @@ from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
@@ -78,7 +79,11 @@ async def get_workflow_jobs(
     Returns all the jobs related to a specific workflow
     """
     await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
     res = await db.execute(stm)
@@ -95,7 +100,11 @@ async def get_latest_job(
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
     await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     stm = (
         select(JobV2)
@@ -134,6 +143,7 @@ async def read_job(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -166,6 +176,7 @@ async def download_job_logs(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -194,7 +205,10 @@ async def get_job_list(
     Get job list for given project
     """
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
 
     stm = select(JobV2).where(JobV2.project_id == project.id)
@@ -229,6 +243,7 @@ async def stop_job(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     job = output["job"]

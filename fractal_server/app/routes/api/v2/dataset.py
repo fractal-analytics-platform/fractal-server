@@ -16,6 +16,7 @@ from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
 from fractal_server.app.schemas.v2.dataset import DatasetExportV2
 from fractal_server.app.schemas.v2.dataset import DatasetImportV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
 
@@ -41,7 +42,10 @@ async def create_dataset(
     Add new dataset to current project
     """
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
 
     if dataset.zarr_dir is None:
@@ -87,7 +91,10 @@ async def read_dataset_list(
     """
     # Access control
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     # Find datasets of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
@@ -117,6 +124,7 @@ async def read_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -143,6 +151,7 @@ async def update_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]
@@ -182,6 +191,7 @@ async def delete_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     dataset = output["dataset"]
@@ -225,6 +235,7 @@ async def export_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     await db.close()
@@ -253,6 +264,7 @@ async def import_dataset(
     await _get_project_check_owner(
         project_id=project_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 

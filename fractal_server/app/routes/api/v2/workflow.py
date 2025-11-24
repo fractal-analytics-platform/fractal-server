@@ -20,6 +20,7 @@ from fractal_server.app.schemas.v2 import WorkflowExportV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
 from fractal_server.app.schemas.v2 import WorkflowUpdateV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.tools import merge_type_filters
 
 from ._aux_functions import _check_workflow_exists
@@ -46,7 +47,10 @@ async def get_workflow_list(
     """
     # Access control
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     # Find workflows of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
@@ -72,7 +76,10 @@ async def create_workflow(
     Create a workflow, associate to a project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     await _check_workflow_exists(
         name=workflow.name, project_id=project_id, db=db
@@ -104,6 +111,7 @@ async def read_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -137,6 +145,7 @@ async def update_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -212,6 +221,7 @@ async def delete_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -256,6 +266,7 @@ async def export_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     wf_task_list = []
@@ -297,6 +308,7 @@ async def get_workflow_type_filters(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 

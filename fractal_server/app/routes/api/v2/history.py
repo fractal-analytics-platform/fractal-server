@@ -24,6 +24,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.app.schemas.v2 import ImageLogsRequest
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.status_tools import enrich_images_unsorted_async
 from fractal_server.images.tools import aggregate_attributes
@@ -190,6 +191,7 @@ async def get_history_run_list(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -283,6 +285,7 @@ async def get_history_run_units(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -342,6 +345,7 @@ async def get_history_images(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     res = await _verify_workflow_and_dataset_access(
@@ -349,6 +353,7 @@ async def get_history_images(
         workflow_id=wftask.workflow_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = res["dataset"]
@@ -423,6 +428,7 @@ async def get_image_log(
         dataset_id=request_data.dataset_id,
         workflowtask_id=request_data.workflowtask_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -480,6 +486,7 @@ async def get_history_unit_log(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 

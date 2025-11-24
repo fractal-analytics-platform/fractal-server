@@ -102,7 +102,10 @@ async def read_project(
     Return info on an existing project
     """
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     await db.close()
     return project
@@ -116,7 +119,10 @@ async def update_project(
     db: AsyncSession = Depends(get_async_db),
 ):
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
 
     # Check that there is no project with the same user and name
@@ -145,7 +151,10 @@ async def delete_project(
     """
 
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     logger = set_logger(__name__)
 
