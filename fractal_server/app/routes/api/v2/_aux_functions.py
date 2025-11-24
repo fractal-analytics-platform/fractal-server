@@ -52,7 +52,7 @@ async def _get_project_check_access(
     Raises:
         HTTPException(status_code=403_FORBIDDEN):
             - If the user is not a member of the project;
-            - If the user has not accepted the invitation yes;
+            - If the user has not accepted the invitation yet;
             - If the user has not the target permissions.
         HTTPException(status_code=404_NOT_FOUND):
             If the project does not exist
