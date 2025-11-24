@@ -126,7 +126,7 @@
 | fractal\_server/runner/executors/local/get\_local\_config.py                 |       14 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/runner/executors/local/runner.py                             |      126 |        1 |       24 |        3 |     97% |244->251, 277->260, 320 |
 | fractal\_server/runner/executors/slurm\_common/\_\_init\_\_.py               |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/runner/executors/slurm\_common/\_batching.py                 |       67 |       36 |       28 |        5 |     42% |50, 126-131, 133-137, 139-141, 146-193 |
+| fractal\_server/runner/executors/slurm\_common/\_batching.py                 |       67 |        1 |       28 |        1 |     98% |        44 |
 | fractal\_server/runner/executors/slurm\_common/\_job\_states.py              |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/executors/slurm\_common/base\_slurm\_runner.py        |      431 |        6 |      108 |        6 |     98% |200, 217, 251, 254, 484, 531->537, 852->859, 894, 963->970, 1033->1005 |
 | fractal\_server/runner/executors/slurm\_common/get\_slurm\_config.py         |       74 |        4 |       34 |        4 |     93% |47, 59->63, 85->89, 107-114 |
@@ -197,7 +197,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9764** |  **235** | **1770** |   **99** | **97%** |           |
+|                                                                    **TOTAL** | **9764** |  **200** | **1770** |   **95** | **97%** |           |
 
 
 ## Setup coverage badge
