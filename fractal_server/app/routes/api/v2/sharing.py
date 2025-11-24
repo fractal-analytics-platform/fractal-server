@@ -178,24 +178,24 @@ async def get_pending_invitations(
     See your current invitations.
     """
 
-    owner_subquery = (
-        select(
-            LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
-        )
-        .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
-        .where(LinkUserProjectV2.is_owner.is_(True))
-        .subquery()
-    )
-
     res = await db.execute(
         select(
             ProjectV2.id,
             ProjectV2.name,
             LinkUserProjectV2.permissions,
-            owner_subquery.c.owner_email,
+            (
+                select(UserOAuth.email)
+                .join(
+                    LinkUserProjectV2,
+                    UserOAuth.id == LinkUserProjectV2.user_id,
+                )
+                .where(LinkUserProjectV2.is_owner.is_(True))
+                .where(LinkUserProjectV2.project_id == ProjectV2.id)
+                .scalar_subquery()
+                .correlate(ProjectV2)
+            ),
         )
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
-        .join(owner_subquery, owner_subquery.c.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_verified.is_(False))
         .order_by(ProjectV2.name)
@@ -231,24 +231,22 @@ async def get_access_info(
     """
     Returns information on your relationship with Project[`project_id`].
     """
-    owner_subquery = (
-        select(
-            LinkUserProjectV2.project_id, UserOAuth.email.label("owner_email")
-        )
-        .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
-        .where(LinkUserProjectV2.is_owner.is_(True))
-        .subquery()
-    )
 
     res = await db.execute(
         select(
             LinkUserProjectV2.is_owner,
             LinkUserProjectV2.permissions,
-            owner_subquery.c.owner_email,
-        )
-        .join(
-            owner_subquery,
-            owner_subquery.c.project_id == LinkUserProjectV2.project_id,
+            (
+                select(UserOAuth.email)
+                .join(
+                    LinkUserProjectV2,
+                    UserOAuth.id == LinkUserProjectV2.user_id,
+                )
+                .where(LinkUserProjectV2.is_owner.is_(True))
+                .where(LinkUserProjectV2.project_id == ProjectV2.id)
+                .scalar_subquery()
+                .correlate(LinkUserProjectV2)
+            ),
         )
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.user_id == user.id)
