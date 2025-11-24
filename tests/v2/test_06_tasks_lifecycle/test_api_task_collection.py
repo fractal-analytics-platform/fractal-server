@@ -227,7 +227,7 @@ async def test_task_collection_failure_due_to_existing_path(
             path=path,
             venv_path=venv_path,
             pkg_name="testing-tasks-mock-FAKE",
-            version="0.1.3",
+            version="0.1.4",
             user_id=user.id,
             resource_id=resource.id,
         )
@@ -240,7 +240,7 @@ async def test_task_collection_failure_due_to_existing_path(
         # Collect again and fail due to another group having the same path set
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.3"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
         )
         assert res.status_code == 422
         assert "Other TaskGroups already have path" in res.json()["detail"]
@@ -306,7 +306,7 @@ async def test_contact_an_admin_message(
         task_group = TaskGroupV2(
             user_id=userB.id,
             pkg_name="testing-tasks-mock",
-            version="0.1.3",
+            version="0.1.4",
             origin="pypi",
             resource_id=resource.id,
         )
@@ -320,7 +320,7 @@ async def test_contact_an_admin_message(
             action=TaskGroupActivityActionV2.COLLECT,
             status=TaskGroupActivityStatusV2.PENDING,
             pkg_name="testing-tasks-mock",
-            version="0.1.3",
+            version="0.1.4",
         )
         db.add(task_group_activity_1)
         await db.commit()
@@ -328,7 +328,7 @@ async def test_contact_an_admin_message(
         # (case `len(states) == 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.3"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
         )
         assert res.status_code == 422
         assert (
@@ -343,7 +343,7 @@ async def test_contact_an_admin_message(
             action=TaskGroupActivityActionV2.COLLECT,
             status=TaskGroupActivityStatusV2.PENDING,
             pkg_name="testing-tasks-mock",
-            version="0.1.3",
+            version="0.1.4",
         )
         db.add(task_group_activity_2)
         await db.commit()
@@ -352,7 +352,7 @@ async def test_contact_an_admin_message(
         # (case `len(states) > 1`).
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.3"),
+            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
         )
         assert "TaskGroupActivityV2" in res.json()["detail"]
         assert "contact an admin" in res.json()["detail"]
