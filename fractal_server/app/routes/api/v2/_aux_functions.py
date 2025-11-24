@@ -65,7 +65,7 @@ async def _get_project_check_access(
 
     link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
     if (
-        not link_user_project
+        link_user_project is None
         or not link_user_project.is_verified
         or required_permissions not in link_user_project.permissions
     ):
