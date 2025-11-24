@@ -94,6 +94,7 @@ async def _get_workflow_check_owner(
     workflow_id: int,
     project_id: int,
     user_id: int,
+    target_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> WorkflowV2:
     """
@@ -118,7 +119,10 @@ async def _get_workflow_check_owner(
 
     # Access control for project
     await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+        project_id=project_id,
+        user_id=user_id,
+        target_permissions=target_permissions,
+        db=db,
     )
 
     res = await db.execute(
@@ -143,6 +147,7 @@ async def _get_workflow_task_check_owner(
     workflow_id: int,
     workflow_task_id: int,
     user_id: int,
+    target_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> tuple[WorkflowTaskV2, WorkflowV2]:
     """
@@ -171,6 +176,7 @@ async def _get_workflow_task_check_owner(
         workflow_id=workflow_id,
         project_id=project_id,
         user_id=user_id,
+        target_permissions=target_permissions,
         db=db,
     )
 
@@ -258,6 +264,7 @@ async def _get_dataset_check_owner(
     project_id: int,
     dataset_id: int,
     user_id: int,
+    target_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["dataset", "project"], DatasetV2 | ProjectV2]:
     """
@@ -282,7 +289,10 @@ async def _get_dataset_check_owner(
     """
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+        project_id=project_id,
+        user_id=user_id,
+        target_permissions=target_permissions,
+        db=db,
     )
 
     res = await db.execute(
@@ -306,6 +316,7 @@ async def _get_job_check_owner(
     project_id: int,
     job_id: int,
     user_id: int,
+    target_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["job", "project"], JobV2 | ProjectV2]:
     """
@@ -332,6 +343,7 @@ async def _get_job_check_owner(
     project = await _get_project_check_owner(
         project_id=project_id,
         user_id=user_id,
+        target_permissions=target_permissions,
         db=db,
     )
 
