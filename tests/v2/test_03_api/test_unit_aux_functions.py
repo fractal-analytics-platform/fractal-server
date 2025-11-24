@@ -81,7 +81,9 @@ async def test_get_project_check_access(
                 db=db,
             )
         assert err.value.status_code == 403
-        assert err.value.detail == f"Not allowed on project {other_project.id}"
+        assert (
+            "You are not authorized to perform this action." in err.value.detail
+        )
 
 
 async def test_get_workflow_check_access(
