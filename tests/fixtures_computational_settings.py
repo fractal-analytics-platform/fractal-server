@@ -112,6 +112,7 @@ def slurm_sudo_resource_profile_objects(
                     "3.11",
                     "3.12",
                     "3.13",
+                    "3.14",
                 )
             },
         },
@@ -160,6 +161,7 @@ def slurm_ssh_resource_profile_objects(
                     "3.11",
                     "3.12",
                     "3.13",
+                    "3.14",
                 )
             },
         },
@@ -209,6 +211,7 @@ def slurm_ssh_resource_profile_fake_objects(
                     "3.11",
                     "3.12",
                     "3.13",
+                    "3.14",
                 )
             },
         },

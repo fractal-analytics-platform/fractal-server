@@ -78,7 +78,7 @@ def test_template_2(
     replacements = [
         ("__PACKAGE_ENV_DIR__", venv_path.as_posix()),
         ("__INSTALL_STRING__", install_string.as_posix()),
-        ("__PINNED_PACKAGE_LIST_PRE__", "pydantic==2.8.2"),
+        ("__PINNED_PACKAGE_LIST_PRE__", "pydantic==2.12.0"),
         ("__PINNED_PACKAGE_LIST_POST__", "devtools==0.12.2"),
         ("__FRACTAL_PIP_CACHE_DIR_ARG__", resource.pip_cache_dir_arg),
     ]
@@ -90,7 +90,7 @@ def test_template_2(
     )
     stdout = execute_command_sync(command=f"bash {script_path.as_posix()}")
     debug(stdout)
-    assert "pydantic-2.8.2" in stdout
+    assert "pydantic-2.12.0" in stdout
     assert "Successfully installed fractal-tasks-mock-0.0.1" in stdout
     assert "devtools-0.12.2" in stdout
 

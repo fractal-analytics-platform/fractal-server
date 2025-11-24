@@ -6,6 +6,8 @@
     * Reduce API logging level for some endpoints (\#3010).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
+* Dependencies:
+    * Support Python 3.14 (\#3015).
 
 # 2.17.2
 
