@@ -54,7 +54,7 @@ async def get_user_jobs(
             LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
         )
         .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_owner._is(True))
+        .where(LinkUserProjectV2.is_owner.is_(True))
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()
