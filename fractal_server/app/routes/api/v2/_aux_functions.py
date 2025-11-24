@@ -64,13 +64,9 @@ async def _get_project_check_access(
         )
 
     link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
-        )
     if (
-        not link_user_project.is_verified
+        not link_user_project
+        or not link_user_project.is_verified
         or required_permissions not in link_user_project.permissions
     ):
         raise HTTPException(
