@@ -13,9 +13,9 @@ from fractal_server.app.schemas.v2.status_legacy import LegacyStatusReadV2
 from fractal_server.app.schemas.v2.status_legacy import WorkflowTaskStatusTypeV2
 from fractal_server.logger import set_logger
 
-from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_dataset_check_access
 from ._aux_functions import _get_submitted_jobs_statement
-from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_check_access
 
 router = APIRouter()
 
@@ -43,7 +43,7 @@ async def get_workflowtask_status(
     order). See fractal-server GitHub issues: 793, 1083.
     """
     # Get the dataset DB entry
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -53,7 +53,7 @@ async def get_workflowtask_status(
     dataset = output["dataset"]
 
     # Get the workflow DB entry
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,

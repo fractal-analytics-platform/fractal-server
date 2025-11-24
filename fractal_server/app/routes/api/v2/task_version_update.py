@@ -23,8 +23,8 @@ from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _get_workflow_check_access
+from ._aux_functions import _get_workflow_task_check_access
 from ._aux_functions_task_version_update import get_new_workflow_task_meta
 from ._aux_functions_tasks import _check_type_filters_compatibility
 from ._aux_functions_tasks import _get_task_group_or_404
@@ -80,7 +80,7 @@ async def get_workflow_version_update_candidates(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[list[TaskVersionRead]]:
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -184,7 +184,7 @@ async def replace_workflowtask(
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskReadV2:
     # Get objects from database
-    workflow_task, workflow = await _get_workflow_task_check_owner(
+    workflow_task, workflow = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         workflow_task_id=workflow_task_id,

@@ -32,13 +32,13 @@ from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.logger import set_logger
 
-from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_dataset_check_access
 from ._aux_functions import _get_submitted_job_or_none
-from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_check_access
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
-from ._aux_functions_history import get_wftask_check_owner
+from ._aux_functions_history import get_wftask_check_access
 from ._aux_functions_history import read_log_file
 from .images import ImagePage
 from .images import ImageQuery
@@ -75,14 +75,14 @@ async def get_workflow_tasks_statuses(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.READ,
         db=db,
     )
-    await _get_dataset_check_owner(
+    await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -188,7 +188,7 @@ async def get_history_run_list(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[HistoryRunReadAggregated]:
     # Access control
-    await get_wftask_check_owner(
+    await get_wftask_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
@@ -282,7 +282,7 @@ async def get_history_run_units(
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[HistoryUnitRead]:
     # Access control
-    await get_wftask_check_owner(
+    await get_wftask_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
@@ -342,7 +342,7 @@ async def get_history_images(
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> ImagePage:
     # Access control and object retrieval
-    wftask = await get_wftask_check_owner(
+    wftask = await get_wftask_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
@@ -425,7 +425,7 @@ async def get_image_log(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
-    wftask = await get_wftask_check_owner(
+    wftask = await get_wftask_check_access(
         project_id=project_id,
         dataset_id=request_data.dataset_id,
         workflowtask_id=request_data.workflowtask_id,
@@ -483,7 +483,7 @@ async def get_history_unit_log(
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
-    wftask = await get_wftask_check_owner(
+    wftask = await get_wftask_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
@@ -539,7 +539,7 @@ async def get_dataset_history(
     timestamp.
     """
     # Access control
-    await _get_dataset_check_owner(
+    await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,

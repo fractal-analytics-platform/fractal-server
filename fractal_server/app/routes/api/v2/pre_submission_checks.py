@@ -18,8 +18,8 @@ from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.types import AttributeFilters
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _get_dataset_check_access
+from ._aux_functions import _get_workflow_task_check_access
 from .images import ImageQuery
 
 router = APIRouter()
@@ -38,7 +38,7 @@ async def verify_unique_types(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     # Get dataset
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -102,7 +102,7 @@ async def check_non_processed_images(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
-    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+    db_workflow_task, db_workflow = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_task_id=workflowtask_id,
         workflow_id=workflow_id,
@@ -127,7 +127,7 @@ async def check_non_processed_images(
         # Skip check if previous task is converter
         return JSONResponse(status_code=200, content=[])
 
-    res = await _get_dataset_check_owner(
+    res = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,

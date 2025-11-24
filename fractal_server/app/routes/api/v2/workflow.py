@@ -24,9 +24,9 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.tools import merge_type_filters
 
 from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_submitted_jobs_statement
-from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_check_access
 from ._aux_functions import _workflow_has_submitted_job
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 
@@ -46,7 +46,7 @@ async def get_workflow_list(
     Get workflow list for given project
     """
     # Access control
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.READ,
@@ -75,7 +75,7 @@ async def create_workflow(
     """
     Create a workflow, associate to a project
     """
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.WRITE,
@@ -107,7 +107,7 @@ async def read_workflow(
     Get info on an existing workflow
     """
 
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -141,7 +141,7 @@ async def update_workflow(
     """
     Edit a workflow
     """
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -217,7 +217,7 @@ async def delete_workflow(
     Delete a workflow
     """
 
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -262,7 +262,7 @@ async def export_workflow(
     """
     Export an existing workflow, after stripping all IDs
     """
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -304,7 +304,7 @@ async def get_workflow_type_filters(
     Get info on type/type-filters flow for a workflow.
     """
 
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,

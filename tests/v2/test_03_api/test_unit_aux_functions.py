@@ -5,22 +5,24 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _check_workflow_exists,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_dataset_check_owner,
+    _get_dataset_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
-from fractal_server.app.routes.api.v2._aux_functions import _get_job_check_owner
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_project_check_owner,
+    _get_job_check_access,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_project_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_submitted_jobs_statement,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_workflow_check_owner,
+    _get_workflow_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_workflow_task_check_owner,
+    _get_workflow_task_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
@@ -40,7 +42,7 @@ async def test_404_functions(db):
         await _get_dataset_or_404(dataset_id=9999, db=db)
 
 
-async def test_get_project_check_owner(
+async def test_get_project_check_access(
     MockCurrentUser,
     project_factory_v2,
     db,
@@ -52,7 +54,7 @@ async def test_get_project_check_owner(
         project = await project_factory_v2(user)
 
         # Test success
-        await _get_project_check_owner(
+        await _get_project_check_access(
             project_id=project.id,
             user_id=user.id,
             target_permissions=ProjectPermissions.EXECUTE,
@@ -61,7 +63,7 @@ async def test_get_project_check_owner(
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_project_check_owner(
+            await _get_project_check_access(
                 project_id=project.id + 1,
                 user_id=user.id,
                 target_permissions=ProjectPermissions.EXECUTE,
@@ -72,7 +74,7 @@ async def test_get_project_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_project_check_owner(
+            await _get_project_check_access(
                 project_id=other_project.id,
                 user_id=user.id,
                 target_permissions=ProjectPermissions.EXECUTE,
@@ -82,7 +84,7 @@ async def test_get_project_check_owner(
         assert err.value.detail == f"Not allowed on project {other_project.id}"
 
 
-async def test_get_workflow_check_owner(
+async def test_get_workflow_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -97,7 +99,7 @@ async def test_get_workflow_check_owner(
         workflow = await workflow_factory_v2(project_id=project.id)
 
         # Test success
-        await _get_workflow_check_owner(
+        await _get_workflow_check_access(
             project_id=project.id,
             workflow_id=workflow.id,
             user_id=user.id,
@@ -108,7 +110,7 @@ async def test_get_workflow_check_owner(
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_check_owner(
+            await _get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id + 1,
                 user_id=user.id,
@@ -120,7 +122,7 @@ async def test_get_workflow_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_check_owner(
+            await _get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=other_workflow.id,
                 user_id=user.id,
@@ -131,7 +133,7 @@ async def test_get_workflow_check_owner(
         assert err.value.detail == "Workflow not found"
 
 
-async def test_get_workflow_task_check_owner(
+async def test_get_workflow_task_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -153,7 +155,7 @@ async def test_get_workflow_task_check_owner(
         )
 
         # Test success
-        await _get_workflow_task_check_owner(
+        await _get_workflow_task_check_access(
             project_id=project.id,
             workflow_id=workflow.id,
             workflow_task_id=wftask.id,
@@ -163,7 +165,7 @@ async def test_get_workflow_task_check_owner(
         )
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_task_check_owner(
+            await _get_workflow_task_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id,
                 workflow_task_id=wftask.id + other_wftask.id,
@@ -176,7 +178,7 @@ async def test_get_workflow_task_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_task_check_owner(
+            await _get_workflow_task_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id,
                 workflow_task_id=other_wftask.id,
@@ -224,7 +226,7 @@ async def test_check_workflow_exists(
         )
 
 
-async def test_get_dataset_check_owner(
+async def test_get_dataset_check_access(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
@@ -236,7 +238,7 @@ async def test_get_dataset_check_owner(
         dataset = await dataset_factory_v2(project_id=project.id)
 
         # Test success
-        res = await _get_dataset_check_owner(
+        res = await _get_dataset_check_access(
             project_id=project.id,
             dataset_id=dataset.id,
             user_id=user.id,
@@ -248,7 +250,7 @@ async def test_get_dataset_check_owner(
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_dataset_check_owner(
+            await _get_dataset_check_access(
                 project_id=project.id,
                 dataset_id=dataset.id + 1,
                 user_id=user.id,
@@ -260,7 +262,7 @@ async def test_get_dataset_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_dataset_check_owner(
+            await _get_dataset_check_access(
                 project_id=other_project.id,
                 dataset_id=dataset.id,
                 user_id=user.id,
@@ -271,7 +273,7 @@ async def test_get_dataset_check_owner(
         assert err.value.detail == "Dataset not found"
 
 
-async def test_get_job_check_owner(
+async def test_get_job_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -306,7 +308,7 @@ async def test_get_job_check_owner(
         )
 
         # Test success
-        await _get_job_check_owner(
+        await _get_job_check_access(
             project_id=project.id,
             job_id=job.id,
             user_id=user.id,
@@ -316,7 +318,7 @@ async def test_get_job_check_owner(
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_job_check_owner(
+            await _get_job_check_access(
                 project_id=project.id,
                 job_id=job.id + 1,
                 user_id=user.id,
@@ -328,7 +330,7 @@ async def test_get_job_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_job_check_owner(
+            await _get_job_check_access(
                 project_id=other_project.id,
                 job_id=job.id,
                 user_id=user.id,

@@ -36,8 +36,8 @@ from fractal_server.runner.set_start_and_last_task_index import (
 from fractal_server.runner.v2.submit_workflow import submit_workflow
 from fractal_server.syringe import Inject
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_dataset_check_access
+from ._aux_functions import _get_workflow_check_access
 from ._aux_functions import clean_app_job_list_v2
 from ._aux_functions_tasks import _check_type_filters_compatibility
 
@@ -73,7 +73,7 @@ async def apply_workflow(
         )
         request.app.state.jobsV2 = new_jobs_list
 
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -94,7 +94,7 @@ async def apply_workflow(
             detail="Project resource does not match with user's resource",
         )
 
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,

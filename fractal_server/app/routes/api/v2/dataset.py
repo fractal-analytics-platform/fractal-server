@@ -20,8 +20,8 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_dataset_check_access
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
@@ -41,7 +41,7 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.WRITE,
@@ -90,7 +90,7 @@ async def read_dataset_list(
     Get dataset list for given project
     """
     # Access control
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.READ,
@@ -120,7 +120,7 @@ async def read_dataset(
     """
     Get info on a dataset associated to the current project
     """
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -147,7 +147,7 @@ async def update_dataset(
     Edit a dataset associated to the current project
     """
 
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -187,7 +187,7 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -231,7 +231,7 @@ async def export_dataset(
     """
     Export an existing dataset
     """
-    dict_dataset_project = await _get_dataset_check_owner(
+    dict_dataset_project = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
@@ -261,7 +261,7 @@ async def import_dataset(
     """
 
     # Preliminary checks
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.WRITE,

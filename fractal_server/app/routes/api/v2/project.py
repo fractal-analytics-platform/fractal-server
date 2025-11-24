@@ -23,7 +23,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
@@ -101,7 +101,7 @@ async def read_project(
     """
     Return info on an existing project
     """
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.READ,
@@ -118,7 +118,7 @@ async def update_project(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.WRITE,
@@ -150,7 +150,7 @@ async def delete_project(
     Delete project
     """
 
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
         target_permissions=ProjectPermissions.EXECUTE,

@@ -13,7 +13,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_project_check_owner,
+    _get_project_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -133,7 +133,7 @@ async def _verify_workflow_and_dataset_access(
         user_id:
         db:
     """
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
         target_permissions=target_permissions,
@@ -161,7 +161,7 @@ async def _verify_workflow_and_dataset_access(
     return dict(dataset=dataset, workflow=workflow)
 
 
-async def get_wftask_check_owner(
+async def get_wftask_check_access(
     *,
     project_id: int,
     dataset_id: int,

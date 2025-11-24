@@ -30,7 +30,7 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
-async def _get_project_check_owner(
+async def _get_project_check_access(
     *,
     project_id: int,
     user_id: int,
@@ -85,7 +85,7 @@ async def _get_project_check_owner(
     return project
 
 
-async def _get_workflow_check_owner(
+async def _get_workflow_check_access(
     *,
     workflow_id: int,
     project_id: int,
@@ -114,7 +114,7 @@ async def _get_workflow_check_owner(
     """
 
     # Access control for project
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
         target_permissions=target_permissions,
@@ -137,7 +137,7 @@ async def _get_workflow_check_owner(
     return workflow
 
 
-async def _get_workflow_task_check_owner(
+async def _get_workflow_task_check_access(
     *,
     project_id: int,
     workflow_id: int,
@@ -168,7 +168,7 @@ async def _get_workflow_task_check_owner(
     """
 
     # Access control for workflow
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         workflow_id=workflow_id,
         project_id=project_id,
         user_id=user_id,
@@ -255,7 +255,7 @@ async def _check_project_exists(
         )
 
 
-async def _get_dataset_check_owner(
+async def _get_dataset_check_access(
     *,
     project_id: int,
     dataset_id: int,
@@ -284,7 +284,7 @@ async def _get_dataset_check_owner(
             If the user is not a member of the project
     """
     # Access control for project
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
         target_permissions=target_permissions,
@@ -307,7 +307,7 @@ async def _get_dataset_check_owner(
     return dict(dataset=dataset, project=project)
 
 
-async def _get_job_check_owner(
+async def _get_job_check_access(
     *,
     project_id: int,
     job_id: int,
@@ -336,7 +336,7 @@ async def _get_job_check_owner(
             If the user is not a member of the project
     """
     # Access control for project
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
         target_permissions=target_permissions,
