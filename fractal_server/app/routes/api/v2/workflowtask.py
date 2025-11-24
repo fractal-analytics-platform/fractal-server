@@ -47,7 +47,7 @@ async def create_workflowtask(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -114,7 +114,7 @@ async def read_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     return workflow_task
@@ -141,7 +141,7 @@ async def update_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     if workflow_task_update.type_filters is not None:
@@ -227,7 +227,7 @@ async def delete_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 

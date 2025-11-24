@@ -49,7 +49,7 @@ async def get_workflow_list(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     # Find workflows of the current project. Note: this select/where approach
@@ -78,7 +78,7 @@ async def create_workflow(
     await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     await _check_workflow_exists(
@@ -111,7 +111,7 @@ async def read_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -145,7 +145,7 @@ async def update_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -221,7 +221,7 @@ async def delete_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -266,7 +266,7 @@ async def export_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     wf_task_list = []
@@ -308,7 +308,7 @@ async def get_workflow_type_filters(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 

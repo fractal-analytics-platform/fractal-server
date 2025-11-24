@@ -42,7 +42,7 @@ async def verify_unique_types(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -107,7 +107,7 @@ async def check_non_processed_images(
         workflow_task_id=workflowtask_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -131,7 +131,7 @@ async def check_non_processed_images(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = res["dataset"]

@@ -104,7 +104,7 @@ async def read_project(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     await db.close()
@@ -121,7 +121,7 @@ async def update_project(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -153,7 +153,7 @@ async def delete_project(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.EXECUTE,
+        required_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     link_user_project = await db.get(LinkUserProjectV2, (project_id, user.id))

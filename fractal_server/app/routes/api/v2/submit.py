@@ -77,7 +77,7 @@ async def apply_workflow(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.EXECUTE,
+        required_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     project = output["project"]
@@ -98,7 +98,7 @@ async def apply_workflow(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.EXECUTE,
+        required_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     num_tasks = len(workflow.task_list)

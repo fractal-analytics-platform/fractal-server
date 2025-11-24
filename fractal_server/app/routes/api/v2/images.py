@@ -69,7 +69,7 @@ async def post_new_image(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     dataset = output["dataset"]
@@ -128,7 +128,7 @@ async def query_dataset_images(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -200,7 +200,7 @@ async def delete_dataset_images(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     dataset = output["dataset"]
@@ -248,7 +248,7 @@ async def patch_dataset_image(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]

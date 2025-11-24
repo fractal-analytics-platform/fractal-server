@@ -82,7 +82,7 @@ async def get_workflow_jobs(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
@@ -103,7 +103,7 @@ async def get_latest_job(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     stm = (
@@ -143,7 +143,7 @@ async def read_job(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -176,7 +176,7 @@ async def download_job_logs(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -207,7 +207,7 @@ async def get_job_list(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -243,7 +243,7 @@ async def stop_job(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.EXECUTE,
+        required_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     job = output["job"]

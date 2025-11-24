@@ -44,7 +44,7 @@ async def create_dataset(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -93,7 +93,7 @@ async def read_dataset_list(
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     # Find datasets of the current project. Note: this select/where approach
@@ -124,7 +124,7 @@ async def read_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -151,7 +151,7 @@ async def update_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]
@@ -191,7 +191,7 @@ async def delete_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     dataset = output["dataset"]
@@ -235,7 +235,7 @@ async def export_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     await db.close()
@@ -264,7 +264,7 @@ async def import_dataset(
     await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 

@@ -47,7 +47,7 @@ async def get_workflowtask_status(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -57,7 +57,7 @@ async def get_workflowtask_status(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 

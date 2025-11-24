@@ -57,7 +57,7 @@ async def test_get_project_check_access(
         await _get_project_check_access(
             project_id=project.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
 
@@ -66,7 +66,7 @@ async def test_get_project_check_access(
             await _get_project_check_access(
                 project_id=project.id + 1,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -77,7 +77,7 @@ async def test_get_project_check_access(
             await _get_project_check_access(
                 project_id=other_project.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 403
@@ -103,7 +103,7 @@ async def test_get_workflow_check_access(
             project_id=project.id,
             workflow_id=workflow.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         assert workflow.project is not None
@@ -114,7 +114,7 @@ async def test_get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id + 1,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -126,7 +126,7 @@ async def test_get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=other_workflow.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -160,7 +160,7 @@ async def test_get_workflow_task_check_access(
             workflow_id=workflow.id,
             workflow_task_id=wftask.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         # Test fail 1
@@ -170,7 +170,7 @@ async def test_get_workflow_task_check_access(
                 workflow_id=workflow.id,
                 workflow_task_id=wftask.id + other_wftask.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -183,7 +183,7 @@ async def test_get_workflow_task_check_access(
                 workflow_id=workflow.id,
                 workflow_task_id=other_wftask.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -242,7 +242,7 @@ async def test_get_dataset_check_access(
             project_id=project.id,
             dataset_id=dataset.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         dataset = res["dataset"]
@@ -254,7 +254,7 @@ async def test_get_dataset_check_access(
                 project_id=project.id,
                 dataset_id=dataset.id + 1,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -266,7 +266,7 @@ async def test_get_dataset_check_access(
                 project_id=other_project.id,
                 dataset_id=dataset.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -312,7 +312,7 @@ async def test_get_job_check_access(
             project_id=project.id,
             job_id=job.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
 
@@ -322,7 +322,7 @@ async def test_get_job_check_access(
                 project_id=project.id,
                 job_id=job.id + 1,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -334,7 +334,7 @@ async def test_get_job_check_access(
                 project_id=other_project.id,
                 job_id=job.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404

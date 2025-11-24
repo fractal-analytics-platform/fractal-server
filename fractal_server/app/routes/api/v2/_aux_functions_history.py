@@ -120,7 +120,7 @@ async def _verify_workflow_and_dataset_access(
     workflow_id: int,
     dataset_id: int,
     user_id: int,
-    target_permissions: ProjectPermissions,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["dataset", "workflow"], DatasetV2 | WorkflowV2]:
     """
@@ -136,7 +136,7 @@ async def _verify_workflow_and_dataset_access(
     await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
-        target_permissions=target_permissions,
+        required_permissions=required_permissions,
         db=db,
     )
     workflow = await _get_workflow_or_404(
@@ -167,7 +167,7 @@ async def get_wftask_check_access(
     dataset_id: int,
     workflowtask_id: int,
     user_id: int,
-    target_permissions: ProjectPermissions,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -188,7 +188,7 @@ async def get_wftask_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         workflow_id=wftask.workflow_id,
-        target_permissions=target_permissions,
+        required_permissions=required_permissions,
         user_id=user_id,
         db=db,
     )

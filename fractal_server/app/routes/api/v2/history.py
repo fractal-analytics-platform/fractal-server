@@ -79,14 +79,14 @@ async def get_workflow_tasks_statuses(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -193,7 +193,7 @@ async def get_history_run_list(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -287,7 +287,7 @@ async def get_history_run_units(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -347,7 +347,7 @@ async def get_history_images(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     res = await _verify_workflow_and_dataset_access(
@@ -355,7 +355,7 @@ async def get_history_images(
         workflow_id=wftask.workflow_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = res["dataset"]
@@ -430,7 +430,7 @@ async def get_image_log(
         dataset_id=request_data.dataset_id,
         workflowtask_id=request_data.workflowtask_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -488,7 +488,7 @@ async def get_history_unit_log(
         dataset_id=dataset_id,
         workflowtask_id=workflowtask_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -543,7 +543,7 @@ async def get_dataset_history(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.READ,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
 

@@ -110,7 +110,7 @@ async def test_verify_workflow_and_dataset_access(
             workflow_id=wf1.id,
             dataset_id=ds1.id,
             user_id=user.id,
-            target_permissions=ProjectPermissions.EXECUTE,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         assert res["dataset"].id == ds1.id
@@ -126,7 +126,7 @@ async def test_verify_workflow_and_dataset_access(
                 workflow_id=wf2.id,
                 dataset_id=ds1.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
 
@@ -136,6 +136,6 @@ async def test_verify_workflow_and_dataset_access(
                 workflow_id=wf1.id,
                 dataset_id=ds2.id,
                 user_id=user.id,
-                target_permissions=ProjectPermissions.EXECUTE,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )

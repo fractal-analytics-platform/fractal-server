@@ -226,7 +226,7 @@ async def import_workflow(
     await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     await _check_workflow_exists(
