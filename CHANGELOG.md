@@ -4,6 +4,8 @@
 
 * API:
     * Reduce API logging level for some endpoints (\#3010).
+* Testing:
+    * Expand SLURM-batching-heuristics test (\#3011).
 
 # 2.17.2
 
