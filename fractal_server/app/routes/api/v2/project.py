@@ -153,9 +153,15 @@ async def delete_project(
     project = await _get_project_check_owner(
         project_id=project_id,
         user_id=user.id,
-        target_permissions=ProjectPermissions.WRITE,
+        target_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
+    link_user_project = await db.get(LinkUserProjectV2, (project_id.user.id))
+    if not link_user_project.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the owner can delete a Project.",
+        )
     logger = set_logger(__name__)
 
     # Fail if there exist jobs that are submitted and in relation with the
