@@ -24,7 +24,7 @@ logger = set_logger(__name__)
 
 class SlurmSSHRunner(BaseSlurmRunner):
     """
-    Runner implementation for a computational `sudo_slurm` resource.
+    Runner implementation for a computational `slurm_ssh` resource.
     """
 
     fractal_ssh: FractalSSH

@@ -47,7 +47,7 @@ def _subprocess_run_or_raise(
 
 class SlurmSudoRunner(BaseSlurmRunner):
     """
-    Runner implementation for a computational `sudo_slurm` resource.
+    Runner implementation for a computational `slurm_sudo` resource.
     """
 
     slurm_user: str
