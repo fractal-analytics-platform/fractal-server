@@ -8,6 +8,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.app.schemas.v2.status_legacy import LegacyStatusReadV2
 from fractal_server.app.schemas.v2.status_legacy import WorkflowTaskStatusTypeV2
 from fractal_server.logger import set_logger
@@ -46,6 +47,7 @@ async def get_workflowtask_status(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
@@ -55,6 +57,7 @@ async def get_workflowtask_status(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 

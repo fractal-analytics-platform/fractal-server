@@ -14,6 +14,7 @@ from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
@@ -43,7 +44,11 @@ async def create_workflowtask(
     """
 
     workflow = await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
 
     task = await _get_task_read_access(
@@ -109,6 +114,7 @@ async def read_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     return workflow_task
@@ -135,6 +141,7 @@ async def update_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     if workflow_task_update.type_filters is not None:
@@ -220,6 +227,7 @@ async def delete_workflowtask(
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 

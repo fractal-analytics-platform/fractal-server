@@ -16,6 +16,7 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.tools import aggregate_attributes
@@ -65,7 +66,11 @@ async def post_new_image(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     dataset = output["dataset"]
 
@@ -120,7 +125,11 @@ async def query_dataset_images(
     page_size = pagination.page_size
 
     output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     dataset = output["dataset"]
     images = dataset.images
@@ -188,7 +197,11 @@ async def delete_dataset_images(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     dataset = output["dataset"]
 
@@ -235,6 +248,7 @@ async def patch_dataset_image(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]

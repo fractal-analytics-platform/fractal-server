@@ -79,12 +79,14 @@ async def get_workflow_tasks_statuses(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -541,6 +543,7 @@ async def get_dataset_history(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 

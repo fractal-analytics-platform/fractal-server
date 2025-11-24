@@ -11,6 +11,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.status_tools import enrich_images_unsorted_async
 from fractal_server.images.tools import aggregate_types
@@ -38,7 +39,11 @@ async def verify_unique_types(
 ) -> list[str]:
     # Get dataset
     output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
+        db=db,
     )
     dataset = output["dataset"]
 
@@ -102,6 +107,7 @@ async def check_non_processed_images(
         workflow_task_id=workflowtask_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -125,6 +131,7 @@ async def check_non_processed_images(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = res["dataset"]

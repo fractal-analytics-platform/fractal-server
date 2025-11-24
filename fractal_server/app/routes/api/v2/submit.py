@@ -27,6 +27,7 @@ from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.runner.set_start_and_last_task_index import (
@@ -76,6 +77,7 @@ async def apply_workflow(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     project = output["project"]
@@ -93,7 +95,11 @@ async def apply_workflow(
         )
 
     workflow = await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        target_permissions=ProjectPermissions.EXECUTE,
+        db=db,
     )
     num_tasks = len(workflow.task_list)
     if num_tasks == 0:

@@ -21,6 +21,7 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
@@ -83,6 +84,7 @@ async def get_workflow_version_update_candidates(
         project_id=project_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.READ,
         db=db,
     )
 
@@ -187,6 +189,7 @@ async def replace_workflowtask(
         workflow_id=workflow_id,
         workflow_task_id=workflow_task_id,
         user_id=user.id,
+        target_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     new_task = await _get_task_read_access(
