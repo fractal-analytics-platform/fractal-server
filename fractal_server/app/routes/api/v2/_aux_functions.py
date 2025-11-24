@@ -24,6 +24,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -33,6 +34,7 @@ async def _get_project_check_owner(
     *,
     project_id: int,
     user_id: int,
+    target_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> ProjectV2:
     """
@@ -41,6 +43,7 @@ async def _get_project_check_owner(
     Args:
         project_id:
         user_id:
+        target_permissions:
         db:
 
     Returns:
@@ -49,20 +52,30 @@ async def _get_project_check_owner(
     Raises:
         HTTPException(status_code=403_FORBIDDEN):
             If the user is not a member of the project
+            or if the user has not the target permissions
         HTTPException(status_code=404_NOT_FOUND):
             If the project does not exist
     """
     project = await db.get(ProjectV2, project_id)
-
-    link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
+
+    link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
     if not link_user_project:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not allowed on project {project_id}",
+        )
+    if target_permissions not in link_user_project.permissions:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You do not have the necessary permissions: "
+                f"required '{target_permissions}',  "
+                f"owned '{link_user_project.permissions}'."
+            ),
         )
 
     return project
