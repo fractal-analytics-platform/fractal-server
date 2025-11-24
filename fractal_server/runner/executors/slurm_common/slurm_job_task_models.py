@@ -67,6 +67,10 @@ class SlurmJob(BaseModel):
     workdir_local: Path
     workdir_remote: Path
     tasks: list[SlurmTask]
+    tar_path_local: Path
+    tar_path_remote: Path
+    filelist_local: Path
+    filelist_remote: Path
 
     @property
     def slurm_submission_script_local(self) -> str:

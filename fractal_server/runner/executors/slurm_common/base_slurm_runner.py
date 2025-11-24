@@ -27,6 +27,9 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmTask,
 )
+from fractal_server.runner.executors.slurm_ssh.tar_commands import (
+    get_tar_compression_cmd_with_target,  # FIXME
+)
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
@@ -342,6 +345,28 @@ class BaseSlurmRunner(BaseRunner):
                 f"[_prepare_single_slurm_job] Written {task.input_file_local=}"
             )
 
+        # Create file list for tar creation
+        if self.slurm_runner_type == "ssh":
+            job_filelist = [
+                slurm_job.slurm_stdout_remote_path.name,
+                slurm_job.slurm_stderr_remote_path.name,
+            ]
+            for task in slurm_job.tasks:
+                job_filelist.extend(
+                    [
+                        task.output_file_remote_path.name,
+                        task.task_files.log_file_remote_path.name,
+                        task.task_files.metadiff_file_remote_path.name,
+                    ]
+                )
+            job_filelist = "\n".join(job_filelist)
+            with open(slurm_job.filelist_local, "w") as f:
+                f.write(job_filelist)
+            logger.debug(
+                "[_prepare_single_slurm_job] Written "
+                f"{slurm_job.filelist_local=}"
+            )
+
         # Prepare commands to be included in SLURM submission script
         cmdlines = []
         for task in slurm_job.tasks:
@@ -383,7 +408,9 @@ class BaseSlurmRunner(BaseRunner):
         # Always print output of `uname -n` and `pwd`
         script_lines.append('\necho "Hostname: $(uname -n)"')
         script_lines.append('echo "Current directory: $(pwd)"')
-        script_lines.append('echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"')
+        script_lines.append(
+            r'echo "Start time: $(date +"%Y-%m-%dT%H:%M:%S%z")"'
+        )
 
         # Complete script preamble
         script_lines.append("\n")
@@ -397,7 +424,23 @@ class BaseSlurmRunner(BaseRunner):
                 f"{cmd} &"
             )
         script_lines.append("wait\n\n")
-        script_lines.append('echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"')
+        script_lines.append(
+            r'echo "End time:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
+        )
+
+        if self.slurm_runner_type == "ssh":
+            script_lines.append(
+                r'echo "Start tar:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
+            )
+            tar_cmd = get_tar_compression_cmd_with_target(
+                archive_file=slurm_job.tar_path_remote,
+                filelist_path=slurm_job.filelist_remote,
+            )
+            script_lines.append(f"{tar_cmd}\n")
+            script_lines.append(
+                r'echo "End tar:   $(date +"%Y-%m-%dT%H:%M:%S%z")"'
+            )
+
         script = "\n".join(script_lines)
 
         # Write submission script
@@ -715,6 +758,13 @@ class BaseSlurmRunner(BaseRunner):
                         task_name=task_name,
                     )
                 ],
+                tar_path_local=workdir_local
+                / f"{task_files.prefix}-archive.tar.gz",
+                tar_path_remote=workdir_remote
+                / f"{task_files.prefix}-archive.tar.gz",
+                filelist_local=workdir_local / f"{task_files.prefix}-files.txt",
+                filelist_remote=workdir_remote
+                / f"{task_files.prefix}-files.txt",
             )
 
             config.parallel_tasks_per_job = 1

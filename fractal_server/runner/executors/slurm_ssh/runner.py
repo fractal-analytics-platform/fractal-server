@@ -18,6 +18,7 @@ from fractal_server.ssh._fabric import FractalSSHTimeoutError
 from .run_subprocess import run_subprocess
 from .tar_commands import get_tar_compression_cmd
 from .tar_commands import get_tar_extraction_cmd
+from .tar_commands import get_tar_extraction_cmd_with_target_folder
 
 logger = set_logger(__name__)
 
@@ -89,82 +90,23 @@ class SlurmSSHRunner(BaseSlurmRunner):
         t_0 = time.perf_counter()
         logger.debug(f"[_fetch_artifacts] START ({len(finished_slurm_jobs)=}).")
 
-        # Extract `workdir_remote` and `workdir_local`
-        self.validate_slurm_jobs_workdirs(finished_slurm_jobs)
-        workdir_local = finished_slurm_jobs[0].workdir_local
-        workdir_remote = finished_slurm_jobs[0].workdir_remote
-
-        # Define local/remote tarfile paths
-        tarfile_path_local = workdir_local.with_suffix(".tar.gz").as_posix()
-        tarfile_path_remote = workdir_remote.with_suffix(".tar.gz").as_posix()
-
-        # Create file list
-        # NOTE: see issue 2483
-        filelist = []
-        for _slurm_job in finished_slurm_jobs:
-            _single_job_filelist = [
-                _slurm_job.slurm_stdout_remote_path.name,
-                _slurm_job.slurm_stderr_remote_path.name,
-            ]
-            for task in _slurm_job.tasks:
-                _single_job_filelist.extend(
-                    [
-                        task.output_file_remote_path.name,
-                        task.task_files.log_file_remote_path.name,
-                        task.task_files.metadiff_file_remote_path.name,
-                    ]
-                )
-            filelist.extend(_single_job_filelist)
-        filelist_string = "\n".join(filelist)
-        elapsed = time.perf_counter() - t_0
-        logger.debug(
-            "[_fetch_artifacts] Created filelist "
-            f"({len(filelist)=}, from start: {elapsed=:.3f} s)."
-        )
-
-        # Write filelist to file remotely
-        tmp_filelist_path = workdir_remote / f"filelist_{time.time()}.txt"
-        self.fractal_ssh.write_remote_file(
-            path=tmp_filelist_path.as_posix(),
-            content=f"{filelist_string}\n",
-        )
-        elapsed = time.perf_counter() - t_0
-        logger.debug(
-            f"[_fetch_artifacts] File list written to {tmp_filelist_path} "
-            f"(from start: {elapsed=:.3f} s)."
-        )
-
-        # Create remote tarfile
-        t_0_tar = time.perf_counter()
-        tar_command = get_tar_compression_cmd(
-            subfolder_path=workdir_remote,
-            filelist_path=tmp_filelist_path,
-        )
-        self.fractal_ssh.run_command(cmd=tar_command)
-        t_1_tar = time.perf_counter()
-        logger.info(
-            f"[_fetch_artifacts] Remote archive {tarfile_path_remote} created"
-            f" - elapsed={t_1_tar - t_0_tar:.3f} s"
-        )
-
-        # Fetch tarfile
-        t_0_get = time.perf_counter()
-        self.fractal_ssh.fetch_file(
-            remote=tarfile_path_remote,
-            local=tarfile_path_local,
-        )
-        t_1_get = time.perf_counter()
-        logger.info(
-            "[_fetch_artifacts] Subfolder archive transferred back "
-            f"to {tarfile_path_local}"
-            f" - elapsed={t_1_get - t_0_get:.3f} s"
-        )
-
-        # Extract tarfile locally
-        target_dir, cmd_tar = get_tar_extraction_cmd(Path(tarfile_path_local))
-        target_dir.mkdir(exist_ok=True)
-        run_subprocess(cmd=cmd_tar, logger_name=logger.name)
-        Path(tarfile_path_local).unlink(missing_ok=True)
+        for slurm_job in finished_slurm_jobs:
+            # Fetch archive
+            self.fractal_ssh.fetch_file(
+                remote=slurm_job.tar_path_remote.as_posix(),
+                local=slurm_job.tar_path_local.as_posix(),
+            )
+            # Remove remote archive
+            rm_tar_cmd = f"rm {slurm_job.tar_path_remote.as_posix()}"
+            self.fractal_ssh.run_command(cmd=rm_tar_cmd)
+            # Extract archive locally
+            cmd_tar = get_tar_extraction_cmd_with_target_folder(
+                archive_path=slurm_job.tar_path_local,
+                target_folder=slurm_job.workdir_local,
+            )
+            run_subprocess(cmd=cmd_tar, logger_name=logger.name)
+            # Remove local archive
+            Path(slurm_job.tar_path_local).unlink(missing_ok=True)
 
         t_1 = time.perf_counter()
         logger.info(f"[_fetch_artifacts] End - elapsed={t_1 - t_0:.3f} s")
