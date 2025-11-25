@@ -69,13 +69,14 @@ async def create_workflowtask(
                 require_active=True,
             )
         except HTTPException as e:
-            if e.status_code == 403:
-                raise HTTPException(
+            raise (
+                HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="The task must be accessible to the project owner.",
                 )
-            else:
-                raise e
+                if e.status_code == 403
+                else e
+            )
 
     task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
