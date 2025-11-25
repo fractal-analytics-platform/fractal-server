@@ -19,13 +19,13 @@ from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.app.schemas.v2 import ProjectReadV2
 from fractal_server.app.schemas.v2 import ProjectUpdateV2
-from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 
+logger = set_logger(__name__)
 router = APIRouter()
 
 
@@ -147,7 +147,6 @@ async def delete_project(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    logger = set_logger(__name__)
 
     # Fail if there exist jobs that are submitted and in relation with the
     # current project.
@@ -164,13 +163,12 @@ async def delete_project(
             ),
         )
 
-    logger.info(f"Adding Project[{project.id}] to deletion.")
+    logger.debug(f"Add project {project.id} to deletion.")
     await db.delete(project)
 
-    logger.info("Committing changes to db...")
+    logger.debug("Commit changes to db")
     await db.commit()
 
-    logger.info("Everything  has been deleted correctly.")
-    reset_logger_handlers(logger)
+    logger.debug("Everything  has been deleted correctly.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

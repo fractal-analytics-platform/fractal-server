@@ -1,13 +1,3 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
 """
 Submodule to determine the number of total/parallel tasks per SLURM job.
 """
@@ -20,6 +10,10 @@ logger = set_logger(__name__)
 
 
 class SlurmHeuristicsError(ValueError):
+    """
+    Error in SLURM-batching heuristics.
+    """
+
     pass
 
 

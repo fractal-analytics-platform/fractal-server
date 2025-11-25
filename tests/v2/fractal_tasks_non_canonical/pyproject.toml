@@ -7,7 +7,7 @@ authors = [
     { name = "Your Name", email = "first.last@example.com" },
 ]
 requires-python = ">=3.9"
-dependencies = ["fractal-task-tools==0.0.13",]
+dependencies = ["fractal-task-tools==0.1.1",]
 
 [project.optional-dependencies]
 dev = ["devtools", "build"]

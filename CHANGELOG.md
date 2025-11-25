@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Next
+
+* API:
+    * Reduce API logging level for some endpoints (\#3010).
+* Testing:
+    * Expand SLURM-batching-heuristics test (\#3011).
+* Dependencies:
+    * Support Python 3.14 (\#3015).
+
 # 2.17.2
 
 > NOTE: Starting from this version, the `unzip` command-line tool must be available (see \#2978).
