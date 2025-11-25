@@ -5,6 +5,7 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -13,6 +14,7 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
@@ -637,6 +639,86 @@ async def test_get_jobs(
         assert len(res.json()) == 2
         assert res.json()[0]["log"] is None
         assert res.json()[1]["log"] is None
+
+
+async def test_get_jobs_access_control(
+    db,
+    client,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    """
+    Test that `GET /api/v2/project/{project_id}/job/` lists all jobs that ran
+    for the current project, whether submitted by me or by others.
+    """
+    res, prof = local_resource_profile_db
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset"
+        )
+        task = await task_factory_v2(user_id=user.id)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+
+        res = await client.get(f"/api/v2/project/{project.id}/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+    async with MockCurrentUser(
+        user_kwargs=dict(
+            is_verified=True,
+            profile_id=prof.id,
+        )
+    ) as user2:
+        assert user2.id != user.id
+        # Manually add `user2` to `project`'s guests with RWX permissions
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=user2.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.EXECUTE,
+            )
+        )
+        await db.commit()
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+
+        res = await client.get(f"/api/v2/project/{project.id}/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 3
 
 
 @pytest.mark.parametrize("backend", backends_available)
