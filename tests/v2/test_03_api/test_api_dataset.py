@@ -4,6 +4,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2.dataset import DatasetExportV2
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -433,3 +434,6 @@ async def test_export_dataset(
             f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
         )
         assert res.status_code == 200
+        assert (
+            res.json() == DatasetExportV2(**dataset.model_dump()).model_dump()
+        )
