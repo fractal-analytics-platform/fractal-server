@@ -14,6 +14,7 @@ from fractal_server.app.routes.api.v2._aux_functions_history import (
 from fractal_server.app.routes.api.v2._aux_functions_history import (
     read_log_file,
 )
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.zip_tools import _create_zip
 
 
@@ -109,6 +110,7 @@ async def test_verify_workflow_and_dataset_access(
             workflow_id=wf1.id,
             dataset_id=ds1.id,
             user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         assert res["dataset"].id == ds1.id
@@ -124,6 +126,7 @@ async def test_verify_workflow_and_dataset_access(
                 workflow_id=wf2.id,
                 dataset_id=ds1.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
 
@@ -133,5 +136,6 @@ async def test_verify_workflow_and_dataset_access(
                 workflow_id=wf1.id,
                 dataset_id=ds2.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )

@@ -22,7 +22,7 @@ from fractal_server.app.schemas.v2 import ProjectUpdateV2
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_submitted_jobs_statement
 
 logger = set_logger(__name__)
@@ -101,8 +101,11 @@ async def read_project(
     """
     Return info on an existing project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
     await db.close()
     return project
@@ -115,8 +118,11 @@ async def update_project(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
 
     # Check that there is no project with the same user and name
@@ -144,9 +150,18 @@ async def delete_project(
     Delete project
     """
 
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.EXECUTE,
+        db=db,
     )
+    link_user_project = await db.get(LinkUserProjectV2, (project_id, user.id))
+    if not link_user_project.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the owner can delete a Project.",
+        )
 
     # Fail if there exist jobs that are submitted and in relation with the
     # current project.

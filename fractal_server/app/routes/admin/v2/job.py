@@ -56,6 +56,7 @@ async def view_job(
 
     Args:
         id: If not `None`, select a given `applyworkflow.id`.
+        user_id:
         project_id: If not `None`, select a given `applyworkflow.project_id`.
         dataset_id: If not `None`, select a given
             `applyworkflow.input_dataset_id`.
@@ -84,12 +85,22 @@ async def view_job(
         stm = stm.where(JobV2.id == id)
         stm_count = stm_count.where(JobV2.id == id)
     if user_id is not None:
-        stm = stm.join(
-            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
-        ).where(LinkUserProjectV2.user_id == user_id)
-        stm_count = stm_count.join(
-            LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
-        ).where(LinkUserProjectV2.user_id == user_id)
+        stm = (
+            stm.join(
+                LinkUserProjectV2,
+                LinkUserProjectV2.project_id == JobV2.project_id,
+            )
+            .where(LinkUserProjectV2.user_id == user_id)
+            .where(LinkUserProjectV2.is_owner.is_(True))
+        )
+        stm_count = (
+            stm_count.join(
+                LinkUserProjectV2,
+                LinkUserProjectV2.project_id == JobV2.project_id,
+            )
+            .where(LinkUserProjectV2.user_id == user_id)
+            .where(LinkUserProjectV2.is_owner.is_(True))
+        )
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
         stm_count = stm_count.where(JobV2.project_id == project_id)

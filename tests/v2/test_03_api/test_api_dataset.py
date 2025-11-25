@@ -4,6 +4,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2.dataset import DatasetExportV2
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -421,3 +422,18 @@ async def test_dataset_import(
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset3"
         assert res_dataset["zarr_dir"] == ZARR_DIR
+
+
+async def test_export_dataset(
+    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        res = await client.get(
+            f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
+        )
+        assert res.status_code == 200
+        assert (
+            res.json() == DatasetExportV2(**dataset.model_dump()).model_dump()
+        )

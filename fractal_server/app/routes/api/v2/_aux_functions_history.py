@@ -13,12 +13,13 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_project_check_owner,
+    _get_project_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.logger import set_logger
 from fractal_server.zip_tools import _read_single_file_from_zip
 
@@ -119,6 +120,7 @@ async def _verify_workflow_and_dataset_access(
     workflow_id: int,
     dataset_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["dataset", "workflow"], DatasetV2 | WorkflowV2]:
     """
@@ -131,9 +133,10 @@ async def _verify_workflow_and_dataset_access(
         user_id:
         db:
     """
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
+        required_permissions=required_permissions,
         db=db,
     )
     workflow = await _get_workflow_or_404(
@@ -158,12 +161,13 @@ async def _verify_workflow_and_dataset_access(
     return dict(dataset=dataset, workflow=workflow)
 
 
-async def get_wftask_check_owner(
+async def get_wftask_check_access(
     *,
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -184,6 +188,7 @@ async def get_wftask_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
         workflow_id=wftask.workflow_id,
+        required_permissions=required_permissions,
         user_id=user_id,
         db=db,
     )

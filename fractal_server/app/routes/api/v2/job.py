@@ -20,12 +20,13 @@ from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
-from ._aux_functions import _get_job_check_owner
-from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_job_check_access
+from ._aux_functions import _get_project_check_access
+from ._aux_functions import _get_workflow_check_access
 
 
 # https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread
@@ -53,6 +54,7 @@ async def get_user_jobs(
             LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
         )
         .where(LinkUserProjectV2.user_id == user.id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()
@@ -77,8 +79,12 @@ async def get_workflow_jobs(
     """
     Returns all the jobs related to a specific workflow
     """
-    await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    await _get_workflow_check_access(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
     stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
     res = await db.execute(stm)
@@ -94,8 +100,12 @@ async def get_latest_job(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobReadV2:
-    await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    await _get_workflow_check_access(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
     stm = (
         select(JobV2)
@@ -130,10 +140,11 @@ async def read_job(
     Return info on an existing job
     """
 
-    output = await _get_job_check_owner(
+    output = await _get_job_check_access(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -162,10 +173,11 @@ async def download_job_logs(
     """
     Download zipped job folder
     """
-    output = await _get_job_check_owner(
+    output = await _get_job_check_access(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     job = output["job"]
@@ -193,8 +205,11 @@ async def get_job_list(
     """
     Get job list for given project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
 
     stm = select(JobV2).where(JobV2.project_id == project.id)
@@ -225,10 +240,11 @@ async def stop_job(
     _check_shutdown_is_supported()
 
     # Get job from DB
-    output = await _get_job_check_owner(
+    output = await _get_job_check_access(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.EXECUTE,
         db=db,
     )
     job = output["job"]

@@ -24,10 +24,11 @@ from fractal_server.app.schemas.v2 import TaskImportV2Legacy
 from fractal_server.app.schemas.v2 import WorkflowImportV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
@@ -222,9 +223,10 @@ async def import_workflow(
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
     # Preliminary checks
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     await _check_workflow_exists(
