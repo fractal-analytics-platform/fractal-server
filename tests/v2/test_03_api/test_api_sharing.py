@@ -1,5 +1,3 @@
-import pytest
-
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserOAuth
@@ -614,8 +612,9 @@ async def test_project_sharing_subquery(
         await db.commit()
 
         # User 2 calls `/access/` endpoint
-        from sqlalchemy.exc import ProgrammingError
-
-        with pytest.raises(ProgrammingError) as e:
-            await client.get(f"/api/v2/project/{project1.id}/access/")
-        assert "CardinalityViolation" in str(e)
+        res = await client.get(f"/api/v2/project/{project1.id}/access/")
+        assert res.json() == dict(
+            is_owner=False,
+            permissions=ProjectPermissions.READ,
+            owner_email=user1.email,
+        )
