@@ -243,9 +243,8 @@ async def get_access_info(
                     UserOAuth.id == LinkUserProjectV2.user_id,
                 )
                 .where(LinkUserProjectV2.is_owner.is_(True))
-                .where(LinkUserProjectV2.project_id == ProjectV2.id)
+                .where(LinkUserProjectV2.project_id == project_id)
                 .scalar_subquery()
-                .correlate(LinkUserProjectV2)
             ),
         )
         .where(LinkUserProjectV2.project_id == project_id)
