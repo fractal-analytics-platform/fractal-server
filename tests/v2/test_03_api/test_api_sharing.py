@@ -1,3 +1,5 @@
+import pytest
+
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserOAuth
@@ -578,3 +580,42 @@ async def test_project_sharing_task_group_access(
             json=dict(),
         )
         assert res.status_code == 201
+
+
+async def test_project_sharing_subquery(
+    db,
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+    project_factory_v2,
+):
+    """
+    See ssue:
+    https://github.com/fractal-analytics-platform/fractal-server/issues/3022
+    """
+    _, profile = local_resource_profile_db
+    user_kwargs = {"profile_id": profile.id}
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user1:
+        # User 1 creates two projects
+        project1 = await project_factory_v2(user1)
+        await project_factory_v2(user1)
+
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user2:
+        # User 1 shares Project 1 with User 2
+        db.add(
+            LinkUserProjectV2(
+                project_id=project1.id,
+                user_id=user2.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        # User 2 calls `/access/` endpoint
+        from sqlalchemy.exc import ProgrammingError
+
+        with pytest.raises(ProgrammingError) as e:
+            await client.get(f"/api/v2/project/{project1.id}/access/")
+        assert "CardinalityViolation" in str(e)
