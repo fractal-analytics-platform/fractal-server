@@ -1,5 +1,7 @@
 from fractal_server.app.db import AsyncSession
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2.task_group import TaskGroupV2
 from fractal_server.app.schemas.v2 import ProjectPermissions
 
 
@@ -9,7 +11,7 @@ async def test_project_sharing(
     MockCurrentUser,
     local_resource_profile_db,
 ):
-    resource, profile = local_resource_profile_db
+    _, profile = local_resource_profile_db
 
     # Create 3 users
     args = dict(
@@ -382,7 +384,7 @@ async def test_project_sharing_access_control(
     MockCurrentUser,
     local_resource_profile_db,
 ):
-    resource, profile = local_resource_profile_db
+    _, profile = local_resource_profile_db
     user_args = dict(
         hashed_password="12345",
         project_dir="/fake",
@@ -456,3 +458,67 @@ async def test_project_sharing_access_control(
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         res = await client.delete(f"/api/v2/project/{project_id}/")
         assert res.status_code == 204
+
+
+async def test_project_sharing_task_group_access(
+    db,
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+    project_factory_v2,
+    workflow_factory_v2,
+    workflowtask_factory_v2,
+):
+    _, profile = local_resource_profile_db
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
+        # User 1 creates a project and a workflow
+        project = await project_factory_v2(user1)
+        workflow = await workflow_factory_v2(project_id=project.id)
+
+        # User 1 inserts a task with limited access (e.g. a private task).
+        res = await client.post(
+            "/api/v2/task/?private=true",
+            json=dict(
+                name="Private Task",
+                command_non_parallel="cmd",
+                type="non_parallel",
+            ),
+        )
+        assert res.status_code == 201
+        task_id = res.json()["id"]
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id is None
+
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=task_id,
+        )
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["task_list"]) == 1
+        assert res.json()["task_list"][0]["warning"] is None
+
+    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user2:
+        # User 1 shares the project with user 2, who accepts.
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=user2.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["task_list"]) == 1
+        assert res.json()["task_list"][0]["warning"] == (
+            "Current user has no access to this task."
+        )
