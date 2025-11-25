@@ -374,3 +374,84 @@ async def test_project_sharing(
             res.json()["detail"]
             == f"You are the owner of project {project1_id}."
         )
+
+
+async def test_project_sharing_access_control(
+    client,
+    db: AsyncSession,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    user_args = dict(
+        hashed_password="12345",
+        project_dir="/fake",
+        is_verified=True,
+        profile_id=profile.id,
+    )
+    user1 = UserOAuth(email="zzz@example.org", **user_args)
+    user2 = UserOAuth(email="yyy@example.org", **user_args)
+    db.add_all([user1, user2])
+    await db.commit()
+    await db.refresh(user1)
+    await db.refresh(user2)
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        # User 1 creates the project
+        res = await client.post("/api/v2/project/", json=dict(name="Project1"))
+        assert res.status_code == 201
+        project = res.json()
+        project_id = project["id"]
+
+        # and shares it with user 2 with permissions R
+        res = await client.post(
+            f"/api/v2/project/{project_id}/guest/?email={user2.email}",
+            json=dict(permissions=ProjectPermissions.READ),
+        )
+        assert res.status_code == 201
+
+    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+        res = await client.post(
+            f"/api/v2/project/{project_id}/access/accept/",
+        )
+        assert res.status_code == 200
+
+        # User 2 can read the project
+        res = await client.get(f"/api/v2/project/{project_id}/")
+        assert res.status_code == 200
+        assert res.json() == project
+
+        # but not patch it
+        res = await client.patch(
+            f"/api/v2/project/{project_id}/",
+            json=dict(name="new_name"),
+        )
+        assert res.status_code == 403
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        # # User 1 edits permissions into RW
+        res = await client.patch(
+            f"/api/v2/project/{project_id}/guest/?email={user2.email}",
+            json=dict(permissions=ProjectPermissions.WRITE),
+        )
+        assert res.status_code == 200
+
+    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+        # User 2 can read and patch the project
+        res = await client.get(f"/api/v2/project/{project_id}/")
+        assert res.status_code == 200
+        assert res.json() == project
+
+        res = await client.patch(
+            f"/api/v2/project/{project_id}/",
+            json=dict(name="new_name"),
+        )
+        assert res.status_code == 200
+
+        # but not delete it
+        res = await client.delete(f"/api/v2/project/{project_id}/")
+        assert res.status_code == 403
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        res = await client.delete(f"/api/v2/project/{project_id}/")
+        assert res.status_code == 204
