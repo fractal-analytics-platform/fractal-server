@@ -476,7 +476,22 @@ async def test_project_sharing_task_group_access(
         project = await project_factory_v2(user1)
         workflow = await workflow_factory_v2(project_id=project.id)
 
-        # User 1 inserts a task with limited access (e.g. a private task).
+        # User 1 inserts a non-private task
+        res = await client.post(
+            "/api/v2/task/",
+            json=dict(
+                name="Non Private Task",
+                command_non_parallel="cmd",
+                type="non_parallel",
+            ),
+        )
+        assert res.status_code == 201
+        task_id = res.json()["id"]
+        taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert taskgroup.user_group_id is not None
+        user_group_id = taskgroup.user_group_id
+
+        # User 1 inserts a private task
         res = await client.post(
             "/api/v2/task/?private=true",
             json=dict(
@@ -504,7 +519,7 @@ async def test_project_sharing_task_group_access(
         assert res.json()["task_list"][0]["warning"] is None
 
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user2:
-        # User 1 shares the project with user 2, who accepts.
+        # User 1 shares the project with user 2, who accepts
         db.add(
             LinkUserProjectV2(
                 project_id=project.id,
@@ -526,7 +541,7 @@ async def test_project_sharing_task_group_access(
             "Current user has no access to this task."
         )
 
-        # User 2 inserts a task with limited access (e.g. a private task).
+        # User 2 inserts a private task
         res = await client.post(
             "/api/v2/task/?private=true",
             json=dict(
@@ -540,6 +555,7 @@ async def test_project_sharing_task_group_access(
         new_taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert new_taskgroup.user_group_id is None
 
+        # User 2 cannot add a workflow task because User 1 can't read the task
         res = await client.post(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"?task_id={new_task_id}",
@@ -549,3 +565,16 @@ async def test_project_sharing_task_group_access(
         assert res.json()["detail"] == (
             "The project owner cannot read this task."
         )
+
+        # User 2 makes the task non-private and now he can add the wftask
+        res = await client.patch(
+            f"/api/v2/task-group/{new_taskgroup.id}/",
+            json=dict(user_group_id=user_group_id),
+        )
+        assert res.status_code == 200
+        res = await client.post(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={new_task_id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
