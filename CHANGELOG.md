@@ -1,9 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Next
+# 2.18.0 (unreleased)
 
 * API:
     * Reduce API logging level for some endpoints (\#3010).
+    * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3019).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
 * Dependencies:
