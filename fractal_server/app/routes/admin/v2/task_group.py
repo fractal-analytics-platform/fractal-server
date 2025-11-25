@@ -5,6 +5,7 @@ from fastapi import status
 from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -16,6 +17,9 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
@@ -29,7 +33,9 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
+@router.get(
+    "/activity/", response_model=PaginationResponse[TaskGroupActivityV2Read]
+)
 async def get_task_group_activity_list(
     task_group_activity_id: int | None = None,
     user_id: int | None = None,
@@ -38,30 +44,65 @@ async def get_task_group_activity_list(
     status: TaskGroupActivityStatusV2 | None = None,
     action: TaskGroupActivityActionV2 | None = None,
     timestamp_started_min: AwareDatetime | None = None,
+    pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupActivityV2Read]:
+) -> PaginationResponse[TaskGroupActivityV2Read]:
+    # Assign pagination parameters
+    page = pagination.page
+    page_size = pagination.page_size
+
     stm = select(TaskGroupActivityV2)
+    stm_count = select(func.count(TaskGroupActivityV2.id))
     if task_group_activity_id is not None:
         stm = stm.where(TaskGroupActivityV2.id == task_group_activity_id)
+        stm_count = stm_count.where(
+            TaskGroupActivityV2.id == task_group_activity_id
+        )
     if user_id:
         stm = stm.where(TaskGroupActivityV2.user_id == user_id)
+        stm_count = stm_count.where(TaskGroupActivityV2.user_id == user_id)
     if taskgroupv2_id:
         stm = stm.where(TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id)
+        stm_count = stm_count.where(
+            TaskGroupActivityV2.taskgroupv2_id == taskgroupv2_id
+        )
     if pkg_name:
         stm = stm.where(TaskGroupActivityV2.pkg_name.icontains(pkg_name))
+        stm_count = stm_count.where(
+            TaskGroupActivityV2.pkg_name.icontains(pkg_name)
+        )
     if status:
         stm = stm.where(TaskGroupActivityV2.status == status)
+        stm_count = stm_count.where(TaskGroupActivityV2.status == status)
     if action:
         stm = stm.where(TaskGroupActivityV2.action == action)
+        stm_count = stm_count.where(TaskGroupActivityV2.action == action)
     if timestamp_started_min is not None:
         stm = stm.where(
             TaskGroupActivityV2.timestamp_started >= timestamp_started_min
         )
+        stm_count = stm_count.where(
+            TaskGroupActivityV2.timestamp_started >= timestamp_started_min
+        )
+
+    # Find total number of elements
+    res_total_count = await db.execute(stm_count)
+    total_count = res_total_count.scalar()
+    if page_size is None:
+        page_size = total_count
+    else:
+        stm = stm.offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stm)
     activities = res.scalars().all()
-    return activities
+
+    return PaginationResponse[TaskGroupActivityV2Read](
+        total_count=total_count,
+        page_size=page_size,
+        current_page=page,
+        items=[activity.model_dump() for activity in activities],
+    )
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupReadSuperuser)
