@@ -421,3 +421,15 @@ async def test_dataset_import(
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset3"
         assert res_dataset["zarr_dir"] == ZARR_DIR
+
+
+async def test_export_dataset(
+    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        res = await client.get(
+            f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
+        )
+        assert res.status_code == 200
