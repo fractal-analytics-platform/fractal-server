@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _check_workflow_exists,
 )
@@ -72,7 +73,7 @@ async def test_get_project_check_access(
         assert err.value.status_code == 404
         assert err.value.detail == "Project not found"
 
-        # Test fail 2
+        # Test fail 2: link_user_project is None
         with pytest.raises(HTTPException) as err:
             await _get_project_check_access(
                 project_id=other_project.id,
@@ -84,6 +85,70 @@ async def test_get_project_check_access(
         assert (
             "You are not authorized to perform this action." in err.value.detail
         )
+
+    async with MockCurrentUser() as read_only_user:
+        # Read only user for `project`
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=read_only_user.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        # test `required_permissions not in link_user_project.permissions`
+        await _get_project_check_access(
+            project_id=project.id,
+            user_id=read_only_user.id,
+            required_permissions=ProjectPermissions.READ,  # <---
+            db=db,
+        )
+        for required_permissions in [
+            ProjectPermissions.WRITE,
+            ProjectPermissions.EXECUTE,
+        ]:
+            with pytest.raises(HTTPException) as err:
+                await _get_project_check_access(
+                    project_id=project.id,
+                    user_id=read_only_user.id,
+                    required_permissions=required_permissions,
+                    db=db,
+                )
+            assert err.value.status_code == 403
+            assert (
+                "You are not authorized to perform this action."
+                in err.value.detail
+            )
+
+    async with MockCurrentUser() as unverified_user:
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=unverified_user.id,
+                is_owner=False,
+                is_verified=False,  # <---
+                permissions=ProjectPermissions.EXECUTE,
+            )
+        )
+        await db.commit()
+
+        # test `not link_user_project.is_verified`
+        for required_permissions in ProjectPermissions:
+            with pytest.raises(HTTPException) as err:
+                await _get_project_check_access(
+                    project_id=project.id,
+                    user_id=unverified_user.id,
+                    required_permissions=required_permissions,
+                    db=db,
+                )
+            assert err.value.status_code == 403
+            assert (
+                "You are not authorized to perform this action."
+                in err.value.detail
+            )
 
 
 async def test_get_workflow_check_access(
