@@ -1,0 +1,21 @@
+# This file is identical to its non-private version
+# The only difference is '/private:/private:rw' in place of '/tmp:/tmp:rw'
+# See https://github.com/fractal-analytics-platform/fractal-server/issues/1475
+
+services:
+  slurm:
+    cpus: 4.0
+    mem_limit: 5g
+    build:
+      context: ./slurm
+      dockerfile: Dockerfile
+      args:
+        - PYTHON_PATH=/.venv3.14/bin/python3.14
+    hostname: slurm
+    volumes:
+      - /private:/private:rw
+    environment:
+      - SLURM_CPUS_ON_NODE=1
+    ports:
+      - '6817:6817'
+      - '6818:6818'

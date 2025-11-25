@@ -66,7 +66,7 @@ async def _get_user_accessible_taskgroups(
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
-    logger.info(
+    logger.debug(
         f"Found {len(accessible_task_groups)} accessible "
         f"task groups for {user_id=}."
     )
@@ -121,7 +121,7 @@ async def _get_task_by_taskimport(
         `id` of the matching task, or `None`.
     """
 
-    logger.info(f"[_get_task_by_taskimport] START, {task_import=}")
+    logger.debug(f"[_get_task_by_taskimport] START, {task_import=}")
 
     # Filter by `pkg_name` and by presence of a task with given `name`.
     matching_task_groups = [
@@ -133,7 +133,7 @@ async def _get_task_by_taskimport(
         )
     ]
     if len(matching_task_groups) < 1:
-        logger.info(
+        logger.debug(
             "[_get_task_by_taskimport] "
             f"No task group with {task_import.pkg_name=} "
             f"and a task with {task_import.name=}."
@@ -143,13 +143,13 @@ async def _get_task_by_taskimport(
     # Determine target `version`
     # Note that task_import.version cannot be "", due to a validator
     if task_import.version is None:
-        logger.info(
+        logger.debug(
             "[_get_task_by_taskimport] "
             "No version requested, looking for latest."
         )
         latest_task = max(matching_task_groups, key=lambda tg: tg.version or "")
         version = latest_task.version
-        logger.info(
+        logger.debug(
             f"[_get_task_by_taskimport] Latest version set to {version}."
         )
     else:
@@ -161,19 +161,19 @@ async def _get_task_by_taskimport(
     )
 
     if len(final_matching_task_groups) < 1:
-        logger.info(
+        logger.debug(
             "[_get_task_by_taskimport] "
             "No task group left after filtering by version."
         )
         return None
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
-        logger.info(
+        logger.debug(
             "[_get_task_by_taskimport] "
             "Found a single task group, after filtering by version."
         )
     else:
-        logger.info(
+        logger.debug(
             "[_get_task_by_taskimport] "
             f"Found {len(final_matching_task_groups)} task groups, "
             "after filtering by version."
@@ -185,7 +185,7 @@ async def _get_task_by_taskimport(
             default_group_id=default_group_id,
         )
         if final_task_group is None:
-            logger.info(
+            logger.debug(
                 "[_get_task_by_taskimport] Disambiguation returned None."
             )
             return None
@@ -200,7 +200,7 @@ async def _get_task_by_taskimport(
         None,
     )
 
-    logger.info(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
+    logger.debug(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
 
     return task_id
 

@@ -8,7 +8,7 @@ authors = [
     { name = "Your Name", email = "first.last@example.com" },
 ]
 requires-python = ">=3.9"
-dependencies = ["pydantic>=2", "fractal-task-tools==0.0.13",]
+dependencies = ["pydantic>=2", "fractal-task-tools==0.1.1",]
 
 [project.optional-dependencies]
 dev = ["devtools", "build"]
