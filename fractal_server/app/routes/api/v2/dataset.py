@@ -103,7 +103,6 @@ async def read_dataset_list(
     stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
-    await db.close()
     return dataset_list
 
 
@@ -128,7 +127,6 @@ async def read_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    await db.close()
     return dataset
 
 
@@ -170,7 +168,6 @@ async def update_dataset(
 
     await db.commit()
     await db.refresh(db_dataset)
-    await db.close()
     return db_dataset
 
 
@@ -238,8 +235,6 @@ async def export_dataset(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    await db.close()
-
     dataset = dict_dataset_project["dataset"]
 
     return dataset
@@ -286,6 +281,5 @@ async def import_dataset(
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
-    await db.close()
 
     return db_dataset
