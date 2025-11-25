@@ -5,10 +5,12 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
@@ -50,6 +52,30 @@ async def create_workflowtask(
         required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
+
+    res = await db.execute(
+        select(UserOAuth.id)
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+    )
+    project_owner_id = res.scalar_one()
+    if project_owner_id != user.id:
+        try:
+            await _get_task_read_access(
+                task_id=task_id,
+                user_id=project_owner_id,
+                db=db,
+                require_active=True,
+            )
+        except HTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="The project owner cannot read this task.",
+                )
+            else:
+                raise e
 
     task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True

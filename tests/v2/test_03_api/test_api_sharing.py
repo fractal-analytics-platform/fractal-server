@@ -540,22 +540,12 @@ async def test_project_sharing_task_group_access(
         new_taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert new_taskgroup.user_group_id is None
 
-        # FIXME this should raise a 422
         res = await client.post(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"?task_id={new_task_id}",
             json=dict(),
         )
-        assert res.status_code == 201
-
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
-        # What User 1 sees
-        res = await client.get(
-            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
-        )
-        assert res.status_code == 200
-        assert len(res.json()["task_list"]) == 2
-        assert res.json()["task_list"][0]["warning"] is None
-        assert res.json()["task_list"][1]["warning"] == (
-            "Current user has no access to this task."
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "The project owner cannot read this task."
         )
