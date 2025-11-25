@@ -210,7 +210,13 @@ async def query_task_group_list(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=[task_group.model_dump() for task_group in task_groups_list],
+        items=[
+            task_group.model_dump()
+            | dict(
+                task_list=[task.model_dump() for task in task_group.task_list]
+            )
+            for task_group in task_groups_list
+        ],
     )
 
 
