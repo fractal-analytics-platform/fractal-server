@@ -470,6 +470,7 @@ async def test_project_sharing_task_group_access(
     workflowtask_factory_v2,
 ):
     _, profile = local_resource_profile_db
+
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
         # User 1 creates a project and a workflow
         project = await project_factory_v2(user1)
@@ -494,6 +495,7 @@ async def test_project_sharing_task_group_access(
             task_id=task_id,
         )
 
+        # What User 1 sees
         res = await client.get(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
         )
@@ -509,16 +511,49 @@ async def test_project_sharing_task_group_access(
                 user_id=user2.id,
                 is_owner=False,
                 is_verified=True,
-                permissions=ProjectPermissions.READ,
+                permissions=ProjectPermissions.WRITE,
             )
         )
         await db.commit()
 
+        # What User 2 sees
         res = await client.get(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
         )
         assert res.status_code == 200
         assert len(res.json()["task_list"]) == 1
         assert res.json()["task_list"][0]["warning"] == (
+            "Current user has no access to this task."
+        )
+
+        # User 2 inserts a task with limited access (e.g. a private task).
+        res = await client.post(
+            "/api/v2/task/?private=true",
+            json=dict(
+                name="Private Task",
+                command_non_parallel="cmd",
+                type="non_parallel",
+            ),
+        )
+        assert res.status_code == 201
+        new_task_id = res.json()["id"]
+        new_taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
+        assert new_taskgroup.user_group_id is None
+
+        # FIXME this should raise a 422
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id,
+            task_id=new_task_id,
+        )
+
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        # What User 1 sees
+        res = await client.get(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["task_list"]) == 2
+        assert res.json()["task_list"][0]["warning"] is None
+        assert res.json()["task_list"][1]["warning"] == (
             "Current user has no access to this task."
         )
