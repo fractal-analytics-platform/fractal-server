@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main", "dev", "2997-project-sharing-core"]
+    branches: ["main"]
 
 permissions: {}
 
