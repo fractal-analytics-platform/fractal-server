@@ -541,10 +541,12 @@ async def test_project_sharing_task_group_access(
         assert new_taskgroup.user_group_id is None
 
         # FIXME this should raise a 422
-        await workflowtask_factory_v2(
-            workflow_id=workflow.id,
-            task_id=new_task_id,
+        res = await client.post(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={new_task_id}",
+            json=dict(),
         )
+        assert res.status_code == 201
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         # What User 1 sees
