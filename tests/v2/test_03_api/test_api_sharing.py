@@ -429,10 +429,10 @@ async def test_project_sharing_access_control(
         assert res.status_code == 403
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
-        # # User 1 edits permissions into RW
+        # # User 1 edits permissions into RWX
         res = await client.patch(
             f"/api/v2/project/{project_id}/guest/?email={user2.email}",
-            json=dict(permissions=ProjectPermissions.WRITE),
+            json=dict(permissions=ProjectPermissions.EXECUTE),
         )
         assert res.status_code == 200
 
@@ -451,6 +451,7 @@ async def test_project_sharing_access_control(
         # but not delete it
         res = await client.delete(f"/api/v2/project/{project_id}/")
         assert res.status_code == 403
+        assert res.json()["detail"] == "Only the owner can delete a Project."
 
     async with MockCurrentUser(user_kwargs={"id": user1.id}):
         res = await client.delete(f"/api/v2/project/{project_id}/")
