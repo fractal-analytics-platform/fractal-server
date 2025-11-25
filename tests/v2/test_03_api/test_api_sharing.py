@@ -563,7 +563,7 @@ async def test_project_sharing_task_group_access(
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "The project owner cannot read this task."
+            "The task must be accessible to the project owner."
         )
 
         # User 2 makes the task non-private and now he can add the wftask

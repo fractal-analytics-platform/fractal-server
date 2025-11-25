@@ -72,7 +72,7 @@ async def create_workflowtask(
             if e.status_code == 403:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail="The project owner cannot read this task.",
+                    detail="The task must be accessible to the project owner.",
                 )
             else:
                 raise e
