@@ -97,11 +97,11 @@ async def get_task_group_activity_list(
     res = await db.execute(stm)
     activities = res.scalars().all()
 
-    return PaginationResponse[TaskGroupActivityV2Read](
+    return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=[activity.model_dump() for activity in activities],
+        items=activities,
     )
 
 
@@ -206,17 +206,11 @@ async def query_task_group_list(
     res = await db.execute(stm)
     task_groups_list = res.scalars().all()
 
-    return PaginationResponse[TaskGroupReadSuperuser](
+    return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=[
-            task_group.model_dump()
-            | dict(
-                task_list=[task.model_dump() for task in task_group.task_list]
-            )
-            for task_group in task_groups_list
-        ],
+        items=task_groups_list,
     )
 
 
