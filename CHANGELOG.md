@@ -2,10 +2,20 @@
 
 # 2.18.0 (unreleased)
 
+> NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
+
+The main contents of this release are the introduction of the project sharing and a review of the authorization scheme for [`fractal-data`](https://github.com/fractal-analytics-platform/fractal-data).
+
 * API:
-    * Reduce API logging level for some endpoints (\#3010).
+    * Add project-owner endpoints `/api/v2/project/{project_id}/guest/` (\#2999).
+    * Add project-guest endpoints `/api/v2/project/invitation/`, `/api/v2/project/{project_id}/access/` and `/api/v2/project/{project_id}/access/accept/` (\#2999).
+    * Add project-sharing admin endpoint (\#2999).
+    * Add granular access-control rules to `/api/v2` endpoints, valid for both project owners and guests (\#2999, \#3029).
     * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3023).
     * Do not cast endpoint return values to `PaginationResponse[X]` (\#3023).
+    * Reduce API logging level for some endpoints (\#3010).
+* Database:
+    * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
 * Dependencies:
