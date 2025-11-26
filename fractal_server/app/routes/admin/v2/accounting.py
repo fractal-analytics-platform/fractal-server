@@ -67,11 +67,11 @@ async def query_accounting(
     res = await db.execute(stm)
     records = res.scalars().all()
 
-    return PaginationResponse[AccountingRecordRead](
+    return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=[record.model_dump() for record in records],
+        items=records,
     )
 
 

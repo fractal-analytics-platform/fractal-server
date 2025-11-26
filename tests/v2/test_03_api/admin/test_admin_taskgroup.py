@@ -69,18 +69,20 @@ async def test_task_group_admin(
         assert res.status_code == 404
 
         # GET /
-        res = await client.get(f"{PREFIX}/task-group/")
+        res = await client.get(f"{PREFIX}/task-group/?page_size=1000")
         assert res.status_code == 200
-        assert len(res.json()) == 3
-        groups = sorted(res.json(), key=lambda x: x["timestamp_last_used"])
+        assert len(res.json()["items"]) == 3
+        groups = sorted(
+            res.json()["items"], key=lambda x: x["timestamp_last_used"]
+        )
 
         # Filter using `user_id`
         res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(f"{PREFIX}/task-group/?user_id={user2.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         # Filter using `timestamp_last_used_min`
         res = await client.get(
@@ -89,13 +91,13 @@ async def test_task_group_admin(
         )
         debug(res.json())
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/?timestamp_last_used_min="
             f"{quote(groups[0]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
 
         # Filter using `timestamp_last_used_max`
         res = await client.get(
@@ -103,64 +105,64 @@ async def test_task_group_admin(
             f"{quote(groups[1]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/?timestamp_last_used_max="
             f"{quote(groups[0]['timestamp_last_used'])}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         # Filter using `origin`
         res = await client.get(f"{PREFIX}/task-group/?origin=other")
         assert res.status_code == 200
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
         res = await client.get(f"{PREFIX}/task-group/?origin=pypi")
         assert res.status_code == 200
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/task-group/?origin=INVALID")
         assert res.status_code == 422
 
         # Filter using `pkg_name`
         res = await client.get(f"{PREFIX}/task-group/?pkg_name=bb")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         # Filter using `active`
         res = await client.get(f"{PREFIX}/task-group/?active=true")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/?user_id={user1.id}&active=true"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(
             f"{PREFIX}/task-group/?user_id={user1.id}&active=false"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         # Filter using `private`
         res = await client.get(f"{PREFIX}/task-group/?private=true")
         assert res.status_code == 200
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/task-group/?private=false")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
         # Filter using `resource_id` (assuming they all have the same resource)
-        resource_id = res.json()[0]["resource_id"]
+        resource_id = res.json()["items"][0]["resource_id"]
         res = await client.get(
             f"{PREFIX}/task-group/?resource_id={resource_id}"
         )
         assert res.status_code == 200
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
 
         # Filter using `user_group_id` and/or `private`
         res = await client.get(f"{PREFIX}/task-group/?user_group_id=1")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/?user_group_id=1&private=true"
         )
@@ -187,9 +189,9 @@ async def test_task_group_admin(
         )
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/task-group/?private=true")
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(f"{PREFIX}/task-group/?active=true")
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
 
 async def test_get_task_group_activity(
@@ -240,7 +242,7 @@ async def test_get_task_group_activity(
         assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.get(f"{PREFIX}/task-group/activity/")
+        res = await client.get(f"{PREFIX}/task-group/activity/?page_size=1000")
         assert res.status_code == 200
         assert len(res.json()) == 4
 
@@ -248,50 +250,50 @@ async def test_get_task_group_activity(
         res = await client.get(
             f"{PREFIX}/task-group/activity/?user_id={user1.id}"
         )
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/activity/?user_id={user2.id}"
         )
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         # task_group_activity_id
         res = await client.get(
             f"{PREFIX}/task-group/activity/"
             f"?user_id={user1.id}&task_group_activity_id={activity1.id}"
         )
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         # taskgroupv2_id
         res = await client.get(
             f"{PREFIX}/task-group/activity/"
             f"?taskgroupv2_id={task.taskgroupv2_id}"
         )
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         # pkg_name
         res = await client.get(f"{PREFIX}/task-group/activity/?pkg_name=foo")
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
         res = await client.get(f"{PREFIX}/task-group/activity/?pkg_name=bar")
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/task-group/activity/?pkg_name=xxx")
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
         # status
         res = await client.get(f"{PREFIX}/task-group/activity/?status=OK")
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
         res = await client.get(f"{PREFIX}/task-group/activity/?status=failed")
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/task-group/activity/?status=ongoing")
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/task-group/activity/?status=xxx")
         assert res.status_code == 422
         # action
         res = await client.get(f"{PREFIX}/task-group/activity/?action=collect")
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
         res = await client.get(
             f"{PREFIX}/task-group/activity/?action=reactivate"
         )
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
         res = await client.get(
             f"{PREFIX}/task-group/activity/?action=deactivate"
         )
-        assert len(res.json()) == 0
+        assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/task-group/activity/?action=xxx")
         assert res.status_code == 422
         # timestamp_started_min
@@ -299,17 +301,17 @@ async def test_get_task_group_activity(
             f"{PREFIX}/task-group/activity/"
             f"?timestamp_started_min={quote(str(activity2.timestamp_started))}"
         )
-        assert len(res.json()) == 3
+        assert len(res.json()["items"]) == 3
         res = await client.get(
             f"{PREFIX}/task-group/activity/"
             f"?timestamp_started_min={quote(str(activity3.timestamp_started))}"
         )
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
         # combination and iconstains
         res = await client.get(
             f"{PREFIX}/task-group/activity/?status=OK&pkg_name=O"
         )
-        assert len(res.json()) == 2
+        assert len(res.json()["items"]) == 2
 
 
 class MockFractalSSHList:
@@ -603,7 +605,7 @@ async def test_admin_delete_task_group_api_local(
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/task-group/")
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         res = await client.post(f"{PREFIX}/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
@@ -613,8 +615,8 @@ async def test_admin_delete_task_group_api_local(
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
 
         res = await client.get(f"{PREFIX}/task-group/activity/?action=delete")
-        assert len(res.json()) == 1
-        activity = res.json()[0]
+        assert len(res.json()["items"]) == 1
+        activity = res.json()["items"][0]
         assert activity["id"] == activity_id
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.OK
@@ -639,7 +641,7 @@ async def test_admin_delete_task_group_api_ssh(
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/task-group/")
-        assert len(res.json()) == 1
+        assert len(res.json()["items"]) == 1
 
         res = await client.post(f"{PREFIX}/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
@@ -649,8 +651,8 @@ async def test_admin_delete_task_group_api_ssh(
         assert activity["status"] == TaskGroupActivityStatusV2.PENDING
 
         res = await client.get(f"{PREFIX}/task-group/activity/?action=delete")
-        assert len(res.json()) == 1
-        activity = res.json()[0]
+        assert len(res.json()["items"]) == 1
+        activity = res.json()["items"][0]
         assert activity["id"] == activity_id
         assert activity["action"] == TaskGroupActivityActionV2.DELETE
         assert activity["status"] == TaskGroupActivityStatusV2.OK

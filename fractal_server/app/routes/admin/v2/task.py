@@ -170,7 +170,7 @@ async def query_tasks(
                 ],
             )
         )
-    return PaginationResponse[TaskV2Info](
+    return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,

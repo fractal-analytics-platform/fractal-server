@@ -4,6 +4,8 @@
 
 * API:
     * Reduce API logging level for some endpoints (\#3010).
+    * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3023).
+    * Do not cast endpoint return values to `PaginationResponse[X]` (\#3023).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
 * Dependencies:

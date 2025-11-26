@@ -146,11 +146,11 @@ async def view_job(
         for job in job_list:
             setattr(job, "log", None)
 
-    return PaginationResponse[JobReadV2](
+    return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=[job.model_dump() for job in job_list],
+        items=job_list,
     )
 
 
