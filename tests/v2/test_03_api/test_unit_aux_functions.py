@@ -1,26 +1,29 @@
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _check_workflow_exists,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_dataset_check_owner,
+    _get_dataset_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_dataset_or_404
-from fractal_server.app.routes.api.v2._aux_functions import _get_job_check_owner
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_project_check_owner,
+    _get_job_check_access,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_project_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_submitted_jobs_statement,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_workflow_check_owner,
+    _get_workflow_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_workflow_task_check_owner,
+    _get_workflow_task_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
@@ -28,6 +31,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 
 async def test_404_functions(db):
@@ -39,7 +43,7 @@ async def test_404_functions(db):
         await _get_dataset_or_404(dataset_id=9999, db=db)
 
 
-async def test_get_project_check_owner(
+async def test_get_project_check_access(
     MockCurrentUser,
     project_factory_v2,
     db,
@@ -51,28 +55,103 @@ async def test_get_project_check_owner(
         project = await project_factory_v2(user)
 
         # Test success
-        await _get_project_check_owner(
-            project_id=project.id, user_id=user.id, db=db
+        await _get_project_check_access(
+            project_id=project.id,
+            user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
+            db=db,
         )
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_project_check_owner(
-                project_id=project.id + 1, user_id=user.id, db=db
+            await _get_project_check_access(
+                project_id=project.id + 1,
+                user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
+                db=db,
             )
         assert err.value.status_code == 404
         assert err.value.detail == "Project not found"
 
-        # Test fail 2
+        # Test fail 2: link_user_project is None
         with pytest.raises(HTTPException) as err:
-            await _get_project_check_owner(
-                project_id=other_project.id, user_id=user.id, db=db
+            await _get_project_check_access(
+                project_id=other_project.id,
+                user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
+                db=db,
             )
         assert err.value.status_code == 403
-        assert err.value.detail == f"Not allowed on project {other_project.id}"
+        assert (
+            "You are not authorized to perform this action." in err.value.detail
+        )
+
+    async with MockCurrentUser() as read_only_user:
+        # Read only user for `project`
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=read_only_user.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        # test `required_permissions not in link_user_project.permissions`
+        await _get_project_check_access(
+            project_id=project.id,
+            user_id=read_only_user.id,
+            required_permissions=ProjectPermissions.READ,  # <---
+            db=db,
+        )
+        for required_permissions in [
+            ProjectPermissions.WRITE,
+            ProjectPermissions.EXECUTE,
+        ]:
+            with pytest.raises(HTTPException) as err:
+                await _get_project_check_access(
+                    project_id=project.id,
+                    user_id=read_only_user.id,
+                    required_permissions=required_permissions,
+                    db=db,
+                )
+            assert err.value.status_code == 403
+            assert (
+                "You are not authorized to perform this action."
+                in err.value.detail
+            )
+
+    async with MockCurrentUser() as unverified_user:
+        db.add(
+            LinkUserProjectV2(
+                project_id=project.id,
+                user_id=unverified_user.id,
+                is_owner=False,
+                is_verified=False,  # <---
+                permissions=ProjectPermissions.EXECUTE,
+            )
+        )
+        await db.commit()
+
+        # test `not link_user_project.is_verified`
+        for required_permissions in ProjectPermissions:
+            with pytest.raises(HTTPException) as err:
+                await _get_project_check_access(
+                    project_id=project.id,
+                    user_id=unverified_user.id,
+                    required_permissions=required_permissions,
+                    db=db,
+                )
+            assert err.value.status_code == 403
+            assert (
+                "You are not authorized to perform this action."
+                in err.value.detail
+            )
 
 
-async def test_get_workflow_check_owner(
+async def test_get_workflow_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -87,20 +166,22 @@ async def test_get_workflow_check_owner(
         workflow = await workflow_factory_v2(project_id=project.id)
 
         # Test success
-        await _get_workflow_check_owner(
+        await _get_workflow_check_access(
             project_id=project.id,
             workflow_id=workflow.id,
             user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         assert workflow.project is not None
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_check_owner(
+            await _get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id + 1,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -108,17 +189,18 @@ async def test_get_workflow_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_check_owner(
+            await _get_workflow_check_access(
                 project_id=project.id,
                 workflow_id=other_workflow.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
         assert err.value.detail == "Workflow not found"
 
 
-async def test_get_workflow_task_check_owner(
+async def test_get_workflow_task_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -140,20 +222,22 @@ async def test_get_workflow_task_check_owner(
         )
 
         # Test success
-        await _get_workflow_task_check_owner(
+        await _get_workflow_task_check_access(
             project_id=project.id,
             workflow_id=workflow.id,
             workflow_task_id=wftask.id,
             user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_task_check_owner(
+            await _get_workflow_task_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id,
                 workflow_task_id=wftask.id + other_wftask.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -161,11 +245,12 @@ async def test_get_workflow_task_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_workflow_task_check_owner(
+            await _get_workflow_task_check_access(
                 project_id=project.id,
                 workflow_id=workflow.id,
                 workflow_task_id=other_wftask.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -208,7 +293,7 @@ async def test_check_workflow_exists(
         )
 
 
-async def test_get_dataset_check_owner(
+async def test_get_dataset_check_access(
     MockCurrentUser,
     project_factory_v2,
     dataset_factory_v2,
@@ -220,10 +305,11 @@ async def test_get_dataset_check_owner(
         dataset = await dataset_factory_v2(project_id=project.id)
 
         # Test success
-        res = await _get_dataset_check_owner(
+        res = await _get_dataset_check_access(
             project_id=project.id,
             dataset_id=dataset.id,
             user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
             db=db,
         )
         dataset = res["dataset"]
@@ -231,10 +317,11 @@ async def test_get_dataset_check_owner(
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_dataset_check_owner(
+            await _get_dataset_check_access(
                 project_id=project.id,
                 dataset_id=dataset.id + 1,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -242,17 +329,18 @@ async def test_get_dataset_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_dataset_check_owner(
+            await _get_dataset_check_access(
                 project_id=other_project.id,
                 dataset_id=dataset.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
         assert err.value.detail == "Dataset not found"
 
 
-async def test_get_job_check_owner(
+async def test_get_job_check_access(
     MockCurrentUser,
     project_factory_v2,
     workflow_factory_v2,
@@ -287,16 +375,21 @@ async def test_get_job_check_owner(
         )
 
         # Test success
-        await _get_job_check_owner(
-            project_id=project.id, job_id=job.id, user_id=user.id, db=db
+        await _get_job_check_access(
+            project_id=project.id,
+            job_id=job.id,
+            user_id=user.id,
+            required_permissions=ProjectPermissions.EXECUTE,
+            db=db,
         )
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
-            await _get_job_check_owner(
+            await _get_job_check_access(
                 project_id=project.id,
                 job_id=job.id + 1,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404
@@ -304,10 +397,11 @@ async def test_get_job_check_owner(
 
         # Test fail 2
         with pytest.raises(HTTPException) as err:
-            await _get_job_check_owner(
+            await _get_job_check_access(
                 project_id=other_project.id,
                 job_id=job.id,
                 user_id=user.id,
+                required_permissions=ProjectPermissions.EXECUTE,
                 db=db,
             )
         assert err.value.status_code == 404

@@ -16,6 +16,7 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
 from fractal_server.images.tools import aggregate_attributes
@@ -26,7 +27,7 @@ from fractal_server.types import AttributeFilters
 from fractal_server.types import ImageAttributeValue
 from fractal_server.types import TypeFilters
 
-from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_dataset_check_access
 
 router = APIRouter()
 
@@ -64,8 +65,12 @@ async def post_new_image(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     dataset = output["dataset"]
 
@@ -119,8 +124,12 @@ async def query_dataset_images(
     page = pagination.page
     page_size = pagination.page_size
 
-    output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
     dataset = output["dataset"]
     images = dataset.images
@@ -187,8 +196,12 @@ async def delete_dataset_images(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
     dataset = output["dataset"]
 
@@ -231,10 +244,11 @@ async def patch_dataset_image(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]

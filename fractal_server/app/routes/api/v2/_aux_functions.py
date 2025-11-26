@@ -24,15 +24,17 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 
 
-async def _get_project_check_owner(
+async def _get_project_check_access(
     *,
     project_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> ProjectV2:
     """
@@ -41,6 +43,7 @@ async def _get_project_check_owner(
     Args:
         project_id:
         user_id:
+        required_permissions:
         db:
 
     Returns:
@@ -48,31 +51,42 @@ async def _get_project_check_owner(
 
     Raises:
         HTTPException(status_code=403_FORBIDDEN):
-            If the user is not a member of the project
+            - If the user is not a member of the project;
+            - If the user has not accepted the invitation yet;
+            - If the user has not the target permissions.
         HTTPException(status_code=404_NOT_FOUND):
             If the project does not exist
     """
     project = await db.get(ProjectV2, project_id)
-
-    link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
-    if not project:
+    if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    if not link_user_project:
+
+    link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
+    if (
+        link_user_project is None
+        or not link_user_project.is_verified
+        or required_permissions not in link_user_project.permissions
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
+            detail=(
+                "You are not authorized to perform this action. "
+                "If you think this is by mistake, "
+                "please contact the project owner."
+            ),
         )
 
     return project
 
 
-async def _get_workflow_check_owner(
+async def _get_workflow_check_access(
     *,
     workflow_id: int,
     project_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> WorkflowV2:
     """
@@ -96,8 +110,11 @@ async def _get_workflow_check_owner(
     """
 
     # Access control for project
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+    await _get_project_check_access(
+        project_id=project_id,
+        user_id=user_id,
+        required_permissions=required_permissions,
+        db=db,
     )
 
     res = await db.execute(
@@ -116,12 +133,13 @@ async def _get_workflow_check_owner(
     return workflow
 
 
-async def _get_workflow_task_check_owner(
+async def _get_workflow_task_check_access(
     *,
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> tuple[WorkflowTaskV2, WorkflowV2]:
     """
@@ -146,10 +164,11 @@ async def _get_workflow_task_check_owner(
     """
 
     # Access control for workflow
-    workflow = await _get_workflow_check_owner(
+    workflow = await _get_workflow_check_access(
         workflow_id=workflow_id,
         project_id=project_id,
         user_id=user_id,
+        required_permissions=required_permissions,
         db=db,
     )
 
@@ -223,6 +242,7 @@ async def _check_project_exists(
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(ProjectV2.name == project_name)
         .where(LinkUserProjectV2.user_id == user_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
     )
     res = await db.execute(stm)
     if res.scalars().all():
@@ -232,11 +252,12 @@ async def _check_project_exists(
         )
 
 
-async def _get_dataset_check_owner(
+async def _get_dataset_check_access(
     *,
     project_id: int,
     dataset_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["dataset", "project"], DatasetV2 | ProjectV2]:
     """
@@ -260,8 +281,11 @@ async def _get_dataset_check_owner(
             If the user is not a member of the project
     """
     # Access control for project
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user_id,
+        required_permissions=required_permissions,
+        db=db,
     )
 
     res = await db.execute(
@@ -280,11 +304,12 @@ async def _get_dataset_check_owner(
     return dict(dataset=dataset, project=project)
 
 
-async def _get_job_check_owner(
+async def _get_job_check_access(
     *,
     project_id: int,
     job_id: int,
     user_id: int,
+    required_permissions: ProjectPermissions,
     db: AsyncSession,
 ) -> dict[Literal["job", "project"], JobV2 | ProjectV2]:
     """
@@ -308,9 +333,10 @@ async def _get_job_check_owner(
             If the user is not a member of the project
     """
     # Access control for project
-    project = await _get_project_check_owner(
+    project = await _get_project_check_access(
         project_id=project_id,
         user_id=user_id,
+        required_permissions=required_permissions,
         db=db,
     )
 

@@ -13,6 +13,7 @@ from .images import router as images_routes_v2
 from .job import router as job_router_v2
 from .pre_submission_checks import router as pre_submission_checks_router
 from .project import router as project_router_v2
+from .sharing import router as sharing_router_v2
 from .status_legacy import router as status_legacy_router_v2
 from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
@@ -32,6 +33,7 @@ router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
 router_api_v2.include_router(pre_submission_checks_router, tags=["V2 Job"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
+router_api_v2.include_router(sharing_router_v2, tags=["Project Sharing"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
 router_api_v2.include_router(submit_job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(history_router_v2, tags=["V2 History"])

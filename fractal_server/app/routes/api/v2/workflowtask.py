@@ -5,18 +5,21 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
-from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _get_workflow_check_access
+from ._aux_functions import _get_workflow_task_check_access
 from ._aux_functions import _workflow_has_submitted_job
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _check_type_filters_compatibility
@@ -42,9 +45,38 @@ async def create_workflowtask(
     Add a WorkflowTask to a Workflow
     """
 
-    workflow = await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    workflow = await _get_workflow_check_access(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
+
+    res = await db.execute(
+        select(UserOAuth.id)
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == UserOAuth.id)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+    )
+    project_owner_id = res.scalar_one()
+    if project_owner_id != user.id:
+        try:
+            await _get_task_read_access(
+                task_id=task_id,
+                user_id=project_owner_id,
+                db=db,
+                require_active=True,
+            )
+        except HTTPException as e:
+            raise (
+                HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="The task must be accessible to the project owner.",
+                )
+                if e.status_code == 403
+                else e
+            )
 
     task = await _get_task_read_access(
         task_id=task_id, user_id=user.id, db=db, require_active=True
@@ -104,11 +136,12 @@ async def read_workflowtask(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):
-    workflow_task, _ = await _get_workflow_task_check_owner(
+    workflow_task, _ = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     return workflow_task
@@ -130,11 +163,12 @@ async def update_workflowtask(
     Edit a WorkflowTask of a Workflow
     """
 
-    db_wf_task, db_workflow = await _get_workflow_task_check_owner(
+    db_wf_task, db_workflow = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     if workflow_task_update.type_filters is not None:
@@ -215,11 +249,12 @@ async def delete_workflowtask(
     Delete a WorkflowTask of a Workflow
     """
 
-    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+    db_workflow_task, db_workflow = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 

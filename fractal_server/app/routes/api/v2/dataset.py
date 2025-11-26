@@ -16,11 +16,12 @@ from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
 from fractal_server.app.schemas.v2.dataset import DatasetExportV2
 from fractal_server.app.schemas.v2.dataset import DatasetImportV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
 
-from ._aux_functions import _get_dataset_check_owner
-from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_dataset_check_access
+from ._aux_functions import _get_project_check_access
 from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
@@ -40,8 +41,11 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
     )
 
     if dataset.zarr_dir is None:
@@ -86,8 +90,11 @@ async def read_dataset_list(
     Get dataset list for given project
     """
     # Access control
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
     )
     # Find datasets of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
@@ -96,7 +103,6 @@ async def read_dataset_list(
     stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
-    await db.close()
     return dataset_list
 
 
@@ -113,14 +119,14 @@ async def read_dataset(
     """
     Get info on a dataset associated to the current project
     """
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
     dataset = output["dataset"]
-    await db.close()
     return dataset
 
 
@@ -139,10 +145,11 @@ async def update_dataset(
     Edit a dataset associated to the current project
     """
 
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     db_dataset = output["dataset"]
@@ -161,7 +168,6 @@ async def update_dataset(
 
     await db.commit()
     await db.refresh(db_dataset)
-    await db.close()
     return db_dataset
 
 
@@ -178,10 +184,11 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
-    output = await _get_dataset_check_owner(
+    output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
     dataset = output["dataset"]
@@ -221,14 +228,13 @@ async def export_dataset(
     """
     Export an existing dataset
     """
-    dict_dataset_project = await _get_dataset_check_owner(
+    dict_dataset_project = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    await db.close()
-
     dataset = dict_dataset_project["dataset"]
 
     return dataset
@@ -250,9 +256,10 @@ async def import_dataset(
     """
 
     # Preliminary checks
-    await _get_project_check_owner(
+    await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
 
@@ -274,6 +281,5 @@ async def import_dataset(
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
-    await db.close()
 
     return db_dataset

@@ -148,6 +148,7 @@ async def query_tasks(
                     LinkUserProjectV2.user_id == UserOAuth.id,
                 )
                 .where(LinkUserProjectV2.project_id == project_id)
+                .where(LinkUserProjectV2.is_owner.is_(True))
             )
             project_users[project_id] = [
                 ProjectUser(id=p_user[0], email=p_user[1])
