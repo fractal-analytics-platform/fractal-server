@@ -24,7 +24,7 @@ async def test_view_link_user_project(
                 id=i,
                 email=f"user{i}@example.org",
                 hashed_password="12345",
-                project_dir="/fake",
+                project_dirs=["/fake"],
                 is_verified=True,
                 profile_id=profile.id,
             )
@@ -88,7 +88,7 @@ async def test_view_link_user_project(
         id=N + 1,
         email="admin@example.org",
         hashed_password="12345",
-        project_dir="/fake",
+        project_dirs=["/fake"],
         is_verified=True,
         is_superuser=True,
         profile_id=profile.id,

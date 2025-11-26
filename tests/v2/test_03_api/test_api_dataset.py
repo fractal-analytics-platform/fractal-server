@@ -178,14 +178,14 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
 
     # Test POST dataset without zarr_dir
     async with MockCurrentUser(
-        user_kwargs={"project_dir": "/some/dir"}
+        user_kwargs={"project_dirs": ["/some/dir"]}
     ) as user:
         prj = await project_factory_v2(user)
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
         )
         assert res.json()["zarr_dir"] == normalize_url(
-            f"{user.project_dir}/fractal/"
+            f"{user.project_dirs[0]}/fractal/"
             f"{prj.id}_{sanitize_string(prj.name)}/"
             f"{res.json()['id']}_{sanitize_string(res.json()['name'])}"
         )

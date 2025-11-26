@@ -363,7 +363,7 @@ async def MockCurrentUser(
                 default_user_kwargs = dict(
                     email=self.email,
                     hashed_password="fake_hashed_password",
-                    project_dir=PROJECT_DIR_PLACEHOLDER,
+                    project_dirs=[PROJECT_DIR_PLACEHOLDER],
                     is_verified=True,
                 )
 
@@ -500,7 +500,7 @@ async def first_user(
             is_active=True,
             is_verified=True,
             profile_id=profile.id,
-            project_dir="/fake",
+            project_dirs=["/fake"],
         )
         db.add(user)
         await db.commit()

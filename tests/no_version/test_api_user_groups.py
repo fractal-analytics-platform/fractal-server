@@ -33,7 +33,7 @@ async def test_update_group(registered_superuser_client):
     credentials_user_A = dict(
         email="aaa@example.org",
         password="12345",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A
@@ -95,12 +95,12 @@ async def test_user_group_crud(
     credentials_user_A = dict(
         email="aaa@example.org",
         password="12345",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
     credentials_user_B = dict(
         email="bbb@example.org",
         password="12345",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=credentials_user_A

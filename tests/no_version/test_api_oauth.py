@@ -171,7 +171,7 @@ async def test_oauth(registered_superuser_client, db, client):
         json=dict(
             email="kilgore@kilgore.trout",
             password="kilgore",
-            project_dir="/fake",
+            project_dirs=["/fake"],
         ),
     )
     assert res.status_code == 201

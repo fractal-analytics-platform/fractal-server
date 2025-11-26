@@ -120,7 +120,7 @@ async def test_get_current_user_allowed_viewer_paths(
 
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
         assert res.status_code == 200
-        assert set(res.json()) == {user.project_dir}
+        assert set(res.json()) == set(user.project_dirs)
 
         # Add one group to this user
         async with MockCurrentUser(
@@ -155,14 +155,14 @@ async def test_get_current_user_allowed_viewer_paths(
         res = await client.post(f"/auth/group/{group2_id}/add-user/{user_id}/")
         assert res.status_code == 200
 
-        # Update user, defining project_dir
+        # Update user, defining project_dirs
         res = await client.patch(
             f"/auth/users/{user_id}/",
-            json=dict(project_dir=PROJECT_DIR_PLACEHOLDER),
+            json=dict(project_dirs=[PROJECT_DIR_PLACEHOLDER]),
         )
         assert res.status_code == 200
 
-    # Check that project_dir is used by "viewer-paths" auth scheme
+    # Check that project_dirs is used by "viewer-paths" auth scheme
     async with MockCurrentUser(user_kwargs=dict(id=user_id)):
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
         assert res.status_code == 200

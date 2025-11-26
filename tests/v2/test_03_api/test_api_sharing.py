@@ -16,7 +16,7 @@ async def test_project_sharing(
     # Create 3 users
     args = dict(
         hashed_password="12345",
-        project_dir="/fake",
+        project_dirs=["/fake"],
         is_verified=True,
         profile_id=profile.id,
     )
@@ -387,7 +387,7 @@ async def test_project_sharing_access_control(
     _, profile = local_resource_profile_db
     user_args = dict(
         hashed_password="12345",
-        project_dir="/fake",
+        project_dirs=["/fake"],
         is_verified=True,
         profile_id=profile.id,
     )

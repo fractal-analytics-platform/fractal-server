@@ -17,7 +17,7 @@ async def test_register_user(
     payload_register = dict(
         email=EMAIL,
         password="12345",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
 
     # Non-superuser user: FORBIDDEN
@@ -41,7 +41,7 @@ async def test_register_user(
     payload_register2 = dict(
         email=EMAIL,
         password="12345",
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
 
     res = await registered_superuser_client.post(
@@ -59,7 +59,7 @@ async def test_register_user(
         email=EMAIL,
         password="12345",
         profile_id=profile.id,
-        project_dir=PROJECT_DIR_PLACEHOLDER,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER],
     )
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register3
@@ -81,7 +81,7 @@ async def test_list_users(registered_client, registered_superuser_client):
         json=dict(
             email="0@asd.asd",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
     res = await registered_superuser_client.post(
@@ -89,7 +89,7 @@ async def test_list_users(registered_client, registered_superuser_client):
         json=dict(
             email="1@asd.asd",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
 
@@ -113,7 +113,7 @@ async def test_show_user(registered_client, registered_superuser_client):
         json=dict(
             email="to_show@asd.asd",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
     user_id = res.json()["id"]
@@ -142,7 +142,7 @@ async def test_edit_users_as_superuser(
         json=dict(
             email="test@example.org",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
     assert res.status_code == 201
@@ -157,10 +157,10 @@ async def test_edit_users_as_superuser(
     )
     assert res.status_code == 422
 
-    # Fail because `project_dir=None`
+    # Fail because `project_dirs=None`
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
-        json=dict(project_dir=None),
+        json=dict(project_dirs=None),
     )
     assert res.status_code == 422
 
@@ -260,7 +260,7 @@ async def test_add_superuser(registered_superuser_client):
         json=dict(
             email="future_superuser@asd.asd",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
     debug(res.json())
@@ -292,7 +292,7 @@ async def test_set_groups_endpoint(
         json=dict(
             email="test@example.org",
             password="12345",
-            project_dir=PROJECT_DIR_PLACEHOLDER,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
             slurm_accounts=["foo", "bar"],
         ),
     )
