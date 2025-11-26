@@ -8,10 +8,16 @@ from pydantic import EmailStr
 from pydantic import Field
 
 from fractal_server.string_tools import validate_cmd
-from fractal_server.types import AbsolutePathStr
+from fractal_server.types import ListUniqueAbsolutePathStr
 from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import ListUniqueNonNegativeInt
 from fractal_server.types import NonEmptyStr
+
+
+def _validate_cmd_list(value: list[str]) -> list[str]:
+    for v in value:
+        validate_cmd(v)
+    return value
 
 
 class OAuthAccountRead(BaseModel):
@@ -38,18 +44,15 @@ class UserRead(schemas.BaseUser[int]):
         group_ids_names:
         oauth_accounts:
         profile_id:
+        project_dirs:
+        slurm_accounts:
     """
 
     group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
     profile_id: int | None = None
-    project_dir: str
+    project_dirs: list[str]
     slurm_accounts: list[str]
-
-
-def _validate_cmd(value: str) -> str:
-    validate_cmd(value)
-    return value
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -63,7 +66,7 @@ class UserUpdate(schemas.BaseUserUpdate):
         is_superuser:
         is_verified:
         profile_id:
-        project_dir:
+        project_dirs:
         slurm_accounts:
     """
 
@@ -74,9 +77,9 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_superuser: bool = None
     is_verified: bool = None
     profile_id: int | None = None
-    project_dir: Annotated[AbsolutePathStr, AfterValidator(_validate_cmd)] = (
-        None
-    )
+    project_dirs: Annotated[
+        ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
+    ] = None
     slurm_accounts: ListUniqueNonEmptyString = None
 
 
@@ -98,10 +101,14 @@ class UserCreate(schemas.BaseUserCreate):
 
     Attributes:
         profile_id:
+        project_dirs:
+        slurm_accounts:
     """
 
     profile_id: int | None = None
-    project_dir: Annotated[AbsolutePathStr, AfterValidator(_validate_cmd)]
+    project_dirs: Annotated[
+        ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
+    ]
     slurm_accounts: list[str] = Field(default_factory=list)
 
 
@@ -109,6 +116,8 @@ class UserUpdateGroups(BaseModel):
     """
     Schema for `POST /auth/users/{user_id}/set-groups/`
 
+    Attributes:
+        group_ids:
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -117,6 +126,14 @@ class UserUpdateGroups(BaseModel):
 
 
 class UserProfileInfo(BaseModel):
+    """
+    Attributes:
+        has_profile:
+        resource_name:
+        profile_name:
+        username:
+    """
+
     has_profile: bool
     resource_name: str | None = None
     profile_name: str | None = None
