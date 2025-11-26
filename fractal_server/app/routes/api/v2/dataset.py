@@ -58,7 +58,7 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
         path = (
-            f"{user.project_dir[0]}/fractal/"
+            f"{user.project_dirs[0]}/fractal/"
             f"{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
