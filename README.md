@@ -34,7 +34,7 @@
 | fractal\_server/app/routes/admin/v2/profile.py                               |       46 |        0 |        6 |        1 |     98% |    61->64 |
 | fractal\_server/app/routes/admin/v2/resource.py                              |       86 |        0 |        8 |        1 |     99% |  130->134 |
 | fractal\_server/app/routes/admin/v2/task.py                                  |       81 |        0 |       24 |        0 |    100% |           |
-| fractal\_server/app/routes/admin/v2/task\_group.py                           |       94 |        0 |       46 |        0 |    100% |           |
+| fractal\_server/app/routes/admin/v2/task\_group.py                           |      132 |        0 |       50 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group\_lifecycle.py                |      105 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/app/routes/api/\_\_init\_\_.py                               |       35 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_\_init\_\_.py                            |       41 |        0 |        0 |        0 |    100% |           |
@@ -197,7 +197,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-|                                                                    **TOTAL** | **9764** |  **200** | **1770** |   **95** | **97%** |           |
+|                                                                    **TOTAL** | **9802** |  **200** | **1774** |   **95** | **97%** |           |
 
 
 ## Setup coverage badge

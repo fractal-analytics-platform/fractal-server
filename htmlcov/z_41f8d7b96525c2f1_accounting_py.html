@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_41f8d7b96525c2f1_impersonate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
-            created at 2025-11-25 09:46 +0000
+            created at 2025-11-26 08:42 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -151,11 +151,11 @@
     <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="nam">records</span> <span class="op">=</span> <span class="nam">res</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">    <span class="key">return</span> <span class="nam">PaginationResponse</span><span class="op">[</span><span class="nam">AccountingRecordRead</span><span class="op">]</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">    <span class="key">return</span> <span class="nam">dict</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">        <span class="nam">total_count</span><span class="op">=</span><span class="nam">total_count</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">        <span class="nam">page_size</span><span class="op">=</span><span class="nam">page_size</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">        <span class="nam">current_page</span><span class="op">=</span><span class="nam">page</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="nam">items</span><span class="op">=</span><span class="op">[</span><span class="nam">record</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">record</span> <span class="key">in</span> <span class="nam">records</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="nam">items</span><span class="op">=</span><span class="nam">records</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -187,7 +187,7 @@
             <a class="nav" href="z_41f8d7b96525c2f1_impersonate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
-            created at 2025-11-25 09:46 +0000
+            created at 2025-11-26 08:42 +0000
         </p>
     </div>
 </footer>
