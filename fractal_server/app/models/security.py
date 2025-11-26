@@ -117,7 +117,7 @@ class UserOAuth(SQLModel, table=True):
     project_dir: str
     # TODO-2.18.1: `project_dirs: list[str] = Field(min_length=1)`
     project_dirs: list[str] = Field(
-        sa_column=Column(ARRAY(String), server_default="{}"),
+        sa_column=Column(ARRAY(String), nullable=False, server_default="{}"),
     )
 
     slurm_accounts: list[str] = Field(

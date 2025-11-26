@@ -1,8 +1,8 @@
 """User project_dirs array
 
-Revision ID: 309b6c111827
+Revision ID: f47af2f8c1f0
 Revises: bc0e8b3327a7
-Create Date: 2025-11-26 15:12:01.389003
+Create Date: 2025-11-26 15:19:25.898013
 
 """
 
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "309b6c111827"
+revision = "f47af2f8c1f0"
 down_revision = "bc0e8b3327a7"
 branch_labels = None
 depends_on = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
                 "project_dirs",
                 postgresql.ARRAY(sa.String()),
                 server_default="{}",
-                nullable=True,
+                nullable=False,
             )
         )
 
