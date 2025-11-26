@@ -167,7 +167,8 @@ def init_db_data(
             "`--admin-pwd` and `--admin-project-dir`. Exit."
         )
         sys.exit(1)
-    if admin_password and admin_email:
+
+    if admin_email:
         asyncio.run(
             _create_first_user(
                 email=admin_email,

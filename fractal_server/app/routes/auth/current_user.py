@@ -127,8 +127,8 @@ async def get_current_user_allowed_viewer_paths(
     if data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.NONE:
         return authorized_paths
 
-    # Append `project_dir` to the list of authorized paths
-    authorized_paths.append(current_user.project_dir)
+    # Append `project_dirs` to the list of authorized paths
+    authorized_paths += current_user.project_dirs
 
     # If auth scheme is "users-folders" and `slurm_user` is set,
     # build and append the user folder

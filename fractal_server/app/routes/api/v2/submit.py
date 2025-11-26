@@ -238,7 +238,7 @@ async def apply_workflow(
     )
 
     # Define user-side job directory
-    cache_dir = Path(user.project_dir, FRACTAL_CACHE_DIR)
+    cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
     match resource.type:
         case ResourceType.LOCAL:
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL

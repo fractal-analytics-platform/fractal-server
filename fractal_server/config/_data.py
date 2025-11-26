@@ -34,11 +34,11 @@ class DataSettings(BaseSettings):
             Options:
                 <ul>
                 <li> `"viewer-paths"`: The list of allowed viewer paths will
-                    include the user's `project_dir` along with any path
+                    include the user's `project_dirs` along with any path
                     defined in  UserGroups `viewer_paths` attributes.
                 </li>
                 <li> `"users-folders"`: The list will consist of the user's
-                    `project_dir` and a user-specific folder. The user folder
+                    `project_dirs` and a user-specific folder. The user folder
                     is constructed by concatenating the base folder
                     `FRACTAL_DATA_BASE_FOLDER` with the user's profile
                     `username`.
