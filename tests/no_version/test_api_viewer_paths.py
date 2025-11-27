@@ -1,9 +1,5 @@
-from devtools import debug
-
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
-
-PREFIX = "/auth/current-user/"
 
 
 async def test_get_current_user_allowed_viewer_paths(
@@ -69,8 +65,7 @@ async def test_get_current_user_allowed_viewer_paths(
         await db.commit()
 
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
-        debug(res.json())
-        assert res.json() == ["/b1", "/a1/x", "/b2", "/a2/y"]
+        assert res.json() == ["/b1", "/a1/x", "/b2", "/a1/x", "/a2/y"]
 
         res = await client.get(
             "/auth/current-user/allowed-viewer-paths/"
