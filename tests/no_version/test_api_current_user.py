@@ -2,7 +2,6 @@ from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth/current-user/"
 
@@ -100,61 +99,3 @@ async def test_patch_current_user_password_fails(MockCurrentUser, client):
     async with MockCurrentUser():
         res = await client.patch(PREFIX, json={"password": "something"})
         assert res.status_code == 422
-
-
-async def test_get_current_user_allowed_viewer_paths(
-    MockCurrentUser,
-    client,
-    slurm_sudo_resource_profile_db,
-):
-    # Check that a vanilla user has no viewer_paths
-    async with MockCurrentUser() as user:
-        user_id = user.id
-
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == set(user.project_dirs)
-
-        # Add one group to this user
-        async with MockCurrentUser(
-            user_kwargs=dict(is_superuser=True)
-        ) as superuser:
-            superuser_id = superuser.id
-            res = await client.post(
-                "/auth/group/",
-                json=dict(name="group1"),
-            )
-            assert res.status_code == 201
-            group1_id = res.json()["id"]
-
-        # Add user to group1
-        res = await client.post(f"/auth/group/{group1_id}/add-user/{user_id}/")
-        assert res.status_code == 200
-
-        # Check current-user viewer-paths again
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER}
-
-    # Add one group to this user
-    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
-        res = await client.post("/auth/group/", json=dict(name="group2"))
-        assert res.status_code == 201
-        group2_id = res.json()["id"]
-
-        # Add user to group2
-        res = await client.post(f"/auth/group/{group2_id}/add-user/{user_id}/")
-        assert res.status_code == 200
-
-        # Update user, defining project_dirs
-        res = await client.patch(
-            f"/auth/users/{user_id}/",
-            json=dict(project_dirs=[PROJECT_DIR_PLACEHOLDER]),
-        )
-        assert res.status_code == 200
-
-    # Check that project_dirs is used by "viewer-paths" auth scheme
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER}

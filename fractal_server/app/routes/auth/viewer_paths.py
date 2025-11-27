@@ -24,8 +24,7 @@ async def get_current_user_allowed_viewer_paths(
     """
     Returns the allowed viewer paths for current user.
     """
-
-    authorized_paths = current_user.project_dirs
+    authorized_paths = current_user.project_dirs.copy()
 
     if include_shared_projects:
         res = await db.execute(
@@ -39,4 +38,5 @@ async def get_current_user_allowed_viewer_paths(
         )
         authorized_paths.extend(res.unique().scalars().all())
 
-    return authorized_paths
+    # https://stackoverflow.com/questions/12897374/get-unique-values-from-a-list-in-python
+    return list(dict.fromkeys(authorized_paths))
