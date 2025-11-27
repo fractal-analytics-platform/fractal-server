@@ -156,9 +156,9 @@ def start_application() -> FastAPI:
         response = await call_next(request)
         stop_time = time.perf_counter()
         process_time = stop_time - start_time
-        end_timestamp = start_timestamp + timedelta(seconds=process_time)
         # Log if process time is too high
         if process_time > settings.FRACTAL_LONG_REQUEST_TIME:
+            end_timestamp = start_timestamp + timedelta(seconds=process_time)
             warning_message_components = [
                 f"{request.method} {request.url.path}",
                 f"{response.status_code}",
