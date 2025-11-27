@@ -11,11 +11,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.linkuserproject import LinkUserProjectV2
-from fractal_server.app.models.v2.dataset import DatasetV2
-from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import current_user_act
-from fractal_server.app.routes.auth import current_user_act_ver
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
@@ -102,35 +98,3 @@ async def get_current_user_profile_info(
         )
 
     return response_data
-
-
-@router_current_user.get(
-    "/current-user/allowed-viewer-paths/", response_model=list[str]
-)
-async def get_current_user_allowed_viewer_paths(
-    include_shared_projects: bool = True,
-    current_user: UserOAuth = Depends(current_user_act_ver),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[str]:
-    """
-    Returns the allowed viewer paths for current user.
-    """
-
-    authorized_paths = []
-
-    # Append `project_dirs` to the list of authorized paths
-    authorized_paths += current_user.project_dirs
-
-    if include_shared_projects:
-        res = await db.execute(
-            select(DatasetV2.zarr_dir)
-            .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
-            .join(
-                LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id
-            )
-            .where(LinkUserProjectV2.user_id == current_user.id)
-            .where(LinkUserProjectV2.is_owner.is_(False))
-        )
-        authorized_paths += list(set(res.scalars().all()))
-
-    return authorized_paths
