@@ -6,6 +6,12 @@
     * Reduce API logging level for some endpoints (\#3010).
     * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3023).
     * Do not cast endpoint return values to `PaginationResponse[X]` (\#3023).
+    * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
+    * Add validator for paths to forbid parent-directory references (\#3031).
+* Database:
+    * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
+* Settings:
+    * Drop `DataSettings` (\#3031).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
 * Dependencies:
