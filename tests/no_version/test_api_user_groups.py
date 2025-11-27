@@ -18,8 +18,6 @@ async def test_no_access_user_group_api(client):
     assert res.status_code == expected_status
     res = await client.get(f"{PREFIX}/group/1/")
     assert res.status_code == expected_status
-    res = await client.patch(f"{PREFIX}/group/1/")
-    assert res.status_code == expected_status
     res = await client.delete(f"{PREFIX}/group/1/")
     assert res.status_code == expected_status
 
@@ -43,13 +41,12 @@ async def test_update_group(registered_superuser_client):
 
     # Preliminary: create a group
     res = await registered_superuser_client.post(
-        f"{PREFIX}/group/", json=dict(name="group1", viewer_paths=["/old"])
+        f"{PREFIX}/group/", json=dict(name="group1")
     )
     assert res.status_code == 201
     group_data = res.json()
     group_id = group_data["id"]
     assert group_data["user_ids"] == []
-    assert group_data["viewer_paths"] == ["/old"]
 
     invalid_id = 99999
     # Path a non existing group
@@ -71,14 +68,6 @@ async def test_update_group(registered_superuser_client):
     )
     assert res.status_code == 200
     assert res.json()["user_ids"] == [user_A_id]
-
-    # Patch an existing group by replacing `viewer_paths` with a new list
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/group/{group_id}/",
-        json=dict(viewer_paths=["/new"]),
-    )
-    assert res.status_code == 200
-    assert res.json()["viewer_paths"] == ["/new"]
 
 
 async def test_user_group_crud(

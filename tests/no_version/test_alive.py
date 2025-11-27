@@ -1,4 +1,3 @@
-from fractal_server.config import get_data_settings
 from fractal_server.config import get_db_settings
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
@@ -41,12 +40,6 @@ async def test_settings_endpoint(client, MockCurrentUser):
         assert res.status_code == 200
         endpoint_settings = res.json()
         settings = Inject(get_email_settings)
-        assert settings.model_dump().keys() == endpoint_settings.keys()
-
-        res = await client.get("/api/settings/data/")
-        assert res.status_code == 200
-        endpoint_settings = res.json()
-        settings = Inject(get_data_settings)
         assert settings.model_dump().keys() == endpoint_settings.keys()
 
         res = await client.get("/api/settings/oauth/")

@@ -2,7 +2,6 @@ from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from fractal_server.config import DataAuthScheme
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth/current-user/"
@@ -106,14 +105,8 @@ async def test_patch_current_user_password_fails(MockCurrentUser, client):
 async def test_get_current_user_allowed_viewer_paths(
     MockCurrentUser,
     client,
-    override_data_settings_factory,
     slurm_sudo_resource_profile_db,
 ):
-    # Start test with "viewer-paths" auth scheme
-    override_data_settings_factory(
-        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.VIEWER_PATHS
-    )
-
     # Check that a vanilla user has no viewer_paths
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -129,7 +122,7 @@ async def test_get_current_user_allowed_viewer_paths(
             superuser_id = superuser.id
             res = await client.post(
                 "/auth/group/",
-                json=dict(name="group1", viewer_paths=["/a", "/b"]),
+                json=dict(name="group1"),
             )
             assert res.status_code == 201
             group1_id = res.json()["id"]
@@ -141,13 +134,11 @@ async def test_get_current_user_allowed_viewer_paths(
         # Check current-user viewer-paths again
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
         assert res.status_code == 200
-        assert set(res.json()) == {"/a", "/b", PROJECT_DIR_PLACEHOLDER}
+        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER}
 
     # Add one group to this user
     async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
-        res = await client.post(
-            "/auth/group/", json=dict(name="group2", viewer_paths=["/a", "/c"])
-        )
+        res = await client.post("/auth/group/", json=dict(name="group2"))
         assert res.status_code == 201
         group2_id = res.json()["id"]
 
@@ -166,36 +157,4 @@ async def test_get_current_user_allowed_viewer_paths(
     async with MockCurrentUser(user_kwargs=dict(id=user_id)):
         res = await client.get(f"{PREFIX}allowed-viewer-paths/")
         assert res.status_code == 200
-        assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER, "/a", "/b", "/c"}
-
-    # Test with "users-folders" scheme
-    override_data_settings_factory(
-        FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.USERS_FOLDERS,
-        FRACTAL_DATA_BASE_FOLDER="/path/to/base",
-    )
-    async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
         assert set(res.json()) == {PROJECT_DIR_PLACEHOLDER}
-
-    # Test that user dir is added when using "users-folders" scheme
-    resource, profile = slurm_sudo_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            id=user_id,
-            profile_id=profile.id,
-        )
-    ):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert set(res.json()) == {
-            PROJECT_DIR_PLACEHOLDER,
-            f"/path/to/base/{profile.username}",
-        }
-
-    # Verify that scheme "none" returns an empty list
-    override_data_settings_factory(FRACTAL_DATA_AUTH_SCHEME=DataAuthScheme.NONE)
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
-        res = await client.get(f"{PREFIX}allowed-viewer-paths/")
-        assert res.status_code == 200
-        assert res.json() == []

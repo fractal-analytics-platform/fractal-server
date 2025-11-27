@@ -21,11 +21,9 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_user
-from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
 from fractal_server.config import OAuthSettings
 from fractal_server.config import Settings
-from fractal_server.config import get_data_settings
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
@@ -128,39 +126,6 @@ def override_oauth_settings_factory():
                 Inject._dependencies.pop(get_oauth_settings)
         else:
             Inject._dependencies[get_oauth_settings] = original_dependency
-
-
-@pytest.fixture(scope="function")
-def override_data_settings_factory():
-    """
-    Returns a function that can be used to override email settings.
-    """
-
-    original_dependency = Inject._dependencies.get(get_data_settings, None)
-
-    def _overrride_data_settings(**kwargs):
-        # Create and validate new `Settings` object
-        _original_settings = Inject(get_data_settings)
-        _data = _original_settings.model_dump()
-        _data.update(kwargs)
-        _new_settings = DataSettings(**_data)
-
-        # Override `get_settings`
-        def _patched_get_data_settings():
-            return _new_settings
-
-        Inject.override(get_data_settings, _patched_get_data_settings)
-
-    try:
-        yield _overrride_data_settings
-
-    finally:
-        # Restore initial configuration
-        if original_dependency is None:
-            if get_oauth_settings in Inject._dependencies.keys():
-                Inject._dependencies.pop(get_data_settings)
-        else:
-            Inject._dependencies[get_data_settings] = original_dependency
 
 
 @pytest.fixture(scope="function")
