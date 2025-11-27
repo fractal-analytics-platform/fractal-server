@@ -27,8 +27,8 @@ A non-empty string, with no leading/trailing whitespaces.
 
 AbsolutePathStr = Annotated[
     NonEmptyStr,
-    AfterValidator(val_canonical_path),
     AfterValidator(val_absolute_path),
+    AfterValidator(val_canonical_path),
 ]
 """
 String representing an absolute path.
@@ -46,7 +46,7 @@ String representing an URL.
 
 ZarrUrlStr = Annotated[
     NonEmptyStr,
-    # AfterValidator(val_canonical_path), # FIXME issue 3032
+    AfterValidator(val_canonical_path),
     AfterValidator(normalize_url),
 ]
 """

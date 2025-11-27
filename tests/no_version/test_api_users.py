@@ -13,7 +13,7 @@ async def test_register_user(
     Test that user registration is only allowed to a superuser
     """
 
-    EMAIL = "asd@asd.asd"
+    EMAIL = "asd@example.org"
     payload_register = dict(
         email=EMAIL,
         password="12345",
@@ -37,7 +37,7 @@ async def test_register_user(
     assert res.json()["profile_id"] is None
 
     # Superuser: ALLOWED
-    EMAIL = "asd2@asd.asd"
+    EMAIL = "asd2@example.org"
     payload_register2 = dict(
         email=EMAIL,
         password="12345",
@@ -54,7 +54,7 @@ async def test_register_user(
     assert res.json()["profile_id"] is None
 
     _, profile = local_resource_profile_db
-    EMAIL = "asd3@asd.asd"
+    EMAIL = "asd3@example.org"
     payload_register3 = dict(
         email=EMAIL,
         password="12345",
@@ -68,6 +68,19 @@ async def test_register_user(
     assert res.json()["email"] == EMAIL
     assert res.json()["oauth_accounts"] == []
     assert res.json()["profile_id"] == profile.id
+
+    # Not-canonical project_dirs
+    payload_register4 = dict(
+        email="user4@example.org",
+        password="12345",
+        profile_id=profile.id,
+        project_dirs=[PROJECT_DIR_PLACEHOLDER + "/a/../b/c"],
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register4
+    )
+    assert res.status_code == 422
+    assert "String must not contain '/../'." in (res.json()["detail"][0]["msg"])
 
 
 async def test_list_users(registered_client, registered_superuser_client):
