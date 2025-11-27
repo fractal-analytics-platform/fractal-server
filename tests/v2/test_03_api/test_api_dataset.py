@@ -165,6 +165,17 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
             "of the user project directories."
         )
 
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/dataset/",
+            json=dict(
+                name="wrong", zarr_dir=f"{user.project_dirs[0]}/tmp/../zarr"
+            ),
+        )
+        assert res.status_code == 422
+        assert (
+            "String must no contain '/../'." in (res.json()["detail"][0]["msg"])
+        )
+
         # ADD DATASET
         payload = dict(
             name="new dataset", zarr_dir=f"{user.project_dirs[0]}/tmp/zarr"
