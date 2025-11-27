@@ -108,7 +108,7 @@ class UserCreate(schemas.BaseUserCreate):
     profile_id: int | None = None
     project_dirs: Annotated[
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
-    ]
+    ] = Field(min_length=1)
     slurm_accounts: list[str] = Field(default_factory=list)
 
 

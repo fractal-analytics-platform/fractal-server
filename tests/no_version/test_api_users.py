@@ -69,9 +69,22 @@ async def test_register_user(
     assert res.json()["oauth_accounts"] == []
     assert res.json()["profile_id"] == profile.id
 
+    # Empty project_dirs
+    payload_register4 = dict(
+        email="user@example.org",
+        password="12345",
+        profile_id=profile.id,
+        project_dirs=[],
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register4
+    )
+    assert res.status_code == 422
+    assert "at least 1" in (res.json()["detail"][0]["msg"])
+
     # Not-canonical project_dirs
     payload_register4 = dict(
-        email="user4@example.org",
+        email="user@example.org",
         password="12345",
         profile_id=profile.id,
         project_dirs=[PROJECT_DIR_PLACEHOLDER + "/a/../b/c"],
@@ -84,7 +97,7 @@ async def test_register_user(
 
     # Not-absolute and not-canonical project_dirs
     payload_register4 = dict(
-        email="user4@example.org",
+        email="user@example.org",
         password="12345",
         profile_id=profile.id,
         project_dirs=["a/b/../c/d"],
