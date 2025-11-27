@@ -20,9 +20,6 @@ router_api = APIRouter()
 
 @router_api.get("/alive/")
 async def alive():
-    import time
-
-    time.sleep(1.2)
     return dict(
         alive=True,
         version=fractal_server.__VERSION__,
