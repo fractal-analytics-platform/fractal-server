@@ -1,8 +1,11 @@
 import os
+import time
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from itertools import chain
 
 from fastapi import FastAPI
+from fastapi import Request
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
@@ -18,6 +21,7 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+from .utils import get_timestamp
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -140,6 +144,32 @@ def start_application() -> FastAPI:
             The fully initialised application.
     """
     app = FastAPI(lifespan=lifespan)
+
+    settings = Inject(get_settings)
+
+    @app.middleware("http")
+    async def slow_response_middleware(request: Request, call_next):
+        logger = set_logger("slow-response")
+        # Measure process time
+        start_timestamp = get_timestamp()
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        stop_time = time.perf_counter()
+        process_time = stop_time - start_time
+        end_timestamp = start_timestamp + timedelta(seconds=process_time)
+        # Log if process time is too high
+        if process_time > settings.FRACTAL_LONG_REQUEST_TIME:
+            warning_message_components = [
+                f"{request.method} {request.url.path}",
+                f"{response.status_code}",
+                f"{process_time:.2f} seconds",
+                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+            ]
+            logger.warning(" - ".join(warning_message_components))
+        reset_logger_handlers(logger)
+        return response
+
     collect_routers(app)
     return app
 
