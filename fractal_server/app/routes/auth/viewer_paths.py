@@ -37,6 +37,7 @@ async def get_current_user_allowed_viewer_paths(
             .where(LinkUserProjectV2.is_owner.is_(False))
         )
         authorized_paths.extend(res.unique().scalars().all())
+        # Note that `project_dirs` and the `db.execute` result may have some
+        # common elements, and then this list may have non-unique items.
 
-    # https://stackoverflow.com/questions/12897374/get-unique-values-from-a-list-in-python
-    return list(dict.fromkeys(authorized_paths))
+    return authorized_paths
