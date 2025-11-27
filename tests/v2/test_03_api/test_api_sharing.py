@@ -489,7 +489,6 @@ async def test_project_sharing_task_group_access(
         task_id = res.json()["id"]
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert taskgroup.user_group_id is not None
-        user_group_id = taskgroup.user_group_id
 
         # User 1 inserts a private task
         res = await client.post(
@@ -561,23 +560,19 @@ async def test_project_sharing_task_group_access(
             f"?task_id={new_task_id}",
             json=dict(),
         )
-        assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "The task must be accessible to the project owner."
-        )
+        assert res.status_code == 201
 
-        # User 2 makes the task non-private and now he can add the wftask
-        res = await client.patch(
-            f"/api/v2/task-group/{new_taskgroup.id}/",
-            json=dict(user_group_id=user_group_id),
+    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+        # What User 1 sees
+        res = await client.get(
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
         )
         assert res.status_code == 200
-        res = await client.post(
-            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={new_task_id}",
-            json=dict(),
+        assert len(res.json()["task_list"]) == 2
+        assert res.json()["task_list"][0]["warning"] is None
+        assert res.json()["task_list"][1]["warning"] == (
+            "Current user has no access to this task."
         )
-        assert res.status_code == 201
 
 
 async def test_project_sharing_subquery(
