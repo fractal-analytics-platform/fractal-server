@@ -35,7 +35,7 @@ def val_canonical_path(path: str) -> str:
     Check that a string attribute has no '/../' in it
     """
     if ".." in Path(path).parts:
-        raise ValueError("String must no contain '/../'.")
+        raise ValueError("String must not contain '/../'.")
     return path
 
 
