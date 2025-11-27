@@ -3,6 +3,7 @@
 Fractal Server only allows PostgreSQL to be used as database; the database-related configuration variables are described below (and in the [configuration page](../configuration.md#fractal_server.config._database.DatabaseSettings)).
 
 To use PostgreSQL as a database, `fractal-server` depends on [`sqlalchemy`](https://www.sqlalchemy.org/) and [`psycopg[binary]`](https://www.psycopg.org/psycopg3/docs/).
+As of `fractal-server` 2.17.0, several versions of PostgreSQL from v10 to v18 have been tested successfully at least once.
 
 ### Setup
 

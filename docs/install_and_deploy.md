@@ -20,7 +20,7 @@ The following will assume that:
 
 - You have access to a dedicated PostgreSQL database (see the [database page](internals/database.md)).
 
-- A few common UNIX tools are available, including `du`, `find`, `cut`, `cat`, `wc`, `bash`, `ls`, `tar` and `unzip`.
+- A few common UNIX tools are available, including `du`, `find`, `cut`, `cat`, `wc`, `bash`, `ls`, `tar`, `ssh` and `unzip`.
 
 ## Install
 
