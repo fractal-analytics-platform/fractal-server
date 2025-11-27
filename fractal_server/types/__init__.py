@@ -32,6 +32,9 @@ AbsolutePathStr = Annotated[
 ]
 """
 String representing an absolute path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 
@@ -51,6 +54,9 @@ ZarrUrlStr = Annotated[
 ]
 """
 String representing a zarr URL/path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 
@@ -61,6 +67,9 @@ ZarrDirStr = Annotated[
 ]
 """
 String representing a `zarr_dir` path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 DictStrAny = Annotated[
