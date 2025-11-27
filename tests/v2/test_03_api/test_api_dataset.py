@@ -374,6 +374,17 @@ async def test_patch_dataset(
             "of the user project directories."
         )
 
+        WRONG_ZARR_DIR_2 = f"{user.project_dirs[0]}/a/b/../c/d"
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(zarr_dir=WRONG_ZARR_DIR_2),
+        )
+        assert res.status_code == 422
+        assert (
+            "String must not contain '/../'."
+            in (res.json()["detail"][0]["msg"])
+        )
+
         # Check that zarr_dir can be modified only if Dataset.images is empty
         NEW_ZARR_DIR = f"{user.project_dirs[0]}/new_zarr_dir"
         res = await client.patch(
