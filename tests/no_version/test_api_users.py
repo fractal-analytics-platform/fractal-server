@@ -82,6 +82,19 @@ async def test_register_user(
     assert res.status_code == 422
     assert "String must not contain '/../'." in (res.json()["detail"][0]["msg"])
 
+    # Not-absolute and not-canonical project_dirs
+    payload_register4 = dict(
+        email="user4@example.org",
+        password="12345",
+        profile_id=profile.id,
+        project_dirs=["a/b/../c/d"],
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/", json=payload_register4
+    )
+    assert res.status_code == 422
+    assert "absolute path" in (res.json()["detail"][0]["msg"])
+
 
 async def test_list_users(registered_client, registered_superuser_client):
     """
