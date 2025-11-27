@@ -2,18 +2,14 @@
 Definition of `/auth/current-user/` endpoints
 """
 
-import os
-
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2.dataset import DatasetV2
@@ -29,9 +25,6 @@ from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.security import UserManager
 from fractal_server.app.security import get_user_manager
-from fractal_server.config import DataAuthScheme
-from fractal_server.config import get_data_settings
-from fractal_server.syringe import Inject
 
 router_current_user = APIRouter()
 
@@ -120,16 +113,10 @@ async def get_current_user_allowed_viewer_paths(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
-    Returns the allowed viewer paths for current user, according to the
-    selected FRACTAL_DATA_AUTH_SCHEME
+    Returns the allowed viewer paths for current user.
     """
 
-    data_settings = Inject(get_data_settings)
-
     authorized_paths = []
-
-    if data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.NONE:
-        return authorized_paths
 
     # Append `project_dirs` to the list of authorized paths
     authorized_paths += current_user.project_dirs
@@ -145,35 +132,5 @@ async def get_current_user_allowed_viewer_paths(
             .where(LinkUserProjectV2.is_owner.is_(False))
         )
         authorized_paths += list(set(res.scalars().all()))
-
-    # If auth scheme is "users-folders" and `slurm_user` is set,
-    # build and append the user folder
-    if (
-        data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.USERS_FOLDERS
-        and current_user.profile_id is not None
-    ):
-        profile = await db.get(Profile, current_user.profile_id)
-        if profile is not None and profile.username is not None:
-            base_folder = data_settings.FRACTAL_DATA_BASE_FOLDER
-            user_folder = os.path.join(base_folder, profile.username)
-            authorized_paths.append(user_folder)
-
-    if data_settings.FRACTAL_DATA_AUTH_SCHEME == DataAuthScheme.VIEWER_PATHS:
-        # Returns the union of `viewer_paths` for all user's groups
-        cmd = (
-            select(UserGroup.viewer_paths)
-            .join(LinkUserGroup, LinkUserGroup.group_id == UserGroup.id)
-            .where(LinkUserGroup.user_id == current_user.id)
-        )
-        res = await db.execute(cmd)
-        viewer_paths_nested = res.scalars().all()
-
-        # Flatten a nested object and make its elements unique
-        all_viewer_paths_set = {
-            path
-            for _viewer_paths in viewer_paths_nested
-            for path in _viewer_paths
-        }
-        authorized_paths.extend(all_viewer_paths_set)
 
     return authorized_paths

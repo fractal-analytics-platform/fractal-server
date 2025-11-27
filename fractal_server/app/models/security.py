@@ -6,7 +6,6 @@ from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -140,7 +139,4 @@ class UserGroup(SQLModel, table=True):
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
-    )
-    viewer_paths: list[str] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
     )

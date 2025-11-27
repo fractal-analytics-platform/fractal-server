@@ -316,7 +316,7 @@ class FractalClient:
         raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
 
     def add_user_group(self):
-        group = UserGroupCreate(name="new_group", viewer_paths=["/view/path"])
+        group = UserGroupCreate(name="new_group")
         res = self.make_request(
             endpoint="auth/group/",
             method="POST",

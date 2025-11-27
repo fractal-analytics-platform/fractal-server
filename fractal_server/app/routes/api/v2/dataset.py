@@ -79,7 +79,7 @@ async def create_dataset(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Dataset zarr_dir is not relative to any of the user "
-                    "headers=project directories."
+                    "project directories."
                 ),
             )
 
@@ -185,7 +185,7 @@ async def update_dataset(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Dataset zarr_dir is not relative to any of the user "
-                    "headers=project directories."
+                    "project directories."
                 ),
             )
 
