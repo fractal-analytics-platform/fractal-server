@@ -135,6 +135,9 @@ async def lifespan(app: FastAPI):
     reset_logger_handlers(logger)
 
 
+slow_response_logger = set_logger("slow-response")
+
+
 def start_application() -> FastAPI:
     """
     Create the application, initialise it and collect all available routers.
@@ -149,7 +152,6 @@ def start_application() -> FastAPI:
 
     @app.middleware("http")
     async def slow_response_middleware(request: Request, call_next):
-        logger = set_logger("slow-response")
         # Measure process time
         start_timestamp = get_timestamp()
         start_time = time.perf_counter()
@@ -166,8 +168,7 @@ def start_application() -> FastAPI:
                 f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
                 f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
             ]
-            logger.warning(" - ".join(warning_message_components))
-        reset_logger_handlers(logger)
+            slow_response_logger.warning(" - ".join(warning_message_components))
         return response
 
     collect_routers(app)
