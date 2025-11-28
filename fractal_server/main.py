@@ -164,7 +164,8 @@ class SlowResponseMiddleware:
             end_timestamp = get_timestamp()
             datetime_format = "%Y-%m-%d %H:%M:%S.%f"
             slow_response_logger.warning(
-                f"{scope['method']} {scope['route'].path}, "
+                f"{scope['method']} {scope['route'].path}"
+                f"?{scope['query_string'].decode('utf-8')}, "
                 f"{context['status_code']}, "
                 f"{process_time:.2f} seconds, "
                 f"{start_timestamp.strftime(datetime_format)}, "
