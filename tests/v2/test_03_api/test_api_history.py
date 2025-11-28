@@ -3,7 +3,7 @@ from fractal_server.app.models import JobV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 
 async def test_get_workflow_tasks_statuses(
@@ -84,13 +84,13 @@ async def test_get_workflow_tasks_statuses(
     job_A = JobV2(
         first_task_index=0,
         last_task_index=3,
-        status=JobStatusTypeV2.DONE,
+        status=JobStatusType.DONE,
         **common_job_args,
     )
     job_B = JobV2(
         first_task_index=1,
         last_task_index=4,
-        status=JobStatusTypeV2.SUBMITTED,
+        status=JobStatusType.SUBMITTED,
         **common_job_args,
     )
     db.add_all([job_A, job_B])
@@ -212,7 +212,7 @@ async def test_multiple_jobs_error(
             project_dump={},
             first_task_index=0,
             last_task_index=0,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
         )
         db.add(job)
         await db.commit()

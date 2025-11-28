@@ -23,7 +23,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.logger import set_logger
 
@@ -361,7 +361,7 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
         A sqlmodel statement that selects all `Job`s with
         `Job.status` equal to `submitted`.
     """
-    stm = select(JobV2).where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+    stm = select(JobV2).where(JobV2.status == JobStatusType.SUBMITTED)
     return stm
 
 
@@ -371,7 +371,7 @@ async def _workflow_has_submitted_job(
 ) -> bool:
     res = await db.execute(
         select(JobV2.id)
-        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
         .where(JobV2.workflow_id == workflow_id)
         .limit(1)
     )
@@ -470,9 +470,7 @@ async def clean_app_job_list_v2(
     result = await db.execute(stmt)
     db_jobs_list = result.scalars().all()
     submitted_job_ids = [
-        job.id
-        for job in db_jobs_list
-        if job.status == JobStatusTypeV2.SUBMITTED
+        job.id for job in db_jobs_list if job.status == JobStatusType.SUBMITTED
     ]
     return submitted_job_ids
 

@@ -11,9 +11,9 @@ from fractal_server.types import NonEmptyStr
 from .task import TaskType
 
 
-class TaskManifestV2(BaseModel):
+class TaskManifest(BaseModel):
     """
-    Represents a task within a V2 manifest.
+    Represents a task within a manifest.
 
     Attributes:
         name:
@@ -65,24 +65,24 @@ class TaskManifestV2(BaseModel):
         executable_parallel = self.executable_parallel
         if (executable_non_parallel is None) and (executable_parallel is None):
             raise ValueError(
-                "`TaskManifestV2.executable_non_parallel` and "
-                "`TaskManifestV2.executable_parallel` cannot be both None."
+                "`TaskManifest.executable_non_parallel` and "
+                "`TaskManifest.executable_parallel` cannot be both None."
             )
 
         elif executable_non_parallel is None:
             meta_non_parallel = self.meta_non_parallel
             if meta_non_parallel != {}:
                 raise ValueError(
-                    "`TaskManifestV2.meta_non_parallel` must be an empty dict "
-                    "if `TaskManifestV2.executable_non_parallel` is None. "
+                    "`TaskManifest.meta_non_parallel` must be an empty dict "
+                    "if `TaskManifest.executable_non_parallel` is None. "
                     f"Given: {meta_non_parallel}."
                 )
 
             args_schema_non_parallel = self.args_schema_non_parallel
             if args_schema_non_parallel is not None:
                 raise ValueError(
-                    "`TaskManifestV2.args_schema_non_parallel` must be None "
-                    "if `TaskManifestV2.executable_non_parallel` is None. "
+                    "`TaskManifest.args_schema_non_parallel` must be None "
+                    "if `TaskManifest.executable_non_parallel` is None. "
                     f"Given: {args_schema_non_parallel}."
                 )
 
@@ -90,23 +90,23 @@ class TaskManifestV2(BaseModel):
             meta_parallel = self.meta_parallel
             if meta_parallel != {}:
                 raise ValueError(
-                    "`TaskManifestV2.meta_parallel` must be an empty dict if "
-                    "`TaskManifestV2.executable_parallel` is None. "
+                    "`TaskManifest.meta_parallel` must be an empty dict if "
+                    "`TaskManifest.executable_parallel` is None. "
                     f"Given: {meta_parallel}."
                 )
 
             args_schema_parallel = self.args_schema_parallel
             if args_schema_parallel is not None:
                 raise ValueError(
-                    "`TaskManifestV2.args_schema_parallel` must be None if "
-                    "`TaskManifestV2.executable_parallel` is None. "
+                    "`TaskManifest.args_schema_parallel` must be None if "
+                    "`TaskManifest.executable_parallel` is None. "
                     f"Given: {args_schema_parallel}."
                 )
 
         return self
 
 
-class ManifestV2(BaseModel):
+class Manifest(BaseModel):
     """
     Packages containing tasks are required to include a special file
     `__FRACTAL_MANIFEST__.json` in order to be discovered and used by Fractal.
@@ -131,7 +131,7 @@ class ManifestV2(BaseModel):
     """
 
     manifest_version: Literal["2"]
-    task_list: list[TaskManifestV2]
+    task_list: list[TaskManifest]
     has_args_schemas: bool = False
     args_schema_version: str | None = None
     authors: NonEmptyStr | None = None

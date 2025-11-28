@@ -15,11 +15,11 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import WorkflowCreateV2
-from fractal_server.app.schemas.v2 import WorkflowExportV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
-from fractal_server.app.schemas.v2 import WorkflowUpdateV2
+from fractal_server.app.schemas.v2 import WorkflowCreate
+from fractal_server.app.schemas.v2 import WorkflowExport
+from fractal_server.app.schemas.v2 import WorkflowRead
+from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
+from fractal_server.app.schemas.v2 import WorkflowUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.tools import merge_type_filters
 
@@ -35,13 +35,13 @@ router = APIRouter()
 
 @router.get(
     "/project/{project_id}/workflow/",
-    response_model=list[WorkflowReadV2],
+    response_model=list[WorkflowRead],
 )
 async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowReadV2] | None:
+) -> list[WorkflowRead] | None:
     """
     Get workflow list for given project
     """
@@ -63,15 +63,15 @@ async def get_workflow_list(
 
 @router.post(
     "/project/{project_id}/workflow/",
-    response_model=WorkflowReadV2,
+    response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
     project_id: int,
-    workflow: WorkflowCreateV2,
+    workflow: WorkflowCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadV2 | None:
+) -> WorkflowRead | None:
     """
     Create a workflow, associate to a project
     """
@@ -95,14 +95,14 @@ async def create_workflow(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowReadV2WithWarnings,
+    response_model=WorkflowReadWithWarnings,
 )
 async def read_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadV2WithWarnings | None:
+) -> WorkflowReadWithWarnings | None:
     """
     Get info on an existing workflow
     """
@@ -129,15 +129,15 @@ async def read_workflow(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowReadV2WithWarnings,
+    response_model=WorkflowReadWithWarnings,
 )
 async def update_workflow(
     project_id: int,
     workflow_id: int,
-    patch: WorkflowUpdateV2,
+    patch: WorkflowUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadV2WithWarnings | None:
+) -> WorkflowReadWithWarnings | None:
     """
     Edit a workflow
     """
@@ -251,14 +251,14 @@ async def delete_workflow(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/export/",
-    response_model=WorkflowExportV2,
+    response_model=WorkflowExport,
 )
 async def export_workflow(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowExportV2 | None:
+) -> WorkflowExport | None:
     """
     Export an existing workflow, after stripping all IDs
     """
@@ -279,7 +279,7 @@ async def export_workflow(
             name=wftask.task.name,
         )
 
-    wf = WorkflowExportV2(
+    wf = WorkflowExport(
         **workflow.model_dump(),
         task_list=wf_task_list,
     )

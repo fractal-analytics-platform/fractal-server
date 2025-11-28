@@ -23,9 +23,9 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.schemas.v2 import JobCreateV2
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobCreate
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
@@ -49,18 +49,18 @@ logger = set_logger(__name__)
 @router.post(
     "/project/{project_id}/job/submit/",
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=JobReadV2,
+    response_model=JobRead,
 )
 async def apply_workflow(
     project_id: int,
     workflow_id: int,
     dataset_id: int,
-    job_create: JobCreateV2,
+    job_create: JobCreate,
     background_tasks: BackgroundTasks,
     request: Request,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2 | None:
+) -> JobRead | None:
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
     # NOTE: this may lead to a race condition on `app.state.jobsV2` if two
@@ -152,7 +152,7 @@ async def apply_workflow(
     stm = (
         select(JobV2)
         .where(JobV2.dataset_id == dataset_id)
-        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
     )
     res = await db.execute(stm)
     if res.scalars().all():

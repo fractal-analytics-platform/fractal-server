@@ -3,64 +3,64 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.schemas.v2 import ManifestV2
-from fractal_server.app.schemas.v2 import TaskCollectCustomV2
-from fractal_server.app.schemas.v2 import TaskCollectPipV2
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import Manifest
+from fractal_server.app.schemas.v2 import TaskCollectCustom
+from fractal_server.app.schemas.v2 import TaskCollectPip
+from fractal_server.app.schemas.v2 import TaskGroupCreateStrict
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 
 
 def test_TaskCollectPipV2():
     """
     Check that leading/trailing whitespace characters were removed
     """
-    collection = TaskCollectPipV2(
+    collection = TaskCollectPip(
         package="  package  ",
         package_version="  1.2.3  ",
     )
     assert collection.package == "package"
     assert collection.package_version == "1.2.3"
 
-    collection_none = TaskCollectPipV2(
+    collection_none = TaskCollectPip(
         package="pkg", pinned_package_versions_post=None
     )
     assert collection_none.pinned_package_versions_post is None
 
-    sanitized_keys = TaskCollectPipV2(
+    sanitized_keys = TaskCollectPip(
         package="pkg", pinned_package_versions_post={"    a      ": "1.0.0"}
     )
     assert sanitized_keys.pinned_package_versions_post == dict(a="1.0.0")
 
     with pytest.raises(ValidationError):
-        TaskCollectPipV2(
+        TaskCollectPip(
             package="pkg",
             pinned_package_versions_post={";maliciouscmd": "1.0.0"},
         )
 
     with pytest.raises(ValidationError):
-        TaskCollectPipV2(
+        TaskCollectPip(
             package="pkg",
             pinned_package_versions_post={"pkg": ";maliciouscmd"},
         )
 
     with pytest.raises(ValidationError):
-        TaskCollectPipV2(
+        TaskCollectPip(
             package="pkg",
             pinned_package_versions_post={" a ": "1.0.0", "a": "2.0.0"},
         )
     with pytest.raises(ValidationError):
-        TaskCollectPipV2(
+        TaskCollectPip(
             package="pkg", pinned_package_versions_post={" ": "1.0.0"}
         )
 
     with pytest.raises(ValidationError, match="must not contain"):
-        TaskCollectPipV2(package="; rm x")
+        TaskCollectPip(package="; rm x")
 
     with pytest.raises(ValidationError, match="must not contain"):
-        TaskCollectPipV2(package="pkg", package_version="; rm x")
+        TaskCollectPip(package="pkg", package_version="; rm x")
 
     with pytest.raises(ValidationError, match="must not contain"):
-        TaskCollectPipV2(
+        TaskCollectPip(
             package="pkg", package_version="1.2.3", package_extras="]; rm x; ["
         )
 
@@ -76,8 +76,8 @@ async def test_TaskCollectCustomV2(testdata_path):
         manifest_dict = json.load(f)
 
     with pytest.raises(ValidationError) as e:
-        TaskCollectCustomV2(
-            manifest=ManifestV2(**manifest_dict),
+        TaskCollectCustom(
+            manifest=Manifest(**manifest_dict),
             python_interpreter="/a",
             label="b",
             package_root=None,
@@ -86,8 +86,8 @@ async def test_TaskCollectCustomV2(testdata_path):
     assert "must not contain" in e._excinfo[1].errors()[0]["msg"]
 
     with pytest.raises(ValidationError) as e:
-        TaskCollectCustomV2(
-            manifest=ManifestV2(**manifest_dict),
+        TaskCollectCustom(
+            manifest=Manifest(**manifest_dict),
             python_interpreter="a",
             label="name",
             package_root=None,
@@ -96,8 +96,8 @@ async def test_TaskCollectCustomV2(testdata_path):
     assert "String must be an absolute path" in str(e.value)
 
     with pytest.raises(ValidationError) as e:
-        TaskCollectCustomV2(
-            manifest=ManifestV2(**manifest_dict),
+        TaskCollectCustom(
+            manifest=Manifest(**manifest_dict),
             python_interpreter="/a",
             label="name",
             package_root="non_absolute_path",
@@ -107,8 +107,8 @@ async def test_TaskCollectCustomV2(testdata_path):
 
     # Fail because neither 'package_root' nor 'package_name'
     with pytest.raises(ValidationError) as e:
-        TaskCollectCustomV2(
-            manifest=ManifestV2(**manifest_dict),
+        TaskCollectCustom(
+            manifest=Manifest(**manifest_dict),
             python_interpreter="/a",
             label="name",
             package_root=None,
@@ -118,8 +118,8 @@ async def test_TaskCollectCustomV2(testdata_path):
     assert "One and only one must be set" in str(e.value)
 
     # Successful
-    collection = TaskCollectCustomV2(
-        manifest=ManifestV2(**manifest_dict),
+    collection = TaskCollectCustom(
+        manifest=Manifest(**manifest_dict),
         python_interpreter="  /some/python                  ",
         label="b",
         package_root="  /somewhere  ",
@@ -132,12 +132,12 @@ async def test_TaskCollectCustomV2(testdata_path):
 
 def test_TaskGroupCreateV2Strict():
     # Success
-    TaskGroupCreateV2Strict(
+    TaskGroupCreateStrict(
         path="/a",
         venv_path="/b",
         version="/c",
         python_version="/d",
-        origin=TaskGroupV2OriginEnum.WHEELFILE,
+        origin=TaskGroupOriginEnum.WHEELFILE,
         archive_path="/a",
         pkg_name="x",
         user_id=1,
@@ -145,23 +145,23 @@ def test_TaskGroupCreateV2Strict():
     )
     # Validators from parent class
     with pytest.raises(ValueError, match="absolute path"):
-        TaskGroupCreateV2Strict(
+        TaskGroupCreateStrict(
             path="a",
             venv_path="b",
             version="c",
             python_version="d",
-            origin=TaskGroupV2OriginEnum.PYPI,
+            origin=TaskGroupOriginEnum.PYPI,
             pkg_name="x",
             user_id=1,
             resource_id=1,
         )
     # No path
     with pytest.raises(ValidationError):
-        TaskGroupCreateV2Strict(
+        TaskGroupCreateStrict(
             venv_path="/b",
             version="c",
             python_version="d",
-            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            origin=TaskGroupOriginEnum.WHEELFILE,
             archive_path="/a",
             pkg_name="x",
             user_id=1,
@@ -169,11 +169,11 @@ def test_TaskGroupCreateV2Strict():
         )
     # No venv_path
     with pytest.raises(ValidationError):
-        TaskGroupCreateV2Strict(
+        TaskGroupCreateStrict(
             path="/a",
             version="c",
             python_version="d",
-            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            origin=TaskGroupOriginEnum.WHEELFILE,
             archive_path="/a",
             pkg_name="x",
             user_id=1,
@@ -181,11 +181,11 @@ def test_TaskGroupCreateV2Strict():
         )
     # No version
     with pytest.raises(ValidationError):
-        TaskGroupCreateV2Strict(
+        TaskGroupCreateStrict(
             path="/a",
             venv_path="/b",
             python_version="d",
-            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            origin=TaskGroupOriginEnum.WHEELFILE,
             archive_path="/a",
             pkg_name="x",
             user_id=1,
@@ -193,11 +193,11 @@ def test_TaskGroupCreateV2Strict():
         )
     # No python_version
     with pytest.raises(ValidationError):
-        TaskGroupCreateV2Strict(
+        TaskGroupCreateStrict(
             path="/a",
             venv_path="/b",
             version="c",
-            origin=TaskGroupV2OriginEnum.WHEELFILE,
+            origin=TaskGroupOriginEnum.WHEELFILE,
             archive_path="/a",
             pkg_name="x",
             user_id=1,

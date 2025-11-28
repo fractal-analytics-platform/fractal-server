@@ -17,8 +17,8 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import TaskDumpV2
-from fractal_server.app.schemas.v2 import TaskGroupDumpV2
+from fractal_server.app.schemas.v2 import TaskDump
+from fractal_server.app.schemas.v2 import TaskGroupDump
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
@@ -165,10 +165,10 @@ def execute_tasks_v2(
             # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
                 **wftask.model_dump(exclude={"task"}),
-                task=TaskDumpV2(**wftask.task.model_dump()).model_dump(),
+                task=TaskDump(**wftask.task.model_dump()).model_dump(),
             )
             task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = TaskGroupDumpV2(
+            task_group_dump = TaskGroupDump(
                 **task_group.model_dump()
             ).model_dump()
             # Create HistoryRun

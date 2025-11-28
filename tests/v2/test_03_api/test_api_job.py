@@ -11,9 +11,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
-from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
-from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
+from fractal_server.app.schemas.v2.dumps import DatasetDump
+from fractal_server.app.schemas.v2.dumps import ProjectDump
+from fractal_server.app.schemas.v2.dumps import WorkflowDump
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -412,13 +412,13 @@ async def test_project_apply_workflow_subset(
             f"?workflow_id={wf.id}&dataset_id={dataset1.id}",
             json=dict(first_task_index=0, last_task_index=1),
         )
-        expected_project_dump = ProjectDumpV2(
+        expected_project_dump = ProjectDump(
             **json.loads(project.model_dump_json(exclude={"resource_id"}))
         ).model_dump()
-        expected_workflow_dump = WorkflowDumpV2(
+        expected_workflow_dump = WorkflowDump(
             **json.loads(wf.model_dump_json(exclude={"task_list"}))
         ).model_dump()
-        expected_dataset_dump = DatasetDumpV2(
+        expected_dataset_dump = DatasetDump(
             **json.loads(
                 dataset1.model_dump_json(exclude={"history", "images"})
             )

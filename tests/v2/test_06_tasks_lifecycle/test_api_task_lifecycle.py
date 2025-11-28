@@ -11,10 +11,10 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -100,8 +100,8 @@ async def test_deactivate_task_group_api(
         activity = res.json()
         assert res.status_code == 202
         assert activity["version"] == "N/A"
-        assert activity["status"] == TaskGroupActivityStatusV2.OK
-        assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
+        assert activity["status"] == TaskGroupActivityStatus.OK
+        assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is not None
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
@@ -114,8 +114,8 @@ async def test_deactivate_task_group_api(
         activity = res.json()
         assert res.status_code == 202
         activity_id = activity["id"]
-        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
-        assert activity["action"] == TaskGroupActivityActionV2.DEACTIVATE
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
+        assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
         task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
@@ -200,8 +200,8 @@ async def test_reactivate_task_group_api(
         activity = res.json()
         assert res.status_code == 202
         assert activity["version"] == "N/A"
-        assert activity["status"] == TaskGroupActivityStatusV2.OK
-        assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
+        assert activity["status"] == TaskGroupActivityStatus.OK
+        assert activity["action"] == TaskGroupActivityAction.REACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is not None
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
@@ -229,8 +229,8 @@ async def test_reactivate_task_group_api(
         activity_id = activity["id"]
         assert res.status_code == 202
         assert activity["version"] == task_group_pypi.version
-        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
-        assert activity["action"] == TaskGroupActivityActionV2.REACTIVATE
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
+        assert activity["action"] == TaskGroupActivityAction.REACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
         await db.refresh(task_group_pypi)
@@ -380,7 +380,7 @@ async def _aux_test_lifecycle(
             f"(activity ID={task_group_activity_collection['id']}) "
             "for this task group "
             f"(ID={task_group_activity_collection['taskgroupv2_id']}), "
-            f"with status '{TaskGroupActivityStatusV2.OK}'."
+            f"with status '{TaskGroupActivityStatus.OK}'."
         )
 
         task_group_path = Path(task_group.path)
@@ -390,15 +390,15 @@ async def _aux_test_lifecycle(
         debug(res.json())
         assert res.status_code == 202
         activity = res.json()
-        assert activity["action"] == TaskGroupActivityActionV2.DELETE
-        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        assert activity["action"] == TaskGroupActivityAction.DELETE
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
         # `task_group.path` does not exist anymore
         assert not Path(task_group.path).exists()
 
         res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
         activity = res.json()
-        assert activity["action"] == TaskGroupActivityActionV2.DELETE
-        assert activity["status"] == TaskGroupActivityStatusV2.OK
+        assert activity["action"] == TaskGroupActivityAction.DELETE
+        assert activity["status"] == TaskGroupActivityStatus.OK
 
         # We call the collect endpoint again, mocking the backgroud tasks
         # (for speeding up the test)
@@ -419,12 +419,12 @@ async def _aux_test_lifecycle(
         res = await client.post(f"api/v2/task-group/{task_group_id}/delete/")
         assert res.status_code == 202
         activity = res.json()
-        assert activity["action"] == TaskGroupActivityActionV2.DELETE
-        assert activity["status"] == TaskGroupActivityStatusV2.PENDING
+        assert activity["action"] == TaskGroupActivityAction.DELETE
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
         res = await client.get(f"api/v2/task-group/activity/{activity['id']}/")
         activity = res.json()
-        assert activity["action"] == TaskGroupActivityActionV2.DELETE
-        assert activity["status"] == TaskGroupActivityStatusV2.FAILED
+        assert activity["action"] == TaskGroupActivityAction.DELETE
+        assert activity["status"] == TaskGroupActivityStatus.FAILED
         assert "No such file or directory" in activity["log"]
 
 
@@ -500,8 +500,8 @@ async def test_fail_due_to_ongoing_activities(
         activity = TaskGroupActivityV2(
             user_id=user.id,
             taskgroupv2_id=task_group.id,
-            action=TaskGroupActivityActionV2.DEACTIVATE,
-            status=TaskGroupActivityStatusV2.ONGOING,
+            action=TaskGroupActivityAction.DEACTIVATE,
+            status=TaskGroupActivityStatus.ONGOING,
             pkg_name="dummy",
             version="dummy",
         )
@@ -570,7 +570,7 @@ async def test_lifecycle_actions_with_submitted_jobs(
                 dataset_dump={},
                 workflow_dump={},
                 project_dump={},
-                status=JobStatusTypeV2.SUBMITTED,
+                status=JobStatusType.SUBMITTED,
                 first_task_index=0,
                 last_task_index=1,
             )

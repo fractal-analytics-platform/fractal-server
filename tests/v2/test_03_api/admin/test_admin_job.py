@@ -15,7 +15,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -257,8 +257,8 @@ async def test_patch_job(
     db,
     tmp_path,
 ):
-    ORIGINAL_STATUS = JobStatusTypeV2.SUBMITTED
-    NEW_STATUS = JobStatusTypeV2.FAILED
+    ORIGINAL_STATUS = JobStatusType.SUBMITTED
+    NEW_STATUS = JobStatusType.FAILED
 
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
@@ -282,7 +282,7 @@ async def test_patch_job(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
 
         hr = HistoryRun(
@@ -430,7 +430,7 @@ async def test_stop_job_slurm(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             user_email="fake@example.org",
             dataset_dump={},
             workflow_dump={},

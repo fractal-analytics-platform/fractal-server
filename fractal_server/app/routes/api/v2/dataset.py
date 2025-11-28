@@ -13,11 +13,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import DatasetCreateV2
-from fractal_server.app.schemas.v2 import DatasetReadV2
-from fractal_server.app.schemas.v2 import DatasetUpdateV2
-from fractal_server.app.schemas.v2.dataset import DatasetExportV2
-from fractal_server.app.schemas.v2.dataset import DatasetImportV2
+from fractal_server.app.schemas.v2 import DatasetCreate
+from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import DatasetUpdate
+from fractal_server.app.schemas.v2.dataset import DatasetExport
+from fractal_server.app.schemas.v2.dataset import DatasetImport
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -31,15 +31,15 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/dataset/",
-    response_model=DatasetReadV2,
+    response_model=DatasetRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_dataset(
     project_id: int,
-    dataset: DatasetCreateV2,
+    dataset: DatasetCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetReadV2 | None:
+) -> DatasetRead | None:
     """
     Add new dataset to current project
     """
@@ -93,13 +93,13 @@ async def create_dataset(
 
 @router.get(
     "/project/{project_id}/dataset/",
-    response_model=list[DatasetReadV2],
+    response_model=list[DatasetRead],
 )
 async def read_dataset_list(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetReadV2] | None:
+) -> list[DatasetRead] | None:
     """
     Get dataset list for given project
     """
@@ -122,14 +122,14 @@ async def read_dataset_list(
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/",
-    response_model=DatasetReadV2,
+    response_model=DatasetRead,
 )
 async def read_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetReadV2 | None:
+) -> DatasetRead | None:
     """
     Get info on a dataset associated to the current project
     """
@@ -146,15 +146,15 @@ async def read_dataset(
 
 @router.patch(
     "/project/{project_id}/dataset/{dataset_id}/",
-    response_model=DatasetReadV2,
+    response_model=DatasetRead,
 )
 async def update_dataset(
     project_id: int,
     dataset_id: int,
-    dataset_update: DatasetUpdateV2,
+    dataset_update: DatasetUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetReadV2 | None:
+) -> DatasetRead | None:
     """
     Edit a dataset associated to the current project
     """
@@ -243,14 +243,14 @@ async def delete_dataset(
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/export/",
-    response_model=DatasetExportV2,
+    response_model=DatasetExport,
 )
 async def export_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetExportV2 | None:
+) -> DatasetExport | None:
     """
     Export an existing dataset
     """
@@ -268,15 +268,15 @@ async def export_dataset(
 
 @router.post(
     "/project/{project_id}/dataset/import/",
-    response_model=DatasetReadV2,
+    response_model=DatasetRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def import_dataset(
     project_id: int,
-    dataset: DatasetImportV2,
+    dataset: DatasetImport,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetReadV2 | None:
+) -> DatasetRead | None:
     """
     Import an existing dataset into a project
     """

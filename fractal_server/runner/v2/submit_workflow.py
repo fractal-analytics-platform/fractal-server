@@ -20,7 +20,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
@@ -71,7 +71,7 @@ def fail_job(
         logger.error(log_msg)
     reset_logger_handlers(logger)
     job = db.get(JobV2, job.id)  # refetch, in case it was updated
-    job.status = JobStatusTypeV2.FAILED
+    job.status = JobStatusType.FAILED
     job.end_timestamp = get_timestamp()
     job.log = log_msg
     db.merge(job)
@@ -273,7 +273,7 @@ def submit_workflow(
         # Update job DB entry
         with next(DB.get_sync_db()) as db_sync:
             job = db_sync.get(JobV2, job_id)
-            job.status = JobStatusTypeV2.DONE
+            job.status = JobStatusType.DONE
             job.end_timestamp = get_timestamp()
             with log_file_path.open("r") as f:
                 logs = f.read()

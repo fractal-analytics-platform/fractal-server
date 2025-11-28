@@ -5,8 +5,8 @@ from devtools import debug
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.tasks.v2.local import collect_local
 
 
@@ -35,8 +35,8 @@ async def test_collect_pip_existing_folder(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name="pkg",
         version="1.2.3",
     )
@@ -104,8 +104,8 @@ async def test_collect_pip_local_fail_rmtree(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name="pkg",
         version="0.0.1",
     )
@@ -190,8 +190,8 @@ async def test_invalid_wheel(
             task_group_activity = TaskGroupActivityV2(
                 user_id=user.id,
                 taskgroupv2_id=task_group.id,
-                status=TaskGroupActivityStatusV2.PENDING,
-                action=TaskGroupActivityActionV2.COLLECT,
+                status=TaskGroupActivityStatus.PENDING,
+                action=TaskGroupActivityAction.COLLECT,
                 pkg_name="pkg",
                 version="1.0.0",
             )
@@ -217,7 +217,7 @@ async def test_invalid_wheel(
                 TaskGroupActivityV2, task_group_activity.id
             )
             assert task_group_activity.status == (
-                TaskGroupActivityStatusV2.FAILED
+                TaskGroupActivityStatus.FAILED
             )
             assert task_group_activity.timestamp_ended is not None
             assert log in task_group_activity.log

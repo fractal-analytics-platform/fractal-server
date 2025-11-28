@@ -3,8 +3,8 @@ from urllib.parse import quote
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 PREFIX = "/api/v2/task-group"
 
@@ -260,8 +260,8 @@ async def test_get_single_task_group_activity(client, MockCurrentUser, db):
             user_id=user.id,
             pkg_name="foo",
             version="1",
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.COLLECT,
         )
         db.add(activity)
         await db.commit()
@@ -296,30 +296,30 @@ async def test_get_task_group_activity_list(
             user_id=user.id,
             pkg_name="foo",
             version="1",
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.COLLECT,
         )
         activity2 = TaskGroupActivityV2(
             user_id=user.id,
             pkg_name="bar",
             version="1",
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.REACTIVATE,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.REACTIVATE,
         )
         activity3 = TaskGroupActivityV2(
             user_id=user.id,
             pkg_name="foo",
             version="2",
-            status=TaskGroupActivityStatusV2.FAILED,
-            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatus.FAILED,
+            action=TaskGroupActivityAction.COLLECT,
             taskgroupv2_id=task.taskgroupv2_id,
         )
         activity4 = TaskGroupActivityV2(
             user_id=user.id,
             pkg_name="foo",
             version="1",
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.COLLECT,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.COLLECT,
             taskgroupv2_id=task.taskgroupv2_id,
         )
         for activity in [activity1, activity2, activity3, activity4]:

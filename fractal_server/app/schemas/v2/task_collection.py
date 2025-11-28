@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.app.schemas.v2 import Manifest
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
@@ -21,9 +21,9 @@ class FractalUploadedFile(BaseModel):
     contents: bytes
 
 
-class TaskCollectPipV2(BaseModel):
+class TaskCollectPip(BaseModel):
     """
-    TaskCollectPipV2 class
+    TaskCollectPip class
 
     This class only encodes the attributes required to trigger a
     task-collection operation. Other attributes (that are assigned *during*
@@ -91,7 +91,7 @@ class TaskCollectPipV2(BaseModel):
         return value
 
 
-class TaskCollectCustomV2(BaseModel):
+class TaskCollectCustom(BaseModel):
     """
     Attributes:
         manifest: Manifest of a Fractal task package (this is typically the
@@ -99,7 +99,7 @@ class TaskCollectCustomV2(BaseModel):
         python_interpreter: Absolute path to the Python interpreter to be used
             for running tasks.
         name: A name identifying this package, that will fill the
-            `TaskGroupV2.pkg_name` column.
+            `TaskGroup.pkg_name` column.
         package_root: The folder where the package is installed.
             If not provided, it will be extracted via `pip show`
             (requires `package_name` to be set).
@@ -110,7 +110,7 @@ class TaskCollectCustomV2(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    manifest: ManifestV2
+    manifest: Manifest
     python_interpreter: AbsolutePathStr
     label: NonEmptyStr
     package_root: AbsolutePathStr | None = None

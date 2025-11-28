@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 PREFIX = "api/v2"
 
@@ -164,17 +164,17 @@ async def test_delete_workflow(
         )
         j1 = await job_factory_v2(
             workflow_id=wf_deletable_1.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
             **payload,
         )
         j2 = await job_factory_v2(
             workflow_id=wf_deletable_2.id,
-            status=JobStatusTypeV2.FAILED,
+            status=JobStatusType.FAILED,
             **payload,
         )
         await job_factory_v2(
             workflow_id=wf_not_deletable_1.id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             **payload,
         )
         res = await client.delete(
@@ -415,7 +415,7 @@ async def test_delete_workflow_with_job(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
 
         assert job.workflow_id == workflow.id

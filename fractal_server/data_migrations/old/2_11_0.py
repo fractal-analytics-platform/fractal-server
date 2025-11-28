@@ -9,11 +9,11 @@ from fractal_server.app.models import JobV2
 from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import WorkflowTaskV2
 from fractal_server.app.models import WorkflowV2
-from fractal_server.app.schemas.v2 import DatasetReadV2
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import TaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import ProjectRead
+from fractal_server.app.schemas.v2 import TaskRead
+from fractal_server.app.schemas.v2 import WorkflowTaskRead
 from fractal_server.types import AttributeFilters
 
 logger = logging.getLogger("fix_db")
@@ -79,9 +79,9 @@ def fix_db():
                 ]["input_filters"]["types"]
                 ds.history[i]["workflowtask"].pop("input_filters")
             flag_modified(ds, "history")
-            DatasetReadV2(
+            DatasetRead(
                 **ds.model_dump(),
-                project=ProjectReadV2(**ds.project.model_dump()),
+                project=ProjectRead(**ds.project.model_dump()),
             )
             db.add(ds)
             logger.info(f"DatasetV2[{ds.id}] END - fixed filters")
@@ -115,9 +115,9 @@ def fix_db():
                 )
             wft.input_filters = None
             flag_modified(wft, "input_filters")
-            WorkflowTaskReadV2(
+            WorkflowTaskRead(
                 **wft.model_dump(),
-                task=TaskReadV2(**wft.task.model_dump()),
+                task=TaskRead(**wft.task.model_dump()),
             )
             db.add(wft)
             logger.info(f"WorkflowTaskV2[{wft.id}] END - fixed filters")
@@ -157,7 +157,7 @@ def fix_db():
                 )
             job.dataset_dump.pop("filters")
             flag_modified(job, "dataset_dump")
-            JobReadV2(**job.model_dump())
+            JobRead(**job.model_dump())
             db.add(job)
             logger.info(f"JobV2[{job.id}] END - fixed filters")
 

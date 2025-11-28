@@ -8,13 +8,13 @@ from pydantic.types import AwareDatetime
 from fractal_server.types import NonEmptyStr
 
 
-class ProjectCreateV2(BaseModel):
+class ProjectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
 
 
-class ProjectReadV2(BaseModel):
+class ProjectRead(BaseModel):
     id: int
     name: str
     timestamp_created: AwareDatetime
@@ -24,7 +24,7 @@ class ProjectReadV2(BaseModel):
         return v.isoformat()
 
 
-class ProjectUpdateV2(BaseModel):
+class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None

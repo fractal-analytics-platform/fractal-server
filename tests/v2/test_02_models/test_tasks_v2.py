@@ -5,7 +5,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 
 async def test_task_group_v2(db, local_resource_profile_db):
@@ -132,7 +132,7 @@ async def test_collection_state(db, local_resource_profile_db):
     task_group_activity = TaskGroupActivityV2(
         user_id=user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
+        status=TaskGroupActivityStatus.PENDING,
         action="collect",
         pkg_name="pkg",
         version="1.0.0",

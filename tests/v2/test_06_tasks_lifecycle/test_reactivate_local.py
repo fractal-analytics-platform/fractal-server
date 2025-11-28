@@ -6,8 +6,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.tasks.v2.local import reactivate_local
 
 
@@ -33,8 +33,8 @@ async def test_reactivate_local_venv_exists(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name="pkg",
         version="1.0.0",
     )
@@ -114,8 +114,8 @@ async def test_reactivate_local_fail(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.REACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.REACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )

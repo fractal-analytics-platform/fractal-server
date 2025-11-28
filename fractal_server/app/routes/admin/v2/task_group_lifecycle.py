@@ -26,10 +26,10 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import delete_local
@@ -46,7 +46,7 @@ logger = set_logger(__name__)
 
 @router.post(
     "/{task_group_id}/deactivate/",
-    response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityRead,
 )
 async def deactivate_task_group(
     task_group_id: int,
@@ -54,7 +54,7 @@ async def deactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityRead:
     """
     Deactivate task-group venv
     """
@@ -78,13 +78,13 @@ async def deactivate_task_group(
     await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
-    if task_group.origin == TaskGroupV2OriginEnum.OTHER:
+    if task_group.origin == TaskGroupOriginEnum.OTHER:
         task_group.active = False
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
             taskgroupv2_id=task_group.id,
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.DEACTIVATE,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.DEACTIVATE,
             pkg_name=task_group.pkg_name,
             version=(task_group.version or "N/A"),
             log=(
@@ -103,8 +103,8 @@ async def deactivate_task_group(
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
@@ -140,7 +140,7 @@ async def deactivate_task_group(
 
 @router.post(
     "/{task_group_id}/reactivate/",
-    response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityRead,
 )
 async def reactivate_task_group(
     task_group_id: int,
@@ -148,7 +148,7 @@ async def reactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityRead:
     """
     Deactivate task-group venv
     """
@@ -173,13 +173,13 @@ async def reactivate_task_group(
     await check_no_submitted_job(task_group_id=task_group.id, db=db)
 
     # Shortcut for task-group with origin="other"
-    if task_group.origin == TaskGroupV2OriginEnum.OTHER:
+    if task_group.origin == TaskGroupOriginEnum.OTHER:
         task_group.active = True
         task_group_activity = TaskGroupActivityV2(
             user_id=task_group.user_id,
             taskgroupv2_id=task_group.id,
-            status=TaskGroupActivityStatusV2.OK,
-            action=TaskGroupActivityActionV2.REACTIVATE,
+            status=TaskGroupActivityStatus.OK,
+            action=TaskGroupActivityAction.REACTIVATE,
             pkg_name=task_group.pkg_name,
             version=(task_group.version or "N/A"),
             log=(
@@ -206,8 +206,8 @@ async def reactivate_task_group(
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.REACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.REACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
@@ -259,8 +259,8 @@ async def delete_task_group(
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DELETE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DELETE,
         pkg_name=task_group.pkg_name,
         version=(task_group.version or "N/A"),
         timestamp_started=get_timestamp(),

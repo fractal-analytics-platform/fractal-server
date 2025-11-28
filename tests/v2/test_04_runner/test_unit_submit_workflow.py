@@ -6,7 +6,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.runner.v2.submit_workflow import submit_workflow
 
 
@@ -47,7 +47,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
         )
-        assert job.status == JobStatusTypeV2.SUBMITTED
+        assert job.status == JobStatusType.SUBMITTED
         submit_workflow(
             workflow_id=9999999,
             dataset_id=9999999,
@@ -58,7 +58,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             user_cache_dir=tmp_path / "cache",
         )
         await db.refresh(job)
-        assert job.status == JobStatusTypeV2.FAILED
+        assert job.status == JobStatusType.FAILED
 
 
 async def test_mkdir_error(

@@ -4,7 +4,7 @@ from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2.job import JobStatusTypeV2
+from fractal_server.app.models.v2.job import JobStatusType
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -18,12 +18,12 @@ async def cleanup_after_shutdown(*, jobsV2: list[int], logger_name: str):
     stm_objects = (
         select(JobV2)
         .where(JobV2.id.in_(jobsV2))
-        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
     )
     stm_ids = (
         select(JobV2.id)
         .where(JobV2.id.in_(jobsV2))
-        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
     )
 
     async for session in get_async_db():

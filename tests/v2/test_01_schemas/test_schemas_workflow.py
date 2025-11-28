@@ -3,11 +3,11 @@ from pydantic import ValidationError
 
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import WorkflowCreateV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
-from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
-from fractal_server.app.schemas.v2 import WorkflowUpdateV2
+from fractal_server.app.schemas.v2 import WorkflowCreate
+from fractal_server.app.schemas.v2 import WorkflowRead
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
+from fractal_server.app.schemas.v2 import WorkflowTaskUpdate
+from fractal_server.app.schemas.v2 import WorkflowUpdate
 
 
 async def test_schemas_workflow_v2():
@@ -15,7 +15,7 @@ async def test_schemas_workflow_v2():
 
     # Create
 
-    workflow_create = WorkflowCreateV2(name="workflow")
+    workflow_create = WorkflowCreate(name="workflow")
 
     workflow = WorkflowV2(
         **workflow_create.model_dump(),
@@ -25,7 +25,7 @@ async def test_schemas_workflow_v2():
 
     # Read
 
-    WorkflowReadV2(
+    WorkflowRead(
         **workflow.model_dump(),
         project=project.model_dump(),
         task_list=workflow.task_list,
@@ -34,28 +34,28 @@ async def test_schemas_workflow_v2():
     # Update
 
     with pytest.raises(ValidationError):
-        WorkflowUpdateV2(name=None)
+        WorkflowUpdate(name=None)
 
     with pytest.raises(ValidationError):
-        WorkflowUpdateV2(name="foo", reordered_workflowtask_ids=[1, 2, -3])
+        WorkflowUpdate(name="foo", reordered_workflowtask_ids=[1, 2, -3])
 
-    WorkflowUpdateV2(name="new name", reordered_workflowtask_ids=[1, 2, 3])
+    WorkflowUpdate(name="new name", reordered_workflowtask_ids=[1, 2, 3])
 
 
 async def test_schemas_workflow_task_v2():
     for attribute in ("args_parallel", "args_non_parallel"):
-        WorkflowTaskCreateV2(**{attribute: dict(something="else")})
+        WorkflowTaskCreate(**{attribute: dict(something="else")})
 
-        WorkflowTaskUpdateV2(**{attribute: dict(something="else")})
+        WorkflowTaskUpdate(**{attribute: dict(something="else")})
 
-        WorkflowTaskCreateV2(**{attribute: None})
+        WorkflowTaskCreate(**{attribute: None})
 
-        WorkflowTaskUpdateV2(**{attribute: None})
+        WorkflowTaskUpdate(**{attribute: None})
 
         with pytest.raises(ValidationError) as e:
-            WorkflowTaskUpdateV2(**{attribute: dict(zarr_url="/something")})
+            WorkflowTaskUpdate(**{attribute: dict(zarr_url="/something")})
         assert "contains the following forbidden keys" in str(e.value)
 
         with pytest.raises(ValidationError) as e:
-            WorkflowTaskCreateV2(**{attribute: dict(zarr_url="/something")})
+            WorkflowTaskCreate(**{attribute: dict(zarr_url="/something")})
         assert "contains the following forbidden keys" in str(e.value)

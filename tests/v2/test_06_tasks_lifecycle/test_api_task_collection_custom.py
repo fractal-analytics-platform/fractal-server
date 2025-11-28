@@ -1,9 +1,9 @@
 import json
 import sys
 
-from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.app.schemas.v2 import Manifest
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskCollectCustomV2
+from fractal_server.app.schemas.v2 import TaskCollectCustom
 
 PREFIX = "api/v2/task"
 
@@ -25,7 +25,7 @@ async def test_task_collection_custom(
     async with MockCurrentUser(
         user_kwargs=dict(is_verified=True, profile_id=profile.id)
     ):
-        payload_name = TaskCollectCustomV2(
+        payload_name = TaskCollectCustom(
             manifest=manifest,
             python_interpreter=python_bin,
             label="label",
@@ -67,7 +67,7 @@ async def test_task_collection_custom(
         # Success with package_root
         package_root = fractal_tasks_mock_collection["package_root"].as_posix()
 
-        payload_root = TaskCollectCustomV2(
+        payload_root = TaskCollectCustom(
             manifest=manifest,
             python_interpreter=python_bin,
             label="label3",
@@ -136,8 +136,8 @@ async def test_task_collection_custom_fail_with_ssh(
     ):
         res = await client.post(
             f"{PREFIX}/collect/custom/",
-            json=TaskCollectCustomV2(
-                manifest=ManifestV2(**manifest_dict),
+            json=TaskCollectCustom(
+                manifest=Manifest(**manifest_dict),
                 python_interpreter="/may/not/exist",
                 label="label",
                 package_root=None,

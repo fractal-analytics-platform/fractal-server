@@ -9,8 +9,8 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
-from fractal_server.app.schemas.v2.status_legacy import LegacyStatusReadV2
-from fractal_server.app.schemas.v2.status_legacy import WorkflowTaskStatusTypeV2
+from fractal_server.app.schemas.v2.status_legacy import LegacyStatusRead
+from fractal_server.app.schemas.v2.status_legacy import WorkflowTaskStatusType
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_dataset_check_access
@@ -24,7 +24,7 @@ logger = set_logger(__name__)
 
 @router.get(
     "/project/{project_id}/status-legacy/",
-    response_model=LegacyStatusReadV2,
+    response_model=LegacyStatusRead,
 )
 async def get_workflowtask_status(
     project_id: int,
@@ -32,7 +32,7 @@ async def get_workflowtask_status(
     workflow_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> LegacyStatusReadV2 | None:
+) -> LegacyStatusRead | None:
     """
     Extract the status of all `WorkflowTaskV2` of a given `WorkflowV2` that ran
     on a given `DatasetV2`.
@@ -116,18 +116,18 @@ async def get_workflowtask_status(
         ]
         try:
             first_submitted_index = running_job_statuses.index(
-                WorkflowTaskStatusTypeV2.SUBMITTED
+                WorkflowTaskStatusType.SUBMITTED
             )
         except ValueError:
             logger.warning(
                 f"Job {running_job.id} is submitted but its task list does not"
-                f" contain a {WorkflowTaskStatusTypeV2.SUBMITTED} task."
+                f" contain a {WorkflowTaskStatusType.SUBMITTED} task."
             )
             first_submitted_index = 0
 
         for wftask in running_job_wftasks[first_submitted_index:]:
             workflow_tasks_status_dict[wftask.id] = (
-                WorkflowTaskStatusTypeV2.SUBMITTED
+                WorkflowTaskStatusType.SUBMITTED
             )
 
         # The last workflow task that is included in the submitted job is also
@@ -157,7 +157,7 @@ async def get_workflowtask_status(
             # If a wftask ID was not found, ignore it and continue
             continue
         clean_workflow_tasks_status_dict[str(wf_task.id)] = wf_task_status
-        if wf_task_status == WorkflowTaskStatusTypeV2.FAILED:
+        if wf_task_status == WorkflowTaskStatusType.FAILED:
             # Starting from the beginning of `workflow.task_list`, stop the
             # first time that you hit a failed job
             break
@@ -166,5 +166,5 @@ async def get_workflowtask_status(
             # first time that you hit `last_valid_wftask_id``
             break
 
-    response_body = LegacyStatusReadV2(status=clean_workflow_tasks_status_dict)
+    response_body = LegacyStatusRead(status=clean_workflow_tasks_status_dict)
     return response_body

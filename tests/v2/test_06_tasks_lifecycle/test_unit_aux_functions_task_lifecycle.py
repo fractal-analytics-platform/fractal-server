@@ -6,7 +6,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     check_no_related_workflowtask,
 )
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 
 
 async def test_check_no_related_workflowtask(
@@ -26,7 +26,7 @@ async def test_check_no_related_workflowtask(
         )
         task_group = TaskGroupV2(
             user_id=user.id,
-            origin=TaskGroupV2OriginEnum.OTHER,
+            origin=TaskGroupOriginEnum.OTHER,
             pkg_name="pkg",
             task_list=[task1, task2],
             resource_id=resource.id,

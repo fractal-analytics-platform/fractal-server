@@ -3,8 +3,8 @@ from devtools import debug
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.app.schemas.v2.dataset import DatasetExportV2
+from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2.dataset import DatasetExport
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -280,7 +280,7 @@ async def test_delete_dataset_cascade_jobs(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
         assert job.dataset_id == dataset.id
 
@@ -308,17 +308,17 @@ async def test_delete_dataset_cascade_jobs(
         }
         j1 = await job_factory_v2(
             dataset_id=ds_deletable.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
             **common_args,
         )
         j2 = await job_factory_v2(
             dataset_id=ds_deletable.id,
-            status=JobStatusTypeV2.FAILED,
+            status=JobStatusType.FAILED,
             **common_args,
         )
         await job_factory_v2(
             dataset_id=ds_not_deletable.id,
-            status=JobStatusTypeV2.SUBMITTED,  # reason why ds is not deletable
+            status=JobStatusType.SUBMITTED,  # reason why ds is not deletable
             **common_args,
         )
         res = await client.delete(
@@ -484,6 +484,4 @@ async def test_export_dataset(
             f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
         )
         assert res.status_code == 200
-        assert (
-            res.json() == DatasetExportV2(**dataset.model_dump()).model_dump()
-        )
+        assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()

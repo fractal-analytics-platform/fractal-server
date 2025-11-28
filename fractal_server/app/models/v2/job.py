@@ -8,7 +8,7 @@ from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.utils import get_timestamp
 
 
@@ -56,7 +56,7 @@ class JobV2(SQLModel, table=True):
     end_timestamp: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
-    status: str = JobStatusTypeV2.SUBMITTED
+    status: str = JobStatusType.SUBMITTED
     log: str | None = None
     executor_error_log: str | None = None
 

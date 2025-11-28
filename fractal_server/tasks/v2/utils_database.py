@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskCreate
 
 
 def create_db_tasks_and_update_task_group_sync(
     *,
     task_group_id: int,
-    task_list: list[TaskCreateV2],
+    task_list: list[TaskCreate],
     db: DBSyncSession,
 ) -> TaskGroupV2:
     """
@@ -36,7 +36,7 @@ def create_db_tasks_and_update_task_group_sync(
 async def create_db_tasks_and_update_task_group_async(
     *,
     task_group_id: int,
-    task_list: list[TaskCreateV2],
+    task_list: list[TaskCreate],
     db: AsyncSession,
 ) -> TaskGroupV2:
     """

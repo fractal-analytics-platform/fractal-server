@@ -24,9 +24,9 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.app.schemas.v2 import JobUpdateV2
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2 import JobUpdate
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
@@ -34,14 +34,14 @@ from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 router = APIRouter()
 
 
-@router.get("/", response_model=PaginationResponse[JobReadV2])
+@router.get("/", response_model=PaginationResponse[JobRead])
 async def view_job(
     id: int | None = None,
     user_id: int | None = None,
     project_id: int | None = None,
     dataset_id: int | None = None,
     workflow_id: int | None = None,
-    status: JobStatusTypeV2 | None = None,
+    status: JobStatusType | None = None,
     start_timestamp_min: AwareDatetime | None = None,
     start_timestamp_max: AwareDatetime | None = None,
     end_timestamp_min: AwareDatetime | None = None,
@@ -50,7 +50,7 @@ async def view_job(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[JobReadV2]:
+) -> PaginationResponse[JobRead]:
     """
     Query `JobV2` table.
 
@@ -154,13 +154,13 @@ async def view_job(
     )
 
 
-@router.get("/{job_id}/", response_model=JobReadV2)
+@router.get("/{job_id}/", response_model=JobRead)
 async def view_single_job(
     job_id: int,
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2:
+) -> JobRead:
     job = await db.get(JobV2, job_id)
     if not job:
         raise HTTPException(
@@ -169,7 +169,7 @@ async def view_single_job(
         )
     await db.close()
 
-    if show_tmp_logs and (job.status == JobStatusTypeV2.SUBMITTED):
+    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
         try:
             with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}") as f:
                 job.log = f.read()
@@ -179,13 +179,13 @@ async def view_single_job(
     return job
 
 
-@router.patch("/{job_id}/", response_model=JobReadV2)
+@router.patch("/{job_id}/", response_model=JobRead)
 async def update_job(
-    job_update: JobUpdateV2,
+    job_update: JobUpdate,
     job_id: int,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2 | None:
+) -> JobRead | None:
     """
     Change the status of an existing job.
 
@@ -198,13 +198,13 @@ async def update_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
-    if job.status != JobStatusTypeV2.SUBMITTED:
+    if job.status != JobStatusType.SUBMITTED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Job {job_id} has status {job.status=} != 'submitted'.",
         )
 
-    if job_update.status != JobStatusTypeV2.FAILED:
+    if job_update.status != JobStatusType.FAILED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Cannot set job status to {job_update.status}",
@@ -217,7 +217,7 @@ async def update_job(
         job,
         "log",
         f"{job.log or ''}\nThis job was manually marked as "
-        f"'{JobStatusTypeV2.FAILED}' by an admin ({timestamp.isoformat()}).",
+        f"'{JobStatusType.FAILED}' by an admin ({timestamp.isoformat()}).",
     )
 
     res = await db.execute(

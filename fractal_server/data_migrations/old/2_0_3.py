@@ -9,7 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified
 import fractal_server
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import JobRead
 
 
 def fix_db():
@@ -73,6 +73,6 @@ def fix_db():
             logger.warning(
                 f"Now validating jobv2.id={job_v2.id} with JobReadV2."
             )
-            JobReadV2(**job_v2.model_dump())
+            JobRead(**job_v2.model_dump())
 
     logger.warning("END of execution of fix_db function")

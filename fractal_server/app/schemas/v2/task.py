@@ -29,7 +29,7 @@ class TaskType(StrEnum):
     PARALLEL = "parallel"
 
 
-class TaskCreateV2(BaseModel):
+class TaskCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
@@ -90,7 +90,7 @@ class TaskCreateV2(BaseModel):
         return self
 
 
-class TaskReadV2(BaseModel):
+class TaskRead(BaseModel):
     id: int
     name: str
     type: TaskType
@@ -117,7 +117,7 @@ class TaskReadV2(BaseModel):
     tags: list[str]
 
 
-class TaskUpdateV2(BaseModel):
+class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     command_parallel: NonEmptyStr = None
@@ -131,7 +131,7 @@ class TaskUpdateV2(BaseModel):
     tags: ListUniqueNonEmptyString | None = None
 
 
-class TaskImportV2(BaseModel):
+class TaskImport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     pkg_name: NonEmptyStr
@@ -139,11 +139,11 @@ class TaskImportV2(BaseModel):
     name: NonEmptyStr
 
 
-class TaskImportV2Legacy(BaseModel):
+class TaskImportLegacy(BaseModel):
     source: NonEmptyStr
 
 
-class TaskExportV2(BaseModel):
+class TaskExport(BaseModel):
     pkg_name: NonEmptyStr
     version: NonEmptyStr | None = None
     name: NonEmptyStr

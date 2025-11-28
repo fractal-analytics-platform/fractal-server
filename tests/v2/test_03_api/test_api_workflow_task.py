@@ -9,7 +9,7 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 PREFIX = "api/v2"
 
@@ -279,7 +279,7 @@ async def test_delete_workflow_task(
         # Fail because of running Job
         running_job = JobV2(
             workflow_id=workflow["id"],
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             user_email="foo@bar.com",
             dataset_dump={},
             workflow_dump={},
@@ -827,7 +827,7 @@ async def test_reorder_task_list_fail(
         # Fail because of running Job
         running_job = JobV2(
             workflow_id=wf_id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             user_email="foo@bar.com",
             dataset_dump={},
             workflow_dump={},
@@ -838,7 +838,7 @@ async def test_reorder_task_list_fail(
         db.add(running_job)
         running_job2 = JobV2(
             workflow_id=wf_id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             user_email="foo@bar.com",
             dataset_dump={},
             workflow_dump={},
