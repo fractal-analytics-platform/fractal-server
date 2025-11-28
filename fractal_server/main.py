@@ -1,7 +1,6 @@
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import timedelta
 from itertools import chain
 
 from fastapi import FastAPI
@@ -160,7 +159,7 @@ def start_application() -> FastAPI:
         process_time = stop_time - start_time
         # Log if process time is too high
         if process_time > settings.FRACTAL_LONG_REQUEST_TIME:
-            end_timestamp = start_timestamp + timedelta(seconds=process_time)
+            end_timestamp = get_timestamp()
             warning_message_components = [
                 f"{request.method} {request.url.path}",
                 f"{response.status_code}",
