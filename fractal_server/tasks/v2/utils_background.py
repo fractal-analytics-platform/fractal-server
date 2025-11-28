@@ -8,7 +8,7 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
-from fractal_server.app.schemas.v2.manifest import Manifest
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import get_logger
@@ -78,7 +78,7 @@ def fail_and_cleanup(
 
 def prepare_tasks_metadata(
     *,
-    package_manifest: Manifest,
+    package_manifest: ManifestV2,
     package_root: Path,
     python_bin: Path | None = None,
     project_python_wrapper: Path | None = None,

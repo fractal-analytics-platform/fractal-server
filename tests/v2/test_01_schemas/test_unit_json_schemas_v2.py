@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import fractal_server.app.schemas.v2 as v2
-from fractal_server.app.schemas.v2.manifest import Manifest
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 
 
 def test_ManifestV2_jsonschema():
@@ -15,5 +15,5 @@ def test_ManifestV2_jsonschema():
     )
     with json_schema_path.open("r") as f:
         current_schema = json.load(f)
-    new_schema = Manifest.model_json_schema()
+    new_schema = ManifestV2.model_json_schema()
     assert new_schema == current_schema

@@ -20,8 +20,8 @@ from .job import JobCreate  # noqa F401
 from .job import JobRead  # noqa F401
 from .job import JobStatusType  # noqa F401
 from .job import JobUpdate  # noqa F401
-from .manifest import Manifest  # noqa F401
-from .manifest import TaskManifest  # noqa F401
+from .manifest import ManifestV2  # noqa F401
+from .manifest import TaskManifestV2  # noqa F401
 from .profile import ProfileCreate  # noqa F401
 from .profile import ProfileRead  # noqa F401
 from .profile import ValidProfileLocal  # noqa F401

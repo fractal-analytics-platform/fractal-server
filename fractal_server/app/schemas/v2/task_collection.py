@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 from pydantic import field_validator
 from pydantic import model_validator
 
-from fractal_server.app.schemas.v2 import Manifest
+from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
@@ -110,7 +110,7 @@ class TaskCollectCustom(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    manifest: Manifest
+    manifest: ManifestV2
     python_interpreter: AbsolutePathStr
     label: NonEmptyStr
     package_root: AbsolutePathStr | None = None

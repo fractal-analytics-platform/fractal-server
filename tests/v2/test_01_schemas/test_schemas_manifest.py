@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.schemas.v2.manifest import Manifest
-from fractal_server.app.schemas.v2.manifest import TaskManifest
+from fractal_server.app.schemas.v2.manifest import ManifestV2
+from fractal_server.app.schemas.v2.manifest import TaskManifestV2
 
 
 def msg(e: pytest.ExceptionInfo) -> str:
@@ -10,19 +10,19 @@ def msg(e: pytest.ExceptionInfo) -> str:
 
 
 def test_TaskManifestV2():
-    assert TaskManifest(name="task", executable_parallel="exec")
-    assert TaskManifest(name="task", executable_non_parallel="exec")
-    assert TaskManifest(
+    assert TaskManifestV2(name="task", executable_parallel="exec")
+    assert TaskManifestV2(name="task", executable_non_parallel="exec")
+    assert TaskManifestV2(
         name="task", executable_parallel="exec", executable_non_parallel="exec"
     )
 
     # 1: no executable
     with pytest.raises(ValidationError):
-        TaskManifest(name="task")
+        TaskManifestV2(name="task")
 
     # 2: parallel with non_parallel meta
     with pytest.raises(ValidationError) as e:
-        TaskManifest(
+        TaskManifestV2(
             name="task",
             executable_parallel="exec",
             meta_non_parallel={"a": "b"},
@@ -31,7 +31,7 @@ def test_TaskManifestV2():
 
     # 3: parallel with non_parallel args_schema
     with pytest.raises(ValidationError) as e:
-        TaskManifest(
+        TaskManifestV2(
             name="task",
             executable_parallel="exec",
             args_schema_non_parallel={"a": "b"},
@@ -40,7 +40,7 @@ def test_TaskManifestV2():
 
     # 4: non_parallel with parallel meta
     with pytest.raises(ValidationError) as e:
-        TaskManifest(
+        TaskManifestV2(
             name="task",
             executable_non_parallel="exec",
             meta_parallel={"a": "b"},
@@ -49,7 +49,7 @@ def test_TaskManifestV2():
 
     # 5: non_parallel with parallel args_schema
     with pytest.raises(ValidationError) as e:
-        TaskManifest(
+        TaskManifestV2(
             name="task",
             executable_non_parallel="exec",
             args_schema_parallel={"a": "b"},
@@ -61,12 +61,12 @@ def test_TaskManifestV2():
         ValidationError,
         match="Input should be a valid URL",
     ):
-        TaskManifest(
+        TaskManifestV2(
             name="task",
             executable_parallel="exec",
             docs_link="not-an-url",
         )
-    TaskManifest(
+    TaskManifestV2(
         name="task",
         executable_parallel="exec",
         docs_link="https://url.com",
@@ -74,50 +74,52 @@ def test_TaskManifestV2():
 
 
 def test_ManifestV2():
-    assert Manifest(manifest_version="2", task_list=[])
+    assert ManifestV2(manifest_version="2", task_list=[])
 
-    compound_both_schemas = TaskManifest(
+    compound_both_schemas = TaskManifestV2(
         name="task1",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
-    compound_just_parallel_schemas = TaskManifest(
+    compound_just_parallel_schemas = TaskManifestV2(
         name="task2",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
         executable_non_parallel="exec",
     )
-    compound_just_non_parallel_schemas = TaskManifest(
+    compound_just_non_parallel_schemas = TaskManifestV2(
         name="task3",
         executable_parallel="exec",
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
-    compound_no_schemas = TaskManifest(
+    compound_no_schemas = TaskManifestV2(
         name="task4",
         executable_parallel="exec",
         executable_non_parallel="exec",
     )
 
-    parallel_schema = TaskManifest(
+    parallel_schema = TaskManifestV2(
         name="task5",
         executable_parallel="exec",
         args_schema_parallel={"a": "b"},
     )
-    parallel_no_schema = TaskManifest(name="task6", executable_parallel="exec")
+    parallel_no_schema = TaskManifestV2(
+        name="task6", executable_parallel="exec"
+    )
 
-    non_parallel_schema = TaskManifest(
+    non_parallel_schema = TaskManifestV2(
         name="task7",
         executable_non_parallel="exec",
         args_schema_non_parallel={"a": "b"},
     )
-    non_parallel_no_schema = TaskManifest(
+    non_parallel_no_schema = TaskManifestV2(
         name="task8", executable_non_parallel="exec"
     )
 
-    assert Manifest(
+    assert ManifestV2(
         manifest_version="2",
         has_args_schemas=True,
         task_list=[
@@ -129,12 +131,12 @@ def test_ManifestV2():
 
     # 1: invalid manifest_version
     with pytest.raises(ValidationError) as exc_info:
-        Manifest(manifest_version="1", task_list=[])
+        ManifestV2(manifest_version="1", task_list=[])
     print(exc_info.value)
 
     # 2: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[
@@ -147,7 +149,7 @@ def test_ManifestV2():
 
     # 3: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[
@@ -160,7 +162,7 @@ def test_ManifestV2():
 
     # 4: compound_no_schemas
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[
@@ -173,7 +175,7 @@ def test_ManifestV2():
 
     # 5: parallel_no_schema
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[
@@ -186,7 +188,7 @@ def test_ManifestV2():
 
     # 6: non_parallel_no_schema
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[
@@ -199,7 +201,7 @@ def test_ManifestV2():
 
     # 7: Non-unique task names
     with pytest.raises(ValidationError) as e:
-        Manifest(
+        ManifestV2(
             manifest_version="2",
             has_args_schemas=True,
             task_list=[

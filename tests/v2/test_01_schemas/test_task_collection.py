@@ -3,7 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.schemas.v2 import Manifest
+from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustom
 from fractal_server.app.schemas.v2 import TaskCollectPip
 from fractal_server.app.schemas.v2 import TaskGroupCreateStrict
@@ -77,7 +77,7 @@ async def test_TaskCollectCustomV2(testdata_path):
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustom(
-            manifest=Manifest(**manifest_dict),
+            manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
             label="b",
             package_root=None,
@@ -87,7 +87,7 @@ async def test_TaskCollectCustomV2(testdata_path):
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustom(
-            manifest=Manifest(**manifest_dict),
+            manifest=ManifestV2(**manifest_dict),
             python_interpreter="a",
             label="name",
             package_root=None,
@@ -97,7 +97,7 @@ async def test_TaskCollectCustomV2(testdata_path):
 
     with pytest.raises(ValidationError) as e:
         TaskCollectCustom(
-            manifest=Manifest(**manifest_dict),
+            manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
             label="name",
             package_root="non_absolute_path",
@@ -108,7 +108,7 @@ async def test_TaskCollectCustomV2(testdata_path):
     # Fail because neither 'package_root' nor 'package_name'
     with pytest.raises(ValidationError) as e:
         TaskCollectCustom(
-            manifest=Manifest(**manifest_dict),
+            manifest=ManifestV2(**manifest_dict),
             python_interpreter="/a",
             label="name",
             package_root=None,
@@ -119,7 +119,7 @@ async def test_TaskCollectCustomV2(testdata_path):
 
     # Successful
     collection = TaskCollectCustom(
-        manifest=Manifest(**manifest_dict),
+        manifest=ManifestV2(**manifest_dict),
         python_interpreter="  /some/python                  ",
         label="b",
         package_root="  /somewhere  ",

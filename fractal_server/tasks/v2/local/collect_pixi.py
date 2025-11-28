@@ -10,7 +10,7 @@ from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
-from fractal_server.app.schemas.v2.manifest import Manifest
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -194,7 +194,7 @@ def collect_local_pixi(
                     pkg_manifest_dict = json.load(json_data)
                 logger.info(f"loaded {manifest_path=}")
                 logger.info("now validating manifest content")
-                pkg_manifest = Manifest(**pkg_manifest_dict)
+                pkg_manifest = ManifestV2(**pkg_manifest_dict)
                 logger.info("validated manifest content")
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)

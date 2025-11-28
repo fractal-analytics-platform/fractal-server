@@ -11,7 +11,7 @@ from fractal_server.types import NonEmptyStr
 from .task import TaskType
 
 
-class TaskManifest(BaseModel):
+class TaskManifestV2(BaseModel):
     """
     Represents a task within a manifest.
 
@@ -106,7 +106,7 @@ class TaskManifest(BaseModel):
         return self
 
 
-class Manifest(BaseModel):
+class ManifestV2(BaseModel):
     """
     Packages containing tasks are required to include a special file
     `__FRACTAL_MANIFEST__.json` in order to be discovered and used by Fractal.
@@ -131,7 +131,7 @@ class Manifest(BaseModel):
     """
 
     manifest_version: Literal["2"]
-    task_list: list[TaskManifest]
+    task_list: list[TaskManifestV2]
     has_args_schemas: bool = False
     args_schema_version: str | None = None
     authors: NonEmptyStr | None = None

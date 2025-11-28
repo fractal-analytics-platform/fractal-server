@@ -17,7 +17,7 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v2 import Manifest
+from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.app.schemas.v2 import TaskGroupCreate
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
@@ -70,7 +70,7 @@ def fractal_tasks_mock_collection(
     with open(package_root / "__FRACTAL_MANIFEST__.json") as f:
         manifest_dict = json.load(f)
 
-    manifest = Manifest(**manifest_dict)
+    manifest = ManifestV2(**manifest_dict)
     task_list: list[TaskCreate] = prepare_tasks_metadata(
         package_manifest=manifest,
         python_bin=venv_python,

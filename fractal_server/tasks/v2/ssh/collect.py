@@ -8,7 +8,7 @@ from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
-from fractal_server.app.schemas.v2.manifest import Manifest
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
@@ -254,7 +254,7 @@ def collect_ssh(
                         manifest_path_remote
                     )
                     logger.info(f"Loaded {manifest_path_remote=}")
-                    pkg_manifest = Manifest(**pkg_manifest_dict)
+                    pkg_manifest = ManifestV2(**pkg_manifest_dict)
                     logger.info("Manifest is a valid ManifestV2")
 
                     logger.info("_prepare_tasks_metadata - start")

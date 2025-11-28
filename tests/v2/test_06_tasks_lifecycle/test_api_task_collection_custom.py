@@ -1,7 +1,7 @@
 import json
 import sys
 
-from fractal_server.app.schemas.v2 import Manifest
+from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustom
 
@@ -137,7 +137,7 @@ async def test_task_collection_custom_fail_with_ssh(
         res = await client.post(
             f"{PREFIX}/collect/custom/",
             json=TaskCollectCustom(
-                manifest=Manifest(**manifest_dict),
+                manifest=ManifestV2(**manifest_dict),
                 python_interpreter="/may/not/exist",
                 label="label",
                 package_root=None,
