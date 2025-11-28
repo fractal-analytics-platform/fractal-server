@@ -4,6 +4,10 @@ from contextlib import asynccontextmanager
 from itertools import chain
 
 from fastapi import FastAPI
+from starlette.types import Message
+from starlette.types import Receive
+from starlette.types import Scope
+from starlette.types import Send
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
@@ -143,14 +147,14 @@ class SlowResponseMiddleware:
         self.app = app
         self.time_threshold = time_threshold
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
         context = {"status_code": None}
 
-        async def send_wrapper(message):
+        async def send_wrapper(message: Message):
             if message["type"] == "http.response.start":
                 context["status_code"] = message["status"]
             await send(message)
@@ -168,7 +172,7 @@ class SlowResponseMiddleware:
                 f"{scope['method']} {scope['route'].path}"
                 f"?{scope['query_string'].decode('utf-8')}, "
                 f"{context['status_code']}, "
-                f"{process_time:.2f} seconds, "
+                f"{process_time:.2f}, "
                 f"{start_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}, "
                 f"{end_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}"
             )
