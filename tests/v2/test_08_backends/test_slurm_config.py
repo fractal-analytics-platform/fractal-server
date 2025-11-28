@@ -12,12 +12,12 @@ from fractal_server.runner.executors.slurm_common.slurm_config import (
 )
 
 
-class MockTaskV2(BaseModel):
+class MockTask(BaseModel):
     name: str = "task-name"
 
 
-class WorkflowTaskV2Mock(BaseModel):
-    task: MockTaskV2 = Field(default_factory=MockTaskV2)
+class WorkflowTaskMock(BaseModel):
+    task: MockTask = Field(default_factory=MockTask)
     meta_parallel: dict[str, Any] | None = Field(None)
     meta_non_parallel: dict[str, Any] | None = Field(None)
 
@@ -78,7 +78,7 @@ def test_get_slurm_config_internal():
         constraint=CUSTOM_CONSTRAINT,
         extra_lines=CUSTOM_EXTRA_LINES,
     )
-    mywftask = WorkflowTaskV2Mock(meta_non_parallel=meta_non_parallel)
+    mywftask = WorkflowTaskMock(meta_non_parallel=meta_non_parallel)
 
     # Call get_slurm_config_internal
     slurm_config = _get_slurm_config_internal(
@@ -145,7 +145,7 @@ def test_get_slurm_config_internal_gpu_options():
     assert shared_slurm_config.default_slurm_config.extra_lines == []
 
     # In absence of `needs_gpu`, parameters in `gpu_slurm_config` are not used
-    mywftask = WorkflowTaskV2Mock()
+    mywftask = WorkflowTaskMock()
     slurm_config = _get_slurm_config_internal(
         shared_config=shared_slurm_config,
         wftask=mywftask,
@@ -155,7 +155,7 @@ def test_get_slurm_config_internal_gpu_options():
     assert slurm_config.gpus is None
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
-    mywftask = WorkflowTaskV2Mock(meta_non_parallel=dict(needs_gpu=True))
+    mywftask = WorkflowTaskMock(meta_non_parallel=dict(needs_gpu=True))
     slurm_config = _get_slurm_config_internal(
         shared_config=shared_slurm_config,
         wftask=mywftask,

@@ -30,13 +30,13 @@ async def test_get_history_unit_or_404(db):
 
 
 def test_read_log_file(tmp_path: Path):
-    class MockTaskV2(BaseModel):
+    class MockTask(BaseModel):
         name: str = "task-name"
 
-    class MockWorkflowTaskV2(BaseModel):
-        task: MockTaskV2
+    class MockWorkflowTask(BaseModel):
+        task: MockTask
 
-    wftask = MockWorkflowTaskV2(task=MockTaskV2())
+    wftask = MockWorkflowTask(task=MockTask())
 
     logfile = (tmp_path / "logs.txt").as_posix()
 
