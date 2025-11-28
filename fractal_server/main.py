@@ -1,8 +1,14 @@
 import os
+import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from itertools import chain
 
 from fastapi import FastAPI
+from starlette.types import Message
+from starlette.types import Receive
+from starlette.types import Scope
+from starlette.types import Send
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
@@ -128,6 +134,50 @@ async def lifespan(app: FastAPI):
     reset_logger_handlers(logger)
 
 
+slow_response_logger = set_logger("slow-response")
+
+MIDDLEWARE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+
+
+class SlowResponseMiddleware:
+    def __init__(self, app: FastAPI, time_threshold: float):
+        self.app = app
+        self.time_threshold = time_threshold
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        # Filter out any non-http scope (e.g. `type="lifespan"`)
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # Mutable variable which can be updated from within `send_wrapper`
+        context = {"status_code": None}
+
+        async def send_wrapper(message: Message):
+            if message["type"] == "http.response.start":
+                context["status_code"] = message["status"]
+            await send(message)
+
+        # Measure request time
+        start_timestamp = datetime.now()
+        start_time = time.perf_counter()
+        await self.app(scope, receive, send_wrapper)
+        stop_time = time.perf_counter()
+        request_time = stop_time - start_time
+
+        # Log if process time is too high
+        if request_time > self.time_threshold:
+            end_timestamp = datetime.now()
+            slow_response_logger.warning(
+                f"{scope['method']} {scope['route'].path}"
+                f"?{scope['query_string'].decode('utf-8')}, "
+                f"{context['status_code']}, "
+                f"{request_time:.2f}, "
+                f"{start_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}, "
+                f"{end_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}"
+            )
+
+
 def start_application() -> FastAPI:
     """
     Create the application, initialise it and collect all available routers.
@@ -137,6 +187,13 @@ def start_application() -> FastAPI:
             The fully initialised application.
     """
     app = FastAPI(lifespan=lifespan)
+
+    settings = Inject(get_settings)
+    app.add_middleware(
+        SlowResponseMiddleware,
+        time_threshold=settings.FRACTAL_LONG_REQUEST_TIME,
+    )
+
     collect_routers(app)
     return app
 

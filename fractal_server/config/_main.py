@@ -41,6 +41,10 @@ class Settings(BaseSettings):
             user group (e.g. it cannot be deleted, and new users are
             automatically added to it). If set to `None` (the default value),
             then user groups are all equivalent, independently on their name.
+        FRACTAL_LONG_REQUEST_TIME:
+            Time limit beyond which the execution of an API request is
+            considered *slow* and an appropriate warning is logged by the
+            middleware.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -57,3 +61,4 @@ class Settings(BaseSettings):
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
     FRACTAL_HELP_URL: HttpUrl | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
+    FRACTAL_LONG_REQUEST_TIME: float = 30.0
