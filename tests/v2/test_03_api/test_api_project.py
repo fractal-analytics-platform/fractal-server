@@ -57,7 +57,7 @@ async def test_post_and_get_project(
         assert res.status_code == 201
         assert len(await _project_list(userB, db)) == 1
 
-        # a user can't create two projectsV2 with the same name
+        # a user can't create two projects with the same name
         res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 422
         assert len(await _project_list(userB, db)) == 1

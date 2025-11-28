@@ -67,23 +67,21 @@ with next(get_sync_db()) as db:
             f"{user_ids_not_in_default_group}"
         )
 
-    # V2
-
-    # PROJECTS V2
+    # PROJECTS
     stm = select(ProjectV2)
     projects = db.execute(stm).scalars().all()
     for project in sorted(projects, key=lambda x: x.id):
         ProjectRead(**project.model_dump())
-        print(f"V2 - Project {project.id} validated")
+        print(f"Project {project.id} validated")
 
-    # TASKS V2
+    # TASKS
     stm = select(TaskV2)
     tasks = db.execute(stm).scalars().all()
     for task in sorted(tasks, key=lambda x: x.id):
         TaskRead(**task.model_dump())
-        print(f"V2 - Task {task.id} validated")
+        print(f"Task {task.id} validated")
 
-    # TASK GROUPS V2
+    # TASK GROUPS
     stm = select(TaskGroupV2)
     task_groups = db.execute(stm).scalars().all()
     for task_group in sorted(task_groups, key=lambda x: x.id):
@@ -91,16 +89,16 @@ with next(get_sync_db()) as db:
         for task in task_group.task_list:
             task_list.append(TaskRead(**task.model_dump()))
         TaskGroupRead(**task_group.model_dump(), task_list=task_list)
-        print(f"V2 - TaskGroup {task_group.id} validated")
+        print(f"TaskGroup {task_group.id} validated")
 
-    # TASK GROUP V2 ACTIVITIES
+    # TASK GROUP ACTIVITIES
     stm = select(TaskGroupActivityV2)
     task_group_activities = db.execute(stm).scalars().all()
     for activity in sorted(task_group_activities, key=lambda x: x.id):
         TaskGroupActivityRead(**activity.model_dump())
-        print(f"V2 - TaskGroupActivity {activity.id} validated")
+        print(f"TaskGroupActivity {activity.id} validated")
 
-    # WORKFLOWS V2
+    # WORKFLOWS
     stm = select(WorkflowV2)
     workflows = db.execute(stm).scalars().all()
     for workflow in sorted(workflows, key=lambda x: x.id):
@@ -119,9 +117,9 @@ with next(get_sync_db()) as db:
             project=ProjectRead(**workflow.project.model_dump()),
             task_list=task_list,
         )
-        print(f"V2 - Workflow {workflow.id} validated")
+        print(f"Workflow {workflow.id} validated")
 
-    # DATASETS V2
+    # DATASETS
     stm = select(DatasetV2)
     datasets = db.execute(stm).scalars().all()
     for dataset in sorted(datasets, key=lambda x: x.id):
@@ -129,11 +127,11 @@ with next(get_sync_db()) as db:
             **dataset.model_dump(),
             project=ProjectRead(**dataset.project.model_dump()),
         )
-        print(f"V2 - Dataset {dataset.id} validated")
+        print(f"Dataset {dataset.id} validated")
 
-    # JOBS V2
+    # JOBS
     stm = select(JobV2)
     jobs = db.execute(stm).scalars().all()
     for job in sorted(jobs, key=lambda x: x.id):
         JobRead(**job.model_dump())
-        print(f"V2 - Job {job.id} validated")
+        print(f"Job {job.id} validated")

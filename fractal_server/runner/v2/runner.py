@@ -218,7 +218,7 @@ def execute_tasks(
             )
             raise JobExecutionError(error_msg)
 
-        # TASK EXECUTION (V2)
+        # TASK EXECUTION
         try:
             if task.type in [
                 TaskType.NON_PARALLEL,

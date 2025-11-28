@@ -17,7 +17,7 @@ def create_db_tasks_and_update_task_group_sync(
 
     Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
-        task_list: List of `TaskCreateV2` objects to be inserted into the db.
+        task_list: List of `TaskCreate` objects to be inserted into the db.
         db: Synchronous database session
 
     Returns:
@@ -44,7 +44,7 @@ async def create_db_tasks_and_update_task_group_async(
 
     Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
-        task_list: List of `TaskCreateV2` objects to be inserted into the db.
+        task_list: List of `TaskCreate` objects to be inserted into the db.
         db: Synchronous database session
 
     Returns:

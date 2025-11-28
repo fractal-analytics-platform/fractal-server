@@ -40,11 +40,11 @@ async def test_new_dataset(
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        res = await client.post("api/v2/project/", json=dict(name="projectV2"))
+        res = await client.post("api/v2/project/", json=dict(name="project"))
         debug(res.json())
         assert res.status_code == 201
-        projectV2 = res.json()
-        p2_id = projectV2["id"]
+        project = res.json()
+        p2_id = project["id"]
 
         # POST
 

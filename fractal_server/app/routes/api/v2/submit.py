@@ -61,7 +61,7 @@ async def apply_workflow(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobRead | None:
-    # Remove non-submitted V2 jobs from the app state when the list grows
+    # Remove non-submitted Jobs from the app state when the list grows
     # beyond a threshold
     # NOTE: this may lead to a race condition on `app.state.jobs` if two
     # requests take place at the same time and `clean_app_job_list` is
