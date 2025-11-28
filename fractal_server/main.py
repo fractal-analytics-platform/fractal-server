@@ -155,8 +155,8 @@ class SlowResponseMiddleware:
                 f"{scope['method']} {scope['route'].path}, "
                 # f"{response.status_code}, "
                 f"{process_time:.2f} seconds, "
-                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, "
-                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}, "
+                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}"
             )
 
 
