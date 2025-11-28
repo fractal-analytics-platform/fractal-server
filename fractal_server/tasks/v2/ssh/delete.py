@@ -4,8 +4,8 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
@@ -80,7 +80,7 @@ def delete_ssh(
                     if not ssh_ok:
                         return
 
-                    activity.status = TaskGroupActivityStatusV2.ONGOING
+                    activity.status = TaskGroupActivityStatus.ONGOING
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
@@ -88,7 +88,7 @@ def delete_ssh(
                     db.commit()
                     logger.debug("Task group removed from database.")
 
-                    if task_group.origin != TaskGroupV2OriginEnum.OTHER:
+                    if task_group.origin != TaskGroupOriginEnum.OTHER:
                         logger.debug(
                             f"Removing remote {task_group.path=} "
                             f"(with {profile.tasks_remote_dir=})."
@@ -99,7 +99,7 @@ def delete_ssh(
                         )
                         logger.debug(f"Remote {task_group.path=} removed.")
 
-                    activity.status = TaskGroupActivityStatusV2.OK
+                    activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)
                     activity.timestamp_ended = get_timestamp()
                     activity = add_commit_refresh(obj=activity, db=db)

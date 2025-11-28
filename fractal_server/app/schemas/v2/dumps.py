@@ -13,17 +13,17 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 from .task import TaskType
-from .task_group import TaskGroupV2OriginEnum
+from .task_group import TaskGroupOriginEnum
 
 
-class ProjectDumpV2(BaseModel):
+class ProjectDump(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     timestamp_created: str
 
 
-class TaskDumpV2(BaseModel):
+class TaskDump(BaseModel):
     id: int
     name: str
     type: TaskType
@@ -37,7 +37,7 @@ class TaskDumpV2(BaseModel):
     output_types: dict[str, bool]
 
 
-class WorkflowTaskDumpV2(BaseModel):
+class WorkflowTaskDump(BaseModel):
     """
     We do not include 'model_config = ConfigDict(extra="forbid")'
     because legacy data may include 'input_filters' field and we want to avoid
@@ -51,10 +51,10 @@ class WorkflowTaskDumpV2(BaseModel):
     type_filters: dict[str, bool]
 
     task_id: int | None = None
-    task: TaskDumpV2 | None = None
+    task: TaskDump | None = None
 
 
-class WorkflowDumpV2(BaseModel):
+class WorkflowDump(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: int
     name: str
@@ -62,7 +62,7 @@ class WorkflowDumpV2(BaseModel):
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel):
+class DatasetDump(BaseModel):
     """
     We do not include 'model_config = ConfigDict(extra="forbid")' because
     legacy data may include 'type_filters' or 'attribute_filters' and we
@@ -76,9 +76,9 @@ class DatasetDumpV2(BaseModel):
     zarr_dir: str
 
 
-class TaskGroupDumpV2(BaseModel):
+class TaskGroupDump(BaseModel):
     id: int
-    origin: TaskGroupV2OriginEnum
+    origin: TaskGroupOriginEnum
     pkg_name: str
     version: str | None = None
     python_version: str | None = None

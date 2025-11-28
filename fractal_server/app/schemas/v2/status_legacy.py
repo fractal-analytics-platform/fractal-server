@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-class WorkflowTaskStatusTypeV2(StrEnum):
+class WorkflowTaskStatusType(StrEnum):
     """
     Define the available values for the status of a `WorkflowTask`.
 
@@ -23,7 +23,7 @@ class WorkflowTaskStatusTypeV2(StrEnum):
     FAILED = "failed"
 
 
-class LegacyStatusReadV2(BaseModel):
+class LegacyStatusRead(BaseModel):
     """
     Response type for the
     `/project/{project_id}/status/` endpoint
@@ -31,5 +31,5 @@ class LegacyStatusReadV2(BaseModel):
 
     status: dict[
         str,
-        WorkflowTaskStatusTypeV2,
+        WorkflowTaskStatusType,
     ] = Field(default_factory=dict)

@@ -12,7 +12,7 @@ jobs:
 
   tests_api:
 
-    name: "V2 - API - Python ${{ matrix.python-version }}"
+    name: "API - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -61,7 +61,7 @@ jobs:
 
   tests_not_api:
 
-    name: "V2 - not API - Python ${{ matrix.python-version }}"
+    name: "Not API - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -110,7 +110,7 @@ jobs:
 
   tests_containers:
 
-    name: "V2 - Containers - Python ${{ matrix.python-version }}"
+    name: "Containers - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -171,7 +171,7 @@ jobs:
 
   tests_oauth:
 
-    name: "V2 - OAuth - Python ${{ matrix.python-version }}"
+    name: "OAuth - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 

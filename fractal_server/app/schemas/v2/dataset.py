@@ -6,15 +6,15 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.app.schemas.v2.project import ProjectReadV2
+from fractal_server.app.schemas.v2.project import ProjectRead
 from fractal_server.images import SingleImage
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import ZarrDirStr
 
 
-class DatasetCreateV2(BaseModel):
+class DatasetCreate(BaseModel):
     """
-    DatasetCreateV2
+    DatasetCreate
 
     Attributes:
         name:
@@ -27,9 +27,9 @@ class DatasetCreateV2(BaseModel):
     zarr_dir: ZarrDirStr | None = None
 
 
-class DatasetReadV2(BaseModel):
+class DatasetRead(BaseModel):
     """
-    DatasetReadV2
+    DatasetRead
 
     Attributes:
         id:
@@ -44,7 +44,7 @@ class DatasetReadV2(BaseModel):
     name: str
 
     project_id: int
-    project: ProjectReadV2
+    project: ProjectRead
 
     timestamp_created: AwareDatetime
 
@@ -55,9 +55,9 @@ class DatasetReadV2(BaseModel):
         return v.isoformat()
 
 
-class DatasetUpdateV2(BaseModel):
+class DatasetUpdate(BaseModel):
     """
-    DatasetUpdateV2
+    DatasetUpdate
 
     Attributes:
         name:
@@ -70,7 +70,7 @@ class DatasetUpdateV2(BaseModel):
     zarr_dir: ZarrDirStr | None = None
 
 
-class DatasetImportV2(BaseModel):
+class DatasetImport(BaseModel):
     """
     Class for `Dataset` import.
 
@@ -89,7 +89,7 @@ class DatasetImportV2(BaseModel):
     images: list[SingleImage] = Field(default_factory=list)
 
 
-class DatasetExportV2(BaseModel):
+class DatasetExport(BaseModel):
     """
     Class for `Dataset` export.
 

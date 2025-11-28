@@ -30,12 +30,12 @@ def bulk_upsert_image_cache_slow(
     ],
 )
 async def test_upsert_function(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db_sync,
     db,
     MockCurrentUser,
@@ -43,15 +43,15 @@ async def test_upsert_function(
     num,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
 
-        wftask = await workflowtask_factory_v2(
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

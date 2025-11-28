@@ -9,14 +9,14 @@ from fractal_server.types import DictStrAny
 from fractal_server.types import TypeFilters
 from fractal_server.types import WorkflowTaskArgument
 
-from .task import TaskExportV2
-from .task import TaskImportV2
-from .task import TaskImportV2Legacy
-from .task import TaskReadV2
+from .task import TaskExport
+from .task import TaskImport
+from .task import TaskImportLegacy
+from .task import TaskRead
 from .task import TaskType
 
 
-class WorkflowTaskCreateV2(BaseModel):
+class WorkflowTaskCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: DictStrAny | None = None
@@ -26,14 +26,14 @@ class WorkflowTaskCreateV2(BaseModel):
     type_filters: TypeFilters = Field(default_factory=dict)
 
 
-class WorkflowTaskReplaceV2(BaseModel):
+class WorkflowTaskReplace(BaseModel):
     """Used by 'replace-task' endpoint"""
 
     args_non_parallel: dict[str, Any] | None = None
     args_parallel: dict[str, Any] | None = None
 
 
-class WorkflowTaskReadV2(BaseModel):
+class WorkflowTaskRead(BaseModel):
     id: int
 
     workflow_id: int
@@ -48,14 +48,14 @@ class WorkflowTaskReadV2(BaseModel):
 
     task_type: TaskType
     task_id: int
-    task: TaskReadV2
+    task: TaskRead
 
 
-class WorkflowTaskReadV2WithWarning(WorkflowTaskReadV2):
+class WorkflowTaskReadWithWarning(WorkflowTaskRead):
     warning: str | None = None
 
 
-class WorkflowTaskUpdateV2(BaseModel):
+class WorkflowTaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: DictStrAny | None = None
@@ -65,7 +65,7 @@ class WorkflowTaskUpdateV2(BaseModel):
     type_filters: TypeFilters = None
 
 
-class WorkflowTaskImportV2(BaseModel):
+class WorkflowTaskImport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     meta_non_parallel: DictStrAny | None = None
@@ -75,7 +75,7 @@ class WorkflowTaskImportV2(BaseModel):
     type_filters: TypeFilters | None = None
     input_filters: dict[str, Any] | None = None
 
-    task: TaskImportV2 | TaskImportV2Legacy
+    task: TaskImport | TaskImportLegacy
 
     @model_validator(mode="before")
     @classmethod
@@ -106,11 +106,11 @@ class WorkflowTaskImportV2(BaseModel):
         return values
 
 
-class WorkflowTaskExportV2(BaseModel):
+class WorkflowTaskExport(BaseModel):
     meta_non_parallel: dict[str, Any] | None = None
     meta_parallel: dict[str, Any] | None = None
     args_non_parallel: dict[str, Any] | None = None
     args_parallel: dict[str, Any] | None = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
 
-    task: TaskExportV2
+    task: TaskExport

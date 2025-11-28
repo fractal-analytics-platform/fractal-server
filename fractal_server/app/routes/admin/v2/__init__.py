@@ -14,16 +14,14 @@ from .task import router as task_router
 from .task_group import router as task_group_router
 from .task_group_lifecycle import router as task_group_lifecycle_router
 
-router_admin_v2 = APIRouter()
+router_admin = APIRouter()
 
-router_admin_v2.include_router(accounting_router, prefix="/accounting")
-router_admin_v2.include_router(job_router, prefix="/job")
-router_admin_v2.include_router(task_router, prefix="/task")
-router_admin_v2.include_router(task_group_router, prefix="/task-group")
-router_admin_v2.include_router(
-    task_group_lifecycle_router, prefix="/task-group"
-)
-router_admin_v2.include_router(impersonate_router, prefix="/impersonate")
-router_admin_v2.include_router(resource_router, prefix="/resource")
-router_admin_v2.include_router(profile_router, prefix="/profile")
-router_admin_v2.include_router(sharing_router, prefix="/linkuserproject")
+router_admin.include_router(accounting_router, prefix="/accounting")
+router_admin.include_router(job_router, prefix="/job")
+router_admin.include_router(task_router, prefix="/task")
+router_admin.include_router(task_group_router, prefix="/task-group")
+router_admin.include_router(task_group_lifecycle_router, prefix="/task-group")
+router_admin.include_router(impersonate_router, prefix="/impersonate")
+router_admin.include_router(resource_router, prefix="/resource")
+router_admin.include_router(profile_router, prefix="/profile")
+router_admin.include_router(sharing_router, prefix="/linkuserproject")

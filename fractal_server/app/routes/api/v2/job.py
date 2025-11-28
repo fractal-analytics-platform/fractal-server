@@ -18,8 +18,8 @@ from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
@@ -39,12 +39,12 @@ async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
 router = APIRouter()
 
 
-@router.get("/job/", response_model=list[JobReadV2])
+@router.get("/job/", response_model=list[JobRead])
 async def get_user_jobs(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2]:
+) -> list[JobRead]:
     """
     Returns all the jobs of the current user
     """
@@ -68,14 +68,14 @@ async def get_user_jobs(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/job/",
-    response_model=list[JobReadV2],
+    response_model=list[JobRead],
 )
 async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2] | None:
+) -> list[JobRead] | None:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -99,7 +99,7 @@ async def get_latest_job(
     dataset_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2:
+) -> JobRead:
     await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
@@ -127,7 +127,7 @@ async def get_latest_job(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/",
-    response_model=JobReadV2,
+    response_model=JobRead,
 )
 async def read_job(
     project_id: int,
@@ -135,7 +135,7 @@ async def read_job(
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> JobReadV2 | None:
+) -> JobRead | None:
     """
     Return info on an existing job
     """
@@ -150,7 +150,7 @@ async def read_job(
     job = output["job"]
     await db.close()
 
-    if show_tmp_logs and (job.status == JobStatusTypeV2.SUBMITTED):
+    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
         try:
             with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}") as f:
                 job.log = f.read()
@@ -194,14 +194,14 @@ async def download_job_logs(
 
 @router.get(
     "/project/{project_id}/job/",
-    response_model=list[JobReadV2],
+    response_model=list[JobRead],
 )
 async def get_job_list(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobReadV2] | None:
+) -> list[JobRead] | None:
     """
     Get job list for given project
     """

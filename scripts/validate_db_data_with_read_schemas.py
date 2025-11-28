@@ -13,14 +13,14 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
-from fractal_server.app.schemas.v2 import DatasetReadV2
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupReadV2
-from fractal_server.app.schemas.v2 import TaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import ProjectRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupRead
+from fractal_server.app.schemas.v2 import TaskRead
+from fractal_server.app.schemas.v2 import WorkflowRead
+from fractal_server.app.schemas.v2 import WorkflowTaskRead
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -67,40 +67,38 @@ with next(get_sync_db()) as db:
             f"{user_ids_not_in_default_group}"
         )
 
-    # V2
-
-    # PROJECTS V2
+    # PROJECTS
     stm = select(ProjectV2)
     projects = db.execute(stm).scalars().all()
     for project in sorted(projects, key=lambda x: x.id):
-        ProjectReadV2(**project.model_dump())
-        print(f"V2 - Project {project.id} validated")
+        ProjectRead(**project.model_dump())
+        print(f"Project {project.id} validated")
 
-    # TASKS V2
+    # TASKS
     stm = select(TaskV2)
     tasks = db.execute(stm).scalars().all()
     for task in sorted(tasks, key=lambda x: x.id):
-        TaskReadV2(**task.model_dump())
-        print(f"V2 - Task {task.id} validated")
+        TaskRead(**task.model_dump())
+        print(f"Task {task.id} validated")
 
-    # TASK GROUPS V2
+    # TASK GROUPS
     stm = select(TaskGroupV2)
     task_groups = db.execute(stm).scalars().all()
     for task_group in sorted(task_groups, key=lambda x: x.id):
         task_list = []
         for task in task_group.task_list:
-            task_list.append(TaskReadV2(**task.model_dump()))
-        TaskGroupReadV2(**task_group.model_dump(), task_list=task_list)
-        print(f"V2 - TaskGroup {task_group.id} validated")
+            task_list.append(TaskRead(**task.model_dump()))
+        TaskGroupRead(**task_group.model_dump(), task_list=task_list)
+        print(f"TaskGroup {task_group.id} validated")
 
-    # TASK GROUP V2 ACTIVITIES
+    # TASK GROUP ACTIVITIES
     stm = select(TaskGroupActivityV2)
     task_group_activities = db.execute(stm).scalars().all()
     for activity in sorted(task_group_activities, key=lambda x: x.id):
-        TaskGroupActivityV2Read(**activity.model_dump())
-        print(f"V2 - TaskGroupActivity {activity.id} validated")
+        TaskGroupActivityRead(**activity.model_dump())
+        print(f"TaskGroupActivity {activity.id} validated")
 
-    # WORKFLOWS V2
+    # WORKFLOWS
     stm = select(WorkflowV2)
     workflows = db.execute(stm).scalars().all()
     for workflow in sorted(workflows, key=lambda x: x.id):
@@ -108,32 +106,32 @@ with next(get_sync_db()) as db:
         task_list = []
         for wftask in workflow.task_list:
             task_list.append(
-                WorkflowTaskReadV2(
+                WorkflowTaskRead(
                     **wftask.model_dump(),
-                    task=TaskReadV2(**wftask.task.model_dump()),
+                    task=TaskRead(**wftask.task.model_dump()),
                 )
             )
 
-        WorkflowReadV2(
+        WorkflowRead(
             **workflow.model_dump(),
-            project=ProjectReadV2(**workflow.project.model_dump()),
+            project=ProjectRead(**workflow.project.model_dump()),
             task_list=task_list,
         )
-        print(f"V2 - Workflow {workflow.id} validated")
+        print(f"Workflow {workflow.id} validated")
 
-    # DATASETS V2
+    # DATASETS
     stm = select(DatasetV2)
     datasets = db.execute(stm).scalars().all()
     for dataset in sorted(datasets, key=lambda x: x.id):
-        DatasetReadV2(
+        DatasetRead(
             **dataset.model_dump(),
-            project=ProjectReadV2(**dataset.project.model_dump()),
+            project=ProjectRead(**dataset.project.model_dump()),
         )
-        print(f"V2 - Dataset {dataset.id} validated")
+        print(f"Dataset {dataset.id} validated")
 
-    # JOBS V2
+    # JOBS
     stm = select(JobV2)
     jobs = db.execute(stm).scalars().all()
     for job in sorted(jobs, key=lambda x: x.id):
-        JobReadV2(**job.model_dump())
-        print(f"V2 - Job {job.id} validated")
+        JobRead(**job.model_dump())
+        print(f"Job {job.id} validated")

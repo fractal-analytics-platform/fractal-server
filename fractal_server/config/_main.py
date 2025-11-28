@@ -28,7 +28,7 @@ class Settings(BaseSettings):
             Only logs of with this level (or higher) will appear in the console
             logs.
         FRACTAL_API_MAX_JOB_LIST_LENGTH:
-            Number of ids that can be stored in the `jobsV2` attribute of
+            Number of ids that can be stored in the `jobs` attribute of
             `app.state`.
         FRACTAL_GRACEFUL_SHUTDOWN_TIME:
             Waiting time for the shutdown phase of executors, in seconds.

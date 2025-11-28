@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskCreate
 
 
 def create_db_tasks_and_update_task_group_sync(
     *,
     task_group_id: int,
-    task_list: list[TaskCreateV2],
+    task_list: list[TaskCreate],
     db: DBSyncSession,
 ) -> TaskGroupV2:
     """
@@ -17,7 +17,7 @@ def create_db_tasks_and_update_task_group_sync(
 
     Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
-        task_list: List of `TaskCreateV2` objects to be inserted into the db.
+        task_list: List of `TaskCreate` objects to be inserted into the db.
         db: Synchronous database session
 
     Returns:
@@ -36,7 +36,7 @@ def create_db_tasks_and_update_task_group_sync(
 async def create_db_tasks_and_update_task_group_async(
     *,
     task_group_id: int,
-    task_list: list[TaskCreateV2],
+    task_list: list[TaskCreate],
     db: AsyncSession,
 ) -> TaskGroupV2:
     """
@@ -44,7 +44,7 @@ async def create_db_tasks_and_update_task_group_async(
 
     Args:
         task_group_id: ID of an existing `TaskGroupV2` object.
-        task_list: List of `TaskCreateV2` objects to be inserted into the db.
+        task_list: List of `TaskCreate` objects to be inserted into the db.
         db: Synchronous database session
 
     Returns:

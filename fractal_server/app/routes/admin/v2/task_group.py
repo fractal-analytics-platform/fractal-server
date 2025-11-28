@@ -20,12 +20,12 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.app.schemas.v2 import TaskGroupReadSuperuser
-from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupUpdate
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -34,20 +34,20 @@ logger = set_logger(__name__)
 
 
 @router.get(
-    "/activity/", response_model=PaginationResponse[TaskGroupActivityV2Read]
+    "/activity/", response_model=PaginationResponse[TaskGroupActivityRead]
 )
 async def get_task_group_activity_list(
     task_group_activity_id: int | None = None,
     user_id: int | None = None,
     taskgroupv2_id: int | None = None,
     pkg_name: str | None = None,
-    status: TaskGroupActivityStatusV2 | None = None,
-    action: TaskGroupActivityActionV2 | None = None,
+    status: TaskGroupActivityStatus | None = None,
+    action: TaskGroupActivityAction | None = None,
     timestamp_started_min: AwareDatetime | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskGroupActivityV2Read]:
+) -> PaginationResponse[TaskGroupActivityRead]:
     # Assign pagination parameters
     page = pagination.page
     page_size = pagination.page_size
@@ -127,7 +127,7 @@ async def query_task_group_list(
     private: bool | None = None,
     active: bool | None = None,
     pkg_name: str | None = None,
-    origin: TaskGroupV2OriginEnum | None = None,
+    origin: TaskGroupOriginEnum | None = None,
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
     resource_id: int | None = None,
@@ -217,7 +217,7 @@ async def query_task_group_list(
 @router.patch("/{task_group_id}/", response_model=TaskGroupReadSuperuser)
 async def patch_task_group(
     task_group_id: int,
-    task_group_update: TaskGroupUpdateV2,
+    task_group_update: TaskGroupUpdate,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadSuperuser]:

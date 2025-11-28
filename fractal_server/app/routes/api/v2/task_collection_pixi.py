@@ -33,10 +33,10 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 )
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2.task_group import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
@@ -74,7 +74,7 @@ def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
 @router.post(
     "/collect/pixi/",
     status_code=202,
-    response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityRead,
 )
 async def collect_task_pixi(
     response: Response,
@@ -85,7 +85,7 @@ async def collect_task_pixi(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityRead:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
@@ -136,7 +136,7 @@ async def collect_task_pixi(
         user_id=user.id,
         user_group_id=user_group_id,
         resource_id=resource_id,
-        origin=TaskGroupV2OriginEnum.PIXI,
+        origin=TaskGroupOriginEnum.PIXI,
         pixi_version=pixi_version,
         pkg_name=pkg_name,
         version=version,
@@ -178,8 +178,8 @@ async def collect_task_pixi(
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )

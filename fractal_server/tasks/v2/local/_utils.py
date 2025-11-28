@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.utils_pixi import simplify_pyproject_toml
@@ -51,7 +51,7 @@ def _customize_and_run_template(
     return stdout
 
 
-def check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
+def check_task_files_exist(task_list: list[TaskCreate]) -> None:
     """
     Check that the modules listed in task commands point to existing files.
 

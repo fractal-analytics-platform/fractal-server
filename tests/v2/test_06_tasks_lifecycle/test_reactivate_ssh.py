@@ -5,8 +5,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 
@@ -49,8 +49,8 @@ async def test_reactivate_ssh_venv_exists(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
@@ -71,12 +71,12 @@ async def test_reactivate_ssh_venv_exists(
     )
 
     # Verify that reactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "already exists" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "already exists" in task_group_activity.log
 
     _reset_permissions(
         fractal_ssh=fractal_ssh,
@@ -139,8 +139,8 @@ async def test_reactivate_ssh_fail(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.REACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.REACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )

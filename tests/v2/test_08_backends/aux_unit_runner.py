@@ -22,23 +22,23 @@ ZARR_URLS_AND_PARAMETER = [
 async def history_run_mock(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    task_factory,
+    job_factory,
     tmp_path,
 ) -> HistoryRun:
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

@@ -3,8 +3,8 @@ from devtools import debug
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.app.schemas.v2.dataset import DatasetExportV2
+from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2.dataset import DatasetExport
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -33,18 +33,18 @@ def n_images(n: int) -> list[dict]:
     ]
 
 
-async def test_new_dataset_v2(
+async def test_new_dataset(
     client,
     MockCurrentUser,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        res = await client.post("api/v2/project/", json=dict(name="projectV2"))
+        res = await client.post("api/v2/project/", json=dict(name="project"))
         debug(res.json())
         assert res.status_code == 201
-        projectV2 = res.json()
-        p2_id = projectV2["id"]
+        project = res.json()
+        p2_id = project["id"]
 
         # POST
 
@@ -109,9 +109,9 @@ async def test_new_dataset_v2(
         assert len(res.json()) == 1
 
 
-async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
+async def test_get_dataset(client, MockCurrentUser, project_factory):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         p_id = project.id
         # Create dataset
         DATASET_NAME = "My Dataset"
@@ -150,9 +150,9 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         debug(datasets[0]["timestamp_created"])
 
 
-async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
+async def test_post_dataset(client, MockCurrentUser, project_factory):
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
+        prj = await project_factory(user)
 
         # Check that zarr_dir must be relative to one of user's project dirs
         res = await client.post(
@@ -207,7 +207,7 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
     async with MockCurrentUser(
         user_kwargs={"project_dirs": ["/some/dir"]}
     ) as user:
-        prj = await project_factory_v2(user)
+        prj = await project_factory(user)
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
         )
@@ -220,12 +220,12 @@ async def test_post_dataset(client, MockCurrentUser, project_factory_v2):
 
 
 async def test_delete_dataset(
-    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+    client, MockCurrentUser, project_factory, dataset_factory
 ):
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        ds0 = await dataset_factory_v2(project_id=prj.id)
-        ds1 = await dataset_factory_v2(project_id=prj.id)
+        prj = await project_factory(user)
+        ds0 = await dataset_factory(project_id=prj.id)
+        ds1 = await dataset_factory(project_id=prj.id)
 
         ds_ids = (ds0.id, ds1.id)
 
@@ -250,11 +250,11 @@ async def test_delete_dataset(
 async def test_delete_dataset_cascade_jobs(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    job_factory,
     tmp_path,
     client,
 ):
@@ -266,21 +266,21 @@ async def test_delete_dataset_cascade_jobs(
     """
     async with MockCurrentUser() as user:
         # Populate the database with the appropriate objects
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="task")
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="task")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
 
         # Create a job in relationship with dataset and workflow
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
         assert job.dataset_id == dataset.id
 
@@ -298,27 +298,27 @@ async def test_delete_dataset_cascade_jobs(
         assert res.status_code == 404
 
         # Assert tha we cannot stop a dataset linked to a running job
-        ds_deletable = await dataset_factory_v2(id=2, project_id=project.id)
-        ds_not_deletable = await dataset_factory_v2(id=3, project_id=project.id)
+        ds_deletable = await dataset_factory(id=2, project_id=project.id)
+        ds_not_deletable = await dataset_factory(id=3, project_id=project.id)
 
         common_args = {
             "project_id": project.id,
             "workflow_id": workflow.id,
             "working_dir": (tmp_path / "some_working_dir").as_posix(),
         }
-        j1 = await job_factory_v2(
+        j1 = await job_factory(
             dataset_id=ds_deletable.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
             **common_args,
         )
-        j2 = await job_factory_v2(
+        j2 = await job_factory(
             dataset_id=ds_deletable.id,
-            status=JobStatusTypeV2.FAILED,
+            status=JobStatusType.FAILED,
             **common_args,
         )
-        await job_factory_v2(
+        await job_factory(
             dataset_id=ds_not_deletable.id,
-            status=JobStatusTypeV2.SUBMITTED,  # reason why ds is not deletable
+            status=JobStatusType.SUBMITTED,  # reason why ds is not deletable
             **common_args,
         )
         res = await client.delete(
@@ -337,11 +337,11 @@ async def test_delete_dataset_cascade_jobs(
 
 
 async def test_patch_dataset(
-    app, client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+    app, client, MockCurrentUser, project_factory, dataset_factory
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(
             project_id=project.id,
         )
         project_id = project.id
@@ -407,7 +407,7 @@ async def test_patch_dataset(
 async def test_dataset_import(
     client,
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     db,
 ):
     ZARR_DIR = "/something"
@@ -415,7 +415,7 @@ async def test_dataset_import(
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         ENDPOINT_URL = f"{PREFIX}/project/{project.id}/dataset/import/"
 
         # FAILURE: Images with zarr_urls not relative to zarr_dir
@@ -475,15 +475,13 @@ async def test_dataset_import(
 
 
 async def test_export_dataset(
-    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+    client, MockCurrentUser, project_factory, dataset_factory
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
         res = await client.get(
             f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
         )
         assert res.status_code == 200
-        assert (
-            res.json() == DatasetExportV2(**dataset.model_dump()).model_dump()
-        )
+        assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()

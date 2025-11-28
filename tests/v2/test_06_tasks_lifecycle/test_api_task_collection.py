@@ -10,8 +10,8 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 PREFIX = "api/v2/task"
 
@@ -317,8 +317,8 @@ async def test_contact_an_admin_message(
         task_group_activity_1 = TaskGroupActivityV2(
             user_id=userB.id,
             taskgroupv2_id=task_group.id,
-            action=TaskGroupActivityActionV2.COLLECT,
-            status=TaskGroupActivityStatusV2.PENDING,
+            action=TaskGroupActivityAction.COLLECT,
+            status=TaskGroupActivityStatus.PENDING,
             pkg_name="testing-tasks-mock",
             version="0.1.4",
         )
@@ -340,8 +340,8 @@ async def test_contact_an_admin_message(
         task_group_activity_2 = TaskGroupActivityV2(
             user_id=userB.id,
             taskgroupv2_id=task_group.id,
-            action=TaskGroupActivityActionV2.COLLECT,
-            status=TaskGroupActivityStatusV2.PENDING,
+            action=TaskGroupActivityAction.COLLECT,
+            status=TaskGroupActivityStatus.PENDING,
             pkg_name="testing-tasks-mock",
             version="0.1.4",
         )

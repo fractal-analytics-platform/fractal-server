@@ -15,10 +15,10 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import ProjectCreate
 from fractal_server.app.schemas.v2 import ProjectPermissions
-from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import ProjectUpdateV2
+from fractal_server.app.schemas.v2 import ProjectRead
+from fractal_server.app.schemas.v2 import ProjectUpdate
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_project_exists
@@ -29,7 +29,7 @@ logger = set_logger(__name__)
 router = APIRouter()
 
 
-@router.get("/project/", response_model=list[ProjectReadV2])
+@router.get("/project/", response_model=list[ProjectRead])
 async def get_list_project(
     is_owner: bool = True,
     user: UserOAuth = Depends(current_user_act_ver_prof),
@@ -51,12 +51,12 @@ async def get_list_project(
     return project_list
 
 
-@router.post("/project/", response_model=ProjectReadV2, status_code=201)
+@router.post("/project/", response_model=ProjectRead, status_code=201)
 async def create_project(
-    project: ProjectCreateV2,
+    project: ProjectCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectReadV2 | None:
+) -> ProjectRead | None:
     """
     Create new project
     """
@@ -92,12 +92,12 @@ async def create_project(
     return db_project
 
 
-@router.get("/project/{project_id}/", response_model=ProjectReadV2)
+@router.get("/project/{project_id}/", response_model=ProjectRead)
 async def read_project(
     project_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectReadV2 | None:
+) -> ProjectRead | None:
     """
     Return info on an existing project
     """
@@ -111,10 +111,10 @@ async def read_project(
     return project
 
 
-@router.patch("/project/{project_id}/", response_model=ProjectReadV2)
+@router.patch("/project/{project_id}/", response_model=ProjectRead)
 async def update_project(
     project_id: int,
-    project_update: ProjectUpdateV2,
+    project_update: ProjectUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
 ):

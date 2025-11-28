@@ -6,8 +6,8 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
@@ -79,7 +79,7 @@ def reactivate_local(
                 return
 
             try:
-                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.status = TaskGroupActivityStatus.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Prepare replacements for templates
@@ -105,7 +105,7 @@ def reactivate_local(
                     ).as_posix(),
                     prefix=(
                         f"{int(time.time())}_"
-                        f"{TaskGroupActivityActionV2.REACTIVATE}"
+                        f"{TaskGroupActivityAction.REACTIVATE}"
                     ),
                     logger_name=LOGGER_NAME,
                 )
@@ -126,7 +126,7 @@ def reactivate_local(
                 )
                 logger.debug("end - install from pip freeze")
                 activity.log = get_current_log(log_file_path)
-                activity.status = TaskGroupActivityStatusV2.OK
+                activity.status = TaskGroupActivityStatus.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
                 task_group.active = True

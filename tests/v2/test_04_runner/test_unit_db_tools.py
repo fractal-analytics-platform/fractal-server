@@ -17,24 +17,24 @@ async def test_update_status_of_history_unit(
     # Fixtures
     db_sync,
     db,
-    dataset_factory_v2,
-    project_factory_v2,
-    task_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    dataset_factory,
+    project_factory,
+    task_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        task = await task_factory_v2(user.id)
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        wftask = await workflowtask_factory_v2(
+        task = await task_factory(user.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task.id,
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

@@ -8,7 +8,7 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 
 async def prepare_data():
@@ -40,7 +40,7 @@ async def prepare_data():
             user_email="a@example.org",
             first_task_index=0,
             last_task_index=0,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
         )
         db.add(job)
         await db.commit()
@@ -61,7 +61,7 @@ def function1(dataset_id, job_id):
         time.sleep(4)
 
         job = db_sync.get(JobV2, job_id)
-        job.status = JobStatusTypeV2.DONE
+        job.status = JobStatusType.DONE
         job.log = "asdasdadasda"
         db_sync.merge(job)
         print(time.perf_counter(), "function1", "merged job")

@@ -465,16 +465,16 @@ async def test_project_sharing_task_group_access(
     client,
     MockCurrentUser,
     local_resource_profile_db,
-    project_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
+    project_factory,
+    workflow_factory,
+    workflowtask_factory,
 ):
     _, profile = local_resource_profile_db
 
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
         # User 1 creates a project and a workflow
-        project = await project_factory_v2(user1)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user1)
+        workflow = await workflow_factory(project_id=project.id)
 
         # User 1 inserts a non-private task
         res = await client.post(
@@ -504,7 +504,7 @@ async def test_project_sharing_task_group_access(
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
         assert taskgroup.user_group_id is None
 
-        await workflowtask_factory_v2(
+        await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task_id,
         )
@@ -580,7 +580,7 @@ async def test_project_sharing_subquery(
     client,
     MockCurrentUser,
     local_resource_profile_db,
-    project_factory_v2,
+    project_factory,
 ):
     """
     See ssue:
@@ -590,8 +590,8 @@ async def test_project_sharing_subquery(
     user_kwargs = {"profile_id": profile.id}
     async with MockCurrentUser(user_kwargs=user_kwargs) as user1:
         # User 1 creates two projects
-        project1 = await project_factory_v2(user1)
-        await project_factory_v2(user1)
+        project1 = await project_factory(user1)
+        await project_factory(user1)
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user2:
         # User 1 shares Project 1 with User 2

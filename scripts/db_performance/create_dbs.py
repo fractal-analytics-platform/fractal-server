@@ -14,11 +14,11 @@ from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import HistoryUnit
 from fractal_server.app.models import JobV2
-from fractal_server.app.schemas.v2 import DatasetImportV2
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import ProjectCreateV2
-from fractal_server.app.schemas.v2 import WorkflowCreateV2
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import DatasetImport
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import ProjectCreate
+from fractal_server.app.schemas.v2 import WorkflowCreate
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.history import HistoryUnitStatus
 from scripts.client import FractalClient
 
@@ -27,7 +27,7 @@ random.seed(123112311)
 
 def insert_job(
     project_id: int, workflow_id: int, dataset_id: int, db: Session
-) -> JobReadV2:
+) -> JobRead:
     job = JobV2(
         project_id=project_id,
         workflow_id=workflow_id,
@@ -165,21 +165,21 @@ if __name__ == "__main__":
 
     admin = FractalClient()
     user = _create_user_client(admin, user_identifier="user1")
-    proj = user.add_project(ProjectCreateV2(name="MyProject"))
+    proj = user.add_project(ProjectCreate(name="MyProject"))
     working_task = admin.add_working_task()
     for cluster in range(num_clusters):
         ds = user.import_dataset(
             proj.id,
-            DatasetImportV2(
+            DatasetImport(
                 name=f"MyDataset_{cluster}",
                 zarr_dir="/invalid/zarr",
             ),
         )
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV2(name=f"MyWorkflow_{cluster}")
+            proj.id, WorkflowCreate(name=f"MyWorkflow_{cluster}")
         )
         wftask = user.add_workflowtask(
-            proj.id, wf.id, working_task.id, WorkflowTaskCreateV2()
+            proj.id, wf.id, working_task.id, WorkflowTaskCreate()
         )
 
         with next(get_sync_db()) as db:

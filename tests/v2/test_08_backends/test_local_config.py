@@ -9,11 +9,11 @@ from fractal_server.runner.executors.local.get_local_config import (
 
 
 def test_get_local_backend_config():
-    class WorkflowTaskV2(object):
+    class WorkflowTask(object):
         meta_parallel: dict[str, str] = {"parallel_tasks_per_job": 11}
         meta_non_parallel: dict[str, Any] = {"parallel_tasks_per_job": 22}
 
-    wftask = WorkflowTaskV2()
+    wftask = WorkflowTask()
     shared_config = JobRunnerConfigLocal()
 
     out = get_local_backend_config(

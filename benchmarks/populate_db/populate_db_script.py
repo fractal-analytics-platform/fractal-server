@@ -1,9 +1,9 @@
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.app.schemas.v2 import DatasetImportV2
-from fractal_server.app.schemas.v2 import JobCreateV2
-from fractal_server.app.schemas.v2 import ProjectCreateV2
-from fractal_server.app.schemas.v2 import WorkflowCreateV2
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import DatasetImport
+from fractal_server.app.schemas.v2 import JobCreate
+from fractal_server.app.schemas.v2 import ProjectCreate
+from fractal_server.app.schemas.v2 import WorkflowCreate
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from scripts.client import FractalClient
 
 
@@ -61,19 +61,17 @@ def _user_flow_vanilla(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="vanilla")
-    proj = user.add_project(ProjectCreateV2(name="MyProject_uv"))
+    proj = user.add_project(ProjectCreate(name="MyProject_uv"))
     image_list = create_image_list(n_images=10)
     ds = user.import_dataset(
         proj.id,
-        DatasetImportV2(
+        DatasetImport(
             name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
         ),
     )
-    wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow"))
-    user.add_workflowtask(
-        proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
-    )
-    user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreateV2())
+    wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow"))
+    user.add_workflowtask(proj.id, wf.id, working_task_id, WorkflowTaskCreate())
+    user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreate())
 
 
 # power user:
@@ -88,29 +86,29 @@ def _user_flow_power(
     failing_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="power")
-    proj = user.add_project(ProjectCreateV2(name="MyProject_upw"))
+    proj = user.add_project(ProjectCreate(name="MyProject_upw"))
     # we add also a dataset with images
     image_list = create_image_list(n_images=100)
     num_workflows = 20
     num_jobs_per_workflow = 20
     for ind_wf in range(num_workflows):
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV2(name=f"MyWorkflow-{ind_wf}")
+            proj.id, WorkflowCreate(name=f"MyWorkflow-{ind_wf}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
         )
         if ind_wf % 2 == 0:
             user.add_workflowtask(
-                proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
+                proj.id, wf.id, working_task_id, WorkflowTaskCreate()
             )
             user.add_workflowtask(
-                proj.id, wf.id, failing_task_id, WorkflowTaskCreateV2()
+                proj.id, wf.id, failing_task_id, WorkflowTaskCreate()
             )
         for ind_job in range(num_jobs_per_workflow):
             ds = user.import_dataset(
                 proj.id,
-                DatasetImportV2(
+                DatasetImport(
                     name="MyDataset",
                     zarr_dir="/invalid/zarr",
                     images=image_list,
@@ -120,7 +118,7 @@ def _user_flow_power(
                 proj.id,
                 wf.id,
                 ds.id,
-                applyworkflow=JobCreateV2(),
+                applyworkflow=JobCreate(),
             )
 
 
@@ -134,14 +132,14 @@ def _user_flow_dataset(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="dataset")
-    proj = user.add_project(ProjectCreateV2(name="MyProject_us"))
+    proj = user.add_project(ProjectCreate(name="MyProject_us"))
     image_list = create_image_list(n_images=1000)
     n_datasets = 20
     ds_list = []
     for i in range(n_datasets):
         ds = user.import_dataset(
             proj.id,
-            DatasetImportV2(
+            DatasetImport(
                 name=f"MyDataset_us-{i}",
                 zarr_dir="/invalid/zarr",
                 images=image_list,
@@ -152,17 +150,17 @@ def _user_flow_dataset(
     num_workflows = 20
     for i in range(num_workflows):
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV2(name=f"MyWorkflow_us-{i}")
+            proj.id, WorkflowCreate(name=f"MyWorkflow_us-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
         )
         for ds in ds_list:
             user.submit_job(
                 proj.id,
                 wf.id,
                 ds.id,
-                applyworkflow=JobCreateV2(),
+                applyworkflow=JobCreate(),
             )
 
 
@@ -180,27 +178,27 @@ def _user_flow_project(
     num_jobs_per_workflow = 5
     image_list = create_image_list(100)
     for i in range(n_projects):
-        proj = user.add_project(ProjectCreateV2(name=f"MyProject_upj-{i}"))
+        proj = user.add_project(ProjectCreate(name=f"MyProject_upj-{i}"))
         ds = user.import_dataset(
             proj.id,
-            DatasetImportV2(
+            DatasetImport(
                 name=f"MyDataset_up-{i}",
                 zarr_dir="/invalid/zarr",
                 images=image_list,
             ),
         )
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV2(name=f"MyWorkflow_up-{i}")
+            proj.id, WorkflowCreate(name=f"MyWorkflow_up-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
         )
         for i in range(num_jobs_per_workflow):
             user.submit_job(
                 proj.id,
                 wf.id,
                 ds.id,
-                applyworkflow=JobCreateV2(),
+                applyworkflow=JobCreate(),
             )
 
 
@@ -214,21 +212,19 @@ def _user_flow_job(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="job")
-    proj = user.add_project(ProjectCreateV2(name="MyProject_uj"))
+    proj = user.add_project(ProjectCreate(name="MyProject_uj"))
     image_list = create_image_list(n_images=10)
     ds = user.import_dataset(
         proj.id,
-        DatasetImportV2(
+        DatasetImport(
             name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
         ),
     )
-    wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow_uj"))
-    user.add_workflowtask(
-        proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
-    )
+    wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow_uj"))
+    user.add_workflowtask(proj.id, wf.id, working_task_id, WorkflowTaskCreate())
     num_jobs_per_workflow = 100
     for i in range(num_jobs_per_workflow):
-        user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreateV2())
+        user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreate())
 
 
 if __name__ == "__main__":

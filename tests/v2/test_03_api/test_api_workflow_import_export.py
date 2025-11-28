@@ -6,7 +6,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
-from fractal_server.app.schemas.v2 import TaskImportV2
+from fractal_server.app.schemas.v2 import TaskImport
 
 PREFIX = "api/v2"
 
@@ -14,8 +14,8 @@ PREFIX = "api/v2"
 async def test_import_export(
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
+    task_factory,
+    project_factory,
     testdata_path,
     db,
 ):
@@ -33,11 +33,11 @@ async def test_import_export(
     wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"]["source"]
 
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        task_with_source0 = await task_factory_v2(
+        prj = await project_factory(user)
+        task_with_source0 = await task_factory(
             user_id=user.id, source=wf_file_task_source_0, name="0"
         )
-        task_with_source1 = await task_factory_v2(
+        task_with_source1 = await task_factory(
             user_id=user.id, source=wf_file_task_source_1, name="1"
         )
 
@@ -143,7 +143,7 @@ async def test_import_export(
         error_msg = "Could not find a task matching with source='INVALID'."
         assert error_msg in res.json()["detail"]
 
-        first_task_no_source = await task_factory_v2(
+        first_task_no_source = await task_factory(
             user_id=user.id,
             name="cellpose_segmentation",
             task_group_kwargs=dict(
@@ -200,7 +200,7 @@ async def test_import_export(
         await db.commit()
         await db.close()
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user.id,
             name="cellpose_segmentation",
             task_group_kwargs=dict(
@@ -294,7 +294,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with matching version
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(name="task", pkg_name="pkg", version="1.0.0"),
+        task_import=TaskImport(name="task", pkg_name="pkg", version="1.0.0"),
         user_id=1,
         task_groups_list=task_groups,
         default_group_id=1,
@@ -304,7 +304,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with latest version
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(
+        task_import=TaskImport(
             name="task",
             pkg_name="pkg",
         ),
@@ -317,7 +317,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with latest version equal to None
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(
+        task_import=TaskImport(
             name="task",
             pkg_name="pkg",
         ),
@@ -330,7 +330,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with non-matching version
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(
+        task_import=TaskImport(
             name="task",
             pkg_name="pkg",
             version="invalid",
@@ -344,7 +344,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with non-matching pkg_name
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(
+        task_import=TaskImport(
             name="task",
             pkg_name="invalid",
         ),
@@ -357,7 +357,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with non-matching name
     task_id = await _get_task_by_taskimport(
-        task_import=TaskImportV2(
+        task_import=TaskImport(
             name="invalid",
             pkg_name="pkg",
         ),
@@ -371,7 +371,7 @@ async def test_unit_get_task_by_taskimport():
 
 async def test_unit_disambiguate_task_groups(
     MockCurrentUser,
-    task_factory_v2,
+    task_factory,
     db,
     default_user_group,
 ):
@@ -406,7 +406,7 @@ async def test_unit_disambiguate_task_groups(
     db.add(LinkUserGroup(user_id=user3_id, group_id=new_group.id))
     await db.commit()
 
-    task_A = await task_factory_v2(
+    task_A = await task_factory(
         name="taskA",
         user_id=user1_id,
         task_group_kwargs=dict(
@@ -416,7 +416,7 @@ async def test_unit_disambiguate_task_groups(
         ),
     )
 
-    task_B = await task_factory_v2(
+    task_B = await task_factory(
         name="taskB",
         user_id=user2_id,
         task_group_kwargs=dict(
@@ -426,7 +426,7 @@ async def test_unit_disambiguate_task_groups(
         ),
     )
 
-    task_C = await task_factory_v2(
+    task_C = await task_factory(
         name="taskC",
         user_id=user3_id,
         task_group_kwargs=dict(
@@ -491,13 +491,13 @@ async def test_unit_disambiguate_task_groups(
 async def test_import_with_legacy_filters(
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
+    task_factory,
+    project_factory,
 ):
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
+        prj = await project_factory(user)
         ENDPOINT_URL = f"{PREFIX}/project/{prj.id}/workflow/import/"
-        task = await task_factory_v2(
+        task = await task_factory(
             name="mytask",
             version="myversion",
             user_id=user.id,
@@ -614,13 +614,13 @@ async def test_import_with_legacy_filters(
 
 async def test_import_filters_compatibility(
     MockCurrentUser,
-    project_factory_v2,
-    task_factory_v2,
+    project_factory,
+    task_factory,
     client,
 ):
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        await task_factory_v2(
+        prj = await project_factory(user)
+        await task_factory(
             user_id=user.id,
             source="foo",
             input_types={"a": True, "b": False},
@@ -653,8 +653,8 @@ async def test_import_filters_compatibility(
 async def test_import_multiple_task_groups_same_version(
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
+    task_factory,
+    project_factory,
     db,
 ):
     """
@@ -675,7 +675,7 @@ async def test_import_multiple_task_groups_same_version(
     await db.commit()
     await db.refresh(some_usergroup)
 
-    await task_factory_v2(
+    await task_factory(
         user_id=user2.id,
         name=TASK_NAME,
         task_group_kwargs=dict(
@@ -686,13 +686,13 @@ async def test_import_multiple_task_groups_same_version(
     )
 
     async with MockCurrentUser() as user1:
-        proj = await project_factory_v2(user1)
+        proj = await project_factory(user1)
 
         db.add(LinkUserGroup(user_id=user1.id, group_id=some_usergroup.id))
         db.add(LinkUserGroup(user_id=user2_id, group_id=some_usergroup.id))
         await db.commit()
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user1.id,
             name=TASK_NAME,
             task_group_kwargs=dict(
@@ -701,7 +701,7 @@ async def test_import_multiple_task_groups_same_version(
             ),
             version=V1,
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user1.id,
             name=TASK_NAME,
             task_group_kwargs=dict(

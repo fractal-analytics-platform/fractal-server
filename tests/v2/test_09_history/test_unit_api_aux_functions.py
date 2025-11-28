@@ -30,13 +30,13 @@ async def test_get_history_unit_or_404(db):
 
 
 def test_read_log_file(tmp_path: Path):
-    class MockTaskV2(BaseModel):
+    class MockTask(BaseModel):
         name: str = "task-name"
 
-    class MockWorkflowTaskV2(BaseModel):
-        task: MockTaskV2
+    class MockWorkflowTask(BaseModel):
+        task: MockTask
 
-    wftask = MockWorkflowTaskV2(task=MockTaskV2())
+    wftask = MockWorkflowTask(task=MockTask())
 
     logfile = (tmp_path / "logs.txt").as_posix()
 
@@ -95,15 +95,15 @@ def test_read_log_file(tmp_path: Path):
 
 async def test_verify_workflow_and_dataset_access(
     db,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        project1 = await project_factory_v2(user=user)
-        wf1 = await workflow_factory_v2(project_id=project1.id)
-        ds1 = await dataset_factory_v2(project_id=project1.id)
+        project1 = await project_factory(user=user)
+        wf1 = await workflow_factory(project_id=project1.id)
+        ds1 = await dataset_factory(project_id=project1.id)
 
         res = await _verify_workflow_and_dataset_access(
             project_id=project1.id,
@@ -116,9 +116,9 @@ async def test_verify_workflow_and_dataset_access(
         assert res["dataset"].id == ds1.id
         assert res["workflow"].id == wf1.id
 
-        project2 = await project_factory_v2(user=user)
-        wf2 = await workflow_factory_v2(project_id=project2.id)
-        ds2 = await dataset_factory_v2(project_id=project2.id)
+        project2 = await project_factory(user=user)
+        wf2 = await workflow_factory(project_id=project2.id)
+        ds2 = await dataset_factory(project_id=project2.id)
 
         with pytest.raises(HTTPException, match="Workflow does not belong"):
             await _verify_workflow_and_dataset_access(

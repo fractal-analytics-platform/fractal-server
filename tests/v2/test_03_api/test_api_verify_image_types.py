@@ -9,8 +9,8 @@ from tests.v2.test_03_api.test_api_workflow_task import PREFIX
 async def test_verify_image_types(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    dataset_factory,
     client,
 ):
     ZARR_DIR = "/zarr_dir"
@@ -60,9 +60,9 @@ async def test_verify_image_types(
         index += 1
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id, zarr_dir=ZARR_DIR, images=images
     )
 
@@ -109,12 +109,12 @@ async def test_verify_image_types(
 
 
 async def test_check_non_processed_images(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     client,
     MockCurrentUser,
     tmp_path,
@@ -126,47 +126,47 @@ async def test_check_non_processed_images(
     """
 
     async with MockCurrentUser() as user:
-        task1 = await task_factory_v2(
+        task1 = await task_factory(
             user_id=user.id,
             name="a",
         )
-        task2 = await task_factory_v2(
+        task2 = await task_factory(
             user_id=user.id,
             output_types={"x": True},
             name="b",
         )
-        task3 = await task_factory_v2(
+        task3 = await task_factory(
             name="c",
             user_id=user.id,
             type="converter_non_parallel",
         )
 
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-        workflow = await workflow_factory_v2(project_id=project.id)
-        wft1 = await workflowtask_factory_v2(
+        workflow = await workflow_factory(project_id=project.id)
+        wft1 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task1.id,
         )
-        wft2 = await workflowtask_factory_v2(
+        wft2 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task2.id,
         )
-        wft3 = await workflowtask_factory_v2(
+        wft3 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task1.id,
         )
-        await workflowtask_factory_v2(
+        await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task3.id,  # converter task
         )
-        wft5 = await workflowtask_factory_v2(
+        wft5 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task1.id,
         )
 
         n = 10
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project.id,
             zarr_dir="/zarr_dir",
             images=[
@@ -182,7 +182,7 @@ async def test_check_non_processed_images(
                 ).model_dump()
             ],
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

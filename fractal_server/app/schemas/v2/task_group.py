@@ -7,40 +7,40 @@ from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.app.schemas.v2.task import TaskReadV2
+from fractal_server.app.schemas.v2.task import TaskRead
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
 
 
-class TaskGroupV2OriginEnum(StrEnum):
+class TaskGroupOriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
     PIXI = "pixi"
     OTHER = "other"
 
 
-class TaskGroupActivityStatusV2(StrEnum):
+class TaskGroupActivityStatus(StrEnum):
     PENDING = "pending"
     ONGOING = "ongoing"
     FAILED = "failed"
     OK = "OK"
 
 
-class TaskGroupActivityActionV2(StrEnum):
+class TaskGroupActivityAction(StrEnum):
     COLLECT = "collect"
     DEACTIVATE = "deactivate"
     REACTIVATE = "reactivate"
     DELETE = "delete"
 
 
-class TaskGroupCreateV2(BaseModel):
+class TaskGroupCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_id: int
     resource_id: int
     user_group_id: int | None = None
     active: bool = True
-    origin: TaskGroupV2OriginEnum
+    origin: TaskGroupOriginEnum
     pkg_name: str
     version: str | None = None
     python_version: NonEmptyStr = None
@@ -54,9 +54,9 @@ class TaskGroupCreateV2(BaseModel):
     pinned_package_versions_post: DictStrStr = Field(default_factory=dict)
 
 
-class TaskGroupCreateV2Strict(TaskGroupCreateV2):
+class TaskGroupCreateStrict(TaskGroupCreate):
     """
-    A strict version of TaskGroupCreateV2, to be used for task collection.
+    A strict version of TaskGroupCreate, to be used for task collection.
     """
 
     path: AbsolutePathStr
@@ -65,14 +65,14 @@ class TaskGroupCreateV2Strict(TaskGroupCreateV2):
     python_version: NonEmptyStr
 
 
-class TaskGroupReadV2(BaseModel):
+class TaskGroupRead(BaseModel):
     id: int
-    task_list: list[TaskReadV2]
+    task_list: list[TaskRead]
 
     user_id: int
     user_group_id: int | None = None
 
-    origin: TaskGroupV2OriginEnum
+    origin: TaskGroupOriginEnum
     pkg_name: str
     version: str | None = None
     python_version: str | None = None
@@ -96,16 +96,16 @@ class TaskGroupReadV2(BaseModel):
         return v.isoformat()
 
 
-class TaskGroupReadSuperuser(TaskGroupReadV2):
+class TaskGroupReadSuperuser(TaskGroupRead):
     resource_id: int
 
 
-class TaskGroupUpdateV2(BaseModel):
+class TaskGroupUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     user_group_id: int | None = None
 
 
-class TaskGroupActivityV2Read(BaseModel):
+class TaskGroupActivityRead(BaseModel):
     id: int
     user_id: int
     taskgroupv2_id: int | None = None
@@ -113,8 +113,8 @@ class TaskGroupActivityV2Read(BaseModel):
     timestamp_ended: AwareDatetime | None = None
     pkg_name: str
     version: str
-    status: TaskGroupActivityStatusV2
-    action: TaskGroupActivityActionV2
+    status: TaskGroupActivityStatus
+    action: TaskGroupActivityAction
     log: str | None = None
 
     @field_serializer("timestamp_started")

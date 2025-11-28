@@ -9,21 +9,21 @@ async def test_status_legacy(
     MockCurrentUser,
     db,
     client,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
 ):
     async with MockCurrentUser() as user:
-        task1 = await task_factory_v2(
+        task1 = await task_factory(
             user_id=user.id, name="task1", command_non_parallel="echo"
         )
-        task2 = await task_factory_v2(
+        task2 = await task_factory(
             user_id=user.id, name="task2", command_non_parallel="echo"
         )
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
         wftask1 = await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task1.id, db=db
         )
@@ -31,7 +31,7 @@ async def test_status_legacy(
             workflow_id=workflow.id, task_id=task2.id, db=db
         )
 
-        dataset1 = await dataset_factory_v2(
+        dataset1 = await dataset_factory(
             project_id=project.id,
             name="ds1",
         )
@@ -42,7 +42,7 @@ async def test_status_legacy(
         assert res.status_code == 200
         assert res.json() == {"status": {}}
 
-        dataset2 = await dataset_factory_v2(
+        dataset2 = await dataset_factory(
             project_id=project.id,
             name="ds2",
             history=[
@@ -77,7 +77,7 @@ async def test_status_legacy(
         flag_modified(dataset2, "history")
         await db.commit()
 
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset2.id,
@@ -97,7 +97,7 @@ async def test_status_legacy(
             }
         }
 
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset2.id,

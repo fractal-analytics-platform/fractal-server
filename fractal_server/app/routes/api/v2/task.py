@@ -25,11 +25,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
-from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskCreate
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2 import TaskRead
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.app.schemas.v2 import TaskUpdateV2
+from fractal_server.app.schemas.v2 import TaskUpdate
 from fractal_server.logger import set_logger
 
 router = APIRouter()
@@ -37,7 +37,7 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.get("/", response_model=list[TaskReadV2])
+@router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     args_schema: bool = True,
     category: str | None = None,
@@ -45,7 +45,7 @@ async def get_list_task(
     author: str | None = None,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskReadV2]:
+) -> list[TaskRead]:
     """
     Get list of available tasks
     """
@@ -86,12 +86,12 @@ async def get_list_task(
     return task_list
 
 
-@router.get("/{task_id}/", response_model=TaskReadV2)
+@router.get("/{task_id}/", response_model=TaskRead)
 async def get_task(
     task_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskReadV2:
+) -> TaskRead:
     """
     Get info on a specific task
     """
@@ -99,13 +99,13 @@ async def get_task(
     return task
 
 
-@router.patch("/{task_id}/", response_model=TaskReadV2)
+@router.patch("/{task_id}/", response_model=TaskRead)
 async def patch_task(
     task_id: int,
-    task_update: TaskUpdateV2,
+    task_update: TaskUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskReadV2 | None:
+) -> TaskRead | None:
     """
     Edit a specific task (restricted to task owner)
     """
@@ -137,16 +137,14 @@ async def patch_task(
     return db_task
 
 
-@router.post(
-    "/", response_model=TaskReadV2, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
-    task: TaskCreateV2,
+    task: TaskCreate,
     user_group_id: int | None = None,
     private: bool = False,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskReadV2 | None:
+) -> TaskRead | None:
     """
     Create a new task
     """
@@ -211,7 +209,7 @@ async def create_task(
         resource_id=resource_id,
         active=True,
         task_list=[db_task],
-        origin=TaskGroupV2OriginEnum.OTHER,
+        origin=TaskGroupOriginEnum.OTHER,
         version=db_task.version,
         pkg_name=pkg_name,
     )

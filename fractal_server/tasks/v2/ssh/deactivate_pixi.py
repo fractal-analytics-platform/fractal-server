@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
@@ -109,7 +109,7 @@ def deactivate_ssh_pixi(
                         safe_root=profile.tasks_remote_dir,
                     )
                     logger.info(f"All good, {source_dir} removed.")
-                    activity.status = TaskGroupActivityStatusV2.OK
+                    activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)
                     activity.timestamp_ended = get_timestamp()
                     activity = add_commit_refresh(obj=activity, db=db)

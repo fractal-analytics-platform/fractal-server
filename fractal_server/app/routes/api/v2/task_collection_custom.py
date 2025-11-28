@@ -17,11 +17,11 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskCollectCustomV2
-from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import TaskCollectCustom
+from fractal_server.app.schemas.v2 import TaskCreate
+from fractal_server.app.schemas.v2 import TaskGroupCreate
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2 import TaskRead
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
@@ -38,16 +38,14 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.post(
-    "/collect/custom/", status_code=201, response_model=list[TaskReadV2]
-)
+@router.post("/collect/custom/", status_code=201, response_model=list[TaskRead])
 async def collect_task_custom(
-    task_collect: TaskCollectCustomV2,
+    task_collect: TaskCollectCustom,
     private: bool = False,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskReadV2]:
+) -> list[TaskRead]:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
@@ -139,7 +137,7 @@ async def collect_task_custom(
     else:
         package_root = Path(task_collect.package_root)
 
-    task_list: list[TaskCreateV2] = prepare_tasks_metadata(
+    task_list: list[TaskCreate] = prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
@@ -148,14 +146,14 @@ async def collect_task_custom(
 
     # Prepare task-group attributes
     task_group_attrs = dict(
-        origin=TaskGroupV2OriginEnum.OTHER,
+        origin=TaskGroupOriginEnum.OTHER,
         pkg_name=task_collect.label,
         user_id=user.id,
         user_group_id=user_group_id,
         version=task_collect.version,
         resource_id=resource_id,
     )
-    TaskGroupCreateV2(**task_group_attrs)
+    TaskGroupCreate(**task_group_attrs)
 
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(

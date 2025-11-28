@@ -12,19 +12,19 @@ from fractal_server.app.schemas import UserGroupRead
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
-from fractal_server.app.schemas.v2 import DatasetCreateV2
-from fractal_server.app.schemas.v2 import DatasetImportV2
-from fractal_server.app.schemas.v2 import DatasetReadV2
-from fractal_server.app.schemas.v2 import JobCreateV2
-from fractal_server.app.schemas.v2 import JobReadV2
-from fractal_server.app.schemas.v2 import ProjectCreateV2
-from fractal_server.app.schemas.v2 import ProjectReadV2
-from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowCreateV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2 import DatasetCreate
+from fractal_server.app.schemas.v2 import DatasetImport
+from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import JobCreate
+from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import ProjectCreate
+from fractal_server.app.schemas.v2 import ProjectRead
+from fractal_server.app.schemas.v2 import TaskCreate
+from fractal_server.app.schemas.v2 import TaskRead
+from fractal_server.app.schemas.v2 import WorkflowCreate
+from fractal_server.app.schemas.v2 import WorkflowRead
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
+from fractal_server.app.schemas.v2 import WorkflowTaskRead
 from fractal_server.main import app
 
 DEFAULT_CREDENTIALS = {}
@@ -33,8 +33,7 @@ DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
 
 
 wsgi_app = ASGIMiddleware(app)
-wsgi_app.app.state.jobsV1 = []
-wsgi_app.app.state.jobsV2 = []
+wsgi_app.app.state.jobs = []
 wsgi_app.app.state.fractal_ssh_list = None
 
 
@@ -155,34 +154,34 @@ class FractalClient:
         )
         self.detail(res)
 
-    def add_project(self, project: ProjectCreateV2):
+    def add_project(self, project: ProjectCreate):
         res = self.make_request(
             endpoint="api/v2/project/",
             method="POST",
             data=project.model_dump(),
         )
         self.detail(res)
-        return ProjectReadV2(**response_json(res))
+        return ProjectRead(**response_json(res))
 
-    def add_dataset(self, project_id, dataset: DatasetCreateV2):
+    def add_dataset(self, project_id, dataset: DatasetCreate):
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/dataset/",
             method="POST",
             data=dataset.model_dump(),
         )
         self.detail(res)
-        return DatasetReadV2(**response_json(res))
+        return DatasetRead(**response_json(res))
 
-    def import_dataset(self, project_id, dataset: DatasetImportV2):
+    def import_dataset(self, project_id, dataset: DatasetImport):
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/dataset/import/",
             method="POST",
             data=dataset.model_dump(),
         )
         self.detail(res)
-        return DatasetReadV2(**response_json(res))
+        return DatasetRead(**response_json(res))
 
-    def add_workflow(self, project_id, workflow: WorkflowCreateV2):
+    def add_workflow(self, project_id, workflow: WorkflowCreate):
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/workflow/",
             method="POST",
@@ -190,14 +189,14 @@ class FractalClient:
         )
         self.detail(res)
 
-        return WorkflowReadV2(**response_json(res))
+        return WorkflowRead(**response_json(res))
 
     def add_workflowtask(
         self,
         project_id: int,
         workflow_id: int,
         task_id: int,
-        wftask: WorkflowTaskCreateV2,
+        wftask: WorkflowTaskCreate,
     ):
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/workflow/"
@@ -207,10 +206,10 @@ class FractalClient:
         )
         self.detail(res)
 
-        return WorkflowTaskReadV2(**response_json(res))
+        return WorkflowTaskRead(**response_json(res))
 
     def add_working_task(self):
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="Echo Task",
             command_non_parallel="echo",
             command_parallel="echo",
@@ -221,10 +220,10 @@ class FractalClient:
             data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**response_json(res))
+        return TaskRead(**response_json(res))
 
     def add_failing_task(self):
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="Ls Task",
             command_non_parallel="ls",
         )
@@ -234,16 +233,16 @@ class FractalClient:
             data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**response_json(res))
+        return TaskRead(**response_json(res))
 
-    def add_task(self, task: TaskCreateV2):
+    def add_task(self, task: TaskCreate):
         res = self.make_request(
             endpoint="api/v2/task/",
             method="POST",
             data=task.model_dump(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**response_json(res))
+        return TaskRead(**response_json(res))
 
     def whoami(self):
         res = self.make_request(
@@ -268,7 +267,7 @@ class FractalClient:
         project_id: int,
         workflow_id: int,
         dataset_id: int,
-        applyworkflow: JobCreateV2,
+        applyworkflow: JobCreate,
     ):
         res = self.make_request(
             endpoint=(
@@ -280,7 +279,7 @@ class FractalClient:
         )
         self.detail(res)
 
-        return JobReadV2(**response_json(res))
+        return JobRead(**response_json(res))
 
     def wait_for_all_jobs(
         self,

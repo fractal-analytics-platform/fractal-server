@@ -17,8 +17,8 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import TaskDumpV2
-from fractal_server.app.schemas.v2 import TaskGroupDumpV2
+from fractal_server.app.schemas.v2 import TaskDump
+from fractal_server.app.schemas.v2 import TaskGroupDump
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
@@ -35,9 +35,9 @@ from fractal_server.types import AttributeFilters
 from .merge_outputs import merge_outputs
 from .runner_functions import GetRunnerConfigType
 from .runner_functions import SubmissionOutcome
-from .runner_functions import run_v2_task_compound
-from .runner_functions import run_v2_task_non_parallel
-from .runner_functions import run_v2_task_parallel
+from .runner_functions import run_task_compound
+from .runner_functions import run_task_non_parallel
+from .runner_functions import run_task_parallel
 from .task_interface import TaskOutput
 
 
@@ -82,7 +82,7 @@ def get_origin_attribute_and_types(
     return updated_attributes, updated_types
 
 
-def execute_tasks_v2(
+def execute_tasks(
     *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
@@ -165,10 +165,10 @@ def execute_tasks_v2(
             # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
                 **wftask.model_dump(exclude={"task"}),
-                task=TaskDumpV2(**wftask.task.model_dump()).model_dump(),
+                task=TaskDump(**wftask.task.model_dump()).model_dump(),
             )
             task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-            task_group_dump = TaskGroupDumpV2(
+            task_group_dump = TaskGroupDump(
                 **task_group.model_dump()
             ).model_dump()
             # Create HistoryRun
@@ -218,13 +218,13 @@ def execute_tasks_v2(
             )
             raise JobExecutionError(error_msg)
 
-        # TASK EXECUTION (V2)
+        # TASK EXECUTION
         try:
             if task.type in [
                 TaskType.NON_PARALLEL,
                 TaskType.CONVERTER_NON_PARALLEL,
             ]:
-                outcomes_dict, num_tasks = run_v2_task_non_parallel(
+                outcomes_dict, num_tasks = run_task_non_parallel(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,
@@ -239,7 +239,7 @@ def execute_tasks_v2(
                     user_id=user_id,
                 )
             elif task.type == TaskType.PARALLEL:
-                outcomes_dict, num_tasks = run_v2_task_parallel(
+                outcomes_dict, num_tasks = run_task_parallel(
                     images=filtered_images,
                     wftask=wftask,
                     task=task,
@@ -255,7 +255,7 @@ def execute_tasks_v2(
                 TaskType.COMPOUND,
                 TaskType.CONVERTER_COMPOUND,
             ]:
-                outcomes_dict, num_tasks = run_v2_task_compound(
+                outcomes_dict, num_tasks = run_task_compound(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,
