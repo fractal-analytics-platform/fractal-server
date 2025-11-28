@@ -5,6 +5,7 @@ from itertools import chain
 
 from fastapi import FastAPI
 from fastapi import Request
+from fastapi.applications import BaseHTTPMiddleware
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
@@ -137,6 +138,29 @@ async def lifespan(app: FastAPI):
 slow_response_logger = set_logger("slow-response")
 
 
+def _slow_response_middleware(time_threshold: float):
+    async def slow_response_middleware(request: Request, call_next):
+        # Measure process time
+        start_timestamp = get_timestamp()
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        stop_time = time.perf_counter()
+        process_time = stop_time - start_time
+        # Log if process time is too high
+        if process_time > time_threshold:
+            end_timestamp = get_timestamp()
+            slow_response_logger.warning(
+                f"{request.method} {request.url.path}, "
+                f"{response.status_code}, "
+                f"{process_time:.2f} seconds, "
+                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, "
+                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+        return response
+
+    return slow_response_middleware
+
+
 def start_application() -> FastAPI:
     """
     Create the application, initialise it and collect all available routers.
@@ -148,26 +172,10 @@ def start_application() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
     settings = Inject(get_settings)
-
-    @app.middleware("http")
-    async def slow_response_middleware(request: Request, call_next):
-        # Measure process time
-        start_timestamp = get_timestamp()
-        start_time = time.perf_counter()
-        response = await call_next(request)
-        stop_time = time.perf_counter()
-        process_time = stop_time - start_time
-        # Log if process time is too high
-        if process_time > settings.FRACTAL_LONG_REQUEST_TIME:
-            end_timestamp = get_timestamp()
-            slow_response_logger.warning(
-                f"{request.method} {request.url.path}, "
-                f"{response.status_code}, "
-                f"{process_time:.2f} seconds, "
-                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, "
-                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
-            )
-        return response
+    app.add_middleware(
+        BaseHTTPMiddleware,
+        dispatch=_slow_response_middleware(settings.FRACTAL_LONG_REQUEST_TIME),
+    )
 
     collect_routers(app)
     return app
