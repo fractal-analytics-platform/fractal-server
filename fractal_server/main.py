@@ -161,20 +161,21 @@ class SlowResponseMiddleware:
                 context["status_code"] = message["status"]
             await send(message)
 
-        # Measure process time
+        # Measure request time
         start_timestamp = datetime.now()
         start_time = time.perf_counter()
         await self.app(scope, receive, send_wrapper)
         stop_time = time.perf_counter()
-        process_time = stop_time - start_time
+        request_time = stop_time - start_time
+
         # Log if process time is too high
-        if process_time > self.time_threshold:
+        if request_time > self.time_threshold:
             end_timestamp = datetime.now()
             slow_response_logger.warning(
                 f"{scope['method']} {scope['route'].path}"
                 f"?{scope['query_string'].decode('utf-8')}, "
                 f"{context['status_code']}, "
-                f"{process_time:.2f}, "
+                f"{request_time:.2f}, "
                 f"{start_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}, "
                 f"{end_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}"
             )
