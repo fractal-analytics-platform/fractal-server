@@ -42,7 +42,7 @@ def _create_user_client(
         UserCreate(
             email=email,
             password=password,
-            project_dir=project_dir,
+            project_dirs=[project_dir],
         )
     )
     _admin.associate_user_with_profile(user_id=_user.id)

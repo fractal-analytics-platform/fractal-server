@@ -1,61 +1,12 @@
-from pathlib import Path
-
 import pytest
-from devtools import debug
 from pydantic import ValidationError
 
 from fractal_server.app.routes.auth.oauth import get_oauth_router
 from fractal_server.config import DatabaseSettings
-from fractal_server.config import DataSettings
 from fractal_server.config import EmailSettings
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
-
-
-@pytest.mark.parametrize(
-    ("settings_dict", "raises"),
-    [
-        # valid FRACTAL_DATA_BASE_FOLDER
-        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
-        (
-            dict(
-                FRACTAL_DATA_AUTH_SCHEME="users-folders",
-                FRACTAL_DATA_BASE_FOLDER="/path/to/base",
-            ),
-            False,
-        ),
-        # missing FRACTAL_DATA_BASE_FOLDER
-        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
-        (
-            dict(
-                FRACTAL_DATA_AUTH_SCHEME="users-folders",
-            ),
-            True,
-        ),
-        # not absolute FRACTAL_DATA_BASE_FOLDER
-        # (FRACTAL_DATA_AUTH_SCHEME="users-folders")
-        (
-            dict(
-                FRACTAL_DATA_AUTH_SCHEME="users-folders",
-                FRACTAL_DATA_BASE_FOLDER="invalid/relative/path",
-            ),
-            True,
-        ),
-    ],
-)
-def test_data_settings(
-    settings_dict: dict[str, str],
-    raises: bool,
-    testdata_path: Path,
-):
-    debug(settings_dict, raises)
-
-    if raises:
-        with pytest.raises(ValueError):
-            DataSettings(**settings_dict)
-    else:
-        DataSettings(**settings_dict)
 
 
 def test_database_settings():

@@ -2,16 +2,13 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.types import ListUniqueAbsolutePathStr
 from fractal_server.types import NonEmptyStr
 
 __all__ = (
     "UserGroupRead",
-    "UserGroupUpdate",
     "UserGroupCreate",
 )
 
@@ -34,7 +31,6 @@ class UserGroupRead(BaseModel):
     name: str
     timestamp_created: AwareDatetime
     user_ids: list[int] | None = None
-    viewer_paths: list[str]
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -52,14 +48,3 @@ class UserGroupCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
-    viewer_paths: ListUniqueAbsolutePathStr = Field(default_factory=list)
-
-
-class UserGroupUpdate(BaseModel):
-    """
-    Schema for `UserGroup` update
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    viewer_paths: ListUniqueAbsolutePathStr = None

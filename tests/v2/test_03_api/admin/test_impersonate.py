@@ -18,7 +18,7 @@ async def test_impersonate(
     u1 = UserOAuth(
         email="user1@email.com",
         hashed_password="abc1",
-        project_dir="/fake",
+        project_dirs=["/fake"],
     )
     db.add(u1)
     await db.commit()

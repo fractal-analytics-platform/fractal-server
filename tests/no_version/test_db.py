@@ -34,7 +34,7 @@ async def test_sync_db(db_sync, db):
         UserOAuth(
             email="user@oauth.com",
             hashed_password="xxx",
-            project_dir="/fake",
+            project_dirs=["/fake"],
         )
     )
     await db.commit()
@@ -122,7 +122,7 @@ async def test_reusing_id(db):
         UserOAuth(
             email=f"{x}@y.z",
             hashed_password="xxx",
-            project_dir="/fake",
+            project_dirs=["/fake"],
         )
         for x in range(num_users)
     ]
@@ -147,7 +147,7 @@ async def test_reusing_id(db):
         UserOAuth(
             email=f"{x}@y.z",
             hashed_password="xxx",
-            project_dir="/fake",
+            project_dirs=["/fake"],
         )
         for x in range(num_users + 10)
     ]

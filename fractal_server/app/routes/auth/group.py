@@ -16,7 +16,6 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
-from fractal_server.app.schemas.user_group import UserGroupUpdate
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -101,39 +100,11 @@ async def create_single_group(
         )
 
     # Create and return new group
-    new_group = UserGroup(
-        name=group_create.name, viewer_paths=group_create.viewer_paths
-    )
+    new_group = UserGroup(name=group_create.name)
     db.add(new_group)
     await db.commit()
 
     return dict(new_group.model_dump(), user_ids=[])
-
-
-@router_group.patch(
-    "/group/{group_id}/",
-    response_model=UserGroupRead,
-    status_code=status.HTTP_200_OK,
-)
-async def update_single_group(
-    group_id: int,
-    group_update: UserGroupUpdate,
-    user: UserOAuth = Depends(current_superuser_act),
-    db: AsyncSession = Depends(get_async_db),
-) -> UserGroupRead:
-    group = await _usergroup_or_404(group_id, db)
-
-    # Patch `viewer_paths`
-    if group_update.viewer_paths is not None:
-        group.viewer_paths = group_update.viewer_paths
-        db.add(group)
-        await db.commit()
-
-    updated_group = await _get_single_usergroup_with_user_ids(
-        group_id=group_id, db=db
-    )
-
-    return updated_group
 
 
 @router_group.delete("/group/{group_id}/", status_code=204)

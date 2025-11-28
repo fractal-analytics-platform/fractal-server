@@ -71,7 +71,7 @@ async def test_full_workflow_slurm(
         user_kwargs=dict(
             profile_id=profile.id,
             slurm_accounts=[],
-            project_dir=project_dir,
+            project_dirs=[project_dir],
         ),
         resource_id=resource.id,
         project_factory_v2=project_factory_v2,
@@ -128,7 +128,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
         MockCurrentUser=MockCurrentUser,
         user_kwargs=dict(
             profile_id=profile.id,
-            project_dir=project_dir,
+            project_dirs=[project_dir],
         ),
         resource_id=resource.id,
         project_factory_v2=project_factory_v2,
@@ -170,7 +170,7 @@ async def test_non_executable_task_command_slurm(
         MockCurrentUser=MockCurrentUser,
         user_kwargs=dict(
             profile_id=profile.id,
-            project_dir=project_dir,
+            project_dirs=[project_dir],
         ),
         resource_id=resource.id,
         client=client,
@@ -214,7 +214,7 @@ async def test_failing_workflow_UnknownError_slurm(
         MockCurrentUser=MockCurrentUser,
         user_kwargs=dict(
             profile_id=profile.id,
-            project_dir=project_dir,
+            project_dirs=[project_dir],
         ),
         resource_id=resource.id,
         client=client,

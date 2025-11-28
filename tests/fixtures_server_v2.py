@@ -55,7 +55,6 @@ async def project_factory_v2(db):
         args = dict(
             name="project",
             resource_id=resource_id,
-            project_dir="/fake",
         )
         args.update(kwargs)
         project = ProjectV2(**args)
@@ -374,7 +373,7 @@ async def valid_user_id(db: AsyncSession) -> int:
     user = UserOAuth(
         email="fake@example.org",
         hashed_password="fake-hashed-password",
-        project_dir="/fake",
+        project_dirs=["/fake"],
     )
     db.add(user)
     await db.commit()
