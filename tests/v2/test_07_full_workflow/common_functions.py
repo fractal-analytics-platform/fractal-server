@@ -539,7 +539,7 @@ async def failing_workflow_UnknownError(
 
         monkeypatch.setattr(
             fractal_server.runner.v2.runner,
-            "run_v2_task_non_parallel",
+            "run_task_non_parallel",
             _raise_RuntimeError,
         )
 
