@@ -14,6 +14,10 @@ The main contents of this release are the introduction of the project sharing an
     * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3023).
     * Do not cast endpoint return values to `PaginationResponse[X]` (\#3023).
     * Reduce API logging level for some endpoints (\#3010).
+* App:
+    * Add `SlowResponseMiddleware` middleware (\#3035).
+* Settings:
+    * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
 * Database:
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
 * Testing:
