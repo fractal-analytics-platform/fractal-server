@@ -4,8 +4,6 @@ from contextlib import asynccontextmanager
 from itertools import chain
 
 from fastapi import FastAPI
-from fastapi import Request
-from fastapi.applications import BaseHTTPMiddleware
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
@@ -138,29 +136,28 @@ async def lifespan(app: FastAPI):
 slow_response_logger = set_logger("slow-response")
 
 
-class SlowResponseMiddleware(BaseHTTPMiddleware):
+class SlowResponseMiddleware:
     def __init__(self, app: FastAPI, time_threshold: float):
-        super().__init__(app)
+        self.app = app
         self.time_threshold = time_threshold
 
-    async def dispatch(self, request: Request, call_next):
+    async def __call__(self, scope, receive, send):
         # Measure process time
         start_timestamp = get_timestamp()
         start_time = time.perf_counter()
-        response = await call_next(request)
+        await self.app(scope, receive, send)
         stop_time = time.perf_counter()
         process_time = stop_time - start_time
         # Log if process time is too high
         if process_time > self.time_threshold:
             end_timestamp = get_timestamp()
             slow_response_logger.warning(
-                f"{request.method} {request.url.path}, "
-                f"{response.status_code}, "
+                f"{scope['method']} {scope['route'].path}, "
+                # f"{response.status_code}, "
                 f"{process_time:.2f} seconds, "
                 f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, "
                 f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
             )
-        return response
 
 
 def start_application() -> FastAPI:
