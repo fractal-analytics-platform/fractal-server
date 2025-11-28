@@ -425,7 +425,7 @@ async def _create_first_user(
                     kwargs = dict(
                         email=email,
                         password=password,
-                        project_dir=project_dir,
+                        project_dirs=[project_dir],
                         profile_id=profile_id,
                         is_superuser=is_superuser,
                         is_verified=is_verified,

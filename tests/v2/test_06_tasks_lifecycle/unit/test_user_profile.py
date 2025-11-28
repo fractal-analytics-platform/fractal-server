@@ -32,7 +32,7 @@ async def test_user_has_profile_or_422(
         is_verified=True,
         hashed_password="fake",
         profile_id=local_resource_profile_db[1].id,
-        project_dir="/fake",
+        project_dirs=["/fake"],
     )
     db.add(user)
     await db.commit()

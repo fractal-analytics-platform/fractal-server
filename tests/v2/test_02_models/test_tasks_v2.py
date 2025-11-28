@@ -14,7 +14,7 @@ async def test_task_group_v2(db, local_resource_profile_db):
         email="user@example.org",
         hashed_password="1234",
         profile_id=profile.id,
-        project_dir="/fake",
+        project_dir=["/fake"],
     )
     db.add(user)
     await db.commit()
@@ -113,7 +113,7 @@ async def test_collection_state(db, local_resource_profile_db):
         email="user@example.org",
         hashed_password="1234",
         profile_id=profile.id,
-        project_dir="/fake",
+        project_dir=["/fake"],
     )
     db.add(user)
     await db.commit()

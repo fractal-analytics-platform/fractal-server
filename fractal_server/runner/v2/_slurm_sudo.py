@@ -77,7 +77,7 @@ def process_workflow(
         resource: Computational resource for running this job.
         profile: Computational profile for running this job.
         user_cache_dir:
-            User-writeable folder (typically a subfolder of `project_dir`).
+            User-writeable folder (typically a subfolder of `project_dirs`).
             Only relevant for `slurm_sudo` and `slurm_ssh` backends.
         fractal_ssh:
             `FractalSSH` object, only relevant for the `slurm_ssh` backend.

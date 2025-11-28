@@ -61,9 +61,9 @@ def test_task_output():
         t.check_zarr_urls_are_unique()
     debug(str(e.value))
     # Test 'normalize_paths'
-    assert TaskOutput(
-        image_list_removals=["/a/b/../c/", "/tmp//"]
-    ).image_list_removals == ["/a/c", "/tmp"]
+    assert TaskOutput(image_list_removals=["/tmp//"]).image_list_removals == [
+        "/tmp"
+    ]
     with pytest.raises(ValidationError):
         TaskOutput(image_list_removals=["s3://BUCKET"])
     with pytest.raises(ValidationError):

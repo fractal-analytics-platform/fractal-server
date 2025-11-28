@@ -1,4 +1,5 @@
 from ._common_validators import val_absolute_path  # noqa F401
+from ._common_validators import val_canonical_path  # noqa F401
 from ._common_validators import val_http_url  # noqa F401
 from ._common_validators import val_unique_list  # noqa F401
 from ._common_validators import valdict_keys  # noqa F401

@@ -9,6 +9,7 @@ from pydantic.types import StringConstraints
 from fractal_server.urls import normalize_url
 
 from .validators import val_absolute_path
+from .validators import val_canonical_path
 from .validators import val_http_url
 from .validators import val_unique_list
 from .validators import valdict_keys
@@ -27,9 +28,13 @@ A non-empty string, with no leading/trailing whitespaces.
 AbsolutePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_absolute_path),
+    AfterValidator(val_canonical_path),
 ]
 """
 String representing an absolute path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 
@@ -44,19 +49,27 @@ String representing an URL.
 
 ZarrUrlStr = Annotated[
     NonEmptyStr,
+    AfterValidator(val_canonical_path),
     AfterValidator(normalize_url),
 ]
 """
 String representing a zarr URL/path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 
 ZarrDirStr = Annotated[
     NonEmptyStr,
+    AfterValidator(val_canonical_path),
     AfterValidator(normalize_url),
 ]
 """
 String representing a `zarr_dir` path.
+
+Validation fails if the path is not absolute or if it contains a
+parent-directory reference "/../".
 """
 
 DictStrAny = Annotated[

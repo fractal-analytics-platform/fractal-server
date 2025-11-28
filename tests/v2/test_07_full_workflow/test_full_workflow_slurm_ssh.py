@@ -31,7 +31,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
         MockCurrentUser=MockCurrentUser,
         additional_user_kwargs=dict(
             profile_id=profile.id,
-            project_dir=(tmp777_path / "project_dir").as_posix(),
+            project_dirs=[(tmp777_path / "project_dir").as_posix()],
         ),
         resource_id=resource.id,
         client=client,
@@ -82,7 +82,7 @@ async def test_workflow_with_non_python_task_slurm_ssh_fail(
         client=client,
         additional_user_kwargs=dict(
             profile_id=profile.id,
-            project_dir=(tmp777_path / "project_dir").as_posix(),
+            project_dirs=[(tmp777_path / "project_dir").as_posix()],
         ),
         resource_id=resource.id,
         testdata_path=testdata_path,

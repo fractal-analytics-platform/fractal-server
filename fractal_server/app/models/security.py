@@ -6,7 +6,6 @@ from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -113,7 +112,13 @@ class UserOAuth(SQLModel, table=True):
         ondelete="RESTRICT",
     )
 
-    project_dir: str
+    # TODO-2.18.1: drop `project_dir`
+    project_dir: str | None = Field(default=None, nullable=True)
+    # TODO-2.18.1: `project_dirs: list[str] = Field(min_length=1)`
+    project_dirs: list[str] = Field(
+        sa_column=Column(ARRAY(String), nullable=False, server_default="{}"),
+    )
+
     slurm_accounts: list[str] = Field(
         sa_column=Column(ARRAY(String), server_default="{}"),
     )
@@ -134,7 +139,4 @@ class UserGroup(SQLModel, table=True):
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
-    )
-    viewer_paths: list[str] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
     )

@@ -35,11 +35,6 @@ Here are all the configuration variables with their description (note: expand th
     options:
       show_root_heading: true
 
-### ::: fractal_server.config._data.DataSettings
-    options:
-      show_root_heading: true
-      filters: ["!check"]
-
 ### ::: fractal_server.config._email.EmailSettings
     options:
       show_root_heading: true

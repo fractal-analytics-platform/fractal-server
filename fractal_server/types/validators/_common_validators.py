@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any
 
 from pydantic import HttpUrl
@@ -26,6 +27,15 @@ def val_absolute_path(path: str) -> str:
     """
     if not os.path.isabs(path):
         raise ValueError(f"String must be an absolute path (given '{path}').")
+    return path
+
+
+def val_canonical_path(path: str) -> str:
+    """
+    Check that a string attribute has no '/../' in it
+    """
+    if ".." in Path(path).parts:
+        raise ValueError("String must not contain '/../'.")
     return path
 
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -58,7 +60,7 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
         path = (
-            f"{user.project_dir}/fractal/"
+            f"{user.project_dirs[0]}/fractal/"
             f"{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
@@ -69,6 +71,18 @@ async def create_dataset(
         await db.commit()
         await db.refresh(db_dataset)
     else:
+        if not any(
+            Path(dataset.zarr_dir).is_relative_to(project_dir)
+            for project_dir in user.project_dirs
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Dataset zarr_dir is not relative to any of the user "
+                    "project directories."
+                ),
+            )
+
         db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
         db.add(db_dataset)
         await db.commit()
@@ -154,14 +168,26 @@ async def update_dataset(
     )
     db_dataset = output["dataset"]
 
-    if (dataset_update.zarr_dir is not None) and (len(db_dataset.images) != 0):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "Cannot modify `zarr_dir` because the dataset has a non-empty "
-                "image list."
-            ),
-        )
+    if dataset_update.zarr_dir is not None:
+        if db_dataset.images:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Cannot modify `zarr_dir` because the dataset has a "
+                    "non-empty image list."
+                ),
+            )
+        if not any(
+            Path(dataset_update.zarr_dir).is_relative_to(project_dir)
+            for project_dir in user.project_dirs
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Dataset zarr_dir is not relative to any of the user "
+                    "project directories."
+                ),
+            )
 
     for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
