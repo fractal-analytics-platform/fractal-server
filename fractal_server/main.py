@@ -160,14 +160,13 @@ def start_application() -> FastAPI:
         # Log if process time is too high
         if process_time > settings.FRACTAL_LONG_REQUEST_TIME:
             end_timestamp = get_timestamp()
-            warning_message_components = [
-                f"{request.method} {request.url.path}",
-                f"{response.status_code}",
-                f"{process_time:.2f} seconds",
-                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
-                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
-            ]
-            slow_response_logger.warning(" - ".join(warning_message_components))
+            slow_response_logger.warning(
+                f"{request.method} {request.url.path}, "
+                f"{response.status_code}, "
+                f"{process_time:.2f} seconds, "
+                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, "
+                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
         return response
 
     collect_routers(app)
