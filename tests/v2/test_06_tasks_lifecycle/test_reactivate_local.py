@@ -53,12 +53,12 @@ async def test_reactivate_local_venv_exists(
     )
 
     # Verify that reactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "already exists" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "already exists" in task_group_activity.log
 
 
 @pytest.mark.parametrize("make_rmtree_fail", [False, True])

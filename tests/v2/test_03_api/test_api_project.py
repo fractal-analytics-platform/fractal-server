@@ -31,7 +31,7 @@ async def test_post_and_get_project(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    PAYLOAD = dict(name="project_v2")
+    PAYLOAD = dict(name="project")
 
     # unauthenticated
     res = await client.post(f"{PREFIX}/project/", json=PAYLOAD)

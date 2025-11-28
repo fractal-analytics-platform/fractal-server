@@ -63,13 +63,13 @@ async def apply_workflow(
 ) -> JobRead | None:
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
-    # NOTE: this may lead to a race condition on `app.state.jobsV2` if two
+    # NOTE: this may lead to a race condition on `app.state.jobs` if two
     # requests take place at the same time and `clean_app_job_list_v2` is
     # somewhat slow.
     settings = Inject(get_settings)
-    if len(request.app.state.jobsV2) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
-        new_jobs_list = await clean_app_job_list(db, request.app.state.jobsV2)
-        request.app.state.jobsV2 = new_jobs_list
+    if len(request.app.state.jobs) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
+        new_jobs_list = await clean_app_job_list(db, request.app.state.jobs)
+        request.app.state.jobs = new_jobs_list
 
     output = await _get_dataset_check_access(
         project_id=project_id,
@@ -266,11 +266,11 @@ async def apply_workflow(
         resource=resource,
         profile=profile,
     )
-    request.app.state.jobsV2.append(job.id)
+    request.app.state.jobs.append(job.id)
     logger.info(
         f"Current worker's pid is {os.getpid()}. "
         f"Current status of worker job's list "
-        f"{request.app.state.jobsV2}"
+        f"{request.app.state.jobs}"
     )
     await db.close()
     return job

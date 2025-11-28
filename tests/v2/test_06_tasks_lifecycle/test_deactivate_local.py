@@ -52,12 +52,12 @@ async def test_deactivate_fail_no_venv_path(
     )
 
     # Verify that deactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "does not exist" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "does not exist" in task_group_activity.log
 
 
 async def test_deactivate_local_fail(
@@ -166,13 +166,13 @@ async def test_deactivate_wheel_no_archive_path(
         profile=profile,
     )
     # Verify that deactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "does not exist" in task_group_activity_v2.log
-    assert "Invalid wheel path" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "does not exist" in task_group_activity.log
+    assert "Invalid wheel path" in task_group_activity.log
 
 
 async def test_deactivate_wheel_package_created_before_2_9_0(

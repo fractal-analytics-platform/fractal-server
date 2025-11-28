@@ -6,7 +6,7 @@ import pytest
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.local.runner import LocalRunner
 
-from .execute_tasks_v2 import execute_tasks_mod
+from .execute_tasks import execute_tasks_mod
 
 
 @pytest.fixture()

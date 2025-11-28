@@ -10,7 +10,7 @@ from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.runner.executors.local.runner import LocalRunner
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
-from .execute_tasks_v2 import execute_tasks_mod
+from .execute_tasks import execute_tasks_mod
 
 
 @pytest.fixture()

@@ -55,12 +55,12 @@ async def test_collect_pip_existing_folder(
         profile=profile,
     )
     # Verify that collection failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert task_group_activity_v2.taskgroupv2_id is None
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert task_group_activity.taskgroupv2_id is None
 
 
 async def test_collect_pip_local_fail_rmtree(
@@ -133,12 +133,12 @@ async def test_collect_pip_local_fail_rmtree(
             "the `rmtree` call that cleans up `tmpdir`. Safe to ignore."
         )
     # Verify that collection failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "Broken rm" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "Broken rm" in task_group_activity.log
     assert path.exists()
 
 

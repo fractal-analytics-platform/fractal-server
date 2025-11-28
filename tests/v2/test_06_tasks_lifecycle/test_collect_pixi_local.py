@@ -66,9 +66,9 @@ async def test_collect_local_pixi_path_exists(
         profile=profile,
     )
     # Verify that collection failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert task_group_activity_v2.taskgroupv2_id is None
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert task_group_activity.taskgroupv2_id is None

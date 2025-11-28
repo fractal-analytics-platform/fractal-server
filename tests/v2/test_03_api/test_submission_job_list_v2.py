@@ -18,7 +18,7 @@ async def test_clean_app_job_list(
     local_resource_profile_db,
 ):
     # Check that app fixture starts in a clean state
-    assert app.state.jobsV2 == []
+    assert app.state.jobs == []
 
     # Set this to 0 so that the endpoint also calls the clean-up function
     override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
@@ -52,7 +52,7 @@ async def test_clean_app_job_list(
             working_dir="/somewhere",
         )
         job1_id = job1.id
-        app.state.jobsV2.append(job1_id)
+        app.state.jobs.append(job1_id)
 
         # Submit a second job via API
         res = await client.post(
@@ -64,8 +64,8 @@ async def test_clean_app_job_list(
         job2_id = res.json()["id"]
 
         # Before clean-up, both jobs are listed
-        assert app.state.jobsV2 == [job1_id, job2_id]
+        assert app.state.jobs == [job1_id, job2_id]
 
         # After clean-up, only the submitted job is left
-        jobs_list = await clean_app_job_list(db, app.state.jobsV2)
+        jobs_list = await clean_app_job_list(db, app.state.jobs)
         assert jobs_list == [job1_id]

@@ -17,7 +17,7 @@ def execute_tasks_mod(
     **kwargs,
 ) -> None:
     """
-    This is a version of `execute_tasks_v2` with some defaults pre-filled.
+    This is a version of `execute_tasks` with some defaults pre-filled.
     """
     execute_tasks(
         wf_task_list=wf_task_list,

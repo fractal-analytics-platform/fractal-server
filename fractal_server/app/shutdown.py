@@ -11,18 +11,18 @@ from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 
 
-async def cleanup_after_shutdown(*, jobsV2: list[int], logger_name: str):
+async def cleanup_after_shutdown(*, jobs: list[int], logger_name: str):
     settings = Inject(get_settings)
     logger = get_logger(logger_name)
     logger.info("Cleanup function after shutdown")
     stm_objects = (
         select(JobV2)
-        .where(JobV2.id.in_(jobsV2))
+        .where(JobV2.id.in_(jobs))
         .where(JobV2.status == JobStatusType.SUBMITTED)
     )
     stm_ids = (
         select(JobV2.id)
-        .where(JobV2.id.in_(jobsV2))
+        .where(JobV2.id.in_(jobs))
         .where(JobV2.status == JobStatusType.SUBMITTED)
     )
 

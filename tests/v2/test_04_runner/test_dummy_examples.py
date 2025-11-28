@@ -18,7 +18,7 @@ from fractal_server.runner.executors.local.runner import LocalRunner
 from fractal_server.urls import normalize_url
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
-from .execute_tasks_v2 import execute_tasks_mod
+from .execute_tasks import execute_tasks_mod
 
 
 async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
@@ -115,7 +115,7 @@ async def test_dummy_insert_single_image(
     resource, profile = local_resource_profile_db
 
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
-        execute_tasks_v2_args = dict(
+        execute_tasks_args = dict(
             runner=local_runner,
             user_id=user.id,
         )
@@ -142,7 +142,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         job_id=job.id,
-        **execute_tasks_v2_args,
+        **execute_tasks_args,
     )
 
     # Case 1: Run successfully even if the image already exists
@@ -153,7 +153,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
         job_id=job.id,
-        **execute_tasks_v2_args,
+        **execute_tasks_args,
     )
 
     # Case 2: Run successfully even if the image already exists but the new
@@ -203,7 +203,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset_case_2,
         workflow_dir_local=tmp_path / "job2",
         job_id=job.id,
-        **execute_tasks_v2_args,
+        **execute_tasks_args,
     )
     db.expunge_all()
     dataset_case_2 = await db.get(DatasetV2, dataset_case_2.id)
@@ -233,7 +233,7 @@ async def test_dummy_insert_single_image(
     EXPECTED_NON_PARENT_MSG = (
         "Cannot create image if zarr_url is not a subfolder of zarr_dir"
     )
-    execute_tasks_v2_args = dict(
+    execute_tasks_args = dict(
         runner=local_runner,
         user_id=user.id,
     )
@@ -253,7 +253,7 @@ async def test_dummy_insert_single_image(
                 dataset=dataset,
                 workflow_dir_local=tmp_path / "job3",
                 job_id=job.id,
-                **execute_tasks_v2_args,
+                **execute_tasks_args,
             )
         error_msg = str(e.value)
         debug(error_msg)
@@ -709,7 +709,7 @@ async def test_dummy_invalid_output_non_parallel(
     # case non-parallel
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
+        execute_tasks_args = dict(
             runner=local_runner,
             user_id=user.id,
         )
@@ -756,7 +756,7 @@ async def test_dummy_invalid_output_non_parallel(
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             job_id=job.id,
-            **execute_tasks_v2_args,
+            **execute_tasks_args,
         )
     res = await db.execute(
         select(HistoryRun).where(HistoryRun.dataset_id == dataset.id)
@@ -785,7 +785,7 @@ async def test_dummy_invalid_output_parallel(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["generic_task_parallel"].id
     async with MockCurrentUser() as user:
-        execute_tasks_v2_args = dict(
+        execute_tasks_args = dict(
             runner=local_runner,
             user_id=user.id,
         )
@@ -836,7 +836,7 @@ async def test_dummy_invalid_output_parallel(
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             job_id=job.id,
-            **execute_tasks_v2_args,
+            **execute_tasks_args,
         )
     res = await db.execute(
         select(HistoryRun).where(HistoryRun.dataset_id == dataset.id)

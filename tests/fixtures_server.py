@@ -176,7 +176,7 @@ async def db_sync(db_create_tables):
 @pytest.fixture
 def app() -> Generator[FastAPI, Any]:
     app = FastAPI()
-    app.state.jobsV2 = []
+    app.state.jobs = []
     app.state.fractal_ssh_list = None
     yield app
 
