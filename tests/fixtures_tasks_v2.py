@@ -121,7 +121,7 @@ def fractal_tasks_mock_db(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(
+def relink_python_interpreter(
     fractal_tasks_mock_collection, current_py_version: str
 ):
     """

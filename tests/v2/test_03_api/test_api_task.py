@@ -57,14 +57,14 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
 
 
 async def test_task_get_list(
-    db, client, task_factory_v2, MockCurrentUser, user_group_factory
+    db, client, task_factory, MockCurrentUser, user_group_factory
 ):
     async with MockCurrentUser() as user:
         new_group = await user_group_factory(
             group_name="new_group", user_id=user.id
         )
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
             index=1,
@@ -73,14 +73,14 @@ async def test_task_get_list(
             authors="Name1 Surname1,Name2 Surname2...",
         )
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user.id,
             index=2,
             category="Conversion",
             modality="EM",
             authors="NAME1 SURNAME3",
         )
-        t = await task_factory_v2(
+        t = await task_factory(
             user_id=user.id,
             index=3,
             args_schema_non_parallel=dict(a=1),
@@ -344,7 +344,7 @@ async def test_patch_task_auth(
 
 
 async def test_patch_task(
-    task_factory_v2,
+    task_factory,
     MockCurrentUser,
     client,
 ):
@@ -352,13 +352,13 @@ async def test_patch_task(
         user_kwargs=dict(is_superuser=True, is_verified=True)
     ) as user_A:
         user_A_id = user_A.id
-        task_parallel = await task_factory_v2(
+        task_parallel = await task_factory(
             user_id=user_A_id, index=1, type="parallel"
         )
-        task_non_parallel = await task_factory_v2(
+        task_non_parallel = await task_factory(
             user_id=user_A_id, index=2, type="non_parallel"
         )
-        task_compound = await task_factory_v2(user_id=user_A_id, index=3)
+        task_compound = await task_factory(user_id=user_A_id, index=3)
         # Test successuful patch of task_compound
         update = TaskUpdate(
             input_types={"input": True, "output": False},
@@ -422,7 +422,7 @@ async def test_patch_task(
 
 
 async def test_get_task(
-    task_factory_v2,
+    task_factory,
     client,
     MockCurrentUser,
     local_resource_profile_db,
@@ -432,12 +432,12 @@ async def test_get_task(
     resource2, profile2 = slurm_sudo_resource_profile_db
 
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
-        task1 = await task_factory_v2(user_id=user1.id, name="name1")
+        task1 = await task_factory(user_id=user1.id, name="name1")
 
     async with MockCurrentUser(
         user_kwargs={"profile_id": profile2.id}
     ) as user2:
-        task2 = await task_factory_v2(user_id=user2.id, name="name2")
+        task2 = await task_factory(user_id=user2.id, name="name2")
         res = await client.get(f"{PREFIX}/{task2.id}/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/9999/")

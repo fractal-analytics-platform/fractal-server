@@ -21,11 +21,11 @@ from fractal_server.ssh._fabric import FractalSSHList
 async def test_app_with_lifespan(
     db,
     override_settings_factory,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
     tmp_path,
     local_resource_profile_db,
 ):
@@ -57,17 +57,15 @@ async def test_app_with_lifespan(
         # verify shutdown
         assert len(app.state.jobsV2) == 0
 
-        task = await task_factory_v2(
-            user_id=user.id, name="task", command="echo"
-        )
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        dataset1 = await dataset_factory_v2(project_id=project.id, name="ds-1")
+        task = await task_factory(user_id=user.id, name="task", command="echo")
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
         await _workflow_insert_task_v2(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         # Create jobv2 with submitted status
-        jobv2 = await job_factory_v2(
+        jobv2 = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset1.id,

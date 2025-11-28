@@ -9,9 +9,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 PREFIX = "/api/v2/task-group"
 
 
-async def test_get_single_task_group(
-    client, MockCurrentUser, task_factory_v2, db
-):
+async def test_get_single_task_group(client, MockCurrentUser, task_factory, db):
     async with MockCurrentUser() as user1:
         # Create a new UserGroup with user1
         new_group = UserGroup(name="new_group")
@@ -23,7 +21,7 @@ async def test_get_single_task_group(
         await db.commit()
         await db.close()
 
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user1.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
         )
@@ -48,7 +46,7 @@ async def test_get_single_task_group(
 async def test_get_task_group_list(
     client,
     MockCurrentUser,
-    task_factory_v2,
+    task_factory,
     default_user_group,
     db,
 ):
@@ -56,7 +54,7 @@ async def test_get_task_group_list(
     # of the `GET /api/v2/task-group/` response, because it has lower priority
     # than the same task group belonging to user2
     async with MockCurrentUser() as user1:
-        task_by_user3 = await task_factory_v2(
+        task_by_user3 = await task_factory(
             user_id=user1.id,
             task_group_kwargs=dict(
                 pkg_name="bbb",
@@ -66,7 +64,7 @@ async def test_get_task_group_list(
         )
 
     async with MockCurrentUser() as user2:
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             args_schema_non_parallel={"foo": 0, "bar": 1},
             args_schema_parallel={"xxx": 2, "yyy": 3},
@@ -76,7 +74,7 @@ async def test_get_task_group_list(
                 user_group_id=None,
             ),
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             task_group_kwargs=dict(
                 active=False, pkg_name="aaa", version="1.2.3"
@@ -84,22 +82,22 @@ async def test_get_task_group_list(
             args_schema_non_parallel={"foo": 4, "bar": 5},
             args_schema_parallel={"xxx": 6, "yyy": 7},
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             task_group_kwargs=dict(active=False, pkg_name="bbb", version="xxx"),
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             task_group_kwargs=dict(active=False, pkg_name="bbb", version="abc"),
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             task_group_kwargs=dict(
                 pkg_name="bbb",
                 version=None,
             ),
         )
-        await task_factory_v2(
+        await task_factory(
             user_id=user2.id,
             task_group_kwargs=dict(
                 active=False, pkg_name="bbb", version="1.0.1"
@@ -158,7 +156,7 @@ async def test_get_task_group_list(
         await db.commit()
         await db.close()
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user3.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
         )
@@ -184,7 +182,7 @@ async def test_get_task_group_list(
 async def test_patch_task_group(
     client,
     MockCurrentUser,
-    task_factory_v2,
+    task_factory,
     default_user_group,
     user_group_factory,
 ):
@@ -192,13 +190,13 @@ async def test_patch_task_group(
         another_user_id = another_user.id
 
     async with MockCurrentUser(debug=True) as user1:
-        taskA = await task_factory_v2(
+        taskA = await task_factory(
             name="asd",
             user_id=user1.id,
             task_group_kwargs=dict(user_group_id=default_user_group.id),
         )
         group2 = await user_group_factory("team2", user1.id, another_user_id)
-        taskB = await task_factory_v2(
+        taskB = await task_factory(
             name="asd",
             user_id=another_user_id,
             task_group_kwargs=dict(user_group_id=group2.id),
@@ -282,12 +280,12 @@ async def test_get_task_group_activity_list(
     client,
     MockCurrentUser,
     db,
-    task_factory_v2,
+    task_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id,
             task_group_kwargs=dict(resource_id=resource.id),
         )

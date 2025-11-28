@@ -43,9 +43,9 @@ async def post_task(
 async def test_post_worfkflow_task(
     client,
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     """
@@ -57,8 +57,8 @@ async def test_post_worfkflow_task(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create project and workflow
-        proj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=proj.id)
+        proj = await project_factory(user)
+        wf = await workflow_factory(project_id=proj.id)
         wf_id = wf.id
 
         # Test that adding an invalid task fails with 404
@@ -104,7 +104,7 @@ async def test_post_worfkflow_task(
         assert task_list[2]["args_non_parallel"] == args_payload
 
         # Test type filters compatibility
-        task = await task_factory_v2(user_id=user.id, input_types={"a": False})
+        task = await task_factory(user_id=user.id, input_types={"a": False})
         res = await client.post(
             f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
             f"?task_id={task.id}",
@@ -123,9 +123,9 @@ async def test_post_worfkflow_task(
 async def test_post_worfkflow_task_failures(
     client,
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
     db,
     local_resource_profile_db,
 ):
@@ -140,11 +140,11 @@ async def test_post_worfkflow_task_failures(
         user_kwargs=dict(profile_id=profile.id)
     ) as user_A:
         user_A_id = user_A.id
-        task_A_active = await task_factory_v2(
+        task_A_active = await task_factory(
             name="a-active",
             user_id=user_A_id,
         )
-        task_A_non_active = await task_factory_v2(
+        task_A_non_active = await task_factory(
             name="a-non-active",
             user_id=user_A_id,
             task_group_kwargs=dict(active=False),
@@ -163,7 +163,7 @@ async def test_post_worfkflow_task_failures(
         await db.close()
 
         user_B_id = user_B.id
-        task_B = await task_factory_v2(
+        task_B = await task_factory(
             name="a",
             user_id=user_B_id,
             task_group_kwargs=dict(user_group_id=new_group.id),
@@ -171,8 +171,8 @@ async def test_post_worfkflow_task_failures(
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user:
         # Create project and workflow
-        proj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=proj.id)
+        proj = await project_factory(user)
+        wf = await workflow_factory(project_id=proj.id)
         wf_id = wf.id
         endpoint_path = f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
 
@@ -232,7 +232,7 @@ async def test_delete_workflow_task(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     local_resource_profile_db,
 ):
     """
@@ -244,7 +244,7 @@ async def test_delete_workflow_task(
     """
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",
             json=dict(name="My Workflow"),
@@ -321,8 +321,8 @@ async def test_delete_workflow_task(
 async def test_patch_workflow_task(
     client,
     MockCurrentUser,
-    project_factory_v2,
-    task_factory_v2,
+    project_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     """
@@ -332,7 +332,7 @@ async def test_patch_workflow_task(
     """
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         workflow = {"name": "WF"}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=workflow
@@ -487,7 +487,7 @@ async def test_patch_workflow_task(
         )
         assert res.status_code == 201
         wf_id = res.json()["id"]
-        task = await task_factory_v2(user_id=user.id, input_types={"a": False})
+        task = await task_factory(user_id=user.id, input_types={"a": False})
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={task.id}",
@@ -510,7 +510,7 @@ async def test_patch_workflow_task(
 
 
 async def test_patch_workflow_task_with_args_schema(
-    client, MockCurrentUser, project_factory_v2, task_factory_v2
+    client, MockCurrentUser, project_factory, task_factory
 ):
     """
     GIVEN a Task with args_schema and a WorkflowTask
@@ -533,14 +533,14 @@ async def test_patch_workflow_task_with_args_schema(
 
     async with MockCurrentUser() as user:
         # Create DB objects
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         workflow = {"name": "WF"}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=workflow
         )
         assert res.status_code == 201
         wf_id = res.json()["id"]
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id,
             name="task with schema",
             command_non_parallel="cmd",
@@ -591,7 +591,7 @@ async def test_patch_workflow_task_with_args_schema(
 async def test_patch_workflow_task_failures(
     client,
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     local_resource_profile_db,
 ):
     """
@@ -603,7 +603,7 @@ async def test_patch_workflow_task_failures(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Prepare two workflows, with one task each
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         workflow1 = {"name": "WF1"}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=workflow1
@@ -675,7 +675,7 @@ async def test_patch_workflow_task_failures(
 
 
 async def test_reorder_task_list(
-    project_factory_v2,
+    project_factory,
     client,
     MockCurrentUser,
     local_resource_profile_db,
@@ -696,7 +696,7 @@ async def test_reorder_task_list(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create a main project and a pool of available tasks
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         tasks = [(await post_task(client, f"task-{ind}")) for ind in range(5)]
 
         for ind_perm, permutation in enumerate(reorder_cases):
@@ -767,7 +767,7 @@ async def test_reorder_task_list(
 async def test_reorder_task_list_fail(
     client,
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     db,
     local_resource_profile_db,
 ):
@@ -781,7 +781,7 @@ async def test_reorder_task_list_fail(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create project, workflow, tasks, workflowtasks
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=dict(name="WF")
         )
@@ -871,13 +871,13 @@ async def test_reorder_task_list_fail(
 
 async def test_read_workflowtask(
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     client,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/",
             json=dict(name="My Workflow"),
@@ -901,47 +901,45 @@ async def test_read_workflowtask(
 
 
 async def test_replace_task_in_workflowtask(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
     client,
     MockCurrentUser,
     db,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
         assert workflow.task_list == []
 
-        task1 = await task_factory_v2(name="1", user_id=user.id)
-        task2 = await task_factory_v2(
-            name="2", user_id=user.id, type="parallel"
-        )
-        task3 = await task_factory_v2(name="3", user_id=user.id)
-        task4 = await task_factory_v2(
+        task1 = await task_factory(name="1", user_id=user.id)
+        task2 = await task_factory(name="2", user_id=user.id, type="parallel")
+        task3 = await task_factory(name="3", user_id=user.id)
+        task4 = await task_factory(
             name="4", user_id=user.id, type="non_parallel"
         )
 
-        wft1 = await workflowtask_factory_v2(
+        wft1 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task1.id,
             args_parallel={"wft1": "wft1"},
             args_non_parallel={"wft1": "wft1"},
             type_filters={"a": True},
         )
-        wft2 = await workflowtask_factory_v2(
+        wft2 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task2.id,
             args_parallel={"wft2": "wft2"},
         )
-        wft3 = await workflowtask_factory_v2(
+        wft3 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task3.id,
             args_parallel={"wft3": "wft3"},
             args_non_parallel={"wft3": "wft3"},
         )
-        wft4 = await workflowtask_factory_v2(
+        wft4 = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task4.id,
             args_non_parallel={"wft4": "wft4"},
@@ -955,7 +953,7 @@ async def test_replace_task_in_workflowtask(
             wft4.id,
         ]
 
-        task5 = await task_factory_v2(
+        task5 = await task_factory(
             name="5",
             user_id=user.id,
             type="compound",
@@ -1065,8 +1063,8 @@ async def test_replace_task_in_workflowtask(
         debug(res.json())
 
         # Test type filters compatibility
-        task6 = await task_factory_v2(user_id=user.id, input_types={"a": False})
-        task7 = await task_factory_v2(
+        task6 = await task_factory(user_id=user.id, input_types={"a": False})
+        task7 = await task_factory(
             user_id=user.id,
             input_types={"a": True},
             name="7",

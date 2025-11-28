@@ -10,7 +10,7 @@ from fractal_server.app.schemas.v2 import DatasetUpdate
 from fractal_server.urls import normalize_url
 
 
-async def test_schemas_dataset_v2():
+async def test_schemas_dataset():
     project = ProjectV2(id=1, name="project")
 
     # Test zarr_dir=None is valid

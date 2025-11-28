@@ -38,7 +38,7 @@ from fractal_server.syringe import Inject
 
 from ._aux_functions import _get_dataset_check_access
 from ._aux_functions import _get_workflow_check_access
-from ._aux_functions import clean_app_job_list_v2
+from ._aux_functions import clean_app_job_list
 from ._aux_functions_tasks import _check_type_filters_compatibility
 
 FRACTAL_CACHE_DIR = ".fractal_cache"
@@ -68,9 +68,7 @@ async def apply_workflow(
     # somewhat slow.
     settings = Inject(get_settings)
     if len(request.app.state.jobsV2) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
-        new_jobs_list = await clean_app_job_list_v2(
-            db, request.app.state.jobsV2
-        )
+        new_jobs_list = await clean_app_job_list(db, request.app.state.jobsV2)
         request.app.state.jobsV2 = new_jobs_list
 
     output = await _get_dataset_check_access(

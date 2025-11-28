@@ -3,40 +3,40 @@ from packaging.version import parse
 
 async def test_get_workflow_version_update_candidates(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    workflowtask_factory,
+    task_factory,
     client,
     db,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
 
         # Matching tasks (0, 1, 2)
-        task0 = await task_factory_v2(
+        task0 = await task_factory(
             user_id=user.id,
             version="1",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "1"},
             name="my_task",
             args_schema_parallel={"foo": "bar"},
         )
-        task1 = await task_factory_v2(
+        task1 = await task_factory(
             user_id=user.id,
             version="2",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "2"},
             name="my_task",
             args_schema_parallel={"foo": "bar"},
         )
-        task2 = await task_factory_v2(
+        task2 = await task_factory(
             user_id=user.id,
             version="3",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "3"},
             name="my_task",
             args_schema_parallel={"foo": "bar"},
         )
-        task3 = await task_factory_v2(
+        task3 = await task_factory(
             user_id=user.id,
             version="4",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "4"},
@@ -44,14 +44,14 @@ async def test_get_workflow_version_update_candidates(
             args_schema_parallel={"foo": "bar"},
         )
         # Task with no args schemas
-        task4 = await task_factory_v2(
+        task4 = await task_factory(
             user_id=user.id,
             version="5",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "5"},
             name="my_task",
         )
         # Task with non-parsable version
-        task5 = await task_factory_v2(
+        task5 = await task_factory(
             user_id=user.id,
             name="my_task",
             args_schema_parallel={"foo": "bar"},
@@ -62,7 +62,7 @@ async def test_get_workflow_version_update_candidates(
             },
         )
         # Task with non-matching pkg_name
-        task6 = await task_factory_v2(
+        task6 = await task_factory(
             user_id=user.id,
             version="6",
             task_group_kwargs={"pkg_name": "another-one", "version": "6"},
@@ -71,7 +71,7 @@ async def test_get_workflow_version_update_candidates(
             args_schema_parallel={"foo": "bar"},
         )
         # Task with non-compatible type
-        task7 = await task_factory_v2(
+        task7 = await task_factory(
             user_id=user.id,
             version="7",
             task_group_kwargs={"pkg_name": "my_pkg", "version": "6"},
@@ -81,7 +81,7 @@ async def test_get_workflow_version_update_candidates(
         )
         assert task0.type != task7.type
         # Non-active task
-        task6 = await task_factory_v2(
+        task6 = await task_factory(
             user_id=user.id,
             version="8",
             task_group_kwargs={
@@ -103,9 +103,7 @@ async def test_get_workflow_version_update_candidates(
             task6,
             task7,
         ]:
-            await workflowtask_factory_v2(
-                workflow_id=workflow.id, task_id=task.id
-            )
+            await workflowtask_factory(workflow_id=workflow.id, task_id=task.id)
 
         await db.refresh(workflow)
 

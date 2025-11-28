@@ -1,21 +1,19 @@
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.routes.api.v2._aux_functions import (
-    clean_app_job_list_v2,
-)
+from fractal_server.app.routes.api.v2._aux_functions import clean_app_job_list
 
 
-async def test_clean_app_job_list_v2(
+async def test_clean_app_job_list(
     MockCurrentUser,
     db,
     app,
     client,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
     override_settings_factory,
     local_resource_profile_db,
 ):
@@ -34,19 +32,19 @@ async def test_clean_app_job_list_v2(
         )
     ) as user:
         # Create DB objects
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id, name="task", command_non_parallel="echo"
         )
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset1 = await dataset_factory_v2(project_id=project.id, name="ds-1")
-        dataset2 = await dataset_factory_v2(project_id=project.id, name="ds-2")
+        dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
+        dataset2 = await dataset_factory(project_id=project.id, name="ds-2")
 
         # Create job with submitted status
-        job1 = await job_factory_v2(
+        job1 = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset1.id,
@@ -69,5 +67,5 @@ async def test_clean_app_job_list_v2(
         assert app.state.jobsV2 == [job1_id, job2_id]
 
         # After clean-up, only the submitted job is left
-        jobs_list = await clean_app_job_list_v2(db, app.state.jobsV2)
+        jobs_list = await clean_app_job_list(db, app.state.jobsV2)
         assert jobs_list == [job1_id]

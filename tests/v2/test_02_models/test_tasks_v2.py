@@ -8,7 +8,7 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 
-async def test_task_group_v2(db, local_resource_profile_db):
+async def test_task_group(db, local_resource_profile_db):
     resource, profile = local_resource_profile_db
     user = UserOAuth(
         email="user@example.org",

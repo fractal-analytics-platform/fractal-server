@@ -38,7 +38,7 @@ async def test_deactivate_task_group_api(
     client,
     MockCurrentUser,
     db,
-    task_factory_v2,
+    task_factory,
     FRACTAL_RUNNER_BACKEND,
     slurm_ssh_resource_profile_fake_db,
     local_resource_profile_db,
@@ -48,7 +48,7 @@ async def test_deactivate_task_group_api(
     """
 
     async with MockCurrentUser() as different_user:
-        non_accessible_task = await task_factory_v2(
+        non_accessible_task = await task_factory(
             user_id=different_user.id, name="task"
         )
 
@@ -60,18 +60,18 @@ async def test_deactivate_task_group_api(
 
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
-        non_active_task = await task_factory_v2(
+        non_active_task = await task_factory(
             user_id=user.id,
             name="task1",
             task_group_kwargs=dict(active=False),
         )
-        task_other = await task_factory_v2(
+        task_other = await task_factory(
             user_id=user.id,
             version=None,
             name="task2",
             task_group_kwargs=dict(origin="other"),
         )
-        task_pypi = await task_factory_v2(
+        task_pypi = await task_factory(
             user_id=user.id,
             name="task3",
             version="1.2.3",
@@ -139,7 +139,7 @@ async def test_reactivate_task_group_api(
     client,
     MockCurrentUser,
     db,
-    task_factory_v2,
+    task_factory,
     current_py_version,
     FRACTAL_RUNNER_BACKEND,
     slurm_ssh_resource_profile_fake_db,
@@ -150,7 +150,7 @@ async def test_reactivate_task_group_api(
     """
 
     async with MockCurrentUser() as different_user:
-        non_accessible_task = await task_factory_v2(
+        non_accessible_task = await task_factory(
             user_id=different_user.id, name="task1"
         )
 
@@ -161,14 +161,14 @@ async def test_reactivate_task_group_api(
         resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
-        active_task = await task_factory_v2(user_id=user.id, name="task2")
-        task_other = await task_factory_v2(
+        active_task = await task_factory(user_id=user.id, name="task2")
+        task_other = await task_factory(
             user_id=user.id,
             version=None,
             name="task3",
             task_group_kwargs=dict(active=False),
         )
-        task_pypi = await task_factory_v2(
+        task_pypi = await task_factory(
             user_id=user.id,
             name="task4",
             version="1.2.3",
@@ -483,7 +483,7 @@ async def test_lifecycle_slurm_ssh(
 
 
 async def test_fail_due_to_ongoing_activities(
-    client, MockCurrentUser, db, task_factory_v2, local_resource_profile_db
+    client, MockCurrentUser, db, task_factory, local_resource_profile_db
 ):
     """
     Test that deactivate/reactivate endpoints fail if other
@@ -492,7 +492,7 @@ async def test_fail_due_to_ongoing_activities(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock objects
-        task = await task_factory_v2(user_id=user.id, name="task")
+        task = await task_factory(user_id=user.id, name="task")
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
         db.add(task_group)
         await db.commit()
@@ -533,28 +533,28 @@ async def test_lifecycle_actions_with_submitted_jobs(
     db,
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
         # Create mock task groups
-        active_task = await task_factory_v2(
+        active_task = await task_factory(
             user_id=user.id,
             name="task-active",
             task_group_kwargs=dict(active=True),
         )
-        non_active_task = await task_factory_v2(
+        non_active_task = await task_factory(
             user_id=user.id,
             name="task-non-active",
             task_group_kwargs=dict(active=False),
         )
-        p = await project_factory_v2(user=user)
-        wf = await workflow_factory_v2()
-        ds = await dataset_factory_v2()
+        p = await project_factory(user=user)
+        wf = await workflow_factory()
+        ds = await dataset_factory()
         for task in [active_task, non_active_task]:
             await _workflow_insert_task(
                 workflow_id=wf.id,

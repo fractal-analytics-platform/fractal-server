@@ -18,7 +18,7 @@ from fractal_server.runner.executors.local.runner import LocalRunner
 from fractal_server.urls import normalize_url
 
 from .aux_get_dataset_attrs import _get_dataset_attrs
-from .execute_tasks_v2 import execute_tasks_v2_mod
+from .execute_tasks_v2 import execute_tasks_mod
 
 
 async def _find_last_history_unit(db: AsyncSession) -> HistoryUnit:
@@ -100,11 +100,11 @@ def local_runner(
 async def test_dummy_insert_single_image(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -119,16 +119,16 @@ async def test_dummy_insert_single_image(
             runner=local_runner,
             user_id=user.id,
         )
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-    dataset = await dataset_factory_v2(project_id=project.id, zarr_dir=zarr_dir)
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+    dataset = await dataset_factory(project_id=project.id, zarr_dir=zarr_dir)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
@@ -137,7 +137,7 @@ async def test_dummy_insert_single_image(
     )
 
     # Case 0: Run successfully on an empty dataset
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -148,7 +148,7 @@ async def test_dummy_insert_single_image(
     # Case 1: Run successfully even if the image already exists
     db.expunge_all()
     dataset = await db.get(DatasetV2, dataset.id)
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
@@ -179,12 +179,12 @@ async def test_dummy_insert_single_image(
             },
         ),
     ]
-    dataset_case_2 = await dataset_factory_v2(
+    dataset_case_2 = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=IMAGES,
     )
-    wftask = await workflowtask_factory_v2(
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         args_non_parallel={
@@ -198,7 +198,7 @@ async def test_dummy_insert_single_image(
             )
         },
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset_case_2,
         workflow_dir_local=tmp_path / "job2",
@@ -240,7 +240,7 @@ async def test_dummy_insert_single_image(
     for _args_non_parallel in [{"fail": True}, {"fail_2": True}]:
         debug(_args_non_parallel)
 
-        wftask = await workflowtask_factory_v2(
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task_id,
             args_non_parallel=_args_non_parallel,
@@ -248,7 +248,7 @@ async def test_dummy_insert_single_image(
         db.expunge_all()
         dataset = await db.get(DatasetV2, dataset.id)
         with pytest.raises(JobExecutionError) as e:
-            execute_tasks_v2_mod(
+            execute_tasks_mod(
                 wf_task_list=[wftask],
                 dataset=dataset,
                 workflow_dir_local=tmp_path / "job3",
@@ -264,11 +264,11 @@ async def test_dummy_insert_single_image(
 async def test_dummy_remove_images(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -282,10 +282,10 @@ async def test_dummy_remove_images(
 
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
@@ -293,9 +293,9 @@ async def test_dummy_remove_images(
 
     # Run successfully on a dataset which includes the images to be
     # removed
-    project = await project_factory_v2(user)
+    project = await project_factory(user)
     N = 3
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[
@@ -308,7 +308,7 @@ async def test_dummy_remove_images(
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == 0
 
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
@@ -329,7 +329,7 @@ async def test_dummy_remove_images(
     res = await db.execute(select(func.count(HistoryImageCache.zarr_url)))
     assert res.scalar() == N + 1
 
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -344,12 +344,12 @@ async def test_dummy_remove_images(
     assert res.scalar() == 1
 
     # Fail when removing images that do not exist
-    dataset_pre_fail = await dataset_factory_v2(
+    dataset_pre_fail = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[dict(zarr_url=Path(zarr_dir, "another-image").as_posix())],
     )
-    wftask = await workflowtask_factory_v2(
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
@@ -358,7 +358,7 @@ async def test_dummy_remove_images(
         ),
     )
     with pytest.raises(JobExecutionError) as e:
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask],
             dataset=dataset_pre_fail,
             workflow_dir_local=tmp_path / "job1",
@@ -373,11 +373,11 @@ async def test_dummy_remove_images(
 async def test_dummy_unset_attribute(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -387,12 +387,12 @@ async def test_dummy_unset_attribute(
 
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-    workflow = await workflow_factory_v2(project_id=project.id)
+    workflow = await workflow_factory(project_id=project.id)
 
     # Unset an existing attribute (starting from dataset_pre)
-    dataset1 = await dataset_factory_v2(
+    dataset1 = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[
@@ -403,20 +403,20 @@ async def test_dummy_unset_attribute(
             )
         ],
     )
-    wftask = await workflowtask_factory_v2(
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
         args_non_parallel=dict(attribute="key2"),
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset1.id,
         workflow_id=workflow.id,
         working_dir="/foo",
         status="done",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset1,
         workflow_dir_local=tmp_path / "job0",
@@ -430,7 +430,7 @@ async def test_dummy_unset_attribute(
     assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
 
     # Unset a missing attribute (starting from dataset_pre)
-    dataset2 = await dataset_factory_v2(
+    dataset2 = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=[
@@ -441,13 +441,13 @@ async def test_dummy_unset_attribute(
             )
         ],
     )
-    wftask = await workflowtask_factory_v2(
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
         args_non_parallel=dict(attribute="missing-attribute"),
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset2,
         workflow_dir_local=tmp_path / "job1",
@@ -466,11 +466,11 @@ async def test_dummy_unset_attribute(
 async def test_dummy_insert_single_image_with_attribute_none(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -480,27 +480,27 @@ async def test_dummy_insert_single_image_with_attribute_none(
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
         args_non_parallel=dict(attributes={"attribute-name": None}),
     )
     # Run successfully on an empty dataset
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
         status="done",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -516,11 +516,11 @@ async def test_dummy_insert_single_image_with_attribute_none(
 async def test_dummy_insert_single_image_normalization(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -530,27 +530,27 @@ async def test_dummy_insert_single_image_normalization(
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
         args_non_parallel={"trailing_slash": True},
     )
     # Run successfully on an empty dataset
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
         status="done",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -568,11 +568,11 @@ async def test_dummy_insert_single_image_normalization(
 async def test_default_inclusion_of_images(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -586,9 +586,9 @@ async def test_default_inclusion_of_images(
     task_id = fractal_tasks_mock_db["generic_task_parallel"].id
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
@@ -603,19 +603,19 @@ async def test_default_inclusion_of_images(
             types={},
         )
     ]
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=images,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
         status="done",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask],
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
@@ -633,11 +633,11 @@ async def test_default_inclusion_of_images(
 async def test_compound_task_with_compute_failure(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -647,9 +647,9 @@ async def test_compound_task_with_compute_failure(
     task_id = fractal_tasks_mock_db["generic_task_compound"].id
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
@@ -666,12 +666,12 @@ async def test_compound_task_with_compute_failure(
     ]
 
     # Run and fail
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=images,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
@@ -679,7 +679,7 @@ async def test_compound_task_with_compute_failure(
         status="done",
     )
     with pytest.raises(JobExecutionError) as exc_info:
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
@@ -695,11 +695,11 @@ async def test_dummy_invalid_output_non_parallel(
     db,
     MockCurrentUser,
     monkeypatch,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -713,7 +713,7 @@ async def test_dummy_invalid_output_non_parallel(
             runner=local_runner,
             user_id=user.id,
         )
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
     IMAGES = [
         dict(
             zarr_url=Path(zarr_dir, "my-image").as_posix(),
@@ -721,17 +721,17 @@ async def test_dummy_invalid_output_non_parallel(
             attributes={},
         )
     ]
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id, zarr_dir=zarr_dir, images=IMAGES
     )
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
     )
 
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
@@ -751,7 +751,7 @@ async def test_dummy_invalid_output_non_parallel(
         patched_cast,
     )
     with pytest.raises(JobExecutionError):
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
@@ -773,11 +773,11 @@ async def test_dummy_invalid_output_parallel(
     db,
     MockCurrentUser,
     monkeypatch,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -789,7 +789,7 @@ async def test_dummy_invalid_output_parallel(
             runner=local_runner,
             user_id=user.id,
         )
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
     IMAGES = [
         dict(
             zarr_url=Path(zarr_dir, "my-image").as_posix(),
@@ -798,16 +798,16 @@ async def test_dummy_invalid_output_parallel(
         )
     ]
 
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id, zarr_dir=zarr_dir, images=IMAGES
     )
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask = await workflowtask_factory_v2(
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
@@ -831,7 +831,7 @@ async def test_dummy_invalid_output_parallel(
         patched_task_output,
     )
     with pytest.raises(JobExecutionError):
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask],
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
@@ -852,11 +852,11 @@ async def test_dummy_invalid_output_parallel(
 async def test_status_based_submission(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
@@ -879,35 +879,35 @@ async def test_status_based_submission(
 
     async with MockCurrentUser() as user:
         user_id = user.id
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-    workflow = await workflow_factory_v2(project_id=project.id)
-    wftask_failing = await workflowtask_factory_v2(
+    workflow = await workflow_factory(project_id=project.id)
+    wftask_failing = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
         args_non_parallel=dict(raise_error=True),
     )
-    wftask_ok = await workflowtask_factory_v2(
+    wftask_ok = await workflowtask_factory(
         workflow_id=workflow.id,
         task_id=task_id,
         order=0,
     )
 
     # Case 1: Run and fail for B00 and B01 (by requiring the UNSET ones)
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=IMAGES,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
     )
     with pytest.raises(JobExecutionError):
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask_failing],
             dataset=dataset,
             workflow_dir_local=tmp_path / str(job.id),
@@ -938,14 +938,14 @@ async def test_status_based_submission(
         assert history_unit.status == HistoryUnitStatusWithUnset.FAILED
 
     # Case 1: Run and fail for no images (by requiring the DONE ones)
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
     )
     with pytest.raises(JobExecutionError, match="empty image list"):
-        execute_tasks_v2_mod(
+        execute_tasks_mod(
             wf_task_list=[wftask_ok],
             dataset=dataset,
             workflow_dir_local=tmp_path / str(job.id),
@@ -962,13 +962,13 @@ async def test_status_based_submission(
     assert last_history_run.status == HistoryUnitStatus.FAILED
 
     # Case 1: Run and succeed for no images (by requiring the UNSET ones)
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask_ok],
         dataset=dataset,
         workflow_dir_local=tmp_path / str(job.id),
@@ -988,18 +988,18 @@ async def test_status_based_submission(
     debug(res.scalars().all())
 
     # Case 2: Run successfully on all images
-    dataset = await dataset_factory_v2(
+    dataset = await dataset_factory(
         project_id=project.id,
         zarr_dir=zarr_dir,
         images=IMAGES,
     )
-    job = await job_factory_v2(
+    job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
         workflow_id=workflow.id,
         working_dir="/foo",
     )
-    execute_tasks_v2_mod(
+    execute_tasks_mod(
         wf_task_list=[wftask_ok],
         dataset=dataset,
         workflow_dir_local=tmp_path / str(job.id),

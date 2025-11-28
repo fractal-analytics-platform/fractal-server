@@ -64,9 +64,9 @@ GetRunnerConfigType = GetRunnerConfigTypeLocal | GetRunnerConfigTypeSLURM
 
 
 __all__ = [
-    "run_v2_task_parallel",
-    "run_v2_task_non_parallel",
-    "run_v2_task_compound",
+    "run_task_parallel",
+    "run_task_non_parallel",
+    "run_task_compound",
 ]
 
 
@@ -145,7 +145,7 @@ def _check_parallelization_list_size(my_list):
         )
 
 
-def run_v2_task_non_parallel(
+def run_task_non_parallel(
     *,
     images: list[dict[str, Any]],
     zarr_dir: str,
@@ -265,7 +265,7 @@ def run_v2_task_non_parallel(
     return outcome, num_tasks
 
 
-def run_v2_task_parallel(
+def run_task_parallel(
     *,
     images: list[dict[str, Any]],
     task: TaskV2,
@@ -388,7 +388,7 @@ def run_v2_task_parallel(
     return outcome, num_tasks
 
 
-def run_v2_task_compound(
+def run_task_compound(
     *,
     images: list[dict[str, Any]],
     zarr_dir: str,

@@ -12,10 +12,10 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 
 async def test_get_task_group_read_access(
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     db,
     client,
     local_resource_profile_db,

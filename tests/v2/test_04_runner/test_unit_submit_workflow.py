@@ -12,24 +12,24 @@ from fractal_server.runner.v2.submit_workflow import submit_workflow
 
 async def test_fail_submit_workflows_wrong_IDs(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
+    job_factory,
     tmp_path,
     db,
     local_resource_profile_objects,
 ):
     res, prof = local_resource_profile_objects[:]
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
 
         submit_workflow(
             workflow_id=workflow.id,
@@ -41,7 +41,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             user_cache_dir=tmp_path / "cache",
         )
 
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -62,11 +62,11 @@ async def test_fail_submit_workflows_wrong_IDs(
 
 
 async def test_mkdir_error(
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    job_factory,
     db,
     tmp_path,
     MockCurrentUser,
@@ -80,14 +80,14 @@ async def test_mkdir_error(
     prof.username = None
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id, name="ds")
-        workflow = await workflow_factory_v2(project_id=project.id, name="wf")  # noqa
-        task = await task_factory_v2(user_id=user.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="ds")
+        workflow = await workflow_factory(project_id=project.id, name="wf")  # noqa
+        task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -115,11 +115,11 @@ async def test_mkdir_error(
 
 async def test_submit_workflow_failure(
     tmp_path,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    job_factory,
     MockCurrentUser,
     db,
     local_resource_profile_objects,
@@ -136,14 +136,14 @@ async def test_submit_workflow_failure(
     assert working_dir.exists()
 
     async with MockCurrentUser() as user:
-        task = await task_factory_v2(user_id=user.id)
-        project = await project_factory_v2(user=user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        project = await project_factory(user=user)
+        workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
-        job = await job_factory_v2(
+        dataset = await dataset_factory(project_id=project.id)
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

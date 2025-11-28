@@ -6,7 +6,7 @@ import pytest
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.local.runner import LocalRunner
 
-from .execute_tasks_v2 import execute_tasks_v2_mod
+from .execute_tasks_v2 import execute_tasks_mod
 
 
 @pytest.fixture()
@@ -27,12 +27,12 @@ def local_runner(
 async def test_parallelize_on_no_images(
     db,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    job_factory,
     tmp_path: Path,
     local_runner: Executor,
 ):
@@ -41,22 +41,22 @@ async def test_parallelize_on_no_images(
     """
     # Preliminary setup
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
 
-        task = await task_factory_v2(
+        task = await task_factory(
             name="name-1",
             type="parallel",
             command_parallel="echo",
             user_id=user.id,
         )
-        wftask = await workflowtask_factory_v2(
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task.id,
             order=0,
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -64,7 +64,7 @@ async def test_parallelize_on_no_images(
             status="done",
         )
         with pytest.raises(JobExecutionError, match="empty image list"):
-            execute_tasks_v2_mod(
+            execute_tasks_mod(
                 wf_task_list=[wftask],
                 dataset=dataset,
                 workflow_dir_local=tmp_path / "job0",
@@ -73,20 +73,20 @@ async def test_parallelize_on_no_images(
                 job_id=job.id,
             )
 
-        task = await task_factory_v2(
+        task = await task_factory(
             name="name-2",
             type="compound",
             command_non_parallel="echo",
             command_parallel="echo",
             user_id=user.id,
         )
-        wftask = await workflowtask_factory_v2(
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task.id,
             order=0,
         )
         with pytest.raises(JobExecutionError, match="empty image list"):
-            execute_tasks_v2_mod(
+            execute_tasks_mod(
                 wf_task_list=[wftask],
                 dataset=dataset,
                 workflow_dir_local=tmp_path / "job1",

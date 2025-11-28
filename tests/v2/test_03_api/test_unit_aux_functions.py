@@ -45,14 +45,14 @@ async def test_404_functions(db):
 
 async def test_get_project_check_access(
     MockCurrentUser,
-    project_factory_v2,
+    project_factory,
     db,
 ):
     async with MockCurrentUser() as other_user:
-        other_project = await project_factory_v2(other_user)
+        other_project = await project_factory(other_user)
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
         # Test success
         await _get_project_check_access(
@@ -153,17 +153,17 @@ async def test_get_project_check_access(
 
 async def test_get_workflow_check_access(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
+    project_factory,
+    workflow_factory,
     db,
 ):
     async with MockCurrentUser() as other_user:
-        other_project = await project_factory_v2(other_user)
-        other_workflow = await workflow_factory_v2(project_id=other_project.id)
+        other_project = await project_factory(other_user)
+        other_workflow = await workflow_factory(project_id=other_project.id)
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
 
         # Test success
         await _get_workflow_check_access(
@@ -202,22 +202,22 @@ async def test_get_workflow_check_access(
 
 async def test_get_workflow_task_check_access(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
     db,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="a")
-        wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="a")
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        other_workflow = await workflow_factory_v2(project_id=project.id)
-        other_task = await task_factory_v2(user_id=user.id, name="B")
-        other_wftask = await workflowtask_factory_v2(
+        other_workflow = await workflow_factory(project_id=project.id)
+        other_task = await task_factory(user_id=user.id, name="B")
+        other_wftask = await workflowtask_factory(
             workflow_id=other_workflow.id, task_id=other_task.id
         )
 
@@ -259,13 +259,13 @@ async def test_get_workflow_task_check_access(
 
 async def test_check_workflow_exists(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
+    project_factory,
+    workflow_factory,
     db,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
 
     # Test success
     await _check_workflow_exists(
@@ -295,14 +295,14 @@ async def test_check_workflow_exists(
 
 async def test_get_dataset_check_access(
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    dataset_factory,
     db,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        other_project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        other_project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
 
         # Test success
         res = await _get_dataset_check_access(
@@ -342,20 +342,20 @@ async def test_get_dataset_check_access(
 
 async def test_get_job_check_access(
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
+    task_factory,
     db,
     tmp_path,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user, id=1)
-        other_project = await project_factory_v2(user, id=2)
+        project = await project_factory(user, id=1)
+        other_project = await project_factory(user, id=2)
 
-        workflow = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2(user_id=user.id)
+        workflow = await workflow_factory(project_id=project.id)
+        t = await task_factory(user_id=user.id)
 
         with pytest.raises(ValueError):
             await _workflow_insert_task(
@@ -365,9 +365,9 @@ async def test_get_job_check_access(
             workflow_id=workflow.id, task_id=t.id, db=db
         )
 
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
 
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

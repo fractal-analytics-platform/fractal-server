@@ -13,9 +13,9 @@ async def test_check_no_related_workflowtask(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
+    project_factory,
+    workflow_factory,
+    workflowtask_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
@@ -36,10 +36,10 @@ async def test_check_no_related_workflowtask(
 
         await check_no_related_workflowtask(task_group=task_group, db=db)
 
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
 
-        await workflowtask_factory_v2(
+        await workflowtask_factory(
             workflow_id=workflow.id, task_id=task_group.task_list[-1].id
         )
 

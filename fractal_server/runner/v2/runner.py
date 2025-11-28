@@ -35,9 +35,9 @@ from fractal_server.types import AttributeFilters
 from .merge_outputs import merge_outputs
 from .runner_functions import GetRunnerConfigType
 from .runner_functions import SubmissionOutcome
-from .runner_functions import run_v2_task_compound
-from .runner_functions import run_v2_task_non_parallel
-from .runner_functions import run_v2_task_parallel
+from .runner_functions import run_task_compound
+from .runner_functions import run_task_non_parallel
+from .runner_functions import run_task_parallel
 from .task_interface import TaskOutput
 
 
@@ -82,7 +82,7 @@ def get_origin_attribute_and_types(
     return updated_attributes, updated_types
 
 
-def execute_tasks_v2(
+def execute_tasks(
     *,
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
@@ -224,7 +224,7 @@ def execute_tasks_v2(
                 TaskType.NON_PARALLEL,
                 TaskType.CONVERTER_NON_PARALLEL,
             ]:
-                outcomes_dict, num_tasks = run_v2_task_non_parallel(
+                outcomes_dict, num_tasks = run_task_non_parallel(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,
@@ -239,7 +239,7 @@ def execute_tasks_v2(
                     user_id=user_id,
                 )
             elif task.type == TaskType.PARALLEL:
-                outcomes_dict, num_tasks = run_v2_task_parallel(
+                outcomes_dict, num_tasks = run_task_parallel(
                     images=filtered_images,
                     wftask=wftask,
                     task=task,
@@ -255,7 +255,7 @@ def execute_tasks_v2(
                 TaskType.COMPOUND,
                 TaskType.CONVERTER_COMPOUND,
             ]:
-                outcomes_dict, num_tasks = run_v2_task_compound(
+                outcomes_dict, num_tasks = run_task_compound(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,

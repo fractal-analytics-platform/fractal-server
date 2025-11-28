@@ -14,7 +14,7 @@ from fractal_server.runner.set_start_and_last_task_index import (
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
 
-from .runner import execute_tasks_v2
+from .runner import execute_tasks
 
 
 def process_workflow(
@@ -90,7 +90,7 @@ def process_workflow(
         resource=resource,
         profile=profile,
     ) as runner:
-        execute_tasks_v2(
+        execute_tasks(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)
             ],

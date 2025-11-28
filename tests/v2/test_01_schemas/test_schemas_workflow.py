@@ -10,7 +10,7 @@ from fractal_server.app.schemas.v2 import WorkflowTaskUpdate
 from fractal_server.app.schemas.v2 import WorkflowUpdate
 
 
-async def test_schemas_workflow_v2():
+async def test_schemas_workflow():
     project = ProjectV2(id=1, name="project")
 
     # Create
@@ -42,7 +42,7 @@ async def test_schemas_workflow_v2():
     WorkflowUpdate(name="new name", reordered_workflowtask_ids=[1, 2, 3])
 
 
-async def test_schemas_workflow_task_v2():
+async def test_schemas_workflow_task():
     for attribute in ("args_parallel", "args_non_parallel"):
         WorkflowTaskCreate(**{attribute: dict(something="else")})
 

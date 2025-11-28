@@ -14,7 +14,7 @@ from fractal_server.app.schemas.v2 import JobStatusType
 PREFIX = "/api/v2"
 
 
-async def _project_list_v2(user: UserOAuth, db):
+async def _project_list(user: UserOAuth, db):
     stm = (
         select(ProjectV2)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
@@ -45,32 +45,32 @@ async def test_post_and_get_project(
     ) as userA:
         res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 201
-        assert len(await _project_list_v2(userA, db)) == 1
+        assert len(await _project_list(userA, db)) == 1
         other_project = res.json()
 
     async with MockCurrentUser() as userB:
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
-        assert res.json() == await _project_list_v2(userB, db) == []
+        assert res.json() == await _project_list(userB, db) == []
 
         res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 201
-        assert len(await _project_list_v2(userB, db)) == 1
+        assert len(await _project_list(userB, db)) == 1
 
         # a user can't create two projectsV2 with the same name
         res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 422
-        assert len(await _project_list_v2(userB, db)) == 1
+        assert len(await _project_list(userB, db)) == 1
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert len(res.json()) == 1
-        assert res.json()[0]["id"] == (await _project_list_v2(userB, db))[0].id
+        assert res.json()[0]["id"] == (await _project_list(userB, db))[0].id
 
         project_id = res.json()[0]["id"]
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
-        assert res.json()["id"] == (await _project_list_v2(userB, db))[0].id
+        assert res.json()["id"] == (await _project_list(userB, db))[0].id
 
         # fail on non existent project
         res = await client.get(f"{PREFIX}/project/123456/")
@@ -214,10 +214,10 @@ async def test_delete_project(
     MockCurrentUser,
     db,
     tmp_path,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
@@ -244,16 +244,16 @@ async def test_delete_project(
         project_id = res.json()[0]["id"]
 
         # Add a dataset to the project
-        dataset = await dataset_factory_v2(project_id=project_id)
+        dataset = await dataset_factory(project_id=project_id)
         dataset_id = dataset.id
 
         # Add a workflow to the project
-        wf = await workflow_factory_v2(project_id=p["id"])
-        t = await task_factory_v2(user_id=user.id)
+        wf = await workflow_factory(project_id=p["id"])
+        t = await task_factory(user_id=user.id)
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
-        await job_factory_v2(
+        await job_factory(
             project_id=p["id"],
             workflow_id=wf.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
@@ -307,24 +307,24 @@ async def test_delete_project_ongoing_jobs(
     MockCurrentUser,
     db,
     tmp_path,
-    project_factory_v2,
-    job_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    job_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
 ):
     async with MockCurrentUser() as user:
 
         async def get_project_id_linked_to_job(status: JobStatusType) -> int:
-            p = await project_factory_v2(user)
-            d = await dataset_factory_v2(project_id=p.id)
-            w = await workflow_factory_v2(project_id=p.id)
-            t = await task_factory_v2(
+            p = await project_factory(user)
+            d = await dataset_factory(project_id=p.id)
+            w = await workflow_factory(project_id=p.id)
+            t = await task_factory(
                 user_id=user.id,
                 name=f"task_{status}",
             )
             await _workflow_insert_task(workflow_id=w.id, task_id=t.id, db=db)
-            await job_factory_v2(
+            await job_factory(
                 project_id=p.id,
                 workflow_id=w.id,
                 dataset_id=d.id,

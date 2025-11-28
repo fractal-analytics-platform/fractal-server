@@ -453,7 +453,7 @@ async def _workflow_insert_task(
     return wf_task
 
 
-async def clean_app_job_list_v2(
+async def clean_app_job_list(
     db: AsyncSession, jobs_list: list[int]
 ) -> list[int]:
     """

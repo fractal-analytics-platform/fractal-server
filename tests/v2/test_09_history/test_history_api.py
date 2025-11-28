@@ -15,27 +15,27 @@ from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 
 
 async def test_status_api(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
 
         # WorkflowTask 1 (one run, four units, different statuses)
-        wftask1 = await workflowtask_factory_v2(
+        wftask1 = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -107,7 +107,7 @@ async def test_status_api(
         )
         await db.commit()
 
-        wftask2 = await workflowtask_factory_v2(
+        wftask2 = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
 
@@ -160,12 +160,12 @@ async def test_status_api(
     ],
 )
 async def test_cascade_delete(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
@@ -177,14 +177,14 @@ async def test_cascade_delete(
     ],
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -274,12 +274,12 @@ async def test_cascade_delete(
 
 
 async def test_get_history_run_list(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
@@ -288,21 +288,21 @@ async def test_get_history_run_list(
     timestamp = datetime.now(tz=local_tz)
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task1 = await task_factory_v2(user_id=user.id, version="3.1.4")
-        task2 = await task_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task1 = await task_factory(user_id=user.id, version="3.1.4")
+        task2 = await task_factory(
             user_id=user.id, args_schema_parallel={"foo": "bar"}, version="1.2"
         )
         debug(task1, task2)
-        wftask1 = await workflowtask_factory_v2(
+        wftask1 = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task1.id
         )
-        wftask2 = await workflowtask_factory_v2(
+        wftask2 = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task2.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -442,25 +442,25 @@ async def test_get_history_run_list(
 
 
 async def test_get_history_run_units(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -506,7 +506,7 @@ async def test_get_history_run_units(
         assert res.status_code == 404
 
         # 422
-        wftask2 = await workflowtask_factory_v2(
+        wftask2 = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )
         res = await client.get(
@@ -514,7 +514,7 @@ async def test_get_history_run_units(
             f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 422
-        dataset2 = await dataset_factory_v2(project_id=project.id)
+        dataset2 = await dataset_factory(project_id=project.id)
         res = await client.get(
             f"/api/v2/project/{project.id}/status/run/{hr.id}/units/"
             f"?workflowtask_id={wftask.id}&dataset_id={dataset2.id}"
@@ -562,18 +562,18 @@ async def test_get_history_run_units(
 
 
 async def test_get_history_images(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
         images_x_no_y = [
             SingleImage(
@@ -599,18 +599,18 @@ async def test_get_history_images(
         ]
 
         dataset_images = images_x_no_y + images_x_and_y
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project.id, images=dataset_images
         )
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, input_types={"y": True})
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, input_types={"y": True})
 
-        wftask = await workflowtask_factory_v2(
+        wftask = await workflowtask_factory(
             workflow_id=workflow.id,
             task_id=task.id,
             type_filters={"x": True},
         )
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -764,12 +764,12 @@ async def test_get_history_images(
 
 
 async def test_get_logs(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     tmp_path,
     client,
@@ -782,16 +782,14 @@ async def test_get_logs(
         f.write(LOGS)
 
     async with MockCurrentUser() as user:
-        proj = await project_factory_v2(user)
-        ds = await dataset_factory_v2(
+        proj = await project_factory(user)
+        ds = await dataset_factory(
             project_id=proj.id, images=[dict(zarr_url=ZARR_URL)]
         )
-        wf = await workflow_factory_v2(project_id=proj.id)
-        task = await task_factory_v2(user_id=user.id)
-        wftask = await workflowtask_factory_v2(
-            workflow_id=wf.id, task_id=task.id
-        )
-        job = await job_factory_v2(
+        wf = await workflow_factory(project_id=proj.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(workflow_id=wf.id, task_id=task.id)
+        job = await job_factory(
             project_id=proj.id,
             dataset_id=ds.id,
             workflow_id=wf.id,
@@ -861,10 +859,8 @@ async def test_get_logs(
         )
         assert res.status_code == 422
         assert "Invalid query parameters: HistoryUnit" in res.json()["detail"]
-        ds2 = await dataset_factory_v2(project_id=proj.id)
-        wftask2 = await workflowtask_factory_v2(
-            workflow_id=wf.id, task_id=task.id
-        )
+        ds2 = await dataset_factory(project_id=proj.id)
+        wftask2 = await workflowtask_factory(workflow_id=wf.id, task_id=task.id)
         res = await client.get(
             f"/api/v2/project/{proj.id}/status/unit-log/"
             f"?workflowtask_id={wftask2.id}&dataset_id={ds.id}"
@@ -882,24 +878,24 @@ async def test_get_logs(
 
 
 async def test_get_history_run_dataset(
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    workflowtask_factory_v2,
-    job_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
 ):
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-        dataset = await dataset_factory_v2(project_id=project.id)
-        wf = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
-        await workflowtask_factory_v2(workflow_id=wf.id, task_id=task.id)
-        job = await job_factory_v2(
+        dataset = await dataset_factory(project_id=project.id)
+        wf = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        await workflowtask_factory(workflow_id=wf.id, task_id=task.id)
+        job = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=wf.id,

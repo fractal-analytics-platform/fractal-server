@@ -42,10 +42,10 @@ async def test_submit_job_failures(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     local_resource_profile_db,
     slurm_sudo_resource_profile_db,
 ):
@@ -57,26 +57,26 @@ async def test_submit_job_failures(
             profile_id=prof.id,
         )
     ) as user:
-        task = await task_factory_v2(user_id=user.id)
+        task = await task_factory(user_id=user.id)
         # 1
-        project1 = await project_factory_v2(user)
-        dataset1 = await dataset_factory_v2(
+        project1 = await project_factory(user)
+        dataset1 = await dataset_factory(
             project_id=project1.id, name="dataset1"
         )
-        workflow1a = await workflow_factory_v2(project_id=project1.id)
-        workflow1b = await workflow_factory_v2(project_id=project1.id)
+        workflow1a = await workflow_factory(project_id=project1.id)
+        workflow1b = await workflow_factory(project_id=project1.id)
         await _workflow_insert_task(
             workflow_id=workflow1a.id, task_id=task.id, db=db
         )
         # 2
-        project2 = await project_factory_v2(user)
-        workflow2 = await workflow_factory_v2(project_id=project2.id)
+        project2 = await project_factory(user)
+        workflow2 = await workflow_factory(project_id=project2.id)
         # 3
-        project3 = await project_factory_v2(user, resource_id=res2.id)
-        dataset3 = await dataset_factory_v2(
+        project3 = await project_factory(user, resource_id=res2.id)
+        dataset3 = await dataset_factory(
             project_id=project3.id, name="dataset3"
         )
-        workflow3 = await workflow_factory_v2(project_id=project3.id)
+        workflow3 = await workflow_factory(project_id=project3.id)
         await _workflow_insert_task(
             workflow_id=workflow3.id, task_id=task.id, db=db
         )
@@ -135,10 +135,10 @@ async def test_submit_job_ssh_connection_failure(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     tmp777_path,
     slurm_ssh_resource_profile_fake_db,
 ):
@@ -150,12 +150,12 @@ async def test_submit_job_ssh_connection_failure(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
         )
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="1to2")
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="1to2")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -173,10 +173,10 @@ async def test_submit_incompatible_filters(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
@@ -186,12 +186,12 @@ async def test_submit_incompatible_filters(
             profile_id=prof.id,
         )
     ) as user:
-        task = await task_factory_v2(user_id=user.id, input_types={"a": True})
+        task = await task_factory(user_id=user.id, input_types={"a": True})
 
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
 
-        workflow1 = await workflow_factory_v2(project_id=project.id)
+        workflow1 = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             db=db,
             workflow_id=workflow1.id,
@@ -207,7 +207,7 @@ async def test_submit_incompatible_filters(
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
 
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             db=db,
             workflow_id=workflow2.id,
@@ -225,11 +225,11 @@ async def test_submit_incompatible_filters(
 async def test_submit_jobs_with_same_dataset(
     db,
     client,
-    project_factory_v2,
-    job_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    job_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     tmp_path,
     MockCurrentUser,
     local_resource_profile_db,
@@ -245,28 +245,24 @@ async def test_submit_jobs_with_same_dataset(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset1 = await dataset_factory_v2(
-            project_id=project.id, name="dataset1"
-        )
-        dataset2 = await dataset_factory_v2(
-            project_id=project.id, name="dataset2"
-        )
-        new_task = await task_factory_v2(user_id=user.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset1 = await dataset_factory(project_id=project.id, name="dataset1")
+        dataset2 = await dataset_factory(project_id=project.id, name="dataset2")
+        new_task = await task_factory(user_id=user.id)
+        workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=new_task.id, db=db
         )
 
         # Existing jobs with done/running status
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset1.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
             status="done",
         )
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset2.id,
             workflow_id=workflow.id,
@@ -305,10 +301,10 @@ async def test_project_apply_workflow_subset(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
@@ -318,18 +314,18 @@ async def test_project_apply_workflow_subset(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset1 = await dataset_factory_v2(
+        project = await project_factory(user)
+        dataset1 = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
         )
-        dataset2 = await dataset_factory_v2(
+        dataset2 = await dataset_factory(
             project_id=project.id, name="ds2", type="type2"
         )
 
-        wf = await workflow_factory_v2(project_id=project.id)
+        wf = await workflow_factory(project_id=project.id)
 
-        task12 = await task_factory_v2(user_id=user.id, name="1to2")
-        task23 = await task_factory_v2(user_id=user.id, name="2to3")
+        task12 = await task_factory(user_id=user.id, name="1to2")
+        task23 = await task_factory(user_id=user.id, name="2to3")
         await _workflow_insert_task(workflow_id=wf.id, task_id=task12.id, db=db)
         await _workflow_insert_task(workflow_id=wf.id, task_id=task23.id, db=db)
 
@@ -430,10 +426,10 @@ async def test_project_apply_workflow_subset(
 
 async def test_project_apply_slurm_account(
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     client,
     db,
     local_resource_profile_db,
@@ -445,12 +441,12 @@ async def test_project_apply_slurm_account(
             profile_id=profile.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
         )
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -483,12 +479,12 @@ async def test_project_apply_slurm_account(
             "slurm_accounts": SLURM_LIST,
         },
     ) as user2:
-        project = await project_factory_v2(user2)
-        dataset = await dataset_factory_v2(
+        project = await project_factory(user2)
+        dataset = await dataset_factory(
             project_id=project.id, name="ds2", type="type2"
         )
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
             user_id=user2.id,
             input_type="type2",
             output_type="type2",
@@ -535,11 +531,11 @@ async def test_project_apply_slurm_account(
 async def test_get_jobs(
     db,
     client,
-    project_factory_v2,
-    job_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    job_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     tmp_path,
     MockCurrentUser,
     local_resource_profile_db,
@@ -555,13 +551,11 @@ async def test_get_jobs(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset1"
-        )
-        new_task = await task_factory_v2(user_id=user.id)
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset1")
+        new_task = await task_factory(user_id=user.id)
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=new_task.id, db=db
         )
@@ -569,7 +563,7 @@ async def test_get_jobs(
             workflow_id=workflow2.id, task_id=new_task.id, db=db
         )
 
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow1.id,
@@ -577,7 +571,7 @@ async def test_get_jobs(
             status="done",
             log="hello world",
         )
-        job2 = await job_factory_v2(
+        job2 = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow2.id,
@@ -644,10 +638,10 @@ async def test_get_jobs(
 async def test_get_jobs_access_control(
     db,
     client,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     MockCurrentUser,
     local_resource_profile_db,
 ):
@@ -662,12 +656,10 @@ async def test_get_jobs_access_control(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset"
-        )
-        task = await task_factory_v2(user_id=user.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset")
+        task = await task_factory(user_id=user.id)
+        workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -727,23 +719,23 @@ async def test_stop_job(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    job_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    job_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     tmp_path,
     override_settings_factory,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=project.id)
-        t = await task_factory_v2(user_id=user.id, name="task")
-        ds = await dataset_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        wf = await workflow_factory(project_id=project.id)
+        t = await task_factory(user_id=user.id, name="task")
+        ds = await dataset_factory(project_id=project.id)
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
-        job = await job_factory_v2(
+        job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=ds.id,
@@ -769,10 +761,10 @@ async def test_update_timestamp_taskgroup(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
@@ -782,12 +774,10 @@ async def test_update_timestamp_taskgroup(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset"
-        )
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset")
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -813,11 +803,11 @@ async def test_update_timestamp_taskgroup(
 async def test_get_latest_jobs(
     db,
     client,
-    project_factory_v2,
-    job_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    job_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     tmp_path,
     MockCurrentUser,
     local_resource_profile_db,
@@ -829,24 +819,22 @@ async def test_get_latest_jobs(
             profile_id=prof.id,
         )
     ) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset"
-        )
-        task = await task_factory_v2(user_id=user.id)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset")
+        task = await task_factory(user_id=user.id)
+        workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
 
-        await job_factory_v2(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
             status="done",
         )
-        job2 = await job_factory_v2(
+        job2 = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
@@ -861,7 +849,7 @@ async def test_get_latest_jobs(
         assert res.status_code == 200
         assert res.json()["id"] == job2.id
 
-        job3 = await job_factory_v2(
+        job3 = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,

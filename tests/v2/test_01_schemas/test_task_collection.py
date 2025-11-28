@@ -10,7 +10,7 @@ from fractal_server.app.schemas.v2 import TaskGroupCreateStrict
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 
 
-def test_TaskCollectPipV2():
+def test_TaskCollectPip():
     """
     Check that leading/trailing whitespace characters were removed
     """
@@ -65,7 +65,7 @@ def test_TaskCollectPipV2():
         )
 
 
-async def test_TaskCollectCustomV2(testdata_path):
+async def test_TaskCollectCustom(testdata_path):
     manifest_file = (
         testdata_path.parent
         / "v2/fractal_tasks_mock"
@@ -130,7 +130,7 @@ async def test_TaskCollectCustomV2(testdata_path):
     assert collection.package_root == "/somewhere"
 
 
-def test_TaskGroupCreateV2Strict():
+def test_TaskGroupCreateStrict():
     # Success
     TaskGroupCreateStrict(
         path="/a",
