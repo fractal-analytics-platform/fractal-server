@@ -142,21 +142,29 @@ class SlowResponseMiddleware:
         self.time_threshold = time_threshold
 
     async def __call__(self, scope, receive, send):
+        context = {"status_code": None}
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                context["status_code"] = message["status"]
+            await send(message)
+
         # Measure process time
         start_timestamp = get_timestamp()
         start_time = time.perf_counter()
-        await self.app(scope, receive, send)
+        await self.app(scope, receive, send_wrapper)
         stop_time = time.perf_counter()
         process_time = stop_time - start_time
         # Log if process time is too high
         if process_time > self.time_threshold:
             end_timestamp = get_timestamp()
+            datetime_format = "%Y-%m-%d %H:%M:%S.%f"
             slow_response_logger.warning(
                 f"{scope['method']} {scope['route'].path}, "
-                # f"{response.status_code}, "
+                f"{context['status_code']}, "
                 f"{process_time:.2f} seconds, "
-                f"{start_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}, "
-                f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}"
+                f"{start_timestamp.strftime(datetime_format)}, "
+                f"{end_timestamp.strftime(datetime_format)}"
             )
 
 
