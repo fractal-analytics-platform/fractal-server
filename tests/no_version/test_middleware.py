@@ -37,9 +37,9 @@ async def test_app_with_middleware(caplog):
 
         caplog.clear()
         await client.get("/?sleep=0.12")
-        assert "0.12 seconds" in caplog.text
+        assert "0.12," in caplog.text
 
         caplog.clear()
         await client.get("/?sleep=0.33&foo=bar")
-        assert "0.33 seconds" in caplog.text
+        assert "0.33," in caplog.text
         assert "GET /?sleep=0.33&foo=bar" in caplog.text
