@@ -1,6 +1,7 @@
 import os
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from itertools import chain
 
 from fastapi import FastAPI
@@ -23,7 +24,6 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
-from .utils import get_timestamp
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -162,14 +162,14 @@ class SlowResponseMiddleware:
             await send(message)
 
         # Measure process time
-        start_timestamp = get_timestamp()
+        start_timestamp = datetime.now()
         start_time = time.perf_counter()
         await self.app(scope, receive, send_wrapper)
         stop_time = time.perf_counter()
         process_time = stop_time - start_time
         # Log if process time is too high
         if process_time > self.time_threshold:
-            end_timestamp = get_timestamp()
+            end_timestamp = datetime.now()
             slow_response_logger.warning(
                 f"{scope['method']} {scope['route'].path}"
                 f"?{scope['query_string'].decode('utf-8')}, "
