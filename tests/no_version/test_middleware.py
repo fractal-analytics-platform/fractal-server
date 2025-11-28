@@ -18,17 +18,21 @@ async def test_app_with_middleware(caplog):
         time.sleep(sleep)
         return {"message": "Hello World"}
 
+    # Patch the logger that is used in the middleware, to capture it via caplog
     logger = logging.getLogger("slow-response")
     logger.propagate = True
 
+    caplog.set_level(logging.WARNING)
+
     async with (
         AsyncClient(
-            base_url="http://test", transport=ASGITransport(app=app)
+            base_url="http://test",
+            transport=ASGITransport(app=app),
         ) as client,
         LifespanManager(app),
     ):
         caplog.clear()
-        await client.get("/")
+        await client.get("/?sleep=0")
         assert caplog.text == ""
 
         caplog.clear()
