@@ -64,8 +64,8 @@ async def test_app_with_lifespan(
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        # Create jobv2 with submitted status
-        jobv2 = await job_factory(
+        # Create job with submitted status
+        job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset1.id,
@@ -75,20 +75,20 @@ async def test_app_with_lifespan(
         )
 
         # append submitted job to jobs status
-        app.state.jobs.append(jobv2.id)
+        app.state.jobs.append(job.id)
 
         # we need to close the db session to get
         # updated data from db
         await db.close()
 
     # verify that the shutdown file was created during the lifespan cleanup
-    assert os.path.exists(f"{jobv2.working_dir}/{SHUTDOWN_FILENAME}")
-    jobv2_after = (
-        await db.execute(select(JobV2).where(JobV2.id == jobv2.id))
+    assert os.path.exists(f"{job.working_dir}/{SHUTDOWN_FILENAME}")
+    job_after = (
+        await db.execute(select(JobV2).where(JobV2.id == job.id))
     ).scalar_one_or_none()
 
-    assert jobv2_after.status == "failed"
-    assert jobv2_after.log == "\nJob stopped due to app shutdown\n"
+    assert job_after.status == "failed"
+    assert job_after.log == "\nJob stopped due to app shutdown\n"
 
 
 async def test_lifespan_shutdown_empty_jobs_list(

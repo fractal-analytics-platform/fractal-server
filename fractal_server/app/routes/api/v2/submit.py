@@ -64,7 +64,7 @@ async def apply_workflow(
     # Remove non-submitted V2 jobs from the app state when the list grows
     # beyond a threshold
     # NOTE: this may lead to a race condition on `app.state.jobs` if two
-    # requests take place at the same time and `clean_app_job_list_v2` is
+    # requests take place at the same time and `clean_app_job_list` is
     # somewhat slow.
     settings = Inject(get_settings)
     if len(request.app.state.jobs) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
