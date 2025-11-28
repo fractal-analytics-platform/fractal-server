@@ -148,10 +148,12 @@ class SlowResponseMiddleware:
         self.time_threshold = time_threshold
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        # Filter out any non-http scope (e.g. `type="lifespan"`)
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
+        # Mutable variable which can be updated from within `send_wrapper`
         context = {"status_code": None}
 
         async def send_wrapper(message: Message):
