@@ -61,4 +61,4 @@ class Settings(BaseSettings):
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
     FRACTAL_HELP_URL: HttpUrl | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
-    FRACTAL_LONG_REQUEST_TIME: float = 15.0
+    FRACTAL_LONG_REQUEST_TIME: float = 30.0
