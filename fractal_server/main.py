@@ -135,6 +135,8 @@ async def lifespan(app: FastAPI):
 
 slow_response_logger = set_logger("slow-response")
 
+MIDDLEWARE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+
 
 class SlowResponseMiddleware:
     def __init__(self, app: FastAPI, time_threshold: float):
@@ -162,14 +164,13 @@ class SlowResponseMiddleware:
         # Log if process time is too high
         if process_time > self.time_threshold:
             end_timestamp = get_timestamp()
-            datetime_format = "%Y-%m-%d %H:%M:%S.%f"
             slow_response_logger.warning(
                 f"{scope['method']} {scope['route'].path}"
                 f"?{scope['query_string'].decode('utf-8')}, "
                 f"{context['status_code']}, "
                 f"{process_time:.2f} seconds, "
-                f"{start_timestamp.strftime(datetime_format)}, "
-                f"{end_timestamp.strftime(datetime_format)}"
+                f"{start_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}, "
+                f"{end_timestamp.strftime(MIDDLEWARE_DATETIME_FORMAT)}"
             )
 
 
