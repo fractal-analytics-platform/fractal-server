@@ -13,7 +13,7 @@ from .task import TaskType
 
 class TaskManifestV2(BaseModel):
     """
-    Represents a task within a manifest.
+    Represents a task within a V2 manifest.
 
     Attributes:
         name:
@@ -65,24 +65,24 @@ class TaskManifestV2(BaseModel):
         executable_parallel = self.executable_parallel
         if (executable_non_parallel is None) and (executable_parallel is None):
             raise ValueError(
-                "`TaskManifest.executable_non_parallel` and "
-                "`TaskManifest.executable_parallel` cannot be both None."
+                "`TaskManifestV2.executable_non_parallel` and "
+                "`TaskManifestV2.executable_parallel` cannot be both None."
             )
 
         elif executable_non_parallel is None:
             meta_non_parallel = self.meta_non_parallel
             if meta_non_parallel != {}:
                 raise ValueError(
-                    "`TaskManifest.meta_non_parallel` must be an empty dict "
-                    "if `TaskManifest.executable_non_parallel` is None. "
+                    "`TaskManifestV2.meta_non_parallel` must be an empty dict "
+                    "if `TaskManifestV2.executable_non_parallel` is None. "
                     f"Given: {meta_non_parallel}."
                 )
 
             args_schema_non_parallel = self.args_schema_non_parallel
             if args_schema_non_parallel is not None:
                 raise ValueError(
-                    "`TaskManifest.args_schema_non_parallel` must be None "
-                    "if `TaskManifest.executable_non_parallel` is None. "
+                    "`TaskManifestV2.args_schema_non_parallel` must be None "
+                    "if `TaskManifestV2.executable_non_parallel` is None. "
                     f"Given: {args_schema_non_parallel}."
                 )
 
@@ -90,16 +90,16 @@ class TaskManifestV2(BaseModel):
             meta_parallel = self.meta_parallel
             if meta_parallel != {}:
                 raise ValueError(
-                    "`TaskManifest.meta_parallel` must be an empty dict if "
-                    "`TaskManifest.executable_parallel` is None. "
+                    "`TaskManifestV2.meta_parallel` must be an empty dict if "
+                    "`TaskManifestV2.executable_parallel` is None. "
                     f"Given: {meta_parallel}."
                 )
 
             args_schema_parallel = self.args_schema_parallel
             if args_schema_parallel is not None:
                 raise ValueError(
-                    "`TaskManifest.args_schema_parallel` must be None if "
-                    "`TaskManifest.executable_parallel` is None. "
+                    "`TaskManifestV2.args_schema_parallel` must be None if "
+                    "`TaskManifestV2.executable_parallel` is None. "
                     f"Given: {args_schema_parallel}."
                 )
 
@@ -145,14 +145,14 @@ class ManifestV2(BaseModel):
                 if task.executable_parallel is not None:
                     if task.args_schema_parallel is None:
                         raise ValueError(
-                            f"Manifest has {has_args_schemas=}, but "
+                            f"ManifestV2 has {has_args_schemas=}, but "
                             f"task '{task.name}' has "
                             f"{task.args_schema_parallel=}."
                         )
                 if task.executable_non_parallel is not None:
                     if task.args_schema_non_parallel is None:
                         raise ValueError(
-                            f"Manifest has {has_args_schemas=}, but "
+                            f"ManifestV2 has {has_args_schemas=}, but "
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )
