@@ -138,8 +138,12 @@ async def lifespan(app: FastAPI):
 slow_response_logger = set_logger("slow-response")
 
 
-def _slow_response_middleware(time_threshold: float):
-    async def slow_response_middleware(request: Request, call_next):
+class SlowResponseMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: FastAPI, time_threshold: float):
+        super().__init__(app)
+        self.time_threshold = time_threshold
+
+    async def dispatch(self, request: Request, call_next):
         # Measure process time
         start_timestamp = get_timestamp()
         start_time = time.perf_counter()
@@ -147,7 +151,7 @@ def _slow_response_middleware(time_threshold: float):
         stop_time = time.perf_counter()
         process_time = stop_time - start_time
         # Log if process time is too high
-        if process_time > time_threshold:
+        if process_time > self.time_threshold:
             end_timestamp = get_timestamp()
             slow_response_logger.warning(
                 f"{request.method} {request.url.path}, "
@@ -157,8 +161,6 @@ def _slow_response_middleware(time_threshold: float):
                 f"{end_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
             )
         return response
-
-    return slow_response_middleware
 
 
 def start_application() -> FastAPI:
@@ -173,8 +175,8 @@ def start_application() -> FastAPI:
 
     settings = Inject(get_settings)
     app.add_middleware(
-        BaseHTTPMiddleware,
-        dispatch=_slow_response_middleware(settings.FRACTAL_LONG_REQUEST_TIME),
+        SlowResponseMiddleware,
+        time_threshold=settings.FRACTAL_LONG_REQUEST_TIME,
     )
 
     collect_routers(app)
