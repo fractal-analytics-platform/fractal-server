@@ -168,9 +168,7 @@ def run_task_non_parallel(
         TaskType.NON_PARALLEL,
         TaskType.CONVERTER_NON_PARALLEL,
     ]:
-        raise ValueError(
-            f"Invalid {task_type=} for `run_v2_task_non_parallel`."
-        )
+        raise ValueError(f"Invalid {task_type=} for `run_task_non_parallel`.")
 
     # Get TaskFiles object
     task_files = TaskFiles(
@@ -213,7 +211,7 @@ def run_task_non_parallel(
         db.commit()
         db.refresh(history_unit)
         logger.debug(
-            "[run_v2_task_non_parallel] Created `HistoryUnit` with "
+            "[run_task_non_parallel] Created `HistoryUnit` with "
             f"{history_run_id=}."
         )
         history_unit_id = history_unit.id
@@ -326,7 +324,7 @@ def run_task_parallel(
         db.add_all(history_units)
         db.commit()
         logger.debug(
-            f"[run_v2_task_non_parallel] Created {len(history_units)} "
+            f"[run_task_non_parallel] Created {len(history_units)} "
             "`HistoryUnit`s."
         )
 
@@ -445,7 +443,7 @@ def run_task_compound(
         db.refresh(history_unit)
         init_history_unit_id = history_unit.id
         logger.debug(
-            "[run_v2_task_compound] Created `HistoryUnit` with "
+            "[run_task_compound] Created `HistoryUnit` with "
             f"{init_history_unit_id=}."
         )
         # Create one `HistoryImageCache` for each input image
@@ -557,8 +555,7 @@ def run_task_compound(
         for history_unit in history_units:
             db.refresh(history_unit)
         logger.debug(
-            f"[run_v2_task_compound] Created {len(history_units)} "
-            "`HistoryUnit`s."
+            f"[run_task_compound] Created {len(history_units)} `HistoryUnit`s."
         )
         history_unit_ids = [history_unit.id for history_unit in history_units]
 

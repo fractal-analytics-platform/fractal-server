@@ -33,9 +33,9 @@ async def test_full_workflow_local(
     resource, profile = local_resource_profile_db
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
         user_kwargs=dict(
@@ -64,9 +64,9 @@ async def test_full_workflow_TaskExecutionError(
     resource, profile = local_resource_profile_db
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
         user_kwargs=dict(profile_id=profile.id),
@@ -95,10 +95,10 @@ async def test_non_executable_task_command_local(
         MockCurrentUser=MockCurrentUser,
         client=client,
         testdata_path=testdata_path,
-        project_factory_v2=project_factory,
-        workflow_factory_v2=workflow_factory,
-        dataset_factory_v2=dataset_factory,
-        task_factory_v2=task_factory,
+        project_factory=project_factory,
+        workflow_factory=workflow_factory,
+        dataset_factory=dataset_factory,
+        task_factory=task_factory,
         user_kwargs=dict(
             profile_id=profile.id,
         ),
@@ -128,10 +128,10 @@ async def test_failing_workflow_UnknownError_local(
         MockCurrentUser=MockCurrentUser,
         client=client,
         monkeypatch=monkeypatch,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
-        task_factory_v2=task_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
+        task_factory=task_factory,
         user_kwargs=dict(profile_id=profile.id),
         resource_id=resource.id,
     )
@@ -161,10 +161,10 @@ async def test_non_python_task_local(
     await workflow_with_non_python_task(
         client=client,
         MockCurrentUser=MockCurrentUser,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
-        task_factory_v2=task_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
+        task_factory=task_factory,
         testdata_path=testdata_path,
         tmp777_path=tmp777_path,
         additional_user_kwargs=dict(profile_id=profile.id),
@@ -188,9 +188,9 @@ async def test_failing_workflow_post_task_execution(
 
     await failing_workflow_post_task_execution(
         MockCurrentUser=MockCurrentUser,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
         tmp_path=tmp_path,

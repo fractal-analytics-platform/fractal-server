@@ -74,9 +74,9 @@ async def test_full_workflow_slurm(
             project_dirs=[project_dir],
         ),
         resource_id=resource.id,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
     )
@@ -131,9 +131,9 @@ async def test_full_workflow_TaskExecutionError_slurm(
             project_dirs=[project_dir],
         ),
         resource_id=resource.id,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
     )
@@ -175,10 +175,10 @@ async def test_non_executable_task_command_slurm(
         resource_id=resource.id,
         client=client,
         testdata_path=testdata_path,
-        project_factory_v2=project_factory,
-        workflow_factory_v2=workflow_factory,
-        dataset_factory_v2=dataset_factory,
-        task_factory_v2=task_factory,
+        project_factory=project_factory,
+        workflow_factory=workflow_factory,
+        dataset_factory=dataset_factory,
+        task_factory=task_factory,
     )
 
     _reset_permissions_for_user_folder(project_dir)
@@ -219,10 +219,10 @@ async def test_failing_workflow_UnknownError_slurm(
         resource_id=resource.id,
         client=client,
         monkeypatch=monkeypatch,
-        project_factory_v2=project_factory,
-        dataset_factory_v2=dataset_factory,
-        workflow_factory_v2=workflow_factory,
-        task_factory_v2=task_factory,
+        project_factory=project_factory,
+        dataset_factory=dataset_factory,
+        workflow_factory=workflow_factory,
+        task_factory=task_factory,
     )
 
     _reset_permissions_for_user_folder(project_dir)
