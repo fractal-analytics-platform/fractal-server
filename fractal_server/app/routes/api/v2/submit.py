@@ -273,5 +273,4 @@ async def submit_job(
         f"Job {job.id}, worker with pid {os.getpid()}. "
         f"Worker jobs list: {request.app.state.jobs}."
     )
-    await db.close()
     return job
