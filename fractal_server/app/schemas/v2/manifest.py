@@ -145,14 +145,14 @@ class ManifestV2(BaseModel):
                 if task.executable_parallel is not None:
                     if task.args_schema_parallel is None:
                         raise ValueError(
-                            f"ManifestV2 has {has_args_schemas=}, but "
+                            f"Manifest has {has_args_schemas=}, but "
                             f"task '{task.name}' has "
                             f"{task.args_schema_parallel=}."
                         )
                 if task.executable_non_parallel is not None:
                     if task.args_schema_non_parallel is None:
                         raise ValueError(
-                            f"ManifestV2 has {has_args_schemas=}, but "
+                            f"Manifest has {has_args_schemas=}, but "
                             f"task '{task.name}' has "
                             f"{task.args_schema_non_parallel=}."
                         )

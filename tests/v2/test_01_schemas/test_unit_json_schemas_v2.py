@@ -5,7 +5,7 @@ import fractal_server.app.schemas.v2 as v2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 
 
-def test_Manifest_jsonschema():
+def test_ManifestV2_jsonschema():
     """
     Generate a JSON Schema from the ManifestV1 Pydantic model, and compare it
     with the one currently present in the repository.
