@@ -6,7 +6,9 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
+from sqlmodel import Index
 from sqlmodel import SQLModel
+from sqlmodel import text
 
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.utils import get_timestamp
@@ -65,4 +67,13 @@ class JobV2(SQLModel, table=True):
     )
     type_filters: dict[str, bool] = Field(
         sa_column=Column(JSONB, nullable=False, server_default="{}")
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_jobv2_one_submitted_job_per_dataset",
+            "dataset_id",
+            unique=True,
+            postgresql_where=text(f"status = '{JobStatusType.SUBMITTED}'"),
+        ),
     )
