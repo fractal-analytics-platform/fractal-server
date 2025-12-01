@@ -221,38 +221,31 @@ async def submit_job(
     await db.refresh(job)
 
     # Update TaskGroupV2.timestamp_last_used
-    stm_update = (
+    await db.execute(
         update(TaskGroupV2)
         .where(TaskGroupV2.id.in_(used_task_group_ids))
         .values(timestamp_last_used=job.start_timestamp)
     )
-
-    await db.execute(stm_update)
     await db.commit()
 
-    # Define server-side job directory
-    timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR_LOCAL = Path(resource.jobs_local_dir) / (
+    # Define `cache_dir`
+    cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
+
+    # Define server-side and user-side job directories
+    timestamp_string = job.start_timestamp.strftime(r"%Y%m%d_%H%M%S")
+    working_dir = Path(resource.jobs_local_dir) / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )
-
-    # Define user-side job directory
-    cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
     match resource.type:
         case ResourceType.LOCAL:
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            working_dir_user = working_dir
         case ResourceType.SLURM_SUDO:
-            WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
+            working_dir_user = cache_dir / working_dir.name
         case ResourceType.SLURM_SSH:
-            WORKFLOW_DIR_REMOTE = Path(
-                profile.jobs_remote_dir,
-                WORKFLOW_DIR_LOCAL.name,
-            )
-
-    # Update job folders in the db
-    job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
-    job.working_dir_user = WORKFLOW_DIR_REMOTE.as_posix()
+            working_dir_user = Path(profile.jobs_remote_dir, working_dir.name)
+    job.working_dir = working_dir.as_posix()
+    job.working_dir_user = working_dir_user.as_posix()
     await db.merge(job)
     await db.commit()
 
