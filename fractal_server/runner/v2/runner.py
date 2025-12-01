@@ -14,6 +14,7 @@ from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -95,6 +96,7 @@ def execute_tasks(
     get_runner_config: GetRunnerConfigType,
     job_type_filters: dict[str, bool],
     job_attribute_filters: AttributeFilters,
+    resource_id: int,
 ) -> None:
     logger = get_logger(logger_name=logger_name)
 
@@ -209,6 +211,22 @@ def execute_tasks(
                 f"Cannot run task '{task.name}' for an empty image list "
                 f"(obtained after applying {type_filters=} and "
                 f"attribute_filters={job_attribute_filters})."
+            )
+            logger.info(error_msg)
+            update_status_of_history_run(
+                history_run_id=history_run_id,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db,
+            )
+            raise JobExecutionError(error_msg)
+
+        # Fail if the resource is not open for new submissions
+        resource_id = 1  # FIXME
+        resource = db.get(Resource, resource_id)
+        if resource.prevent_new_submissions:
+            error_msg = (
+                f"The computational resource '{resource.name}' cannot "
+                "currently accept new job submissions."
             )
             logger.info(error_msg)
             update_status_of_history_run(
