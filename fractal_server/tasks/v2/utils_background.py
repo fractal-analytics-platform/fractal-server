@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskCreate
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.manifest import ManifestV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
@@ -66,11 +66,11 @@ def fail_and_cleanup(
         f"Original error: {str(exception)}"
     )
 
-    task_group_activity.status = TaskGroupActivityStatusV2.FAILED
+    task_group_activity.status = TaskGroupActivityStatus.FAILED
     task_group_activity.timestamp_ended = get_timestamp()
     task_group_activity.log = get_current_log(log_file_path)
     task_group_activity = add_commit_refresh(obj=task_group_activity, db=db)
-    if task_group_activity.action == TaskGroupActivityActionV2.COLLECT:
+    if task_group_activity.action == TaskGroupActivityAction.COLLECT:
         db.delete(task_group)
     db.commit()
     reset_logger_handlers(logger)
@@ -83,7 +83,7 @@ def prepare_tasks_metadata(
     python_bin: Path | None = None,
     project_python_wrapper: Path | None = None,
     package_version: str | None = None,
-) -> list[TaskCreateV2]:
+) -> list[TaskCreate]:
     """
     Based on the package manifest and additional info, prepare the task list.
 
@@ -129,7 +129,7 @@ def prepare_tasks_metadata(
             )
             task_attributes["command_parallel"] = cmd_parallel
         # Create object
-        task_obj = TaskCreateV2(
+        task_obj = TaskCreate(
             **_task.model_dump(
                 exclude={
                     "executable_non_parallel",

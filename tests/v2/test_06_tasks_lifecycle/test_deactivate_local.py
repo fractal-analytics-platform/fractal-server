@@ -4,9 +4,9 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.tasks.v2.local import collect_local
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.utils import execute_command_sync
@@ -33,8 +33,8 @@ async def test_deactivate_fail_no_venv_path(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name="pkg",
         version="1.0.0",
     )
@@ -52,12 +52,12 @@ async def test_deactivate_fail_no_venv_path(
     )
 
     # Verify that deactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "does not exist" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "does not exist" in task_group_activity.log
 
 
 async def test_deactivate_local_fail(
@@ -94,8 +94,8 @@ async def test_deactivate_local_fail(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name="pkg",
         version="1.0.0",
     )
@@ -130,7 +130,7 @@ async def test_deactivate_wheel_no_archive_path(
     task_group = TaskGroupV2(
         pkg_name="pkg",
         version="1.2.3",
-        origin=TaskGroupV2OriginEnum.WHEELFILE,
+        origin=TaskGroupOriginEnum.WHEELFILE,
         archive_path="/invalid",
         path=path.as_posix(),
         venv_path=(path / "venv").as_posix(),
@@ -145,8 +145,8 @@ async def test_deactivate_wheel_no_archive_path(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name="pkg",
         version="1.0.0",
     )
@@ -166,13 +166,13 @@ async def test_deactivate_wheel_no_archive_path(
         profile=profile,
     )
     # Verify that deactivate failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert "does not exist" in task_group_activity_v2.log
-    assert "Invalid wheel path" in task_group_activity_v2.log
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert "does not exist" in task_group_activity.log
+    assert "Invalid wheel path" in task_group_activity.log
 
 
 async def test_deactivate_wheel_package_created_before_2_9_0(
@@ -197,7 +197,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     task_group = TaskGroupV2(
         pkg_name="fractal_tasks_mock",
         version="0.0.1",
-        origin=TaskGroupV2OriginEnum.WHEELFILE,
+        origin=TaskGroupOriginEnum.WHEELFILE,
         archive_path=archive_path,
         path=path.as_posix(),
         venv_path=venv_path.as_posix(),
@@ -212,8 +212,8 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     activity_collect = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
@@ -230,7 +230,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         profile=profile,
     )
     activity_collect = await db.get(TaskGroupActivityV2, activity_collect.id)
-    assert activity_collect.status == TaskGroupActivityStatusV2.OK
+    assert activity_collect.status == TaskGroupActivityStatus.OK
 
     # STEP 2: make it look like a pre-2.9.0 package, both in the db and
     # in the virtual environment
@@ -251,8 +251,8 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
     activity_deactivate = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
@@ -273,7 +273,7 @@ async def test_deactivate_wheel_package_created_before_2_9_0(
         TaskGroupActivityV2, activity_deactivate.id
     )
     task_group = await db.get(TaskGroupV2, task_group.id)
-    assert activity_deactivate.status == TaskGroupActivityStatusV2.OK
+    assert activity_deactivate.status == TaskGroupActivityStatus.OK
     print(activity_deactivate.log)
     assert "Recreate pip-freeze information" in activity_deactivate.log
 
@@ -309,8 +309,8 @@ async def test_deactivate_local_github_dependency(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.DEACTIVATE,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.DEACTIVATE,
         pkg_name="pkg",
         version="1.0.0",
     )

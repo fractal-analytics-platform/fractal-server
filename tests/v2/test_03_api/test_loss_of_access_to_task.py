@@ -8,10 +8,10 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 
 async def test_loss_of_access_to_task(
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     db,
     client,
     local_resource_profile_db,
@@ -48,12 +48,12 @@ async def test_loss_of_access_to_task(
         await db.commit()
 
         # Create tasks with different ownership info
-        task_A = await task_factory_v2(
+        task_A = await task_factory(
             command_non_parallel="echo",
             user_id=user_A.id,
             name=f"iteration-{i}-A",
         )
-        task_B = await task_factory_v2(
+        task_B = await task_factory(
             command_non_parallel="echo",
             user_id=user_B.id,
             task_group_kwargs=dict(user_group_id=team_group.id),
@@ -61,13 +61,13 @@ async def test_loss_of_access_to_task(
         )
         async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
             # Prepare all objects
-            project = await project_factory_v2(user)
-            dataset = await dataset_factory_v2(
+            project = await project_factory(user)
+            dataset = await dataset_factory(
                 project_id=project.id,
                 zarr_dir="/fake/",
                 images=[dict(zarr_url="/fake/1")],
             )
-            workflow = await workflow_factory_v2(project_id=project.id)
+            workflow = await workflow_factory(project_id=project.id)
             await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task_A.id, db=db
             )

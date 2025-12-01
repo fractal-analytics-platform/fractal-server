@@ -6,8 +6,8 @@ from pydantic import ValidationError
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
-from fractal_server.app.schemas.v2 import TaskCreateV2
-from fractal_server.app.schemas.v2 import TaskUpdateV2
+from fractal_server.app.schemas.v2 import TaskCreate
+from fractal_server.app.schemas.v2 import TaskUpdate
 
 PREFIX = "/api/v2/task"
 
@@ -57,14 +57,14 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
 
 
 async def test_task_get_list(
-    db, client, task_factory_v2, MockCurrentUser, user_group_factory
+    db, client, task_factory, MockCurrentUser, user_group_factory
 ):
     async with MockCurrentUser() as user:
         new_group = await user_group_factory(
             group_name="new_group", user_id=user.id
         )
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user.id,
             task_group_kwargs=dict(user_group_id=new_group.id),
             index=1,
@@ -73,14 +73,14 @@ async def test_task_get_list(
             authors="Name1 Surname1,Name2 Surname2...",
         )
 
-        await task_factory_v2(
+        await task_factory(
             user_id=user.id,
             index=2,
             category="Conversion",
             modality="EM",
             authors="NAME1 SURNAME3",
         )
-        t = await task_factory_v2(
+        t = await task_factory(
             user_id=user.id,
             index=3,
             args_schema_non_parallel=dict(a=1),
@@ -123,7 +123,7 @@ async def test_post_task(
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # Successful task creations
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="task_name",
             # Compound
             command_parallel="task_command_parallel",
@@ -156,7 +156,7 @@ async def test_post_task(
         assert res.json()["authors"] == "Foo Bar + Fractal Team"
         assert res.json()["tags"] == ["compound", "test", "post", "api"]
 
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="task_name",
             command_parallel="task_command_parallel",
         )
@@ -166,7 +166,7 @@ async def test_post_task(
         # TaskGroupV2 with same (pkg_name, version, user_id)
         assert res.status_code == 422
 
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="task_name2",
             # Parallel
             command_parallel="task_command_parallel",
@@ -176,7 +176,7 @@ async def test_post_task(
         )
         assert res.status_code == 201
         assert res.json()["type"] == "parallel"
-        task = TaskCreateV2(
+        task = TaskCreate(
             name="task_name3",
             # Non Parallel
             command_non_parallel="task_command_non_parallel",
@@ -312,7 +312,7 @@ async def test_patch_task_auth(
         user_kwargs=dict(profile_id=profile.id)
     ) as user_A:
         user_A_id = user_A.id
-        payload_obj = TaskCreateV2(
+        payload_obj = TaskCreate(
             name="a", category="my-cat", command_parallel="c"
         )
         res = await client.post(
@@ -323,7 +323,7 @@ async def test_patch_task_auth(
 
     # PATCH-task success as user_A -> success (task belongs to user)
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
-        payload_obj = TaskUpdateV2(category="new-cat-1")
+        payload_obj = TaskUpdate(category="new-cat-1")
         res = await client.patch(
             f"{PREFIX}/{task_id}/",
             json=payload_obj.model_dump(exclude_unset=True),
@@ -334,7 +334,7 @@ async def test_patch_task_auth(
     # PATCH-task failure as a different user -> failure (task belongs to user)
     async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
         # PATCH-task failure (task does not belong to user)
-        payload_obj = TaskUpdateV2(category="new-cat-2")
+        payload_obj = TaskUpdate(category="new-cat-2")
         res = await client.patch(
             f"{PREFIX}/{task_id}/",
             json=payload_obj.model_dump(exclude_unset=True),
@@ -344,7 +344,7 @@ async def test_patch_task_auth(
 
 
 async def test_patch_task(
-    task_factory_v2,
+    task_factory,
     MockCurrentUser,
     client,
 ):
@@ -352,15 +352,15 @@ async def test_patch_task(
         user_kwargs=dict(is_superuser=True, is_verified=True)
     ) as user_A:
         user_A_id = user_A.id
-        task_parallel = await task_factory_v2(
+        task_parallel = await task_factory(
             user_id=user_A_id, index=1, type="parallel"
         )
-        task_non_parallel = await task_factory_v2(
+        task_non_parallel = await task_factory(
             user_id=user_A_id, index=2, type="non_parallel"
         )
-        task_compound = await task_factory_v2(user_id=user_A_id, index=3)
+        task_compound = await task_factory(user_id=user_A_id, index=3)
         # Test successuful patch of task_compound
-        update = TaskUpdateV2(
+        update = TaskUpdate(
             input_types={"input": True, "output": False},
             output_types={"input": False, "output": True},
             command_parallel="new_cmd_parallel",
@@ -386,7 +386,7 @@ async def test_patch_task(
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)):
         # Fail on updating unsetted commands
-        update_non_parallel = TaskUpdateV2(command_non_parallel="xxx")
+        update_non_parallel = TaskUpdate(command_non_parallel="xxx")
         res_compound = await client.patch(
             f"{PREFIX}/{task_compound.id}/",
             json=update_non_parallel.model_dump(exclude_unset=True),
@@ -403,7 +403,7 @@ async def test_patch_task(
         assert res_non_parallel.status_code == 200
         assert res_parallel.status_code == 422
 
-        update_parallel = TaskUpdateV2(command_parallel="yyy")
+        update_parallel = TaskUpdate(command_parallel="yyy")
         res_compound = await client.patch(
             f"{PREFIX}/{task_compound.id}/",
             json=update_non_parallel.model_dump(exclude_unset=True),
@@ -422,7 +422,7 @@ async def test_patch_task(
 
 
 async def test_get_task(
-    task_factory_v2,
+    task_factory,
     client,
     MockCurrentUser,
     local_resource_profile_db,
@@ -432,12 +432,12 @@ async def test_get_task(
     resource2, profile2 = slurm_sudo_resource_profile_db
 
     async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
-        task1 = await task_factory_v2(user_id=user1.id, name="name1")
+        task1 = await task_factory(user_id=user1.id, name="name1")
 
     async with MockCurrentUser(
         user_kwargs={"profile_id": profile2.id}
     ) as user2:
-        task2 = await task_factory_v2(user_id=user2.id, name="name2")
+        task2 = await task_factory(user_id=user2.id, name="name2")
         res = await client.get(f"{PREFIX}/{task2.id}/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/9999/")

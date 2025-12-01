@@ -29,9 +29,9 @@ async def full_workflow(
     *,
     MockCurrentUser,
     client,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     tasks: dict[str, TaskV2],
     resource_id: int,
     user_kwargs: dict | None = None,
@@ -42,14 +42,14 @@ async def full_workflow(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         project_id = project.id
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="dataset",
         )
         dataset_id = dataset.id
-        workflow = await workflow_factory_v2(
+        workflow = await workflow_factory(
             project_id=project_id, name="workflow"
         )
         workflow_id = workflow.id
@@ -307,9 +307,9 @@ async def full_workflow_TaskExecutionError(
     *,
     MockCurrentUser,
     client,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     tasks: dict[str, TaskV2],
     resource_id: int,
     user_kwargs: dict | None = None,
@@ -321,14 +321,14 @@ async def full_workflow_TaskExecutionError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         project_id = project.id
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="dataset",
         )
         dataset_id = dataset.id
-        workflow = await workflow_factory_v2(
+        workflow = await workflow_factory(
             project_id=project_id, name="workflow"
         )
         workflow_id = workflow.id
@@ -411,10 +411,10 @@ async def non_executable_task_command(
     MockCurrentUser,
     client,
     testdata_path,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
     resource_id: int,
     user_kwargs: dict | None = None,
 ):
@@ -425,7 +425,7 @@ async def non_executable_task_command(
         user_kwargs={"is_verified": True, **user_kwargs},
     ) as user:
         # Create task
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id,
             name="invalid-task-command",
             type="non_parallel",
@@ -434,13 +434,11 @@ async def non_executable_task_command(
         debug(task)
 
         # Create project
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         project_id = project.id
 
         # Create workflow
-        workflow = await workflow_factory_v2(
-            name="test_wf", project_id=project_id
-        )
+        workflow = await workflow_factory(name="test_wf", project_id=project_id)
 
         # Add task to workflow
         res = await client.post(
@@ -452,7 +450,7 @@ async def non_executable_task_command(
         assert res.status_code == 201
 
         # Create dataset
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="input",
             zarr_dir="/fake",
@@ -485,10 +483,10 @@ async def failing_workflow_UnknownError(
     MockCurrentUser,
     client,
     monkeypatch,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     resource_id: int,
     user_kwargs: dict | None = None,
 ):
@@ -499,22 +497,22 @@ async def failing_workflow_UnknownError(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         project_id = project.id
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="dataset",
             zarr_dir="/fake",
             images=[dict(zarr_url="/fake/1")],
         )
         dataset_id = dataset.id
-        workflow = await workflow_factory_v2(
+        workflow = await workflow_factory(
             project_id=project_id, name="workflow"
         )
         workflow_id = workflow.id
 
         # Create task
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id,
             command_non_parallel="echo",
             type="non_parallel",
@@ -539,7 +537,7 @@ async def failing_workflow_UnknownError(
 
         monkeypatch.setattr(
             fractal_server.runner.v2.runner,
-            "run_v2_task_non_parallel",
+            "run_task_non_parallel",
             _raise_RuntimeError,
         )
 
@@ -590,10 +588,10 @@ async def workflow_with_non_python_task(
     MockCurrentUser,
     client,
     testdata_path,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
     tmp777_path: Path,
     resource_id: int,
     additional_user_kwargs=None,
@@ -613,13 +611,11 @@ async def workflow_with_non_python_task(
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         project_id = project.id
 
         # Create workflow
-        workflow = await workflow_factory_v2(
-            name="test_wf", project_id=project_id
-        )
+        workflow = await workflow_factory(name="test_wf", project_id=project_id)
 
         # Copy script somewhere accessible
         script_name = "non_python_task_issue1377.sh"
@@ -630,7 +626,7 @@ async def workflow_with_non_python_task(
         )
 
         # Create task
-        task = await task_factory_v2(
+        task = await task_factory(
             user_id=user.id,
             name="non-python",
             type="non_parallel",
@@ -646,7 +642,7 @@ async def workflow_with_non_python_task(
         assert res.status_code == 201
 
         # Create datasets
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="dataset",
             zarr_dir="/fake",
@@ -702,9 +698,9 @@ async def failing_workflow_post_task_execution(
     *,
     MockCurrentUser,
     client,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
     tasks: dict[str, TaskV2],
     resource_id: int,
     user_kwargs: dict | None = None,
@@ -716,7 +712,7 @@ async def failing_workflow_post_task_execution(
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs},
     ) as user:
-        project = await project_factory_v2(
+        project = await project_factory(
             user,
             resource_id=resource_id,
         )
@@ -724,7 +720,7 @@ async def failing_workflow_post_task_execution(
 
         zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
-        dataset = await dataset_factory_v2(
+        dataset = await dataset_factory(
             project_id=project_id,
             name="dataset",
             zarr_dir=zarr_dir,
@@ -734,7 +730,7 @@ async def failing_workflow_post_task_execution(
             ],
         )
         dataset_id = dataset.id
-        workflow = await workflow_factory_v2(
+        workflow = await workflow_factory(
             project_id=project_id, name="workflow"
         )
         workflow_id = workflow.id

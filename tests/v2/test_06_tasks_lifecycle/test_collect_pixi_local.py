@@ -5,8 +5,8 @@ from devtools import debug
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import FractalUploadedFile
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.tasks.v2.local import collect_local_pixi
 
 
@@ -44,8 +44,8 @@ async def test_collect_local_pixi_path_exists(
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
@@ -66,9 +66,9 @@ async def test_collect_local_pixi_path_exists(
         profile=profile,
     )
     # Verify that collection failed
-    task_group_activity_v2 = await db.get(
+    task_group_activity = await db.get(
         TaskGroupActivityV2, task_group_activity.id
     )
-    debug(task_group_activity_v2)
-    assert task_group_activity_v2.status == "failed"
-    assert task_group_activity_v2.taskgroupv2_id is None
+    debug(task_group_activity)
+    assert task_group_activity.status == "failed"
+    assert task_group_activity.taskgroupv2_id is None

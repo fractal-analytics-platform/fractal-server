@@ -10,15 +10,15 @@ from pydantic.types import AwareDatetime
 from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
-from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
-from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
-from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
+from fractal_server.app.schemas.v2.dumps import DatasetDump
+from fractal_server.app.schemas.v2.dumps import ProjectDump
+from fractal_server.app.schemas.v2.dumps import WorkflowDump
 from fractal_server.types import AttributeFilters
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 
 
-class JobStatusTypeV2(StrEnum):
+class JobStatusType(StrEnum):
     """
     Define the available job statuses
 
@@ -39,7 +39,7 @@ class JobStatusTypeV2(StrEnum):
     FAILED = "failed"
 
 
-class JobCreateV2(BaseModel):
+class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     first_task_index: NonNegativeInt | None = None
@@ -65,16 +65,16 @@ class JobCreateV2(BaseModel):
         return values
 
 
-class JobReadV2(BaseModel):
+class JobRead(BaseModel):
     id: int
     project_id: int | None = None
-    project_dump: ProjectDumpV2
+    project_dump: ProjectDump
     user_email: str
     slurm_account: str | None = None
     workflow_id: int | None = None
-    workflow_dump: WorkflowDumpV2
+    workflow_dump: WorkflowDump
     dataset_id: int | None = None
-    dataset_dump: DatasetDumpV2
+    dataset_dump: DatasetDump
     start_timestamp: AwareDatetime
     end_timestamp: AwareDatetime | None = None
     status: str
@@ -100,7 +100,7 @@ class JobReadV2(BaseModel):
             return v.isoformat()
 
 
-class JobUpdateV2(BaseModel):
+class JobUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: JobStatusTypeV2
+    status: JobStatusType

@@ -33,16 +33,14 @@ def collect_routers(app: FastAPI) -> None:
         app:
             The application to register the routers to.
     """
-    from .app.routes.admin.v2 import router_admin_v2
+    from .app.routes.admin.v2 import router_admin
     from .app.routes.api import router_api
-    from .app.routes.api.v2 import router_api_v2
+    from .app.routes.api.v2 import router_api as router_api_v2
     from .app.routes.auth.router import router_auth
 
     app.include_router(router_api, prefix="/api")
     app.include_router(router_api_v2, prefix="/api/v2")
-    app.include_router(
-        router_admin_v2, prefix="/admin/v2", tags=["V2 Admin area"]
-    )
+    app.include_router(router_admin, prefix="/admin/v2", tags=["Admin area"])
     app.include_router(router_auth, prefix="/auth", tags=["Authentication"])
 
 
@@ -74,7 +72,7 @@ def check_settings() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.jobsV2 = []
+    app.state.jobs = []
     logger = set_logger("fractal_server.lifespan")
     logger.info(f"[startup] START (fractal-server {__VERSION__})")
     check_settings()
@@ -111,12 +109,12 @@ async def lifespan(app: FastAPI):
 
     logger.info(
         f"[teardown] Current worker with pid {os.getpid()} is shutting down. "
-        f"Current jobs: {app.state.jobsV2=}"
+        f"Current jobs: {app.state.jobs=}"
     )
     if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
         try:
             await cleanup_after_shutdown(
-                jobsV2=app.state.jobsV2,
+                jobs=app.state.jobs,
                 logger_name="fractal_server.lifespan",
             )
         except Exception as e:

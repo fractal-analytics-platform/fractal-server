@@ -25,12 +25,12 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 )
 from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2 import TaskCollectPipV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupCreateV2Strict
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskCollectPip
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupCreateStrict
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local.collect import collect_local
@@ -59,9 +59,9 @@ class CollectionRequestData(BaseModel):
     Validate form data _and_ wheel file.
     """
 
-    task_collect: TaskCollectPipV2
+    task_collect: TaskCollectPip
     file: UploadFile | None = None
-    origin: TaskGroupV2OriginEnum
+    origin: TaskGroupOriginEnum
 
     @model_validator(mode="before")
     @classmethod
@@ -75,7 +75,7 @@ class CollectionRequestData(BaseModel):
                 raise ValueError(
                     "When no `file` is provided, `package` is required."
                 )
-            values["origin"] = TaskGroupV2OriginEnum.PYPI
+            values["origin"] = TaskGroupOriginEnum.PYPI
         else:
             if package is not None:
                 raise ValueError(
@@ -87,7 +87,7 @@ class CollectionRequestData(BaseModel):
                     "Cannot set `package_version` when `file` is "
                     f"provided (given package_version='{package_version}')."
                 )
-            values["origin"] = TaskGroupV2OriginEnum.WHEELFILE
+            values["origin"] = TaskGroupOriginEnum.WHEELFILE
 
             for forbidden_char in FORBIDDEN_CHAR_WHEEL:
                 if forbidden_char in file.filename:
@@ -125,7 +125,7 @@ def parse_request_data(
             else None
         )
         # Validate and coerce form data
-        task_collect_pip = TaskCollectPipV2(
+        task_collect_pip = TaskCollectPip(
             package=package,
             package_version=package_version,
             package_extras=package_extras,
@@ -150,7 +150,7 @@ def parse_request_data(
 
 @router.post(
     "/collect/pip/",
-    response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityRead,
 )
 async def collect_tasks_pip(
     response: Response,
@@ -160,7 +160,7 @@ async def collect_tasks_pip(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityRead:
     """
     Task-collection endpoint
     """
@@ -221,7 +221,7 @@ async def collect_tasks_pip(
     wheel_file = None
 
     # Set pkg_name, version, origin and archive_path
-    if request_data.origin == TaskGroupV2OriginEnum.WHEELFILE:
+    if request_data.origin == TaskGroupOriginEnum.WHEELFILE:
         try:
             wheel_filename = request_data.file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
@@ -242,7 +242,7 @@ async def collect_tasks_pip(
             wheel_info["distribution"]
         )
         task_group_attrs["version"] = wheel_info["version"]
-    elif request_data.origin == TaskGroupV2OriginEnum.PYPI:
+    elif request_data.origin == TaskGroupOriginEnum.PYPI:
         pkg_name = task_collect.package
         task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
         latest_version = await get_package_version_from_pypi(
@@ -278,7 +278,7 @@ async def collect_tasks_pip(
 
     # Validate TaskGroupV2 attributes
     try:
-        TaskGroupCreateV2Strict(**task_group_attrs)
+        TaskGroupCreateStrict(**task_group_attrs)
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -328,8 +328,8 @@ async def collect_tasks_pip(
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
-        status=TaskGroupActivityStatusV2.PENDING,
-        action=TaskGroupActivityActionV2.COLLECT,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )

@@ -6,9 +6,9 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import FORBIDDEN_DEPENDENCY_STRINGS
@@ -78,7 +78,7 @@ def deactivate_local(
                 return
 
             try:
-                activity.status = TaskGroupActivityStatusV2.ONGOING
+                activity.status = TaskGroupActivityStatus.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 if task_group.env_info is None:
@@ -102,7 +102,7 @@ def deactivate_local(
                         ).as_posix(),
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.DEACTIVATE}"
+                            f"{TaskGroupActivityAction.DEACTIVATE}"
                         ),
                         logger_name=LOGGER_NAME,
                     )
@@ -120,7 +120,7 @@ def deactivate_local(
                     logger.info("Add pip freeze stdout to TaskGroupV2 - end")
 
                 # Handle some specific cases for wheel-file case
-                if task_group.origin == TaskGroupV2OriginEnum.WHEELFILE:
+                if task_group.origin == TaskGroupOriginEnum.WHEELFILE:
                     logger.info(
                         f"Handle specific cases for {task_group.origin=}."
                     )
@@ -209,7 +209,7 @@ def deactivate_local(
                 logger.info(f"Now removing {task_group.venv_path}.")
                 shutil.rmtree(task_group.venv_path)
                 logger.info(f"All good, {task_group.venv_path} removed.")
-                activity.status = TaskGroupActivityStatusV2.OK
+                activity.status = TaskGroupActivityStatus.OK
                 activity.log = get_current_log(log_file_path)
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)

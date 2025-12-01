@@ -14,8 +14,8 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 
@@ -171,7 +171,7 @@ async def check_no_ongoing_activity(
     stm = (
         select(TaskGroupActivityV2)
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
-        .where(TaskGroupActivityV2.status == TaskGroupActivityStatusV2.ONGOING)
+        .where(TaskGroupActivityV2.status == TaskGroupActivityStatus.ONGOING)
     )
     res = await db.execute(stm)
     ongoing_activities = res.scalars().all()
@@ -213,7 +213,7 @@ async def check_no_submitted_job(
         .join(TaskV2, WorkflowTaskV2.task_id == TaskV2.id)
         .where(WorkflowTaskV2.order >= JobV2.first_task_index)
         .where(WorkflowTaskV2.order <= JobV2.last_task_index)
-        .where(JobV2.status == JobStatusTypeV2.SUBMITTED)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
         .where(TaskV2.taskgroupv2_id == task_group_id)
     )
     res = await db.execute(stm)

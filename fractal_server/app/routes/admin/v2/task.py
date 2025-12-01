@@ -23,7 +23,7 @@ from fractal_server.app.schemas.v2.task import TaskType
 router = APIRouter()
 
 
-class TaskV2Minimal(BaseModel):
+class TaskMinimal(BaseModel):
     id: int
     name: str
     type: str
@@ -39,7 +39,7 @@ class ProjectUser(BaseModel):
     email: EmailStr
 
 
-class TaskV2Relationship(BaseModel):
+class TaskRelationship(BaseModel):
     workflow_id: int
     workflow_name: str
     project_id: int
@@ -47,12 +47,12 @@ class TaskV2Relationship(BaseModel):
     project_users: list[ProjectUser] = Field(default_factory=list)
 
 
-class TaskV2Info(BaseModel):
-    task: TaskV2Minimal
-    relationships: list[TaskV2Relationship]
+class TaskInfo(BaseModel):
+    task: TaskMinimal
+    relationships: list[TaskRelationship]
 
 
-@router.get("/", response_model=PaginationResponse[TaskV2Info])
+@router.get("/", response_model=PaginationResponse[TaskInfo])
 async def query_tasks(
     id: int | None = None,
     source: str | None = None,
@@ -66,7 +66,7 @@ async def query_tasks(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskV2Info]:
+) -> PaginationResponse[TaskInfo]:
     """
     Query `TaskV2` and get information about related workflows and projects.
     """

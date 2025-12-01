@@ -3,13 +3,13 @@ from fractal_server.app.models import JobV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 
 async def test_get_workflow_tasks_statuses(
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
     MockCurrentUser,
     client,
     db,
@@ -35,11 +35,9 @@ async def test_get_workflow_tasks_statuses(
         user_kwargs={"is_verified": True, "profile_id": profile.id}
     ) as user:
         user_id = user.id
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset1"
-        )
-        workflow = await workflow_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset1")
+        workflow = await workflow_factory(
             project_id=project.id, name="workflow"
         )
 
@@ -84,13 +82,13 @@ async def test_get_workflow_tasks_statuses(
     job_A = JobV2(
         first_task_index=0,
         last_task_index=3,
-        status=JobStatusTypeV2.DONE,
+        status=JobStatusType.DONE,
         **common_job_args,
     )
     job_B = JobV2(
         first_task_index=1,
         last_task_index=4,
-        status=JobStatusTypeV2.SUBMITTED,
+        status=JobStatusType.SUBMITTED,
         **common_job_args,
     )
     db.add_all([job_A, job_B])
@@ -179,9 +177,9 @@ async def test_get_workflow_tasks_statuses(
 
 
 async def test_multiple_jobs_error(
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
     MockCurrentUser,
     client,
     db,
@@ -192,11 +190,9 @@ async def test_multiple_jobs_error(
     """
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
-        project = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(
-            project_id=project.id, name="dataset1"
-        )
-        workflow = await workflow_factory_v2(
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id, name="dataset1")
+        workflow = await workflow_factory(
             project_id=project.id, name="workflow"
         )
 
@@ -212,7 +208,7 @@ async def test_multiple_jobs_error(
             project_dump={},
             first_task_index=0,
             last_task_index=0,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
         )
         db.add(job)
         await db.commit()

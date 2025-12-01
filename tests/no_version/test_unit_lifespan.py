@@ -8,7 +8,7 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2.job import JobV2
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _workflow_insert_task as _workflow_insert_task_v2,
+    _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_group
@@ -21,11 +21,11 @@ from fractal_server.ssh._fabric import FractalSSHList
 async def test_app_with_lifespan(
     db,
     override_settings_factory,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
     tmp_path,
     local_resource_profile_db,
 ):
@@ -55,19 +55,17 @@ async def test_app_with_lifespan(
 
     async with lifespan(app):
         # verify shutdown
-        assert len(app.state.jobsV2) == 0
+        assert len(app.state.jobs) == 0
 
-        task = await task_factory_v2(
-            user_id=user.id, name="task", command="echo"
-        )
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        dataset1 = await dataset_factory_v2(project_id=project.id, name="ds-1")
-        await _workflow_insert_task_v2(
+        task = await task_factory(user_id=user.id, name="task", command="echo")
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
+        await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        # Create jobv2 with submitted status
-        jobv2 = await job_factory_v2(
+        # Create job with submitted status
+        job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset1.id,
@@ -76,21 +74,21 @@ async def test_app_with_lifespan(
             last_task_index=0,
         )
 
-        # append submitted job to jobsV2 status
-        app.state.jobsV2.append(jobv2.id)
+        # append submitted job to jobs status
+        app.state.jobs.append(job.id)
 
         # we need to close the db session to get
         # updated data from db
         await db.close()
 
     # verify that the shutdown file was created during the lifespan cleanup
-    assert os.path.exists(f"{jobv2.working_dir}/{SHUTDOWN_FILENAME}")
-    jobv2_after = (
-        await db.execute(select(JobV2).where(JobV2.id == jobv2.id))
+    assert os.path.exists(f"{job.working_dir}/{SHUTDOWN_FILENAME}")
+    job_after = (
+        await db.execute(select(JobV2).where(JobV2.id == job.id))
     ).scalar_one_or_none()
 
-    assert jobv2_after.status == "failed"
-    assert jobv2_after.log == "\nJob stopped due to app shutdown\n"
+    assert job_after.status == "failed"
+    assert job_after.log == "\nJob stopped due to app shutdown\n"
 
 
 async def test_lifespan_shutdown_empty_jobs_list(
@@ -117,7 +115,7 @@ async def test_lifespan_shutdown_raise_error(
 ):
     # mock function to trigger except
 
-    async def raise_error(*, jobsV2: list[int], logger_name: str):
+    async def raise_error(*, jobs: list[int], logger_name: str):
         raise ValueError("ERROR")
 
     monkeypatch.setattr(
@@ -143,6 +141,6 @@ async def test_lifespan_slurm_ssh(override_settings_factory, db):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     app = FastAPI()
     async with lifespan(app):
-        assert len(app.state.jobsV2) == 0
+        assert len(app.state.jobs) == 0
         assert isinstance(app.state.fractal_ssh_list, FractalSSHList)
         assert app.state.fractal_ssh_list.size == 0

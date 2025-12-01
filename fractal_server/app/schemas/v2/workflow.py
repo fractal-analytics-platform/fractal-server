@@ -5,29 +5,29 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.app.schemas.v2.project import ProjectReadV2
-from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskExportV2
-from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskImportV2
-from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskReadV2
+from fractal_server.app.schemas.v2.project import ProjectRead
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskExport
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskImport
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskRead
 from fractal_server.app.schemas.v2.workflowtask import (
-    WorkflowTaskReadV2WithWarning,
+    WorkflowTaskReadWithWarning,
 )
 from fractal_server.types import ListUniqueNonNegativeInt
 from fractal_server.types import NonEmptyStr
 
 
-class WorkflowCreateV2(BaseModel):
+class WorkflowCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
 
 
-class WorkflowReadV2(BaseModel):
+class WorkflowRead(BaseModel):
     id: int
     name: str
     project_id: int
-    task_list: list[WorkflowTaskReadV2]
-    project: ProjectReadV2
+    task_list: list[WorkflowTaskRead]
+    project: ProjectRead
     timestamp_created: AwareDatetime
 
     @field_serializer("timestamp_created")
@@ -35,18 +35,18 @@ class WorkflowReadV2(BaseModel):
         return v.isoformat()
 
 
-class WorkflowReadV2WithWarnings(WorkflowReadV2):
-    task_list: list[WorkflowTaskReadV2WithWarning]
+class WorkflowReadWithWarnings(WorkflowRead):
+    task_list: list[WorkflowTaskReadWithWarning]
 
 
-class WorkflowUpdateV2(BaseModel):
+class WorkflowUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
 
 
-class WorkflowImportV2(BaseModel):
+class WorkflowImport(BaseModel):
     """
     Class for `Workflow` import.
 
@@ -56,10 +56,10 @@ class WorkflowImportV2(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     name: NonEmptyStr
-    task_list: list[WorkflowTaskImportV2]
+    task_list: list[WorkflowTaskImport]
 
 
-class WorkflowExportV2(BaseModel):
+class WorkflowExport(BaseModel):
     """
     Class for `Workflow` export.
 
@@ -68,4 +68,4 @@ class WorkflowExportV2(BaseModel):
     """
 
     name: str
-    task_list: list[WorkflowTaskExportV2]
+    task_list: list[WorkflowTaskExport]

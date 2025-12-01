@@ -22,17 +22,17 @@ async def test_task_query(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": True}) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
 
-        task1 = await task_factory_v2(
+        task1 = await task_factory(
             user_id=user.id,
             name="Foo",
             source="xxx",
@@ -40,7 +40,7 @@ async def test_task_query(
             modality="HCS",
             authors="Name1 Surname1,Name2 Surname2...",
         )
-        task2 = await task_factory_v2(
+        task2 = await task_factory(
             user_id=user.id,
             name="abcdef",
             source="yyy",
@@ -48,7 +48,7 @@ async def test_task_query(
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
         )
-        task3 = await task_factory_v2(
+        task3 = await task_factory(
             user_id=user.id, index=3, source="source3", modality="EM"
         )
 

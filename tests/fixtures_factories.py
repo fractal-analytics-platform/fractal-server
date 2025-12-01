@@ -38,7 +38,7 @@ from fractal_server.urls import normalize_url
 
 
 @pytest.fixture
-async def project_factory_v2(db):
+async def project_factory(db):
     """
     Factory that adds a ProjectV2 to the database
     """
@@ -79,12 +79,12 @@ async def project_factory_v2(db):
 
 
 @pytest.fixture
-async def dataset_factory_v2(db: AsyncSession, tmp_path):
+async def dataset_factory(db: AsyncSession, tmp_path):
     """
     Insert DatasetV2 in db
     """
 
-    async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
+    async def __dataset_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
             name="My Dataset",
             project_id=1,
@@ -112,11 +112,11 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
         await db.refresh(_dataset)
         return _dataset
 
-    return __dataset_factory_v2
+    return __dataset_factory
 
 
 @pytest.fixture
-async def workflow_factory_v2(db: AsyncSession):
+async def workflow_factory(db: AsyncSession):
     """
     Insert WorkflowV2 in db
     """
@@ -147,7 +147,7 @@ async def workflow_factory_v2(db: AsyncSession):
 
 
 @pytest.fixture
-async def job_factory_v2(db: AsyncSession):
+async def job_factory(db: AsyncSession):
     """
     Insert JobV2 in db
     """
@@ -216,7 +216,7 @@ async def job_factory_v2(db: AsyncSession):
 
 
 @pytest.fixture
-async def task_factory_v2(db: AsyncSession):
+async def task_factory(db: AsyncSession):
     """
     Insert TaskV2 in db
     """
@@ -330,7 +330,7 @@ async def task_factory_v2(db: AsyncSession):
 
 
 @pytest.fixture
-async def workflowtask_factory_v2(db: AsyncSession):
+async def workflowtask_factory(db: AsyncSession):
     """
     Insert workflowtaskv2 in db
     """

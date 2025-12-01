@@ -6,8 +6,8 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import FractalUploadedFile
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -184,7 +184,7 @@ def collect_ssh_pixi(
                     logger.info("installing - START")
 
                     # Set status to ONGOING and refresh logs
-                    activity.status = TaskGroupActivityStatusV2.ONGOING
+                    activity.status = TaskGroupActivityStatus.ONGOING
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
@@ -195,7 +195,7 @@ def collect_ssh_pixi(
                         script_dir_remote=script_dir_remote,
                         prefix=(
                             f"{int(time.time())}_"
-                            f"{TaskGroupActivityActionV2.COLLECT}"
+                            f"{TaskGroupActivityAction.COLLECT}"
                         ),
                         logger_name=LOGGER_NAME,
                         fractal_ssh=fractal_ssh,
@@ -327,7 +327,7 @@ def collect_ssh_pixi(
 
                     # Finalize (write metadata to DB)
                     logger.info("finalising - START")
-                    activity.status = TaskGroupActivityStatusV2.OK
+                    activity.status = TaskGroupActivityStatus.OK
                     activity.timestamp_ended = get_timestamp()
                     activity = add_commit_refresh(obj=activity, db=db)
                     logger.info("finalising - END")

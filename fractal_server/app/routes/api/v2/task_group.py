@@ -24,11 +24,11 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatusV2
-from fractal_server.app.schemas.v2 import TaskGroupActivityV2Read
-from fractal_server.app.schemas.v2 import TaskGroupReadV2
-from fractal_server.app.schemas.v2 import TaskGroupUpdateV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupRead
+from fractal_server.app.schemas.v2 import TaskGroupUpdate
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_user_resource_id
@@ -62,17 +62,17 @@ def _version_sort_key(
         return (1, task_group.version)
 
 
-@router.get("/activity/", response_model=list[TaskGroupActivityV2Read])
+@router.get("/activity/", response_model=list[TaskGroupActivityRead])
 async def get_task_group_activity_list(
     task_group_activity_id: int | None = None,
     taskgroupv2_id: int | None = None,
     pkg_name: str | None = None,
-    status: TaskGroupActivityStatusV2 | None = None,
-    action: TaskGroupActivityActionV2 | None = None,
+    status: TaskGroupActivityStatus | None = None,
+    action: TaskGroupActivityAction | None = None,
     timestamp_started_min: AwareDatetime | None = None,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupActivityV2Read]:
+) -> list[TaskGroupActivityRead]:
     stm = select(TaskGroupActivityV2).where(
         TaskGroupActivityV2.user_id == user.id
     )
@@ -98,13 +98,13 @@ async def get_task_group_activity_list(
 
 @router.get(
     "/activity/{task_group_activity_id}/",
-    response_model=TaskGroupActivityV2Read,
+    response_model=TaskGroupActivityRead,
 )
 async def get_task_group_activity(
     task_group_activity_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityV2Read:
+) -> TaskGroupActivityRead:
     activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
 
     if activity is None:
@@ -124,14 +124,14 @@ async def get_task_group_activity(
     return activity
 
 
-@router.get("/", response_model=list[tuple[str, list[TaskGroupReadV2]]])
+@router.get("/", response_model=list[tuple[str, list[TaskGroupRead]]])
 async def get_task_group_list(
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
     args_schema: bool = True,
-) -> list[tuple[str, list[TaskGroupReadV2]]]:
+) -> list[tuple[str, list[TaskGroupRead]]]:
     """
     Get all accessible TaskGroups
     """
@@ -190,12 +190,12 @@ async def get_task_group_list(
     return grouped_result
 
 
-@router.get("/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.get("/{task_group_id}/", response_model=TaskGroupRead)
 async def get_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupRead:
     """
     Get single TaskGroup
     """
@@ -207,13 +207,13 @@ async def get_task_group(
     return task_group
 
 
-@router.patch("/{task_group_id}/", response_model=TaskGroupReadV2)
+@router.patch("/{task_group_id}/", response_model=TaskGroupRead)
 async def patch_task_group(
     task_group_id: int,
-    task_group_update: TaskGroupUpdateV2,
+    task_group_update: TaskGroupUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadV2:
+) -> TaskGroupRead:
     """
     Patch single TaskGroup
     """

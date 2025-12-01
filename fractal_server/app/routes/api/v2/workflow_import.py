@@ -19,11 +19,11 @@ from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
-from fractal_server.app.schemas.v2 import TaskImportV2
-from fractal_server.app.schemas.v2 import TaskImportV2Legacy
-from fractal_server.app.schemas.v2 import WorkflowImportV2
-from fractal_server.app.schemas.v2 import WorkflowReadV2WithWarnings
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import TaskImport
+from fractal_server.app.schemas.v2 import TaskImportLegacy
+from fractal_server.app.schemas.v2 import WorkflowImport
+from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.logger import set_logger
 
@@ -101,7 +101,7 @@ async def _get_task_by_source(
 
 async def _get_task_by_taskimport(
     *,
-    task_import: TaskImportV2,
+    task_import: TaskImport,
     task_groups_list: list[TaskGroupV2],
     user_id: int,
     default_group_id: int | None,
@@ -207,15 +207,15 @@ async def _get_task_by_taskimport(
 
 @router.post(
     "/project/{project_id}/workflow/import/",
-    response_model=WorkflowReadV2WithWarnings,
+    response_model=WorkflowReadWithWarnings,
     status_code=status.HTTP_201_CREATED,
 )
 async def import_workflow(
     project_id: int,
-    workflow_import: WorkflowImportV2,
+    workflow_import: WorkflowImport,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadV2WithWarnings:
+) -> WorkflowReadWithWarnings:
     """
     Import an existing workflow into a project and create required objects.
     """
@@ -246,7 +246,7 @@ async def import_workflow(
     list_task_ids = []
     for wf_task in workflow_import.task_list:
         task_import = wf_task.task
-        if isinstance(task_import, TaskImportV2Legacy):
+        if isinstance(task_import, TaskImportLegacy):
             task_id = await _get_task_by_source(
                 source=task_import.source,
                 task_groups_list=task_group_list,
@@ -264,7 +264,7 @@ async def import_workflow(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Could not find a task matching with {wf_task.task}.",
             )
-        new_wf_task = WorkflowTaskCreateV2(
+        new_wf_task = WorkflowTaskCreate(
             **wf_task.model_dump(exclude_none=True, exclude={"task"})
         )
         list_wf_tasks.append(new_wf_task)

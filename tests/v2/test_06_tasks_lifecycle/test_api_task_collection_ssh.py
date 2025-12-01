@@ -75,10 +75,10 @@ async def test_task_collection_ssh_from_pypi(
         assert res.status_code == 200
         task_group_activity = res.json()
         assert task_group_activity["status"] == "OK"
-        task_groupv2_id = task_group_activity["taskgroupv2_id"]
+        task_group_id = task_group_activity["taskgroupv2_id"]
         # Check env_info attribute in TaskGroupV2
         db.expunge_all()
-        task_group = await db.get(TaskGroupV2, task_groupv2_id)
+        task_group = await db.get(TaskGroupV2, task_group_id)
         assert f"testing-tasks-mock=={package_version}" in task_group.env_info
         # Check venv_size and venv_file_number in TaskGroupV2
         assert task_group.venv_size_in_kB is not None

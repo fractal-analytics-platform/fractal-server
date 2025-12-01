@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 
 PREFIX = "api/v2"
 
@@ -40,7 +40,7 @@ async def add_task(
     return res.json()
 
 
-async def test_post_workflow(db, client, MockCurrentUser, project_factory_v2):
+async def test_post_workflow(db, client, MockCurrentUser, project_factory):
     async with MockCurrentUser() as user:
         project_id = None
         res = await client.post(
@@ -54,8 +54,8 @@ async def test_post_workflow(db, client, MockCurrentUser, project_factory_v2):
         )
         assert res.status_code == 404  # project does not exist
 
-        project1 = await project_factory_v2(user)
-        project2 = await project_factory_v2(user)
+        project1 = await project_factory(user)
+        project2 = await project_factory(user)
         workflow = dict(name="My Workflow")
 
         res = await client.post(
@@ -81,11 +81,11 @@ async def test_post_workflow(db, client, MockCurrentUser, project_factory_v2):
 
 
 async def test_delete_workflow(
-    project_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    dataset_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    job_factory,
     db,
     client,
     MockCurrentUser,
@@ -98,7 +98,7 @@ async def test_delete_workflow(
     """
     async with MockCurrentUser() as user:
         # Create project
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
         p_id = project.id
         workflow = dict(name="My Workflow")
 
@@ -109,7 +109,7 @@ async def test_delete_workflow(
         wf_id = res.json()["id"]
 
         # Create a task
-        task = await task_factory_v2(user_id=user.id, name="task1")
+        task = await task_factory(user_id=user.id, name="task1")
 
         # Add a dummy task to workflow
         res = await client.post(
@@ -141,10 +141,10 @@ async def test_delete_workflow(
         assert len(res) == 0
 
         # Assert you cannot delete a Workflow linked to an ongoing Job
-        wf_deletable_1 = await workflow_factory_v2(project_id=project.id)
-        wf_deletable_2 = await workflow_factory_v2(project_id=project.id)
-        wf_not_deletable_1 = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="task2")
+        wf_deletable_1 = await workflow_factory(project_id=project.id)
+        wf_deletable_2 = await workflow_factory(project_id=project.id)
+        wf_not_deletable_1 = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="task2")
         await _workflow_insert_task(
             workflow_id=wf_deletable_1.id, task_id=task.id, db=db
         )
@@ -156,25 +156,25 @@ async def test_delete_workflow(
             task_id=task.id,
             db=db,
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
         payload = dict(
             project_id=project.id,
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
-        j1 = await job_factory_v2(
+        j1 = await job_factory(
             workflow_id=wf_deletable_1.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
             **payload,
         )
-        j2 = await job_factory_v2(
+        j2 = await job_factory(
             workflow_id=wf_deletable_2.id,
-            status=JobStatusTypeV2.FAILED,
+            status=JobStatusType.FAILED,
             **payload,
         )
-        await job_factory_v2(
+        await job_factory(
             workflow_id=wf_not_deletable_1.id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             **payload,
         )
         res = await client.delete(
@@ -200,9 +200,9 @@ async def test_delete_workflow(
 async def test_get_workflow(
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
     db,
 ):
     """
@@ -213,10 +213,10 @@ async def test_get_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, name="1")
-        t2 = await task_factory_v2(user_id=user_A_id, name="2")
+        t1 = await task_factory(user_id=user_A_id, name="1")
+        t2 = await task_factory(user_id=user_A_id, name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, name="3")
+        t3 = await task_factory(user_id=user_B.id, name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -226,12 +226,12 @@ async def test_get_workflow(
     await db.commit()
 
     async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
-        project = await project_factory_v2(user_A)
+        project = await project_factory(user_A)
         p_id = project.id
 
         # Create workflow
         WORKFLOW_NAME = "My Workflow"
-        wf = await workflow_factory_v2(project_id=p_id, name=WORKFLOW_NAME)
+        wf = await workflow_factory(project_id=p_id, name=WORKFLOW_NAME)
         wf_id = wf.id
 
         for task in [t1, t2, t3]:
@@ -267,7 +267,7 @@ async def test_get_workflow(
 
 
 async def test_get_project_workflows(
-    db, client, MockCurrentUser, project_factory_v2
+    db, client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a Project containing three Workflows
@@ -276,8 +276,8 @@ async def test_get_project_workflows(
     THEN the list of all its Workflows is returned
     """
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        other_project = await project_factory_v2(user)
+        project = await project_factory(user)
+        other_project = await project_factory(user)
         workflow1 = {"name": "WF1"}
         workflow2 = {"name": "WF2"}
         workflow3 = {"name": "WF3"}
@@ -307,7 +307,7 @@ async def test_get_project_workflows(
 
 
 async def test_patch_workflow(
-    client, MockCurrentUser, project_factory_v2, db, task_factory_v2
+    client, MockCurrentUser, project_factory, db, task_factory
 ):
     """
     GIVEN a Workflow
@@ -317,10 +317,10 @@ async def test_patch_workflow(
     # Create several kinds of tasks
     async with MockCurrentUser() as user_A:
         user_A_id = user_A.id
-        t1 = await task_factory_v2(user_id=user_A_id, name="1")
-        t2 = await task_factory_v2(user_id=user_A_id, name="2")
+        t1 = await task_factory(user_id=user_A_id, name="1")
+        t2 = await task_factory(user_id=user_A_id, name="2")
     async with MockCurrentUser() as user_B:
-        t3 = await task_factory_v2(user_id=user_B.id, name="3")
+        t3 = await task_factory(user_id=user_B.id, name="3")
     tg3 = await db.get(TaskGroupV2, t3.taskgroupv2_id)
     tg2 = await db.get(TaskGroupV2, t2.taskgroupv2_id)
     tg3.user_group_id = None
@@ -330,7 +330,7 @@ async def test_patch_workflow(
     await db.commit()
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
         # POST a Workflow with name `WF`
         res = await client.post(
@@ -386,11 +386,11 @@ async def test_patch_workflow(
 async def test_delete_workflow_with_job(
     client,
     MockCurrentUser,
-    project_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
+    project_factory,
+    job_factory,
+    task_factory,
+    workflow_factory,
+    dataset_factory,
     tmp_path,
     db,
 ):
@@ -400,22 +400,22 @@ async def test_delete_workflow_with_job(
     THEN Job.workflow_id is set to None
     """
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
         # Create a workflow and a job in relationship with it
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(user_id=user.id, name="1")
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="1")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
 
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
 
         assert job.workflow_id == workflow.id
@@ -432,14 +432,14 @@ async def test_delete_workflow_with_job(
 async def test_workflow_type_filters_flow(
     client,
     MockCurrentUser,
-    task_factory_v2,
-    project_factory_v2,
-    workflow_factory_v2,
+    task_factory,
+    project_factory,
+    workflow_factory,
     db,
 ):
     async with MockCurrentUser() as user:
-        proj = await project_factory_v2(user)
-        wf = await workflow_factory_v2(project_id=proj.id)
+        proj = await project_factory(user)
+        wf = await workflow_factory(project_id=proj.id)
 
         # FAILURE due to empty workflow
         res = await client.get(
@@ -449,11 +449,9 @@ async def test_workflow_type_filters_flow(
         assert "Workflow has no tasks" in str(res.json())
 
         # Add a workflow task
-        task_converter = await task_factory_v2(
-            user_id=user.id, name="converter"
-        )
-        task_cellpose = await task_factory_v2(user_id=user.id, name="cellpose")
-        task_MIP = await task_factory_v2(
+        task_converter = await task_factory(user_id=user.id, name="converter")
+        task_cellpose = await task_factory(user_id=user.id, name="cellpose")
+        task_MIP = await task_factory(
             user_id=user.id,
             name="mip",
             input_types={"is_3D": True},

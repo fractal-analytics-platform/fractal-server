@@ -11,9 +11,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
+from fractal_server.app.schemas.v2 import WorkflowTaskCreate
+from fractal_server.app.schemas.v2 import WorkflowTaskRead
+from fractal_server.app.schemas.v2 import WorkflowTaskUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 from ._aux_functions import _get_workflow_check_access
@@ -28,17 +28,17 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=WorkflowTaskReadV2,
+    response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflowtask(
     project_id: int,
     workflow_id: int,
     task_id: int,
-    wftask: WorkflowTaskCreateV2,
+    wftask: WorkflowTaskCreate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskReadV2 | None:
+) -> WorkflowTaskRead | None:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -100,7 +100,7 @@ async def create_workflowtask(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskReadV2,
+    response_model=WorkflowTaskRead,
 )
 async def read_workflowtask(
     project_id: int,
@@ -122,16 +122,16 @@ async def read_workflowtask(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskReadV2,
+    response_model=WorkflowTaskRead,
 )
 async def update_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    workflow_task_update: WorkflowTaskUpdateV2,
+    workflow_task_update: WorkflowTaskUpdate,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskReadV2 | None:
+) -> WorkflowTaskRead | None:
     """
     Edit a WorkflowTask of a Workflow
     """

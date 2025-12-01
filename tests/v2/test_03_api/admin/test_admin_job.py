@@ -15,7 +15,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.aux._runner import _backend_supports_shutdown
-from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -28,22 +28,20 @@ async def test_view_job(
     client,
     MockCurrentUser,
     tmp_path,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
+    job_factory,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
 
-        task = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
-        )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="task", source="source")
+        dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=task.id, db=db
@@ -52,7 +50,7 @@ async def test_view_job(
             workflow_id=workflow2.id, task_id=task.id, db=db
         )
 
-        job1 = await job_factory_v2(
+        job1 = await job_factory(
             working_dir=f"{tmp_path.as_posix()}/aaaa1111",
             working_dir_user=f"{tmp_path.as_posix()}/aaaa2222",
             project_id=project.id,
@@ -62,7 +60,7 @@ async def test_view_job(
             start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
         )
 
-        await job_factory_v2(
+        await job_factory(
             working_dir=f"{tmp_path.as_posix()}/bbbb1111",
             working_dir_user=f"{tmp_path.as_posix()}/bbbb2222",
             project_id=project.id,
@@ -191,22 +189,20 @@ async def test_view_single_job(
     client,
     MockCurrentUser,
     tmp_path,
-    project_factory_v2,
-    workflow_factory_v2,
-    dataset_factory_v2,
-    task_factory_v2,
-    job_factory_v2,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
+    job_factory,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project = await project_factory_v2(user)
+        project = await project_factory(user)
 
-        workflow1 = await workflow_factory_v2(project_id=project.id)
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
 
-        task = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
-        )
-        dataset = await dataset_factory_v2(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="task", source="source")
+        dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=task.id, db=db
@@ -215,7 +211,7 @@ async def test_view_single_job(
             workflow_id=workflow2.id, task_id=task.id, db=db
         )
 
-        job = await job_factory_v2(
+        job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=dataset.id,
@@ -247,42 +243,40 @@ async def test_view_single_job(
 
 async def test_patch_job(
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    task_factory,
     client,
     registered_superuser_client,
     db,
     tmp_path,
 ):
-    ORIGINAL_STATUS = JobStatusTypeV2.SUBMITTED
-    NEW_STATUS = JobStatusTypeV2.FAILED
+    ORIGINAL_STATUS = JobStatusType.SUBMITTED
+    NEW_STATUS = JobStatusType.FAILED
 
     async with MockCurrentUser() as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        task = await task_factory_v2(
-            user_id=user.id, name="task", source="source"
-        )
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id, name="task", source="source")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(project_id=project.id)
-        job = await job_factory_v2(
+        dataset = await dataset_factory(project_id=project.id)
+        job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
             status=ORIGINAL_STATUS,
         )
-        job_done = await job_factory_v2(
+        job_done = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusTypeV2.DONE,
+            status=JobStatusType.DONE,
         )
 
         hr = HistoryRun(
@@ -413,24 +407,24 @@ async def test_stop_job_slurm(
     MockCurrentUser,
     client,
     db,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
     tmp_path,
     override_settings_factory,
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
     async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        dataset = await dataset_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        dataset = await dataset_factory(project_id=project.id)
         job = JobV2(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusTypeV2.SUBMITTED,
+            status=JobStatusType.SUBMITTED,
             user_email="fake@example.org",
             dataset_dump={},
             workflow_dump={},
@@ -457,24 +451,24 @@ async def test_stop_job_slurm(
 async def test_download_job_logs(
     client,
     MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    job_factory_v2,
-    task_factory_v2,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    task_factory,
     db,
     tmp_path,
 ):
     async with MockCurrentUser() as user:
-        prj = await project_factory_v2(user)
-        dataset = await dataset_factory_v2(project_id=prj.id, name="dataset")
-        workflow = await workflow_factory_v2(project_id=prj.id)
-        task = await task_factory_v2(user_id=user.id)
+        prj = await project_factory(user)
+        dataset = await dataset_factory(project_id=prj.id, name="dataset")
+        workflow = await workflow_factory(project_id=prj.id)
+        task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         working_dir = (tmp_path / "working_dir_for_zipping").as_posix()
-        job = await job_factory_v2(
+        job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,
             working_dir=working_dir,

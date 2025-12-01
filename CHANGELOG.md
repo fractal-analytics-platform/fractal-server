@@ -26,6 +26,8 @@ The main contents of this release are the introduction of the project sharing an
 * Settings:
     * Drop `DataSettings` (\#3031).
     * Reduce API logging level for some endpoints (\#3010).
+* Internal:
+    * Remove the "V2" label from names of internal schemas and API route tags (\#3037).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
 * Dependencies:

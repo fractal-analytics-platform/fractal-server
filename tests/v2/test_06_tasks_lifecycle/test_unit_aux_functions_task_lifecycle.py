@@ -6,16 +6,16 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     check_no_related_workflowtask,
 )
-from fractal_server.app.schemas.v2 import TaskGroupV2OriginEnum
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 
 
 async def test_check_no_related_workflowtask(
     db,
     client,
     MockCurrentUser,
-    project_factory_v2,
-    workflow_factory_v2,
-    workflowtask_factory_v2,
+    project_factory,
+    workflow_factory,
+    workflowtask_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
@@ -26,7 +26,7 @@ async def test_check_no_related_workflowtask(
         )
         task_group = TaskGroupV2(
             user_id=user.id,
-            origin=TaskGroupV2OriginEnum.OTHER,
+            origin=TaskGroupOriginEnum.OTHER,
             pkg_name="pkg",
             task_list=[task1, task2],
             resource_id=resource.id,
@@ -36,10 +36,10 @@ async def test_check_no_related_workflowtask(
 
         await check_no_related_workflowtask(task_group=task_group, db=db)
 
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
 
-        await workflowtask_factory_v2(
+        await workflowtask_factory(
             workflow_id=workflow.id, task_id=task_group.task_list[-1].id
         )
 

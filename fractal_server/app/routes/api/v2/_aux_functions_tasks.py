@@ -27,7 +27,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
-from fractal_server.app.schemas.v2 import TaskGroupActivityActionV2
+from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.images.tools import merge_type_filters
 from fractal_server.logger import set_logger
 
@@ -252,7 +252,7 @@ async def _get_collection_task_group_activity_status_message(
     res = await db.execute(
         select(TaskGroupActivityV2)
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
-        .where(TaskGroupActivityV2.action == TaskGroupActivityActionV2.COLLECT)
+        .where(TaskGroupActivityV2.action == TaskGroupActivityAction.COLLECT)
     )
     task_group_activity_list = res.scalars().all()
     if len(task_group_activity_list) > 1:

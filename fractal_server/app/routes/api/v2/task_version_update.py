@@ -19,8 +19,8 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import TaskType
-from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
-from fractal_server.app.schemas.v2 import WorkflowTaskReplaceV2
+from fractal_server.app.schemas.v2 import WorkflowTaskRead
+from fractal_server.app.schemas.v2 import WorkflowTaskReplace
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 from ._aux_functions import _get_workflow_check_access
@@ -171,7 +171,7 @@ async def get_workflow_version_update_candidates(
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/replace-task/",
-    response_model=WorkflowTaskReadV2,
+    response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def replace_workflowtask(
@@ -179,10 +179,10 @@ async def replace_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     task_id: int,
-    replace: WorkflowTaskReplaceV2,
+    replace: WorkflowTaskReplace,
     user: UserOAuth = Depends(current_user_act_ver_prof),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskReadV2:
+) -> WorkflowTaskRead:
     # Get objects from database
     workflow_task, workflow = await _get_workflow_task_check_access(
         project_id=project_id,
