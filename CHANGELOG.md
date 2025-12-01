@@ -17,7 +17,7 @@ The main contents of this release are the introduction of the project sharing an
     * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
     * Add validator for paths to forbid parent-directory references (\#3031).
 * App:
-    * Add `SlowResponseMiddleware` middleware (\#3035).
+    * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
 * Database:
