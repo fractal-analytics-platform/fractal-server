@@ -128,7 +128,7 @@ async def patch_user(
                 for key, value_list in less_privileged.items()
             ):
                 raise HTTPException(
-                    status_code=422,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="Project dir in use in some Dataset.",
                 )
 
