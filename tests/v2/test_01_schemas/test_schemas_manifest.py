@@ -145,7 +145,7 @@ def test_ManifestV2():
                 non_parallel_schema,
             ],
         )
-    assert "ManifestV2 has has_args_schemas=True" in msg(e)
+    assert "Manifest has has_args_schemas=True" in msg(e)
 
     # 3: compound_just_parallel_schemas
     with pytest.raises(ValidationError) as e:
@@ -158,7 +158,7 @@ def test_ManifestV2():
                 non_parallel_schema,
             ],
         )
-    assert "ManifestV2 has has_args_schemas=True" in msg(e)
+    assert "Manifest has has_args_schemas=True" in msg(e)
 
     # 4: compound_no_schemas
     with pytest.raises(ValidationError) as e:
@@ -171,7 +171,7 @@ def test_ManifestV2():
                 non_parallel_schema,
             ],
         )
-    assert "ManifestV2 has has_args_schemas=True" in msg(e)
+    assert "Manifest has has_args_schemas=True" in msg(e)
 
     # 5: parallel_no_schema
     with pytest.raises(ValidationError) as e:
@@ -184,7 +184,7 @@ def test_ManifestV2():
                 non_parallel_schema,
             ],
         )
-    assert "ManifestV2 has has_args_schemas=True" in msg(e)
+    assert "Manifest has has_args_schemas=True" in msg(e)
 
     # 6: non_parallel_no_schema
     with pytest.raises(ValidationError) as e:
@@ -197,7 +197,7 @@ def test_ManifestV2():
                 non_parallel_no_schema,
             ],
         )
-    assert "ManifestV2 has has_args_schemas=True" in msg(e)
+    assert "Manifest has has_args_schemas=True" in msg(e)
 
     # 7: Non-unique task names
     with pytest.raises(ValidationError) as e:
