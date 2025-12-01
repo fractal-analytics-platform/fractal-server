@@ -16,6 +16,7 @@ The main contents of this release are the introduction of the project sharing an
     * Reduce API logging level for some endpoints (\#3010).
     * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
     * Add validator for paths to forbid parent-directory references (\#3031).
+    * Review job-submission endpoint (\#3041).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
