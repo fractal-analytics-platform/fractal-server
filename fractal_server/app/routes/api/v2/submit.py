@@ -221,11 +221,12 @@ async def submit_job(
     await db.refresh(job)
 
     # Update TaskGroupV2.timestamp_last_used
-    stm_update = update(TaskGroupV2).where(
-        TaskGroupV2.id.in_(used_task_group_ids).values(
-            timestamp_last_used=job.start_timestamp
-        )
+    stm_update = (
+        update(TaskGroupV2)
+        .where(TaskGroupV2.id.in_(used_task_group_ids))
+        .values(timestamp_last_used=job.start_timestamp)
     )
+
     await db.execute(stm_update)
     await db.commit()
 
