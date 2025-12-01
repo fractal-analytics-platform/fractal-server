@@ -12,6 +12,7 @@ from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
@@ -105,7 +106,16 @@ async def patch_user(
                     LinkUserProjectV2.project_id == ProjectV2.id,
                 )
                 .where(LinkUserProjectV2.user_id == user_id)
+                .where(
+                    or_(
+                        *[
+                            DatasetV2.zarr_dir.startswith(path)
+                            for path in less_privileged.keys()
+                        ]
+                    )
+                )
             )
+
             if any(
                 (
                     Path(zarr_dir).is_relative_to(key)
