@@ -3,7 +3,7 @@ Auxiliary functions to get object from the database or perform simple checks
 """
 
 from typing import Any
-from typing import Literal
+from typing import TypedDict
 
 from fastapi import HTTPException
 from fastapi import status
@@ -252,6 +252,11 @@ async def _check_project_exists(
         )
 
 
+class DatasetOrProject(TypedDict):
+    dataset: DatasetV2
+    project: ProjectV2
+
+
 async def _get_dataset_check_access(
     *,
     project_id: int,
@@ -259,7 +264,7 @@ async def _get_dataset_check_access(
     user_id: int,
     required_permissions: ProjectPermissions,
     db: AsyncSession,
-) -> dict[Literal["dataset", "project"], DatasetV2 | ProjectV2]:
+) -> DatasetOrProject:
     """
     Get a dataset and a project, after access control on the project
 
@@ -304,6 +309,11 @@ async def _get_dataset_check_access(
     return dict(dataset=dataset, project=project)
 
 
+class JobOrProject(TypedDict):
+    job: JobV2
+    project: ProjectV2
+
+
 async def _get_job_check_access(
     *,
     project_id: int,
@@ -311,7 +321,7 @@ async def _get_job_check_access(
     user_id: int,
     required_permissions: ProjectPermissions,
     db: AsyncSession,
-) -> dict[Literal["job", "project"], JobV2 | ProjectV2]:
+) -> JobOrProject:
     """
     Get a job and a project, after access control on the project
 
