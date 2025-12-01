@@ -77,7 +77,7 @@ class ValidResourceBase(BaseModel):
     jobs_runner_config: dict[NonEmptyStr, Any]
     jobs_poll_interval: int = 5
 
-    prevent_new_submissions: bool = True
+    prevent_new_submissions: bool = False
 
     @model_validator(mode="after")
     def _pixi_slurm_config(self) -> Self:
