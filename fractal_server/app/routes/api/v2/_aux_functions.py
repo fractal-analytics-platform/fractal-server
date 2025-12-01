@@ -309,7 +309,7 @@ async def _get_dataset_check_access(
     return dict(dataset=dataset, project=project)
 
 
-class JobOrProject(TypedDict):
+class JobAndProject(TypedDict):
     job: JobV2
     project: ProjectV2
 
@@ -321,7 +321,7 @@ async def _get_job_check_access(
     user_id: int,
     required_permissions: ProjectPermissions,
     db: AsyncSession,
-) -> JobOrProject:
+) -> JobAndProject:
     """
     Get a job and a project, after access control on the project
 
