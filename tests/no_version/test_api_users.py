@@ -1,6 +1,12 @@
 from devtools import debug
+from sqlmodel import select
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import OAuthAccount
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2.dataset import DatasetV2
+from fractal_server.app.models.v2.project import ProjectV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
@@ -290,6 +296,89 @@ async def test_edit_users_as_superuser(
     assert res.status_code == 200
     users = res.json()
     assert len(users) == 0
+
+
+async def test_edit_user_project_dirs(
+    registered_superuser_client, local_resource_profile_db, db
+):
+    resource, profile = local_resource_profile_db
+
+    user = UserOAuth(
+        email="user@example.org",
+        hashed_password="12345",
+        project_dirs=["/a", "/b", "/c/d", "/e/f"],
+        is_active=True,
+        is_superuser=False,
+        is_verified=True,
+        profile_id=profile.id,
+        slurm_accounts=[],
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    project = ProjectV2(name="Project", resource_id=resource.id)
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    db.add(
+        LinkUserProjectV2(
+            project_id=project.id,
+            user_id=user.id,
+            is_owner=True,
+            is_verified=True,
+            permissions=ProjectPermissions.EXECUTE,
+        )
+    )
+    await db.commit()
+
+    db.add_all(
+        [
+            DatasetV2(
+                name=f"Dataset {i}",
+                project_id=project.id,
+                zarr_dir=f"{project_dir}/x",
+                images=[],
+            )
+            for i, project_dir in enumerate(user.project_dirs)
+        ]
+    )
+    await db.commit()
+
+    update = dict(project_dirs=["/a", "/c", "/e/f/x", "/e/f/y"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 422
+    assert res.json()["detail"] == "Project dir in use in some Dataset."
+
+    update = dict(project_dirs=["/a", "/b", "/c", "/e/f/x", "/e/f/y"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
+
+    update = dict(project_dirs=["/a", "/c", "/e/f/x"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 422
+    # delete the dataset
+    res = await db.execute(
+        select(DatasetV2).where(DatasetV2.zarr_dir == "/b/x")
+    )
+    dataset = res.scalars().one()
+    await db.delete(dataset)
+    await db.commit()
+    # now it works
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
 
 
 async def test_add_superuser(registered_superuser_client):
