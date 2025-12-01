@@ -454,7 +454,8 @@ async def _workflow_insert_task(
 
 
 async def clean_app_job_list(
-    db: AsyncSession, jobs_list: list[int]
+    db: AsyncSession,
+    jobs_list: list[int],
 ) -> list[int]:
     """
     Remove from a job list all jobs with status different from submitted.
@@ -466,12 +467,14 @@ async def clean_app_job_list(
     Return:
         List of IDs for submitted jobs.
     """
+    logger.info(f"[clean_app_job_list] START - {jobs_list=}.")
     stmt = select(JobV2).where(JobV2.id.in_(jobs_list))
     result = await db.execute(stmt)
     db_jobs_list = result.scalars().all()
     submitted_job_ids = [
         job.id for job in db_jobs_list if job.status == JobStatusType.SUBMITTED
     ]
+    logger.info(f"[clean_app_job_list] END - {submitted_job_ids=}.")
     return submitted_job_ids
 
 
