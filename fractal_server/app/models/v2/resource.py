@@ -45,11 +45,12 @@ class Resource(SQLModel, table=True):
     """
 
     prevent_new_submission: bool = Field(
+        default=False,
         sa_column=Column(
             BOOLEAN,
             server_default="false",
             nullable=False,
-        )
+        ),
     )
     """
     When set to true: Prevent new job submissions and stop execution of
