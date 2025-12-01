@@ -5,6 +5,7 @@ from typing import Self
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
+from sqlmodel import BOOLEAN
 from sqlmodel import CheckConstraint
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -41,6 +42,18 @@ class Resource(SQLModel, table=True):
     host: str | None = None
     """
     Address for ssh connections, when `type="slurm_ssh"`.
+    """
+
+    prevent_new_submission: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        )
+    )
+    """
+    When set to true: Prevent new job submissions and stop execution of
+    ongoing jobs as soon as the current task is complete.
     """
 
     jobs_local_dir: str
