@@ -729,7 +729,9 @@ async def test_dummy_invalid_output_non_parallel(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
     # case non-parallel
@@ -782,6 +784,7 @@ async def test_dummy_invalid_output_non_parallel(
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             job_id=job.id,
+            resource_id=resource.id,
             **execute_tasks_args,
         )
     res = await db.execute(
