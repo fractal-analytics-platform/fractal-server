@@ -226,7 +226,8 @@ def execute_tasks(
             resource = db.get(Resource, resource_id)
             if resource.prevent_new_submissions:
                 error_msg = (
-                    f"The '{resource.name}' resource is not currently active."
+                    f"Cannot run '{task.name}', since the '{resource.name}' "
+                    "resource is not currently active."
                 )
                 logger.info(error_msg)
                 update_status_of_history_run(
