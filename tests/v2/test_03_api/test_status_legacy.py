@@ -96,17 +96,3 @@ async def test_status_legacy(
                 str(wftask2.id): "submitted",
             }
         }
-
-        await job_factory(
-            project_id=project.id,
-            workflow_id=workflow.id,
-            dataset_id=dataset2.id,
-            status="submitted",
-            working_dir="/somewhere",
-        )
-        res = await client.get(
-            f"/api/v2/project/{project.id}/status-legacy/"
-            f"?dataset_id={dataset2.id}&workflow_id={workflow.id}"
-        )
-        assert res.status_code == 422
-        assert "linked to multiple active jobs" in res.json()["detail"]

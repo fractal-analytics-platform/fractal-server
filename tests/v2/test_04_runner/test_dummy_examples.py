@@ -938,6 +938,11 @@ async def test_status_based_submission(
         assert history_unit.status == HistoryUnitStatusWithUnset.FAILED
 
     # Case 1: Run and fail for no images (by requiring the DONE ones)
+    dataset = await dataset_factory(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
     job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,
@@ -962,6 +967,11 @@ async def test_status_based_submission(
     assert last_history_run.status == HistoryUnitStatus.FAILED
 
     # Case 1: Run and succeed for no images (by requiring the UNSET ones)
+    dataset = await dataset_factory(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=IMAGES,
+    )
     job = await job_factory(
         project_id=project.id,
         dataset_id=dataset.id,

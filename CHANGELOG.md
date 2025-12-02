@@ -4,6 +4,8 @@
 
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
 
+> WARNING: Before upgrading to this version, make sure that no jobs are marked as submitted in the current database tables.
+
 The main contents of this release are the introduction of the project sharing and a review of the authorization scheme for [`fractal-data`](https://github.com/fractal-analytics-platform/fractal-data).
 
 * API:
@@ -24,6 +26,7 @@ The main contents of this release are the introduction of the project sharing an
 * Database:
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
     * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
+    * Enforce max one submitted `JobV2` per `DatasetV2` (\#3044).
 * Settings:
     * Drop `DataSettings` (\#3031).
     * Reduce API logging level for some endpoints (\#3010).

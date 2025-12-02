@@ -33,7 +33,7 @@ from fractal_server.images.tools import filter_image_list
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_dataset_check_access
-from ._aux_functions import _get_submitted_job_or_none
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_access
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
@@ -90,11 +90,13 @@ async def get_workflow_tasks_statuses(
         db=db,
     )
 
-    running_job = await _get_submitted_job_or_none(
-        db=db,
-        dataset_id=dataset_id,
-        workflow_id=workflow_id,
+    res = await db.execute(
+        _get_submitted_jobs_statement()
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.workflow_id == workflow_id)
     )
+    running_job = res.scalars().one_or_none()
+
     if running_job is not None:
         running_wftasks = workflow.task_list[
             running_job.first_task_index : running_job.last_task_index + 1
