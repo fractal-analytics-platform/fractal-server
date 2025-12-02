@@ -1,12 +1,18 @@
+from pathlib import Path
+
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import asc
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2.dataset import DatasetV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.config import get_settings
@@ -177,4 +183,61 @@ async def _verify_user_belongs_to_group(
                     f"User {user_id} does not belong "
                     f"to UserGroup {user_group_id}"
                 ),
+            )
+
+
+async def _check_project_dirs_update(
+    old_project_dirs: list[str],
+    new_project_dirs: list[str],
+    user_id: int,
+    db: AsyncSession,
+) -> None:
+    less_privileged = {
+        path: [
+            new_path
+            for new_path in new_project_dirs
+            if Path(new_path).is_relative_to(path)
+        ]
+        for path in old_project_dirs
+        if not any(
+            Path(path).is_relative_to(new_path) for new_path in new_project_dirs
+        )
+    }
+    # E.g.
+    # user_to_patch.project_dirs = ["/a", "/b", "/c/d", "/e/f"]
+    # user_update.project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
+    # less_privileged == {"/b": [], "/e/f": ["/e/f/g1", "/e/f/g2"]}
+    if less_privileged:
+        res = await db.execute(
+            select(DatasetV2.zarr_dir)
+            .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
+            .join(
+                LinkUserProjectV2,
+                LinkUserProjectV2.project_id == ProjectV2.id,
+            )
+            .where(LinkUserProjectV2.user_id == user_id)
+            .where(
+                or_(
+                    *[
+                        DatasetV2.zarr_dir.startswith(path)
+                        for path in less_privileged.keys()
+                    ]
+                )
+            )
+        )
+
+        if any(
+            (
+                Path(zarr_dir).is_relative_to(key)
+                and all(
+                    not Path(zarr_dir).is_relative_to(value)
+                    for value in value_list
+                )
+            )
+            for zarr_dir in res.scalars().all()
+            for key, value_list in less_privileged.items()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Project dir in use in some Dataset.",
             )

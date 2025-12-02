@@ -2,8 +2,6 @@
 Definition of `/auth/users/` routes
 """
 
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -12,17 +10,13 @@ from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func
-from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import Profile
-from fractal_server.app.models.v2.dataset import DatasetV2
-from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user import UserUpdate
@@ -34,6 +28,7 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 from . import current_superuser_act
+from ._aux_auth import _check_project_dirs_update
 from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_user_with_groups
 
@@ -81,56 +76,12 @@ async def patch_user(
             )
 
     if user_update.project_dirs is not None:
-        less_privileged = {
-            path: [
-                new_path
-                for new_path in user_update.project_dirs
-                if Path(new_path).is_relative_to(path)
-            ]
-            for path in user_to_patch.project_dirs
-            if not any(
-                Path(path).is_relative_to(new_path)
-                for new_path in user_update.project_dirs
-            )
-        }
-        # E.g.
-        # user_to_patch.project_dirs = ["/a", "/b", "/c/d", "/e/f"]
-        # user_update.project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
-        # less_privileged == {"/b": [], "/e/f": ["/e/f/g1", "/e/f/g2"]}
-        if less_privileged:
-            res = await db.execute(
-                select(DatasetV2.zarr_dir)
-                .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
-                .join(
-                    LinkUserProjectV2,
-                    LinkUserProjectV2.project_id == ProjectV2.id,
-                )
-                .where(LinkUserProjectV2.user_id == user_id)
-                .where(
-                    or_(
-                        *[
-                            DatasetV2.zarr_dir.startswith(path)
-                            for path in less_privileged.keys()
-                        ]
-                    )
-                )
-            )
-
-            if any(
-                (
-                    Path(zarr_dir).is_relative_to(key)
-                    and all(
-                        not Path(zarr_dir).is_relative_to(value)
-                        for value in value_list
-                    )
-                )
-                for zarr_dir in res.scalars().all()
-                for key, value_list in less_privileged.items()
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail="Project dir in use in some Dataset.",
-                )
+        await _check_project_dirs_update(
+            old_project_dirs=user_to_patch.project_dirs,
+            new_project_dirs=user_update.project_dirs,
+            user_id=user_id,
+            db=db,
+        )
 
     # Modify user attributes
     try:
