@@ -187,6 +187,7 @@ async def _verify_user_belongs_to_group(
 
 
 async def _check_project_dirs_update(
+    *,
     old_project_dirs: list[str],
     new_project_dirs: list[str],
     user_id: int,
