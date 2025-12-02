@@ -1,8 +1,8 @@
-"""Add `prevent_new_submissions`
+"""add_prevent_new_submissions
 
-Revision ID: 1be9f71472cf
-Revises: 7910eed4cf97
-Create Date: 2025-12-01 16:22:05.337158
+Revision ID: 88270f589c9b
+Revises: f0702066b007
+Create Date: 2025-12-02 12:34:11.028259
 
 """
 
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "1be9f71472cf"
-down_revision = "7910eed4cf97"
+revision = "88270f589c9b"
+down_revision = "f0702066b007"
 branch_labels = None
 depends_on = None
 
@@ -25,7 +25,7 @@ def upgrade() -> None:
                 sa.BOOLEAN(),
                 server_default="false",
                 nullable=False,
-            ),
+            )
         )
 
     # ### end Alembic commands ###
