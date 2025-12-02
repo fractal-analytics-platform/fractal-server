@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -51,7 +52,7 @@ logger = set_logger(__name__)
     status_code=status.HTTP_202_ACCEPTED,
     response_model=JobRead,
 )
-async def apply_workflow(
+async def submit_job(
     project_id: int,
     workflow_id: int,
     dataset_id: int,
@@ -146,34 +147,6 @@ async def apply_workflow(
         db=db,
     )
 
-    # Check that no other job with the same dataset_id is SUBMITTED
-    stm = (
-        select(JobV2)
-        .where(JobV2.dataset_id == dataset_id)
-        .where(JobV2.status == JobStatusType.SUBMITTED)
-    )
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Dataset {dataset_id} is already in use in submitted job(s)."
-            ),
-        )
-
-    if job_create.slurm_account is not None:
-        if job_create.slurm_account not in user.slurm_accounts:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"SLURM account '{job_create.slurm_account}' is not "
-                    "among those available to the current user"
-                ),
-            )
-    else:
-        if len(user.slurm_accounts) > 0:
-            job_create.slurm_account = user.slurm_accounts[0]
-
     # User appropriate FractalSSH object
     if resource.type == ResourceType.SLURM_SSH:
         ssh_config = dict(
@@ -195,6 +168,35 @@ async def apply_workflow(
             )
     else:
         fractal_ssh = None
+
+    # Assign `job_create.slurm_account`
+    if job_create.slurm_account is not None:
+        if job_create.slurm_account not in user.slurm_accounts:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    f"SLURM account '{job_create.slurm_account}' is not "
+                    "among those available to the current user"
+                ),
+            )
+    else:
+        if len(user.slurm_accounts) > 0:
+            job_create.slurm_account = user.slurm_accounts[0]
+
+    # Check that no other job with the same dataset_id is SUBMITTED
+    stm = (
+        select(JobV2)
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.status == JobStatusType.SUBMITTED)
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Dataset {dataset_id} is already in use in submitted job(s)."
+            ),
+        )
 
     # Add new Job object to DB
     job = JobV2(
@@ -219,38 +221,31 @@ async def apply_workflow(
     await db.refresh(job)
 
     # Update TaskGroupV2.timestamp_last_used
-    res = await db.execute(
-        select(TaskGroupV2).where(TaskGroupV2.id.in_(used_task_group_ids))
+    await db.execute(
+        update(TaskGroupV2)
+        .where(TaskGroupV2.id.in_(used_task_group_ids))
+        .values(timestamp_last_used=job.start_timestamp)
     )
-    used_task_groups = res.scalars().all()
-    for used_task_group in used_task_groups:
-        used_task_group.timestamp_last_used = job.start_timestamp
-        db.add(used_task_group)
     await db.commit()
 
-    # Define server-side job directory
-    timestamp_string = job.start_timestamp.strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR_LOCAL = Path(resource.jobs_local_dir) / (
+    # Define `cache_dir`
+    cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
+
+    # Define server-side and user-side job directories
+    timestamp_string = job.start_timestamp.strftime(r"%Y%m%d_%H%M%S")
+    working_dir = Path(resource.jobs_local_dir) / (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )
-
-    # Define user-side job directory
-    cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
     match resource.type:
         case ResourceType.LOCAL:
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            working_dir_user = working_dir
         case ResourceType.SLURM_SUDO:
-            WORKFLOW_DIR_REMOTE = cache_dir / WORKFLOW_DIR_LOCAL.name
+            working_dir_user = cache_dir / working_dir.name
         case ResourceType.SLURM_SSH:
-            WORKFLOW_DIR_REMOTE = Path(
-                profile.jobs_remote_dir,
-                WORKFLOW_DIR_LOCAL.name,
-            )
-
-    # Update job folders in the db
-    job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
-    job.working_dir_user = WORKFLOW_DIR_REMOTE.as_posix()
+            working_dir_user = Path(profile.jobs_remote_dir, working_dir.name)
+    job.working_dir = working_dir.as_posix()
+    job.working_dir_user = working_dir_user.as_posix()
     await db.merge(job)
     await db.commit()
 
@@ -268,9 +263,7 @@ async def apply_workflow(
     )
     request.app.state.jobs.append(job.id)
     logger.info(
-        f"Current worker's pid is {os.getpid()}. "
-        f"Current status of worker job's list "
-        f"{request.app.state.jobs}"
+        f"Job {job.id}, worker with pid {os.getpid()}. "
+        f"Worker jobs list: {request.app.state.jobs}."
     )
-    await db.close()
     return job

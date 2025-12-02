@@ -4,6 +4,8 @@
 
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
 
+> WARNING: Before upgrading to this version, make sure that no jobs are marked as submitted in the current database tables.
+
 The main contents of this release are the introduction of the project sharing and a review of the authorization scheme for [`fractal-data`](https://github.com/fractal-analytics-platform/fractal-data).
 
 * API:
@@ -17,13 +19,15 @@ The main contents of this release are the introduction of the project sharing an
     * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
     * Add validator for paths to forbid parent-directory references (\#3031).
     * Add check to `PATCH /auth/users/{user_id}/` when patching `project_dirs` (\#3043).
+    * Review job-submission endpoint (\#3041).
 * App:
-    * Add `SlowResponseMiddleware` middleware (\#3035).
+    * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
 * Database:
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
     * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
+    * Enforce max one submitted `JobV2` per `DatasetV2` (\#3044).
 * Settings:
     * Drop `DataSettings` (\#3031).
     * Reduce API logging level for some endpoints (\#3010).

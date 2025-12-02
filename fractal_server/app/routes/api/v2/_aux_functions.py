@@ -3,11 +3,10 @@ Auxiliary functions to get object from the database or perform simple checks
 """
 
 from typing import Any
-from typing import Literal
+from typing import TypedDict
 
 from fastapi import HTTPException
 from fastapi import status
-from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
@@ -252,6 +251,11 @@ async def _check_project_exists(
         )
 
 
+class DatasetOrProject(TypedDict):
+    dataset: DatasetV2
+    project: ProjectV2
+
+
 async def _get_dataset_check_access(
     *,
     project_id: int,
@@ -259,7 +263,7 @@ async def _get_dataset_check_access(
     user_id: int,
     required_permissions: ProjectPermissions,
     db: AsyncSession,
-) -> dict[Literal["dataset", "project"], DatasetV2 | ProjectV2]:
+) -> DatasetOrProject:
     """
     Get a dataset and a project, after access control on the project
 
@@ -304,6 +308,11 @@ async def _get_dataset_check_access(
     return dict(dataset=dataset, project=project)
 
 
+class JobAndProject(TypedDict):
+    job: JobV2
+    project: ProjectV2
+
+
 async def _get_job_check_access(
     *,
     project_id: int,
@@ -311,7 +320,7 @@ async def _get_job_check_access(
     user_id: int,
     required_permissions: ProjectPermissions,
     db: AsyncSession,
-) -> dict[Literal["job", "project"], JobV2 | ProjectV2]:
+) -> JobAndProject:
     """
     Get a job and a project, after access control on the project
 
@@ -454,7 +463,8 @@ async def _workflow_insert_task(
 
 
 async def clean_app_job_list(
-    db: AsyncSession, jobs_list: list[int]
+    db: AsyncSession,
+    jobs_list: list[int],
 ) -> list[int]:
     """
     Remove from a job list all jobs with status different from submitted.
@@ -466,12 +476,14 @@ async def clean_app_job_list(
     Return:
         List of IDs for submitted jobs.
     """
+    logger.info(f"[clean_app_job_list] START - {jobs_list=}.")
     stmt = select(JobV2).where(JobV2.id.in_(jobs_list))
     result = await db.execute(stmt)
     db_jobs_list = result.scalars().all()
     submitted_job_ids = [
         job.id for job in db_jobs_list if job.status == JobStatusType.SUBMITTED
     ]
+    logger.info(f"[clean_app_job_list] END - {submitted_job_ids=}.")
     return submitted_job_ids
 
 
@@ -539,41 +551,6 @@ async def _get_workflowtask_or_404(
         )
     else:
         return wftask
-
-
-async def _get_submitted_job_or_none(
-    *,
-    dataset_id: int,
-    workflow_id: int,
-    db: AsyncSession,
-) -> JobV2 | None:
-    """
-    Get the submitted job for given dataset/workflow, if any.
-
-    This function also handles the invalid branch where more than one job
-    is found.
-
-    Args:
-        dataset_id:
-        workflow_id:
-        db:
-    """
-    res = await db.execute(
-        _get_submitted_jobs_statement()
-        .where(JobV2.dataset_id == dataset_id)
-        .where(JobV2.workflow_id == workflow_id)
-    )
-    try:
-        return res.scalars().one_or_none()
-    except MultipleResultsFound as e:
-        error_msg = (
-            f"Multiple running jobs found for {dataset_id=} and {workflow_id=}."
-        )
-        logger.error(f"{error_msg} Original error: {str(e)}.")
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=error_msg,
-        )
 
 
 async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:

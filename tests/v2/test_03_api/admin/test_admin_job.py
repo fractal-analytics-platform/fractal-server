@@ -66,6 +66,7 @@ async def test_view_job(
             project_id=project.id,
             log="log-b",
             dataset_id=dataset.id,
+            status=JobStatusType.DONE,
             workflow_id=workflow2.id,
             start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
             end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
@@ -134,7 +135,10 @@ async def test_view_job(
         assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/job/?status=submitted")
         assert res.status_code == 200
-        assert len(res.json()["items"]) == 2
+        assert len(res.json()["items"]) == 1
+        res = await client.get(f"{PREFIX}/job/?status=done")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
 
         # get jobs by [start/end]_timestamp_[min/max]
 
