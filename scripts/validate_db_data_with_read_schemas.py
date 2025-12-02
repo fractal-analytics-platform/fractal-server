@@ -1,7 +1,6 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
@@ -18,7 +17,6 @@ from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.v2 import DatasetRead
 from fractal_server.app.schemas.v2 import JobRead
-from fractal_server.app.schemas.v2 import LinkUserProjectRead
 from fractal_server.app.schemas.v2 import ProfileRead
 from fractal_server.app.schemas.v2 import ProjectRead
 from fractal_server.app.schemas.v2 import ResourceRead
@@ -155,15 +153,3 @@ with next(get_sync_db()) as db:
     for profile in sorted(profiles, key=lambda x: x.id):
         ProfileRead(**profile.model_dump())
         print(f"Profile {profile.id} validated")
-
-    # LINK USER-PROJECT
-    stm = select(LinkUserProjectV2)
-    links_userproject = db.execute(stm).scalars().all()
-    for link_userproject in sorted(
-        links_userproject, key=lambda x: (x.user_id, x.project_id)
-    ):
-        LinkUserProjectRead(**link_userproject.model_dump())
-        print(
-            f"Link User {link_userproject.user_id} "
-            f"Project {link_userproject.project_id} validated"
-        )
