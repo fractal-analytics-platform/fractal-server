@@ -4,6 +4,8 @@
 
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
 
+> WARNING: Before upgrading to this version, make sure that no jobs are marked as submitted in the current database tables.
+
 The main contents of this release are the introduction of the project sharing and a review of the authorization scheme for [`fractal-data`](https://github.com/fractal-analytics-platform/fractal-data).
 
 * API:
