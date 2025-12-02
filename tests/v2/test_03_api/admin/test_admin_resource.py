@@ -151,11 +151,13 @@ async def test_resource_api(
         # PUT one resource / success
         NEW_NAME = "A new name"
         valid_new_resource["name"] = NEW_NAME
+        valid_new_resource["prevent_new_submissions"] = True
         res = await client.put(
             f"/admin/v2/resource/{resource_id}/", json=valid_new_resource
         )
         assert res.status_code == 200
         assert res.json()["name"] == NEW_NAME
+        assert res.json()["prevent_new_submissions"] is True
 
         # DELETE one resource / failure
         res = await client.post(
