@@ -197,26 +197,22 @@ async def _check_project_dirs_update(
     Raises 422 if by replacing user's `project_dirs` with new ones we are
     removing the access to a `zarr_dir` used by some dataset.
     """
-    # Create a dictionary describing which old project directories have *lost*
-    # privilege, e.g.:
+    # Create a list of all the old project dirs that will lose privileges.
+    # E.g.:
     #   old_project_dirs = ["/a", "/b", "/c/d", "/e/f"]
     #   new_project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
-    #   less_privileged == {"/b": [], "/e/f": ["/e/f/g1", "/e/f/g2"]}
-    less_privileged = {
-        old_project_dir: [
-            new_project_dir
-            for new_project_dir in new_project_dirs
-            if Path(new_project_dir).is_relative_to(old_project_dir)
-        ]
+    #   less_privileged == ["/b", "/e/f"]
+    less_privileged = [
+        old_project_dir
         for old_project_dir in old_project_dirs
-        if not any(
-            Path(old_project_dir).is_relative_to(new_project_dir)
+        if all(
+            not Path(old_project_dir).is_relative_to(new_project_dir)
             for new_project_dir in new_project_dirs
         )
-    }
+    ]
     if less_privileged:
-        # Query all `zarr_dir` linked to the user such that `zarr_dir` starts
-        # with one of the keys of `less_privileged`.
+        # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
+        # starts with one of the project dirs in `less_privileged`.
         res = await db.execute(
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
@@ -229,15 +225,14 @@ async def _check_project_dirs_update(
                 or_(
                     *[
                         DatasetV2.zarr_dir.startswith(old_project_dir)
-                        for old_project_dir in less_privileged.keys()
+                        for old_project_dir in less_privileged
                     ]
                 )
             )
         )
-
-        # Raise 422 if one of the query results is relative to a key `K` of
-        # `less_privileged` but its not relative to one of the paths in
-        # `less_privileged[K]`.
+        # Raise 422 if one of the query results is relative to a path in
+        # `less_privileged`, but its not relative to any path in
+        # `new_project_dirs`.
         if any(
             (
                 Path(zarr_dir).is_relative_to(old_project_dir)
@@ -247,7 +242,7 @@ async def _check_project_dirs_update(
                 )
             )
             for zarr_dir in res.scalars().all()
-            for old_project_dir, new_project_dirs in less_privileged.items()
+            for old_project_dir in less_privileged
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
