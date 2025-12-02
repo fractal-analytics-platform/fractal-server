@@ -193,19 +193,20 @@ async def _check_project_dirs_update(
     db: AsyncSession,
 ) -> None:
     less_privileged = {
-        path: [
-            new_path
-            for new_path in new_project_dirs
-            if Path(new_path).is_relative_to(path)
+        old_project_dir: [
+            new_project_dir
+            for new_project_dir in new_project_dirs
+            if Path(new_project_dir).is_relative_to(old_project_dir)
         ]
-        for path in old_project_dirs
+        for old_project_dir in old_project_dirs
         if not any(
-            Path(path).is_relative_to(new_path) for new_path in new_project_dirs
+            Path(old_project_dir).is_relative_to(new_project_dir)
+            for new_project_dir in new_project_dirs
         )
     }
     # E.g.
-    # user_to_patch.project_dirs = ["/a", "/b", "/c/d", "/e/f"]
-    # user_update.project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
+    # old_project_dirs = ["/a", "/b", "/c/d", "/e/f"]
+    # new_project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
     # less_privileged == {"/b": [], "/e/f": ["/e/f/g1", "/e/f/g2"]}
     if less_privileged:
         res = await db.execute(
@@ -228,14 +229,14 @@ async def _check_project_dirs_update(
 
         if any(
             (
-                Path(zarr_dir).is_relative_to(key)
+                Path(zarr_dir).is_relative_to(old_project_dir)
                 and all(
-                    not Path(zarr_dir).is_relative_to(value)
-                    for value in value_list
+                    not Path(zarr_dir).is_relative_to(new_project_dir)
+                    for new_project_dir in new_project_dirs
                 )
             )
             for zarr_dir in res.scalars().all()
-            for key, value_list in less_privileged.items()
+            for old_project_dir, new_project_dirs in less_privileged.items()
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
