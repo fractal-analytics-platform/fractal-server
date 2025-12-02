@@ -89,7 +89,7 @@ async def test_unique_job_submitted_per_dataset(db, local_resource_profile_db):
     )
     await db.commit()
 
-    # NOTE: the following tests a situation that should never happens,
+    # NOTE: the following tests a situation that should never happen,
     # i.e. dataset_id=None, status="submitted"
 
     # Dataset NULL, SUBMITTED -> OK
