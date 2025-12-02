@@ -258,5 +258,10 @@ async def _check_project_dirs_update(
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Project dir in use in some Dataset.",
+                detail=(
+                    "You tried updating the user project_dirs, removing "
+                    f"{removed_project_dirs}. This operation is not possible, "
+                    "because it would make the user loose access to some of "
+                    "their dataset zarr directories."
+                ),
             )

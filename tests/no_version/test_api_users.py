@@ -351,7 +351,7 @@ async def test_edit_user_project_dirs(
         json=update,
     )
     assert res.status_code == 422
-    assert res.json()["detail"] == "Project dir in use in some Dataset."
+    assert "loose access" in res.json()["detail"]
 
     await db.delete(dataset)
     await db.commit()
