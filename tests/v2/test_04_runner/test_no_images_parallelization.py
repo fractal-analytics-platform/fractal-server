@@ -35,11 +35,13 @@ async def test_parallelize_on_no_images(
     job_factory,
     tmp_path: Path,
     local_runner: Executor,
+    local_resource_profile_db,
 ):
     """
     Run parallel&compound tasks on a dataset with no images.
     """
     # Preliminary setup
+    resource, _ = local_resource_profile_db
     async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
@@ -71,6 +73,7 @@ async def test_parallelize_on_no_images(
                 runner=local_runner,
                 user_id=user.id,
                 job_id=job.id,
+                resource_id=resource.id,
             )
 
         task = await task_factory(
@@ -93,4 +96,5 @@ async def test_parallelize_on_no_images(
                 runner=local_runner,
                 user_id=user.id,
                 job_id=job.id,
+                resource_id=resource.id,
             )
