@@ -222,6 +222,7 @@ def execute_tasks(
 
         # Fail if the resource is not open for new submissions
         resource = db.get(Resource, resource_id)
+        db.refresh(resource)
         if resource.prevent_new_submissions:
             error_msg = (
                 f"The computational resource '{resource.name}' cannot "
