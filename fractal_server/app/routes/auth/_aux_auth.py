@@ -3,7 +3,9 @@ from pathlib import Path
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import and_
 from sqlmodel import asc
+from sqlmodel import not_
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -226,6 +228,14 @@ async def _check_project_dirs_update(
                     *[
                         DatasetV2.zarr_dir.startswith(old_project_dir)
                         for old_project_dir in less_privileged
+                    ]
+                )
+            )
+            .where(
+                and_(
+                    *[
+                        not_(DatasetV2.zarr_dir.startswith(new_project_dir))
+                        for new_project_dir in new_project_dirs
                     ]
                 )
             )
