@@ -227,8 +227,7 @@ def execute_tasks(
             db.refresh(resource)
             if resource.prevent_new_submissions:
                 error_msg = (
-                    f"The computational resource '{resource.name}' cannot "
-                    "currently accept new job submissions."
+                    f"The '{resource.name}' resource is not currently active."
                 )
                 logger.info(error_msg)
                 update_status_of_history_run(

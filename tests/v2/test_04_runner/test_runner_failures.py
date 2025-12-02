@@ -98,3 +98,57 @@ async def test_parallelize_on_no_images(
                 job_id=job.id,
                 resource_id=resource.id,
             )
+
+
+async def test_resource_does_not_accept_submissions(
+    db,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    job_factory,
+    tmp_path: Path,
+    local_runner: Executor,
+    local_resource_profile_db,
+):
+    """
+    Run parallel&compound tasks on a dataset with no images.
+    """
+    # Preliminary setup
+    resource, _ = local_resource_profile_db
+    resource.prevent_new_submissions = True
+    db.add(resource)
+    await db.commit()
+
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(
+            project_id=project.id, images=[dict(zarr_url="/fake")]
+        )
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
+        with pytest.raises(
+            JobExecutionError,
+            match="resource is not currently active",
+        ):
+            execute_tasks_mod(
+                wf_task_list=[wftask],
+                dataset=dataset,
+                workflow_dir_local=tmp_path / "job0",
+                runner=local_runner,
+                user_id=user.id,
+                job_id=job.id,
+                resource_id=resource.id,
+            )
