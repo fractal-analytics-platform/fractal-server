@@ -151,7 +151,7 @@ async def submit_job(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 f"The computational resource '{resource.name}' cannot "
-                "currently accept new job submissions.",
+                "currently accept new job submissions."
             ),
         )
 
