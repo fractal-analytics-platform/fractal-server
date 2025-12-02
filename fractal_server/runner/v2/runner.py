@@ -221,7 +221,6 @@ def execute_tasks(
             raise JobExecutionError(error_msg)
 
         # Fail if the resource is not open for new submissions
-        resource_id = 1  # FIXME
         resource = db.get(Resource, resource_id)
         if resource.prevent_new_submissions:
             error_msg = (
