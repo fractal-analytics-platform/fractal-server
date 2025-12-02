@@ -159,6 +159,8 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     with pytest.raises(HTTPException):
         await _check_project_dirs_update(
             new_project_dirs=[
+                "/example",
+                "/test",
                 "/test/data",  # dataset2
                 "/test-1",  # dataset3
             ],
@@ -167,6 +169,8 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     await db.delete(dataset1)
     await _check_project_dirs_update(
         new_project_dirs=[
+            "/example",
+            "/test",
             "/test/data",  # dataset2
             "/test-1",  # dataset3
         ],
@@ -175,6 +179,9 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     # Changing "/test/data" into something more specific is OK
     await _check_project_dirs_update(
         new_project_dirs=[
+            "/example",
+            "/foo/bar",
+            "/test",
             "/test/data/dataset/zarr/",  # dataset2
             "/test-1",  # dataset3
         ],
@@ -183,6 +190,8 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     # Removing "/test/data" is OK, as long as we have "/test"
     await _check_project_dirs_update(
         new_project_dirs=[
+            "/example",
+            "/foo/bar",
             "/test",  # dataset2
             "/test-1",  # dataset3
         ],
@@ -191,6 +200,8 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     with pytest.raises(HTTPException):
         await _check_project_dirs_update(
             new_project_dirs=[
+                "/example",
+                "/foo/bar",
                 "/test-1",  # dataset3
             ],
             **kwargs,
