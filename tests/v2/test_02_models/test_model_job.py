@@ -1,5 +1,6 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -110,3 +111,27 @@ async def test_unique_job_submitted_per_dataset(db, local_resource_profile_db):
         )
     )
     await db.commit()
+
+    # Dataset 2, test PATCH
+    job_to_patch = JobV2(
+        dataset_id=dataset2_id,
+        status=JobStatusType.FAILED,
+        **common_args,
+    )
+    db.add(job_to_patch)
+    await db.commit()
+
+    # PATCH status to DONE -> OK
+    job_to_patch.status = JobStatusType.DONE
+    flag_modified(job_to_patch, "status")
+    await db.commit()
+    await db.refresh(job_to_patch)
+    assert job_to_patch.status == JobStatusType.DONE
+
+    # PATCH status to DONE -> FAIL
+    job_to_patch.status = JobStatusType.SUBMITTED
+    flag_modified(job_to_patch, "status")
+    with pytest.raises(IntegrityError) as e:
+        await db.commit()
+    assert "ix_jobv2_one_submitted_job_per_dataset" in e.value.args[0]
+    await db.rollback()
