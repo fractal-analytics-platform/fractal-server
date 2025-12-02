@@ -65,7 +65,7 @@ async def test_unique_job_submitted_per_dataset(db, local_resource_profile_db):
     )
     await db.commit()
 
-    # Dataset 1, SUBMITTED -> FAILED
+    # Dataset 1, SUBMITTED -> FAIL
     db.add(
         JobV2(
             dataset_id=dataset1_id,
@@ -82,6 +82,29 @@ async def test_unique_job_submitted_per_dataset(db, local_resource_profile_db):
     db.add(
         JobV2(
             dataset_id=dataset2_id,
+            status=JobStatusType.SUBMITTED,
+            **common_args,
+        )
+    )
+    await db.commit()
+
+    # NOTE: the following tests a situation that should never happens,
+    # i.e. dataset_id=None, status="submitted"
+
+    # Dataset NULL, SUBMITTED -> OK
+    db.add(
+        JobV2(
+            dataset_id=None,
+            status=JobStatusType.SUBMITTED,
+            **common_args,
+        )
+    )
+    await db.commit()
+
+    # Dataset NULL, SUBMITTED -> OK
+    db.add(
+        JobV2(
+            dataset_id=None,
             status=JobStatusType.SUBMITTED,
             **common_args,
         )
