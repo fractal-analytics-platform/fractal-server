@@ -203,18 +203,18 @@ async def _check_project_dirs_update(
     # E.g.:
     #   old_project_dirs = ["/a", "/b", "/c/d", "/e/f"]
     #   new_project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
-    #   less_privileged == ["/b", "/e/f"]
-    less_privileged = [
+    #   removed_project_dirs == ["/b", "/e/f"]
+    removed_project_dirs = [
         old_project_dir
         for old_project_dir in old_project_dirs
-        if all(
-            not Path(old_project_dir).is_relative_to(new_project_dir)
+        if not any(
+            Path(old_project_dir).is_relative_to(new_project_dir)
             for new_project_dir in new_project_dirs
         )
     ]
-    if less_privileged:
+    if removed_project_dirs:
         # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
-        # starts with one of the project dirs in `less_privileged`.
+        # starts with one of the project dirs in `removed_project_dirs`.
         res = await db.execute(
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
@@ -227,7 +227,7 @@ async def _check_project_dirs_update(
                 or_(
                     *[
                         DatasetV2.zarr_dir.startswith(old_project_dir)
-                        for old_project_dir in less_privileged
+                        for old_project_dir in removed_project_dirs
                     ]
                 )
             )
@@ -241,13 +241,13 @@ async def _check_project_dirs_update(
             )
         )
         # Raise 422 if one of the query results is relative to a path in
-        # `less_privileged`, but its not relative to any path in
+        # `removed_project_dirs`, but its not relative to any path in
         # `new_project_dirs`.
         if any(
             (
                 any(
                     Path(zarr_dir).is_relative_to(old_project_dir)
-                    for old_project_dir in less_privileged
+                    for old_project_dir in removed_project_dirs
                 )
                 and not any(
                     Path(zarr_dir).is_relative_to(new_project_dir)
