@@ -1,5 +1,4 @@
 from devtools import debug
-from sqlmodel import select
 
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import OAuthAccount
@@ -306,21 +305,13 @@ async def test_edit_user_project_dirs(
     user = UserOAuth(
         email="user@example.org",
         hashed_password="12345",
-        project_dirs=["/a", "/b", "/c/d", "/e/f"],
-        is_active=True,
-        is_superuser=False,
-        is_verified=True,
-        profile_id=profile.id,
-        slurm_accounts=[],
+        project_dirs=["/a", "/b", "/b/c"],
     )
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
-
+    await db.flush()
     project = ProjectV2(name="Project", resource_id=resource.id)
     db.add(project)
-    await db.commit()
-    await db.refresh(project)
+    await db.flush()
     db.add(
         LinkUserProjectV2(
             project_id=project.id,
@@ -330,22 +321,31 @@ async def test_edit_user_project_dirs(
             permissions=ProjectPermissions.EXECUTE,
         )
     )
-    await db.commit()
-
-    db.add_all(
-        [
-            DatasetV2(
-                name=f"Dataset {i}",
-                project_id=project.id,
-                zarr_dir=f"{project_dir}/x",
-                images=[],
-            )
-            for i, project_dir in enumerate(user.project_dirs)
-        ]
+    await db.flush()
+    dataset = DatasetV2(
+        name="Dataset",
+        project_id=project.id,
+        zarr_dir="/b/c/data/zarr",
+        images=[],
     )
+    db.add(dataset)
     await db.commit()
+    await db.refresh(user)
+    await db.refresh(dataset)
 
-    update = dict(project_dirs=["/a", "/c", "/e/f/x", "/e/f/y"])
+    # Update 1
+
+    update = dict(project_dirs=["/a", "/b/c/data/"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
+    assert res.json()["project_dirs"] == update["project_dirs"]
+
+    # Update 2
+
+    update = dict(project_dirs=["/a"])
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
@@ -353,27 +353,9 @@ async def test_edit_user_project_dirs(
     assert res.status_code == 422
     assert res.json()["detail"] == "Project dir in use in some Dataset."
 
-    update = dict(project_dirs=["/a", "/b", "/c", "/e/f/x", "/e/f/y"])
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user.id}/",
-        json=update,
-    )
-    assert res.status_code == 200
-
-    update = dict(project_dirs=["/a", "/c", "/e/f/x"])
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user.id}/",
-        json=update,
-    )
-    assert res.status_code == 422
-    # delete the dataset
-    res = await db.execute(
-        select(DatasetV2).where(DatasetV2.zarr_dir == "/b/x")
-    )
-    dataset = res.scalars().one()
     await db.delete(dataset)
     await db.commit()
-    # now it works
+
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
