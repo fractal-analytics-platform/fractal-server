@@ -213,28 +213,30 @@ def execute_tasks(
                 f"attribute_filters={job_attribute_filters})."
             )
             logger.info(error_msg)
-            update_status_of_history_run(
-                history_run_id=history_run_id,
-                status=HistoryUnitStatus.FAILED,
-                db_sync=db,
-            )
+            with next(get_sync_db()) as db:
+                update_status_of_history_run(
+                    history_run_id=history_run_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
             raise JobExecutionError(error_msg)
 
         # Fail if the resource is not open for new submissions
-        resource = db.get(Resource, resource_id)
-        db.refresh(resource)
-        if resource.prevent_new_submissions:
-            error_msg = (
-                f"The computational resource '{resource.name}' cannot "
-                "currently accept new job submissions."
-            )
-            logger.info(error_msg)
-            update_status_of_history_run(
-                history_run_id=history_run_id,
-                status=HistoryUnitStatus.FAILED,
-                db_sync=db,
-            )
-            raise JobExecutionError(error_msg)
+        with next(get_sync_db()) as db:
+            resource = db.get(Resource, resource_id)
+            db.refresh(resource)
+            if resource.prevent_new_submissions:
+                error_msg = (
+                    f"The computational resource '{resource.name}' cannot "
+                    "currently accept new job submissions."
+                )
+                logger.info(error_msg)
+                update_status_of_history_run(
+                    history_run_id=history_run_id,
+                    status=HistoryUnitStatus.FAILED,
+                    db_sync=db,
+                )
+                raise JobExecutionError(error_msg)
 
         # TASK EXECUTION
         try:
