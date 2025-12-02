@@ -245,14 +245,16 @@ async def _check_project_dirs_update(
         # `new_project_dirs`.
         if any(
             (
-                Path(zarr_dir).is_relative_to(old_project_dir)
-                and all(
-                    not Path(zarr_dir).is_relative_to(new_project_dir)
+                any(
+                    Path(zarr_dir).is_relative_to(old_project_dir)
+                    for old_project_dir in less_privileged
+                )
+                and not any(
+                    Path(zarr_dir).is_relative_to(new_project_dir)
                     for new_project_dir in new_project_dirs
                 )
             )
             for zarr_dir in res.scalars().all()
-            for old_project_dir in less_privileged
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
