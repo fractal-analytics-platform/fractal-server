@@ -142,6 +142,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset,
         workflow_dir_local=tmp_path / "job0",
         job_id=job.id,
+        resource_id=resource.id,
         **execute_tasks_args,
     )
 
@@ -153,6 +154,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset,
         workflow_dir_local=tmp_path / "job1",
         job_id=job.id,
+        resource_id=resource.id,
         **execute_tasks_args,
     )
 
@@ -203,6 +205,7 @@ async def test_dummy_insert_single_image(
         dataset=dataset_case_2,
         workflow_dir_local=tmp_path / "job2",
         job_id=job.id,
+        resource_id=resource.id,
         **execute_tasks_args,
     )
     db.expunge_all()
@@ -253,6 +256,7 @@ async def test_dummy_insert_single_image(
                 dataset=dataset,
                 workflow_dir_local=tmp_path / "job3",
                 job_id=job.id,
+                resource_id=resource.id,
                 **execute_tasks_args,
             )
         error_msg = str(e.value)
@@ -272,6 +276,7 @@ async def test_dummy_remove_images(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     """
     NOTE: this test is relevant for
@@ -279,6 +284,8 @@ async def test_dummy_remove_images(
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_remove_images"].id
+
+    resource, _ = local_resource_profile_db
 
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -335,6 +342,7 @@ async def test_dummy_remove_images(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
 
@@ -364,6 +372,7 @@ async def test_dummy_remove_images(
             workflow_dir_local=tmp_path / "job1",
             user_id=user_id,
             job_id=job.id,
+            resource_id=resource.id,
             runner=local_runner,
         )
     error_msg = str(e.value)
@@ -381,7 +390,9 @@ async def test_dummy_unset_attribute(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_unset_attribute"].id
 
@@ -422,6 +433,7 @@ async def test_dummy_unset_attribute(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
     db.expunge_all()
@@ -453,6 +465,7 @@ async def test_dummy_unset_attribute(
         workflow_dir_local=tmp_path / "job1",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
     db.expunge_all()
@@ -474,7 +487,9 @@ async def test_dummy_insert_single_image_with_attribute_none(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     # Preliminary setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
@@ -506,6 +521,7 @@ async def test_dummy_insert_single_image_with_attribute_none(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
     # Assert that attribute was not set
@@ -524,7 +540,9 @@ async def test_dummy_insert_single_image_normalization(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     # Preliminary setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
@@ -556,6 +574,7 @@ async def test_dummy_insert_single_image_normalization(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
     # Assert that URLs are normalized
@@ -576,11 +595,14 @@ async def test_default_inclusion_of_images(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     """
     Ref
     https://github.com/fractal-analytics-platform/fractal-server/issues/1374
     """
+
+    resource, _ = local_resource_profile_db
     # Preliminary setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["generic_task_parallel"].id
@@ -621,6 +643,7 @@ async def test_default_inclusion_of_images(
         workflow_dir_local=tmp_path / "job0",
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
         runner=local_runner,
     )
 
@@ -641,7 +664,9 @@ async def test_compound_task_with_compute_failure(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     # Preliminary setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["generic_task_compound"].id
@@ -685,6 +710,7 @@ async def test_compound_task_with_compute_failure(
             workflow_dir_local=tmp_path / "job0",
             user_id=user_id,
             job_id=job.id,
+            resource_id=resource.id,
             runner=local_runner,
         )
     debug(exc_info.value.assemble_error())
@@ -781,7 +807,9 @@ async def test_dummy_invalid_output_parallel(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["generic_task_parallel"].id
     async with MockCurrentUser() as user:
@@ -836,6 +864,7 @@ async def test_dummy_invalid_output_parallel(
             dataset=dataset,
             workflow_dir_local=tmp_path / "job0",
             job_id=job.id,
+            resource_id=resource.id,
             **execute_tasks_args,
         )
     res = await db.execute(
@@ -860,11 +889,12 @@ async def test_status_based_submission(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     """
     Test processing of images based on status.
     """
-
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     task_id = fractal_tasks_mock_db["generic_task"].id
 
@@ -918,6 +948,7 @@ async def test_status_based_submission(
                 "well": ["B01", "B02"],
                 IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.UNSET],
             },
+            resource_id=resource.id,
         )
 
     # Check that `HistoryImageCache`/`HistoryUnit` data were stored correctly
@@ -960,6 +991,7 @@ async def test_status_based_submission(
             job_attribute_filters={
                 IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.DONE],
             },
+            resource_id=resource.id,
         )
 
     # Validate latest `HistoryRun` object
@@ -988,6 +1020,7 @@ async def test_status_based_submission(
         job_attribute_filters={
             IMAGE_STATUS_KEY: [HistoryUnitStatusWithUnset.UNSET],
         },
+        resource_id=resource.id,
     )
 
     res = await db.execute(
@@ -1016,4 +1049,5 @@ async def test_status_based_submission(
         job_id=job.id,
         runner=local_runner,
         user_id=user_id,
+        resource_id=resource.id,
     )
