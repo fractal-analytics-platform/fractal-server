@@ -139,7 +139,7 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
     # Removing "/test" is OK
     await _check_project_dirs_update(
         new_project_dirs=[
-            "/exmple",
+            "/example",
             "/foo/bar",  # dataset1
             "/test/data",  # dataset2
             "/test-1",  # dataset3
