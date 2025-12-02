@@ -128,7 +128,7 @@ async def test_unique_job_submitted_per_dataset(db, local_resource_profile_db):
     await db.refresh(job_to_patch)
     assert job_to_patch.status == JobStatusType.DONE
 
-    # PATCH status to DONE -> FAIL
+    # PATCH status to SUBMITTED -> FAIL
     job_to_patch.status = JobStatusType.SUBMITTED
     flag_modified(job_to_patch, "status")
     with pytest.raises(IntegrityError) as e:
