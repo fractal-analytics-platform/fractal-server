@@ -1,7 +1,5 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -64,24 +62,12 @@ async def get_workflowtask_status(
     # Check whether there exists a submitted job associated to this
     # workflow/dataset pair. If it does exist, it will be used later.
     # If there are multiple jobs, raise an error.
-    stm = _get_submitted_jobs_statement()
-    stm = stm.where(JobV2.dataset_id == dataset_id)
-    stm = stm.where(JobV2.workflow_id == workflow_id)
-    res = await db.execute(stm)
-    running_jobs = res.scalars().all()
-    if len(running_jobs) == 0:
-        running_job = None
-    elif len(running_jobs) == 1:
-        running_job = running_jobs[0]
-    else:
-        string_ids = str([job.id for job in running_jobs])[1:-1]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot get WorkflowTaskV2 statuses as DatasetV2 {dataset.id}"
-                f" is linked to multiple active jobs: {string_ids}."
-            ),
-        )
+    res = await db.execute(
+        _get_submitted_jobs_statement()
+        .where(JobV2.dataset_id == dataset_id)
+        .where(JobV2.workflow_id == workflow_id)
+    )
+    running_job = res.scalars().one_or_none()
 
     # Initialize empty dictionary for WorkflowTaskV2 status
     workflow_tasks_status_dict: dict = {}
