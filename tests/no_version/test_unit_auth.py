@@ -3,7 +3,11 @@ from devtools import debug
 from fastapi import HTTPException
 from sqlmodel import select
 
+from fractal_server.app.models import DatasetV2
+from fractal_server.app.models import LinkUserProjectV2
+from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth._aux_auth import _check_project_dirs_update
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
@@ -14,6 +18,7 @@ from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.schemas.v2 import ProjectPermissions
 from fractal_server.app.security import _create_first_user
 
 
@@ -55,3 +60,138 @@ async def test_verify_user_belongs_to_group(db):
     with pytest.raises(HTTPException) as exc_info:
         await _verify_user_belongs_to_group(user_id=1, user_group_id=42, db=db)
     debug(exc_info.value)
+
+
+async def test_check_project_dirs_update(local_resource_profile_db, db):
+    # Setup
+
+    resource, _ = local_resource_profile_db
+    # Add User
+    user = UserOAuth(
+        email="user@example.org",
+        hashed_password="12345",
+        project_dirs=[
+            "/example",
+            "/foo/bar",  # dataset1
+            "/test",
+            "/test/data",  # dataset2
+            "/test-1",  # dataset3
+        ],
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    # Add Project
+    project = ProjectV2(name="Project", resource_id=resource.id)
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    db.add(
+        LinkUserProjectV2(
+            project_id=project.id,
+            user_id=user.id,
+            is_owner=True,
+            is_verified=True,
+            permissions=ProjectPermissions.EXECUTE,
+        )
+    )
+    await db.commit()
+    # Add Datasets
+    dataset1 = DatasetV2(
+        name="Dataset 3",
+        project_id=project.id,
+        zarr_dir="/foo/bar/dataset/zarr",
+    )
+    dataset2 = DatasetV2(
+        name="Dataset 1",
+        project_id=project.id,
+        zarr_dir="/test/data/dataset/zarr",
+    )
+    dataset3 = DatasetV2(
+        name="Dataset 2",
+        project_id=project.id,
+        zarr_dir="/test-1/dataset/zarr",
+    )
+    db.add_all([dataset1, dataset2, dataset3])
+    await db.commit()
+    await db.refresh(dataset1)
+    await db.refresh(dataset2)
+    await db.refresh(dataset3)
+
+    kwargs = dict(
+        old_project_dirs=user.project_dirs,
+        user_id=user.id,
+        db=db,
+    )
+
+    # Test
+
+    # Removing "/example" is OK
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/foo/bar",  # dataset1
+            "/test",
+            "/test/data",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    # Removing "/test" is OK
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/exmple",
+            "/foo/bar",  # dataset1
+            "/test/data",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    # Removing both "/example" and "/test" is OK
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/foo/bar",  # dataset1
+            "/test/data",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    # Removing "/foo/bar" can be done after removing dataset1
+    with pytest.raises(HTTPException):
+        await _check_project_dirs_update(
+            new_project_dirs=[
+                "/test/data",  # dataset2
+                "/test-1",  # dataset3
+            ],
+            **kwargs,
+        )
+    await db.delete(dataset1)
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/test/data",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    # Changing "/test/data" into something more specific is OK
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/test/data/dataset/zarr/",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    # Removing "/test/data" is OK, as long as we have "/test"
+    await _check_project_dirs_update(
+        new_project_dirs=[
+            "/test",  # dataset2
+            "/test-1",  # dataset3
+        ],
+        **kwargs,
+    )
+    with pytest.raises(HTTPException):
+        await _check_project_dirs_update(
+            new_project_dirs=[
+                "/test-1",  # dataset3
+            ],
+            **kwargs,
+        )
