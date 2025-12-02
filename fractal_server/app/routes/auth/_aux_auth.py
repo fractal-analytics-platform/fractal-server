@@ -228,8 +228,8 @@ async def _check_project_dirs_update(
             .where(
                 or_(
                     *[
-                        DatasetV2.zarr_dir.startswith(path)
-                        for path in less_privileged.keys()
+                        DatasetV2.zarr_dir.startswith(old_project_dir)
+                        for old_project_dir in less_privileged.keys()
                     ]
                 )
             )
