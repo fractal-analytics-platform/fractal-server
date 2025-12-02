@@ -156,8 +156,13 @@ def submit_workflow(
                     f"(as part of job {job_id}).\n"
                 )
 
+            logger.warning(log_msg)
             fail_job(
-                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+                db=db_sync,
+                job=job,
+                log_msg=log_msg,
+                logger_name=logger_name,
+                emit_log=False,
             )
             return
 
