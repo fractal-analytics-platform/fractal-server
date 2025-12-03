@@ -50,7 +50,11 @@ async def test_new_dataset(
 
         res = await client.post(
             f"api/v2/project/{p2_id}/dataset/",
-            json=dict(name="dataset", zarr_dir=f"{user.project_dirs[0]}/tmp"),
+            json=dict(
+                name="dataset",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp",
+            ),
         )
         assert res.status_code == 201
         dataset1 = res.json()
@@ -59,7 +63,8 @@ async def test_new_dataset(
             f"api/v2/project/{p2_id}/dataset/",
             json=dict(
                 name="dataset",
-                zarr_dir=f"{user.project_dirs[0]}/tmp",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp",
             ),
         )
         assert res.status_code == 201
@@ -118,7 +123,9 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         res = await client.post(
             f"{PREFIX}/project/{p_id}/dataset/",
             json=dict(
-                name=DATASET_NAME, zarr_dir=f"{user.project_dirs[0]}/tmp/zarr"
+                name=DATASET_NAME,
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp/zarr",
             ),
         )
         assert res.status_code == 201
@@ -157,18 +164,19 @@ async def test_post_dataset(client, MockCurrentUser, project_factory):
         # Check that zarr_dir must be relative to one of user's project dirs
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
-            json=dict(name="wrong", zarr_dir="/wrong/zarr/dir"),
+            json=dict(name="wrong", project_dir="/wrong"),
         )
-        assert res.status_code == 422
+        assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Dataset zarr_dir is not relative to any "
-            "of the user project directories."
+            "You are not allowed to use dataset.project_dir='/wrong'."
         )
 
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
             json=dict(
-                name="wrong", zarr_dir=f"{user.project_dirs[0]}/tmp/../zarr"
+                name="wrong",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp/../zarr",
             ),
         )
         assert res.status_code == 422
@@ -179,7 +187,9 @@ async def test_post_dataset(client, MockCurrentUser, project_factory):
 
         # ADD DATASET
         payload = dict(
-            name="new dataset", zarr_dir=f"{user.project_dirs[0]}/tmp/zarr"
+            name="new dataset",
+            project_dir=user.project_dirs[0],
+            zarr_subfolder="tmp/zarr",
         )
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
@@ -361,47 +371,6 @@ async def test_patch_dataset(
         dataset = res.json()
         debug(dataset)
         assert dataset["name"] == NEW_NAME
-
-        # Check that zarr_dir must be relative to one of user's project dirs
-        WRONG_ZARR_DIR = "/wrong/zarr/dir"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=WRONG_ZARR_DIR),
-        )
-        assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "Dataset zarr_dir is not relative to any "
-            "of the user project directories."
-        )
-
-        WRONG_ZARR_DIR_2 = f"{user.project_dirs[0]}/a/b/../c/d"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=WRONG_ZARR_DIR_2),
-        )
-        assert res.status_code == 422
-        assert (
-            "String must not contain '/../'."
-            in (res.json()["detail"][0]["msg"])
-        )
-
-        # Check that zarr_dir can be modified only if Dataset.images is empty
-        NEW_ZARR_DIR = f"{user.project_dirs[0]}/new_zarr_dir"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=NEW_ZARR_DIR),
-        )
-        assert res.status_code == 200
-        assert res.json()["zarr_dir"] == NEW_ZARR_DIR
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/",
-            json=dict(zarr_url=f"{NEW_ZARR_DIR}/x.zarr"),
-        )
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir="/new_zarr_dir_2"),
-        )
-        assert res.status_code == 422
 
 
 async def test_dataset_import(
