@@ -20,6 +20,7 @@ The main contents of this release are the introduction of the project sharing an
     * Add validator for paths to forbid parent-directory references (\#3031).
     * Review job-submission endpoint (\#3041).
     * Prevent submissions if `Resource.prevent_new_submissions` is set (\#3042).
+    * Add `normpath` to `AbsolutePathStr` type (\#3050).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
