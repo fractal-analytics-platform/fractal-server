@@ -335,7 +335,7 @@ async def test_edit_user_project_dirs(
 
     # Update 1
 
-    update = dict(project_dirs=["/a", "/b/c/data/"])
+    update = dict(project_dirs=["/a", "/b/c/data"])
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
@@ -361,6 +361,14 @@ async def test_edit_user_project_dirs(
         json=update,
     )
     assert res.status_code == 200
+
+    # Update 3
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/", json=dict(project_dirs=[])
+    )
+    assert res.status_code == 422
+    debug(res.json())
+    assert "at least 1 item" in str(res.json()["detail"])
 
 
 async def test_add_superuser(registered_superuser_client):
