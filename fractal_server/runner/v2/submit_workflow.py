@@ -146,17 +146,20 @@ def submit_workflow(
         if dataset is None or workflow is None:
             log_msg = ""
             if dataset is None:
-                log_msg += (
+                current_log_msg = (
                     f"Cannot fetch dataset {dataset_id} from database "
-                    f"(as part of job {job_id}).\n"
+                    f"(as part of job {job_id})."
                 )
+                logger.error(current_log_msg)
+                log_msg += f"{current_log_msg}\n"
             if workflow is None:
-                log_msg += (
+                current_log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database "
-                    f"(as part of job {job_id}).\n"
+                    f"(as part of job {job_id})."
                 )
+                logger.error(current_log_msg)
+                log_msg += f"{current_log_msg}\n"
 
-            logger.warning(log_msg)
             fail_job(
                 db=db_sync,
                 job=job,
