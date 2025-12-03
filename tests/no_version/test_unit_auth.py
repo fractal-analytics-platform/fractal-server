@@ -213,11 +213,9 @@ async def test_check_project_dirs_update_trailing_slash(
     db,
 ):
     """
-    This test documents an unreachable branch, where `zarr_dir` has not been
+    This test documents a case where `zarr_dir` has not been
     normalized upon creation and still has a trailing `/`.
-
-    If this is the case, then the `_check_project_dirs_update` function may
-    behave wrong - as in the example below.
+    Also in this case `_check_project_dirs_update` works as expected.
     """
     resource, _ = local_resource_profile_db
 
@@ -225,7 +223,8 @@ async def test_check_project_dirs_update_trailing_slash(
     user = UserOAuth(
         email="user@example.org",
         hashed_password="12345",
-        project_dirs=["/data"],
+        # Note: `/data/` would have been transformed into `/data` in the API
+        project_dirs=["/data/"],
     )
     db.add(user)
     await db.commit()
@@ -249,7 +248,7 @@ async def test_check_project_dirs_update_trailing_slash(
     dataset = DatasetV2(
         name="Dataset",
         project_id=project.id,
-        zarr_dir="/data/",
+        zarr_dir="/data",
     )
     db.add(dataset)
     await db.commit()
@@ -260,8 +259,8 @@ async def test_check_project_dirs_update_trailing_slash(
     with pytest.raises(HTTPException) as e:
         await _check_project_dirs_update(
             old_project_dirs=user.project_dirs,
-            new_project_dirs=[],
+            new_project_dirs=["/somewhere-else/"],
             user_id=user.id,
             db=db,
         )
-    assert "422" in str(e)
+    assert "You tried updating the user project_dirs" in str(e)

@@ -199,6 +199,10 @@ async def _check_project_dirs_update(
     """
     Raises 422 if by replacing user's `project_dirs` with new ones we are
     removing the access to a `zarr_dir` used by some dataset.
+
+    Note both `old_project_dirs` and `new_project_dirs` have been
+    normalized through `os.path.normpath`, which notably strips any trailing
+    `/` character. To be safe, we also re-normalize them within this function.
     """
     # Create a list of all the old project dirs that will lose privileges.
     # E.g.:
