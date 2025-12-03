@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -56,35 +57,32 @@ async def create_dataset(
         **dataset.model_dump(exclude={"project_dir", "zarr_subfolder"}),
     )
     db.add(db_dataset)
-    await db.flush()
+    await db.commit()
     await db.refresh(db_dataset)
 
     if dataset.project_dir is None:
-        path = (
-            f"{user.project_dirs[0]}/fractal/"
-            f"{project_id}_{sanitize_string(project.name)}/"
+        project_dir = user.project_dirs[0]
+        zarr_subfolder = (
+            f"fractal/{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
-        normalized_path = normalize_url(path)
-        db_dataset.zarr_dir = normalized_path
     else:
         if dataset.project_dir not in user.project_dirs:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"You are not allowed to use {dataset.project_dir=}.",
             )
+        project_dir = dataset.project_dir
         if dataset.zarr_subfolder is None:
-            path = (
-                f"{dataset.project_dir}/fractal/"
-                f"{project_id}_{sanitize_string(project.name)}/"
+            zarr_subfolder = (
+                f"fractal/{project_id}_{sanitize_string(project.name)}/"
                 f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
             )
-            normalized_path = normalize_url(path)
-            db_dataset.zarr_dir = normalized_path
         else:
-            db_dataset.zarr_dir = (
-                f"{dataset.project_dir}/{dataset.zarr_subfolder}"
-            )
+            zarr_subfolder = dataset.zarr_subfolder
+
+    zarr_dir = os.path.join(project_dir, zarr_subfolder)
+    db_dataset.zarr_dir = normalize_url(zarr_dir)
 
     db.add(db_dataset)
     await db.commit()
