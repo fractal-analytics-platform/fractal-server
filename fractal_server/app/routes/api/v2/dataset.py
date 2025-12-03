@@ -71,7 +71,7 @@ async def create_dataset(
         if dataset.project_dir not in user.project_dirs:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not allowed to use the `project_dir` provided",
+                detail=f"You are not allowed to use {dataset.project_dir=}.",
             )
         if dataset.zarr_subfolder is None:
             path = (
