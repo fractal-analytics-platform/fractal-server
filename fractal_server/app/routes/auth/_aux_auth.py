@@ -1,3 +1,4 @@
+from os.path import normpath
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -226,9 +227,7 @@ async def _check_project_dirs_update(
             .where(
                 or_(
                     *[
-                        DatasetV2.zarr_dir.startswith(
-                            Path(old_project_dir).as_posix()
-                        )
+                        DatasetV2.zarr_dir.startswith(normpath(old_project_dir))
                         for old_project_dir in removed_project_dirs
                     ]
                 )
@@ -240,7 +239,7 @@ async def _check_project_dirs_update(
                     *[
                         not_(
                             DatasetV2.zarr_dir.startswith(
-                                Path(new_project_dir).as_posix()
+                                normpath(new_project_dir)
                             )
                         )
                         for new_project_dir in new_project_dirs
