@@ -127,10 +127,6 @@ def submit_workflow(
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(logger_name=logger_name)
 
-    import time
-
-    time.sleep(15)
-
     with next(DB.get_sync_db()) as db_sync:
         try:
             job: JobV2 | None = db_sync.get(JobV2, job_id)
