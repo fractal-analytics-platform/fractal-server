@@ -62,10 +62,6 @@ async def create_dataset(
 
     if dataset.project_dir is None:
         project_dir = user.project_dirs[0]
-        zarr_subfolder = (
-            f"fractal/{project_id}_{sanitize_string(project.name)}/"
-            f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
-        )
     else:
         if dataset.project_dir not in user.project_dirs:
             raise HTTPException(
@@ -73,13 +69,14 @@ async def create_dataset(
                 detail=f"You are not allowed to use {dataset.project_dir=}.",
             )
         project_dir = dataset.project_dir
-        if dataset.zarr_subfolder is None:
-            zarr_subfolder = (
-                f"fractal/{project_id}_{sanitize_string(project.name)}/"
-                f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
-            )
-        else:
-            zarr_subfolder = dataset.zarr_subfolder
+
+    if dataset.zarr_subfolder is None:
+        zarr_subfolder = (
+            f"fractal/{project_id}_{sanitize_string(project.name)}/"
+            f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
+        )
+    else:
+        zarr_subfolder = dataset.zarr_subfolder
 
     zarr_dir = os.path.join(project_dir, zarr_subfolder)
     db_dataset.zarr_dir = normalize_url(zarr_dir)
