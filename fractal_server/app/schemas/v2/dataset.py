@@ -4,12 +4,14 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
+from pydantic import model_validator
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectRead
 from fractal_server.images import SingleImage
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
+from fractal_server.types import RelativePathStr
 from fractal_server.types import ZarrDirStr
 
 
@@ -27,7 +29,19 @@ class DatasetCreate(BaseModel):
 
     name: NonEmptyStr
     project_dir: AbsolutePathStr | None = None
-    zarr_subfolder: str | None = None
+    zarr_subfolder: RelativePathStr | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_zarr_dir(cls, values):
+        project_dir = values.get("project_dir")
+        zarr_subfolder = values.get("zarr_subfolder")
+
+        if (project_dir is None) and (zarr_subfolder is not None):
+            raise ValueError(
+                "Cannot provide `zarr_subfolder` without `project_dir`"
+            )
+        return values
 
 
 class DatasetRead(BaseModel):
