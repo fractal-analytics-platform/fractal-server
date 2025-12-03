@@ -41,7 +41,7 @@ def val_non_absolute_path(path: str) -> str:
     return path
 
 
-def val_canonical_path(path: str) -> str:
+def val_no_dotdot_in_path(path: str) -> str:
     """
     Check that a string attribute has no '/../' in it
     """
