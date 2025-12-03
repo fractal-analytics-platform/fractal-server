@@ -31,17 +31,13 @@ class DatasetCreate(BaseModel):
     project_dir: AbsolutePathStr | None = None
     zarr_subfolder: RelativePathStr | None = None
 
-    @model_validator(mode="before")
-    @classmethod
-    def validate_zarr_dir(cls, values):
-        project_dir = values.get("project_dir")
-        zarr_subfolder = values.get("zarr_subfolder")
-
-        if (project_dir is None) and (zarr_subfolder is not None):
+    @model_validator(mode="after")
+    def validate_zarr_dir(self):
+        if (self.project_dir is None) and (self.zarr_subfolder is not None):
             raise ValueError(
                 "Cannot provide `zarr_subfolder` without `project_dir`"
             )
-        return values
+        return self
 
 
 class DatasetRead(BaseModel):
