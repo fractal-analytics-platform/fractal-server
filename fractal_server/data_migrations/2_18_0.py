@@ -1,5 +1,6 @@
 import logging
 import sys
+from os.path import normpath
 
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -21,7 +22,7 @@ def fix_db():
             logging.info(f"Now handling user {user.email}.")
             if user.project_dirs != []:
                 sys.exit(f"Non empty `project_dirs` for User[{user.id}]")
-            user.project_dirs.append(user.project_dir)
+            user.project_dirs.append(normpath(user.project_dir))
             flag_modified(user, "project_dirs")
 
         db.commit()
