@@ -215,7 +215,7 @@ async def _check_project_dirs_update(
     if removed_project_dirs:
         # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
         # starts with one of the project dirs in `removed_project_dirs`.
-        res = await db.execute(
+        stmt = (
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
             .join(
@@ -226,20 +226,29 @@ async def _check_project_dirs_update(
             .where(
                 or_(
                     *[
-                        DatasetV2.zarr_dir.startswith(old_project_dir)
+                        DatasetV2.zarr_dir.startswith(
+                            Path(old_project_dir).as_posix()
+                        )
                         for old_project_dir in removed_project_dirs
                     ]
                 )
             )
-            .where(
+        )
+        if new_project_dirs:
+            stmt = stmt.where(
                 and_(
                     *[
-                        not_(DatasetV2.zarr_dir.startswith(new_project_dir))
+                        not_(
+                            DatasetV2.zarr_dir.startswith(
+                                Path(new_project_dir).as_posix()
+                            )
+                        )
                         for new_project_dir in new_project_dirs
                     ]
                 )
             )
-        )
+        res = await db.execute(stmt)
+
         # Raise 422 if one of the query results is relative to a path in
         # `removed_project_dirs`, but its not relative to any path in
         # `new_project_dirs`.
