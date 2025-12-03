@@ -66,7 +66,9 @@ def _user_flow_vanilla(
     ds = user.import_dataset(
         proj.id,
         DatasetImport(
-            name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
+            name="MyDataset",
+            zarr_dir=f"{user.whoami()['project_dirs'][0]}/invalid/zarr",
+            images=image_list,
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow"))
@@ -110,7 +112,7 @@ def _user_flow_power(
                 proj.id,
                 DatasetImport(
                     name="MyDataset",
-                    zarr_dir="/invalid/zarr",
+                    zarr_dir=f"{user.whoami()['project_dirs'][0]}/invalid/zarr",
                     images=image_list,
                 ),
             )
@@ -141,7 +143,7 @@ def _user_flow_dataset(
             proj.id,
             DatasetImport(
                 name=f"MyDataset_us-{i}",
-                zarr_dir="/invalid/zarr",
+                zarr_dir=f"{user.whoami()['project_dirs'][0]}/invalid/zarr",
                 images=image_list,
             ),
         )
@@ -183,7 +185,7 @@ def _user_flow_project(
             proj.id,
             DatasetImport(
                 name=f"MyDataset_up-{i}",
-                zarr_dir="/invalid/zarr",
+                zarr_dir=f"{user.whoami()['project_dirs'][0]}/invalid/zarr",
                 images=image_list,
             ),
         )
@@ -217,7 +219,9 @@ def _user_flow_job(
     ds = user.import_dataset(
         proj.id,
         DatasetImport(
-            name="MyDataset", zarr_dir="/invalid/zarr", images=image_list
+            name="MyDataset",
+            zarr_dir=f"{user.whoami()['project_dirs'][0]}/invalid/zarr",
+            images=image_list,
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow_uj"))
