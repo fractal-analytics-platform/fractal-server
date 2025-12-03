@@ -39,6 +39,17 @@ def val_canonical_path(path: str) -> str:
     return path
 
 
+def val_os_path_normpath(path: str) -> str:
+    """
+    Apply `os.path.normpath` to `path`.
+
+    Note: we keep this separate from `fractal_server.urls.normalize_url`,
+    because this function only applies to on-disk paths, while `normalize_url`
+    may apply to s3 URLs as well.
+    """
+    return os.path.normpath(path)
+
+
 def val_unique_list(must_be_unique: list) -> list:
     if len(set(must_be_unique)) != len(must_be_unique):
         raise ValueError("List has repetitions")
