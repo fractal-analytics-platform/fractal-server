@@ -23,6 +23,8 @@ The main contents of this release are the introduction of the project sharing an
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
+* Runner:
+    * Improve logging for when dataset or workflow is not found in the database (\#3046).
 * Database:
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
     * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
@@ -34,6 +36,7 @@ The main contents of this release are the introduction of the project sharing an
     * Remove the "V2" label from names of internal schemas and API route tags (\#3037).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
+    * Also validate resources and profiles in `migrations.yml` action (\#3046).
 * Dependencies:
     * Support Python 3.14 (\#3015).
 
