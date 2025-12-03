@@ -8,12 +8,14 @@ from fractal_server.runner.v2.runner import execute_tasks
 
 
 def execute_tasks_mod(
+    *,
     wf_task_list: list[WorkflowTaskV2],
     workflow_dir_local: Path,
     user_id: int,
     job_id: int,
     job_attribute_filters: dict[str, bool] | None = None,
     job_type_filters: dict[str, bool] | None = None,
+    resource_id: int,
     **kwargs,
 ) -> None:
     """
@@ -27,5 +29,6 @@ def execute_tasks_mod(
         job_id=job_id,
         user_id=user_id,
         get_runner_config=get_local_backend_config,
+        resource_id=resource_id,
         **kwargs,
     )

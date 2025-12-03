@@ -6,7 +6,9 @@ from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
@@ -15,7 +17,9 @@ from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.app.schemas.v2 import DatasetRead
 from fractal_server.app.schemas.v2 import JobRead
+from fractal_server.app.schemas.v2 import ProfileRead
 from fractal_server.app.schemas.v2 import ProjectRead
+from fractal_server.app.schemas.v2 import ResourceRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskRead
@@ -135,3 +139,17 @@ with next(get_sync_db()) as db:
     for job in sorted(jobs, key=lambda x: x.id):
         JobRead(**job.model_dump())
         print(f"Job {job.id} validated")
+
+    # RESOURCE
+    stm = select(Resource)
+    resources = db.execute(stm).scalars().all()
+    for resource in sorted(resources, key=lambda x: x.id):
+        ResourceRead(**resource.model_dump())
+        print(f"Resource {resource.id} validated")
+
+    # PROFILE
+    stm = select(Profile)
+    profiles = db.execute(stm).scalars().all()
+    for profile in sorted(profiles, key=lambda x: x.id):
+        ProfileRead(**profile.model_dump())
+        print(f"Profile {profile.id} validated")

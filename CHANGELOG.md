@@ -20,11 +20,16 @@ The main contents of this release are the introduction of the project sharing an
     * Add validator for paths to forbid parent-directory references (\#3031).
     * Add check to `PATCH /auth/users/{user_id}/` when patching `project_dirs` (\#3043).
     * Review job-submission endpoint (\#3041).
+    * Prevent submissions if `Resource.prevent_new_submissions` is set (\#3042).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
+* Runner:
+    * Improve logging for when dataset or workflow is not found in the database (\#3046).
+    * Prevent job-execution from continuing if `Resource.prevent_new_submissions` is set (\#3042).
 * Database:
+    * Add `Resource.prevent_new_submissions` boolean flag (\#3042).
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
     * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
     * Enforce max one submitted `JobV2` per `DatasetV2` (\#3044).
@@ -35,6 +40,7 @@ The main contents of this release are the introduction of the project sharing an
     * Remove the "V2" label from names of internal schemas and API route tags (\#3037).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
+    * Also validate resources and profiles in `migrations.yml` action (\#3046).
 * Dependencies:
     * Support Python 3.14 (\#3015).
 

@@ -146,6 +146,14 @@ async def submit_job(
         user=user,
         db=db,
     )
+    if resource.prevent_new_submissions:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"The '{resource.name}' resource does not currently accept "
+                "new job submissions."
+            ),
+        )
 
     # User appropriate FractalSSH object
     if resource.type == ResourceType.SLURM_SSH:
