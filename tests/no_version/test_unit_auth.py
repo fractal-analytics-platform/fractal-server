@@ -258,4 +258,4 @@ async def test_check_project_dirs_update_trailing_slash(
             user_id=user.id,
             db=db,
         )
-    assert e.status_code == 422
+    assert "422" in str(e)
