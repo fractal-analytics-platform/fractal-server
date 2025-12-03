@@ -33,6 +33,7 @@ The main contents of this release are the introduction of the project sharing an
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).
     * Move `UserOAuth.project_dir` to `.project_dirs` and drop `UserGrop.viewer_paths` (\#3031).
     * Enforce max one submitted `JobV2` per `DatasetV2` (\#3044).
+    * Create 2.18.0 data-migration script (\#3031, \#3050).
 * Settings:
     * Drop `DataSettings` (\#3031).
     * Reduce API logging level for some endpoints (\#3010).
