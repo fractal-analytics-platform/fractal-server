@@ -209,10 +209,16 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
 
 
 async def test_check_project_dirs_update_trailing_slash(
-    local_resource_profile_db, db
+    local_resource_profile_db,
+    db,
 ):
-    # Setup
+    """
+    This test documents an unreachable branch, where `zarr_dir` has not been
+    normalized upon creation and still has a trailing `/`.
 
+    If this is the case, then the `_check_project_dirs_update` function may
+    behave wrong - as in the example below.
+    """
     resource, _ = local_resource_profile_db
 
     # Add User
