@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -263,6 +264,18 @@ async def import_dataset(
         required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
+
+    if not any(
+        Path(dataset.zarr_dir).is_relative_to(project_dir)
+        for project_dir in user.project_dirs
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"{dataset.zarr_dir=} is not relative to any of user's project "
+                "dirs."
+            ),
+        )
 
     for image in dataset.images:
         if not image.zarr_url.startswith(dataset.zarr_dir):

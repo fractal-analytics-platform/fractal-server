@@ -379,29 +379,36 @@ async def test_dataset_import(
     project_factory,
     db,
 ):
-    ZARR_DIR = "/something"
-    IMAGES = [SingleImage(zarr_url=f"{ZARR_DIR}/image1").model_dump()]
+    PROJECT_DIR = "/user"
+    ZARR_SUBFOLDER = "something"
+    IMAGES = [
+        SingleImage(
+            zarr_url=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}/image1"
+        ).model_dump()
+    ]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(
+        user_kwargs={"project_dirs": [PROJECT_DIR]}
+    ) as user:
         project = await project_factory(user)
         ENDPOINT_URL = f"{PREFIX}/project/{project.id}/dataset/import/"
 
         # FAILURE: Images with zarr_urls not relative to zarr_dir
         payload = dict(
             name="Dataset",
-            zarr_dir="/invalid",
+            zarr_dir=f"/fake/{ZARR_SUBFOLDER}",
             images=IMAGES,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
         assert res.status_code == 422
-        assert "is not relative to zarr_dir" in res.json()["detail"]
+        assert "is not relative to" in res.json()["detail"]
 
         # SUCCESS, with new filters (which are ignored)
         payload = dict(
             name="Dataset1",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
         )
@@ -410,12 +417,12 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset1"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
         # SUCCESS, with legacy filters (which are ignored)
         payload = dict(
             name="Dataset2",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
             filters={
                 "attributes": dict(key1="value1"),
@@ -427,12 +434,12 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset2"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
         # SUCCESS, with no filters
         payload = dict(
             name="Dataset3",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
@@ -440,7 +447,7 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset3"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
 
 async def test_export_dataset(
