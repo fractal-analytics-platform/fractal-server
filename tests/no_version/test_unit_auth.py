@@ -206,3 +206,56 @@ async def test_check_project_dirs_update(local_resource_profile_db, db):
             ],
             **kwargs,
         )
+
+
+async def test_check_project_dirs_update_trailing_slash(
+    local_resource_profile_db, db
+):
+    # Setup
+
+    resource, _ = local_resource_profile_db
+
+    # Add User
+    user = UserOAuth(
+        email="user@example.org",
+        hashed_password="12345",
+        project_dirs=["/data"],
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    # Add Project
+    project = ProjectV2(name="Project", resource_id=resource.id)
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    db.add(
+        LinkUserProjectV2(
+            project_id=project.id,
+            user_id=user.id,
+            is_owner=True,
+            is_verified=True,
+            permissions=ProjectPermissions.EXECUTE,
+        )
+    )
+    await db.commit()
+    # Add Datasets
+    dataset = DatasetV2(
+        name="Dataset",
+        project_id=project.id,
+        zarr_dir="/data/",
+    )
+    db.add(dataset)
+    await db.commit()
+    await db.refresh(dataset)
+
+    # Test
+
+    with pytest.raises(HTTPException) as e:
+        await _check_project_dirs_update(
+            old_project_dirs=user.project_dirs,
+            new_project_dirs=[],
+            user_id=user.id,
+            db=db,
+        )
+    assert e.status_code == 422
