@@ -53,7 +53,7 @@ async def create_dataset(
     db_dataset = DatasetV2(
         project_id=project_id,
         zarr_dir="__PLACEHOLDER__",
-        **dataset.model_dump(exclude={"zarr_dir"}),
+        **dataset.model_dump(exclude={"project_dir", "zarr_subfolder"}),
     )
     db.add(db_dataset)
     await db.flush()
