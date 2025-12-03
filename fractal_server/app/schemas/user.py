@@ -79,7 +79,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     profile_id: int | None = None
     project_dirs: Annotated[
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
-    ] = None
+    ] = Field(default=None, min_length=1)
     slurm_accounts: ListUniqueNonEmptyString = None
 
 

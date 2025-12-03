@@ -1,6 +1,11 @@
 from devtools import debug
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import OAuthAccount
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2.dataset import DatasetV2
+from fractal_server.app.models.v2.project import ProjectV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
@@ -290,6 +295,80 @@ async def test_edit_users_as_superuser(
     assert res.status_code == 200
     users = res.json()
     assert len(users) == 0
+
+
+async def test_edit_user_project_dirs(
+    registered_superuser_client, local_resource_profile_db, db
+):
+    resource, profile = local_resource_profile_db
+
+    user = UserOAuth(
+        email="user@example.org",
+        hashed_password="12345",
+        project_dirs=["/a", "/b", "/b/c"],
+    )
+    db.add(user)
+    await db.flush()
+    project = ProjectV2(name="Project", resource_id=resource.id)
+    db.add(project)
+    await db.flush()
+    db.add(
+        LinkUserProjectV2(
+            project_id=project.id,
+            user_id=user.id,
+            is_owner=True,
+            is_verified=True,
+            permissions=ProjectPermissions.EXECUTE,
+        )
+    )
+    await db.flush()
+    dataset = DatasetV2(
+        name="Dataset",
+        project_id=project.id,
+        zarr_dir="/b/c/data/zarr",
+        images=[],
+    )
+    db.add(dataset)
+    await db.commit()
+    await db.refresh(user)
+    await db.refresh(dataset)
+
+    # Update 1
+
+    update = dict(project_dirs=["/a", "/b/c/data"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
+    assert res.json()["project_dirs"] == update["project_dirs"]
+
+    # Update 2
+
+    update = dict(project_dirs=["/a"])
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 422
+    assert "loose access" in res.json()["detail"]
+
+    await db.delete(dataset)
+    await db.commit()
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
+
+    # Update 3
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/", json=dict(project_dirs=[])
+    )
+    assert res.status_code == 422
+    debug(res.json())
+    assert "at least 1 item" in str(res.json()["detail"])
 
 
 async def test_add_superuser(registered_superuser_client):

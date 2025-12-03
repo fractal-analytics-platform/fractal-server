@@ -1,12 +1,21 @@
+from os.path import normpath
+from pathlib import Path
+
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import and_
 from sqlmodel import asc
+from sqlmodel import not_
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v2.dataset import DatasetV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.config import get_settings
@@ -176,5 +185,95 @@ async def _verify_user_belongs_to_group(
                 detail=(
                     f"User {user_id} does not belong "
                     f"to UserGroup {user_group_id}"
+                ),
+            )
+
+
+async def _check_project_dirs_update(
+    *,
+    old_project_dirs: list[str],
+    new_project_dirs: list[str],
+    user_id: int,
+    db: AsyncSession,
+) -> None:
+    """
+    Raises 422 if by replacing user's `project_dirs` with new ones we are
+    removing the access to a `zarr_dir` used by some dataset.
+
+    Note both `old_project_dirs` and `new_project_dirs` have been
+    normalized through `os.path.normpath`, which notably strips any trailing
+    `/` character. To be safe, we also re-normalize them within this function.
+    """
+    # Create a list of all the old project dirs that will lose privileges.
+    # E.g.:
+    #   old_project_dirs = ["/a", "/b", "/c/d", "/e/f"]
+    #   new_project_dirs = ["/a", "/c", "/e/f/g1", "/e/f/g2"]
+    #   removed_project_dirs == ["/b", "/e/f"]
+    removed_project_dirs = [
+        old_project_dir
+        for old_project_dir in old_project_dirs
+        if not any(
+            Path(old_project_dir).is_relative_to(new_project_dir)
+            for new_project_dir in new_project_dirs
+        )
+    ]
+    if removed_project_dirs:
+        # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
+        # starts with one of the project dirs in `removed_project_dirs`.
+        stmt = (
+            select(DatasetV2.zarr_dir)
+            .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
+            .join(
+                LinkUserProjectV2,
+                LinkUserProjectV2.project_id == ProjectV2.id,
+            )
+            .where(LinkUserProjectV2.user_id == user_id)
+            .where(
+                or_(
+                    *[
+                        DatasetV2.zarr_dir.startswith(normpath(old_project_dir))
+                        for old_project_dir in removed_project_dirs
+                    ]
+                )
+            )
+        )
+        if new_project_dirs:
+            stmt = stmt.where(
+                and_(
+                    *[
+                        not_(
+                            DatasetV2.zarr_dir.startswith(
+                                normpath(new_project_dir)
+                            )
+                        )
+                        for new_project_dir in new_project_dirs
+                    ]
+                )
+            )
+        res = await db.execute(stmt)
+
+        # Raise 422 if one of the query results is relative to a path in
+        # `removed_project_dirs`, but its not relative to any path in
+        # `new_project_dirs`.
+        if any(
+            (
+                any(
+                    Path(zarr_dir).is_relative_to(old_project_dir)
+                    for old_project_dir in removed_project_dirs
+                )
+                and not any(
+                    Path(zarr_dir).is_relative_to(new_project_dir)
+                    for new_project_dir in new_project_dirs
+                )
+            )
+            for zarr_dir in res.scalars().all()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "You tried updating the user project_dirs, removing "
+                    f"{removed_project_dirs}. This operation is not possible, "
+                    "because it would make the user loose access to some of "
+                    "their dataset zarr directories."
                 ),
             )
