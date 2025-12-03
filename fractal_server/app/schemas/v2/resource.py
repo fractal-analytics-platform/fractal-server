@@ -77,6 +77,8 @@ class ValidResourceBase(BaseModel):
     jobs_runner_config: dict[NonEmptyStr, Any]
     jobs_poll_interval: int = 5
 
+    prevent_new_submissions: bool = False
+
     @model_validator(mode="after")
     def _pixi_slurm_config(self) -> Self:
         if (
@@ -95,6 +97,9 @@ class ValidResourceLocal(ValidResourceBase):
     Attributes:
         name: Resource name.
         type: Resource type.
+        prevent_new_submissions:
+            When set to true: Prevent new job submissions and stop execution of
+            ongoing jobs as soon as the current task is complete.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
@@ -105,7 +110,6 @@ class ValidResourceLocal(ValidResourceBase):
             Local base folder for job folders.
         jobs_runner_config:
             Runner configuration.
-
     """
 
     type: Literal[ResourceType.LOCAL]
@@ -121,6 +125,9 @@ class ValidResourceSlurmSudo(ValidResourceBase):
     Attributes:
         name: Resource name.
         type: Resource type.
+        prevent_new_submissions:
+            When set to true: Prevent new job submissions and stop execution of
+            ongoing jobs as soon as the current task is complete.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
@@ -150,6 +157,9 @@ class ValidResourceSlurmSSH(ValidResourceBase):
     Attributes:
         name: Resource name
         type: Resource type.
+        prevent_new_submissions:
+            When set to true: Prevent new job submissions and stop execution of
+            ongoing jobs as soon as the current task is complete.
         tasks_python_config:
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
@@ -198,10 +208,9 @@ class ResourceRead(BaseModel):
     """
 
     id: int
-
-    type: str
-
     name: str
+    type: str
+    prevent_new_submissions: bool
     timestamp_created: AwareDatetime
 
     host: str | None
