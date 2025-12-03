@@ -50,15 +50,16 @@ async def create_dataset(
         db=db,
     )
 
-    if dataset.zarr_dir is None:
-        db_dataset = DatasetV2(
-            project_id=project_id,
-            zarr_dir="__PLACEHOLDER__",
-            **dataset.model_dump(exclude={"zarr_dir"}),
-        )
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
+    db_dataset = DatasetV2(
+        project_id=project_id,
+        zarr_dir="__PLACEHOLDER__",
+        **dataset.model_dump(exclude={"zarr_dir"}),
+    )
+    db.add(db_dataset)
+    await db.flush()
+    await db.refresh(db_dataset)
+
+    if dataset.project_dir is None:
         path = (
             f"{user.project_dirs[0]}/fractal/"
             f"{project_id}_{sanitize_string(project.name)}/"
@@ -66,27 +67,28 @@ async def create_dataset(
         )
         normalized_path = normalize_url(path)
         db_dataset.zarr_dir = normalized_path
-
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
     else:
-        if not any(
-            Path(dataset.zarr_dir).is_relative_to(project_dir)
-            for project_dir in user.project_dirs
-        ):
+        if dataset.project_dir not in user.project_dirs:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Dataset zarr_dir is not relative to any of the user "
-                    "project directories."
-                ),
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to use the `project_dir` provided",
+            )
+        if dataset.zarr_subfolder is None:
+            path = (
+                f"{dataset.project_dir}/fractal/"
+                f"{project_id}_{sanitize_string(project.name)}/"
+                f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
+            )
+            normalized_path = normalize_url(path)
+            db_dataset.zarr_dir = normalized_path
+        else:
+            db_dataset.zarr_dir = (
+                f"{dataset.project_dir}/{dataset.zarr_subfolder}"
             )
 
-        db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
+    db.add(db_dataset)
+    await db.commit()
+    await db.refresh(db_dataset)
 
     return db_dataset
 
