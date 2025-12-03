@@ -18,6 +18,7 @@ The main contents of this release are the introduction of the project sharing an
     * Reduce API logging level for some endpoints (\#3010).
     * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
     * Add validator for paths to forbid parent-directory references (\#3031).
+    * Add check to `PATCH /auth/users/{user_id}/` when patching `project_dirs` (\#3043).
     * Review job-submission endpoint (\#3041).
     * Prevent submissions if `Resource.prevent_new_submissions` is set (\#3042).
     * Add `normpath` to `AbsolutePathStr` type (\#3050).

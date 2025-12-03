@@ -28,6 +28,7 @@ from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 from . import current_superuser_act
+from ._aux_auth import _check_project_dirs_update
 from ._aux_auth import _get_default_usergroup_id_or_none
 from ._aux_auth import _get_single_user_with_groups
 
@@ -73,6 +74,14 @@ async def patch_user(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Profile {user_update.profile_id} not found.",
             )
+
+    if user_update.project_dirs is not None:
+        await _check_project_dirs_update(
+            old_project_dirs=user_to_patch.project_dirs,
+            new_project_dirs=user_update.project_dirs,
+            user_id=user_id,
+            db=db,
+        )
 
     # Modify user attributes
     try:
