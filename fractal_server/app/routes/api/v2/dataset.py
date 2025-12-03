@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -164,27 +163,6 @@ async def update_dataset(
         db=db,
     )
     db_dataset = output["dataset"]
-
-    if dataset_update.zarr_dir is not None:
-        if db_dataset.images:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot modify `zarr_dir` because the dataset has a "
-                    "non-empty image list."
-                ),
-            )
-        if not any(
-            Path(dataset_update.zarr_dir).is_relative_to(project_dir)
-            for project_dir in user.project_dirs
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Dataset zarr_dir is not relative to any of the user "
-                    "project directories."
-                ),
-            )
 
     for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)

@@ -80,7 +80,6 @@ class DatasetUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr = None
-    zarr_dir: ZarrDirStr | None = None
 
 
 class DatasetImport(BaseModel):
