@@ -59,10 +59,12 @@ async def test_fractal_demos_01(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     """
     Mock of fractal-demos/examples/01.
     """
+    resource, _ = local_resource_profile_db
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
@@ -112,6 +114,7 @@ async def test_fractal_demos_01(
         runner=local_runner,
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
     _assert_image_data_exist(dataset_attrs["images"])
@@ -127,6 +130,7 @@ async def test_fractal_demos_01(
         runner=local_runner,
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     assert {img["zarr_url"] for img in dataset_attrs["images"]} == {
@@ -165,6 +169,7 @@ async def test_fractal_demos_01(
             "illumination_correction": True,
         },
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
@@ -200,6 +205,7 @@ async def test_fractal_demos_01(
             "3D": False,
         },
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
     debug(dataset_attrs)
@@ -216,11 +222,13 @@ async def test_fractal_demos_01_no_overwrite(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
     """
     Similar to fractal-demos/examples/01, but illumination
     correction task does not override its input images.
     """
+    resource, _ = local_resource_profile_db
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
@@ -271,6 +279,7 @@ async def test_fractal_demos_01_no_overwrite(
         runner=local_runner,
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
     assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
@@ -291,6 +300,7 @@ async def test_fractal_demos_01_no_overwrite(
         runner=local_runner,
         user_id=user_id,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -360,6 +370,7 @@ async def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -411,6 +422,7 @@ async def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -426,7 +438,9 @@ async def test_registration_no_overwrite(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -474,6 +488,7 @@ async def test_registration_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -488,6 +503,7 @@ async def test_registration_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -509,6 +525,7 @@ async def test_registration_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -530,6 +547,7 @@ async def test_registration_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -548,7 +566,9 @@ async def test_registration_overwrite(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -596,6 +616,7 @@ async def test_registration_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -610,6 +631,7 @@ async def test_registration_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -631,6 +653,7 @@ async def test_registration_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -652,6 +675,7 @@ async def test_registration_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 
@@ -672,7 +696,9 @@ async def test_channel_parallelization_with_overwrite(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -710,6 +736,7 @@ async def test_channel_parallelization_with_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -723,6 +750,7 @@ async def test_channel_parallelization_with_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -741,7 +769,9 @@ async def test_channel_parallelization_no_overwrite(
     tmp_path: Path,
     local_runner: LocalRunner,
     fractal_tasks_mock_db,
+    local_resource_profile_db,
 ):
+    resource, _ = local_resource_profile_db
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     async with MockCurrentUser() as user:
         user_id = user.id
@@ -779,6 +809,7 @@ async def test_channel_parallelization_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset.id)
 
@@ -793,6 +824,7 @@ async def test_channel_parallelization_no_overwrite(
         user_id=user_id,
         runner=local_runner,
         job_id=job.id,
+        resource_id=resource.id,
     )
     dataset_attrs = await _get_dataset_attrs(db, dataset_with_attrs.id)
 

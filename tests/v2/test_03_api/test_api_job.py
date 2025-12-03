@@ -49,12 +49,12 @@ async def test_submit_job_failures(
     local_resource_profile_db,
     slurm_sudo_resource_profile_db,
 ):
-    res, prof = local_resource_profile_db
-    res2, _ = slurm_sudo_resource_profile_db
+    resource1, profile1 = local_resource_profile_db
+    resource2, _ = slurm_sudo_resource_profile_db
     async with MockCurrentUser(
         user_kwargs=dict(
             is_verified=True,
-            profile_id=prof.id,
+            profile_id=profile1.id,
         )
     ) as user:
         task = await task_factory(user_id=user.id)
@@ -72,7 +72,7 @@ async def test_submit_job_failures(
         project2 = await project_factory(user)
         workflow2 = await workflow_factory(project_id=project2.id)
         # 3
-        project3 = await project_factory(user, resource_id=res2.id)
+        project3 = await project_factory(user, resource_id=resource2.id)
         dataset3 = await dataset_factory(
             project_id=project3.id, name="dataset3"
         )
@@ -129,6 +129,23 @@ async def test_submit_job_failures(
         assert res.json()["detail"] == (
             "Project resource does not match with user's resource"
         )
+
+        # (F) Resource cannot accept new submissions
+        resource1.prevent_new_submissions = True
+        db.add(resource1)
+        await db.commit()
+        await _workflow_insert_task(
+            workflow_id=workflow1b.id, task_id=task.id, db=db
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/job/submit/"
+            f"?workflow_id={workflow1b.id}&dataset_id={dataset1.id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert resource1.name in res.json()["detail"]
+        assert "new job submissions" in res.json()["detail"]
 
 
 async def test_submit_job_ssh_connection_failure(
