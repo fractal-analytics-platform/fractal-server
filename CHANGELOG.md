@@ -25,6 +25,7 @@ The main contents of this release are the introduction of the project sharing an
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
 * Runner:
+    * Improve logging for when dataset or workflow is not found in the database (\#3046).
     * Prevent job-execution from continuing if `Resource.prevent_new_submissions` is set (\#3042).
 * Database:
     * Add `Resource.prevent_new_submissions` boolean flag (\#3042).
@@ -38,6 +39,7 @@ The main contents of this release are the introduction of the project sharing an
     * Remove the "V2" label from names of internal schemas and API route tags (\#3037).
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
+    * Also validate resources and profiles in `migrations.yml` action (\#3046).
 * Dependencies:
     * Support Python 3.14 (\#3015).
 
