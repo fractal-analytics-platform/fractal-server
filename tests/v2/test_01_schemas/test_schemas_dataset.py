@@ -32,6 +32,13 @@ async def test_schemas_dataset():
         )
 
     with pytest.raises(ValidationError):
+        DatasetCreate(
+            name="name",
+            project_dir="/",
+            zarr_subfolder="/absolute",
+        )
+
+    with pytest.raises(ValidationError):
         DatasetImport(name="name", zarr_dir=None)
 
     dataset_import = DatasetImport(
