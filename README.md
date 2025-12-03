@@ -156,7 +156,7 @@
 | fractal\_server/runner/v2/merge\_outputs.py                                  |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/runner/v2/runner.py                                          |      202 |        2 |       44 |        3 |     98% |292, 341, 359->376 |
 | fractal\_server/runner/v2/runner\_functions.py                               |      192 |       11 |       48 |        8 |     92% |141, 171, 201->204, 280, 365-370, 429->433, 481-482, 579-584 |
-| fractal\_server/runner/v2/submit\_workflow.py                                |      139 |        4 |       26 |        4 |     95% |135-140, 148->150, 150->154, 172->200, 241->248 |
+| fractal\_server/runner/v2/submit\_workflow.py                                |      143 |        4 |       26 |        4 |     95% |135-140, 148->155, 155->163, 185->213, 254->261 |
 | fractal\_server/runner/v2/task\_interface.py                                 |       39 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/ssh/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/ssh/\_fabric.py                                              |      309 |        2 |       40 |        2 |     99% |210->212, 310-311, 356->358 |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-|                                                                    **TOTAL** | **10001** |  **196** | **1812** |   **93** | **97%** |           |
+|                                                                    **TOTAL** | **10005** |  **196** | **1812** |   **93** | **97%** |           |
 
 
 ## Setup coverage badge
