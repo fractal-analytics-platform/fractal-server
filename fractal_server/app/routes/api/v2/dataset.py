@@ -11,7 +11,6 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.auth import current_user_act_ver_prof
 from fractal_server.app.schemas.v2 import DatasetCreate
 from fractal_server.app.schemas.v2 import DatasetRead
@@ -24,7 +23,6 @@ from fractal_server.urls import normalize_url
 
 from ._aux_functions import _get_dataset_check_access
 from ._aux_functions import _get_project_check_access
-from ._aux_functions import _get_submitted_jobs_statement
 
 router = APIRouter()
 
@@ -221,18 +219,18 @@ async def delete_dataset(
 
     # Fail if there exist jobs that are submitted and in relation with the
     # current dataset.
-    stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
-    res = await db.execute(stm)
-    jobs = res.scalars().all()
-    if jobs:
-        string_ids = str([job.id for job in jobs])[1:-1]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Cannot delete dataset {dataset.id} because it "
-                f"is linked to active job(s) {string_ids}."
-            ),
-        )
+    # stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
+    # res = await db.execute(stm)
+    # jobs = res.scalars().all()
+    # if jobs:
+    #     string_ids = str([job.id for job in jobs])[1:-1]
+    #     raise HTTPException(
+    #         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    #         detail=(
+    #             f"Cannot delete dataset {dataset.id} because it "
+    #             f"is linked to active job(s) {string_ids}."
+    #         ),
+    #     )
 
     # Delete dataset
     await db.delete(dataset)
