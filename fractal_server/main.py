@@ -141,9 +141,11 @@ class SlowResponseMiddleware:
         self.time_threshold = time_threshold
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        # Filter out any non-http scope (e.g. `type="lifespan"`)
-        if (scope["type"] != "http") or (
-            # exclude endpoints with background tasks
+        if (
+            # Filter out any non-http scope (e.g. `type="lifespan"`)
+            scope["type"] != "http"
+        ) or (
+            # Exclude endpoints with background tasks
             scope["method"] == "POST"
             and scope["path"].startswith("/api/v2/task/collect")
         ):
