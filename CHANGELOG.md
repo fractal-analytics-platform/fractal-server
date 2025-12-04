@@ -25,6 +25,7 @@ The main contents of this release are the introduction of the project sharing an
     * Split `zarr_dir` request body argument of `POST /project/{project_id}/dataset/` into `project_dir` and `zarr_subfolder` (\#3051).
     * Add `zarr_dir` validity check in `POST /project/{project_id}/dataset/import/` (\#3051).
     * Remove `zarr_dir` request body argument from `PATCH /project/{project_id}/dataset/{dataset_id}/` (\#3051).
+    * Validate `images` in `DatasetImport` (\#3057).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:
