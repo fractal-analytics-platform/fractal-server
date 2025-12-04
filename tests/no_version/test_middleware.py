@@ -62,12 +62,11 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
         return {}
     ```
 
-    The test fails on the second assertion if there is an endpoint using
-    `BackgroundTasks` for which the function returns `True`, but which is not
-    listed below, e.g.:
+    The test fails on the second assertion if there is an endpoint for which
+    the function returns `True`, but which is not listed below, e.g.:
     ```
     @router.post("/foo/task-group/bar/")
-    async def example(background_tasks: BackgroundTasks):
+    async def example():
         return {}
     ```
     """
