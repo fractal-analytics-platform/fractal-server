@@ -64,6 +64,8 @@ async def create_dataset(
         project_dir = user.project_dirs[0]
     else:
         if dataset.project_dir not in user.project_dirs:
+            await db.delete(db_dataset)
+            await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"You are not allowed to use {dataset.project_dir=}.",
