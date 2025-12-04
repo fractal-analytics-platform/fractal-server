@@ -5,7 +5,6 @@ from fractal_server.types import DictStrAny
 from fractal_server.types import ImageAttributes
 from fractal_server.types import ImageAttributesWithNone
 from fractal_server.types import ImageTypes
-from fractal_server.types import ZarrDirStr
 from fractal_server.types import ZarrUrlStr
 
 
@@ -21,7 +20,7 @@ class SingleImageBase(BaseModel):
     """
 
     zarr_url: ZarrUrlStr
-    origin: ZarrDirStr | None = None
+    origin: ZarrUrlStr | None = None
 
     attributes: DictStrAny = Field(default_factory=dict)
     types: ImageTypes = Field(default_factory=dict)

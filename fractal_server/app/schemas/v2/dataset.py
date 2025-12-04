@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -99,6 +100,15 @@ class DatasetImport(BaseModel):
     name: str
     zarr_dir: ZarrDirStr
     images: list[SingleImage] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_image_zarr_url(self):
+        for image in self.images:
+            if not Path(image.zarr_url).is_relative_to(self.zarr_dir):
+                raise ValueError(
+                    f"{image.zarr_url=} is not relative to {self.zarr_dir=}."
+                )
+        return self
 
 
 class DatasetExport(BaseModel):
