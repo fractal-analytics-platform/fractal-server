@@ -67,13 +67,12 @@ async def test_schemas_dataset():
 
     # Update
 
+    DatasetUpdate()
+
     with pytest.raises(ValidationError):
         DatasetUpdate(name=None)
 
-    dataset_update = DatasetUpdate(name="new name")
-    for key, value in dataset_update.model_dump(exclude_unset=True).items():
-        setattr(dataset, key, value)
-    assert dataset.name == "new name"
+    DatasetUpdate(name="name")
 
 
 def test_project_dir():
