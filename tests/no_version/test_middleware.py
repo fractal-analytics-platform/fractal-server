@@ -51,20 +51,20 @@ async def test_app_with_middleware(caplog):
 
 async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     """
-    Verifify that `_endpoint_has_background_task` works as expected.
+    Verifify that the function `_endpoint_has_background_task` works as
+    expected.
 
-    The test fails on the first assertion if we add an endpoint using
-    BackgroundTasks which is not identified by `_endpoint_has_background_task`,
-    e.g.:
+    The test fails on the first assertion if there is an endpoint using
+    `BackgroundTasks` for which the function returns `False`, e.g.:
     ```
     @router.get("/foo/bar/")
     async def example(background_tasks: BackgroundTasks):
         return {}
     ```
 
-    The test fails on the second assertion if we add an endpoint using
-    BackgroundTasks which is identified by `_endpoint_has_background_task`, but
-    it's not listed below, e.g.:
+    The test fails on the second assertion if there is an endpoint using
+    `BackgroundTasks` for which the function returns `True`, but which is not
+    listed below, e.g.:
     ```
     @router.post("/foo/task-group/bar/")
     async def example(background_tasks: BackgroundTasks):
