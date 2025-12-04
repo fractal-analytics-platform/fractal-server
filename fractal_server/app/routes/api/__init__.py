@@ -3,7 +3,6 @@
 """
 
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Depends
 
 import fractal_server
@@ -24,11 +23,6 @@ async def alive():
         alive=True,
         version=fractal_server.__VERSION__,
     )
-
-
-@router_api.post("/task-group/")
-async def foo(background_tasks: BackgroundTasks):
-    return {"hello": "world"}
 
 
 @router_api.get("/settings/app/")
