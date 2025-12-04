@@ -22,6 +22,9 @@ The main contents of this release are the introduction of the project sharing an
     * Review job-submission endpoint (\#3041).
     * Prevent submissions if `Resource.prevent_new_submissions` is set (\#3042).
     * Add `normpath` to `AbsolutePathStr` type (\#3050).
+    * Split `zarr_dir` request body argument of `POST /project/{project_id}/dataset/` into `project_dir` and `zarr_subfolder` (\#3051).
+    * Add `zarr_dir` validity check in `POST /project/{project_id}/dataset/import/` (\#3051).
+    * Remove `zarr_dir` request body argument from `PATCH /project/{project_id}/dataset/{dataset_id}/` (\#3051).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
 * Settings:

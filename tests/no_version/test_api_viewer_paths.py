@@ -19,24 +19,36 @@ async def test_get_current_user_allowed_viewer_paths(
         assert res.status_code == 201
         project_id = res.json()["id"]
 
-        # Dataset1.zatt_dir == '/a1/x'
+        # Dataset1.zarr_dir == '/a1/x'
         res = await client.post(
             f"api/v2/project/{project_id}/dataset/",
-            json=dict(name="Dataset1", zarr_dir=f"{userA.project_dirs[0]}/x"),
+            json=dict(
+                name="Dataset1",
+                project_dir=userA.project_dirs[0],
+                zarr_subfolder="x",
+            ),
         )
         assert res.status_code == 201
 
-        # Dataset2.zatt_dir == '/a2/y'
+        # Dataset2.zarr_dir == '/a2/y'
         res = await client.post(
             f"api/v2/project/{project_id}/dataset/",
-            json=dict(name="Dataset2", zarr_dir=f"{userA.project_dirs[1]}/y"),
+            json=dict(
+                name="Dataset2",
+                project_dir=userA.project_dirs[1],
+                zarr_subfolder="y",
+            ),
         )
         assert res.status_code == 201
 
-        # Dataset3.zatt_dir == '/a2/y'
+        # Dataset3.zarr_dir == '/a2/y'
         res = await client.post(
             f"api/v2/project/{project_id}/dataset/",
-            json=dict(name="Dataset3", zarr_dir=f"{userA.project_dirs[1]}/y"),
+            json=dict(
+                name="Dataset3",
+                project_dir=userA.project_dirs[1],
+                zarr_subfolder="y",
+            ),
         )
         assert res.status_code == 201
 

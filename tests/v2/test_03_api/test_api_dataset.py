@@ -1,5 +1,7 @@
 from devtools import debug
+from sqlmodel import func
 
+from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -50,7 +52,11 @@ async def test_new_dataset(
 
         res = await client.post(
             f"api/v2/project/{p2_id}/dataset/",
-            json=dict(name="dataset", zarr_dir=f"{user.project_dirs[0]}/tmp"),
+            json=dict(
+                name="dataset",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp",
+            ),
         )
         assert res.status_code == 201
         dataset1 = res.json()
@@ -59,7 +65,8 @@ async def test_new_dataset(
             f"api/v2/project/{p2_id}/dataset/",
             json=dict(
                 name="dataset",
-                zarr_dir=f"{user.project_dirs[0]}/tmp",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp",
             ),
         )
         assert res.status_code == 201
@@ -118,7 +125,9 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         res = await client.post(
             f"{PREFIX}/project/{p_id}/dataset/",
             json=dict(
-                name=DATASET_NAME, zarr_dir=f"{user.project_dirs[0]}/tmp/zarr"
+                name=DATASET_NAME,
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp/zarr",
             ),
         )
         assert res.status_code == 201
@@ -150,25 +159,30 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         debug(datasets[0]["timestamp_created"])
 
 
-async def test_post_dataset(client, MockCurrentUser, project_factory):
+async def test_post_dataset(client, MockCurrentUser, project_factory, db):
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
         # Check that zarr_dir must be relative to one of user's project dirs
+        res = await db.execute(func.count(DatasetV2.id))
+        initial_count = res.scalar()
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
-            json=dict(name="wrong", zarr_dir="/wrong/zarr/dir"),
+            json=dict(name="wrong", project_dir="/wrong"),
         )
-        assert res.status_code == 422
+        assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Dataset zarr_dir is not relative to any "
-            "of the user project directories."
+            "You are not allowed to use dataset.project_dir='/wrong'."
         )
+        res = await db.execute(func.count(DatasetV2.id))
+        assert res.scalar() == initial_count
 
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
             json=dict(
-                name="wrong", zarr_dir=f"{user.project_dirs[0]}/tmp/../zarr"
+                name="wrong",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp/../zarr",
             ),
         )
         assert res.status_code == 422
@@ -179,7 +193,9 @@ async def test_post_dataset(client, MockCurrentUser, project_factory):
 
         # ADD DATASET
         payload = dict(
-            name="new dataset", zarr_dir=f"{user.project_dirs[0]}/tmp/zarr"
+            name="new dataset",
+            project_dir=user.project_dirs[0],
+            zarr_subfolder="tmp/zarr",
         )
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
@@ -362,47 +378,6 @@ async def test_patch_dataset(
         debug(dataset)
         assert dataset["name"] == NEW_NAME
 
-        # Check that zarr_dir must be relative to one of user's project dirs
-        WRONG_ZARR_DIR = "/wrong/zarr/dir"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=WRONG_ZARR_DIR),
-        )
-        assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "Dataset zarr_dir is not relative to any "
-            "of the user project directories."
-        )
-
-        WRONG_ZARR_DIR_2 = f"{user.project_dirs[0]}/a/b/../c/d"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=WRONG_ZARR_DIR_2),
-        )
-        assert res.status_code == 422
-        assert (
-            "String must not contain '/../'."
-            in (res.json()["detail"][0]["msg"])
-        )
-
-        # Check that zarr_dir can be modified only if Dataset.images is empty
-        NEW_ZARR_DIR = f"{user.project_dirs[0]}/new_zarr_dir"
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir=NEW_ZARR_DIR),
-        )
-        assert res.status_code == 200
-        assert res.json()["zarr_dir"] == NEW_ZARR_DIR
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/",
-            json=dict(zarr_url=f"{NEW_ZARR_DIR}/x.zarr"),
-        )
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
-            json=dict(zarr_dir="/new_zarr_dir_2"),
-        )
-        assert res.status_code == 422
-
 
 async def test_dataset_import(
     client,
@@ -410,29 +385,36 @@ async def test_dataset_import(
     project_factory,
     db,
 ):
-    ZARR_DIR = "/something"
-    IMAGES = [SingleImage(zarr_url=f"{ZARR_DIR}/image1").model_dump()]
+    PROJECT_DIR = "/user"
+    ZARR_SUBFOLDER = "something"
+    IMAGES = [
+        SingleImage(
+            zarr_url=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}/image1"
+        ).model_dump()
+    ]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(
+        user_kwargs={"project_dirs": [PROJECT_DIR]}
+    ) as user:
         project = await project_factory(user)
         ENDPOINT_URL = f"{PREFIX}/project/{project.id}/dataset/import/"
 
         # FAILURE: Images with zarr_urls not relative to zarr_dir
         payload = dict(
             name="Dataset",
-            zarr_dir="/invalid",
+            zarr_dir=f"/fake/{ZARR_SUBFOLDER}",
             images=IMAGES,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
         debug(res.json())
         assert res.status_code == 422
-        assert "is not relative to zarr_dir" in res.json()["detail"]
+        assert "is not relative to" in res.json()["detail"]
 
         # SUCCESS, with new filters (which are ignored)
         payload = dict(
             name="Dataset1",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
             attribute_filters=EXPECTED_ATTRIBUTE_FILTERS,
         )
@@ -441,12 +423,12 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset1"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
         # SUCCESS, with legacy filters (which are ignored)
         payload = dict(
             name="Dataset2",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
             filters={
                 "attributes": dict(key1="value1"),
@@ -458,12 +440,12 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset2"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
         # SUCCESS, with no filters
         payload = dict(
             name="Dataset3",
-            zarr_dir=ZARR_DIR,
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
             images=IMAGES,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
@@ -471,7 +453,18 @@ async def test_dataset_import(
         res_dataset = res.json()
         debug(res_dataset)
         assert res_dataset["name"] == "Dataset3"
-        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
+
+        # FAIL Cannot import dataset:
+        # {image.zarr_url} is not relative to {dataset.zarr_dir}
+        payload = dict(
+            name="Dataset4",
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
+            images=[SingleImage(zarr_url="/something/image1").model_dump()],
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        assert res.status_code == 422
+        assert "Cannot import dataset" in res.json()["detail"]
 
 
 async def test_export_dataset(

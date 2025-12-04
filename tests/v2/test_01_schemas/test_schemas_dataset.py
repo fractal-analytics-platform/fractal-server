@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from pydantic import ValidationError
 
@@ -14,13 +16,27 @@ async def test_schemas_dataset():
     project = ProjectV2(id=1, name="project")
 
     # Test zarr_dir=None is valid
-    DatasetCreate(name="name", zarr_dir=None)
+    DatasetCreate(name="name", project_dir=None)
 
     dataset_create = DatasetCreate(
         name="name",
-        zarr_dir="/tmp/",
+        project_dir="/",
+        zarr_subfolder="tmp",
     )
-    assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
+
+    with pytest.raises(ValidationError):
+        DatasetCreate(
+            name="name",
+            project_dir=None,
+            zarr_subfolder="something",
+        )
+
+    with pytest.raises(ValidationError):
+        DatasetCreate(
+            name="name",
+            project_dir="/",
+            zarr_subfolder="/absolute",
+        )
 
     with pytest.raises(ValidationError):
         DatasetImport(name="name", zarr_dir=None)
@@ -36,7 +52,13 @@ async def test_schemas_dataset():
     )
 
     dataset = DatasetV2(
-        **dataset_create.model_dump(), id=1, project_id=project.id, history=[]
+        **dataset_create.model_dump(),
+        id=1,
+        project_id=project.id,
+        history=[],
+        zarr_dir=os.path.join(
+            dataset_create.project_dir, dataset_create.zarr_subfolder
+        ),
     )
 
     # Read
@@ -45,34 +67,56 @@ async def test_schemas_dataset():
 
     # Update
 
-    # validation accepts `zarr_dir` as None, but not `name`
-    DatasetUpdate(zarr_dir=None)
+    DatasetUpdate()
+
     with pytest.raises(ValidationError):
         DatasetUpdate(name=None)
 
-    dataset_update = DatasetUpdate(name="new name", zarr_dir="/zarr/")
-    assert not dataset_update.zarr_dir.endswith("/")
-
-    for key, value in dataset_update.model_dump(exclude_unset=True).items():
-        setattr(dataset, key, value)
-
-    assert dataset.name == "new name"
+    DatasetUpdate(name="name")
 
 
-def test_zarr_dir():
-    DatasetCreate(name="foo", zarr_dir="/")
-    assert (
-        DatasetCreate(name="foo", zarr_dir="/foo/bar").zarr_dir
-        == DatasetCreate(name="foo", zarr_dir="   /foo/bar").zarr_dir
-        == DatasetCreate(name="foo", zarr_dir="/foo/bar   ").zarr_dir
-        == "/foo/bar"
+def test_project_dir_and_zarr_subfolder():
+    DatasetCreate(name="foo", project_dir="/")
+
+    a = DatasetCreate(
+        name="foo", project_dir="/foo/bar", zarr_subfolder=" zarr "
     )
-    assert (
-        DatasetCreate(name="foo", zarr_dir="  / foo bar  ").zarr_dir
-        == "/ foo bar"
+    b = DatasetCreate(
+        name="foo", project_dir="   /foo/bar", zarr_subfolder=" zarr/ "
     )
+    c = DatasetCreate(
+        name="foo", project_dir="/foo/bar   ", zarr_subfolder="zarr"
+    )
+
+    assert a == b == c
+    assert a.project_dir, a.zarr_subfolder == ("/foo/bar", "zarr")
+
+    d = DatasetCreate(
+        name="foo", project_dir="  / foo bar  ", zarr_subfolder=" za rr "
+    )
+    assert d.project_dir, d.zarr_subfolder == ("/ foo/ bar", "za rr")
 
     with pytest.raises(ValidationError):
-        DatasetCreate(name="foo", zarr_dir="not/absolute")
+        # project_dir not absolute
+        DatasetCreate(name="foo", project_dir="foo/bar", zarr_subfolder="zarr")
 
-    DatasetCreate(name="foo", zarr_dir="/#special/chars")
+    with pytest.raises(ValidationError):
+        # zarr_subfolder absolute
+        DatasetCreate(
+            name="foo", project_dir="/foo/bar", zarr_subfolder="/zarr"
+        )
+
+    with pytest.raises(ValidationError):
+        # dot dot
+        DatasetCreate(
+            name="foo", project_dir="/foo/../bar", zarr_subfolder="zarr"
+        )
+    with pytest.raises(ValidationError):
+        # dot dot
+        DatasetCreate(
+            name="foo", project_dir="/foo/bar", zarr_subfolder="za/../rr"
+        )
+
+    DatasetCreate(
+        name="foo", project_dir="/#special/chars", zarr_subfolder="?../#"
+    )

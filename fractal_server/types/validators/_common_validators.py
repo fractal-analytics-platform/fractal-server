@@ -30,7 +30,18 @@ def val_absolute_path(path: str) -> str:
     return path
 
 
-def val_canonical_path(path: str) -> str:
+def val_non_absolute_path(path: str) -> str:
+    """
+    Check that a string attribute is not an absolute path
+    """
+    if os.path.isabs(path):
+        raise ValueError(
+            f"String must not be an absolute path (given '{path}')."
+        )
+    return path
+
+
+def val_no_dotdot_in_path(path: str) -> str:
     """
     Check that a string attribute has no '/../' in it
     """

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -50,43 +51,41 @@ async def create_dataset(
         db=db,
     )
 
-    if dataset.zarr_dir is None:
-        db_dataset = DatasetV2(
-            project_id=project_id,
-            zarr_dir="__PLACEHOLDER__",
-            **dataset.model_dump(exclude={"zarr_dir"}),
-        )
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
-        path = (
-            f"{user.project_dirs[0]}/fractal/"
-            f"{project_id}_{sanitize_string(project.name)}/"
+    db_dataset = DatasetV2(
+        project_id=project_id,
+        zarr_dir="__PLACEHOLDER__",
+        **dataset.model_dump(exclude={"project_dir", "zarr_subfolder"}),
+    )
+    db.add(db_dataset)
+    await db.commit()
+    await db.refresh(db_dataset)
+
+    if dataset.project_dir is None:
+        project_dir = user.project_dirs[0]
+    else:
+        if dataset.project_dir not in user.project_dirs:
+            await db.delete(db_dataset)
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You are not allowed to use {dataset.project_dir=}.",
+            )
+        project_dir = dataset.project_dir
+
+    if dataset.zarr_subfolder is None:
+        zarr_subfolder = (
+            f"fractal/{project_id}_{sanitize_string(project.name)}/"
             f"{db_dataset.id}_{sanitize_string(db_dataset.name)}"
         )
-        normalized_path = normalize_url(path)
-        db_dataset.zarr_dir = normalized_path
-
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
     else:
-        if not any(
-            Path(dataset.zarr_dir).is_relative_to(project_dir)
-            for project_dir in user.project_dirs
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Dataset zarr_dir is not relative to any of the user "
-                    "project directories."
-                ),
-            )
+        zarr_subfolder = dataset.zarr_subfolder
 
-        db_dataset = DatasetV2(project_id=project_id, **dataset.model_dump())
-        db.add(db_dataset)
-        await db.commit()
-        await db.refresh(db_dataset)
+    zarr_dir = os.path.join(project_dir, zarr_subfolder)
+    db_dataset.zarr_dir = normalize_url(zarr_dir)
+
+    db.add(db_dataset)
+    await db.commit()
+    await db.refresh(db_dataset)
 
     return db_dataset
 
@@ -167,27 +166,6 @@ async def update_dataset(
         db=db,
     )
     db_dataset = output["dataset"]
-
-    if dataset_update.zarr_dir is not None:
-        if db_dataset.images:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot modify `zarr_dir` because the dataset has a "
-                    "non-empty image list."
-                ),
-            )
-        if not any(
-            Path(dataset_update.zarr_dir).is_relative_to(project_dir)
-            for project_dir in user.project_dirs
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Dataset zarr_dir is not relative to any of the user "
-                    "project directories."
-                ),
-            )
 
     for key, value in dataset_update.model_dump(exclude_unset=True).items():
         setattr(db_dataset, key, value)
@@ -288,6 +266,18 @@ async def import_dataset(
         required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
+
+    if not any(
+        Path(dataset.zarr_dir).is_relative_to(project_dir)
+        for project_dir in user.project_dirs
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"{dataset.zarr_dir=} is not relative to any of user's project "
+                "dirs."
+            ),
+        )
 
     for image in dataset.images:
         if not image.zarr_url.startswith(dataset.zarr_dir):

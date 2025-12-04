@@ -16,9 +16,9 @@ from fractal_server.app.schemas.v2 import WorkflowTaskDump
 
 def test_extra_on_create_models():
     # Dataset
-    DatasetCreate(name="name", zarr_dir="/zarr/dir")
+    DatasetCreate(name="name", project_dir="/project/dir")
     with pytest.raises(ValidationError):
-        DatasetCreate(name="name", zarr_dir="/zarr/dir", foo="bar")
+        DatasetCreate(name="name", project_dir="/project/dir", foo="bar")
 
     # Job
     JobCreate()
