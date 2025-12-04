@@ -1,5 +1,7 @@
 from devtools import debug
+from sqlmodel import func
 
+from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -157,11 +159,13 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         debug(datasets[0]["timestamp_created"])
 
 
-async def test_post_dataset(client, MockCurrentUser, project_factory):
+async def test_post_dataset(client, MockCurrentUser, project_factory, db):
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
         # Check that zarr_dir must be relative to one of user's project dirs
+        res = await db.execute(func.count(DatasetV2.id))
+        initial_count = res.scalar()
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
             json=dict(name="wrong", project_dir="/wrong"),
@@ -170,6 +174,8 @@ async def test_post_dataset(client, MockCurrentUser, project_factory):
         assert res.json()["detail"] == (
             "You are not allowed to use dataset.project_dir='/wrong'."
         )
+        res = await db.execute(func.count(DatasetV2.id))
+        assert res.scalar() == initial_count
 
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/",
