@@ -136,7 +136,7 @@ slow_response_logger = set_logger("slow-response")
 
 
 def _endpoint_has_background_task(method: str, path: str) -> bool:
-    has_background_task = method == "POST" and (
+    has_background_task = (method == "POST") and (
         "/job/submit/" in path
         or "/task/collect/pi" in path  # "/pip" and "/pixi"
         or "/task-group/" in path
