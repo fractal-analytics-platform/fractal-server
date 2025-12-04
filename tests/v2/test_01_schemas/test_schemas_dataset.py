@@ -75,20 +75,48 @@ async def test_schemas_dataset():
     DatasetUpdate(name="name")
 
 
-def test_project_dir():
+def test_project_dir_and_zarr_subfolder():
     DatasetCreate(name="foo", project_dir="/")
-    assert (
-        DatasetCreate(name="foo", project_dir="/foo/bar").project_dir
-        == DatasetCreate(name="foo", project_dir="   /foo/bar").project_dir
-        == DatasetCreate(name="foo", project_dir="/foo/bar   ").project_dir
-        == "/foo/bar"
+
+    a = DatasetCreate(
+        name="foo", project_dir="/foo/bar", zarr_subfolder=" zarr "
     )
-    assert (
-        DatasetCreate(name="foo", project_dir="  / foo bar  ").project_dir
-        == "/ foo bar"
+    b = DatasetCreate(
+        name="foo", project_dir="   /foo/bar", zarr_subfolder=" zarr/ "
     )
+    c = DatasetCreate(
+        name="foo", project_dir="/foo/bar   ", zarr_subfolder="zarr"
+    )
+
+    assert a == b == c
+    assert a.project_dir, a.zarr_subfolder == ("/foo/bar", "zarr")
+
+    d = DatasetCreate(
+        name="foo", project_dir="  / foo bar  ", zarr_subfolder=" za rr "
+    )
+    assert d.project_dir, d.zarr_subfolder == ("/ foo/ bar", "za rr")
 
     with pytest.raises(ValidationError):
-        DatasetCreate(name="foo", project_dir="not/absolute")
+        # project_dir not absolute
+        DatasetCreate(name="foo", project_dir="foo/bar", zarr_subfolder="zarr")
 
-    DatasetCreate(name="foo", project_dir="/#special/chars")
+    with pytest.raises(ValidationError):
+        # zarr_subfolder absolute
+        DatasetCreate(
+            name="foo", project_dir="/foo/bar", zarr_subfolder="/zarr"
+        )
+
+    with pytest.raises(ValidationError):
+        # dot dot
+        DatasetCreate(
+            name="foo", project_dir="/foo/../bar", zarr_subfolder="zarr"
+        )
+    with pytest.raises(ValidationError):
+        # dot dot
+        DatasetCreate(
+            name="foo", project_dir="/foo/bar", zarr_subfolder="za/../rr"
+        )
+
+    DatasetCreate(
+        name="foo", project_dir="/#special/chars", zarr_subfolder="?../#"
+    )
