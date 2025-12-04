@@ -19,11 +19,16 @@ router_api = APIRouter()
 
 
 @router_api.get("/alive/")
-async def alive(background_tasks: BackgroundTasks):
+async def alive():
     return dict(
         alive=True,
         version=fractal_server.__VERSION__,
     )
+
+
+@router_api.post("/task-group/")
+async def foo(background_tasks: BackgroundTasks):
+    return {"hello": "world"}
 
 
 @router_api.get("/settings/app/")
