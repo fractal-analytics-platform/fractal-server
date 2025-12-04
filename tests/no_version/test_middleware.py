@@ -54,7 +54,7 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     Test that `_endpoint_has_background_task` correctly identifies endpoints
     containing a background task.
     """
-    background_task_routes = []
+    background_task_routes = set()
     for route in app.routes:
         if isinstance(route, APIRoute):
             method = list(route.methods)[0]
@@ -64,14 +64,14 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
             for _, param in signature.parameters.items():
                 if param.annotation == BackgroundTasks:
                     has_background_task = True
-                    background_task_routes.append((method, path))
+                    background_task_routes.add((method, path))
                     break
 
             assert (
                 _endpoint_has_background_task(method=method, path=path)
                 == has_background_task
             )
-    assert set(background_task_routes) == {
+    assert background_task_routes == {
         ("POST", "/api/v2/project/{project_id}/job/submit/"),
         ("POST", "/api/v2/task/collect/pip/"),
         ("POST", "/api/v2/task/collect/pixi/"),
