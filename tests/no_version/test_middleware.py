@@ -50,10 +50,10 @@ async def test_app_with_middleware(caplog):
         assert "GET /?sleep=0.33&foo=bar" in caplog.text
 
 
-async def test_endpoint_has_background_task(app, register_routers):
+async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     """
-    Test that all and only the endpoints with a BackgroundTask are
-    identified by the function `_endpoint_has_background_task`
+    Test that `_endpoint_has_background_task` correctly identifies endpoints
+    containing a background task.
     """
     for route in app.routes:
         if isinstance(route, APIRoute):
