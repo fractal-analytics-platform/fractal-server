@@ -279,16 +279,6 @@ async def import_dataset(
             ),
         )
 
-    for image in dataset.images:
-        if not image.zarr_url.startswith(dataset.zarr_dir):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Cannot import dataset: zarr_url {image.zarr_url} is not "
-                    f"relative to zarr_dir={dataset.zarr_dir}."
-                ),
-            )
-
     # Create new Dataset
     db_dataset = DatasetV2(
         project_id=project_id,
