@@ -1,6 +1,5 @@
 import inspect
 import logging
-import re
 import time
 
 from asgi_lifespan import LifespanManager
@@ -57,20 +56,17 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     """
     for route in app.routes:
         if isinstance(route, APIRoute):
-            path = re.sub(r"\{[^}]+\}", "1", route.path)
-            method = list(route.methods)[0]
             has_background_task = False
-
-            sig = inspect.signature(route.endpoint)
-            for _, param in sig.parameters.items():
+            signature = inspect.signature(route.endpoint)
+            for _, param in signature.parameters.items():
                 if param.annotation == BackgroundTasks:
                     has_background_task = True
                     break
 
             assert (
                 _endpoint_has_background_task(
-                    method=method,
-                    path=path,
+                    method=list(route.methods)[0],
+                    path=route.path,
                 )
                 == has_background_task
             )
