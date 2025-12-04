@@ -54,6 +54,7 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     Test that `_endpoint_has_background_task` correctly identifies endpoints
     containing a background task.
     """
+    total = 0
     for route in app.routes:
         if isinstance(route, APIRoute):
             has_background_task = False
@@ -61,6 +62,7 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
             for _, param in signature.parameters.items():
                 if param.annotation == BackgroundTasks:
                     has_background_task = True
+                    total += 1
                     break
 
             assert (
@@ -70,3 +72,4 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
                 )
                 == has_background_task
             )
+    assert total == 9  # last edit 2.18.0
