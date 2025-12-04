@@ -135,7 +135,7 @@ async def lifespan(app: FastAPI):
 slow_response_logger = set_logger("slow-response")
 
 
-def _has_background_task(method: str, path: str) -> bool:
+def _endpoint_has_background_task(method: str, path: str) -> bool:
     if method == "POST":
         if (
             "/task/collect/" in path
@@ -153,9 +153,9 @@ class SlowResponseMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if (
-            # Filter out any non-http scope (e.g. `type="lifespan"`)
-            scope["type"] != "http"
-        ) or _has_background_task(scope["method"], scope["path"]):
+            scope["type"] != "http"  # e.g. `type="lifespan"`
+            or _endpoint_has_background_task(scope["method"], scope["path"])
+        ):
             await self.app(scope, receive, send)
             return
 
