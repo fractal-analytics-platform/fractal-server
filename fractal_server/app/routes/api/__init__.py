@@ -3,6 +3,7 @@
 """
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 
 import fractal_server
@@ -18,7 +19,7 @@ router_api = APIRouter()
 
 
 @router_api.get("/alive/")
-async def alive():
+async def alive(background_tasks: BackgroundTasks):
     return dict(
         alive=True,
         version=fractal_server.__VERSION__,
