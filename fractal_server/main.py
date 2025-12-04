@@ -153,7 +153,7 @@ class SlowResponseMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if (
-            scope["type"] != "http"  # e.g. `type="lifespan"`
+            scope["type"] != "http"  # e.g. `scope["type"] == "lifespan"`
             or _endpoint_has_background_task(scope["method"], scope["path"])
         ):
             await self.app(scope, receive, send)
