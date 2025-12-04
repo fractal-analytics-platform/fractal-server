@@ -3,6 +3,7 @@ import logging
 import time
 
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -54,7 +55,7 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     Test that `_endpoint_has_background_task` correctly identifies endpoints
     containing a background task.
     """
-    total = 0
+    endpoints_with_background_task = []
     for route in app.routes:
         if isinstance(route, APIRoute):
             has_background_task = False
@@ -62,7 +63,7 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
             for _, param in signature.parameters.items():
                 if param.annotation == BackgroundTasks:
                     has_background_task = True
-                    total += 1
+                    endpoints_with_background_task.append(route)
                     break
 
             assert (
@@ -72,4 +73,5 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
                 )
                 == has_background_task
             )
-    assert total == 9  # last edit 2.18.0
+    assert len(endpoints_with_background_task) == 9  # last edit 2.18.0
+    debug(endpoints_with_background_task)
