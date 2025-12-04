@@ -449,6 +449,17 @@ async def test_dataset_import(
         assert res_dataset["name"] == "Dataset3"
         assert res_dataset["zarr_dir"] == f"{PROJECT_DIR}/{ZARR_SUBFOLDER}"
 
+        # FAIL Cannot import dataset:
+        # {image.zarr_url} is not relative to {dataset.zarr_dir}
+        payload = dict(
+            name="Dataset4",
+            zarr_dir=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}",
+            images=[SingleImage(zarr_url="/something/image1").model_dump()],
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        assert res.status_code == 422
+        assert "Cannot import dataset" in res.json()["detail"]
+
 
 async def test_export_dataset(
     client, MockCurrentUser, project_factory, dataset_factory
