@@ -3,7 +3,6 @@ import logging
 import time
 
 from asgi_lifespan import LifespanManager
-from devtools import debug
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -55,23 +54,31 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     Test that `_endpoint_has_background_task` correctly identifies endpoints
     containing a background task.
     """
-    endpoints_with_background_task = []
+    background_task_routes = []
     for route in app.routes:
         if isinstance(route, APIRoute):
+            method = list(route.methods)[0]
+            path = route.path
             has_background_task = False
             signature = inspect.signature(route.endpoint)
             for _, param in signature.parameters.items():
                 if param.annotation == BackgroundTasks:
                     has_background_task = True
-                    endpoints_with_background_task.append(route)
+                    background_task_routes.append((method, path))
                     break
 
             assert (
-                _endpoint_has_background_task(
-                    method=list(route.methods)[0],
-                    path=route.path,
-                )
+                _endpoint_has_background_task(method=method, path=path)
                 == has_background_task
             )
-    debug(endpoints_with_background_task)
-    assert len(endpoints_with_background_task) == 9  # last edit 2.18.0
+    assert set(background_task_routes) == {
+        ("POST", "/api/v2/project/{project_id}/job/submit/"),
+        ("POST", "/api/v2/task/collect/pip/"),
+        ("POST", "/api/v2/task/collect/pixi/"),
+        ("POST", "/api/v2/task-group/{task_group_id}/deactivate/"),
+        ("POST", "/api/v2/task-group/{task_group_id}/reactivate/"),
+        ("POST", "/api/v2/task-group/{task_group_id}/delete/"),
+        ("POST", "/admin/v2/task-group/{task_group_id}/deactivate/"),
+        ("POST", "/admin/v2/task-group/{task_group_id}/reactivate/"),
+        ("POST", "/admin/v2/task-group/{task_group_id}/delete/"),
+    }
