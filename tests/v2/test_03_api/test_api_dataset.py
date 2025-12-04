@@ -407,9 +407,7 @@ async def test_dataset_import(
             images=IMAGES,
         )
         res = await client.post(ENDPOINT_URL, json=payload)
-        debug(res.json())
         assert res.status_code == 422
-        debug(res.json())
         assert "is not relative to" in res.json()["detail"][0]["msg"]
 
         # SUCCESS, with new filters (which are ignored)
