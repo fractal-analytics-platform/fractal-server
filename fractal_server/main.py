@@ -142,12 +142,18 @@ class SlowResponseMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if (
-            # Filter out any non-http scope (e.g. `type="lifespan"`)
-            scope["type"] != "http"
-        ) or (
-            # Exclude endpoints with background tasks
-            scope["method"] == "POST"
-            and scope["path"].startswith("/api/v2/task/collect")
+            (
+                # Filter out any non-http scope (e.g. `type="lifespan"`)
+                scope["type"] != "http"
+            )
+            or (
+                # Exclude task collection endpoints
+                scope["method"] == "POST" and "/task/collect/" in scope["path"]
+            )
+            or (
+                # Exclude job submission endpoint
+                scope["method"] == "POST" and "/job/submit/" in scope["path"]
+            )
         ):
             await self.app(scope, receive, send)
             return
