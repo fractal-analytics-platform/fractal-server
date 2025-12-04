@@ -73,5 +73,5 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
                 )
                 == has_background_task
             )
-    assert len(endpoints_with_background_task) == 9  # last edit 2.18.0
     debug(endpoints_with_background_task)
+    assert len(endpoints_with_background_task) == 9  # last edit 2.18.0
