@@ -575,22 +575,28 @@ async def test_oauth_accounts_list(
 
 
 async def test_get_profile_info(
-    client,
-    MockCurrentUser,
-    local_resource_profile_db,
+    client, MockCurrentUser, local_resource_profile_db, db
 ):
-    resource, profile = local_resource_profile_db
-
-    async with MockCurrentUser():
+    # No profile
+    profiless_user = UserOAuth(
+        email="no.profile@example.org",
+        hashed_password="12345",
+        profile_id=None,
+    )
+    db.add(profiless_user)
+    await db.commit()
+    await db.refresh(profiless_user)
+    async with MockCurrentUser(user_id=profiless_user.id):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {
-            "has_profile": True,
-            "resource_name": resource.name,
-            "profile_name": profile.name,
+            "has_profile": False,
+            "resource_name": None,
+            "profile_name": None,
             "username": None,
         }
-
+    # Profile
+    resource, profile = local_resource_profile_db
     async with MockCurrentUser(profile_id=profile.id):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
