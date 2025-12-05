@@ -225,7 +225,7 @@ async def test_get_collection_task_group_activity_status_message(
     db, MockCurrentUser, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create task group
         task_group = TaskGroupV2(
             user_id=user.id,

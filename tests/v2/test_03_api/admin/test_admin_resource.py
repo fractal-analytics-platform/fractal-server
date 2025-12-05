@@ -37,9 +37,7 @@ async def test_resource_api(
     local_resource_profile_db,
     slurm_ssh_resource_profile_fake_objects,
 ):
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True)
-    ) as superuser:
+    async with MockCurrentUser(is_superuser=True) as superuser:
         # GET all resources
         res = await client.get("/admin/v2/resource/")
         assert res.status_code == 200

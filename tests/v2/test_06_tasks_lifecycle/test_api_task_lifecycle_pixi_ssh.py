@@ -109,12 +109,7 @@ async def test_task_group_lifecycle_pixi_ssh(
             )
         }
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        ),
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         # 1 / Failed collection - remote folder already exists
         task_group_path = (
             Path(profile.tasks_remote_dir)

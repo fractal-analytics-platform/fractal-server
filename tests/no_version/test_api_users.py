@@ -501,9 +501,9 @@ async def test_set_groups_endpoint(
 async def test_oauth_accounts_list(
     client, db, MockCurrentUser, registered_superuser_client
 ):
-    async with MockCurrentUser(user_kwargs=dict(email="user1@email.org")) as u1:
+    async with MockCurrentUser(user_email="user1@email.org") as u1:
         u1_id = u1.id
-    async with MockCurrentUser(user_kwargs=dict(email="user2@email.org")) as u2:
+    async with MockCurrentUser(user_email="user2@email.org") as u2:
         u2_id = u2.id
 
     oauth1 = OAuthAccount(
@@ -562,14 +562,14 @@ async def test_oauth_accounts_list(
     assert len(res.json()["oauth_accounts"]) == 2
 
     # test GET /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u1_id)):
+    async with MockCurrentUser(user_id=u1_id):
         res = await client.get(f"{PREFIX}/current-user/")
         assert len(res.json()["oauth_accounts"]) == 2
         res = await client.get(f"{PREFIX}/current-user/?group_names=true")
         assert len(res.json()["oauth_accounts"]) == 2
 
     # test PATCH /auth/current-user/
-    async with MockCurrentUser(user_kwargs=dict(id=u2_id)):
+    async with MockCurrentUser(user_id=u2_id):
         res = await client.patch(f"{PREFIX}/current-user/", json=dict())
         assert len(res.json()["oauth_accounts"]) == 1
 
@@ -581,7 +581,7 @@ async def test_get_profile_info(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=None)):
+    async with MockCurrentUser(profile_id=None):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {
@@ -591,7 +591,7 @@ async def test_get_profile_info(
             "username": None,
         }
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {

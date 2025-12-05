@@ -20,7 +20,7 @@ async def test_(client, MockCurrentUser, testdata_path):
     with open(archive_path, "rb") as f:
         files = {"file": (archive_path.name, f.read(), "application/zip")}
     # Task collection triggered by non-verified user
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+    async with MockCurrentUser(is_verified=False):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data={},
@@ -36,9 +36,7 @@ async def test_folder_already_exists(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         # Create the folder in advance
         expected_path = (
             Path(resource.tasks_local_dir)
@@ -68,9 +66,7 @@ async def test_invalid_python_version(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(package="invalid-task-package", python_version="3.9"),
@@ -97,9 +93,7 @@ async def test_wheel_collection_failures(
     files = {"file": (archive_path.name, wheel_file_content, "application/zip")}
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data={},
@@ -188,9 +182,7 @@ async def test_failure_cleanup(
     # Valid part of the payload
     payload = dict(package_extras="my_extra")
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         archive_path = (
             testdata_path.parent
             / "v2/fractal_tasks_mock/dist"

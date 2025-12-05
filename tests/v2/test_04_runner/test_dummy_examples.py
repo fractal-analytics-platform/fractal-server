@@ -114,7 +114,7 @@ async def test_dummy_insert_single_image(
     task_id = fractal_tasks_mock_db["dummy_insert_single_image"].id
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         execute_tasks_args = dict(
             runner=local_runner,
             user_id=user.id,

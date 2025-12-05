@@ -56,7 +56,7 @@ async def test_validate_user_profile_local(
     await db.commit()
     await db.refresh(res)
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=prof.id)) as u:
+    async with MockCurrentUser(profile_id=prof.id) as u:
         # Successful validation
         _res, _prof = await validate_user_profile(user=u, db=db)
         assert _res.tasks_pixi_config["TOKIO_WORKER_THREADS"]

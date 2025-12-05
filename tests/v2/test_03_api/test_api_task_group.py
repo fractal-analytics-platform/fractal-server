@@ -173,7 +173,7 @@ async def test_get_task_group_list(
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+    async with MockCurrentUser(user_id=user2.id):
         res = await client.get(f"{PREFIX}/")
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -231,9 +231,7 @@ async def test_patch_task_group(
         )
         assert res.status_code == 200
 
-    async with MockCurrentUser(
-        debug=True, user_kwargs=dict(id=another_user_id)
-    ):
+    async with MockCurrentUser(debug=True, user_id=another_user_id):
         # Link the task-group to another usergroup and fail due to
         # non-duplication constraint
         res = await client.patch(
@@ -284,7 +282,7 @@ async def test_get_task_group_activity_list(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         task = await task_factory(
             user_id=user.id,
             task_group_kwargs=dict(resource_id=resource.id),
@@ -382,7 +380,7 @@ async def test_get_task_group_activity_list(
         res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
         assert len(res.json()) == 2
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         res = await client.get(f"{PREFIX}/activity/")
         assert res.status_code == 200
         assert len(res.json()) == 0

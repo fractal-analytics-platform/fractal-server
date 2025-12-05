@@ -47,6 +47,6 @@ async def test_impersonate(
     assert res.status_code == 404
 
     # Try to impersonate a user without being a superuser
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+    async with MockCurrentUser(is_superuser=False):
         res = await client.get(f"{PREFIX}/impersonate/{u1.id}/")
         assert res.status_code == 401

@@ -247,9 +247,7 @@ async def test_get_user_optional_group_info(
     """
     Test that GET-ting a single user may be enriched with group IDs/names.
     """
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True)
-    ) as superuser:
+    async with MockCurrentUser(is_superuser=True) as superuser:
         superuser_id = superuser.id
         # Create two groups
         GROUP_A_NAME = "my group A"
@@ -272,7 +270,7 @@ async def test_get_user_optional_group_info(
         current_user_id = res.json()["id"]
 
     # Add current user to group A
-    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
+    async with MockCurrentUser(user_id=superuser_id):
         res = await client.post(
             f"{PREFIX}/group/{GROUP_A_ID}/add-user/{current_user_id}/"
         )
@@ -280,7 +278,7 @@ async def test_get_user_optional_group_info(
 
     # Calls to `/auth/current-users/` may or may not include `group_names_id`,
     # depending on a query parameter
-    async with MockCurrentUser(user_kwargs=dict(id=user_id)):
+    async with MockCurrentUser(user_id=user_id):
         for query_param, expected_attribute in [
             ("", None),
             ("?group_ids_names=False", None),
@@ -299,7 +297,7 @@ async def test_get_user_optional_group_info(
 
     # Calls to `/auth/users/{id}/` or may not include `group_names_id`,
     # depending on a query parameter
-    async with MockCurrentUser(user_kwargs=dict(id=superuser_id)):
+    async with MockCurrentUser(user_id=superuser_id):
         for query_param, expected_attribute in [
             (
                 "",
