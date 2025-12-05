@@ -581,13 +581,13 @@ async def test_get_profile_info(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(profile_id=None):
+    async with MockCurrentUser():
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {
-            "has_profile": False,
-            "resource_name": None,
-            "profile_name": None,
+            "has_profile": True,
+            "resource_name": resource.name,
+            "profile_name": profile.name,
             "username": None,
         }
 
