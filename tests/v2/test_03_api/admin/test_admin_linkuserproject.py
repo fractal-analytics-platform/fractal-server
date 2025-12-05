@@ -97,7 +97,7 @@ async def test_view_link_user_project(
     await db.commit()
     await db.refresh(superuser)
 
-    async with MockCurrentUser(user_kwargs={"id": superuser.id}):
+    async with MockCurrentUser(user_id=superuser.id):
         # page_size
         res = await client.get("/admin/v2/linkuserproject/?page_size=3")
         assert res.status_code == 200

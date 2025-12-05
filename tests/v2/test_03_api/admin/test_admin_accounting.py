@@ -38,7 +38,7 @@ async def test_accounting(
             )
         )
 
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(is_superuser=True):
         # Test timestamp/user filters
         res = await client.post(
             "/admin/v2/accounting/",
@@ -84,13 +84,13 @@ async def test_accounting_api_failure(
     MockCurrentUser,
 ):
     # Non admin
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=False)):
+    async with MockCurrentUser(is_superuser=False):
         res = await client.post("/admin/v2/accounting/", json={})
         assert res.status_code == 401
 
     # Naive datetime
     naive_datetime = datetime.now().isoformat()
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.post(
             "/admin/v2/accounting/",
             json=dict(
@@ -101,7 +101,7 @@ async def test_accounting_api_failure(
         assert "Input should have timezone info" in str(res.json())
 
     # Pagination error
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.post(
             "/admin/v2/accounting/?page=2",
             json={},
@@ -115,7 +115,7 @@ async def test_accounting_slurm(
     client,
     MockCurrentUser,
 ):
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
+    async with MockCurrentUser(is_superuser=True) as user:
         timestamp_min = get_timestamp().isoformat()
         db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[1, 4]))
         db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[2, 3]))

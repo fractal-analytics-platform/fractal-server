@@ -22,9 +22,7 @@ async def test_task_collection_custom(
     resource, profile = local_resource_profile_db
     # ---
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         payload_name = TaskCollectCustom(
             manifest=manifest,
             python_interpreter=python_bin,
@@ -131,9 +129,7 @@ async def test_task_collection_custom_fail_with_ssh(
         manifest_dict = json.load(f)
 
     resource, profile = slurm_ssh_resource_profile_fake_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         res = await client.post(
             f"{PREFIX}/collect/custom/",
             json=TaskCollectCustom(

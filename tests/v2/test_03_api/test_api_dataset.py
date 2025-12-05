@@ -41,7 +41,7 @@ async def test_new_dataset(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         res = await client.post("api/v2/project/", json=dict(name="project"))
         debug(res.json())
         assert res.status_code == 201
@@ -220,9 +220,7 @@ async def test_post_dataset(client, MockCurrentUser, project_factory, db):
             assert patched_dataset[k] == v
 
     # Test POST dataset without zarr_dir
-    async with MockCurrentUser(
-        user_kwargs={"project_dirs": ["/some/dir"]}
-    ) as user:
+    async with MockCurrentUser(project_dirs=["/some/dir"]) as user:
         prj = await project_factory(user)
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/dataset/", json=dict(name="DSName")
@@ -394,9 +392,7 @@ async def test_dataset_import(
     ]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])
 
-    async with MockCurrentUser(
-        user_kwargs={"project_dirs": [PROJECT_DIR]}
-    ) as user:
+    async with MockCurrentUser(project_dirs=[PROJECT_DIR]) as user:
         project = await project_factory(user)
         ENDPOINT_URL = f"{PREFIX}/project/{project.id}/dataset/import/"
 

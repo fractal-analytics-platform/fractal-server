@@ -17,13 +17,12 @@ async def test_settings_endpoint(client, MockCurrentUser):
 
     res = await client.get("/api/settings/app/")
     assert res.status_code == 401
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+    async with MockCurrentUser(is_superuser=False):
         res = await client.get("/api/settings/app/")
         assert res.status_code == 401
 
     # Success
-
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get("/api/settings/app/")
         assert res.status_code == 200
         endpoint_settings = res.json()

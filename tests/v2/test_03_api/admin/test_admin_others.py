@@ -9,11 +9,11 @@ PREFIX = "/admin/v2"
 
 
 async def test_unauthorized_to_admin(client, MockCurrentUser):
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+    async with MockCurrentUser(is_superuser=False):
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 401
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
 
@@ -26,7 +26,7 @@ async def test_task_query(
     workflow_factory,
     task_factory,
 ):
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}) as user:
+    async with MockCurrentUser(is_superuser=True) as user:
         project = await project_factory(user)
 
         workflow1 = await workflow_factory(project_id=project.id)

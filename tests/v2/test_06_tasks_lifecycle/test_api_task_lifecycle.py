@@ -58,7 +58,7 @@ async def test_deactivate_task_group_api(
     else:
         resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         non_active_task = await task_factory(
             user_id=user.id,
@@ -159,7 +159,7 @@ async def test_reactivate_task_group_api(
         app.state.fractal_ssh_list = MockFractalSSHList()
     else:
         resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         active_task = await task_factory(user_id=user.id, name="task2")
         task_other = await task_factory(
@@ -262,12 +262,7 @@ async def _aux_test_lifecycle(
     with open(archive_path, "rb") as f:
         files = {"file": (archive_path.name, f.read(), "application/zip")}
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        )
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         # STEP 1: Task collection
         res = await client.post(
             "api/v2/task/collect/pip/",
@@ -490,7 +485,7 @@ async def test_fail_due_to_ongoing_activities(
     activities for the same task group are ongoing.
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock objects
         task = await task_factory(user_id=user.id, name="task")
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
@@ -540,7 +535,7 @@ async def test_lifecycle_actions_with_submitted_jobs(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         active_task = await task_factory(
             user_id=user.id,

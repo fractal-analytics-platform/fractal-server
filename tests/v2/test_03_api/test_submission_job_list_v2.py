@@ -25,12 +25,7 @@ async def test_clean_app_job_list(
 
     res, prof = local_resource_profile_db
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=prof.id) as user:
         # Create DB objects
         task = await task_factory(
             user_id=user.id, name="task", command_non_parallel="echo"

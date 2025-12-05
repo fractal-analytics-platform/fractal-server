@@ -79,7 +79,7 @@ async def test_mkdir_error(
     res.jobs_slurm_python_worker = sys.executable
     prof.username = None
 
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(is_verified=True) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="ds")
         workflow = await workflow_factory(project_id=project.id, name="wf")  # noqa

@@ -163,7 +163,7 @@ async def test_invalid_wheel(
         ("missing_manifest", "manifest path not found"),
         ("missing_executable", "missing file"),
     ]
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         for name, log in pkgnames_logs:
             archive_path = (
                 testdata_path.parent

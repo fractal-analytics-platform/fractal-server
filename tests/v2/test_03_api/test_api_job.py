@@ -30,7 +30,7 @@ async def test_submit_job_failures_non_verified_user(
     Test that non-verified users are not authorized to make calls
     to `/api/v2/project/123/workflow/123/apply/`.
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+    async with MockCurrentUser(is_verified=False):
         res = await client.post(
             f"{PREFIX}/project/123/job/submit/?workflow_id=123&dataset_id=123",
             json={},
@@ -52,10 +52,8 @@ async def test_submit_job_failures(
     resource1, profile1 = local_resource_profile_db
     resource2, _ = slurm_sudo_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile1.id,
-        )
+        is_verified=True,
+        profile_id=profile1.id,
     ) as user:
         task = await task_factory(user_id=user.id)
         # 1
@@ -162,10 +160,8 @@ async def test_submit_job_ssh_connection_failure(
     resource, prof = slurm_ssh_resource_profile_fake_db
 
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
@@ -198,10 +194,8 @@ async def test_submit_incompatible_filters(
 ):
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         task = await task_factory(user_id=user.id, input_types={"a": True})
 
@@ -257,10 +251,8 @@ async def test_submit_jobs_with_same_dataset(
     """
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset1 = await dataset_factory(project_id=project.id, name="dataset1")
@@ -326,10 +318,8 @@ async def test_project_apply_workflow_subset(
 ):
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset1 = await dataset_factory(
@@ -453,10 +443,8 @@ async def test_project_apply_slurm_account(
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        )
+        is_verified=True,
+        profile_id=profile.id,
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
@@ -490,11 +478,9 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={
-            "is_verified": True,
-            "profile_id": profile.id,
-            "slurm_accounts": SLURM_LIST,
-        },
+        is_verified=True,
+        profile_id=profile.id,
+        slurm_accounts=SLURM_LIST,
     ) as user2:
         project = await project_factory(user2)
         dataset = await dataset_factory(
@@ -563,10 +549,8 @@ async def test_get_jobs(
     """
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset1")
@@ -668,10 +652,8 @@ async def test_get_jobs_access_control(
     """
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset")
@@ -700,10 +682,8 @@ async def test_get_jobs_access_control(
         assert len(res.json()) == 2
 
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user2:
         assert user2.id != user.id
         # Manually add `user2` to `project`'s guests with RWX permissions
@@ -785,12 +765,7 @@ async def test_update_timestamp_taskgroup(
     local_resource_profile_db,
 ):
     res, prof = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=prof.id) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset")
         workflow = await workflow_factory(project_id=project.id)
@@ -831,10 +806,8 @@ async def test_get_latest_jobs(
 ):
     res, prof = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=prof.id,
-        )
+        is_verified=True,
+        profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset")

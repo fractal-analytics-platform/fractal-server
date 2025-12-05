@@ -68,12 +68,9 @@ async def test_full_workflow_slurm(
 
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs=dict(
-            profile_id=profile.id,
-            slurm_accounts=[],
-            project_dirs=[project_dir],
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
+        slurm_accounts=[],
+        project_dirs=[project_dir],
         project_factory=project_factory,
         dataset_factory=dataset_factory,
         workflow_factory=workflow_factory,
@@ -126,11 +123,8 @@ async def test_full_workflow_TaskExecutionError_slurm(
 
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs=dict(
-            profile_id=profile.id,
-            project_dirs=[project_dir],
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
+        project_dirs=[project_dir],
         project_factory=project_factory,
         dataset_factory=dataset_factory,
         workflow_factory=workflow_factory,
@@ -168,11 +162,8 @@ async def test_non_executable_task_command_slurm(
 
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs=dict(
-            profile_id=profile.id,
-            project_dirs=[project_dir],
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
+        project_dirs=[project_dir],
         client=client,
         testdata_path=testdata_path,
         project_factory=project_factory,
@@ -212,11 +203,8 @@ async def test_failing_workflow_UnknownError_slurm(
 
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs=dict(
-            profile_id=profile.id,
-            project_dirs=[project_dir],
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
+        project_dirs=[project_dir],
         client=client,
         monkeypatch=monkeypatch,
         project_factory=project_factory,

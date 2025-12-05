@@ -19,7 +19,7 @@ async def test_check_no_related_workflowtask(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         task1 = TaskV2(name="task1", type="parallel", command_parallel="cmd")
         task2 = TaskV2(
             name="task2", type="non_parallel", command_non_parallel="cmd"

@@ -58,7 +58,7 @@ async def test_task_group_admin(
         task_group_3 = res.json()
         assert "resource_id" not in task_group_3
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         # GET /{id}/
         for task_group in [task_group_1, task_group_2, task_group_3]:
             res = await client.get(f"{PREFIX}/task-group/{task_group['id']}/")
@@ -241,7 +241,7 @@ async def test_get_task_group_activity(
         res = await client.get(f"{PREFIX}/task-group/activity/")
         assert res.status_code == 401
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(f"{PREFIX}/task-group/activity/?page_size=1000")
         assert res.status_code == 200
         assert len(res.json()) == 4
@@ -350,9 +350,7 @@ async def test_admin_deactivate_task_group_api(
     else:
         resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id),
-    ) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         non_active_task = await task_factory(
             user_id=user.id, name="task", task_group_kwargs=dict(active=False)
@@ -371,9 +369,7 @@ async def test_admin_deactivate_task_group_api(
             ),
         )
 
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True},
-    ):
+    async with MockCurrentUser(is_superuser=True):
         # API failure: Non-active task group cannot be deactivated
         res = await client.post(
             f"{PREFIX}/task-group/{non_active_task.taskgroupv2_id}/deactivate/"
@@ -448,7 +444,7 @@ async def test_reactivate_task_group_api(
     else:
         resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         active_task = await task_factory(user_id=user.id, name="task")
 
@@ -471,9 +467,7 @@ async def test_reactivate_task_group_api(
             ),
         )
 
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True},
-    ):
+    async with MockCurrentUser(is_superuser=True):
         # API failure: Active task group cannot be reactivated
         res = await client.post(
             f"{PREFIX}/task-group/{active_task.taskgroupv2_id}/reactivate/"
@@ -574,9 +568,7 @@ async def test_lifecycle_actions_with_submitted_jobs(
         )
         await db.commit()
 
-    async with MockCurrentUser(
-        user_kwargs={"is_superuser": True},
-    ):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.post(
             f"{PREFIX}/task-group/{active_task.taskgroupv2_id}/deactivate/"
         )
@@ -598,12 +590,12 @@ async def test_admin_delete_task_group_api_local(
 ):
     resource, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         task = await task_factory(user_id=user.id, name="task-name")
         res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
         task_group_id = res.json()["id"]
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(f"{PREFIX}/task-group/")
         assert len(res.json()["items"]) == 1
 
@@ -634,12 +626,12 @@ async def test_admin_delete_task_group_api_ssh(
 ):
     app.state.fractal_ssh_list = fractal_ssh_list
     resource, profile = slurm_ssh_resource_profile_db[:]
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)) as user:
+    async with MockCurrentUser(profile_id=profile.id) as user:
         task = await task_factory(user_id=user.id, name="task-name")
         res = await client.get(f"/api/v2/task-group/{task.taskgroupv2_id}/")
         task_group_id = res.json()["id"]
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(f"{PREFIX}/task-group/")
         assert len(res.json()["items"]) == 1
 

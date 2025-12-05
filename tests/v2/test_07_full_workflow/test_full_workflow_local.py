@@ -38,10 +38,7 @@ async def test_full_workflow_local(
         workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
-        user_kwargs=dict(
-            profile_id=profile.id,
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
     )
 
 
@@ -69,8 +66,7 @@ async def test_full_workflow_TaskExecutionError(
         workflow_factory=workflow_factory,
         client=client,
         tasks=fractal_tasks_mock_db,
-        user_kwargs=dict(profile_id=profile.id),
-        resource_id=resource.id,
+        profile_id=profile.id,
     )
 
 
@@ -99,10 +95,7 @@ async def test_non_executable_task_command_local(
         workflow_factory=workflow_factory,
         dataset_factory=dataset_factory,
         task_factory=task_factory,
-        user_kwargs=dict(
-            profile_id=profile.id,
-        ),
-        resource_id=resource.id,
+        profile_id=profile.id,
     )
 
 
@@ -132,8 +125,7 @@ async def test_failing_workflow_UnknownError_local(
         dataset_factory=dataset_factory,
         workflow_factory=workflow_factory,
         task_factory=task_factory,
-        user_kwargs=dict(profile_id=profile.id),
-        resource_id=resource.id,
+        profile_id=profile.id,
     )
 
 
@@ -167,8 +159,7 @@ async def test_non_python_task_local(
         task_factory=task_factory,
         testdata_path=testdata_path,
         tmp777_path=tmp777_path,
-        additional_user_kwargs=dict(profile_id=profile.id),
-        resource_id=resource.id,
+        profile_id=profile.id,
     )
 
 
@@ -194,6 +185,6 @@ async def test_failing_workflow_post_task_execution(
         client=client,
         tasks=fractal_tasks_mock_db,
         tmp_path=tmp_path,
-        user_kwargs=dict(profile_id=profile.id),
+        profile_id=profile.id,
         resource_id=resource.id,
     )

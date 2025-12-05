@@ -21,7 +21,7 @@ async def test_get_current_user(client, MockCurrentUser):
         assert res.json()["oauth_accounts"] == []
 
     # Registered superuser
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(PREFIX)
         debug(res.json())
         assert res.status_code == 200

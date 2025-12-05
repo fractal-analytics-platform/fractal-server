@@ -11,7 +11,7 @@ async def test_profile_api(
     slurm_ssh_res, slurm_ssh_prof = slurm_ssh_resource_profile_fake_db
     slurm_ssh_prof_id = slurm_ssh_prof.id
 
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(is_superuser=True):
         # GET all profiles of a given resource / failure
         res = await client.get("/admin/v2/resource/9999/profile/")
         assert res.status_code == 404

@@ -33,14 +33,18 @@ async def full_workflow(
     workflow_factory,
     dataset_factory,
     tasks: dict[str, TaskV2],
-    resource_id: int,
-    user_kwargs: dict | None = None,
+    profile_id: int,
+    slurm_accounts: list[str] | None = None,
+    project_dirs: list[str] | None = None,
 ):
-    if user_kwargs is None:
-        user_kwargs = {}
+    mock_current_user_kwargs = {}
+    if slurm_accounts:
+        mock_current_user_kwargs["slurm_accounts"] = slurm_accounts
+    if project_dirs:
+        mock_current_user_kwargs["project_dirs"] = project_dirs
 
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs}
+        is_verified=True, profile_id=profile_id, **mock_current_user_kwargs
     ) as user:
         project = await project_factory(user)
         project_id = project.id
@@ -311,15 +315,18 @@ async def full_workflow_TaskExecutionError(
     workflow_factory,
     dataset_factory,
     tasks: dict[str, TaskV2],
-    resource_id: int,
-    user_kwargs: dict | None = None,
+    profile_id: int,
+    project_dirs: list[str] | None = None,
 ):
-    if user_kwargs is None:
-        user_kwargs = {}
+    mock_current_user_kwargs = {}
+    if project_dirs is not None:
+        mock_current_user_kwargs["project_dirs"] = project_dirs
 
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs}
+        is_verified=True,
+        profile_id=profile_id,
+        **mock_current_user_kwargs,
     ) as user:
         project = await project_factory(user)
         project_id = project.id
@@ -415,14 +422,15 @@ async def non_executable_task_command(
     workflow_factory,
     dataset_factory,
     task_factory,
-    resource_id: int,
-    user_kwargs: dict | None = None,
+    profile_id: int,
+    project_dirs: list[str] | None = None,
 ):
-    if user_kwargs is None:
-        user_kwargs = {}
+    mock_current_user_kwargs = {}
+    if project_dirs is not None:
+        mock_current_user_kwargs["project_dirs"] = project_dirs
 
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs},
+        is_verified=True, profile_id=profile_id, **mock_current_user_kwargs
     ) as user:
         # Create task
         task = await task_factory(
@@ -487,15 +495,16 @@ async def failing_workflow_UnknownError(
     dataset_factory,
     workflow_factory,
     task_factory,
-    resource_id: int,
-    user_kwargs: dict | None = None,
+    profile_id: int,
+    project_dirs: list[str] | None = None,
 ):
-    if user_kwargs is None:
-        user_kwargs = {}
+    mock_current_user_kwargs = {}
+    if project_dirs is not None:
+        mock_current_user_kwargs["project_dirs"] = project_dirs
 
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs}
+        is_verified=True, profile_id=profile_id, **mock_current_user_kwargs
     ) as user:
         project = await project_factory(user)
         project_id = project.id
@@ -593,8 +602,8 @@ async def workflow_with_non_python_task(
     workflow_factory,
     task_factory,
     tmp777_path: Path,
-    resource_id: int,
-    additional_user_kwargs=None,
+    profile_id: int,
+    project_dirs: list[str] | None = None,
     this_should_fail: bool = False,
 ) -> str:
     """
@@ -604,12 +613,13 @@ async def workflow_with_non_python_task(
         String with job logs.
     """
 
-    user_kwargs = {"is_verified": True}
-    if additional_user_kwargs is not None:
-        user_kwargs.update(additional_user_kwargs)
-    debug(user_kwargs)
+    mock_current_user_kwargs = {}
+    if project_dirs is not None:
+        mock_current_user_kwargs["project_dirs"] = project_dirs
 
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(
+        is_verified=True, profile_id=profile_id, **mock_current_user_kwargs
+    ) as user:
         # Create project
         project = await project_factory(user)
         project_id = project.id
@@ -703,15 +713,10 @@ async def failing_workflow_post_task_execution(
     dataset_factory,
     tasks: dict[str, TaskV2],
     resource_id: int,
-    user_kwargs: dict | None = None,
+    profile_id: int,
     tmp_path: Path,
 ):
-    if user_kwargs is None:
-        user_kwargs = {}
-
-    async with MockCurrentUser(
-        user_kwargs={"is_verified": True, **user_kwargs},
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile_id) as user:
         project = await project_factory(
             user,
             resource_id=resource_id,
