@@ -34,10 +34,7 @@ class SlurmConfigSet(BaseModel):
         account:
         extra_lines:
         gpus:
-        sleep_after_srun:
-            Add a `sleep` command in the SLURM submission script, after the
-            `srun .. &` lines, and before the `wait` one. This may mitigate
-            an issue observed on SLURM 25.05.4.
+        shebang_line: The shell shebang to use for SLURM jobs.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -53,7 +50,7 @@ class SlurmConfigSet(BaseModel):
     account: NonEmptyStr | None = None
     extra_lines: list[NonEmptyStr] = Field(default_factory=list)
     gpus: NonEmptyStr | None = None
-    sleep_after_srun: int = 0
+    shebang_line: str = "#!/bin/sh"
 
 
 class BatchingConfigSet(BaseModel):
