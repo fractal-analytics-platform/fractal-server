@@ -34,7 +34,7 @@ async def test_oauth_callback(
     user = UserOAuth(
         email="user1@example.org",
         hashed_password="xxx",
-        project_dir=["/fake"],
+        project_dirs=["/fake"],
         oauth_accounts=[
             OAuthAccount(
                 oauth_name="oidc",
@@ -55,7 +55,7 @@ async def test_oauth_callback(
         UserOAuth(
             email="user2@example.org",
             hashed_password="xxx",
-            project_dir=["/fake"],
+            project_dirs=["/fake"],
         )
     )
     await db.commit()

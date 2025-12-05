@@ -112,11 +112,8 @@ class UserOAuth(SQLModel, table=True):
         ondelete="RESTRICT",
     )
 
-    # TODO-2.18.1: drop `project_dir`
-    project_dir: str | None = Field(default=None, nullable=True)
-    # TODO-2.18.1: `project_dirs: list[str] = Field(min_length=1)`
     project_dirs: list[str] = Field(
-        sa_column=Column(ARRAY(String), nullable=False, server_default="{}"),
+        sa_column=Column(ARRAY(String), nullable=False),
     )
 
     slurm_accounts: list[str] = Field(

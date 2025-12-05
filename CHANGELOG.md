@@ -1,6 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.18.0 (unreleased)
+# 2.18.1 (unreleased)
+
+* Database:
+    * Drop `server_default` for `is_owner`, `is_verified` and `permissions` in `LinkUserProjectV2` (\#3058).
+    * Drop `server_default` for `UserOAuth.project_dirs` and drop column `UserOAuth.project_dir` (\#3058).
+
+# 2.18.0
 
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
 
