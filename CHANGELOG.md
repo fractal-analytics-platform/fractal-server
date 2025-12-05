@@ -47,6 +47,7 @@ The main contents of this release are the introduction of the project sharing an
 * Testing:
     * Expand SLURM-batching-heuristics test (\#3011).
     * Also validate resources and profiles in `migrations.yml` action (\#3046).
+    * Replace `MockCurrentUser.user_kwargs` with explicit keyword arguments (\#3061).
 * Dependencies:
     * Support Python 3.14 (\#3015).
 
