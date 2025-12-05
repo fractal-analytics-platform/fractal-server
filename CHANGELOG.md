@@ -33,7 +33,7 @@ The main contents of this release are the introduction of the project sharing an
     * Remove `zarr_dir` request body argument from `PATCH /project/{project_id}/dataset/{dataset_id}/` (\#3051).
     * Validate `images` in `DatasetImport` (\#3057).
 * App:
-    * Add `SlowResponseMiddleware` middleware (\#3035, \#3038).
+    * Add `SlowResponseMiddleware` middleware (\#3035, \#3038, \#3060).
 * Settings:
     * Add `Settings.FRACTAL_LONG_REQUEST_TIME` configuration variable (\#3035).
 * Runner:
