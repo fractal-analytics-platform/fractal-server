@@ -316,7 +316,7 @@ async def full_workflow_TaskExecutionError(
     dataset_factory,
     tasks: dict[str, TaskV2],
     profile_id: int,
-    project_dirs: list[str] | None,
+    project_dirs: list[str] | None = None,
 ):
     mock_current_user_kwargs = {}
     if project_dirs is not None:

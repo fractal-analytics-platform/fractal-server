@@ -203,7 +203,7 @@ async def test_task_collection_failure_due_to_existing_path(
     db, client, MockCurrentUser, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(verified=True, profile_id=profile.id) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         path = (
             Path(resource.tasks_local_dir)
             / f"{user.id}/testing-tasks-mock/0.1.4/"
