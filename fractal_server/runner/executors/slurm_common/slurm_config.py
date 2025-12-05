@@ -60,6 +60,10 @@ class SlurmConfig(BaseModel):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
+        sleep_after_srun:
+            Add a `sleep` command in the SLURM submission script, after the
+            `srun .. &` lines, and before the `wait` one. This may mitigate
+            an issue observed on SLURM 25.05.4.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -98,6 +102,8 @@ class SlurmConfig(BaseModel):
     max_mem_per_job: int
     target_num_jobs: int
     max_num_jobs: int
+
+    sleep_after_srun: int = 0
 
     def _sorted_extra_lines(self) -> list[str]:
         """
