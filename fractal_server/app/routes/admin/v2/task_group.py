@@ -52,7 +52,9 @@ async def get_task_group_activity_list(
     page = pagination.page
     page_size = pagination.page_size
 
-    stm = select(TaskGroupActivityV2)
+    stm = select(TaskGroupActivityV2).order_by(
+        TaskGroupActivityV2.timestamp_started.desc()
+    )
     stm_count = select(func.count(TaskGroupActivityV2.id))
     if task_group_activity_id is not None:
         stm = stm.where(TaskGroupActivityV2.id == task_group_activity_id)
