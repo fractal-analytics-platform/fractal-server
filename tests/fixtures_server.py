@@ -299,12 +299,20 @@ async def MockCurrentUser(
             user_id: int | None = None,
             user_email: str | None = None,
             profile_id: int | None = None,
+            is_superuser: bool | None = None,
+            is_verified: bool | None = None,
+            project_dirs: list[str] | None = None,
+            # ---
             previous_deps: dict | None = None,
             debug: bool = False,
         ):
             self.user_id = user_id
             self.user_email = user_email
             self.profile_id = profile_id
+            self.is_superuser = is_superuser
+            self.is_verified = is_verified
+            self.project_dirs = project_dirs
+            # ---
             self.previous_deps = previous_deps or {}
             self.debug = debug
 
@@ -323,22 +331,27 @@ async def MockCurrentUser(
                         "[MockCurrentUser] "
                         f"User with user_id={self.user_id} doesn't exist"
                     )
-                # FIXME replace the following
-                # for k, v in self.user_kwargs.items():
-                #     if not getattr(db_user, k) == v:
-                #         raise RuntimeError(
-                #             "[MockCurrentUser] "
-                #             f"User with user_id={self.user_id} has "
-                #             f"{k}={v}."
-                #         )
+                if (
+                    self.user_email != db_user.email
+                    or self.profile_id != db_user.profile_id
+                    or self.is_superuser != db_user.is_superuser
+                    or self.is_verified != db_user.is_verified
+                    or self.project_dirs != db_user.project_dirs
+                ):
+                    raise RuntimeError(
+                        "[MockCurrentUser] "
+                        f"User {self.user_id} has not the required attributes."
+                    )
                 self.user = db_user
             else:
                 # (2) Create new user
-                default_user_kwargs = dict(
+
+                user_kwargs = dict(
                     email=self.user_email or _new_mail(),
                     hashed_password="fake_hashed_password",
-                    project_dirs=[PROJECT_DIR_PLACEHOLDER],
-                    is_verified=True,
+                    is_superuser=self.is_superuser or False,
+                    is_verified=self.is_verified or True,
+                    project_dirs=self.project_dirs or [PROJECT_DIR_PLACEHOLDER],
                 )
 
                 # (2/a) Handle resource and profile
@@ -373,11 +386,14 @@ async def MockCurrentUser(
                         await db.commit()
                         await db.refresh(profile)
                         db.expunge(profile)
-                    default_user_kwargs["profile_id"] = profile.id
+                    user_kwargs["profile_id"] = profile.id
+                else:
+                    user_kwargs["profile_id"] = self.profile_id
 
+                debug(self)
+                debug(user_kwargs)
                 # Create new user
-                default_user_kwargs.update(self.user_kwargs)
-                self.user = UserOAuth(**default_user_kwargs)
+                self.user = UserOAuth(**user_kwargs)
                 db.add(self.user)
                 await db.commit()
                 await db.refresh(self.user)
