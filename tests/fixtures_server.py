@@ -417,8 +417,6 @@ async def MockCurrentUser(
                 else:
                     user_kwargs["profile_id"] = self.profile_id
 
-                debug(self)
-                debug(user_kwargs)
                 # Create new user
                 self.user = UserOAuth(**user_kwargs)
                 db.add(self.user)
