@@ -165,7 +165,7 @@ async def test_post_worfkflow_task_failures(
             task_group_kwargs=dict(user_group_id=new_group.id),
         )
 
-    async with MockCurrentUser(user_d=user_A_id) as user:
+    async with MockCurrentUser(user_id=user_A_id) as user:
         # Create project and workflow
         proj = await project_factory(user)
         wf = await workflow_factory(project_id=proj.id)

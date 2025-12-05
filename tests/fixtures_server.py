@@ -302,6 +302,7 @@ async def MockCurrentUser(
             is_superuser: bool | None = None,
             is_verified: bool | None = None,
             project_dirs: list[str] | None = None,
+            slurm_accounts: list[str] | None = None,
             # ---
             previous_deps: dict | None = None,
             debug: bool = False,
@@ -312,6 +313,7 @@ async def MockCurrentUser(
             self.is_superuser = is_superuser
             self.is_verified = is_verified
             self.project_dirs = project_dirs
+            self.slurm_accounts = slurm_accounts
             # ---
             self.previous_deps = previous_deps or {}
             self.debug = debug
@@ -353,6 +355,10 @@ async def MockCurrentUser(
                         self.project_dirs is not None
                         and self.project_dirs != db_user.project_dirs
                     )
+                    or (
+                        self.slurm_accounts is not None
+                        and self.slurm_accounts != db_user.slurm_accounts
+                    )
                 ):
                     raise RuntimeError(
                         "[MockCurrentUser] "
@@ -365,9 +371,14 @@ async def MockCurrentUser(
                 user_kwargs = dict(
                     email=self.user_email or _new_mail(),
                     hashed_password="fake_hashed_password",
-                    is_superuser=self.is_superuser or False,
-                    is_verified=self.is_verified or True,
+                    is_superuser=self.is_superuser
+                    if self.is_superuser is not None
+                    else False,
+                    is_verified=self.is_verified
+                    if self.is_verified is not None
+                    else True,
                     project_dirs=self.project_dirs or [PROJECT_DIR_PLACEHOLDER],
+                    slurm_accounts=self.slurm_accounts or [],
                 )
 
                 # (2/a) Handle resource and profile
