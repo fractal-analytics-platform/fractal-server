@@ -331,12 +331,28 @@ async def MockCurrentUser(
                         "[MockCurrentUser] "
                         f"User with user_id={self.user_id} doesn't exist"
                     )
+
                 if (
-                    self.user_email != db_user.email
-                    or self.profile_id != db_user.profile_id
-                    or self.is_superuser != db_user.is_superuser
-                    or self.is_verified != db_user.is_verified
-                    or self.project_dirs != db_user.project_dirs
+                    (
+                        self.user_email is not None
+                        and self.user_email != db_user.email
+                    )
+                    or (
+                        self.profile_id is not None
+                        and self.profile_id != db_user.profile_id
+                    )
+                    or (
+                        self.is_superuser is not None
+                        and self.is_superuser != db_user.is_superuser
+                    )
+                    or (
+                        self.is_verified is not None
+                        and self.is_verified != db_user.is_verified
+                    )
+                    or (
+                        self.project_dirs is not None
+                        and self.project_dirs != db_user.project_dirs
+                    )
                 ):
                     raise RuntimeError(
                         "[MockCurrentUser] "
