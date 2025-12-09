@@ -34,7 +34,6 @@ async def get_current_user_allowed_viewer_paths(
                 LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id
             )
             .where(LinkUserProjectV2.user_id == current_user.id)
-            .where(LinkUserProjectV2.is_owner.is_(False))
         )
         authorized_paths.extend(res.unique().scalars().all())
         # Note that `project_dirs` and the `db.execute` result may have some
