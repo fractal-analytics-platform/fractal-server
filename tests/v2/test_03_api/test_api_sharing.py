@@ -621,7 +621,7 @@ async def test_data_streaming_edge_case(
 
     # User 1 creates a project and shares it with User 2 (who accepts)
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id, project_dirs=["/a"])
+        profile_id=profile.id, project_dirs=["/a"]
     ) as user1:
         res = await client.post("/api/v2/project/", json=dict(name="Project"))
         assert res.status_code == 201
@@ -629,7 +629,7 @@ async def test_data_streaming_edge_case(
         project_id = project["id"]
 
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id, project_dirs=["/b"])
+        profile_id=profile.id, project_dirs=["/b"]
     ) as user2:
         db.add(
             LinkUserProjectV2(
@@ -650,7 +650,7 @@ async def test_data_streaming_edge_case(
         assert res.status_code == 201
         dataset = res.json()
 
-    async with MockCurrentUser(user_kwargs=dict(id=user1.id)):
+    async with MockCurrentUser(user_id=user1.id):
         # User 1 should have data-streaming access for that dataset
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
         assert dataset["zarr_dir"] in res.json()
