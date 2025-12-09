@@ -582,6 +582,7 @@ async def test_get_profile_info(
         email="no.profile@example.org",
         hashed_password="12345",
         profile_id=None,
+        project_dirs=["/a"],
     )
     db.add(user_without_profile)
     await db.commit()
