@@ -10,8 +10,8 @@
 | fractal\_server/app/db/\_\_init\_\_.py                                       |       56 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkusergroup.py                                  |       10 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/linkuserproject.py                                |       15 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/security.py                                       |       41 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/linkuserproject.py                                |        9 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/security.py                                       |       40 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/\_\_init\_\_.py                                |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/accounting.py                                  |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v2/dataset.py                                     |       21 |        0 |        0 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-|                                                                    **TOTAL** | **10051** |  **197** | **1822** |   **95** | **97%** |           |
+|                                                                    **TOTAL** | **10044** |  **197** | **1822** |   **95** | **97%** |           |
 
 
 ## Setup coverage badge
