@@ -26,6 +26,7 @@ The main contents of this release are the introduction of the project sharing an
     * Add `zarr_dir` validity check in `POST /project/{project_id}/dataset/import/` (\#3051).
     * Remove `zarr_dir` request body argument from `PATCH /project/{project_id}/dataset/{dataset_id}/` (\#3051).
     * Validate `images` in `DatasetImport` (\#3057).
+    * Sort response of `GET /admin/v2/task-group/activity/` starting with the most recent activities (\#3066).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038, \#3060).
 * Settings:
