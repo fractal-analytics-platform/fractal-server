@@ -299,8 +299,8 @@ async def MockCurrentUser(
             user_id: int | None = None,
             user_email: str | None = None,
             profile_id: int | None = None,
-            is_superuser: bool | None = None,
-            is_verified: bool | None = None,
+            is_superuser: bool = False,
+            is_verified: bool = True,
             project_dirs: list[str] | None = None,
             slurm_accounts: list[str] | None = None,
             # ---
@@ -342,14 +342,8 @@ async def MockCurrentUser(
                         self.profile_id is not None
                         and self.profile_id != db_user.profile_id
                     )
-                    or (
-                        self.is_superuser is not None
-                        and self.is_superuser != db_user.is_superuser
-                    )
-                    or (
-                        self.is_verified is not None
-                        and self.is_verified != db_user.is_verified
-                    )
+                    or self.is_superuser != db_user.is_superuser
+                    or self.is_verified != db_user.is_verified
                     or (
                         self.project_dirs is not None
                         and self.project_dirs != db_user.project_dirs
@@ -370,12 +364,9 @@ async def MockCurrentUser(
                 user_kwargs = dict(
                     email=self.user_email or _new_mail(),
                     hashed_password="fake_hashed_password",
-                    is_superuser=self.is_superuser
-                    if self.is_superuser is not None
-                    else False,
-                    is_verified=self.is_verified
-                    if self.is_verified is not None
-                    else True,
+                    is_active=True,
+                    is_superuser=self.is_superuser,
+                    is_verified=self.is_verified,
                     project_dirs=self.project_dirs or [PROJECT_DIR_PLACEHOLDER],
                     slurm_accounts=self.slurm_accounts or [],
                 )
