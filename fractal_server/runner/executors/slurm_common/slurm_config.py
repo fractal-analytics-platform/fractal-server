@@ -60,6 +60,7 @@ class SlurmConfig(BaseModel):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
+
     """
 
     model_config = ConfigDict(extra="forbid")
