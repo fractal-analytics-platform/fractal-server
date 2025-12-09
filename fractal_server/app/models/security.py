@@ -75,8 +75,8 @@ class UserOAuth(SQLModel, table=True):
         profile_id:
             Foreign key linking the user to a `Profile`. If this is unset,
             the user has no access to the `/api/v2/` endpoints.
-        project_dir:
-            Absolute path of the user's project directory. This is used (A) as
+        project_dirs:
+            Absolute paths of the user's project directory. This is used (A) as
             a default base folder for the `zarr_dir` of new datasets (where
             the output Zarr are located), and (B) as a folder which is included
             by default in the paths that a user is allowed to stream (if the
