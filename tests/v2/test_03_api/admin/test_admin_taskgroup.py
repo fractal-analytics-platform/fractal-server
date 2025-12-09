@@ -244,7 +244,13 @@ async def test_get_task_group_activity(
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/task-group/activity/?page_size=1000")
         assert res.status_code == 200
-        assert len(res.json()) == 4
+        assert len(res.json()["items"]) == 4
+        assert [activity["id"] for activity in res.json()["items"]] == [
+            activity4.id,
+            activity3.id,
+            activity2.id,
+            activity1.id,
+        ]
 
         # user_id
         res = await client.get(
