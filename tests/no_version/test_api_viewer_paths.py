@@ -51,7 +51,7 @@ async def test_get_current_user_allowed_viewer_paths(
         assert res.status_code == 201
 
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
-        assert res.json() == ["/a1", "/a2"]
+        assert res.json() == ["/a1", "/a2", "/a1/x", "/a2/y"]
 
     async with MockCurrentUser(
         profile_id=local_resource_profile_db[1].id,

@@ -16,9 +16,9 @@ The main contents of this release are the introduction of the project sharing an
     * Add pagination to `GET /admin/v2/task-group/activity/` and `GET /admin/v2/task-group/` (\#3023).
     * Do not cast endpoint return values to `PaginationResponse[X]` (\#3023).
     * Reduce API logging level for some endpoints (\#3010).
-    * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031).
+    * Modify `GET /auth/current-user/allowed-viewer-paths/` logic, with `include_shared_projects` query parameter (\#3031, \#3069).
     * Add validator for paths to forbid parent-directory references (\#3031).
-    * Add check to `PATCH /auth/users/{user_id}/` when patching `project_dirs` (\#3043).
+    * Add check to `PATCH /auth/users/{user_id}/` when patching `project_dirs` (\#3043, \#3069).
     * Review job-submission endpoint (\#3041).
     * Prevent submissions if `Resource.prevent_new_submissions` is set (\#3042).
     * Add `normpath` to `AbsolutePathStr` type (\#3050).
@@ -26,6 +26,7 @@ The main contents of this release are the introduction of the project sharing an
     * Add `zarr_dir` validity check in `POST /project/{project_id}/dataset/import/` (\#3051).
     * Remove `zarr_dir` request body argument from `PATCH /project/{project_id}/dataset/{dataset_id}/` (\#3051).
     * Validate `images` in `DatasetImport` (\#3057).
+    * Sort response of `GET /admin/v2/task-group/activity/` starting with the most recent activities (\#3066).
 * App:
     * Add `SlowResponseMiddleware` middleware (\#3035, \#3038, \#3060).
 * Settings:
@@ -33,6 +34,7 @@ The main contents of this release are the introduction of the project sharing an
 * Runner:
     * Improve logging for when dataset or workflow is not found in the database (\#3046).
     * Prevent job-execution from continuing if `Resource.prevent_new_submissions` is set (\#3042).
+    * Espose `shebang_line` in resource runner configuration (\#3064).
 * Database:
     * Add `Resource.prevent_new_submissions` boolean flag (\#3042).
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).

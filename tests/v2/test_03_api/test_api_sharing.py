@@ -612,3 +612,45 @@ async def test_project_sharing_subquery(
             permissions=ProjectPermissions.READ,
             owner_email=user1.email,
         )
+
+
+async def test_data_streaming_edge_case(
+    MockCurrentUser, client, db, local_resource_profile_db
+):
+    _, profile = local_resource_profile_db
+
+    # User 1 creates a project and shares it with User 2 (who accepts)
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id, project_dirs=["/a"])
+    ) as user1:
+        res = await client.post("/api/v2/project/", json=dict(name="Project"))
+        assert res.status_code == 201
+        project = res.json()
+        project_id = project["id"]
+
+    async with MockCurrentUser(
+        user_kwargs=dict(profile_id=profile.id, project_dirs=["/b"])
+    ) as user2:
+        db.add(
+            LinkUserProjectV2(
+                user_id=user2.id,
+                project_id=project_id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.WRITE,
+            )
+        )
+        await db.commit()
+
+        # User 2 creates a dataset in the project
+        res = await client.post(
+            f"/api/v2/project/{project_id}/dataset/",
+            json=dict(name="Dataset", project_dir="/b", zarr_subfolder="zarr"),
+        )
+        assert res.status_code == 201
+        dataset = res.json()
+
+    async with MockCurrentUser(user_kwargs=dict(id=user1.id)):
+        # User 1 should have data-streaming access for that dataset
+        res = await client.get("/auth/current-user/allowed-viewer-paths/")
+        assert dataset["zarr_dir"] in res.json()
