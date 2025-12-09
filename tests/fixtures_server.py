@@ -332,36 +332,23 @@ async def MockCurrentUser(
                         "[MockCurrentUser] "
                         f"User with user_id={self.user_id} doesn't exist"
                     )
-
-                if (
-                    (
-                        self.user_email is not None
-                        and self.user_email != db_user.email
-                    )
-                    or (
-                        self.profile_id is not None
-                        and self.profile_id != db_user.profile_id
-                    )
-                    or (
-                        self.is_superuser is not None
-                        and self.is_superuser != db_user.is_superuser
-                    )
-                    or (
-                        self.is_verified is not None
-                        and self.is_verified != db_user.is_verified
-                    )
-                    or (
-                        self.project_dirs is not None
-                        and self.project_dirs != db_user.project_dirs
-                    )
-                    or (
-                        self.slurm_accounts is not None
-                        and self.slurm_accounts != db_user.slurm_accounts
-                    )
-                ):
+                provided_kwargs = {
+                    key: getattr(self, key)
+                    for key in [
+                        "user_email",
+                        "profile_id",
+                        "is_superuser",
+                        "is_verified",
+                        "project_dirs",
+                        "slurm_accounts",
+                    ]
+                    if getattr(self, key) is not None
+                }
+                if provided_kwargs:
                     raise RuntimeError(
                         "[MockCurrentUser] "
-                        f"User {self.user_id} has not the required attributes."
+                        f"Cannot provde {list(provided_kwargs.keys())} "
+                        "while also providing `user_id`."
                     )
                 self.user = db_user
             else:
@@ -370,6 +357,7 @@ async def MockCurrentUser(
                 user_kwargs = dict(
                     email=self.user_email or _new_mail(),
                     hashed_password="fake_hashed_password",
+                    is_active=True,
                     is_superuser=self.is_superuser
                     if self.is_superuser is not None
                     else False,
