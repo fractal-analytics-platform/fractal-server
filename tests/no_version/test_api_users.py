@@ -578,15 +578,15 @@ async def test_get_profile_info(
     client, MockCurrentUser, local_resource_profile_db, db
 ):
     # No profile
-    profiless_user = UserOAuth(
+    user_without_profile = UserOAuth(
         email="no.profile@example.org",
         hashed_password="12345",
         profile_id=None,
     )
-    db.add(profiless_user)
+    db.add(user_without_profile)
     await db.commit()
-    await db.refresh(profiless_user)
-    async with MockCurrentUser(user_id=profiless_user.id):
+    await db.refresh(user_without_profile)
+    async with MockCurrentUser(user_id=user_without_profile.id):
         res = await client.get("/auth/current-user/profile-info/")
         assert res.status_code == 200
         assert res.json() == {
