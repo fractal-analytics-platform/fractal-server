@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict O8FZTj8udHoAWBQmvOCcSbVU2QHqtkMbELcbtBcEJppyRGxtVXyZhaHsg99Doah
+\restrict k0hv7rB4ruUyzF6niw02u3UgCaM2iF4MHQdjqKR202ynFkDpkKQYN8HeMqEiL2M
 
--- Dumped from database version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.10 (Ubuntu 16.10-0ubuntu0.24.04.1)
+-- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -645,8 +645,9 @@ CREATE TABLE public.user_oauth (
     is_superuser boolean NOT NULL,
     is_verified boolean NOT NULL,
     profile_id integer,
+    project_dir character varying,
     slurm_accounts character varying[] DEFAULT '{}'::character varying[],
-    project_dirs character varying[] NOT NULL
+    project_dirs character varying[] DEFAULT '{}'::character varying[] NOT NULL
 );
 
 
@@ -927,7 +928,7 @@ COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids) FROM
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-b7477cc98f45
+88270f589c9b
 \.
 
 
@@ -1062,11 +1063,11 @@ COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, sour
 -- Data for Name: user_oauth; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, profile_id, slurm_accounts, project_dirs) FROM stdin;
-1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	\N	{}	{/PLACEHOLDER}
-6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	\N	{}	{/PLACEHOLDER}
-27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	1	{}	{/placeholder}
-28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	1	{}	{/placeholder}
+COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, profile_id, project_dir, slurm_accounts, project_dirs) FROM stdin;
+1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	\N	/PLACEHOLDER	{}	{/PLACEHOLDER}
+6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	\N	/PLACEHOLDER	{}	{/PLACEHOLDER}
+27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	1	/placeholder	{}	{/placeholder}
+28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	1	/placeholder	{}	{/placeholder}
 \.
 
 
@@ -1723,4 +1724,4 @@ ALTER TABLE ONLY public.oauthaccount
 -- PostgreSQL database dump complete
 --
 
-\unrestrict O8FZTj8udHoAWBQmvOCcSbVU2QHqtkMbELcbtBcEJppyRGxtVXyZhaHsg99Doah
+\unrestrict k0hv7rB4ruUyzF6niw02u3UgCaM2iF4MHQdjqKR202ynFkDpkKQYN8HeMqEiL2M
