@@ -34,6 +34,7 @@ The main contents of this release are the introduction of the project sharing an
 * Runner:
     * Improve logging for when dataset or workflow is not found in the database (\#3046).
     * Prevent job-execution from continuing if `Resource.prevent_new_submissions` is set (\#3042).
+    * Espose `shebang_line` in resource runner configuration (\#3064).
 * Database:
     * Add `Resource.prevent_new_submissions` boolean flag (\#3042).
     * Add project-sharing-related `LinkUserProjectV2` columns (\#2999).

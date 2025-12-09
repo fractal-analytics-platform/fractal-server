@@ -20,6 +20,7 @@ SLURM_CONFIG = {
         "partition": "main",
         "cpus_per_task": 1,
         "mem": "100M",
+        "shebang_line": "#!/bin/bash",
     },
     "gpu_slurm_config": {},
     "batching_config": {
