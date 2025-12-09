@@ -304,7 +304,6 @@ async def MockCurrentUser(
             project_dirs: list[str] | None = None,
             slurm_accounts: list[str] | None = None,
             # ---
-            previous_deps: dict | None = None,
             debug: bool = False,
         ):
             self.user_id = user_id
@@ -315,7 +314,7 @@ async def MockCurrentUser(
             self.project_dirs = project_dirs
             self.slurm_accounts = slurm_accounts
             # ---
-            self.previous_deps = previous_deps or {}
+            self.previous_deps = {}
             self.debug = debug
 
         async def __aenter__(self):
