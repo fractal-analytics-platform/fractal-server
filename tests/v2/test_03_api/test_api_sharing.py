@@ -653,6 +653,5 @@ async def test_data_streaming_edge_case(
 
     async with MockCurrentUser(user_kwargs=dict(id=user1.id)):
         # User 1 should have data-streaming access for that dataset
-        #  - but they currently cannot.
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
         assert dataset["zarr_dir"] in res.json()
