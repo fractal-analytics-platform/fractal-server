@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.18.1 (unreleased)
+# 2.18.1
 
 * Database:
     * Drop `server_default` for `is_owner`, `is_verified` and `permissions` in `LinkUserProjectV2` (\#3058).
