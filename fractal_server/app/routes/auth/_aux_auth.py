@@ -228,6 +228,7 @@ async def _check_project_dirs_update(
                 LinkUserProjectV2.project_id == ProjectV2.id,
             )
             .where(LinkUserProjectV2.user_id == user_id)
+            .where(LinkUserProjectV2.is_verified.is_(True))
             .where(
                 or_(
                     *[
