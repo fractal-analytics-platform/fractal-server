@@ -12,9 +12,7 @@ async def test_pixi_not_available(
     client, MockCurrentUser, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         res = await client.post(
             "api/v2/task/collect/pixi/",
             data={"pixi_version": "9.9.9"},
@@ -45,12 +43,7 @@ async def test_api_failures(
             )
         }
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        )
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # no data nor files
         res = await client.post(
             "api/v2/task/collect/pixi/",
@@ -105,9 +98,7 @@ async def test_pixi_collection_path_already_exists(
     resource.tasks_pixi_config = pixi.model_dump()
     db.add(resource)
     await db.commit()
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         task_group_path = (
             Path(Path(resource.tasks_local_dir).as_posix())
             / str(user.id)
@@ -149,9 +140,7 @@ async def test_task_group_lifecycle_pixi_local(
             )
         }
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Failed collection (pixi version not available)
         res = await client.post(
             "api/v2/task/collect/pixi/",

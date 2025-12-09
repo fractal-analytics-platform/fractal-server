@@ -17,7 +17,7 @@ async def test_non_verified_user(client, MockCurrentUser):
     Test that a non-verified user is not authorized to make POST/PATCH task
     cals.
     """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)) as user:
+    async with MockCurrentUser(is_verified=False) as user:
         debug(user)
         res = await client.post(f"{PREFIX}/", json={})
         debug(res.json())
@@ -121,7 +121,7 @@ async def test_post_task(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         # Successful task creations
         task = TaskCreate(
             name="task_name",
@@ -255,9 +255,8 @@ async def test_post_task_user_group_id(
 
     args = dict(command_non_parallel="cmd", type="non_parallel")
 
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ):  # No query parameter
+    async with MockCurrentUser(profile_id=profile.id):
+        # No query parameter
         res = await client.post(f"{PREFIX}/", json=dict(name="a", **args))
         assert res.status_code == 201
         taskgroup = await db.get(TaskGroupV2, res.json()["taskgroupv2_id"])
@@ -308,9 +307,7 @@ async def test_patch_task_auth(
 ):
     resource, profile = local_resource_profile_db
     # POST-task as user_A
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as user_A:
+    async with MockCurrentUser(profile_id=profile.id) as user_A:
         user_A_id = user_A.id
         payload_obj = TaskCreate(
             name="a", category="my-cat", command_parallel="c"
@@ -322,7 +319,7 @@ async def test_patch_task_auth(
         task_id = res.json()["id"]
 
     # PATCH-task success as user_A -> success (task belongs to user)
-    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
+    async with MockCurrentUser(user_id=user_A_id) as user_A:
         payload_obj = TaskUpdate(category="new-cat-1")
         res = await client.patch(
             f"{PREFIX}/{task_id}/",
@@ -332,7 +329,7 @@ async def test_patch_task_auth(
         assert res.json()["category"] == "new-cat-1"
 
     # PATCH-task failure as a different user -> failure (task belongs to user)
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         # PATCH-task failure (task does not belong to user)
         payload_obj = TaskUpdate(category="new-cat-2")
         res = await client.patch(
@@ -348,9 +345,7 @@ async def test_patch_task(
     MockCurrentUser,
     client,
 ):
-    async with MockCurrentUser(
-        user_kwargs=dict(is_superuser=True, is_verified=True)
-    ) as user_A:
+    async with MockCurrentUser(is_superuser=True, is_verified=True) as user_A:
         user_A_id = user_A.id
         task_parallel = await task_factory(
             user_id=user_A_id, index=1, type="parallel"
@@ -384,7 +379,7 @@ async def test_patch_task(
                 # assert non patched items are still the same
                 assert v == task_compound.model_dump()[k]
 
-    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)):
+    async with MockCurrentUser(user_id=user_A_id):
         # Fail on updating unsetted commands
         update_non_parallel = TaskUpdate(command_non_parallel="xxx")
         res_compound = await client.patch(
@@ -431,12 +426,10 @@ async def test_get_task(
     resource, profile = local_resource_profile_db
     resource2, profile2 = slurm_sudo_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
+    async with MockCurrentUser(profile_id=profile.id) as user1:
         task1 = await task_factory(user_id=user1.id, name="name1")
 
-    async with MockCurrentUser(
-        user_kwargs={"profile_id": profile2.id}
-    ) as user2:
+    async with MockCurrentUser(profile_id=profile2.id) as user2:
         task2 = await task_factory(user_id=user2.id, name="name2")
         res = await client.get(f"{PREFIX}/{task2.id}/")
         assert res.status_code == 200

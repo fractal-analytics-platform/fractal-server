@@ -40,9 +40,7 @@ async def test_post_and_get_project(
     assert res.status_code == 401
 
     # authenticated
-    async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id)
-    ) as userA:
+    async with MockCurrentUser(profile_id=profile.id) as userA:
         res = await client.post(f"{PREFIX}/project/", json=dict(name="project"))
         assert res.status_code == 201
         assert len(await _project_list(userA, db)) == 1
@@ -97,7 +95,7 @@ async def test_post_project(
     data = res.json()
     assert res.status_code == 401
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         res = await client.post(f"{PREFIX}/project/", json=payload)
         data = res.json()
         assert res.status_code == 201
@@ -123,7 +121,7 @@ async def test_post_project_name_constraint(
     assert res.status_code == 401
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         # Create a first project named "new project"
         res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 201
@@ -142,7 +140,7 @@ async def test_patch_project_name_constraint(
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         # Create a first project named "name1"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name1"))
         assert res.status_code == 201
@@ -159,7 +157,7 @@ async def test_patch_project_name_constraint(
         assert res.status_code == 422
         assert res.json()["detail"] == "Project name (name1) already in use"
 
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         # Using another user, create a project named "name3"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name3"))
         assert res.status_code == 201
@@ -182,7 +180,7 @@ async def test_patch_project(
     combination of set/unset attributes.
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(user_kwargs=dict(profile_id=profile.id)):
+    async with MockCurrentUser(profile_id=profile.id):
         for new_name in (None, "new name"):
             # Create project
             payload = dict(name=f"old {new_name}")
@@ -222,10 +220,8 @@ async def test_delete_project(
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(
-        user_kwargs={
-            "is_superuser": True,
-            "profile_id": profile.id,
-        }
+        is_superuser=True,
+        profile_id=profile.id,
     ) as user:
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()

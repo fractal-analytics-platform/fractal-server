@@ -225,7 +225,7 @@ async def test_get_workflow(
     db.add(tg3)
     await db.commit()
 
-    async with MockCurrentUser(user_kwargs=dict(id=user_A_id)) as user_A:
+    async with MockCurrentUser(user_id=user_A_id) as user_A:
         project = await project_factory(user_A)
         p_id = project.id
 

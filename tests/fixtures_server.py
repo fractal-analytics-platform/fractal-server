@@ -1,8 +1,6 @@
 import time
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
-from dataclasses import dataclass
-from dataclasses import field
 from typing import Any
 
 import pytest
@@ -290,50 +288,88 @@ async def MockCurrentUser(
     def _new_mail():
         return f"{time.perf_counter_ns()}@example.org"
 
-    @dataclass
     class _MockCurrentUser:
         """
         Context managed user override
         """
 
-        user_kwargs: dict[str, Any] = field(default_factory=dict)
-        email: str | None = field(default_factory=_new_mail)
-        previous_deps: dict = field(default_factory=dict)
-        debug: bool = False
+        def __init__(
+            self,
+            *,
+            user_id: int | None = None,
+            user_email: str | None = None,
+            profile_id: int | None = None,
+            is_superuser: bool | None = None,
+            is_verified: bool | None = None,
+            project_dirs: list[str] | None = None,
+            slurm_accounts: list[str] | None = None,
+            # ---
+            debug: bool = False,
+        ):
+            self.user_id = user_id
+            self.user_email = user_email
+            self.profile_id = profile_id
+            self.is_superuser = is_superuser
+            self.is_verified = is_verified
+            self.project_dirs = project_dirs
+            self.slurm_accounts = slurm_accounts
+            # ---
+            self.previous_deps = {}
+            self.debug = debug
 
         async def __aenter__(self):
-            user_id = self.user_kwargs.get("id", None)
-            if user_id is not None:
+            if self.user_id is not None:
                 # (1) Look for existing user, by ID
                 db_user = await db.get(
                     UserOAuth,
-                    user_id,
+                    self.user_id,
                     populate_existing=True,
                 )
                 if self.debug:
                     debug("FOUND USER", db_user)
                 if db_user is None:
                     raise RuntimeError(
-                        f"[MockCurrentUser] User with {user_id=} doesn't exist"
+                        "[MockCurrentUser] "
+                        f"User with user_id={self.user_id} doesn't exist"
                     )
-                for k, v in self.user_kwargs.items():
-                    if not getattr(db_user, k) == v:
-                        raise RuntimeError(
-                            f"[MockCurrentUser] User with {user_id=} has "
-                            f"{k}={v}."
-                        )
+                provided_kwargs = {
+                    key: getattr(self, key)
+                    for key in [
+                        "user_email",
+                        "profile_id",
+                        "is_superuser",
+                        "is_verified",
+                        "project_dirs",
+                        "slurm_accounts",
+                    ]
+                    if getattr(self, key) is not None
+                }
+                if provided_kwargs:
+                    raise RuntimeError(
+                        "[MockCurrentUser] "
+                        f"Cannot provde {list(provided_kwargs.keys())} "
+                        "while also providing `user_id`."
+                    )
                 self.user = db_user
             else:
                 # (2) Create new user
-                default_user_kwargs = dict(
-                    email=self.email,
+
+                user_kwargs = dict(
+                    email=self.user_email or _new_mail(),
                     hashed_password="fake_hashed_password",
-                    project_dirs=[PROJECT_DIR_PLACEHOLDER],
-                    is_verified=True,
+                    is_active=True,
+                    is_superuser=self.is_superuser
+                    if self.is_superuser is not None
+                    else False,
+                    is_verified=self.is_verified
+                    if self.is_verified is not None
+                    else True,
+                    project_dirs=self.project_dirs or [PROJECT_DIR_PLACEHOLDER],
+                    slurm_accounts=self.slurm_accounts or [],
                 )
 
                 # (2/a) Handle resource and profile
-                if "profile_id" not in self.user_kwargs.keys():
+                if self.profile_id is None:
                     res = await db.execute(select(Profile))
                     profile = res.scalars().first()
                     if profile is None:
@@ -364,11 +400,12 @@ async def MockCurrentUser(
                         await db.commit()
                         await db.refresh(profile)
                         db.expunge(profile)
-                    default_user_kwargs["profile_id"] = profile.id
+                    user_kwargs["profile_id"] = profile.id
+                else:
+                    user_kwargs["profile_id"] = self.profile_id
 
                 # Create new user
-                default_user_kwargs.update(self.user_kwargs)
-                self.user = UserOAuth(**default_user_kwargs)
+                self.user = UserOAuth(**user_kwargs)
                 db.add(self.user)
                 await db.commit()
                 await db.refresh(self.user)

@@ -59,7 +59,7 @@ async def test_loss_of_access_to_task(
             task_group_kwargs=dict(user_group_id=team_group.id),
             name=f"iteration-{i}-B",
         )
-        async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
+        async with MockCurrentUser(user_id=user_A.id) as user:
             # Prepare all objects
             project = await project_factory(user)
             dataset = await dataset_factory(
@@ -103,13 +103,13 @@ async def test_loss_of_access_to_task(
             assert link is None
         elif remove == "group":
             # Remove the team group
-            async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+            async with MockCurrentUser(is_superuser=True):
                 res = await client.delete(f"/auth/group/{team_group.id}/")
                 assert res.status_code == 204
         else:
             raise RuntimeError("Wrong branch.")
 
-        async with MockCurrentUser(user_kwargs=dict(id=user_A.id)) as user:
+        async with MockCurrentUser(user_id=user_A.id) as user:
             # User A cannot get task_B any more
             res = await client.get(f"/api/v2/task/{task_B.id}/")
             assert res.status_code == 403

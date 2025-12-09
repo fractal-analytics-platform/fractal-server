@@ -31,9 +31,7 @@ async def test_get_workflow_tasks_statuses(
 
     """
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs={"is_verified": True, "profile_id": profile.id}
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         user_id = user.id
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset1")

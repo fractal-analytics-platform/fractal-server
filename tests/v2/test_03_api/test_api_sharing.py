@@ -31,7 +31,7 @@ async def test_project_sharing(
     await db.refresh(user3)
     await db.refresh(user4)
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # Create Project1
         res = await client.post("/api/v2/project/", json=dict(name="ProjectZ"))
         assert res.status_code == 201
@@ -103,7 +103,7 @@ async def test_project_sharing(
             key=lambda item: item["email"],
         )
 
-    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+    async with MockCurrentUser(user_id=user2.id):
         # Get list of projects
         res = await client.get("/api/v2/project/")
         assert res.json() == []
@@ -168,7 +168,7 @@ async def test_project_sharing(
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == project1_id
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # Get list of all users linked to Project1
         res = await client.get(
             f"/api/v2/project/{project1_id}/guest/",
@@ -195,7 +195,7 @@ async def test_project_sharing(
             key=lambda item: item["email"],
         )
 
-    async with MockCurrentUser(user_kwargs={"id": user3.id}):
+    async with MockCurrentUser(user_id=user3.id):
         # Get list of invitations
         res = await client.get("/api/v2/project/invitation/")
         assert res.status_code == 200
@@ -219,7 +219,7 @@ async def test_project_sharing(
         assert res.status_code == 200
         assert res.json() == []
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # Get list of all users linked to Project1
         res = await client.get(
             f"/api/v2/project/{project1_id}/guest/",
@@ -241,21 +241,21 @@ async def test_project_sharing(
             key=lambda item: item["email"],
         )
 
-    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+    async with MockCurrentUser(user_id=user2.id):
         # Exit project
         res = await client.delete(
             f"/api/v2/project/{project1_id}/access/",
         )
         assert res.status_code == 204
 
-    async with MockCurrentUser(user_kwargs={"id": user4.id}):
+    async with MockCurrentUser(user_id=user4.id):
         # Accept invitation
         res = await client.post(
             f"/api/v2/project/{project1_id}/access/accept/",
         )
         assert res.status_code == 200
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # Get list of all users linked to Project1
         res = await client.get(
             f"/api/v2/project/{project1_id}/guest/",
@@ -304,7 +304,7 @@ async def test_project_sharing(
 
     # From now on: TESTING FAILURES
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # Not project owner
         res = await client.get(
             f"/api/v2/project/{project2_id}/guest/",
@@ -398,7 +398,7 @@ async def test_project_sharing_access_control(
     await db.refresh(user1)
     await db.refresh(user2)
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # User 1 creates the project
         res = await client.post("/api/v2/project/", json=dict(name="Project1"))
         assert res.status_code == 201
@@ -412,7 +412,7 @@ async def test_project_sharing_access_control(
         )
         assert res.status_code == 201
 
-    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+    async with MockCurrentUser(user_id=user2.id):
         res = await client.post(
             f"/api/v2/project/{project_id}/access/accept/",
         )
@@ -430,7 +430,7 @@ async def test_project_sharing_access_control(
         )
         assert res.status_code == 403
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # # User 1 edits permissions into RWX
         res = await client.patch(
             f"/api/v2/project/{project_id}/guest/?email={user2.email}",
@@ -438,7 +438,7 @@ async def test_project_sharing_access_control(
         )
         assert res.status_code == 200
 
-    async with MockCurrentUser(user_kwargs={"id": user2.id}):
+    async with MockCurrentUser(user_id=user2.id):
         # User 2 can read and patch the project
         res = await client.get(f"/api/v2/project/{project_id}/")
         assert res.status_code == 200
@@ -455,7 +455,7 @@ async def test_project_sharing_access_control(
         assert res.status_code == 403
         assert res.json()["detail"] == "Only the owner can delete a Project."
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         res = await client.delete(f"/api/v2/project/{project_id}/")
         assert res.status_code == 204
 
@@ -471,7 +471,7 @@ async def test_project_sharing_task_group_access(
 ):
     _, profile = local_resource_profile_db
 
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user1:
+    async with MockCurrentUser(profile_id=profile.id) as user1:
         # User 1 creates a project and a workflow
         project = await project_factory(user1)
         workflow = await workflow_factory(project_id=project.id)
@@ -517,7 +517,7 @@ async def test_project_sharing_task_group_access(
         assert len(res.json()["task_list"]) == 1
         assert res.json()["task_list"][0]["warning"] is None
 
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as user2:
+    async with MockCurrentUser(profile_id=profile.id) as user2:
         # User 1 shares the project with user 2, who accepts
         db.add(
             LinkUserProjectV2(
@@ -562,7 +562,7 @@ async def test_project_sharing_task_group_access(
         )
         assert res.status_code == 201
 
-    async with MockCurrentUser(user_kwargs={"id": user1.id}):
+    async with MockCurrentUser(user_id=user1.id):
         # What User 1 sees
         res = await client.get(
             f"/api/v2/project/{project.id}/workflow/{workflow.id}/"
@@ -587,13 +587,12 @@ async def test_project_sharing_subquery(
     https://github.com/fractal-analytics-platform/fractal-server/issues/3022
     """
     _, profile = local_resource_profile_db
-    user_kwargs = {"profile_id": profile.id}
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user1:
+    async with MockCurrentUser(profile_id=profile.id) as user1:
         # User 1 creates two projects
         project1 = await project_factory(user1)
         await project_factory(user1)
 
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user2:
+    async with MockCurrentUser(profile_id=profile.id) as user2:
         # User 1 shares Project 1 with User 2
         db.add(
             LinkUserProjectV2(
@@ -622,7 +621,7 @@ async def test_data_streaming_edge_case(
 
     # User 1 creates a project and shares it with User 2 (who accepts)
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id, project_dirs=["/a"])
+        profile_id=profile.id, project_dirs=["/a"]
     ) as user1:
         res = await client.post("/api/v2/project/", json=dict(name="Project"))
         assert res.status_code == 201
@@ -630,7 +629,7 @@ async def test_data_streaming_edge_case(
         project_id = project["id"]
 
     async with MockCurrentUser(
-        user_kwargs=dict(profile_id=profile.id, project_dirs=["/b"])
+        profile_id=profile.id, project_dirs=["/b"]
     ) as user2:
         db.add(
             LinkUserProjectV2(
@@ -651,7 +650,7 @@ async def test_data_streaming_edge_case(
         assert res.status_code == 201
         dataset = res.json()
 
-    async with MockCurrentUser(user_kwargs=dict(id=user1.id)):
+    async with MockCurrentUser(user_id=user1.id):
         # User 1 should have data-streaming access for that dataset
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
         assert dataset["zarr_dir"] in res.json()

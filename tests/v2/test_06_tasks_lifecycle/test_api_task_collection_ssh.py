@@ -49,12 +49,7 @@ async def test_task_collection_ssh_from_pypi(
     # Override settings with Python/SSH configurations
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        ),
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         # SUCCESSFUL COLLECTION
         package_version = "0.1.4"
         res = await client.post(
@@ -218,12 +213,7 @@ async def test_task_collection_ssh_failure(
             )
         }
 
-    async with MockCurrentUser(
-        user_kwargs=dict(
-            is_verified=True,
-            profile_id=profile.id,
-        )
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Patch ssh.remove_folder
         import fractal_server.tasks.v2.ssh._utils
 
@@ -279,9 +269,7 @@ async def test_task_collection_ssh_failure_no_connection(
     # Assign empty FractalSSH object to app state
     app.state.fractal_ssh_list = FractalSSHList()
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",

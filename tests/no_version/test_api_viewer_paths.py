@@ -9,10 +9,8 @@ async def test_get_current_user_allowed_viewer_paths(
     local_resource_profile_db,
 ):
     async with MockCurrentUser(
-        user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-            project_dirs=["/a1", "/a2"],
-        )
+        profile_id=local_resource_profile_db[1].id,
+        project_dirs=["/a1", "/a2"],
     ) as userA:
         # UserA creates a Project with three Datasets:
         res = await client.post("/api/v2/project/", json=dict(name="Project"))
@@ -56,10 +54,8 @@ async def test_get_current_user_allowed_viewer_paths(
         assert res.json() == ["/a1", "/a2", "/a1/x", "/a2/y"]
 
     async with MockCurrentUser(
-        user_kwargs=dict(
-            profile_id=local_resource_profile_db[1].id,
-            project_dirs=["/b1", "/a1/x", "/b2"],
-        )
+        profile_id=local_resource_profile_db[1].id,
+        project_dirs=["/b1", "/a1/x", "/b2"],
     ) as userB:
         res = await client.get("/auth/current-user/allowed-viewer-paths/")
         assert res.json() == ["/b1", "/a1/x", "/b2"]

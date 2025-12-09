@@ -51,9 +51,7 @@ async def test_task_collection_from_wheel_non_canonical(
     payload["python_version"] = current_py_version
     debug(payload)
 
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/", data=payload, files=files
@@ -124,9 +122,7 @@ async def test_task_collection_from_pypi_api_only(
     debug(payload)
     debug(EXPECTED_PACKAGE_VERSION)
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/?private=true",
@@ -171,9 +167,7 @@ async def test_task_collection_from_pypi(
     debug(EXPECTED_PACKAGE_VERSION)
 
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/?private=true",
@@ -209,9 +203,7 @@ async def test_task_collection_failure_due_to_existing_path(
     db, client, MockCurrentUser, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ) as user:
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         path = (
             Path(resource.tasks_local_dir)
             / f"{user.id}/testing-tasks-mock/0.1.4/"
@@ -252,7 +244,7 @@ async def test_contact_an_admin_message(
     resource, profile = local_resource_profile_db
     # Create identical multiple (> 1) TaskGroups associated to userA and to the
     # default UserGroup (this is NOT ALLOWED using the API).
-    async with MockCurrentUser(user_kwargs={"profile_id": profile.id}) as userA:
+    async with MockCurrentUser(profile_id=profile.id) as userA:
         for _ in range(2):
             db.add(
                 TaskGroupV2(
@@ -267,7 +259,7 @@ async def test_contact_an_admin_message(
         await db.commit()
 
     async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
+        is_verified=True, profile_id=profile.id
     ) as userB:
         # Fail inside `_verify_non_duplication_group_constraint`.
         res = await client.post(
@@ -365,9 +357,7 @@ async def test_task_collection_from_pypi_with_extras(
 ):
     ERROR_MESSAGE = "Command must not contain any of this characters"
     _, profile = local_resource_profile_db
-    async with MockCurrentUser(
-        user_kwargs=dict(is_verified=True, profile_id=profile.id)
-    ):
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(

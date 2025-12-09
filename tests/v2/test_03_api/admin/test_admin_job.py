@@ -34,7 +34,7 @@ async def test_view_job(
     task_factory,
     job_factory,
 ):
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
+    async with MockCurrentUser(is_superuser=False) as user:
         project = await project_factory(user)
 
         workflow1 = await workflow_factory(project_id=project.id)
@@ -72,7 +72,7 @@ async def test_view_job(
             end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         # get all jobs, with logs
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
@@ -199,7 +199,7 @@ async def test_view_single_job(
     task_factory,
     job_factory,
 ):
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
+    async with MockCurrentUser(is_superuser=False) as user:
         project = await project_factory(user)
 
         workflow1 = await workflow_factory(project_id=project.id)
@@ -223,7 +223,7 @@ async def test_view_single_job(
             status="submitted",
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         res = await client.get(f"{PREFIX}/job/{job.id + 1}/")
         assert res.status_code == 404
 
@@ -321,7 +321,7 @@ async def test_patch_job(
         assert res.status_code == 401
 
         # Patch job as superuser
-        async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        async with MockCurrentUser(is_superuser=True):
             # Fail due to invalid payload (missing attribute "status")
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{job.id}/",
@@ -396,10 +396,8 @@ async def test_stop_job_local(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.LOCAL)
     assert not _backend_supports_shutdown(backend=ResourceType.LOCAL)
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.get(
-            f"{PREFIX}/job/123/stop/",
-        )
+    async with MockCurrentUser(is_superuser=True):
+        res = await client.get(f"{PREFIX}/job/123/stop/")
         assert res.status_code == 422
 
 
@@ -419,7 +417,7 @@ async def test_stop_job_slurm(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
+    async with MockCurrentUser(is_superuser=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         dataset = await dataset_factory(project_id=project.id)
@@ -479,7 +477,7 @@ async def test_download_job_logs(
             dataset_id=dataset.id,
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(is_superuser=True):
         # Write a log file in working_dir
         LOG_CONTENT = "This is a log\n"
         LOG_FILE = "log.txt"
