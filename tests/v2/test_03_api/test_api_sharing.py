@@ -645,7 +645,8 @@ async def test_data_streaming_edge_case(
 
         # User 2 creates a dataset in the project
         res = await client.post(
-            f"/api/v2/project/{project_id}/dataset/", json=dict(name="Dataset")
+            f"/api/v2/project/{project_id}/dataset/",
+            json=dict(name="Dataset", project_dir="/b", zarr_subfolder="zarr"),
         )
         assert res.status_code == 201
         dataset = res.json()
