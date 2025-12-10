@@ -174,15 +174,6 @@ def collect_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 5
-                venv_info = _customize_and_run_template(
-                    template_filename="5_get_venv_size_and_file_number.sh",
-                    **common_args,
-                )
-                venv_size, venv_file_number = venv_info.split()
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
                 pkg_attrs = parse_script_pip_show_stdout(stdout)
                 for key, value in pkg_attrs.items():
                     logger.debug(f"Parsed from pip-show: {key}={value}")
@@ -246,8 +237,6 @@ def collect_local(
                     "to TaskGroupV2 - start"
                 )
                 task_group.env_info = pip_freeze_stdout
-                task_group.venv_size_in_kB = int(venv_size)
-                task_group.venv_file_number = int(venv_file_number)
                 task_group = add_commit_refresh(obj=task_group, db=db)
                 logger.info(
                     "Add env_info, venv_size and venv_file_number "

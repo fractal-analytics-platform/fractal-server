@@ -66,12 +66,6 @@ PACKAGE_FOLDER=$(bash "${FIND_PACKAGE_FOLDER_SCRIPT}")
 write_log "Package folder: ${PACKAGE_FOLDER}"
 echo
 
-ENV_DISK_USAGE=$(du -sk "${PACKAGE_DIR}" | cut -f1)
-ENV_FILE_NUMBER=$(find "${PACKAGE_DIR}" -type f | wc -l)
-write_log "Disk usage: ${ENV_DISK_USAGE}"
-write_log "Number of files: ${ENV_FILE_NUMBER}"
-echo
-
 TIME_END=$(date +%s)
 write_log "Elapsed: $((TIME_END - TIME_START)) seconds"
 write_log "All ok, exit."

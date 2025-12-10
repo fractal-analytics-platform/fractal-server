@@ -248,9 +248,9 @@ def test_templates_freeze(
     with requirements_file.open("w") as f:
         f.write(pip_freeze_venv_1)
 
-    # Run script 6 (install from freeze) on 'venv2'
+    # Run script 5 (install from freeze) on 'venv2'
     _customize_and_run_template(
-        template_filename="6_pip_install_from_freeze.sh",
+        template_filename="5_pip_install_from_freeze.sh",
         replacements=[
             ("__PACKAGE_ENV_DIR__", venv_path_2.as_posix()),
             ("__PIP_FREEZE_FILE__", requirements_file.as_posix()),
