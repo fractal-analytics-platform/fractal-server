@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.18.2 (unreleased)
+
+* Database:
+    * Drop `TaskGroupV2.venv_size_in_kB` and `TaskGroupV2.venv_file_number` (\#3075).
+* Task-group lifecycle:
+    * Stop measuring venv size and venv file number (\#3075).
+
 # 2.18.1
 
 * Database:
