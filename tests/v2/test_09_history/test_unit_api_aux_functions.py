@@ -42,14 +42,15 @@ def test_read_log_file(tmp_path: Path):
     logfile = (tmp_path / "logs.txt").as_posix()
 
     # Case 1: files do not exist
-    log = read_log_file(
-        logfile=logfile,
-        task_name=wftask.task.name,
-        dataset_id=1,
-        job_working_dir="/foo",
-        job_status=JobStatusType.DONE,
-    )
-    assert "not available" in log
+    for status in JobStatusType:
+        log = read_log_file(
+            logfile=logfile,
+            task_name=wftask.task.name,
+            dataset_id=1,
+            job_working_dir="/foo",
+            job_status=status,
+        )
+        assert "not available" in log
 
     LOG = "some keyword\n"
     with open(logfile, "w") as f:
