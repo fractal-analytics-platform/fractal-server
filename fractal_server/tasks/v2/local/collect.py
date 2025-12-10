@@ -232,16 +232,10 @@ def collect_local(
                 logger.info("create_db_tasks_and_update_task_group - end")
 
                 # Update task_group data
-                logger.info(
-                    "Add env_info, venv_size and venv_file_number "
-                    "to TaskGroupV2 - start"
-                )
+                logger.info("Add env_info to TaskGroupV2 - start")
                 task_group.env_info = pip_freeze_stdout
                 task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.info(
-                    "Add env_info, venv_size and venv_file_number "
-                    "to TaskGroupV2 - end"
-                )
+                logger.info("Add env_info to TaskGroupV2 - end")
 
                 # Finalize (write metadata to DB)
                 logger.info("finalising - START")
