@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.18.2 (unreleased)
+
+* API:
+    * Review logs in `read_log_file` aux function (\#3073).
+
+
 # 2.18.1
 
 * Database:
