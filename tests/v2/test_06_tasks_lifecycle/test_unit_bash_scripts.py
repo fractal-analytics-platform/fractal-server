@@ -272,34 +272,3 @@ def test_templates_freeze(
     dependencies_2 = _parse_pip_freeze_output(pip_freeze_venv_2)
 
     assert dependencies_2 == dependencies_1
-
-
-def test_venv_size_and_file_number(tmp_path):
-    # Create folders
-    folder = tmp_path / "test"
-    subfolder = folder / "subfolder"
-    subfolder.mkdir(parents=True)
-
-    # Create files
-    FILESIZE_IN_MB = 1
-    FILES = [folder / "file1", folder / "file2", subfolder / "file3"]
-    for file in FILES:
-        with file.open("wb") as f:
-            f.write(b"_" * FILESIZE_IN_MB * (1024**2))
-
-    # Run script
-    stdout = _customize_and_run_template(
-        template_filename="5_get_venv_size_and_file_number.sh",
-        replacements=[("__PACKAGE_ENV_DIR__", folder.as_posix())],
-        script_dir=tmp_path,
-        logger_name=__name__,
-        prefix="prefix",
-    )
-    size_in_kB, file_number = (int(item) for item in stdout.split())
-    print(f"{size_in_kB=}")
-    print(f"{file_number=}")
-
-    # Check that file number and (approximate) disk usage
-    assert file_number == len(FILES)
-    EXPECTED_SIZE_IN_KB = FILESIZE_IN_MB * 1024 * len(FILES)
-    assert abs(size_in_kB - EXPECTED_SIZE_IN_KB) < 0.02 * size_in_kB
