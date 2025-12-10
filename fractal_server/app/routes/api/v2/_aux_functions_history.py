@@ -99,8 +99,8 @@ def read_log_file(
             match job_status:
                 case JobStatusType.SUBMITTED:
                     logger.info(
-                        f"Error while retrieving logs for {logfile=} and "
-                        f"{archive_path=} for submitted job."
+                        f"Neither {logfile=} nor {archive_path=} exist "
+                        "(for submitted job)."
                     )
                 case _:
                     logger.warning(
