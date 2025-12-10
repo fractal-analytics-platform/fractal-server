@@ -564,20 +564,20 @@ async def test_get_jobs(
             workflow_id=workflow2.id, task_id=new_task.id, db=db
         )
 
-        await job_factory(
+        job1 = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow1.id,
             working_dir=tmp_path.as_posix(),
-            status="done",
-            log="hello world",
+            status="submitted",
         )
-        job2 = await job_factory(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow2.id,
             working_dir=tmp_path.as_posix(),
-            status="submitted",
+            status="done",
+            log="hello world",
         )
 
         # Test GET project/{project.id}/job/?log=false
@@ -603,22 +603,22 @@ async def test_get_jobs(
         # Test GET project/{project.id}/job/{job_id}/?show_tmp_logs=true
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/?show_tmp_logs=true"
         )
         assert res.json()["log"] is None
 
-        with open(f"{job2.working_dir}/{WORKFLOW_LOG_FILENAME}", "w") as f:
+        with open(f"{job1.working_dir}/{WORKFLOW_LOG_FILENAME}", "w") as f:
             f.write("hello job")
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/?show_tmp_logs=true"
         )
         assert res.json()["log"] == "hello job"
 
         # Test GET /project/{project_id}/job/{job_id}/download/
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/download/"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/download/"
         )
         assert res.status_code == 200
         assert res.headers["content-type"] == "application/x-zip-compressed"
