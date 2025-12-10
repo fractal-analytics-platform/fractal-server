@@ -14,6 +14,7 @@ from fractal_server.app.routes.api.v2._aux_functions_history import (
 from fractal_server.app.routes.api.v2._aux_functions_history import (
     read_log_file,
 )
+from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.zip_tools import _create_zip
 
@@ -46,6 +47,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo",
+        job_status=JobStatusType.DONE,
     )
     assert "not available" in log
 
@@ -58,6 +60,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo.zip",
+        job_status=JobStatusType.DONE,
     )
     assert log == LOG
 
@@ -68,6 +71,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo.zip",
+        job_status=JobStatusType.DONE,
     )
     assert "Error while retrieving logs for task" in log
 
@@ -80,6 +84,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
+        job_status=JobStatusType.DONE,
     )
     assert log == LOG
 
@@ -89,6 +94,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
+        job_status=JobStatusType.DONE,
     )
     assert "Error while retrieving logs for task" in log
 
