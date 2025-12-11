@@ -54,7 +54,8 @@ async def get_user_jobs(
             LinkUserProjectV2, LinkUserProjectV2.project_id == JobV2.project_id
         )
         .where(LinkUserProjectV2.user_id == user.id)
-        .where(LinkUserProjectV2.is_owner.is_(True))
+        .where(LinkUserProjectV2.is_verified.is_(True))
+        .order_by(JobV2.start_timestamp.desc())
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()
@@ -86,8 +87,11 @@ async def get_workflow_jobs(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
-    res = await db.execute(stm)
+    res = await db.execute(
+        select(JobV2)
+        .where(JobV2.workflow_id == workflow_id)
+        .order_by(JobV2.start_timestamp.desc())
+    )
     job_list = res.scalars().all()
     return job_list
 
@@ -212,8 +216,11 @@ async def get_job_list(
         db=db,
     )
 
-    stm = select(JobV2).where(JobV2.project_id == project.id)
-    res = await db.execute(stm)
+    res = await db.execute(
+        select(JobV2)
+        .where(JobV2.project_id == project.id)
+        .order_by(JobV2.start_timestamp.desc())
+    )
     job_list = res.scalars().all()
     await db.close()
     if not log:
