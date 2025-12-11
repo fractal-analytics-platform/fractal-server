@@ -13,6 +13,8 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions: {}
+
 
 env:
   # The DB `${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql` is compatible

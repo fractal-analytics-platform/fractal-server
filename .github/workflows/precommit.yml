@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions: {}
+
 jobs:
   precommit:
     runs-on: ubuntu-24.04
@@ -19,4 +21,5 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+
       - uses: pre-commit/action@v3.0.1
