@@ -84,9 +84,6 @@ class TaskGroupRead(BaseModel):
     pinned_package_versions_pre: dict[str, str] = Field(default_factory=dict)
     pinned_package_versions_post: dict[str, str] = Field(default_factory=dict)
 
-    venv_size_in_kB: int | None = None
-    venv_file_number: int | None = None
-
     active: bool
     timestamp_created: AwareDatetime
     timestamp_last_used: AwareDatetime

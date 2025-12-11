@@ -121,7 +121,7 @@ def reactivate_local(
 
                 logger.debug("start - install from pip freeze")
                 _customize_and_run_template(
-                    template_filename="6_pip_install_from_freeze.sh",
+                    template_filename="5_pip_install_from_freeze.sh",
                     **common_args,
                 )
                 logger.debug("end - install from pip freeze")

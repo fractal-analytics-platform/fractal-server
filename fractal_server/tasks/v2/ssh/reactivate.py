@@ -167,7 +167,7 @@ def reactivate_ssh(
 
                     logger.info("start - install from pip freeze")
                     _customize_and_run_template(
-                        template_filename="6_pip_install_from_freeze.sh",
+                        template_filename="5_pip_install_from_freeze.sh",
                         **common_args,
                     )
                     logger.info("end - install from pip freeze")
