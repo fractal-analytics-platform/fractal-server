@@ -164,8 +164,6 @@ async def test_task_group_lifecycle_pixi_ssh(
         db.expunge_all()
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert len(task_group.task_list) == 1
-        assert task_group.venv_size_in_kB is not None
-        assert task_group.venv_file_number is not None
         assert task_group.env_info is not None
 
         # 3 / Failed collection - due to non-duplication constraint

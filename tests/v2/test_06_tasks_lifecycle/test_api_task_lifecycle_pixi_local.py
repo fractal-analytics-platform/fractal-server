@@ -170,8 +170,6 @@ async def test_task_group_lifecycle_pixi_local(
         db.expunge_all()
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert len(task_group.task_list) == 1
-        assert task_group.venv_size_in_kB is not None
-        assert task_group.venv_file_number is not None
         assert task_group.env_info is not None
         # Check `TaskGroupReadV2.task_list` (only available through API)
         res = await client.get(f"/api/v2/task-group/{task_group_id}/")

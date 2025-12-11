@@ -71,8 +71,6 @@ class TaskGroupV2(SQLModel, table=True):
     )
     env_info: str | None = None
     venv_path: str | None = None
-    venv_size_in_kB: int | None = None
-    venv_file_number: int | None = None
 
     active: bool = True
     timestamp_created: datetime = Field(

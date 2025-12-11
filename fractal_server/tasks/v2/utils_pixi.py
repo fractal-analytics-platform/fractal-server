@@ -12,8 +12,6 @@ SOURCE_DIR_NAME = "source_dir"
 
 class ParsedOutput(TypedDict):
     package_root: str
-    venv_size: str
-    venv_file_number: str
     project_python_wrapper: str
 
 
@@ -23,8 +21,6 @@ def parse_collect_stdout(stdout: str) -> ParsedOutput:
     """
     searches = [
         ("Package folder:", "package_root"),
-        ("Disk usage:", "venv_size"),
-        ("Number of files:", "venv_file_number"),
         ("Project Python wrapper:", "project_python_wrapper"),
     ]
     stdout_lines = stdout.splitlines()
