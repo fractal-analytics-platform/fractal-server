@@ -4,7 +4,10 @@
 
 * API:
     * Review logs in `read_log_file` aux function (\#3073).
-
+* Database:
+    * Drop `TaskGroupV2.venv_size_in_kB` and `TaskGroupV2.venv_file_number` (\#3075).
+* Task-group lifecycle:
+    * Stop measuring venv size and venv file number (\#3075).
 
 # 2.18.1
 

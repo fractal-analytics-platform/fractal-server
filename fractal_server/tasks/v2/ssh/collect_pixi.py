@@ -266,8 +266,6 @@ def collect_ssh_pixi(
                     # Parse stdout
                     parsed_output = parse_collect_stdout(stdout)
                     package_root_remote = parsed_output["package_root"]
-                    venv_size = parsed_output["venv_size"]
-                    venv_file_number = parsed_output["venv_file_number"]
                     project_python_wrapper = parsed_output[
                         "project_python_wrapper"
                     ]
@@ -312,18 +310,10 @@ def collect_ssh_pixi(
                     )
 
                     # Update task_group data
-                    logger.info(
-                        "Add env_info, venv_size and venv_file_number "
-                        "to TaskGroupV2 - start"
-                    )
+                    logger.info("Add env_info to TaskGroupV2 - start")
                     task_group.env_info = pixi_lock_contents
-                    task_group.venv_size_in_kB = int(venv_size)
-                    task_group.venv_file_number = int(venv_file_number)
                     task_group = add_commit_refresh(obj=task_group, db=db)
-                    logger.info(
-                        "Add env_info, venv_size and venv_file_number "
-                        "to TaskGroupV2 - end"
-                    )
+                    logger.info("Add env_info to TaskGroupV2 - end")
 
                     # Finalize (write metadata to DB)
                     logger.info("finalising - START")
