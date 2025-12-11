@@ -548,10 +548,67 @@ async def test_get_jobs(
     exists.
     """
     res, prof = local_resource_profile_db
+
+    async with MockCurrentUser(
+        is_verified=True,
+        profile_id=prof.id,
+    ) as user0:
+        task0 = await task_factory(user_id=user0.id, name="foo")
+        # job A
+        projectA = await project_factory(user0)
+        datasetA = await dataset_factory(project_id=projectA.id, name="dsA")
+        workflowA = await workflow_factory(project_id=projectA.id)
+        await _workflow_insert_task(
+            workflow_id=workflowA.id, task_id=task0.id, db=db
+        )
+        await job_factory(
+            project_id=projectA.id,
+            dataset_id=datasetA.id,
+            workflow_id=workflowA.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+        # job B
+        projectB = await project_factory(user0)
+        datasetB = await dataset_factory(project_id=projectB.id, name="dsB")
+        workflowB = await workflow_factory(project_id=projectB.id)
+        await _workflow_insert_task(
+            workflow_id=workflowB.id, task_id=task0.id, db=db
+        )
+        await job_factory(
+            project_id=projectB.id,
+            dataset_id=datasetB.id,
+            workflow_id=workflowB.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+
     async with MockCurrentUser(
         is_verified=True,
         profile_id=prof.id,
     ) as user:
+        # Add user as guest to projectA and projectB
+        # Only link to projectB is verified.
+        db.add_all(
+            [
+                LinkUserProjectV2(
+                    project_id=projectA.id,
+                    user_id=user.id,
+                    is_owner=False,
+                    is_verified=False,
+                    permissions=ProjectPermissions.READ,
+                ),
+                LinkUserProjectV2(
+                    project_id=projectB.id,
+                    user_id=user.id,
+                    is_owner=False,
+                    is_verified=True,
+                    permissions=ProjectPermissions.READ,
+                ),
+            ]
+        )
+        await db.commit()
+
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset1")
         new_task = await task_factory(user_id=user.id)
@@ -584,9 +641,10 @@ async def test_get_jobs(
 
         res1 = await client.get(f"{PREFIX}/job/")
         res2 = await client.get(f"{PREFIX}/job/?log=false")
-        assert len(res1.json()) == len(res2.json()) == 2
+        assert len(res1.json()) == len(res2.json()) == 3
         assert res1.json()[0]["log"] == "hello world"
         assert res2.json()[0]["log"] is None
+        assert res1.json()[-1]["id"] == projectB.id
 
         # Test GET project/{project.id}/workflow/{workflow.id}/job/
 
