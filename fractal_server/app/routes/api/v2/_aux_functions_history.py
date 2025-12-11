@@ -19,6 +19,7 @@ from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflowtask_or_404,
 )
+from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.logger import set_logger
 from fractal_server.zip_tools import _read_single_file_from_zip
@@ -70,6 +71,7 @@ def read_log_file(
     dataset_id: int,
     logfile: str,
     job_working_dir: str,
+    job_status: JobStatusType,
 ) -> str:
     """
     Returns the contents of a Job's log file, either directly from the working
@@ -93,12 +95,18 @@ def read_log_file(
             return _read_single_file_from_zip(
                 file_path=relative_logfile, archive_path=archive_path
             )
-
         else:
-            logger.error(
-                f"Error while retrieving logs for {logfile=} and "
-                f"{archive_path=}: both files do not exist."
-            )
+            match job_status:
+                case JobStatusType.SUBMITTED:
+                    logger.info(
+                        f"Neither {logfile=} nor {archive_path=} exist "
+                        "(for submitted job)."
+                    )
+                case _:
+                    logger.warning(
+                        f"Error while retrieving logs for {logfile=} and "
+                        f"{archive_path=}."
+                    )
             return (
                 f"Logs for task '{task_name}' in dataset "
                 f"{dataset_id} are not available."

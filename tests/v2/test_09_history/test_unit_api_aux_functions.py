@@ -12,8 +12,12 @@ from fractal_server.app.routes.api.v2._aux_functions_history import (
     get_history_unit_or_404,
 )
 from fractal_server.app.routes.api.v2._aux_functions_history import (
+    logger as aux_function_history_logger,
+)
+from fractal_server.app.routes.api.v2._aux_functions_history import (
     read_log_file,
 )
+from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.zip_tools import _create_zip
 
@@ -29,7 +33,7 @@ async def test_get_history_unit_or_404(db):
         )
 
 
-def test_read_log_file(tmp_path: Path):
+def test_read_log_file(tmp_path: Path, caplog):
     class MockTask(BaseModel):
         name: str = "task-name"
 
@@ -41,34 +45,42 @@ def test_read_log_file(tmp_path: Path):
     logfile = (tmp_path / "logs.txt").as_posix()
 
     # Case 1: files do not exist
-    log = read_log_file(
+    args = dict(
         logfile=logfile,
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir="/foo",
     )
+    aux_function_history_logger.propagate = True
+    # - DONE
+    log = read_log_file(job_status=JobStatusType.DONE, **args)
     assert "not available" in log
+    assert "Error while retrieving logs for logfile" in caplog.text
+    caplog.clear()
+    # - SUBMITTED
+    log = read_log_file(job_status=JobStatusType.SUBMITTED, **args)
+    assert "not available" in log
+    assert "Error while retrieving logs for logfile" not in caplog.text
+    assert "(for submitted job)" in caplog.text
+    caplog.clear()
+    # - FAILED
+    log = read_log_file(job_status=JobStatusType.FAILED, **args)
+    assert "not available" in log
+    assert "Error while retrieving logs for logfile" in caplog.text
 
+    # Case 2: logfile exists and can be read
     LOG = "some keyword\n"
     with open(logfile, "w") as f:
         f.write(LOG)
-    # Case 2: logfile exists and can be read
     log = read_log_file(
-        logfile=logfile,
-        task_name=wftask.task.name,
-        dataset_id=1,
-        job_working_dir="/foo.zip",
+        job_status=JobStatusType.DONE,
+        **args,
     )
     assert log == LOG
 
     # Case 3: File exists but cannot be read
     os.chmod(logfile, 0o000)
-    log = read_log_file(
-        logfile=logfile,
-        task_name=wftask.task.name,
-        dataset_id=1,
-        job_working_dir="/foo.zip",
-    )
+    log = read_log_file(job_status=JobStatusType.DONE, **args)
     assert "Error while retrieving logs for task" in log
 
     # Case 4: File exists inside an archive
@@ -80,6 +92,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
+        job_status=JobStatusType.DONE,
     )
     assert log == LOG
 
@@ -89,6 +102,7 @@ def test_read_log_file(tmp_path: Path):
         task_name=wftask.task.name,
         dataset_id=1,
         job_working_dir=tmp_path.as_posix(),
+        job_status=JobStatusType.DONE,
     )
     assert "Error while retrieving logs for task" in log
 

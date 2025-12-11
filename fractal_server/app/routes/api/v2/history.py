@@ -458,11 +458,11 @@ async def get_image_log(
 
     # Get job.working_dir
     res = await db.execute(
-        select(JobV2.working_dir)
+        select(JobV2.working_dir, JobV2.status)
         .join(HistoryRun, HistoryRun.job_id == JobV2.id)
         .where(HistoryRun.id == history_unit.history_run_id)
     )
-    job_working_dir = res.scalar_one_or_none()
+    job_working_dir, job_status = res.one()
 
     # Get log or placeholder text
     log = read_log_file(
@@ -470,6 +470,7 @@ async def get_image_log(
         task_name=wftask.task.name,
         dataset_id=request_data.dataset_id,
         job_working_dir=job_working_dir,
+        job_status=job_status,
     )
     return JSONResponse(content=log)
 
@@ -525,6 +526,7 @@ async def get_history_unit_log(
         task_name=wftask.task.name,
         dataset_id=dataset_id,
         job_working_dir=job.working_dir,
+        job_status=job.status,
     )
     return JSONResponse(content=log)
 
