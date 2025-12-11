@@ -87,8 +87,11 @@ async def get_workflow_jobs(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    stm = select(JobV2).where(JobV2.workflow_id == workflow_id)
-    res = await db.execute(stm)
+    res = await db.execute(
+        select(JobV2)
+        .where(JobV2.workflow_id == workflow_id)
+        .order_by(JobV2.start_timestamp.desc())
+    )
     job_list = res.scalars().all()
     return job_list
 
