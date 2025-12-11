@@ -2,6 +2,8 @@
 
 # 2.18.2 (unreleased)
 
+* API:
+    * Return all Jobs (owner and guest) from `GET /api/v2/job/` (/#3076).
 * Database:
     * Drop `TaskGroupV2.venv_size_in_kB` and `TaskGroupV2.venv_file_number` (\#3075).
 * Task-group lifecycle:
