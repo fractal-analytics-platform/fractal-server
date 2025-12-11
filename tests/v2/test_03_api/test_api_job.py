@@ -548,10 +548,67 @@ async def test_get_jobs(
     exists.
     """
     res, prof = local_resource_profile_db
+
+    async with MockCurrentUser(
+        is_verified=True,
+        profile_id=prof.id,
+    ) as user0:
+        task0 = await task_factory(user_id=user0.id, name="foo")
+        # job A
+        projectA = await project_factory(user0)
+        datasetA = await dataset_factory(project_id=projectA.id, name="dsA")
+        workflowA = await workflow_factory(project_id=projectA.id)
+        await _workflow_insert_task(
+            workflow_id=workflowA.id, task_id=task0.id, db=db
+        )
+        await job_factory(
+            project_id=projectA.id,
+            dataset_id=datasetA.id,
+            workflow_id=workflowA.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+        # job B
+        projectB = await project_factory(user0)
+        datasetB = await dataset_factory(project_id=projectB.id, name="dsB")
+        workflowB = await workflow_factory(project_id=projectB.id)
+        await _workflow_insert_task(
+            workflow_id=workflowB.id, task_id=task0.id, db=db
+        )
+        await job_factory(
+            project_id=projectB.id,
+            dataset_id=datasetB.id,
+            workflow_id=workflowB.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+
     async with MockCurrentUser(
         is_verified=True,
         profile_id=prof.id,
     ) as user:
+        # Add user as guest to projectA and projectB
+        # Only link to projectB is verified.
+        db.add_all(
+            [
+                LinkUserProjectV2(
+                    project_id=projectA.id,
+                    user_id=user.id,
+                    is_owner=False,
+                    is_verified=False,
+                    permissions=ProjectPermissions.READ,
+                ),
+                LinkUserProjectV2(
+                    project_id=projectB.id,
+                    user_id=user.id,
+                    is_owner=False,
+                    is_verified=True,
+                    permissions=ProjectPermissions.READ,
+                ),
+            ]
+        )
+        await db.commit()
+
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset1")
         new_task = await task_factory(user_id=user.id)
@@ -564,29 +621,30 @@ async def test_get_jobs(
             workflow_id=workflow2.id, task_id=new_task.id, db=db
         )
 
-        await job_factory(
+        job1 = await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow1.id,
             working_dir=tmp_path.as_posix(),
-            status="done",
-            log="hello world",
+            status="submitted",
         )
-        job2 = await job_factory(
+        await job_factory(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow2.id,
             working_dir=tmp_path.as_posix(),
-            status="submitted",
+            status="done",
+            log="hello world",
         )
 
         # Test GET project/{project.id}/job/?log=false
 
         res1 = await client.get(f"{PREFIX}/job/")
         res2 = await client.get(f"{PREFIX}/job/?log=false")
-        assert len(res1.json()) == len(res2.json()) == 2
+        assert len(res1.json()) == len(res2.json()) == 3
         assert res1.json()[0]["log"] == "hello world"
         assert res2.json()[0]["log"] is None
+        assert res1.json()[-1]["id"] == projectB.id
 
         # Test GET project/{project.id}/workflow/{workflow.id}/job/
 
@@ -603,22 +661,22 @@ async def test_get_jobs(
         # Test GET project/{project.id}/job/{job_id}/?show_tmp_logs=true
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/?show_tmp_logs=true"
         )
         assert res.json()["log"] is None
 
-        with open(f"{job2.working_dir}/{WORKFLOW_LOG_FILENAME}", "w") as f:
+        with open(f"{job1.working_dir}/{WORKFLOW_LOG_FILENAME}", "w") as f:
             f.write("hello job")
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/?show_tmp_logs=true"
         )
         assert res.json()["log"] == "hello job"
 
         # Test GET /project/{project_id}/job/{job_id}/download/
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job2.id}/download/"
+            f"{PREFIX}/project/{project.id}/job/{job1.id}/download/"
         )
         assert res.status_code == 200
         assert res.headers["content-type"] == "application/x-zip-compressed"

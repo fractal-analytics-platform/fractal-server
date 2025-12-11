@@ -4,6 +4,7 @@
 
 * API:
     * Review logs in `read_log_file` aux function (\#3073).
+    * Review the job-list endpoints, so that their response is sorted and they do not check for project ownership information (\#3076).
 * Database:
     * Drop `TaskGroupV2.venv_size_in_kB` and `TaskGroupV2.venv_file_number` (\#3075).
 * Task-group lifecycle:
