@@ -365,7 +365,8 @@ class BaseSlurmRunner(BaseRunner):
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
-            remote_export_dir=self.user_cache_dir
+            remote_export_dir=self.user_cache_dir,
+            use_mem_per_cpu=slurm_config.use_mem_per_cpu,
         )
 
         # Extend SLURM preamble with variable which are not in SlurmConfig, and
@@ -389,11 +390,14 @@ class BaseSlurmRunner(BaseRunner):
         script_lines.append("\n")
 
         # Include command lines
-        mem_per_task_MB = slurm_config.mem_per_task_MB
         for cmd in cmdlines:
+            if slurm_config.use_mem_per_cpu:
+                mem_specific = f"--mem-per-cpu={slurm_config.mem_per_cpu_MB}MB"
+            else:
+                mem_specific = f"--mem={slurm_config.mem_per_task_MB}MB"
             script_lines.append(
                 "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
-                f"--mem={mem_per_task_MB}MB "
+                f"{mem_specific} "
                 f"{cmd} &"
             )
         script_lines.append("wait\n\n")

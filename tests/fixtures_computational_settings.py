@@ -21,6 +21,7 @@ SLURM_CONFIG = {
         "cpus_per_task": 1,
         "mem": "100M",
         "shebang_line": "#!/bin/bash",
+        "use_mem_per_cpu": False,
     },
     "gpu_slurm_config": {},
     "batching_config": {

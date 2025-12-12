@@ -35,6 +35,7 @@ class SlurmConfigSet(BaseModel):
         extra_lines:
         gpus:
         shebang_line: The shell shebang to use for SLURM jobs.
+        use_mem_per_cpu:
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -51,6 +52,7 @@ class SlurmConfigSet(BaseModel):
     extra_lines: list[NonEmptyStr] = Field(default_factory=list)
     gpus: NonEmptyStr | None = None
     shebang_line: str = "#!/bin/sh"
+    use_mem_per_cpu: bool = False
 
 
 class BatchingConfigSet(BaseModel):
