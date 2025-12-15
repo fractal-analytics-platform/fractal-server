@@ -33,14 +33,20 @@ async def test_view_job(
     dataset_factory,
     task_factory,
     job_factory,
+    local_resource_profile_db,
+    slurm_sudo_resource_profile_db,
 ):
-    async with MockCurrentUser(is_superuser=False) as user:
-        project = await project_factory(user)
+    async with MockCurrentUser(
+        is_superuser=False, profile_id=local_resource_profile_db[1].id
+    ) as user1:
+        project = await project_factory(user1)
 
         workflow1 = await workflow_factory(project_id=project.id)
         workflow2 = await workflow_factory(project_id=project.id)
 
-        task = await task_factory(user_id=user.id, name="task", source="source")
+        task = await task_factory(
+            user_id=user1.id, name="task", source="source"
+        )
         dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
@@ -72,32 +78,65 @@ async def test_view_job(
             end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
         )
 
+    async with MockCurrentUser(
+        is_superuser=False, profile_id=slurm_sudo_resource_profile_db[1].id
+    ) as user2:
+        project2 = await project_factory(user2)
+
+        workflow3 = await workflow_factory(project_id=project2.id)
+        workflow4 = await workflow_factory(project_id=project2.id)
+
+        task2 = await task_factory(
+            user_id=user2.id, name="task2", source="source"
+        )
+        dataset2 = await dataset_factory(project_id=project2.id)
+
+        await _workflow_insert_task(
+            workflow_id=workflow3.id, task_id=task2.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow4.id, task_id=task2.id, db=db
+        )
+
+        await job_factory(
+            working_dir=f"{tmp_path.as_posix()}/cccc1111",
+            working_dir_user=f"{tmp_path.as_posix()}/cccc2222",
+            project_id=project2.id,
+            log="log-c",
+            dataset_id=dataset2.id,
+            workflow_id=workflow3.id,
+            start_timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        )
+
     async with MockCurrentUser(is_superuser=True):
         # get all jobs, with logs
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
-        assert len(res.json()["items"]) == 2
-        assert res.json()["items"][0]["log"] == "log-b"
+        assert len(res.json()["items"]) == 3
+        assert res.json()["items"][0]["log"] == "log-c"
 
         # get all jobs, without logs
         res = await client.get(f"{PREFIX}/job/?log=false")
         assert res.status_code == 200
-        assert res.json()["total_count"] == 2
+        assert res.json()["total_count"] == 3
         assert res.json()["items"][0]["log"] is None
 
         # get second page of all jobs
         res = await client.get(f"{PREFIX}/job/?page_size=1&page=2")
         assert res.status_code == 200
-        assert res.json()["total_count"] == 2
+        assert res.json()["total_count"] == 3
         assert res.json()["page_size"] == 1
         assert res.json()["current_page"] == 2
-        assert res.json()["items"][0]["log"] == "log-a"
+        assert res.json()["items"][0]["log"] == "log-b"
 
         # get jobs by user_id
-        res = await client.get(f"{PREFIX}/job/?user_id={user.id}")
+        res = await client.get(f"{PREFIX}/job/?user_id={user1.id}")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 2
-        res = await client.get(f"{PREFIX}/job/?user_id={user.id + 1}")
+        res = await client.get(f"{PREFIX}/job/?user_id={user2.id}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        res = await client.get(f"{PREFIX}/job/?user_id={user1.id + user2.id}")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 0
 
@@ -135,7 +174,7 @@ async def test_view_job(
         assert len(res.json()["items"]) == 0
         res = await client.get(f"{PREFIX}/job/?status=submitted")
         assert res.status_code == 200
-        assert len(res.json()["items"]) == 1
+        assert len(res.json()["items"]) == 2
         res = await client.get(f"{PREFIX}/job/?status=done")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
@@ -153,13 +192,13 @@ async def test_view_job(
             f"{quote('1999-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
-        assert len(res.json()["items"]) == 2
+        assert len(res.json()["items"]) == 3
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01Z"
         )
         assert res.status_code == 200
-        assert len(res.json()["items"]) == 2
+        assert len(res.json()["items"]) == 3
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
@@ -183,6 +222,17 @@ async def test_view_job(
 
         res = await client.get(
             f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01Z"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+
+        res = await client.get(
+            f"{PREFIX}/job/?resource_id={local_resource_profile_db[1].id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        res = await client.get(
+            f"{PREFIX}/job/?resource_id={slurm_sudo_resource_profile_db[1].id}"
         )
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
