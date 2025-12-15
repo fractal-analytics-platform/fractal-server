@@ -57,7 +57,7 @@ def call_command_wrapper(*, cmd: str, log_path: str) -> None:
         stderr = ""
         if os.path.isfile(log_path):
             with open(log_path) as fp_stderr:
-                stderr = placeholder_if_too_long(fp_stderr.read())
+                stderr = fp_stderr.read()
             stderr = placeholder_if_too_long(stderr)
         raise TaskExecutionError(
             f"Task failed with returncode={result.returncode}.\n"
