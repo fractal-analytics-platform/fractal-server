@@ -24,10 +24,10 @@ echo "POSTGRES_DB=$POSTGRES_DB" > .fractal_server.env
 echo "JWT_SECRET_KEY=fake" >> .fractal_server.env
 
 # Update database schemas
-poetry run fractalctl set-db
+uv run --frozen fractalctl set-db
 
 # Update database data
-echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
+echo -e "yes\nyes\nyes\nyes\nyes" | uv run --frozen fractalctl update-db-data
 
 # Clean up env file
 rm .fractal_server.env

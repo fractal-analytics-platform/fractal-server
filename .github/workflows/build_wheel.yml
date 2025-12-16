@@ -17,13 +17,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Set up Python 3.11"
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
-      - name: "Install poetry"
-        run: pipx install poetry==2.2.1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
 
-      - name: Build package
-        run: poetry build
+      - run: uv build

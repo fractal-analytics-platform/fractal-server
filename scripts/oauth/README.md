@@ -1,7 +1,7 @@
 Terminal 1
 ```
 docker compose up -d
-poetry run ./start_test_server_locally.sh
+uv run --frozen ./start_test_server_locally.sh
 ```
 
 Terminal 2
@@ -12,5 +12,5 @@ export PGHOST=localhost
 export PGPORT=5432
 export PGDATABASE=fractal_test
 
-poetry run bash -x oauth.sh
+uv run --frozen bash -x oauth.sh
 ```
