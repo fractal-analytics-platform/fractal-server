@@ -1,6 +1,8 @@
 import os
 import sys
+from pathlib import Path
 
+import fractal_server
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.v2 import DatasetImport
 from fractal_server.app.schemas.v2 import JobCreate
@@ -8,7 +10,7 @@ from fractal_server.app.schemas.v2 import ProjectCreate
 from fractal_server.app.schemas.v2 import WorkflowCreate
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 
-sys.path.append(os.getcwd())
+sys.path.append(Path(fractal_server.__file__).parents[2])
 
 from scripts.client import FractalClient
 
