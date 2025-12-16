@@ -40,6 +40,9 @@ fractalctl = "fractal_server.__main__:run"
 requires = ["setuptools>=80.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.package-data]
+fractal_server = ["alembic.ini"]
+
 [dependency-groups]
 dev = [
     "asgi-lifespan >2.0.0,<3.0.0",
