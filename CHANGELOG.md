@@ -12,7 +12,7 @@
     * Move from `poetry` optional dependency groups to standard dependency groups for `dev` and `docs` (\#3086).
 * Internal:
     * Move `fractal_server` to `src/fractal_server` (\#3086).
-    * Move from `poetry` to `uv` (\#3086).
+    * Move from `poetry` to `uv` (\#3086, \#3088).
 
 # 2.18.2
 
