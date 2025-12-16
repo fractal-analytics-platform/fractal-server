@@ -4,17 +4,6 @@ To contribute code, please fork the repository and submit a pull request.
 
 ## Set up the development environment
 
-### Install poetry
-
-Fractal uses [poetry](https://python-poetry.org/docs) to manage the development environment and dependencies, and to streamline the build and release operations; at least version 2.0.0 is recommended.
-
-A simple way to install `poetry` is
-```console
-pipx install poetry==2.2.1`
-```
-while other options are described [here](https://python-poetry.org/docs#installing-with-the-official-installer).
-
-
 ### Clone repository
 
 You can clone the `fractal-server` repository via
@@ -22,19 +11,22 @@ You can clone the `fractal-server` repository via
 git clone https://github.com/fractal-analytics-platform/fractal-server.git
 ```
 
-### Install package
+### Install uv
 
+We use [uv](https://docs.astral.sh/uv/) to manage the development environment and the dependencies - see https://docs.astral.sh/uv/getting-started/installation/ for methods to install it.
 Running
+```console
+$ uv venv
+$ uv sync --frozen [--group dev] [--group docs]
 ```
-poetry install --with dev --with docs
-```
-will initialise a Python virtual environment and install Fractal Server and all its dependencies, including optional dependencies. Note that to run commands from within this environment you should prepend them with `poetry run` (as in `poetry run fractalctl set-db`).
+will create a new virtual environment in `./.venv` and install the main dependencies (and optionally the dev/docs groups).
+Note that to run commands from within this environment you should prepend them with `uv run` (as in `uv run --frozen fractalctl set-db`).
 
 ## Update database schema
 
 Whenever the models in [`app/models`](./reference/app/models/index.md) are modified, you should update them via a migration. To check whether this is needed, run
 ```
-poetry run alembic check
+uv run --frozen alembic check
 ```
 
 If needed, the simplest procedure is to use `alembic --autogenerate` to create
@@ -43,22 +35,22 @@ an incremental migration script, as in
 $ export POSTGRES_DB="autogenerate-fractal-revision"
 $ dropdb --if-exist "$POSTGRES_DB"
 $ createdb "$POSTGRES_DB"
-$ poetry run fractalctl set-db --skip-init-data
-$ poetry run alembic revision --autogenerate -m "Some migration message"
+$ uv run --frozen fractalctl set-db --skip-init-data
+$ uv run --frozen alembic revision --autogenerate -m "Some migration message"
 ```
 
 ## Release
 
 1. Checkout to branch `main`.
-2. Check that the current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
+2. Check that the current HEAD of the `main` branch passes all the tests (note: make sure that you are using the `uv`-installed local package).
 3. Update the `CHANGELOG.md` file (e.g. remove `(unreleased)` from the upcoming version).
 4. If you have modified the models, then you must also [create](#update-database-schema) a new migration script (note: in principle the CI will fail if you forget this step).
 5. Use one of the following
 ```
-poetry run bumpver update --tag-num --tag-commit --commit --dry
-poetry run bumpver update --patch --tag-commit --commit --dry
-poetry run bumpver update --minor --tag-commit --commit --dry
-poetry run bumpver update --set-version X.Y.Z --tag-commit --commit --dry
+uv run --frozen bumpver update --tag-num --tag-commit --commit --dry
+uv run --frozen bumpver update --patch --tag-commit --commit --dry
+uv run --frozen bumpver update --minor --tag-commit --commit --dry
+uv run --frozen bumpver update --set-version X.Y.Z --tag-commit --commit --dry
 ```
 to test updating the version bump.
 6. If the previous step looks OK, remove `--dry` and re-run to actually bump the version, commit and push the changes.
@@ -76,11 +68,11 @@ To test the SLURM backend, we use a custom version of a  Docker local SLURM clus
 
 If you installed the development dependencies, you may run the test suite by invoking
 ```
-poetry run pytest
+uv run --frozen pytest
 ```
 from the main directory of the `fractal-server` repository. It is sometimes useful to specify additional arguments, e.g.
 ```
-poetry run pytest -s -v --log-cli-level info --full-trace
+uv run --frozen pytest -s -v --log-cli-level info --full-trace
 ```
 
 Tests are also run as part of [GitHub Actions Continuous Integration](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/ci.yml) for the `fractal-server` repository.
@@ -95,6 +87,6 @@ To build the documentation
 1. Setup a python environment and install the requirements from [`docs/doc-requirements.txt`](https://github.com/fractal-analytics-platform/fractal-server/blob/main/docs/doc-requirements.txt).
 2. Run
 ```
-poetry run mkdocs serve --config-file mkdocs.yml
+uv run --frozen mkdocs serve --config-file mkdocs.yml
 ```
 and browse the documentation at `http://127.0.0.1:8000`.
