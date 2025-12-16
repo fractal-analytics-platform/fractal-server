@@ -125,7 +125,7 @@
 | src/fractal\_server/runner/exceptions.py                                         |       24 |        0 |        2 |        0 |    100% |           |
 | src/fractal\_server/runner/executors/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | src/fractal\_server/runner/executors/base\_runner.py                             |       61 |        0 |       32 |        1 |     99% |  169->177 |
-| src/fractal\_server/runner/executors/call\_command\_wrapper.py                   |       26 |        2 |        6 |        1 |     91% |40-42, 46->49 |
+| src/fractal\_server/runner/executors/call\_command\_wrapper.py                   |       32 |        2 |        8 |        1 |     92% |52-54, 58->62 |
 | src/fractal\_server/runner/executors/local/\_\_init\_\_.py                       |        0 |        0 |        0 |        0 |    100% |           |
 | src/fractal\_server/runner/executors/local/get\_local\_config.py                 |       14 |        0 |        6 |        0 |    100% |           |
 | src/fractal\_server/runner/executors/local/runner.py                             |      126 |        1 |       24 |        3 |     97% |244->251, 277->260, 320 |
@@ -201,7 +201,7 @@
 | src/fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | src/fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | src/fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                        | **10027** |  **197** | **1826** |   **95** | **97%** |           |
+| **TOTAL**                                                                        | **10033** |  **197** | **1828** |   **95** | **97%** |           |
 
 
 ## Setup coverage badge
