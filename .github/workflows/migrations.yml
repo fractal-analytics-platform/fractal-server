@@ -114,7 +114,7 @@ jobs:
       - name: Apply upgrade and downgrade
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
-          cd fractal_server
+          cd src/fractal_server
           uv run --frozen alembic history
           uv run --frozen alembic upgrade head
           uv run --frozen alembic downgrade 1eac13a26c83
