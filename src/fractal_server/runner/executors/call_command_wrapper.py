@@ -6,6 +6,18 @@ import subprocess  # nosec
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.string_tools import validate_cmd
 
+MAX_LEN_STDERR = 100_000
+
+
+def placeholder_if_too_long(stderr: str) -> str:
+    """Returns a placeholder if the string is too long"""
+    if len(stderr) > MAX_LEN_STDERR:
+        return (
+            f"Cannot display stderr of length {len(stderr)}. You can find the "
+            "detailed logs by downloading the job-log folder."
+        )
+    return stderr
+
 
 def call_command_wrapper(*, cmd: str, log_path: str) -> None:
     """
@@ -46,6 +58,7 @@ def call_command_wrapper(*, cmd: str, log_path: str) -> None:
         if os.path.isfile(log_path):
             with open(log_path) as fp_stderr:
                 stderr = fp_stderr.read()
+            stderr = placeholder_if_too_long(stderr)
         raise TaskExecutionError(
             f"Task failed with returncode={result.returncode}.\n"
             f"STDERR: {stderr}"

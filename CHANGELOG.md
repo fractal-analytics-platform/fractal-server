@@ -4,6 +4,8 @@
 
 * API:
     * Add `resource_id` query parameter for admin jobs endpoint (\#3082).
+* Runner:
+    * Replace large traceback with placeholder (\#3081).
 * Testing:
     * Implement several `zizmor` recommendations (\#3077).
 * Dependencies:

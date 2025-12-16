@@ -4,6 +4,10 @@ from pydantic import ValidationError
 
 from fractal_server.images import SingleImageTaskOutput
 from fractal_server.runner.exceptions import TaskOutputValidationError
+from fractal_server.runner.executors.call_command_wrapper import MAX_LEN_STDERR
+from fractal_server.runner.executors.call_command_wrapper import (
+    placeholder_if_too_long,
+)
 from fractal_server.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.runner.v2.merge_outputs import merge_outputs
 from fractal_server.runner.v2.runner_functions import _process_init_task_output
@@ -169,3 +173,12 @@ def test_process_init_task_output():
     oe = _process_init_task_output(result=None, exception=EXCEPTION)
     assert oe.task_output is None
     assert oe.exception == EXCEPTION
+
+
+def test_placeholder_if_too_long():
+    string = "x" * MAX_LEN_STDERR
+    assert string == placeholder_if_too_long(string)
+
+    string = "x" * (MAX_LEN_STDERR + 1)
+    assert string != placeholder_if_too_long(string)
+    assert str(MAX_LEN_STDERR + 1) in placeholder_if_too_long(string)
