@@ -17,6 +17,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
@@ -37,6 +38,7 @@ router = APIRouter()
 @router.get("/", response_model=PaginationResponse[JobRead])
 async def view_job(
     id: int | None = None,
+    resource_id: int | None = None,
     user_id: int | None = None,
     project_id: int | None = None,
     dataset_id: int | None = None,
@@ -84,6 +86,13 @@ async def view_job(
     if id is not None:
         stm = stm.where(JobV2.id == id)
         stm_count = stm_count.where(JobV2.id == id)
+    if resource_id is not None:
+        stm = stm.join(ProjectV2, ProjectV2.id == JobV2.project_id).where(
+            ProjectV2.resource_id == resource_id
+        )
+        stm_count = stm_count.join(
+            ProjectV2, ProjectV2.id == JobV2.project_id
+        ).where(ProjectV2.resource_id == resource_id)
     if user_id is not None:
         stm = (
             stm.join(

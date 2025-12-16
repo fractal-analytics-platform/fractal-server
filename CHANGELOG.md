@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Add `resource_id` query parameter for admin jobs endpoint (\#3082).
 * Testing:
     * Implement several `zizmor` recommendations (\#3077).
 
