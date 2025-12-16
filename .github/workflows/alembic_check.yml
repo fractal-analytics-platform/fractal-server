@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main", "dev"]
+    branches: ["main"]
 
 permissions: {}
 
@@ -36,9 +36,9 @@ jobs:
           version: "0.9.17"
           enable-cache: true
 
-      - run: uv sync --frozen --group dev
+      - run: uv sync --frozen
 
-      - name: Test with pytest
+      - name: Run alembic check
         env:
           JWT_SECRET_KEY: some_secret
           POSTGRES_USER: postgres
