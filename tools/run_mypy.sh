@@ -1,3 +1,3 @@
 #!/bin/sh
 
-poetry run mypy -p fractal_server
+uv run --frozen mypy -p fractal_server

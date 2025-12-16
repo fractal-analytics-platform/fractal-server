@@ -52,34 +52,34 @@ jobs:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
-      - run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install fractal-server
-        run: |
-          poetry install --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen
 
       - name: Apply schema migration
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
-          poetry run fractalctl set-db
+          uv run --frozen fractalctl set-db
 
       - name: Apply data migration
         env:
           FRACTAL_DEFAULT_GROUP_NAME: All
         run: |
           cp $ROOTDIR/.fractal_server.env.old .
-          echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
+          echo -e "yes\nyes\nyes\nyes\nyes" | uv run --frozen fractalctl update-db-data
 
       - name: Validate new database
         env:
           FRACTAL_DEFAULT_GROUP_NAME: All
-        run: poetry run python scripts/validate_db_data_with_read_schemas.py
+        run: uv run --frozen python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
     name: "Alembic downgrade"
@@ -97,18 +97,16 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.11
-          cache: "poetry"
 
-      - name: Install fractal-server
-        run: |
-          poetry install --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen
 
       # We only run `alembic downgrade` until the specific revision that drops
       # V1 tables (rather than all the way to `base`), because that revision
@@ -117,6 +115,6 @@ jobs:
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd fractal_server
-          poetry run alembic history
-          poetry run alembic upgrade head
-          poetry run alembic downgrade 1eac13a26c83
+          uv run --frozen alembic history
+          uv run --frozen alembic upgrade head
+          uv run --frozen alembic downgrade 1eac13a26c83

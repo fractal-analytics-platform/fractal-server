@@ -33,24 +33,23 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
 
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -82,24 +81,23 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
 
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -144,23 +142,22 @@ jobs:
         if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
 
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-containers-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -208,18 +205,17 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
 
       - name: Test with pytest
         env:
@@ -250,7 +246,7 @@ jobs:
           FRACTAL_HELP_URL: https://example.org/info
           # Coverage
           COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -273,15 +269,17 @@ jobs:
       # py-cov-action/python-coverage-comment-action@v3
       - uses: actions/checkout@v5
 
-      - run: pipx install poetry==2.2.1
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: poetry install --only dev
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen --only-group dev
 
       - name: Download data
         uses: actions/download-artifact@v4
@@ -295,7 +293,7 @@ jobs:
         # We added this step to replace the variable `MERGE_COVERAGE_FILES: true`
         # in the next step, which had started to raise errors
         # (https://github.com/fractal-analytics-platform/fractal-server/pull/1725).
-        run: poetry run coverage combine coverage-data-*
+        run: uv run --frozen coverage combine coverage-data-*
 
       - name: Add coverage comment to Pull Requests
         id: coverage_comment
