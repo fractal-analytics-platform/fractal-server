@@ -125,7 +125,7 @@ def set_db():
     # Perform migrations
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
-    print(f"START: Run alembic.config ({alembic_ini=}, argv={alembic_args})")
+    print(f"START: Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
     print("END: alembic.config")
 
