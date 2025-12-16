@@ -67,20 +67,20 @@ def docker_compose_file(
     import fractal_server
 
     # Provide a tar.gz archive with fractal-server package
-    CODE_ROOT = Path(fractal_server.__file__).parent.parent
+    REPOSITORY_ROOT = Path(fractal_server.__file__).parents[2]
     TAR_FILE = (
         testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
     )
-    TAR_ROOT = CODE_ROOT.name
+    TAR_ROOT = REPOSITORY_ROOT.name
     with tarfile.open(TAR_FILE, "w:gz") as tar:
-        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
+        tar.add(REPOSITORY_ROOT, arcname=TAR_ROOT, recursive=False)
         for name in [
             "pyproject.toml",
             "README.md",
             "src",
         ]:
-            f = CODE_ROOT / name
-            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+            f = REPOSITORY_ROOT / name
+            tar.add(f, arcname=f.relative_to(REPOSITORY_ROOT.parent))
 
     # Provide a public SSH key
     dest = testdata_path / "slurm_docker_images" / "slurm" / "public_ssh_key"
