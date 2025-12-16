@@ -113,8 +113,8 @@ jobs:
       # is breakingly non-reversible
       - name: Apply upgrade and downgrade
         run: |
-          cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
           cd src/fractal_server
+          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           uv run --frozen alembic history
           uv run --frozen alembic upgrade head
           uv run --frozen alembic downgrade 1eac13a26c83
