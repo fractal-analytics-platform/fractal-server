@@ -36,55 +36,42 @@ changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/m
 
 [project.scripts]
 fractalctl = "fractal_server.__main__:run"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=80.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry]
-requires-poetry = ">=2.0"
-packages = [
-    {include="fractal_server"}
+[dependency-groups]
+dev = [
+    "asgi-lifespan >2.0.0,<3.0.0",
+    "pytest>=8.4.0,<8.5.0",
+    "pytest-env >=1.1.5,<1.2.0",
+    "httpx >=0.28.0,<0.29.0",
+    "devtools ==0.12",
+    "pytest-asyncio >= 1.2.0,<1.3.0",
+    "bumpver = >=2024.0",
+    "pre-commit ==4.2.0",
+    "coverage[toml]>=7.12.0,<7.13.0",
+    "pytest-docker >=3.2.0,<3.3.0",
+    "mypy >= 1.9",
+    "pytest-subprocess >=1.5.0,<1.6.0",
+    "a2wsgi >=1.10.0,<1.11.0",
+    "jinja2 >=3.1.3,<3.1.4",
+    "pyyaml>=6.0.0"
 ]
-exclude = [
-    "fractal_server/data_migrations/old",
-    "fractal_server/json_schemas",
-    "fractal_server/migrations/script.py.mako",
+
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocstrings[python]==0.30.1",
+    "mkdocs-material==9.7.0",
+    "mkdocs-gen-files==0.5.0",
+    "mkdocs-literate-nav==0.6.2",
+    "mkdocs-section-index==0.3.10",
+    "mkdocs-include-markdown-plugin==7.2.0",
+    "mkdocs-render-swagger-plugin==0.1.2",
+    "pyyaml>=6.0.0",
+    "click == 8.2.1"
 ]
 
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-asgi-lifespan = "^2"
-pytest = "8.4.*"
-pytest-env = ">=1.1.5,<1.2.0"
-httpx = ">=0.28.0,<0.29.0"
-devtools = "^0.12"
-pytest-asyncio = "1.2.*"
-bumpver = ">=2024.0"
-pre-commit = "4.2.0"
-coverage = {extras = ["toml"], version = "7.5.*"}
-pytest-docker = {version = "3.2.*"}
-mypy = "^1.9"
-pytest-subprocess = "1.5.*"
-a2wsgi = "^1.10.0"
-jinja2 = "^3.1.3"
-pyyaml=">=6.0.0"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-mkdocs="1.6.1"
-mkdocstrings = { extras = ["python"], version = "0.30.1" }
-mkdocs-material="9.7.0"
-mkdocs-gen-files="0.5.0"
-mkdocs-literate-nav="0.6.2"
-mkdocs-section-index="0.3.10"
-mkdocs-render-swagger-plugin="0.1.2"
-pyyaml=">=6.0.0"
-click = "8.2.1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
