@@ -29,18 +29,17 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Install poetry
-        run: pipx install poetry==2.2.1
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --no-interaction
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.17"
+          enable-cache: true
+
+      - run: uv sync --frozen
 
       - name: Test with pytest
-        run: poetry run pytest -vv --durations 0 -m "not oauth"
+        run: uv run --frozen pytest -vv --durations 0 -m "not oauth"

@@ -13,7 +13,7 @@ Executing:
 Run:
 
 ```bash
-poetry run  python api_bench.py
+uv run --frozen  python api_bench.py
 ```
 
 Then the `bench.html` file will be generated with a summary about response time and number of failures.
