@@ -47,4 +47,4 @@ jobs:
         run: |
           cd src/fractal_server
           uv run --frozen fractalctl set-db
-          uv run --frozen run alembic check
+          uv run --frozen alembic check
