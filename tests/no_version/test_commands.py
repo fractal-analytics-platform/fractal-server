@@ -23,7 +23,7 @@ commands = [
 def test_startup_commands(cmd, db_create_tables):
     debug(cmd)
     p = subprocess.Popen(
-        shlex.split(f"poetry run {cmd}"),
+        shlex.split(f"uv run --frozen {cmd}"),
         start_new_session=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -47,7 +47,7 @@ def test_startup_commands(cmd, db_create_tables):
 
 
 def test_email_settings():
-    cmd = "poetry run fractalctl email-settings"
+    cmd = "uv run --frozen fractalctl email-settings"
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",

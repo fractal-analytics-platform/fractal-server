@@ -1,12 +1,21 @@
 import os
+import sys
+from pathlib import Path
 
+from devtools import debug
+
+import fractal_server
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.v2 import DatasetImport
 from fractal_server.app.schemas.v2 import JobCreate
 from fractal_server.app.schemas.v2 import ProjectCreate
 from fractal_server.app.schemas.v2 import WorkflowCreate
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
-from scripts.client import FractalClient
+
+sys.path.append(Path(fractal_server.__file__).parents[2].as_posix())
+debug(sys.path)
+
+from scripts.client import FractalClient  # noqa: E402
 
 
 def create_image_list(n_images: int, zarr_dir: str) -> list:

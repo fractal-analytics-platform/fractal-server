@@ -22,17 +22,17 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-     - name: Install poetry
-       run: pipx install poetry==2.2.1
-
      - name: Set up Python 3.12
        uses: actions/setup-python@v5
        with:
         python-version: "3.12"
-        cache: "poetry"
 
-     - name: Install dependencies
-       run: poetry install --with dev --no-interaction
+     - uses: astral-sh/setup-uv@v6
+       with:
+        version: "0.9.17"
+        enable-cache: true
+
+     - run: uv sync --frozen --group dev
 
      - name: Run Fractal with Gunicorn
        run: |
@@ -44,15 +44,15 @@ jobs:
         export JWT_EXPIRE_SECONDS=84600
         export FRACTAL_DEFAULT_GROUP_NAME=All
         cd benchmarks/
-        poetry run fractalctl set-db
-        poetry run fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir "$(pwd)/project-dir"
-        poetry run python populate_db/populate_db_script.py
-        poetry run sh serve.sh
+        uv run --frozen fractalctl set-db
+        uv run --frozen fractalctl init-db-data --resource default --profile default --admin-email admin@example.org --admin-pwd 1234 --admin-project-dir "$(pwd)/project-dir"
+        uv run --frozen python populate_db/populate_db_script.py
+        uv run --frozen sh serve.sh
 
      - name: Benchmark
        run: |
         cd benchmarks/
-        poetry run python api_bench.py
+        uv run --frozen python api_bench.py
 
      - name: Print logs stderr
        run: cat benchmarks/fractal-server.err

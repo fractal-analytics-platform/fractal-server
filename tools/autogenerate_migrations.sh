@@ -20,8 +20,8 @@ POSTGRES_DB=$POSTGRES_DB" > .fractal_server.env
 
 dropdb --if-exist "$POSTGRES_DB"
 createdb "$POSTGRES_DB"
-poetry run fractalctl set-db
-poetry run alembic revision --autogenerate -m "$MESSAGE"
+uv run --frozen fractalctl set-db
+uv run --frozen alembic revision --autogenerate -m "$MESSAGE"
 
 rm .fractal_server.env
 

@@ -8,5 +8,5 @@ createdb fractal_test
 # docker exec -it postgres-main dropdb -Upostgres fractal_test
 # docker exec -it postgres-main createdb -Upostgres fractal_test
 
-poetry run fractalctl set-db
-poetry run python populate_db_script.py
+uv run --frozen fractalctl set-db
+uv run --frozen python populate_db_script.py
