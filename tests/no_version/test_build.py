@@ -10,10 +10,8 @@ import pytest
 def tmp_dir_module():
     """
     Module-scoped temporary directory.
-
-    Set `delete=False` if you need to manually debug the `uv build` artifacts.
     """
-    with tempfile.TemporaryDirectory(delete=True) as tmpdirname:
+    with tempfile.TemporaryDirectory() as tmpdirname:
         yield tmpdirname
 
 
