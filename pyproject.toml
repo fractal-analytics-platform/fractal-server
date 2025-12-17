@@ -38,11 +38,14 @@ changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/m
 fractalctl = "fractal_server.__main__:run"
 
 [build-system]
-requires = ["setuptools>=80.0", "setuptools-scm>=9"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
 
-[tool.setuptools.package-data]
-fractal_server = ["alembic.ini"]
+[tool.uv.build-backend]
+module-name = "fractal_server"
+module-root = ""
+source-exclude = ["tmp*", "fractal_server/data_migrations/old", "fractal_server/data_migrations/README.md", "fractal_server/json_schemas", "fractal_server/migrations/script.py.mako"]
+wheel-exclude = ["tmp*", "fractal_server/data_migrations/old", "fractal_server/data_migrations/README.md", "fractal_server/json_schemas", "fractal_server/migrations/script.py.mako"]
 
 [dependency-groups]
 dev = [
