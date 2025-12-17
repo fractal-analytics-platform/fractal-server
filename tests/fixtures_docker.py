@@ -67,7 +67,7 @@ def docker_compose_file(
     import fractal_server
 
     # Provide a tar.gz archive with fractal-server package
-    REPOSITORY_ROOT = Path(fractal_server.__file__).parents[2]
+    REPOSITORY_ROOT = Path(fractal_server.__file__).parents[1]
     TAR_FILE = (
         testdata_path / "slurm_docker_images/slurm/fractal_server_local.tar.gz"
     )

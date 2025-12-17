@@ -12,7 +12,7 @@ from fractal_server.app.schemas.v2 import ProjectCreate
 from fractal_server.app.schemas.v2 import WorkflowCreate
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 
-sys.path.append(Path(fractal_server.__file__).parents[2].as_posix())
+sys.path.append(Path(fractal_server.__file__).parents[1].as_posix())
 debug(sys.path)
 
 from scripts.client import FractalClient  # noqa: E402
