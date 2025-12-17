@@ -36,8 +36,9 @@ changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/m
 
 [project.scripts]
 fractalctl = "fractal_server.__main__:run"
+
 [build-system]
-requires = ["setuptools>=80.0"]
+requires = ["setuptools>=80.0", "setuptools-scm>=9"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-data]
