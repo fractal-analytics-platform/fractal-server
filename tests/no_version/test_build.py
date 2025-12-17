@@ -8,7 +8,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def tmp_dir_module():
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory(delete=False) as tmpdirname:
         yield tmpdirname
 
 
@@ -37,6 +37,7 @@ def build_namelist(
         check=True,
     )
     wheel_file_path = next(Path(tmp_dir_module).glob("*.whl"))
+    print(f"{wheel_file_path=}")
 
     with ZipFile(wheel_file_path, "r") as zip:
         namelist = list(zip.namelist())
@@ -61,18 +62,15 @@ def test_exclude_gitignored_file(
     assert gitignored_file not in build_namelist
 
 
-@pytest.mark.xfail(reason="FIXME")
 def test_exclude_json_schemas(build_namelist: list[str]):
     assert not [
         name for name in build_namelist if "fractal_server/json_schemas" in name
     ]
 
 
-@pytest.mark.xfail(reason="FIXME")
 def test_exclude_data_migrations_old(build_namelist: list[str]):
     assert "fractal_server/data_migrations/old/2_18_0.py" not in build_namelist
 
 
-@pytest.mark.xfail(reason="FIXME")
 def test_exclude_mako(build_namelist: list[str]):
     assert "fractal_server/migrations/script.py.mako" not in build_namelist
