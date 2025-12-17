@@ -79,7 +79,7 @@ nav:
   - Development: development.md
 
 watch:
-  - src
+  - fractal_server
 
 plugins:
   - search

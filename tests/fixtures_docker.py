@@ -77,7 +77,7 @@ def docker_compose_file(
         for name in [
             "pyproject.toml",
             "README.md",
-            "src",
+            "fractal_server",
         ]:
             f = REPOSITORY_ROOT / name
             tar.add(f, arcname=f.relative_to(REPOSITORY_ROOT.parent))
