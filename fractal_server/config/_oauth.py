@@ -28,6 +28,11 @@ class OAuthSettings(BaseSettings):
             String to be used as `redirect_url` argument in
             `fastapi_users.get_oauth_router`, and then in
             `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`.
+        OAUTH_EMAIL_CLAIM:
+            Name of the OIDC claim with the user's email address. This is
+            `"email"` by default, but can be customized (e.g. to `"mail"`) to
+            fit with the response from the userinfo endpoint - see
+            https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)

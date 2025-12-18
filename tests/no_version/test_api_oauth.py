@@ -141,6 +141,10 @@ async def _verify_token(client: AsyncClient, token: str, expected_email: str):
 
 @pytest.mark.oauth
 async def test_unit_get_id_email():
+    """
+    Test the error branch in `get_id_email`, which is reached when the token
+    is invalid.
+    """
     oauth_settings = Inject(get_oauth_settings)
     open_id = FractalOpenID(
         client_id=oauth_settings.OAUTH_CLIENT_ID.get_secret_value(),

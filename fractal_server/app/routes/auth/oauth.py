@@ -16,12 +16,21 @@ from . import fastapi_users
 
 
 class FractalOpenID(OpenID):
+    """
+    Subclass of `httpx_oauth.clients.openid.OpenID` with customizable name for
+    the `"email"` claim.
+    """
+
     def __init__(self, *, email_claim: str, **kwargs):
         super().__init__(**kwargs)
         self.email_claim = email_claim
 
     # TODO-requires-py312: add `@override` decorator
     async def get_id_email(self, token: str) -> tuple[str, str | None]:
+        """
+        Identical to the parent-class method (httpx-oauth version 0.16.1),
+        apart from making `"email"` configurable.
+        """
         try:
             profile = await self.get_profile(token)
         except GetProfileError as e:
