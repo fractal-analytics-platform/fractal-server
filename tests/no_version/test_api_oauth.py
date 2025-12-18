@@ -22,6 +22,7 @@ FRACTAL_HELP_URL=https://example.org/info
 import httpx
 import pytest
 from httpx import AsyncClient
+from httpx_oauth.exceptions import GetIdEmailError
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import delete
@@ -30,6 +31,7 @@ from sqlmodel import select
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth.oauth import FractalOpenID
 from fractal_server.app.routes.auth.oauth import _create_client_oidc
 from fractal_server.config import OAuthSettings
 from fractal_server.config import get_email_settings
@@ -135,6 +137,20 @@ async def _verify_token(client: AsyncClient, token: str, expected_email: str):
     )
     assert res.status_code == 200
     assert res.json()["email"] == expected_email
+
+
+@pytest.mark.oauth
+async def test_unit_get_id_email():
+    oauth_settings = Inject(get_oauth_settings)
+    open_id = FractalOpenID(
+        client_id=oauth_settings.OAUTH_CLIENT_ID.get_secret_value(),
+        client_secret=oauth_settings.OAUTH_CLIENT_SECRET.get_secret_value(),
+        openid_configuration_endpoint=oauth_settings.OAUTH_OIDC_CONFIG_ENDPOINT.get_secret_value(),
+        email_claim=oauth_settings.OAUTH_EMAIL_CLAIM,
+    )
+
+    with pytest.raises(GetIdEmailError):
+        await open_id.get_id_email("abcd")
 
 
 @pytest.mark.oauth
