@@ -24,7 +24,7 @@ async def get_current_user_allowed_viewer_paths(
     """
     Returns the allowed viewer paths for current user.
     """
-    authorized_paths = current_user.project_dirs.copy()
+    authorized_paths = current_user.project_dirs
 
     if include_shared_projects:
         res = await db.execute(
