@@ -36,9 +36,6 @@ changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/m
 
 [project.scripts]
 fractalctl = "fractal_server.__main__:run"
-[build-system]
-requires = ["setuptools>=80.0"]
-build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
@@ -71,6 +68,19 @@ docs = [
     "pyyaml>=6.0.0",
     "click == 8.2.1"
 ]
+
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+# See https://docs.astral.sh/uv/concepts/build-backend/#file-inclusion-and-exclusion
+[tool.uv.build-backend]
+module-name = "fractal_server"
+module-root = ""
+source-exclude = ["tmp*", "fractal_server/data_migrations/old", "fractal_server/data_migrations/README.md", "fractal_server/json_schemas", "fractal_server/migrations/script.py.mako"]
+wheel-exclude = ["tmp*", "fractal_server/data_migrations/old", "fractal_server/data_migrations/README.md", "fractal_server/json_schemas", "fractal_server/migrations/script.py.mako"]
+
 
 
 [tool.pytest.ini_options]

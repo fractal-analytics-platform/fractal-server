@@ -45,6 +45,6 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
         run: |
-          cd src/fractal_server
+          cd fractal_server
           uv run --frozen fractalctl set-db
           uv run --frozen alembic check
