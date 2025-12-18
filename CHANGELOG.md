@@ -5,6 +5,7 @@
 * API:
     * Add `resource_id` query parameter for admin jobs endpoint (\#3082).
 * Runner:
+    * Include `use_mem_per_cpu: bool = False` flag for SLURM configuration (\#3078).
     * Replace large traceback with placeholder (\#3081).
 * Testing:
     * Implement several `zizmor` recommendations (\#3077).
