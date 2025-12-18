@@ -4,17 +4,19 @@
 
 * API:
     * Add `resource_id` query parameter for admin jobs endpoint (\#3082).
+    * Support custom email claim in OIDC provider (\#3095).
 * Runner:
     * Include `use_mem_per_cpu: bool = False` flag for SLURM configuration (\#3078).
     * Replace large traceback with placeholder (\#3081).
-* Testing:
-    * Implement several `zizmor` recommendations (\#3077).
+* Settings:
+    * Introduce `OAuthSettings.OAUTH_EMAIL_CLAIM` (\#3095).
 * Dependencies:
     * Move from `poetry` optional dependency groups to standard dependency groups for `dev` and `docs` (\#3086).
 * Internal:
     * Move `fractal_server` to `src/fractal_server` (\#3086). Reverted with \#3092.
     * Move from `poetry` to `uv` (\#3086, \#3088, \#3089).
 * Testing:
+    * Implement several `zizmor` recommendations (\#3077).
     * Add test for include/exclude options in build backend (\#3089).
 
 # 2.18.2
