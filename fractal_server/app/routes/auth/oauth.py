@@ -1,5 +1,3 @@
-from typing import override
-
 from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
@@ -22,7 +20,7 @@ class FractalOpenID(OpenID):
         super().__init__(**kwargs)
         self.email_claim = email_claim
 
-    @override
+    # TODO-requires-py312: add `@override` decorator
     async def get_id_email(self, token: str) -> tuple[str, str | None]:
         try:
             profile = await self.get_profile(token)
