@@ -1,8 +1,10 @@
 from fastapi import APIRouter
+from typing import override
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.openid import OpenID
 from httpx_oauth.clients.openid import OpenIDConfigurationError
+from httpx_oauth.exceptions import GetIdEmailError, GetProfileError
 
 from fractal_server.config import OAuthSettings
 from fractal_server.config import get_oauth_settings
@@ -11,6 +13,21 @@ from fractal_server.syringe import Inject
 
 from . import cookie_backend
 from . import fastapi_users
+
+
+class FractalOpenID(OpenID):
+
+    def __init__(self, *, email_claim: str, **kwargs):
+        super().__init__(**kwargs)
+        self.email_claim = email_claim
+
+    @override
+    async def get_id_email(self, token: str) -> tuple[str, str | None]:
+        try:
+            profile = await self.get_profile(token)
+        except GetProfileError as e:
+            raise GetIdEmailError(response=e.response) from e
+        return str(profile["sub"]), profile.get(self.email_claim)
 
 
 def _create_client_github(cfg: OAuthSettings) -> GitHubOAuth2:
@@ -29,10 +46,11 @@ def _create_client_google(cfg: OAuthSettings) -> GoogleOAuth2:
 
 def _create_client_oidc(cfg: OAuthSettings) -> OpenID:
     try:
-        open_id = OpenID(
+        open_id = FractalOpenID(
             client_id=cfg.OAUTH_CLIENT_ID.get_secret_value(),
             client_secret=cfg.OAUTH_CLIENT_SECRET.get_secret_value(),
             openid_configuration_endpoint=cfg.OAUTH_OIDC_CONFIG_ENDPOINT.get_secret_value(),  # noqa
+            email_claim=cfg.OAUTH_EMAIL_CLAIM,
         )
     except OpenIDConfigurationError as e:
         OAUTH_OIDC_CONFIG_ENDPOINT = (

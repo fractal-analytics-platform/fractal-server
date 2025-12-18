@@ -43,6 +43,7 @@ class OAuthSettings(BaseSettings):
     OAUTH_CLIENT_SECRET: SecretStr | None = None
     OAUTH_OIDC_CONFIG_ENDPOINT: SecretStr | None = None
     OAUTH_REDIRECT_URL: str | None = None
+    OAUTH_EMAIL_CLAIM: str = "email"
 
     @model_validator(mode="after")
     def check_configuration(self: Self) -> Self:
