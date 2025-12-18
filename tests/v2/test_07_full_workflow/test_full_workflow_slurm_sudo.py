@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -55,6 +56,15 @@ async def test_full_workflow_slurm(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
     resource, profile = slurm_sudo_resource_profile_db[:]
+
+    # Edit the runner configuration, to test the `use_mem_per_cpu=True` branch
+    resource.jobs_runner_config["default_slurm_config"]["use_mem_per_cpu"] = (
+        True  # noqa: E501
+    )
+    flag_modified(resource, "jobs_runner_config")
+    db.add(resource)
+    await db.commit()
+    db.expunge(resource)
 
     project_dir = str(tmp777_path / "user_project_dir-slurm")
 
