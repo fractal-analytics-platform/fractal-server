@@ -1,10 +1,12 @@
-from fastapi import APIRouter
 from typing import override
+
+from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.openid import OpenID
 from httpx_oauth.clients.openid import OpenIDConfigurationError
-from httpx_oauth.exceptions import GetIdEmailError, GetProfileError
+from httpx_oauth.exceptions import GetIdEmailError
+from httpx_oauth.exceptions import GetProfileError
 
 from fractal_server.config import OAuthSettings
 from fractal_server.config import get_oauth_settings
@@ -16,7 +18,6 @@ from . import fastapi_users
 
 
 class FractalOpenID(OpenID):
-
     def __init__(self, *, email_claim: str, **kwargs):
         super().__init__(**kwargs)
         self.email_claim = email_claim
