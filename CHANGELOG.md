@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.18.3
 
 * API:
     * Add `resource_id` query parameter for admin jobs endpoint (\#3082).
