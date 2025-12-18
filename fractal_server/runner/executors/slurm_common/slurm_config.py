@@ -42,6 +42,9 @@ class SlurmConfig(BaseModel):
         exclude: Corresponds to SLURM option.
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
+        use_mem_per_cpu:
+            If `True`, use `--mem-per-cpu` rather than `--mem`, both at the job
+            level and for `srun` statements.
         extra_lines: Additional lines to include in SLURM submission scripts.
         tasks_per_job: Number of tasks for each SLURM job.
         parallel_tasks_per_job: Number of tasks to run in parallel for
@@ -70,8 +73,11 @@ class SlurmConfig(BaseModel):
     partition: str
     cpus_per_task: int
     mem_per_task_MB: int
+
     prefix: str = "#SBATCH"
     shebang_line: str = "#!/bin/sh"
+
+    use_mem_per_cpu: bool = False
 
     # Optional SLURM parameters
     job_name: str | None = None
@@ -139,6 +145,7 @@ class SlurmConfig(BaseModel):
     def to_sbatch_preamble(
         self,
         remote_export_dir: str,
+        use_mem_per_cpu: bool = False,
     ) -> list[str]:
         """
         Compile `SlurmConfig` object into the preamble of a SLURM submission
@@ -148,6 +155,8 @@ class SlurmConfig(BaseModel):
             remote_export_dir:
                 Base directory for exports defined in
                 `self.user_local_exports`.
+            use_mem_per_cpu:
+                If `True`, use `--mem-per-cpu` rather than `--mem`.
         """
         if self.parallel_tasks_per_job is None:
             raise ValueError(
@@ -157,13 +166,18 @@ class SlurmConfig(BaseModel):
         if len(self.extra_lines) != len(set(self.extra_lines)):
             raise ValueError(f"{self.extra_lines=} contains repetitions")
 
-        mem_per_job_MB = self.parallel_tasks_per_job * self.mem_per_task_MB
+        if use_mem_per_cpu:
+            memory_line = f"{self.prefix} --mem-per-cpu={self.mem_per_cpu_MB}M"
+        else:
+            mem_per_job_MB = self.parallel_tasks_per_job * self.mem_per_task_MB
+            memory_line = f"{self.prefix} --mem={mem_per_job_MB}M"
+
         lines = [
             self.shebang_line,
             f"{self.prefix} --partition={self.partition}",
             f"{self.prefix} --ntasks={self.parallel_tasks_per_job}",
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
-            f"{self.prefix} --mem={mem_per_job_MB}M",
+            memory_line,
         ]
         for key in [
             "job_name",
@@ -214,3 +228,7 @@ class SlurmConfig(BaseModel):
     @property
     def batch_size(self) -> int:
         return self.tasks_per_job
+
+    @property
+    def mem_per_cpu_MB(self) -> int:
+        return int(self.mem_per_task_MB / self.cpus_per_task)
