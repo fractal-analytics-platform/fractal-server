@@ -24,6 +24,8 @@ RUN $PYTHON_PATH -m pip install devtools
 # Install fractal-server
 ADD fractal_server_local.tar.gz .
 WORKDIR ./fractal-server
+RUN pwd
+RUN ls -lh
 RUN $PYTHON_PATH -m pip install -e .
 
 EXPOSE 22 6817 6818
