@@ -2,7 +2,7 @@
 
 # 2.18.4
 
-* Include LICENSE in distribution (\#3098).
+* Include `LICENSE` file in distribution (\#3099, \#3100).
 
 # 2.18.3
 
