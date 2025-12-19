@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.18.3"
+version = "2.18.4"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -94,7 +94,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth"]
 
 [tool.bumpver]
-current_version = "2.18.3"
+current_version = "2.18.4"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
