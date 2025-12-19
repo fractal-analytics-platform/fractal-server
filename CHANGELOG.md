@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.18.4
+
+* Include LICENSE in distribution (\#3098).
+
 # 2.18.3
 
 * API:
