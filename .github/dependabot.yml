@@ -6,8 +6,4 @@ updates:
     versioning-strategy: "lockfile-only"
     directory: "/"
     schedule:
-      interval: "weekly"
-    groups:
-      all:
-        patterns:
-          - "*"
+      interval: "daily"
