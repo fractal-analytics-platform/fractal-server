@@ -188,7 +188,8 @@ def test_merge_type_filters():
 
 def test_merge_type_filters_mutable_args():
     """
-    Test for"""
+    Test for issue 3115
+    """
     task_input_types = dict(key1=False, key2=True)
     wftask_type_filters = dict(key1=False, key3=True)
     merge_type_filters(
