@@ -47,6 +47,10 @@ def dist_files(tmp_dir_module: Path):
     Path(path).unlink()
 
 
+def test_include_LICENSE(dist_files: list[str]):
+    assert any("LICENSE" in file for file in dist_files)
+
+
 def test_include_task_template(dist_files: list[str]):
     assert "fractal_server/tasks/v2/templates/1_create_venv.sh" in dist_files
 

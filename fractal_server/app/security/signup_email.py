@@ -13,7 +13,7 @@ def send_fractal_email_or_log_failure(
     subject: str,
     msg: str,
     email_settings: PublicEmailSettings | None,
-):
+) -> None:
     """
     Send an email using the specified settings, or log about failure.
     """
@@ -22,6 +22,7 @@ def send_fractal_email_or_log_failure(
         logger.error(
             f"Cannot send email with {subject=}, because {email_settings=}."
         )
+        return
 
     try:
         logger.info(f"START sending email with {subject=}.")
