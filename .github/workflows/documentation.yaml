@@ -9,9 +9,10 @@ on:
 env:
   JWT_SECRET_KEY: fake
   POSTGRES_DB: fake
-  OAUTH_OAUTH2EXAMPLE_CLIENT_ID: oidc_example_client_id
-  OAUTH_OAUTH2EXAMPLE_CLIENT_SECRET: oicd_example_client_secret
-  OAUTH_OAUTH2EXAMPLE_OIDC_CONFIGURATION_ENDPOINT: https://accounts.google.com/.well-known/openid-configuration
+  OAUTH_CLIENT_NAME: oauth2-example
+  OAUTH_CLIENT_ID: oidc_example_client_id
+  OAUTH_CLIENT_SECRET: oicd_example_client_secret
+  OAUTH_OIDC_CONFIG_ENDPOINT: https://accounts.google.com/.well-known/openid-configuration
 
 jobs:
 
