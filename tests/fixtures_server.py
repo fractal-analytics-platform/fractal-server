@@ -470,7 +470,9 @@ async def MockCurrentUser(
 
             # Override dependencies in the FastAPI app
             for _dep in self.previous_deps.keys():
-                app.dependency_overrides[_dep] = lambda: self.user
+                app.dependency_overrides[_dep] = lambda: self.user.model_copy(
+                    deep=True
+                )
 
             return self.user
 
