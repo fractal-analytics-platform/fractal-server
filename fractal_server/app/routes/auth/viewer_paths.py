@@ -23,9 +23,12 @@ async def get_current_user_allowed_viewer_paths(
 ) -> list[str]:
     """
     Returns the allowed viewer paths for current user.
-    """
-    authorized_paths = current_user.project_dirs.copy()
 
+    NOTE: `include_shared_projects` is an obsolete query-parameter name,
+    because it does not make a difference between owners/guests. A better
+    naming would be e.g. `include_zarr_dirs`, but it would require a fix
+    in `fractal-web` as well.
+    """
     if include_shared_projects:
         res = await db.execute(
             select(DatasetV2.zarr_dir)
@@ -36,8 +39,9 @@ async def get_current_user_allowed_viewer_paths(
             .where(LinkUserProjectV2.user_id == current_user.id)
             .where(LinkUserProjectV2.is_verified.is_(True))
         )
-        authorized_paths.extend(res.unique().scalars().all())
-        # Note that `project_dirs` and the `db.execute` result may have some
-        # common elements, and then this list may have non-unique items.
-
-    return authorized_paths
+        authorized_zarr_dirs = list(res.unique().scalars().all())
+        # Note that `project_dirs` and the `authorized_zarr_dirs` may have some
+        # common elements, and then the response may include non-unique items.
+        return current_user.project_dirs + authorized_zarr_dirs
+    else:
+        return current_user.project_dirs
