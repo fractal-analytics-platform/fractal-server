@@ -4,6 +4,8 @@
 
 * API:
     * Skip email-sending logic when email settings are not present (\#3102).
+* Documentation:
+    * Fix OAuth API documentation (\#3106).
 
 # 2.18.4
 
