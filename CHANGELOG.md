@@ -15,6 +15,7 @@
     * Bump `sqlmodel` to v0.0.31 (\#3110).
     * Bump `fastapi-users` to v15.0.3 (\#3110).
     * Bump `uvicorn` to v0.40 (\#3110).
+    * Bump `pydantic-settings` to v2.12.0 (\#3110).
 
 # 2.18.4
 
