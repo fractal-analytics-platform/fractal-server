@@ -105,6 +105,9 @@ async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
     Login via Dex as 'kilgore@kilgore.trout'
     """
     res = await client.get("/auth/dexidp/authorize/")
+    cookies = {
+        "fastapiusersoauthcsrf": res.cookies.get("fastapiusersoauthcsrf")
+    }
     authorization_url = res.json()["authorization_url"]
 
     with httpx.Client() as httpx_client:
@@ -124,7 +127,10 @@ async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
         assert location.startswith(oauth_settings.OAUTH_REDIRECT_URL)
         code_and_state = location[len(oauth_settings.OAUTH_REDIRECT_URL) :]
 
-    res = await client.get(f"/auth/dexidp/callback/{code_and_state}")
+    res = await client.get(
+        f"/auth/dexidp/callback/{code_and_state}",
+        cookies=cookies,
+    )
     assert res.status_code == 204
     assert res.headers["set-cookie"].startswith("fastapiusersauth=")
 

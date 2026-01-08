@@ -7,6 +7,15 @@
     * Clarify viewer-path endpoint (\#3096).
 * Documentation:
     * Fix OAuth API documentation (\#3106).
+* Testing:
+    * Add script to run OAuth tests locally (\#3110).
+    * Fix OAuth test by including `fastapi-users` cookies (\#3110).
+* Dependencies:
+    * Bump `fastapi` to v0.128 (\#3110).
+    * Bump `sqlmodel` to v0.0.31 (\#3110).
+    * Bump `fastapi-users` to v15.0.3 (\#3110).
+    * Bump `uvicorn` to v0.40 (\#3110).
+    * Bump `pydantic-settings` to v2.12.0 (\#3110).
 
 # 2.18.4
 
