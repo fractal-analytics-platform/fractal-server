@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.18.5 (unreleased)
+# 2.18.5
 
 * API:
     * Skip email-sending logic when email settings are not present (\#3102).
