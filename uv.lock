@@ -680,7 +680,7 @@ wheels = [
 
 [[package]]
 name = "fastapi-users"
-version = "15.0.3"
+version = "15.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "email-validator" },
@@ -690,9 +690,9 @@ dependencies = [
     { name = "pyjwt", extra = ["crypto"] },
     { name = "python-multipart" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4f/35/7272d1c6c81828a1f1a4dca2d1731e8a428ae52c36404d78f7602d5fa044/fastapi_users-15.0.3.tar.gz", hash = "sha256:94b24f8889b51ca3d8da92a88bced2bca2764cb1dd21c7d6d838890ff57b6472", size = 121336, upload-time = "2025-12-19T09:41:09.488Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ed/d5/e8f7b598c6b81e3e2955506e47b4c778a858b994ac435c0c85dd37923f40/fastapi_users-15.0.2.tar.gz", hash = "sha256:4cdcc471a5b9e48de3ec4e7dc97e7b7afb610dda5ec6d022d3ddc0a0c0699323", size = 120625, upload-time = "2025-12-19T07:36:31.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/a0/81b33000d59eb265b88074c6a15c1fda6f9120581878c368a94e87638d96/fastapi_users-15.0.3-py3-none-any.whl", hash = "sha256:cea3da00ba1bfdd04ce61dcb4515a0914f19d9609d3ba68cf54367c876f380c3", size = 39031, upload-time = "2025-12-19T09:41:10.34Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/c1/df04587c4125de11a10a663197c6715537eb16dffb9a6823417eeee675d5/fastapi_users-15.0.2-py3-none-any.whl", hash = "sha256:e52f7124f44ac3042b3b0866476bcd5818513609b225b4e485e8ac69f8d49161", size = 38594, upload-time = "2025-12-19T07:36:30.315Z" },
 ]
 
 [package.optional-dependencies]
