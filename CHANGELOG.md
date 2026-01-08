@@ -4,10 +4,9 @@
 
 * API:
     * Skip email-sending logic when email settings are not present (\#3102).
+    * Clarify viewer-path endpoint (\#3096).
 * Documentation:
     * Fix OAuth API documentation (\#3106).
-* Testing:
-    * Improve isolation of `MockCurrentUser` dependency (\#3096).
 
 # 2.18.4
 
