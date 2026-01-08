@@ -14,6 +14,7 @@
     * Bump `fastapi` to v0.128 (\#3110).
     * Bump `sqlmodel` to v0.0.31 (\#3110).
     * Bump `fastapi-users` to v15.0.3 (\#3110).
+    * Bump `uvicorn` to v0.40 (\#3110).
 
 # 2.18.4
 
