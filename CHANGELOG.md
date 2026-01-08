@@ -5,6 +5,8 @@
 * API:
     * Skip email-sending logic when email settings are not present (\#3102).
     * Clarify viewer-path endpoint (\#3096).
+* Internals:
+    * Fix bug where `merge_type_filters` would mutate one of its arguments (\#3116).
 * Documentation:
     * Fix OAuth API documentation (\#3106).
 * Testing:
