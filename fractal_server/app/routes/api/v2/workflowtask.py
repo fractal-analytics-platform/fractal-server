@@ -202,7 +202,6 @@ async def update_workflowtask(
 
     await db.commit()
     await db.refresh(db_wf_task)
-    await db.close()
 
     return db_wf_task
 

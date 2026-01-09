@@ -136,7 +136,6 @@ async def update_project(
 
     await db.commit()
     await db.refresh(project)
-    await db.close()
     return project
 
 

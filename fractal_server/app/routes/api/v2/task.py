@@ -133,7 +133,6 @@ async def patch_task(
 
     await db.commit()
     await db.refresh(db_task)
-    await db.close()
     return db_task
 
 

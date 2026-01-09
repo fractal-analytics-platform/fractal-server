@@ -54,7 +54,7 @@ async def test_get_task_group_list(
     # of the `GET /api/v2/task-group/` response, because it has lower priority
     # than the same task group belonging to user2
     async with MockCurrentUser() as user1:
-        task_by_user3 = await task_factory(
+        task_by_user1 = await task_factory(
             user_id=user1.id,
             task_group_kwargs=dict(
                 pkg_name="bbb",
@@ -105,7 +105,7 @@ async def test_get_task_group_list(
         )
 
         # Verify that the task-group by user1 is accessible
-        res = await client.get(f"{PREFIX}/{task_by_user3.taskgroupv2_id}/")
+        res = await client.get(f"{PREFIX}/{task_by_user1.taskgroupv2_id}/")
         assert res.status_code == 200
         taskgroup_by_user3 = res.json()
 

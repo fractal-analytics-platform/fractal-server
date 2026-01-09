@@ -154,6 +154,7 @@ async def update_workflow(
             name=patch.name, project_id=project_id, db=db
         )
 
+    await db.close()
     for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
             if await _workflow_has_submitted_job(
