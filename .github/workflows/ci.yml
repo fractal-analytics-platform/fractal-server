@@ -23,9 +23,8 @@ jobs:
           - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
 
     steps:
+
       - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
 
       - name: Start Postgres
         run: |
@@ -40,7 +39,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -88,7 +87,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -149,7 +148,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -212,7 +211,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -276,7 +275,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --only-group dev
