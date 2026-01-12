@@ -24,23 +24,9 @@ jobs:
 
     steps:
 
-
-      - run: traceroute6 pypi.org
-      - run: curl -vvv -I --ipv6 https://pypi.org/
-      - run: echo -n | openssl s_client -6 -connect pypi.org:443
-
-
       - uses: GitHubSecurityLab/actions-permissions/monitor@v1
 
       - uses: actions/checkout@v5
-
-
-
-      - run: traceroute6 pypi.org
-      - run: curl -vvv -I --ipv6 https://pypi.org/
-      - run: echo -n | openssl s_client -6 -connect pypi.org:443
-
-
 
       - name: Start Postgres
         run: |
@@ -55,7 +41,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -103,7 +89,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -164,7 +150,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -227,7 +213,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --group dev
@@ -293,7 +279,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
 
       - run: uv sync --frozen --only-group dev

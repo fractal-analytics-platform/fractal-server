@@ -31,7 +31,7 @@ jobs:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
@@ -54,7 +54,7 @@ jobs:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.9.17"
+          version: "0.9.24"
           enable-cache: true
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
