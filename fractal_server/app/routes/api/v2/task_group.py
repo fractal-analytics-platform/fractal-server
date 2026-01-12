@@ -162,8 +162,8 @@ async def get_task_group_list(
 
     if args_schema is False:
         for taskgroup in task_groups:
-            db.expunge(taskgroup)
             for task in taskgroup.task_list:
+                db.expunge(task)
                 setattr(task, "args_schema_non_parallel", None)
                 setattr(task, "args_schema_parallel", None)
 
