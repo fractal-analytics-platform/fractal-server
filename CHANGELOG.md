@@ -3,7 +3,7 @@
 # Unreleased
 
 * Testing:
-    * Implement some more `zizmor` recommendations (\#3121).
+    * Implement some more `zizmor` recommendations (\#3121, \#3122).
 
 # 2.18.5
 

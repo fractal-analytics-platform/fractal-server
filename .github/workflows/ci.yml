@@ -23,9 +23,10 @@ jobs:
           - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
 
     steps:
+
+      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+
       - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
 
       - name: Start Postgres
         run: |
