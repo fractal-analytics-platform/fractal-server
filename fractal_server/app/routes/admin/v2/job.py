@@ -249,6 +249,7 @@ async def update_job(
             setattr(history_unit, "status", HistoryUnitStatus.FAILED)
 
     await db.commit()
+    await db.refresh(job)
     return job
 
 
