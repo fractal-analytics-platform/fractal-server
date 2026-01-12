@@ -2,6 +2,9 @@
 
 # Unreleased
 
+* API:
+    * Drop all `db.close()` (\#3118).
+    * Expunge items before `setattr` to prevent `StaleDataError` (\#3118).
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
 * Testing:
