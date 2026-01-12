@@ -236,7 +236,6 @@ async def update_job(
         .limit(1)
     )
     latest_run = res.scalar_one_or_none()
-
     if latest_run is not None:
         setattr(latest_run, "status", HistoryUnitStatus.FAILED)
         res = await db.execute(
