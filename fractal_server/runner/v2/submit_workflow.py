@@ -76,7 +76,6 @@ def fail_job(
     job.log = log_msg
     db.merge(job)
     db.commit()
-    db.close()
     return
 
 
