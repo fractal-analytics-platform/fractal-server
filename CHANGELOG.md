@@ -4,6 +4,8 @@
 
 * Testing:
     * Implement some more `zizmor` recommendations (\#3121, \#3122).
+* Runner
+    * Added support for S3
 
 # 2.18.5
 

@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,17 @@ def val_absolute_path(path: str) -> str:
     if not os.path.isabs(path):
         raise ValueError(f"String must be an absolute path (given '{path}').")
     return path
+
+
+def val_s3_url(value: str) -> str:
+    """
+    Check that a string attribute is a valid S3 URL
+    """
+    if not re.match(r"^s3:\/\/[^\/]+\/.+$", value):
+        raise ValueError("S3 URL must match pattern 's3://bucket/key'")
+    if " " in value:
+        raise ValueError("S3 URL must not contain spaces.")
+    return value
 
 
 def val_non_absolute_path(path: str) -> str:

@@ -5,6 +5,7 @@ from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.types.validators import val_absolute_path
+from fractal_server.types.validators import val_s3_url
 
 
 def test_user_create():
@@ -49,3 +50,20 @@ def test_unit_val_absolute_path():
         val_absolute_path("   ")
     with pytest.raises(ValueError):
         val_absolute_path("non/absolute/path")
+
+
+def test_unit_val_s3_url():
+    val_s3_url("s3://bucket/key")
+    val_s3_url("s3://bucket/key/with/more/paths")
+    with pytest.raises(ValueError):
+        val_s3_url("s3://")
+    with pytest.raises(ValueError):
+        val_s3_url("s3://bucket")
+    with pytest.raises(ValueError):
+        val_s3_url("s3://bucket/ key")
+    with pytest.raises(ValueError):
+        val_s3_url("s3:/missing-slashes")
+    with pytest.raises(ValueError):
+        val_s3_url("http://not-an-s3-url")
+    with pytest.raises(ValueError):
+        val_s3_url("/also-not-an-s3-url")
