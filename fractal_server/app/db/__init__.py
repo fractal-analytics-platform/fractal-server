@@ -51,9 +51,9 @@ class DB:
             pool_pre_ping=True,
         )
         cls._async_session_maker = sessionmaker(
-            cls._engine_async,
-            class_=AsyncSession,
+            bind=cls._engine_async,
             expire_on_commit=False,
+            class_=AsyncSession,
         )
 
     @classmethod
@@ -67,7 +67,10 @@ class DB:
             pool_pre_ping=True,
         )
 
-        cls._sync_session_maker = sessionmaker(cls._engine_sync)
+        cls._sync_session_maker = sessionmaker(
+            bind=cls._engine_sync,
+            expire_on_commit=False,
+        )
 
     @classmethod
     async def get_async_db(cls) -> AsyncGenerator[AsyncSession, None]:
