@@ -473,7 +473,6 @@ def execute_tasks(
             )
 
             db.commit()
-            db.close()  # NOTE: this is needed, but the reason is unclear
 
             # Store the SLURM error in the job database
             job_db = db.get(JobV2, job_id)
