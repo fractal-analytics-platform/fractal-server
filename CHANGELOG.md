@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Dependencies:
+    * Drop `mypy` dev dependency (\#3123).
 * Testing:
     * Implement some more `zizmor` recommendations (\#3121, \#3122).
 
