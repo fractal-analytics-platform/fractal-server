@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Implement some more `zizmor` recommendations (\#3121).
+
 # 2.18.5
 
 * API:

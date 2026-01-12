@@ -14,7 +14,11 @@ jobs:
 
     steps:
 
+     - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+
      - uses: actions/checkout@v5
+       with:
+         persist-credentials: false
 
      - name: Start Postgres
        run: |
