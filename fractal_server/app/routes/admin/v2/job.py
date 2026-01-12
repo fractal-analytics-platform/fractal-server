@@ -176,7 +176,6 @@ async def view_single_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
-    await db.close()
 
     if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
         try:

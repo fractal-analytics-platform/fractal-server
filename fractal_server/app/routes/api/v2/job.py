@@ -59,7 +59,6 @@ async def get_user_jobs(
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()
-    await db.close()
     if not log:
         for job in job_list:
             setattr(job, "log", None)
@@ -152,7 +151,6 @@ async def read_job(
         db=db,
     )
     job = output["job"]
-    await db.close()
 
     if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
         try:
@@ -222,7 +220,6 @@ async def get_job_list(
         .order_by(JobV2.start_timestamp.desc())
     )
     job_list = res.scalars().all()
-    await db.close()
     if not log:
         for job in job_list:
             setattr(job, "log", None)
