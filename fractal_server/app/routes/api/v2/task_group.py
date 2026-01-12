@@ -161,7 +161,7 @@ async def get_task_group_list(
     task_groups = res.scalars().all()
 
     if args_schema is False:
-        await db.close()
+        await db.close()  # Ref issue 3101 (close db session before setattr)
         for taskgroup in task_groups:
             for task in taskgroup.task_list:
                 setattr(task, "args_schema_non_parallel", None)

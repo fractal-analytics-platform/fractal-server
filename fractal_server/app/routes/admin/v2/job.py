@@ -220,8 +220,6 @@ async def update_job(
         )
 
     timestamp = get_timestamp()
-    await db.close()
-
     setattr(job, "status", job_update.status)
     setattr(job, "end_timestamp", timestamp)
     setattr(
@@ -238,8 +236,8 @@ async def update_job(
         .limit(1)
     )
     latest_run = res.scalar_one_or_none()
+
     if latest_run is not None:
-        await db.close()
         setattr(latest_run, "status", HistoryUnitStatus.FAILED)
         res = await db.execute(
             select(HistoryUnit).where(
@@ -251,7 +249,6 @@ async def update_job(
             setattr(history_unit, "status", HistoryUnitStatus.FAILED)
 
     await db.commit()
-    await db.refresh(job)
     return job
 
 
