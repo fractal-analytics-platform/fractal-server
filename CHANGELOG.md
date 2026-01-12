@@ -5,7 +5,7 @@
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
 * Testing:
-    * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124).
+    * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124, \#3125).
     * Remove `GitHubSecurityLab/actions-permissions/monitor` to avoid TLS issues (\#3124).
     * Bump `uv` version in GitHub Actions (\#3124).
 
