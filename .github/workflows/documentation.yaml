@@ -22,7 +22,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+
       - uses: actions/checkout@v5
         with:
           persist-credentials: true
