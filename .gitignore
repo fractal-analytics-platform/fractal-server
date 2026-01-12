@@ -27,6 +27,7 @@ site/
 tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
 
 venv
+.venv
 tmp_*
 .*.swp
 
