@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Dependencies:
+    * Drop `mypy` dev dependency (\#3123).
 * Testing:
     * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124).
     * Remove `GitHubSecurityLab/actions-permissions/monitor` to avoid TLS issues (\#3124).
