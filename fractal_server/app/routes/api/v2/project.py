@@ -47,7 +47,6 @@ async def get_list_project(
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
-    await db.close()
     return project_list
 
 
@@ -107,7 +106,6 @@ async def read_project(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    await db.close()
     return project
 
 
@@ -136,7 +134,6 @@ async def update_project(
 
     await db.commit()
     await db.refresh(project)
-    await db.close()
     return project
 
 

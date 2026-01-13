@@ -89,7 +89,6 @@ async def create_workflow(
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
-    await db.close()
     return db_workflow
 
 
@@ -189,7 +188,6 @@ async def update_workflow(
 
     await db.commit()
     await db.refresh(workflow)
-    await db.close()
 
     wftask_list_with_warnings = await _add_warnings_to_workflow_tasks(
         wftask_list=workflow.task_list, user_id=user.id, db=db

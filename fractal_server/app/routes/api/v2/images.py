@@ -274,5 +274,4 @@ async def patch_dataset_image(
     flag_modified(db_dataset, "images")
 
     await db.commit()
-    await db.close()
     return db_dataset.images[index]
