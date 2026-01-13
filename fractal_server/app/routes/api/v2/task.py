@@ -77,7 +77,6 @@ async def get_list_task(
     stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = list(res.scalars().all())
-    await db.close()
     if args_schema is False:
         for task in task_list:
             setattr(task, "args_schema_parallel", None)
@@ -133,7 +132,6 @@ async def patch_task(
 
     await db.commit()
     await db.refresh(db_task)
-    await db.close()
     return db_task
 
 
@@ -216,7 +214,6 @@ async def create_task(
     db.add(db_task_group)
     await db.commit()
     await db.refresh(db_task)
-    await db.close()
 
     return db_task
 

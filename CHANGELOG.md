@@ -2,6 +2,11 @@
 
 # Unreleased
 
+* API:
+    * Drop all redundant `db.close()` statements (\#3118).
+    * Expunge items before `setattr` to prevent `StaleDataError` (\#3118).
+* Database:
+    * Use `autoflush=True` also for sync db sessions (\#3119).
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
 * Testing:
