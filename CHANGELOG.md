@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Database:
+    * Use `autoflush=True` also for sync db sessions (\#3119).
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
 * Testing:
