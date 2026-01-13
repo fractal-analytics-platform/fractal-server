@@ -10,7 +10,7 @@
     * Bump `uv` version in GitHub Actions (\#3124).
 * Runner
     * Added support for S3
-    * 
+
 # 2.18.5
 
 * API:
