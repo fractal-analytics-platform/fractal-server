@@ -283,7 +283,8 @@ async def MockCurrentUser(
     from fractal_server.app.routes.auth import current_superuser_act
     from fractal_server.app.routes.auth import current_user_act
     from fractal_server.app.routes.auth import current_user_act_ver
-    from fractal_server.app.routes.auth import current_user_act_ver_prof
+    from fractal_server.app.routes.auth import get_api_guest
+    from fractal_server.app.routes.auth import get_api_user
 
     def _new_mail():
         return f"{time.perf_counter_ns()}@example.org"
@@ -301,6 +302,7 @@ async def MockCurrentUser(
             profile_id: int | None = None,
             is_superuser: bool | None = None,
             is_verified: bool | None = None,
+            is_guest: bool | None = None,
             project_dirs: list[str] | None = None,
             slurm_accounts: list[str] | None = None,
             # ---
@@ -311,6 +313,7 @@ async def MockCurrentUser(
             self.profile_id = profile_id
             self.is_superuser = is_superuser
             self.is_verified = is_verified
+            self.is_guest = is_guest
             self.project_dirs = project_dirs
             self.slurm_accounts = slurm_accounts
             # ---
@@ -339,6 +342,7 @@ async def MockCurrentUser(
                         "profile_id",
                         "is_superuser",
                         "is_verified",
+                        "is_guest",
                         "project_dirs",
                         "slurm_accounts",
                     ]
@@ -364,6 +368,9 @@ async def MockCurrentUser(
                     is_verified=self.is_verified
                     if self.is_verified is not None
                     else True,
+                    is_guest=self.is_guest
+                    if self.is_guest is not None
+                    else False,
                     project_dirs=self.project_dirs or [PROJECT_DIR_PLACEHOLDER],
                     slurm_accounts=self.slurm_accounts or [],
                 )
@@ -377,7 +384,7 @@ async def MockCurrentUser(
                             name="Local resource",
                             type=ResourceType.LOCAL,
                             jobs_local_dir="/jobs_local_dir",
-                            tasks_local_dir="/tasks_local_dir",
+                            tasks_local_dir="/tasks_lTrueocal_dir",
                             jobs_runner_config={"parallel_tasks_per_job": 1},
                             tasks_python_config={
                                 "default_version": "3.0",
@@ -453,9 +460,22 @@ async def MockCurrentUser(
                 and self.user.is_verified
                 and self.user.profile_id is not None
             ):
-                dep = current_user_act_ver_prof
+                dep = get_api_guest
                 if self.debug:
-                    debug(f"Override {current_user_act_ver_prof}.")
+                    debug(f"Override {get_api_guest}.")
+                self.previous_deps[dep] = app.dependency_overrides.get(
+                    dep, None
+                )
+
+            if (
+                self.user.is_active
+                and self.user.is_verified
+                and self.user.profile_id is not None
+                and self.is_guest is False
+            ):
+                dep = get_api_user
+                if self.debug:
+                    debug(f"Override {get_api_user}.")
                 self.previous_deps[dep] = app.dependency_overrides.get(
                     dep, None
                 )
