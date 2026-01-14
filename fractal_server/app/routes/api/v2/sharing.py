@@ -11,7 +11,8 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import ProjectAccessRead
 from fractal_server.app.schemas.v2 import ProjectGuestCreate
 from fractal_server.app.schemas.v2 import ProjectGuestRead
@@ -33,7 +34,7 @@ router = APIRouter()
 )
 async def get_project_guests(
     project_id: int,
-    owner: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectGuestRead]:
     """
@@ -68,7 +69,7 @@ async def invite_guest(
     project_id: int,
     email: EmailStr,
     project_invitation: ProjectGuestCreate,
-    owner: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -103,7 +104,7 @@ async def patch_guest(
     project_id: int,
     email: EmailStr,
     update: ProjectGuestUpdate,
-    owner: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -137,7 +138,7 @@ async def patch_guest(
 async def revoke_guest_access(
     project_id: int,
     email: EmailStr,
-    owner: UserOAuth = Depends(current_user_act_ver_prof),
+    owner: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -171,7 +172,7 @@ async def revoke_guest_access(
     response_model=list[ProjectInvitationRead],
 )
 async def get_pending_invitations(
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectInvitationRead]:
     """
@@ -225,7 +226,7 @@ async def get_pending_invitations(
 )
 async def get_access_info(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectAccessRead:
     """
@@ -272,7 +273,7 @@ async def get_access_info(
 @router.post("/project/{project_id}/access/accept/", status_code=200)
 async def accept_project_invitation(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
@@ -290,7 +291,7 @@ async def accept_project_invitation(
 @router.delete("/project/{project_id}/access/", status_code=204)
 async def leave_project(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

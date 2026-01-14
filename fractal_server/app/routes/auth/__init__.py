@@ -57,25 +57,6 @@ current_user_act_ver = fastapi_users.current_user(
 )
 
 
-async def current_user_act_ver_prof(
-    user: UserOAuth = Depends(current_user_act_ver),
-) -> UserOAuth:
-    """
-    Require a active&verified user, with a non-null `profile_id`.
-
-    Raises 401 if user does not exist or is not active.
-    Raises 403 if user is not verified or has null `profile_id`.
-    """
-    if user.profile_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                f"Forbidden access ({user.is_verified=} {user.profile_id=})."
-            ),
-        )
-    return user
-
-
 async def get_api_user(
     user: UserOAuth = Depends(current_user_act_ver),
 ) -> UserOAuth:
