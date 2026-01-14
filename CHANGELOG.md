@@ -9,6 +9,7 @@
     * Use `autoflush=True` also for sync db sessions (\#3119).
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
+    * Drop support for Python 3.11 (\#3129).
 * Testing:
     * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124, \#3125).
     * Remove `GitHubSecurityLab/actions-permissions/monitor` to avoid TLS issues (\#3124).

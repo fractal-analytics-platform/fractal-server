@@ -3,6 +3,7 @@ from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from typing import override
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
@@ -91,6 +92,7 @@ class LocalRunner(BaseRunner):
         )
         return self.executor.__exit__(exc_type, exc_val, exc_tb)
 
+    @override
     def submit(
         self,
         *,
