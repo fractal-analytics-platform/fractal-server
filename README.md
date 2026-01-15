@@ -37,7 +37,9 @@
 | fractal\_server/app/routes/admin/v2/task.py                                  |       81 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group.py                           |      132 |        0 |       50 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group\_lifecycle.py                |      105 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/routes/api/\_\_init\_\_.py                               |       30 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/routes/api/\_\_init\_\_.py                               |        6 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/routes/api/alive.py                                      |        6 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/routes/api/settings.py                                   |       26 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_\_init\_\_.py                            |       43 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions.py                        |      128 |        1 |       32 |        1 |     99% |       421 |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_history.py               |       61 |        0 |       14 |        0 |    100% |           |
@@ -201,7 +203,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10055** |  **197** | **1832** |   **95** | **97%** |           |
+| **TOTAL**                                                                    | **10063** |  **197** | **1832** |   **95** | **97%** |           |
 
 
 ## Setup coverage badge
