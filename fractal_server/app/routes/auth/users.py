@@ -83,6 +83,17 @@ async def patch_user(
             db=db,
         )
 
+    is_becoming_superuser = (
+        user_update.is_superuser
+        if user_update.is_superuser is not None
+        else user_to_patch.is_superuser
+    )
+    if user_update.is_guest and is_becoming_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Superuser cannot be guest.",
+        )
+
     # Modify user attributes
     try:
         user = await user_manager.update(
