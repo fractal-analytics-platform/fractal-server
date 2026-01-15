@@ -51,7 +51,7 @@ async def test_get_api_user_and_guest(
         res = await client.get("/auth/current-user/")
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Forbidden access (user.is_verified=True, user.profile_id=None)."
+            "Forbidden access (user.is_verified=True user.profile_id=None)."
         )
 
         # Set user.profile_id
