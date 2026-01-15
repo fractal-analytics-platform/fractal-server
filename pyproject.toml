@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.18.5"
+version = "2.18.6"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -12,7 +12,7 @@ readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.12,<3.15"
 dependencies = [
     "fastapi >= 0.128.0, <0.129.0",
     "sqlmodel == 0.0.31",
@@ -49,7 +49,7 @@ dev = [
     "pytest-asyncio >= 1.2.0,<1.3.0",
     "bumpver >=2024.0",
     "pre-commit ==4.2.0",
-    "coverage[toml]>=7.12.0,<7.13.0",
+    "coverage>=7.12.0,<7.13.0",
     "pytest-docker >=3.2.0,<3.3.0",
     "pytest-subprocess >=1.5.0,<1.6.0",
     "a2wsgi >=1.10.0,<1.11.0",
@@ -93,7 +93,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth"]
 
 [tool.bumpver]
-current_version = "2.18.5"
+current_version = "2.18.6"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

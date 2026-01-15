@@ -1,3 +1,5 @@
+from typing import override
+
 from fastapi import APIRouter
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
@@ -25,7 +27,7 @@ class FractalOpenID(OpenID):
         super().__init__(**kwargs)
         self.email_claim = email_claim
 
-    # TODO-requires-py312: add `@override` decorator
+    @override
     async def get_id_email(self, token: str) -> tuple[str, str | None]:
         """
         Identical to the parent-class method (httpx-oauth version 0.16.1),

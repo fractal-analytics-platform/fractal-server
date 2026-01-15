@@ -18,9 +18,9 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13"]
         exclude:
-          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
 
     steps:
 
@@ -65,9 +65,9 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13"]
         exclude:
-          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -113,7 +113,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v5
@@ -173,9 +173,9 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13"]
         exclude:
-          - python-version: ${{ github.ref != 'refs/heads/main' && '3.12' }}
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
 
 
     services:
