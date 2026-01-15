@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.18.6
 
 * API:
     * Drop all redundant `db.close()` statements (\#3118).
