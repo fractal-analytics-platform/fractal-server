@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Internal:
+    * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
+
 # 2.18.6
 
 * API:
