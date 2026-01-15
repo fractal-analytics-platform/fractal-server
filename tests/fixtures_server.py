@@ -384,7 +384,7 @@ async def MockCurrentUser(
                             name="Local resource",
                             type=ResourceType.LOCAL,
                             jobs_local_dir="/jobs_local_dir",
-                            tasks_local_dir="/tasks_lTrueocal_dir",
+                            tasks_local_dir="/tasks_local_dir",
                             jobs_runner_config={"parallel_tasks_per_job": 1},
                             tasks_python_config={
                                 "default_version": "3.0",
