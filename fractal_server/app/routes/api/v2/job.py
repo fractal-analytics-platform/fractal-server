@@ -47,7 +47,7 @@ async def get_user_jobs(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[JobRead]:
     """
-    Returns all the jobs of the current user
+    Returns all the jobs from projects linked to the current user
     """
     stm = (
         select(JobV2)
