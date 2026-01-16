@@ -20,6 +20,7 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import LinkUserProjectRead
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 router = APIRouter()
 
@@ -130,10 +131,19 @@ async def verify_invitation_for_guest(
             detail="Cannot accept invitations for non-guest users.",
         )
 
-    # Mark the invitation as verified
+    # Find verification and check that permissions are set to R
     link = await get_pending_invitation_or_404(
         user_id=guest_user_id, project_id=project_id, db=db
     )
+    if link.permissions != ProjectPermissions.READ:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Guest users can only have 'r' permission "
+                f"(given: '{link.permissions}')"
+            ),
+        )
+    # Mark the invitation as verified
     link.is_verified = True
     await db.commit()
 
