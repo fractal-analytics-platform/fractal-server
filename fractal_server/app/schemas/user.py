@@ -122,7 +122,7 @@ class UserCreate(schemas.BaseUserCreate):
     @model_validator(mode="after")
     def validate_superuser_is_not_guest(self):
         if self.is_superuser and self.is_guest:
-            raise ValueError("Superuser cannot be guest")
+            raise ValueError("Superuser cannot be guest.")
         return self
 
 
