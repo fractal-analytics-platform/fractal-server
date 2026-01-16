@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Response
+from fastapi import status
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -8,7 +11,11 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.routes.api.v2._aux_functions_sharing import (
+    get_pending_invitation_or_404,
+)
 from fractal_server.app.routes.auth import current_superuser_act
+from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -101,3 +108,33 @@ async def view_link_user_project(
             for linkuserproject, user_email, project_name in items
         ],
     )
+
+
+@router.post("/verify/", status_code=200)
+async def verify_invitation_for_guest(
+    guest_user_id: int,
+    project_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> None:
+    """
+    Verify the invitation to join a project for a guest user
+
+    Note that a guest user would not be allowed to do this themselves.
+    """
+    # Get user and verify that they actually are a guest
+    guest_user = await _user_or_404(guest_user_id, db)
+    if not guest_user.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Cannot accept invitations for non-guest users.",
+        )
+
+    # Mark the invitation as verified
+    link = await get_pending_invitation_or_404(
+        user_id=guest_user_id, project_id=project_id, db=db
+    )
+    link.is_verified = True
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
