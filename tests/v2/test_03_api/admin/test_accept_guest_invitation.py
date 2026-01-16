@@ -84,6 +84,15 @@ async def test_project_sharing(
         )
         assert res.status_code == 422
         debug(res.json())
+        # Accept invitation that does not exist -> 404
+        res = await client.post(
+            (
+                f"/admin/v2/linkuserproject/verify/"
+                f"?project_id=12345&guest_user_id={guest_user.id}"
+            )
+        )
+        assert res.status_code == 404
+        debug(res.json())
 
     async with MockCurrentUser(user_id=guest_user.id):
         # List projects
