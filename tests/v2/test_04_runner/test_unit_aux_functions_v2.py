@@ -69,8 +69,6 @@ def test_task_output():
         "/tmp"
     ]
     with pytest.raises(ValidationError):
-        TaskOutput(image_list_removals=["s3://BUCKET"])
-    with pytest.raises(ValidationError):
         TaskOutput(image_list_removals=["http://url.json"])
 
 

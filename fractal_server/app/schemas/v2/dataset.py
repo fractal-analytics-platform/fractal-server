@@ -13,6 +13,7 @@ from fractal_server.images import SingleImage
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
 from fractal_server.types import RelativePathStr
+from fractal_server.types import S3PathStr
 from fractal_server.types import ZarrDirStr
 
 
@@ -29,7 +30,7 @@ class DatasetCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
-    project_dir: AbsolutePathStr | None = None
+    project_dir: AbsolutePathStr | S3PathStr | None = None
     zarr_subfolder: RelativePathStr | None = None
 
     @model_validator(mode="after")
