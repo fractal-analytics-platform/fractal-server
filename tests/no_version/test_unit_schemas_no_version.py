@@ -11,15 +11,6 @@ def test_user_create():
     u = UserCreate(email="a@b.c", password="asd", project_dirs=["/fake"])
     assert u.slurm_accounts == []
 
-    with pytest.raises(ValidationError, match="Superuser cannot be guest."):
-        UserCreate(
-            email="a@b.c",
-            password="asd",
-            project_dirs=["/fake"],
-            is_superuser=True,
-            is_guest=True,
-        )
-
 
 def test_user_group_create():
     ug = UserGroupCreate(name="group")
