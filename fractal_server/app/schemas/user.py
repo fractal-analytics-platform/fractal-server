@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import model_validator
 
 from fractal_server.string_tools import validate_cmd
 from fractal_server.types import ListUniqueAbsolutePathStr
@@ -118,12 +117,6 @@ class UserCreate(schemas.BaseUserCreate):
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
     ] = Field(min_length=1)
     slurm_accounts: list[str] = Field(default_factory=list)
-
-    @model_validator(mode="after")
-    def validate_superuser_is_not_guest(self):
-        if self.is_superuser and self.is_guest:
-            raise ValueError("Superuser cannot be guest.")
-        return self
 
 
 class UserUpdateGroups(BaseModel):

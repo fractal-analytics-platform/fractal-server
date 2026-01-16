@@ -123,6 +123,22 @@ async def test_register_user(
     assert res.status_code == 422
     assert "absolute path" in (res.json()["detail"][0]["msg"])
 
+    # on register `is_superuser` is always set to False, so `is_guest` is
+    # always possible
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(
+            email="guest@example.org",
+            password="12345",
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+            is_superuser=True,
+            is_guest=True,
+        ),
+    )
+    assert res.status_code == 201
+    assert res.json()["is_superuser"] is False
+    assert res.json()["is_guest"] is True
+
 
 async def test_list_users(registered_client, registered_superuser_client):
     """
