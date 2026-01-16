@@ -5,7 +5,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.app.schemas.v2.status_legacy import LegacyStatusRead
 from fractal_server.app.schemas.v2.status_legacy import WorkflowTaskStatusType
@@ -28,7 +28,7 @@ async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     workflow_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> LegacyStatusRead | None:
     """

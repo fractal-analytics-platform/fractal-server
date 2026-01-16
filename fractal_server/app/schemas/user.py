@@ -41,13 +41,16 @@ class UserRead(schemas.BaseUser[int]):
     Schema for `User` read from database.
 
     Attributes:
+        is_guest:
         group_ids_names:
         oauth_accounts:
         profile_id:
         project_dirs:
         slurm_accounts:
+
     """
 
+    is_guest: bool
     group_ids_names: list[tuple[int, str]] | None = None
     oauth_accounts: list[OAuthAccountRead]
     profile_id: int | None = None
@@ -65,6 +68,7 @@ class UserUpdate(schemas.BaseUserUpdate):
         is_active:
         is_superuser:
         is_verified:
+        is_guest:
         profile_id:
         project_dirs:
         slurm_accounts:
@@ -76,6 +80,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_active: bool = None
     is_superuser: bool = None
     is_verified: bool = None
+    is_guest: bool = None
     profile_id: int | None = None
     project_dirs: Annotated[
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
@@ -100,11 +105,13 @@ class UserCreate(schemas.BaseUserCreate):
     Schema for `User` creation.
 
     Attributes:
+        is_guest:
         profile_id:
         project_dirs:
         slurm_accounts:
     """
 
+    is_guest: bool = False
     profile_id: int | None = None
     project_dirs: Annotated[
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)

@@ -14,7 +14,7 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -71,7 +71,7 @@ async def get_workflow_tasks_statuses(
     project_id: int,
     dataset_id: int,
     workflow_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
@@ -186,7 +186,7 @@ async def get_history_run_list(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[HistoryRunReadAggregated]:
     # Access control
@@ -279,7 +279,7 @@ async def get_history_run_units(
     workflowtask_id: int,
     history_run_id: int,
     unit_status: HistoryUnitStatus | None = None,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[HistoryUnitRead]:
@@ -339,7 +339,7 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> ImagePage:
@@ -423,7 +423,7 @@ async def get_history_images(
 async def get_image_log(
     project_id: int,
     request_data: ImageLogsRequest,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
@@ -482,7 +482,7 @@ async def get_history_unit_log(
     history_unit_id: int,
     workflowtask_id: int,
     dataset_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     # Access control
@@ -535,7 +535,7 @@ async def get_history_unit_log(
 async def get_dataset_history(
     project_id: int,
     dataset_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[HistoryRunRead]:
     """
