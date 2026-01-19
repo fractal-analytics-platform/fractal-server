@@ -179,6 +179,13 @@ async def get_pending_invitations(
     See your current invitations.
     """
 
+    if user.is_guest:
+        # The user's attribute `is_guest` is used to identify guest accounts,
+        # i.e. accounts with read only permissions on the API.
+        # This is a different concept from a project guest, which is a regular
+        # account with which a project has been shared.
+        return []
+
     res = await db.execute(
         select(
             ProjectV2.id,
