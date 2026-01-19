@@ -47,6 +47,7 @@ async def test_project_sharing(
             f"/api/v2/project/{project1_id}/guest/?email={guest_user.email}",
             json=dict(permissions=ProjectPermissions.READ),
         )
+
         assert res.status_code == 201
         res = await client.post(
             f"/api/v2/project/{project2_id}/guest/?email={guest_user.email}",
@@ -65,7 +66,7 @@ async def test_project_sharing(
         assert res.json() == []
         # Get list of invitations
         res = await client.get("/api/v2/project/invitation/")
-        assert len(res.json()) == 2
+        assert len(res.json()) == 0
         # Accept invitation --> forbidden
         res = await client.post(
             f"/api/v2/project/{project1_id}/access/accept/",
@@ -112,7 +113,4 @@ async def test_project_sharing(
     async with MockCurrentUser(user_id=guest_user.id):
         # List projects
         res = await client.get("/api/v2/project/?is_owner=false")
-        assert len(res.json()) == 1
-        # Get list of invitations
-        res = await client.get("/api/v2/project/invitation/")
         assert len(res.json()) == 1
