@@ -94,6 +94,10 @@ class UserUpdateStrict(BaseModel):
     model_config = ConfigDict(extra="forbid")
     slurm_accounts: ListUniqueNonEmptyString = None
 
+def val_shorted_than_72(password: str) -> str:
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password is too long.")
+    return password
 
 class UserCreate(schemas.BaseUserCreate):
     """
@@ -105,6 +109,7 @@ class UserCreate(schemas.BaseUserCreate):
         slurm_accounts:
     """
 
+    password: Annotated[str, AfterValidator(val_shorted_than_72)]
     profile_id: int | None = None
     project_dirs: Annotated[
         ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
