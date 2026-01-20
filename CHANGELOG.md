@@ -1,7 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.19.0 (unreleased)
 
+* API:
+    * Add `POST /admin/v2/linkuserproject/verify/` (\#3130).
+    * Include new `is_guest` field in users CRUD (\#3130).
+    * Return empty list of project-sharing invitations for `is_guest=True` users (\#3130).
+    * Rename `current_user_act_ver_prof` into `get_api_guest`, and add a more restrictive `get_api_user` dependency for non-read-only endpoints (\#3130).
+* Database:
+    * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:

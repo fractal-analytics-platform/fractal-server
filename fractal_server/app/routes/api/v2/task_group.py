@@ -17,7 +17,8 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
@@ -70,7 +71,7 @@ async def get_task_group_activity_list(
     status: TaskGroupActivityStatus | None = None,
     action: TaskGroupActivityAction | None = None,
     timestamp_started_min: AwareDatetime | None = None,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupActivityRead]:
     stm = select(TaskGroupActivityV2).where(
@@ -102,7 +103,7 @@ async def get_task_group_activity_list(
 )
 async def get_task_group_activity(
     task_group_activity_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityRead:
     activity = await db.get(TaskGroupActivityV2, task_group_activity_id)
@@ -126,7 +127,7 @@ async def get_task_group_activity(
 
 @router.get("/", response_model=list[tuple[str, list[TaskGroupRead]]])
 async def get_task_group_list(
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
@@ -194,7 +195,7 @@ async def get_task_group_list(
 @router.get("/{task_group_id}/", response_model=TaskGroupRead)
 async def get_task_group(
     task_group_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupRead:
     """
@@ -212,7 +213,7 @@ async def get_task_group(
 async def patch_task_group(
     task_group_id: int,
     task_group_update: TaskGroupUpdate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupRead:
     """

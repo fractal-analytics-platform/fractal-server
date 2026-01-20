@@ -7,6 +7,8 @@ from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.types import DateTime
+from sqlmodel import BOOLEAN
+from sqlmodel import CheckConstraint
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -100,6 +102,13 @@ class UserOAuth(SQLModel, table=True):
     is_active: bool = Field(default=True, nullable=False)
     is_superuser: bool = Field(default=False, nullable=False)
     is_verified: bool = Field(default=False, nullable=False)
+    is_guest: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        ),
+    )
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
@@ -118,6 +127,13 @@ class UserOAuth(SQLModel, table=True):
 
     slurm_accounts: list[str] = Field(
         sa_column=Column(ARRAY(String), server_default="{}"),
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "NOT (is_superuser AND is_guest)",
+            name="superuser_is_not_guest",
+        ),
     )
 
 

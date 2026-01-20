@@ -37,9 +37,19 @@ async def test_register_user(
         f"{PREFIX}/register/", json=payload_register
     )
     assert res.status_code == 201
-    assert res.json()["email"] == EMAIL
-    assert res.json()["oauth_accounts"] == []
-    assert res.json()["profile_id"] is None
+    assert res.json() == {
+        "id": res.json()["id"],
+        "email": EMAIL,
+        "is_active": True,
+        "is_superuser": False,
+        "is_verified": False,
+        "is_guest": False,
+        "group_ids_names": None,
+        "oauth_accounts": [],
+        "profile_id": None,
+        "project_dirs": ["/fake/placeholder"],
+        "slurm_accounts": [],
+    }
 
     # Superuser: ALLOWED
     EMAIL = "asd2@example.org"
@@ -112,6 +122,22 @@ async def test_register_user(
     )
     assert res.status_code == 422
     assert "absolute path" in (res.json()["detail"][0]["msg"])
+
+    # on register `is_superuser` is always set to False, so `is_guest` is
+    # always possible
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(
+            email="guest@example.org",
+            password="12345",
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+            is_superuser=True,
+            is_guest=True,
+        ),
+    )
+    assert res.status_code == 201
+    assert res.json()["is_superuser"] is False
+    assert res.json()["is_guest"] is True
 
 
 async def test_password_length(registered_superuser_client):
@@ -359,6 +385,22 @@ async def test_edit_users_as_superuser(
     assert res.status_code == 200
     users = res.json()
     assert len(users) == 0
+
+    # Fail because superuser cannot be guest
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(is_guest=True),
+    )
+    assert res.status_code == 422
+    assert res.json()["detail"] == "Superuser cannot be guest."
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(is_guest=True, is_superuser=False),
+    )
+    assert res.status_code == 200
+    assert res.json()["is_superuser"] is False
+    assert res.json()["is_guest"] is True
 
 
 async def test_edit_user_project_dirs(

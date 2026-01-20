@@ -8,7 +8,7 @@ from pydantic import Field
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
@@ -34,7 +34,7 @@ async def verify_unique_types(
     dataset_id: int,
     workflowtask_id: int,
     query: ImageQuery | None = None,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     # Get dataset
@@ -99,7 +99,7 @@ async def check_non_processed_images(
     workflow_id: int,
     workflowtask_id: int,
     filters: NonProcessedImagesPayload,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> JSONResponse:
     db_workflow_task, db_workflow = await _get_workflow_task_check_access(

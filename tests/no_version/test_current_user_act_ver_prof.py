@@ -4,14 +4,14 @@ from httpx import AsyncClient
 
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_user_act
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.security import _create_first_user
 
-_EMAIL = "test@test.com"
+_EMAIL = "test@example.org"
 _PWD = "12345"
 
 
-async def test_current_user_act_ver_prof(
+async def test_get_api_user_and_guest(
     app: FastAPI,
     client,
     local_resource_profile_db,
@@ -44,10 +44,10 @@ async def test_current_user_act_ver_prof(
         assert res.json()["profile_id"] is None
 
         assert app.dependency_overrides == {}
-        app.dependency_overrides[current_user_act] = current_user_act_ver_prof
+        app.dependency_overrides[current_user_act] = get_api_guest
 
         # Failure in GET-current-user, if it provisionally depends on
-        # `current_user_act_ver_prof`
+        # `get_api_guest`
         res = await client.get("/auth/current-user/")
         assert res.status_code == 403
         assert res.json()["detail"] == (
