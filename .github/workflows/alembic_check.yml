@@ -2,9 +2,9 @@ name: alembic-check
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", 'ihb-develop']
   pull_request:
-    branches: ["main"]
+    branches: ["main", 'ihb-develop']
 
 permissions: {}
 
