@@ -149,32 +149,32 @@ async def test_password_length(registered_superuser_client):
     assert len(latin_char.encode("utf-8")) == 1
 
     res = await registered_superuser_client.post(
-        "/auth/register/", 
+        "/auth/register/",
         json=dict(
             email="user1@example.org",
-            password=latin_char*71,
+            password=latin_char * 71,
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
-        )
+        ),
     )
     assert res.status_code == 201
 
     res = await registered_superuser_client.post(
-        "/auth/register/", 
+        "/auth/register/",
         json=dict(
             email="user2@example.org",
-            password=latin_char*72,
+            password=latin_char * 72,
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
-        )
+        ),
     )
     assert res.status_code == 201
 
     res = await registered_superuser_client.post(
-        "/auth/register/", 
+        "/auth/register/",
         json=dict(
             email="user3@example.org",
-            password=latin_char*73,
+            password=latin_char * 73,
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
-        )
+        ),
     )
     assert res.status_code == 422
     assert "Password is too long." in res.json()["detail"][0]["msg"]
@@ -183,22 +183,22 @@ async def test_password_length(registered_superuser_client):
     assert len(chinese_char.encode("utf-8")) == 3
 
     res = await registered_superuser_client.post(
-        "/auth/register/", 
+        "/auth/register/",
         json=dict(
             email="user4@example.org",
-            password=chinese_char*24,
+            password=chinese_char * 24,
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
-        )
+        ),
     )
     assert res.status_code == 201
 
     res = await registered_superuser_client.post(
-        "/auth/register/", 
+        "/auth/register/",
         json=dict(
             email="user5@example.org",
-            password=chinese_char*24+latin_char,
+            password=chinese_char * 24 + latin_char,
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
-        )
+        ),
     )
     assert res.status_code == 422
     assert "Password is too long." in res.json()["detail"][0]["msg"]

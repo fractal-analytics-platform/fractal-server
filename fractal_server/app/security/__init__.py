@@ -188,7 +188,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             user_db=user_db,
             password_helper=password_helper,
         )
-    
+
     @override
     async def validate_password(self, password: str, user: UserOAuth) -> None:
         # check password length
