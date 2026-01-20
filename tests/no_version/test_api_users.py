@@ -114,6 +114,70 @@ async def test_register_user(
     assert "absolute path" in (res.json()["detail"][0]["msg"])
 
 
+async def test_password_length(registered_superuser_client):
+    """
+    Test that passwords cannot be longer than 72 (once encoded in utf-8).
+    """
+
+    latin_char = "a"
+    assert len(latin_char.encode("utf-8")) == 1
+
+    res = await registered_superuser_client.post(
+        "/auth/register/", 
+        json=dict(
+            email="user1@example.org",
+            password=latin_char*71,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        )
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/", 
+        json=dict(
+            email="user2@example.org",
+            password=latin_char*72,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        )
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/", 
+        json=dict(
+            email="user3@example.org",
+            password=latin_char*73,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        )
+    )
+    assert res.status_code == 422
+    assert "Password is too long." in res.json()["detail"][0]["msg"]
+
+    chinese_char = "界"
+    assert len(chinese_char.encode("utf-8")) == 3
+
+    res = await registered_superuser_client.post(
+        "/auth/register/", 
+        json=dict(
+            email="user4@example.org",
+            password=chinese_char*24,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        )
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/", 
+        json=dict(
+            email="user5@example.org",
+            password=chinese_char*24+latin_char,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        )
+    )
+    assert res.status_code == 422
+    assert "Password is too long." in res.json()["detail"][0]["msg"]
+
+
 async def test_list_users(registered_client, registered_superuser_client):
     """
     Test listing users
