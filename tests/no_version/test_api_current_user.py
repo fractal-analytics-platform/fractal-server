@@ -81,21 +81,35 @@ async def test_get_current_user_group_ids_names_order(
         ]
 
 
-async def test_patch_current_user_response(client, MockCurrentUser):
+async def test_patch_current_user(client, MockCurrentUser):
     async with MockCurrentUser():
         res = await client.get(f"{PREFIX}?group_ids_names=True")
         pre_patch_user = res.json()
+        assert pre_patch_user["slurm_accounts"] == []
 
         # Successful API call with empty payload
         res = await client.patch(PREFIX, json={})
         assert res.status_code == 200
         assert res.json() == pre_patch_user
 
-
-async def test_patch_current_user_password_fails(MockCurrentUser, client):
-    """
-    Users cannot edit their own password.
-    """
-    async with MockCurrentUser():
+        # Users cannot edit their own password.
         res = await client.patch(PREFIX, json={"password": "something"})
         assert res.status_code == 422
+
+        # Successful API call with payload
+        res = await client.patch(
+            PREFIX, json={"slurm_accounts": ["foo", "bar"]}
+        )
+        assert res.status_code == 200
+        assert res.json()["slurm_accounts"] == ["foo", "bar"]
+
+    async with MockCurrentUser(is_guest=True):
+        res = await client.get(f"{PREFIX}?group_ids_names=True")
+        pre_patch_user = res.json()
+        assert pre_patch_user["slurm_accounts"] == []
+
+        res = await client.patch(
+            PREFIX, json={"slurm_accounts": ["foo", "bar"]}
+        )
+        assert res.status_code == 403
+        assert res.json()["detail"] == "Editing is forbidden for guests."
