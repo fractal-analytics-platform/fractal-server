@@ -4,6 +4,8 @@ Definition of `/auth/current-user/` endpoints
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -52,6 +54,12 @@ async def patch_current_user(
     Note: a user cannot patch their own password (as enforced within the
     `UserUpdateStrict` schema).
     """
+    if current_user.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Editing is forbidden for guests.",
+        )
+
     update = UserUpdate(**user_update.model_dump(exclude_unset=True))
 
     # NOTE: here it would be relevant to catch an `InvalidPasswordException`
