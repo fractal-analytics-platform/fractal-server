@@ -9,7 +9,8 @@ from fastapi import status
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2 import WorkflowTaskRead
@@ -36,7 +37,7 @@ async def create_workflowtask(
     workflow_id: int,
     task_id: int,
     wftask: WorkflowTaskCreate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskRead | None:
     """
@@ -106,7 +107,7 @@ async def read_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ):
     workflow_task, _ = await _get_workflow_task_check_access(
@@ -129,7 +130,7 @@ async def update_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTaskRead | None:
     """
@@ -214,7 +215,7 @@ async def delete_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """

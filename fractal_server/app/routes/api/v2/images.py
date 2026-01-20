@@ -12,7 +12,8 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -62,7 +63,7 @@ async def post_new_image(
     project_id: int,
     dataset_id: int,
     new_image: SingleImage,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     output = await _get_dataset_check_access(
@@ -118,7 +119,7 @@ async def query_dataset_images(
     dataset_id: int,
     query: ImageQueryWithZarrUrl | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
     page = pagination.page
@@ -193,7 +194,7 @@ async def delete_dataset_images(
     project_id: int,
     dataset_id: int,
     zarr_url: str,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     output = await _get_dataset_check_access(
@@ -241,7 +242,7 @@ async def patch_dataset_image(
     project_id: int,
     dataset_id: int,
     image_update: SingleImageUpdate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     output = await _get_dataset_check_access(

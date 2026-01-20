@@ -11,7 +11,8 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -32,7 +33,7 @@ router = APIRouter()
 @router.get("/project/", response_model=list[ProjectRead])
 async def get_list_project(
     is_owner: bool = True,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectV2]:
     """
@@ -53,7 +54,7 @@ async def get_list_project(
 @router.post("/project/", response_model=ProjectRead, status_code=201)
 async def create_project(
     project: ProjectCreate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectRead | None:
     """
@@ -94,7 +95,7 @@ async def create_project(
 @router.get("/project/{project_id}/", response_model=ProjectRead)
 async def read_project(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectRead | None:
     """
@@ -113,7 +114,7 @@ async def read_project(
 async def update_project(
     project_id: int,
     project_update: ProjectUpdate,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     project = await _get_project_check_access(
@@ -140,7 +141,7 @@ async def update_project(
 @router.delete("/project/{project_id}/", status_code=204)
 async def delete_project(
     project_id: int,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
