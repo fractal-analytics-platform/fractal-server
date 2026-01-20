@@ -200,7 +200,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             )
         if len(password.encode("utf-8")) > max_length:
             raise InvalidPasswordException(
-                f"The password is too long (maximum length: {max_length})."
+                "The password is too long "
+                f"(maximum length: {max_length} bytes)."
             )
 
     @override
