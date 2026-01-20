@@ -4,6 +4,8 @@
 
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
+* Testing:
+    *  Run some GitHub Actions when targeting `ihb-develop` branch (\#3138).
 
 # 2.18.6
 
