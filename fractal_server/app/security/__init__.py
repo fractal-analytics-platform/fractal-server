@@ -21,6 +21,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from typing import Generic
 from typing import Self
+from typing import override
 
 from fastapi import Depends
 from fastapi import Request
@@ -187,20 +188,22 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
             user_db=user_db,
             password_helper=password_helper,
         )
-
+    
+    @override
     async def validate_password(self, password: str, user: UserOAuth) -> None:
         # check password length
         min_length = 4
-        max_length = 100
+        max_length = 72
         if len(password) < min_length:
             raise InvalidPasswordException(
                 f"The password is too short (minimum length: {min_length})."
             )
-        elif len(password) > max_length:
+        if len(password.encode("utf-8")) > max_length:
             raise InvalidPasswordException(
                 f"The password is too long (maximum length: {min_length})."
             )
 
+    @override
     async def oauth_callback(
         self: Self,
         oauth_name: str,
@@ -324,6 +327,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
         return user
 
+    @override
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
     ):
