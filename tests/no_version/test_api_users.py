@@ -176,8 +176,8 @@ async def test_password_length(registered_superuser_client):
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
-    assert res.status_code == 422
-    assert "Password is too long." in res.json()["detail"][0]["msg"]
+    assert res.status_code == 400
+    assert "password is too long" in res.json()["detail"]["reason"]
 
     chinese_char = "界"
     assert len(chinese_char.encode("utf-8")) == 3
@@ -200,8 +200,8 @@ async def test_password_length(registered_superuser_client):
             project_dirs=[PROJECT_DIR_PLACEHOLDER],
         ),
     )
-    assert res.status_code == 422
-    assert "Password is too long." in res.json()["detail"][0]["msg"]
+    assert res.status_code == 400
+    assert "password is too long" in res.json()["detail"]["reason"]
 
 
 async def test_list_users(registered_client, registered_superuser_client):
