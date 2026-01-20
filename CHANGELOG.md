@@ -8,6 +8,7 @@
     * Return empty list of project-sharing invitations for `is_guest=True` users (\#3130).
     * Rename `current_user_act_ver_prof` into `get_api_guest`, and add a more restrictive `get_api_user` dependency for non-read-only endpoints (\#3130).
     * Make `UserManager.validate_password` fail if password is longer than 72 bytes (\#3141).
+    * Prevent guest users from self update (\#3142).
 * Database:
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
 * Internal:
