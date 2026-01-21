@@ -58,7 +58,7 @@ async def test_import_export(
             },
         )
         assert res.status_code == 422
-        assert "Could not find a task matching with" in res.json()["details"]
+        assert "Could not find a task matching with" in res.json()["detail"]
 
         # Import workflow
         res = await client.post(
