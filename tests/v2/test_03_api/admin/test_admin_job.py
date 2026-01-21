@@ -44,9 +44,7 @@ async def test_view_job(
         workflow1 = await workflow_factory(project_id=project.id)
         workflow2 = await workflow_factory(project_id=project.id)
 
-        task = await task_factory(
-            user_id=user1.id, name="task", source="source"
-        )
+        task = await task_factory(user_id=user1.id, name="task")
         dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
@@ -86,9 +84,7 @@ async def test_view_job(
         workflow3 = await workflow_factory(project_id=project2.id)
         workflow4 = await workflow_factory(project_id=project2.id)
 
-        task2 = await task_factory(
-            user_id=user2.id, name="task2", source="source"
-        )
+        task2 = await task_factory(user_id=user2.id, name="task2")
         dataset2 = await dataset_factory(project_id=project2.id)
 
         await _workflow_insert_task(
@@ -255,7 +251,7 @@ async def test_view_single_job(
         workflow1 = await workflow_factory(project_id=project.id)
         workflow2 = await workflow_factory(project_id=project.id)
 
-        task = await task_factory(user_id=user.id, name="task", source="source")
+        task = await task_factory(user_id=user.id, name="task")
         dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
@@ -313,7 +309,7 @@ async def test_patch_job(
     async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(user_id=user.id, name="task", source="source")
+        task = await task_factory(user_id=user.id, name="task")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
