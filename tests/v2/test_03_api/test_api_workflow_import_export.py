@@ -1,6 +1,5 @@
 import json
 
-import pytest
 from devtools import debug  # noqa
 
 from fractal_server.app.models import LinkUserGroup
@@ -12,7 +11,6 @@ from fractal_server.app.schemas.v2 import TaskImport
 PREFIX = "api/v2"
 
 
-@pytest.mark.xfail(reason="FIXME", strict=True)
 async def test_import_export(
     client,
     MockCurrentUser,
@@ -31,16 +29,22 @@ async def test_import_export(
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
-    wf_file_task_source_0 = workflow_from_file["task_list"][0]["task"]["source"]
-    wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"]["source"]
+    task0 = workflow_from_file["task_list"][0]["task"]
+    task1 = workflow_from_file["task_list"][1]["task"]
 
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
-        task_with_source0 = await task_factory(
-            user_id=user.id, source=wf_file_task_source_0, name="0"
+        task_0 = await task_factory(
+            user_id=user.id,
+            name=task0["name"],
+            version=task0["version"],
+            task_group_kwargs=dict(pkg_name=task0["pkg_name"]),
         )
-        task_with_source1 = await task_factory(
-            user_id=user.id, source=wf_file_task_source_1, name="1"
+        task_1 = await task_factory(
+            user_id=user.id,
+            name=task1["name"],
+            version=task1["version"],
+            task_group_kwargs=dict(pkg_name=task1["pkg_name"]),
         )
 
         # Import workflow
@@ -54,14 +58,8 @@ async def test_import_export(
             workflow_from_file["task_list"]
         )
         workflow_imported_id = workflow_imported["id"]
-        assert (
-            workflow_imported["task_list"][0]["task"]["id"]
-            == task_with_source0.id
-        )
-        assert (
-            workflow_imported["task_list"][1]["task"]["id"]
-            == task_with_source1.id
-        )
+        assert workflow_imported["task_list"][0]["task"]["id"] == task_0.id
+        assert workflow_imported["task_list"][1]["task"]["id"] == task_1.id
 
         # Export the workflow we just imported
         res = await client.get(
@@ -115,35 +113,6 @@ async def test_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
-
-        # Valid request: source-based
-        valid_payload_full = wf_modify(
-            new_name="new_name_source_1",
-            task_import={
-                "source": wf_file_task_source_0,
-            },
-        )
-        debug(valid_payload_full)
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=valid_payload_full,
-        )
-        debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["task_list"][0]["task"]["id"] == task_with_source0.id
-
-        # Valid request: source-based, but invalid source
-        valid_payload_full = wf_modify(
-            new_name="new_name_source_2",
-            task_import={"source": "INVALID"},
-        )
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=valid_payload_full,
-        )
-        assert res.status_code == 422
-        error_msg = "Could not find a task matching with source='INVALID'."
-        assert error_msg in res.json()["detail"]
 
         first_task_no_source = await task_factory(
             user_id=user.id,

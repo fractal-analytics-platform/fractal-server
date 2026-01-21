@@ -1,0 +1,29 @@
+{
+    "name": "MyWorkflow-V2",
+    "task_list": [
+        {
+            "args_parallel": {
+                "message_x": "task_x",
+                "arg_x": "value_x"
+            },
+            "args_non_parallel": {
+                "message_y": "task_y",
+                "arg_y": "value_y"
+            },
+            "meta_parallel": {"key1": "value1"},
+            "meta_non_parallel": {"key2": "value2"},
+            "task": {
+                "name": "NAME1",
+                "pkg_name": "PKG_NAME1",
+                "version": "0.0.1"
+            }
+        },
+        {
+           "task": {
+                "name": "NAME2",
+                "pkg_name": "PKG_NAME2",
+                "version": "0.0.2"
+            }
+        }
+    ]
+}

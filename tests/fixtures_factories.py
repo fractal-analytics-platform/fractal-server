@@ -233,12 +233,14 @@ async def task_factory(db: AsyncSession):
             "converter_compound",
             "converter_non_parallel",
         ] = "compound",
+        name: str | None = None,
+        version: str | None = None,
         **kwargs,
     ) -> TaskV2:
         args = dict(
             type=type,
-            name=f"task{index}",
-            version=f"{index}",
+            name=name or f"task{index}",
+            version=version or f"{index}",
             command_parallel="cmd_parallel",
             command_non_parallel="cmd_non_parallel",
         )
