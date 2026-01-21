@@ -20,7 +20,6 @@ from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
 from fractal_server.app.schemas.v2 import TaskImport
-from fractal_server.app.schemas.v2 import TaskImportLegacy
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
@@ -71,32 +70,6 @@ async def _get_user_accessible_taskgroups(
         f"task groups for {user_id=}."
     )
     return accessible_task_groups
-
-
-async def _get_task_by_source(
-    source: str,
-    task_groups_list: list[TaskGroupV2],
-) -> int | None:
-    """
-    Find task with a given source.
-
-    Args:
-        source: `source` of the task to be imported.
-        task_groups_list: Current list of valid task groups.
-
-    Return:
-        `id` of the matching task, or `None`.
-    """
-    task_id = next(
-        iter(
-            task.id
-            for task_group in task_groups_list
-            for task in task_group.task_list
-            if task.source == source
-        ),
-        None,
-    )
-    return task_id
 
 
 async def _get_task_by_taskimport(
@@ -246,19 +219,13 @@ async def import_workflow(
     list_task_ids = []
     for wf_task in workflow_import.task_list:
         task_import = wf_task.task
-        if isinstance(task_import, TaskImportLegacy):
-            task_id = await _get_task_by_source(
-                source=task_import.source,
-                task_groups_list=task_group_list,
-            )
-        else:
-            task_id = await _get_task_by_taskimport(
-                task_import=task_import,
-                user_id=user.id,
-                default_group_id=default_group_id,
-                task_groups_list=task_group_list,
-                db=db,
-            )
+        task_id = await _get_task_by_taskimport(
+            task_import=task_import,
+            user_id=user.id,
+            default_group_id=default_group_id,
+            task_groups_list=task_group_list,
+            db=db,
+        )
         if task_id is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

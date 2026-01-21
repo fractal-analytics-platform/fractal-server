@@ -30,7 +30,6 @@ class TaskDump(BaseModel):
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None
-    source: str | None = None
     version: str | None = None
 
     input_types: dict[str, bool]

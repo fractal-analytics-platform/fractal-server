@@ -47,7 +47,6 @@ from .status_legacy import WorkflowTaskStatusType  # noqa F401
 from .task import TaskCreate  # noqa F401
 from .task import TaskExport  # noqa F401
 from .task import TaskImport  # noqa F401
-from .task import TaskImportLegacy  # noqa F401
 from .task import TaskRead  # noqa F401
 from .task import TaskType  # noqa F401
 from .task import TaskUpdate  # noqa F401
