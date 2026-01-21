@@ -30,7 +30,6 @@ class TaskMinimal(BaseModel):
     taskgroupv2_id: int
     command_non_parallel: str | None = None
     command_parallel: str | None = None
-    source: str | None = None
     version: str | None = None
 
 
@@ -55,7 +54,6 @@ class TaskInfo(BaseModel):
 @router.get("/", response_model=PaginationResponse[TaskInfo])
 async def query_tasks(
     id: int | None = None,
-    source: str | None = None,
     version: str | None = None,
     name: str | None = None,
     task_type: TaskType | None = None,
@@ -81,9 +79,6 @@ async def query_tasks(
     if id is not None:
         stm = stm.where(TaskV2.id == id)
         stm_count = stm_count.where(TaskV2.id == id)
-    if source is not None:
-        stm = stm.where(TaskV2.source.icontains(source))
-        stm_count = stm_count.where(TaskV2.source.icontains(source))
     if version is not None:
         stm = stm.where(TaskV2.version == version)
         stm_count = stm_count.where(TaskV2.version == version)
