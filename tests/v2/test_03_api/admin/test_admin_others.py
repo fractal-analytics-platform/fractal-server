@@ -35,6 +35,7 @@ async def test_task_query(
         task1 = await task_factory(
             user_id=user.id,
             name="Foo",
+            version="0",
             category="Conversion",
             modality="HCS",
             authors="Name1 Surname1,Name2 Surname2...",
@@ -42,11 +43,14 @@ async def test_task_query(
         task2 = await task_factory(
             user_id=user.id,
             name="abcdef",
+            version="0",
             category="Conversion",
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
         )
-        task3 = await task_factory(user_id=user.id, index=3, modality="EM")
+        task3 = await task_factory(
+            user_id=user.id, index=3, modality="EM", version="3"
+        )
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(
