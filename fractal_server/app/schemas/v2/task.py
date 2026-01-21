@@ -94,7 +94,6 @@ class TaskRead(BaseModel):
     id: int
     name: str
     type: TaskType
-    source: str | None = None
     version: str | None = None
 
     command_non_parallel: str | None = None
@@ -137,10 +136,6 @@ class TaskImport(BaseModel):
     pkg_name: NonEmptyStr
     version: NonEmptyStr | None = None
     name: NonEmptyStr
-
-
-class TaskImportLegacy(BaseModel):
-    source: NonEmptyStr
 
 
 class TaskExport(BaseModel):

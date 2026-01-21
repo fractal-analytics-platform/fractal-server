@@ -11,7 +11,6 @@ from fractal_server.types import WorkflowTaskArgument
 
 from .task import TaskExport
 from .task import TaskImport
-from .task import TaskImportLegacy
 from .task import TaskRead
 from .task import TaskType
 
@@ -75,7 +74,7 @@ class WorkflowTaskImport(BaseModel):
     type_filters: TypeFilters | None = None
     input_filters: dict[str, Any] | None = None
 
-    task: TaskImport | TaskImportLegacy
+    task: TaskImport
 
     @model_validator(mode="before")
     @classmethod
