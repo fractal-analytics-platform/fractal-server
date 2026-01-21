@@ -57,7 +57,7 @@ async def patch_current_user(
     if current_user.is_guest:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Editing is forbidden for guests.",
+            detail="This feature is not available for guest users.",
         )
 
     update = UserUpdate(**user_update.model_dump(exclude_unset=True))

@@ -112,4 +112,7 @@ async def test_patch_current_user(client, MockCurrentUser):
             PREFIX, json={"slurm_accounts": ["foo", "bar"]}
         )
         assert res.status_code == 403
-        assert res.json()["detail"] == "Editing is forbidden for guests."
+        assert (
+            res.json()["detail"]
+            == "This feature is not available for guest users."
+        )
