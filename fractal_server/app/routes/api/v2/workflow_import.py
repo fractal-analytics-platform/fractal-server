@@ -72,32 +72,6 @@ async def _get_user_accessible_taskgroups(
     return accessible_task_groups
 
 
-async def _get_task_by_source(
-    source: str,
-    task_groups_list: list[TaskGroupV2],
-) -> int | None:
-    """
-    Find task with a given source.
-
-    Args:
-        source: `source` of the task to be imported.
-        task_groups_list: Current list of valid task groups.
-
-    Return:
-        `id` of the matching task, or `None`.
-    """
-    task_id = next(
-        iter(
-            task.id
-            for task_group in task_groups_list
-            for task in task_group.task_list
-            if task.source == source
-        ),
-        None,
-    )
-    return task_id
-
-
 async def _get_task_by_taskimport(
     *,
     task_import: TaskImport,
