@@ -565,7 +565,6 @@ async def test_import_filters_compatibility(
             user_id=user.id,
             input_types={"a": True, "b": False},
             name="foo",
-            pkg_name="foo",
             version="0.0.1",
         )
 
