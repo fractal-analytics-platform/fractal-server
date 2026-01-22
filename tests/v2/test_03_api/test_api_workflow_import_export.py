@@ -47,6 +47,19 @@ async def test_import_export(
             task_group_kwargs=dict(pkg_name=task1["pkg_name"]),
         )
 
+        # Import fail
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json={
+                "name": "Name",
+                "task_list": [
+                    {"task": {"name": "x", "pkg_name": "y", "version": "z"}}
+                ],
+            },
+        )
+        assert res.status_code == 422
+        assert "Could not find a task matching with" in res.json()["detail"]
+
         # Import workflow
         res = await client.post(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
