@@ -253,6 +253,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id == task1.id
 
@@ -266,6 +267,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id == task2.id
 
@@ -279,6 +281,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=[task_group3],
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id == task3.id
 
@@ -293,8 +296,36 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id is None
+
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImport(
+            name="task",
+            pkg_name="pkg",
+            version="invalid",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+        flexible_version=True,
+    )
+    assert task_id == task1.id
+    task_id = await _get_task_by_taskimport(
+        task_import=TaskImport(
+            name="task",
+            pkg_name="pkg",
+            version="1.5.0",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+        flexible_version=True,
+    )
+    assert task_id == task2.id
 
     # Test with non-matching pkg_name
     task_id = await _get_task_by_taskimport(
@@ -306,6 +337,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id is None
 
@@ -319,6 +351,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
+        flexible_version=False,
     )
     assert task_id is None
 
