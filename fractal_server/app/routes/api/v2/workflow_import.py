@@ -19,6 +19,7 @@ from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
+from fractal_server.app.routes.aux._versions import _version_sort_key
 from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
@@ -114,14 +115,15 @@ async def _get_task_by_taskimport(
         return None
 
     # Determine target `version`
-    # Note that task_import.version cannot be "", due to a validator
     if task_import.version is None:
         logger.debug(
             "[_get_task_by_taskimport] "
             "No version requested, looking for latest."
         )
-        latest_task = max(matching_task_groups, key=lambda tg: tg.version or "")
-        version = latest_task.version
+        latest_task_group = max(
+            matching_task_groups, key=lambda tg: _version_sort_key(tg)
+        )
+        version = latest_task_group.version
         logger.debug(
             f"[_get_task_by_taskimport] Latest version set to {version}."
         )
