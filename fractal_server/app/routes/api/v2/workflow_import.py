@@ -122,7 +122,7 @@ async def _get_task_by_taskimport(
         )
         version = max(
             [tg.version for tg in matching_task_groups],
-            key=_version_sort_key,
+            key=lambda version: _version_sort_key(version),
         )
         logger.debug(
             f"[_get_task_by_taskimport] Latest version set to {version}."
