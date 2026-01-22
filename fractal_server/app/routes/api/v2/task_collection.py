@@ -116,6 +116,7 @@ async def parse_request_data(
 
     form = await request.form()
     allowed_form_fields = {
+        "file",
         "package",
         "package_version",
         "package_extras",
