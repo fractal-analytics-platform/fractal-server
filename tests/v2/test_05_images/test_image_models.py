@@ -85,19 +85,22 @@ def test_url_normalization():
     assert image.zarr_url == "/valid/url"
     image = image_ok(model=SingleImageBase, zarr_url="/remove/slash/")
     assert image.zarr_url == "/remove/slash"
+    image = image_ok(model=SingleImageBase, zarr_url="s3://foo")
+    assert image.zarr_url == "s3://foo"
 
     e = image_fail(model=SingleImageBase, zarr_url="s3/foo")
-    assert "S3 handling" in e
+    assert "URLs must begin with '/' or 's3://'" in e
     e = image_fail(model=SingleImageBase, zarr_url="https://foo.bar")
     assert "URLs must begin" in e
 
     image_ok(model=SingleImageBase, zarr_url="/x", origin=None)
     image_ok(model=SingleImageBase, zarr_url="/x", origin="/y")
+    image_ok(model=SingleImageBase, zarr_url="/x", origin="s3://foo")
     image = image_ok(model=SingleImageBase, zarr_url="/x", origin="/y///")
     assert image.origin == "/y"
 
     e = image_fail(model=SingleImageBase, zarr_url="/x", origin="s3/foo")
-    assert "S3 handling" in e
+    assert "URLs must begin with '/' or 's3://'" in e
     e = image_fail(
         model=SingleImageBase, zarr_url="/x", origin="https://foo.bar"
     )
