@@ -154,7 +154,7 @@ async def get_task_group_list(
                 await remove_duplicate_task_groups(
                     task_groups=sorted(
                         list(groups),
-                        key=_version_sort_key,
+                        key=lambda group: _version_sort_key(group.version),
                         reverse=True,
                     ),
                     user_id=user.id,
