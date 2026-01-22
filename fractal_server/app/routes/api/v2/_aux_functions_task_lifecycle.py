@@ -2,8 +2,6 @@ from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
 from httpx import TimeoutException
-from packaging.version import InvalidVersion
-from packaging.version import Version
 from sqlmodel import func
 from sqlmodel import select
 
@@ -14,6 +12,7 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.aux._versions import _find_latest_version_or_422
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.logger import set_logger
@@ -24,24 +23,6 @@ PYPI_JSON_HEADERS = {"Accept": "application/vnd.pypi.simple.v1+json"}
 
 
 logger = set_logger(__name__)
-
-
-def _find_latest_version_or_422(versions: list[str]) -> str:
-    """
-    > For PEP 440 versions, this is easy enough for the client to do (using
-    > the `packaging` library [...]. For non-standard versions, there is no
-    > well-defined ordering, and clients will need to decide on what rule is
-    > appropriate for their needs.
-    (https://peps.python.org/pep-0700/#why-not-provide-a-latest-version-value)
-    """
-    try:
-        latest = max(versions, key=lambda v_str: Version(v_str))
-        return latest
-    except InvalidVersion as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Cannot find latest version (original error: {str(e)}).",
-        )
 
 
 async def get_package_version_from_pypi(
