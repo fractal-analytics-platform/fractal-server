@@ -28,6 +28,9 @@ def _find_latest_version_or_422(versions: list[str]) -> str:
     > well-defined ordering, and clients will need to decide on what rule is
     > appropriate for their needs.
     (https://peps.python.org/pep-0700/#why-not-provide-a-latest-version-value)
+
+    The `versions` array is coming from the PyPI API, and its elements are
+    assumed parsable.
     """
     try:
         latest = max(versions, key=lambda v_str: Version(v_str))
