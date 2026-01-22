@@ -4,9 +4,6 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
-from packaging.version import InvalidVersion
-from packaging.version import Version
-from packaging.version import parse
 from pydantic.types import AwareDatetime
 from sqlmodel import or_
 from sqlmodel import select
@@ -25,6 +22,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
 )
+from fractal_server.app.routes.aux._versions import _version_sort_key
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
@@ -41,26 +39,6 @@ from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 router = APIRouter()
 
 logger = set_logger(__name__)
-
-
-def _version_sort_key(
-    task_group: TaskGroupV2,
-) -> tuple[int, Version | str | None]:
-    """
-    Returns a tuple used as (reverse) ordering key for TaskGroups in
-    `get_task_group_list`.
-    The TaskGroups with a parsable versions are the first in order,
-    sorted according to the sorting rules of packaging.version.Version.
-    Next in order we have the TaskGroups with non-null non-parsable versions,
-    sorted alphabetically.
-    Last we have the TaskGroups with null version.
-    """
-    if task_group.version is None:
-        return (0, task_group.version)
-    try:
-        return (2, parse(task_group.version))
-    except InvalidVersion:
-        return (1, task_group.version)
 
 
 @router.get("/activity/", response_model=list[TaskGroupActivityRead])
