@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import Form
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
@@ -99,7 +100,8 @@ class CollectionRequestData(BaseModel):
         return values
 
 
-def parse_request_data(
+async def parse_request_data(
+    request: Request,
     package: str | None = Form(None),
     package_version: str | None = Form(None),
     package_extras: str | None = Form(None),
@@ -111,6 +113,22 @@ def parse_request_data(
     """
     Expand the parsing/validation of `parse_form_data`, based on `file`.
     """
+
+    form = await request.form()
+    allowed_form_fields = {
+        "package",
+        "package_version",
+        "package_extras",
+        "python_version",
+        "pinned_package_versions_pre",
+        "pinned_package_versions_post",
+    }
+    extra_fields = set(form.keys()) - allowed_form_fields
+    if extra_fields:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Extra fields not permitted: {sorted(extra_fields)}",
+        )
 
     try:
         # Convert dict_pinned_pkg from a JSON string into a Python dictionary
