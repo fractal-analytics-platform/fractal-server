@@ -80,6 +80,7 @@ async def _get_task_by_taskimport(
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
+    flexible_version: bool,
 ) -> int | None:
     """
     Find a task based on `task_import`.
@@ -115,18 +116,38 @@ async def _get_task_by_taskimport(
         return None
 
     # Determine target `version`
+    sorted_available_versions = sorted(
+        [tg.version for tg in matching_task_groups], key=_version_sort_key
+    )
     if task_import.version is None:
         logger.debug(
             "[_get_task_by_taskimport] "
             "No version requested, looking for latest."
         )
-        version = max(
-            [tg.version for tg in matching_task_groups],
-            key=_version_sort_key,
-        )
+        version = sorted_available_versions[-1]
         logger.debug(
             f"[_get_task_by_taskimport] Latest version set to {version}."
         )
+    elif (
+        task_import.version not in sorted_available_versions
+    ) and flexible_version:
+        logger.debug(
+            "[_get_task_by_taskimport] "
+            f"Requested version {task_import.version} not available, "
+            "looking for the most appropriate one."
+        )
+        version = next(
+            (
+                available_version
+                for available_version in sorted_available_versions
+                if (
+                    _version_sort_key(available_version)
+                    > _version_sort_key(task_import.version)
+                )
+            ),
+            sorted_available_versions[-1],
+        )
+        logger.debug(f"[_get_task_by_taskimport] Selected {version=}.")
     else:
         version = task_import.version
 
@@ -190,6 +211,7 @@ async def import_workflow(
     workflow_import: WorkflowImport,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
+    flexible_version: bool = False,
 ) -> WorkflowReadWithWarnings:
     """
     Import an existing workflow into a project and create required objects.
@@ -227,6 +249,7 @@ async def import_workflow(
             default_group_id=default_group_id,
             task_groups_list=task_group_list,
             db=db,
+            flexible_version=flexible_version,
         )
         if task_id is None:
             raise HTTPException(
