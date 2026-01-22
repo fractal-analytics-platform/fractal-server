@@ -29,9 +29,11 @@ def _find_latest_version_or_422(versions: list[str]) -> str:
     > appropriate for their needs.
     (https://peps.python.org/pep-0700/#why-not-provide-a-latest-version-value)
     """
-    if any(_version_sort_key(version)[0] < 2 for version in versions):
+    try:
+        latest = max(versions, key=lambda v_str: Version(v_str))
+        return latest
+    except InvalidVersion as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Cannot find latest version among {versions=}).",
+            detail=f"Cannot find latest version (original error: {str(e)}).",
         )
-    return max(versions, key=lambda version: _version_sort_key(version))
