@@ -35,10 +35,77 @@ def val_s3_url(value: str) -> str:
     """
     Check that a string attribute is a valid S3 URL
     """
-    if not re.match(r"^s3:\/\/[^\/]+\/.+$", value):
-        raise ValueError("S3 URL must match pattern 's3://bucket/key'")
-    if " " in value:
-        raise ValueError("S3 URL must not contain spaces.")
+    # Check basic pattern
+    match = re.match(r"^s3:\/\/([^\/]+)\/(.+)$", value)
+    if not match:
+        raise ValueError(
+            f"S3 URL must match pattern 's3://bucket/key' (given '{value}')"
+        )
+
+    bucket, key = match.groups()
+    ## Validate bucket name See https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+    if not (3 <= len(bucket) <= 63):
+        raise ValueError(
+            f"S3 bucket name must be between 3 and 63 characters long "
+            f"(given '{bucket}')"
+        )
+    if not re.match(r"^[a-z0-9][a-z0-9.\-]*[a-z0-9]$", bucket):
+        raise ValueError(
+            f"S3 bucket name must start and end with lowercase letter or "
+            f"number, and contain only lowercase letters, numbers, periods, "
+            f"and hyphens (given '{bucket}')"
+        )
+    if ".." in bucket:
+        raise ValueError(
+            f"S3 bucket name must not contain two adjacent periods "
+            f"(given '{bucket}')"
+        )
+    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", bucket):
+        raise ValueError(
+            f"S3 bucket name must not be formatted as an IP address "
+            f"(given '{bucket}')"
+        )
+    # Check for prohibited prefixes
+    prohibited_prefixes = [
+        "xn--",
+        "sthree-",
+        "amzn-s3-demo-",
+    ]
+    if any(bucket.startswith(prefix) for prefix in prohibited_prefixes):
+        raise ValueError(
+            f"S3 bucket name must not start with "
+            f"{', '.join(repr(p) for p in prohibited_prefixes)} "
+            f"(given '{bucket}')"
+        )
+    # Check for prohibited suffixes
+    prohibited_suffixes = [
+        "-s3alias",
+        "--ol-s3",
+        ".mrap",
+        "--x-s3",
+        "--table-s3",
+    ]
+    if any(bucket.endswith(suffix) for suffix in prohibited_suffixes):
+        raise ValueError(
+            f"S3 bucket name must not end with "
+            f"{', '.join(repr(s) for s in prohibited_suffixes)} "
+            f"(given '{bucket}')"
+        )
+
+    ## Validate key See https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html
+    # Check key is valid UTF-8 and size
+    try:
+        key_bytes = key.encode("utf-8")
+    except UnicodeEncodeError:
+        raise ValueError(
+            f"S3 key must contain only valid UTF-8 characters (given '{key}')"
+        )
+    if len(key_bytes) > 1024:
+        raise ValueError(
+            f"S3 key must not exceed 1024 bytes "
+            f"(given key has {len(key_bytes)} bytes)"
+        )
+
     return value
 
 
