@@ -6,11 +6,9 @@ from httpx import TimeoutException
 
 import fractal_server.app.routes.api.v2._aux_functions_task_lifecycle
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
-    _find_latest_version_or_422,
-)
-from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
+from fractal_server.app.routes.aux._versions import _find_latest_version_or_422
 
 PKG = "fractal-tasks-core"
 
