@@ -10,6 +10,7 @@
     * Make `UserManager.validate_password` fail if password is longer than 72 bytes (\#3141).
     * Prevent guest users from self update (\#3142).
     * Deprecate use of `TaskV2.source` in workflow imports and superuser-only task queries(\#3147, \#3148).
+    * Improve definition of *latest version* in task import (\#3153).
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
