@@ -141,6 +141,17 @@ async def _get_task_by_taskimport(
     sorted_available_versions = sorted(
         [tg.version for tg in matching_task_groups], key=_version_sort_key
     )
+    resolved_version_with_flexibility = next(
+        (
+            available_version
+            for available_version in sorted_available_versions
+            if (
+                _version_sort_key(available_version)
+                >= _version_sort_key(task_import.version)
+            )
+        ),
+        None,
+    )
     if task_import.version is None:
         logger.debug(
             "[_get_task_by_taskimport] "
@@ -153,23 +164,20 @@ async def _get_task_by_taskimport(
     elif (
         task_import.version not in sorted_available_versions
     ) and flexible_version:
+        if resolved_version_with_flexibility is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "No version found using flexibility for task "
+                    f"{task_import.model_dump()}."
+                ),
+            )
         logger.debug(
             "[_get_task_by_taskimport] "
             f"Requested version {task_import.version} not available, "
-            "looking for the most appropriate one."
+            f"using {resolved_version_with_flexibility=} instead."
         )
-        version = next(
-            (
-                available_version
-                for available_version in sorted_available_versions
-                if (
-                    _version_sort_key(available_version)
-                    > _version_sort_key(task_import.version)
-                )
-            ),
-            sorted_available_versions[-1],
-        )
-        logger.debug(f"[_get_task_by_taskimport] Selected {version=}.")
+        version = resolved_version_with_flexibility
     else:
         version = task_import.version
 
@@ -189,7 +197,10 @@ async def _get_task_by_taskimport(
                 requested_task=task_import,
                 error_reason="task_not_found-pkg_name,name,version",
                 error_info={
-                    "selected_version_not_found": version,
+                    "required_version": version,
+                    "resolved_version_with_flexibility": (
+                        resolved_version_with_flexibility
+                    ),
                     "available_versions": [
                         tg.version for tg in matching_task_groups
                     ],
