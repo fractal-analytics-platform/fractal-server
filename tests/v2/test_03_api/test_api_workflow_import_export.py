@@ -303,7 +303,8 @@ async def test_unit_get_task_by_taskimport():
             flexible_version=False,
         )
     assert e._excinfo[1].data["error_info"] == {
-        "selected_version_not_found": "invalid",
+        "required_version": "invalid",
+        "resolved_version_with_flexibility": "1.0.0",
         "available_versions": [
             "1.0.0",
             "2.0.0",
