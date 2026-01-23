@@ -4,7 +4,6 @@ from typing import Literal
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlmodel import or_
 from sqlmodel import select
@@ -28,6 +27,7 @@ from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_workflow_exists
@@ -47,26 +47,6 @@ class TaskImportErrorData(BaseModel):
     requested_task: TaskImport
     error_reason: Literal["task_not_found", "task_not_active"]
     error_info: dict[str, Any]
-
-
-class TaskImportErrorResponse(JSONResponse):
-    def __init__(
-        self,
-        requested_task: TaskImport | dict[str, str],
-        error_reason: Literal["task_not_found", "task_not_active"],
-        error_info: dict[str, Any],
-    ):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content=dict(
-                detail="Task import error [HAS_ERROR_DATA]",
-                content=TaskImportErrorData(
-                    requested_task=requested_task,
-                    error_reason=error_reason,
-                    error_info=error_info,
-                ).model_dump(),
-            ),
-        )
 
 
 async def _get_user_accessible_taskgroups(
@@ -110,7 +90,7 @@ async def _get_task_by_taskimport(
     default_group_id: int | None,
     db: AsyncSession,
     flexible_version: bool,
-) -> int | TaskImportErrorResponse:
+) -> int:
     """
     Find a task based on `task_import`.
 
@@ -142,10 +122,15 @@ async def _get_task_by_taskimport(
             f"No task group with {task_import.pkg_name=} "
             f"and a task with {task_import.name=}."
         )
-        return TaskImportErrorResponse(
-            requested_task=task_import,
-            error_reason="task_not_found",
-            error_info={"missing_match": ["task.name", "taskgroup.pkg_name"]},
+        raise HTTPExceptionWithData(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            data=TaskImportErrorData(
+                requested_task=task_import,
+                error_reason="task_not_found",
+                error_info={
+                    "missing_match": ["task.name", "taskgroup.pkg_name"]
+                },
+            ).model_dump(),
         )
 
     # Determine target `version`
@@ -194,15 +179,18 @@ async def _get_task_by_taskimport(
             "[_get_task_by_taskimport] "
             "No task group left after filtering by version."
         )
-        return TaskImportErrorResponse(
-            requested_task=task_import,
-            error_reason="task_not_found",
-            error_info={
-                "selected_version_not_found": version,
-                "available_versions": [
-                    tg.version for tg in matching_task_groups
-                ],
-            },
+        raise HTTPExceptionWithData(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            data=TaskImportErrorData(
+                requested_task=task_import,
+                error_reason="task_not_found",
+                error_info={
+                    "selected_version_not_found": version,
+                    "available_versions": [
+                        tg.version for tg in matching_task_groups
+                    ],
+                },
+            ).model_dump(),
         )
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
@@ -226,15 +214,18 @@ async def _get_task_by_taskimport(
             logger.debug(
                 "[_get_task_by_taskimport] Disambiguation returned None."
             )
-            return TaskImportErrorResponse(
-                requested_task=task_import,
-                error_reason="task_not_found",
-                error_info={
-                    "cant_disambiguate": [
-                        tg.model_dump(exclude={"task_list"})
-                        for tg in final_matching_task_groups
-                    ]
-                },
+            raise HTTPExceptionWithData(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                data=TaskImportErrorData(
+                    requested_task=task_import,
+                    error_reason="task_not_found",
+                    error_info={
+                        "cant_disambiguate": [
+                            tg.model_dump(exclude={"task_list"})
+                            for tg in final_matching_task_groups
+                        ]
+                    },
+                ).model_dump(),
             )
 
     # Find task with given name
@@ -247,15 +238,18 @@ async def _get_task_by_taskimport(
         None,
     )
     if task_id is None:
-        return TaskImportErrorResponse(
-            requested_task=task_import,
-            error_reason="task_not_found",
-            error_info={
-                "missing_match": ["task.name"],
-                "available_names": [
-                    task.name for task in final_task_group.task_list
-                ],
-            },
+        raise HTTPExceptionWithData(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            data=TaskImportErrorData(
+                requested_task=task_import,
+                error_reason="task_not_found",
+                error_info={
+                    "missing_match": ["task.name"],
+                    "available_names": [
+                        task.name for task in final_task_group.task_list
+                    ],
+                },
+            ).model_dump(),
         )
 
     logger.debug(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
@@ -304,7 +298,7 @@ async def import_workflow(
     list_task_ids = []
     for wf_task in workflow_import.task_list:
         task_import = wf_task.task
-        res = await _get_task_by_taskimport(
+        task_id = await _get_task_by_taskimport(
             task_import=task_import,
             user_id=user.id,
             default_group_id=default_group_id,
@@ -312,10 +306,7 @@ async def import_workflow(
             db=db,
             flexible_version=flexible_version,
         )
-        if isinstance(res, TaskImportErrorResponse):
-            return res
 
-        task_id = res
         new_wf_task = WorkflowTaskCreate(
             **wf_task.model_dump(exclude_none=True, exclude={"task"})
         )
