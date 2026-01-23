@@ -23,3 +23,12 @@ class HTTPExceptionWithData(HTTPException):
             status_code=status_code,
             detail=f"{detail + ' ' if detail else ''}[HAS_ERROR_DATA]",
         )
+
+    def __repr__(self) -> str:
+        return (
+            "HTTPExceptionWithData("
+            f"status_code={self.status_code!r},"
+            f"detail={self.detail!r},"
+            f"data={self.data!r}"
+            ")"
+        )
