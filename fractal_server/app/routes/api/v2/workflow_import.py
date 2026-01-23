@@ -46,7 +46,10 @@ logger = set_logger(__name__)
 
 class TaskImportErrorData(BaseModel):
     requested_task: TaskImport
-    error_reason: Literal["task_not_found", "task_not_active"]
+    error_reason: Literal[
+        "task_not_found-pkg_name,name",
+        "task_not_found-pkg_name,name,version",
+    ]
     error_info: dict[str, Any]
 
 
@@ -127,7 +130,7 @@ async def _get_task_by_taskimport(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             data=TaskImportErrorData(
                 requested_task=task_import,
-                error_reason="task_not_found",
+                error_reason="task_not_found-pkg_name,name",
                 error_info={
                     "missing_match": ["task.name", "taskgroup.pkg_name"]
                 },
@@ -184,7 +187,7 @@ async def _get_task_by_taskimport(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             data=TaskImportErrorData(
                 requested_task=task_import,
-                error_reason="task_not_found",
+                error_reason="task_not_found-pkg_name,name,version",
                 error_info={
                     "selected_version_not_found": version,
                     "available_versions": [
@@ -219,7 +222,7 @@ async def _get_task_by_taskimport(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 data=TaskImportErrorData(
                     requested_task=task_import,
-                    error_reason="task_not_found",
+                    error_reason="task_not_found-pkg_name,name,version",
                     error_info={
                         "cant_disambiguate": [
                             tg.model_dump(exclude={"task_list"})
