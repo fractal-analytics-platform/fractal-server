@@ -381,3 +381,34 @@ async def test_task_collection_from_pypi_with_extras(
             ),
         )
         assert ERROR_MESSAGE in res.json()["detail"]
+
+
+async def test_extra_not_allowed_in_task_collection(
+    client,
+    MockCurrentUser,
+    local_resource_profile_db,
+):
+    _, profile = local_resource_profile_db
+    async with MockCurrentUser(profile_id=profile.id):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/?private=true",
+            data=dict(
+                package="testing-tasks-mock",
+                package_extras="foo",
+            ),
+        )
+        assert res.status_code == 202
+
+    async with MockCurrentUser(profile_id=profile.id):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/?private=true",
+            data=dict(
+                package="testing-tasks-mock",
+                package_extras="foo",
+                fake_arg="bar",
+            ),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Extra fields not permitted: ['fake_arg']"
+        )
