@@ -3,6 +3,7 @@ from typing import Literal
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
 from sqlmodel import or_
@@ -238,19 +239,11 @@ async def _get_task_by_taskimport(
         None,
     )
     if task_id is None:
-        raise HTTPExceptionWithData(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            data=TaskImportErrorData(
-                requested_task=task_import,
-                error_reason="task_not_found",
-                error_info={
-                    "missing_match": ["task.name"],
-                    "available_names": [
-                        task.name for task in final_task_group.task_list
-                    ],
-                },
-            ).model_dump(),
+        logger.error(
+            "[_get_task_by_taskimport] UnreachableBranchError:"
+            "likely be due to a race condition on TaskGroups."
         )
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
 
     logger.debug(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
 
