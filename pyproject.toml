@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.19.0a0"
+version = "2.19.0a1"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -25,7 +25,7 @@ dependencies = [
     "pydantic-settings ==2.12.0",
     "packaging >= 25.0.0, <26.0.0",
     "fabric >= 3.2.2, <3.3.0",
-    "gunicorn >=23.0,<24.0",
+    "gunicorn >=24.1,<25",
     "psycopg[binary] >= 3.1.0, <4.0.0",
     "tomli_w >=1.2.0, <1.3.0 "
 ]
@@ -92,7 +92,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth"]
 
 [tool.bumpver]
-current_version = "2.19.0a0"
+current_version = "2.19.0a1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
