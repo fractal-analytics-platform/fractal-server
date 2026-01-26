@@ -13,12 +13,16 @@
             "meta_parallel": {"key1": "value1"},
             "meta_non_parallel": {"key2": "value2"},
             "task": {
-                "source": "PKG_SOURCE:dummy0"
+                "name": "NAME1",
+                "pkg_name": "PKG_NAME1",
+                "version": "0.0.1"
             }
         },
         {
            "task": {
-                "source": "PKG_SOURCE:dummy1"
+                "name": "NAME2",
+                "pkg_name": "PKG_NAME2",
+                "version": "0.0.2"
             }
         }
     ]

@@ -104,7 +104,9 @@ async def test_post_worfkflow_task(
         assert task_list[2]["args_non_parallel"] == args_payload
 
         # Test type filters compatibility
-        task = await task_factory(user_id=user.id, input_types={"a": False})
+        task = await task_factory(
+            user_id=user.id, name="A", input_types={"a": False}
+        )
         res = await client.post(
             f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
             f"?task_id={task.id}",
@@ -483,7 +485,9 @@ async def test_patch_workflow_task(
         )
         assert res.status_code == 201
         wf_id = res.json()["id"]
-        task = await task_factory(user_id=user.id, input_types={"a": False})
+        task = await task_factory(
+            user_id=user.id, name="A", input_types={"a": False}
+        )
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={task.id}",

@@ -6,11 +6,10 @@ from httpx import TimeoutException
 
 import fractal_server.app.routes.api.v2._aux_functions_task_lifecycle
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
-    _find_latest_version_or_422,
-)
-from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
+from fractal_server.app.routes.aux._versions import _find_latest_version_or_422
+from fractal_server.app.routes.aux._versions import _version_sort_key
 
 PKG = "fractal-tasks-core"
 
@@ -42,6 +41,49 @@ def test_find_latest_version_or_422():
     # Failure
     with pytest.raises(HTTPException, match="Cannot find latest version"):
         _find_latest_version_or_422(["1.2.3", "3.4.5", "aaa"])
+
+
+def test_version_sort_key():
+    assert sorted(["6.7a0", "1.2.3", "3.4.5"], key=_version_sort_key) == [
+        "1.2.3",
+        "3.4.5",
+        "6.7a0",
+    ]
+    assert sorted(
+        [
+            "0.2.0a0",
+            "0.1.dev27+g1458b59",
+            "0.10.0alpha3",
+            "0.10.0beta5",
+            "0.10.0a",
+            "0.1.2",
+            "0.10.0b4",
+            "0.10.0c0",
+            "2",
+            "1.0.0",
+            "0.10.0",
+            "0.10.0a2",
+            "1.0.0rc4.dev7",
+        ],
+        key=_version_sort_key,
+    ) == [
+        "0.1.dev27+g1458b59",
+        "0.1.2",
+        "0.2.0a0",
+        "0.10.0a",
+        "0.10.0a2",
+        "0.10.0alpha3",
+        "0.10.0b4",
+        "0.10.0beta5",
+        "0.10.0c0",
+        "0.10.0",
+        "1.0.0rc4.dev7",
+        "1.0.0",
+        "2",
+    ]
+    assert sorted(
+        ["1.2.3", "3.4.5", "bb", "aaa", None, "aa"], key=_version_sort_key
+    ) == [None, "aa", "aaa", "bb", "1.2.3", "3.4.5"]
 
 
 async def test_get_package_version_from_pypi():
