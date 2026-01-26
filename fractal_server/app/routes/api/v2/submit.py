@@ -216,7 +216,7 @@ async def submit_job(
             dataset.model_dump_json(exclude={"images", "history"})
         ),
         workflow_dump=json.loads(
-            workflow.model_dump_json(exclude={"task_list"})
+            workflow.model_dump_json(exclude={"task_list", "description"})
         ),
         project_dump=json.loads(
             project.model_dump_json(exclude={"resource_id"})
