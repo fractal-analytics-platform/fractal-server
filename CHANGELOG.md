@@ -21,6 +21,7 @@
 * Documentation:
     * Introduce `CONTRIBUTING.md` (\#3157).
 * Dependencies:
+    * Bump `gunicorn` to v24 (\#3158).
     * Remove `pre-commit` from project dependencies (\#3157).
 
 # 2.18.6
