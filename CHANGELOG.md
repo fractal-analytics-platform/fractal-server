@@ -18,6 +18,10 @@
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:
     *  Run some GitHub Actions when targeting `ihb-develop` branch (\#3138).
+* Documentation:
+    * Introduce `CONTRIBUTING.md` (\#3157).
+* Dependencies:
+    * Remove `pre-commit` from project dependencies (\#3157).
 
 # 2.18.6
 
@@ -273,8 +277,8 @@ resource&profile concepts, and a review of the application settings.
 * Task life cycle:
     * Switch to PyPI Index API for finding latest package versions (\#2790).
 * SSH:
-    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#XXX).
-    * Introduce structured logs for SSH-lock dynamics (\#XXX).
+    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#2826).
+    * Introduce structured logs for SSH-lock dynamics (\#2826).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Internal:
