@@ -59,6 +59,7 @@ class WorkflowDump(BaseModel):
     name: str
     project_id: int
     timestamp_created: str
+    description: str | None = None
 
 
 class DatasetDump(BaseModel):

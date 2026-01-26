@@ -193,7 +193,13 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        elif key in ["meta_parallel", "meta_non_parallel", "type_filters"]:
+        elif key in [
+            "meta_parallel",
+            "meta_non_parallel",
+            "type_filters",
+            "alias",
+            "description",
+        ]:
             setattr(db_wf_task, key, value)
         else:
             raise HTTPException(

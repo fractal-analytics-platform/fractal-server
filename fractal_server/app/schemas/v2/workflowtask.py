@@ -49,6 +49,9 @@ class WorkflowTaskRead(BaseModel):
     task_id: int
     task: TaskRead
 
+    alias: str | None = None
+    description: str | None = None
+
 
 class WorkflowTaskReadWithWarning(WorkflowTaskRead):
     warning: str | None = None
@@ -62,6 +65,8 @@ class WorkflowTaskUpdate(BaseModel):
     args_non_parallel: WorkflowTaskArgument | None = None
     args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = None
+    description: str | None = None
+    alias: str | None = None
 
 
 class WorkflowTaskImport(BaseModel):

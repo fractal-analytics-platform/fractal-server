@@ -149,7 +149,7 @@ async def update_workflow(
         db=db,
     )
 
-    if patch.name:
+    if patch.name and patch.name != workflow.name:
         await _check_workflow_exists(
             name=patch.name, project_id=project_id, db=db
         )
