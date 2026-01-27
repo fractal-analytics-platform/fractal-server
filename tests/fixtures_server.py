@@ -25,6 +25,8 @@ from fractal_server.config import Settings
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
+from fractal_server.exceptions import HTTPExceptionWithData
+from fractal_server.main import data_exception_handler
 from fractal_server.syringe import Inject
 
 PROJECT_DIR_PLACEHOLDER = "/fake/placeholder"
@@ -176,6 +178,10 @@ def app() -> Generator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobs = []
     app.state.fractal_ssh_list = None
+    app.add_exception_handler(
+        HTTPExceptionWithData,
+        handler=data_exception_handler,
+    )
     yield app
 
 
