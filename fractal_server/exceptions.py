@@ -15,7 +15,7 @@ class HTTPExceptionWithData(HTTPException):
     def __init__(
         self,
         status_code: int,
-        data: dict[str, Any],
+        data: Any,
         detail: str | None = None,
     ):
         self.data = data

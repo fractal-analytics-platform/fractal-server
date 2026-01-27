@@ -1,6 +1,3 @@
-from typing import Any
-from typing import Literal
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -44,13 +41,11 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-class TaskImportErrorData(BaseModel):
-    requested_task: TaskImport
-    error_reason: Literal[
-        "task_not_found-pkg_name,name",
-        "task_not_found-pkg_name,name,version",
-    ]
-    error_info: dict[str, Any]
+class TaskAvailable(BaseModel):
+    task_id: int
+    taskgroup_owner_id: int
+    version: str
+    active: bool
 
 
 async def _get_user_accessible_taskgroups(
@@ -93,8 +88,7 @@ async def _get_task_by_taskimport(
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
-    flexible_version: bool,
-) -> int:
+) -> int | list[dict[str, str | int]]:
     """
     Find a task based on `task_import`.
 
@@ -106,7 +100,7 @@ async def _get_task_by_taskimport(
         db: Asynchronous database session.
 
     Return:
-        `id` of the matching task, or `None`.
+        `id` of the matching task, or a list of available tasks.
     """
 
     logger.debug(f"[_get_task_by_taskimport] START, {task_import=}")
@@ -126,64 +120,31 @@ async def _get_task_by_taskimport(
             f"No task group with {task_import.pkg_name=} "
             f"and a task with {task_import.name=}."
         )
-        raise HTTPExceptionWithData(
+        raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            data=TaskImportErrorData(
-                requested_task=task_import,
-                error_reason="task_not_found-pkg_name,name",
-                error_info={
-                    "missing_match": ["task.name", "taskgroup.pkg_name"]
-                },
-            ).model_dump(),
+            detail=(
+                f"Missing match for {task_import.name=} {task_import.pkg_name=}"
+            ),
         )
 
     # Determine target `version`
-    sorted_available_versions = sorted(
-        [tg.version for tg in matching_task_groups], key=_version_sort_key
-    )
-    resolved_version_with_flexibility = next(
-        (
-            available_version
-            for available_version in sorted_available_versions
-            if (
-                _version_sort_key(available_version)
-                >= _version_sort_key(task_import.version)
-            )
-        ),
-        None,
-    )
     if task_import.version is None:
         logger.debug(
             "[_get_task_by_taskimport] "
             "No version requested, looking for latest."
         )
-        version = sorted_available_versions[-1]
-        logger.debug(
-            f"[_get_task_by_taskimport] Latest version set to {version}."
+        target_version = max(
+            [tg.version for tg in matching_task_groups], key=_version_sort_key
         )
-    elif (
-        task_import.version not in sorted_available_versions
-    ) and flexible_version:
-        if resolved_version_with_flexibility is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "No version found using flexibility for task "
-                    f"{task_import.model_dump()}."
-                ),
-            )
         logger.debug(
-            "[_get_task_by_taskimport] "
-            f"Requested version {task_import.version} not available, "
-            f"using {resolved_version_with_flexibility=} instead."
+            f"[_get_task_by_taskimport] Latest version set to {target_version}."
         )
-        version = resolved_version_with_flexibility
     else:
-        version = task_import.version
+        target_version = task_import.version
 
     # Filter task groups by version
     final_matching_task_groups = list(
-        filter(lambda tg: tg.version == version, matching_task_groups)
+        filter(lambda tg: tg.version == target_version, matching_task_groups)
     )
 
     if len(final_matching_task_groups) < 1:
@@ -191,22 +152,15 @@ async def _get_task_by_taskimport(
             "[_get_task_by_taskimport] "
             "No task group left after filtering by version."
         )
-        raise HTTPExceptionWithData(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            data=TaskImportErrorData(
-                requested_task=task_import,
-                error_reason="task_not_found-pkg_name,name,version",
-                error_info={
-                    "required_version": version,
-                    "resolved_version_with_flexibility": (
-                        resolved_version_with_flexibility
-                    ),
-                    "available_versions": [
-                        tg.version for tg in matching_task_groups
-                    ],
-                },
-            ).model_dump(),
-        )
+        return [
+            TaskAvailable(
+                task_id=next(task.id for task in tg.task_list),
+                taskgroup_owner_id=tg.user_id,
+                version=tg.version,
+                active=tg.active,
+            ).model_dump()
+            for tg in matching_task_groups
+        ]
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
         logger.debug(
@@ -229,18 +183,12 @@ async def _get_task_by_taskimport(
             logger.debug(
                 "[_get_task_by_taskimport] Disambiguation returned None."
             )
-            raise HTTPExceptionWithData(
+            raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                data=TaskImportErrorData(
-                    requested_task=task_import,
-                    error_reason="task_not_found-pkg_name,name,version",
-                    error_info={
-                        "cant_disambiguate": [
-                            tg.model_dump(exclude={"task_list"})
-                            for tg in final_matching_task_groups
-                        ]
-                    },
-                ).model_dump(),
+                detail=(
+                    "Disambiguation returned None for requested task "
+                    f"{task_import}."
+                ),
             )
 
     # Find task with given name
@@ -302,29 +250,51 @@ async def import_workflow(
     default_group_id = await _get_default_usergroup_id_or_none(db)
 
     list_wf_tasks = []
-    list_task_ids = []
-    for wf_task in workflow_import.task_list:
-        task_import = wf_task.task
-        task_id = await _get_task_by_taskimport(
-            task_import=task_import,
+    list_task_ids = [
+        await _get_task_by_taskimport(
+            task_import=wf_task.task,
             user_id=user.id,
             default_group_id=default_group_id,
             task_groups_list=task_group_list,
             db=db,
-            flexible_version=flexible_version,
+        )
+        for wf_task in workflow_import.task_list
+    ]
+
+    if any(not isinstance(item, int) for item in list_task_ids):
+        raise HTTPExceptionWithData(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            data=[
+                {
+                    "pkg_name": wf_task.task.pkg_name,
+                    "version": wf_task.task.version,
+                    "task_name": wf_task.task.name,
+                    "outcome": "success",
+                    "task_id": outcome,
+                }
+                if isinstance(outcome, int)
+                else {
+                    "pkg_name": wf_task.task.pkg_name,
+                    "version": wf_task.task.version,
+                    "task_name": wf_task.task.name,
+                    "outcome": "fail",
+                    "available_tasks": outcome,
+                }
+                for wf_task, outcome in zip(
+                    workflow_import.task_list, list_task_ids
+                )
+            ],
         )
 
+    for wf_task, task_id in zip(workflow_import.task_list, list_task_ids):
         new_wf_task = WorkflowTaskCreate(
             **wf_task.model_dump(exclude_none=True, exclude={"task"})
         )
         list_wf_tasks.append(new_wf_task)
-        list_task_ids.append(task_id)
-
-    for wftask, task_id in zip(list_wf_tasks, list_task_ids):
         task = await db.get(TaskV2, task_id)
         _check_type_filters_compatibility(
             task_input_types=task.input_types,
-            wftask_type_filters=wftask.type_filters,
+            wftask_type_filters=new_wf_task.type_filters,
         )
 
     # Create new Workflow
