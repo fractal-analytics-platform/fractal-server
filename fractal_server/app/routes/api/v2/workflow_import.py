@@ -43,8 +43,9 @@ logger = set_logger(__name__)
 
 class TaskAvailable(BaseModel):
     task_id: int
-    taskgroup_owner_id: int
-    version: str
+    taskgroup_id: int
+    taskgroup_write_access: bool
+    version: str | None
     active: bool
 
 
@@ -155,7 +156,8 @@ async def _get_task_by_taskimport(
         return [
             TaskAvailable(
                 task_id=next(task.id for task in tg.task_list),
-                taskgroup_owner_id=tg.user_id,
+                taskgroup_id=tg.id,
+                taskgroup_write_access=(tg.user_id == user_id),
                 version=tg.version,
                 active=tg.active,
             ).model_dump()
@@ -266,21 +268,21 @@ async def import_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             data=[
                 {
-                    "pkg_name": wf_task.task.pkg_name,
-                    "version": wf_task.task.version,
-                    "task_name": wf_task.task.name,
                     "outcome": "success",
-                    "task_id": outcome,
-                }
-                if isinstance(outcome, int)
-                else {
                     "pkg_name": wf_task.task.pkg_name,
                     "version": wf_task.task.version,
                     "task_name": wf_task.task.name,
-                    "outcome": "fail",
-                    "available_tasks": outcome,
+                    "task_id": task_id_or_available_tasks,
                 }
-                for wf_task, outcome in zip(
+                if isinstance(task_id_or_available_tasks, int)
+                else {
+                    "outcome": "fail",
+                    "pkg_name": wf_task.task.pkg_name,
+                    "version": wf_task.task.version,
+                    "task_name": wf_task.task.name,
+                    "available_tasks": task_id_or_available_tasks,
+                }
+                for wf_task, task_id_or_available_tasks in zip(
                     workflow_import.task_list, list_task_ids
                 )
             ],
