@@ -2,13 +2,13 @@ import json
 
 import pytest  # noqa
 from devtools import debug
+from fastapi import HTTPException
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.schemas.v2 import TaskImport
-from fractal_server.exceptions import HTTPExceptionWithData
 
 PREFIX = "api/v2"
 
@@ -60,8 +60,9 @@ async def test_import_export(
             },
         )
         assert res.status_code == 422
-        assert "HAS_ERROR_DATA" in res.json()["detail"]
-        assert "missing_match" in res.json()["data"]["error_info"].keys()
+        assert res.json()["detail"] == (
+            "Missing match for task_import.name='x' task_import.pkg_name='y'"
+        )
 
         # Import workflow
         res = await client.post(
@@ -225,8 +226,10 @@ async def test_unit_get_task_by_taskimport():
     task1 = TaskV2(id=1, name="task")
     task2 = TaskV2(id=2, name="task")
     task3 = TaskV2(id=3, name="task")
+    tasks = [task1, task2, task3]
 
     task_group1 = TaskGroupV2(
+        id=1,
         task_list=[task1],
         user_id=1,
         user_group_id=1,
@@ -234,6 +237,7 @@ async def test_unit_get_task_by_taskimport():
         version="1.0.0",
     )
     task_group2 = TaskGroupV2(
+        id=2,
         task_list=[task2],
         user_id=1,
         user_group_id=2,
@@ -241,6 +245,7 @@ async def test_unit_get_task_by_taskimport():
         version="2.0.0",
     )
     task_group3 = TaskGroupV2(
+        id=3,
         task_list=[task3],
         user_id=1,
         user_group_id=2,
@@ -256,7 +261,6 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
-        flexible_version=False,
     )
     assert task_id == task1.id
 
@@ -270,7 +274,6 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
-        flexible_version=False,
     )
     assert task_id == task2.id
 
@@ -284,35 +287,11 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=[task_group3],
         default_group_id=1,
         db=None,
-        flexible_version=False,
     )
     assert task_id == task3.id
 
     # Test with non-matching version
-    with pytest.raises(HTTPExceptionWithData) as e:
-        await _get_task_by_taskimport(
-            task_import=TaskImport(
-                name="task",
-                pkg_name="pkg",
-                version="invalid",
-            ),
-            user_id=1,
-            task_groups_list=task_groups,
-            default_group_id=1,
-            db=None,
-            flexible_version=False,
-        )
-    assert e._excinfo[1].data["error_info"] == {
-        "required_version": "invalid",
-        "resolved_version_with_flexibility": "1.0.0",
-        "available_versions": [
-            "1.0.0",
-            "2.0.0",
-            None,
-        ],
-    }
-
-    task_id = await _get_task_by_taskimport(
+    res = await _get_task_by_taskimport(
         task_import=TaskImport(
             name="task",
             pkg_name="pkg",
@@ -322,25 +301,20 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
-        flexible_version=True,
     )
-    assert task_id == task1.id
-    task_id = await _get_task_by_taskimport(
-        task_import=TaskImport(
-            name="task",
-            pkg_name="pkg",
-            version="1.5.0",
-        ),
-        user_id=1,
-        task_groups_list=task_groups,
-        default_group_id=1,
-        db=None,
-        flexible_version=True,
-    )
-    assert task_id == task2.id
+    res == [
+        {
+            "task_id": task.id,
+            "taskgroup_id": task_group.id,
+            "taskgroup_write_access": True,
+            "version": task_group.version,
+            "active": True,
+        }
+        for task, task_group in zip(tasks, task_groups)
+    ]
 
     # Test with non-matching pkg_name
-    with pytest.raises(HTTPExceptionWithData) as e:
+    with pytest.raises(HTTPException) as e:
         await _get_task_by_taskimport(
             task_import=TaskImport(
                 name="task",
@@ -350,15 +324,11 @@ async def test_unit_get_task_by_taskimport():
             task_groups_list=task_groups,
             default_group_id=1,
             db=None,
-            flexible_version=False,
         )
-    assert e._excinfo[1].data["error_info"]["missing_match"] == [
-        "task.name",
-        "taskgroup.pkg_name",
-    ]
+    assert "Missing match" in e._excinfo[1].detail
 
     # Test with non-matching name
-    with pytest.raises(HTTPExceptionWithData) as e:
+    with pytest.raises(HTTPException) as e:
         task_id = await _get_task_by_taskimport(
             task_import=TaskImport(
                 name="invalid",
@@ -368,12 +338,8 @@ async def test_unit_get_task_by_taskimport():
             task_groups_list=task_groups,
             default_group_id=1,
             db=None,
-            flexible_version=False,
         )
-    assert e._excinfo[1].data["error_info"]["missing_match"] == [
-        "task.name",
-        "taskgroup.pkg_name",
-    ]
+    assert "Missing match" in e._excinfo[1].detail
 
 
 async def test_unit_disambiguate_task_groups(
