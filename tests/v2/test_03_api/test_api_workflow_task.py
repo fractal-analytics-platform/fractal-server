@@ -359,6 +359,8 @@ async def test_patch_workflow_task(
             meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
             type_filters={"e": True, "f": False, "g": True},
+            alias="foo",
+            description="bar",
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -383,6 +385,8 @@ async def test_patch_workflow_task(
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
         )
         assert patched_workflow_task["type_filters"] == payload["type_filters"]
+        assert patched_workflow_task["alias"] == payload["alias"]
+        assert patched_workflow_task["description"] == payload["description"]
         assert res.status_code == 200
 
         payload_up = dict(
@@ -390,6 +394,8 @@ async def test_patch_workflow_task(
             args_parallel={"x": "y"},
             meta_non_parallel={"foo": "bar"},
             meta_parallel={"oof": "arb"},
+            alias=None,
+            description=None,
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -413,6 +419,8 @@ async def test_patch_workflow_task(
             patched_workflow_task_up["meta_parallel"]
             == payload_up["meta_parallel"]
         )
+        assert patched_workflow_task_up["alias"] is None
+        assert patched_workflow_task_up["description"] is None
         assert res.status_code == 200
 
         # Remove an argument

@@ -14,6 +14,7 @@
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
+    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:
