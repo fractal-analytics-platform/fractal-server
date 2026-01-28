@@ -80,6 +80,7 @@ nav:
 
 watch:
   - fractal_server
+  - CONTRIBUTING.md
 
 plugins:
   - search
