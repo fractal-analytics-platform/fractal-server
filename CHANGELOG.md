@@ -11,10 +11,12 @@
     * Prevent guest users from self update (\#3142).
     * Deprecate use of `TaskV2.source` in workflow imports and superuser-only task queries(\#3147, \#3148).
     * Improve definition of *latest version* in task import (\#3153).
+    * Remove `GET /project/{project_id}/status-legacy/` endpoint (\#3160).
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
     * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
+    * Drop `DatasetV2.history` (\#3160).
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:
