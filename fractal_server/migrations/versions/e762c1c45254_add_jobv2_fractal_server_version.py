@@ -1,7 +1,7 @@
 """add jobv2.fractal_server_version
 
 Revision ID: e762c1c45254
-Revises: 1bf8785755f9
+Revises: 18a26fcdea5d
 Create Date: 2026-01-29 10:27:27.174608
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "e762c1c45254"
-down_revision = "1bf8785755f9"
+down_revision = "18a26fcdea5d"
 branch_labels = None
 depends_on = None
 
