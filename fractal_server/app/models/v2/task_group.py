@@ -151,3 +151,4 @@ class TaskGroupActivityV2(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True)),
     )
+    fractal_server_version: str | None = None
