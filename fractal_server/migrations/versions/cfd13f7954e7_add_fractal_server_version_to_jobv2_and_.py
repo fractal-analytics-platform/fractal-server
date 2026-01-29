@@ -1,17 +1,16 @@
-"""add fractal_server_version column to JobV2 and TaskGroupActivityV2
+"""add fractal_server_version to jobv2 and taskgroupactivityv2
 
-Revision ID: bb5d46d6158c
+Revision ID: cfd13f7954e7
 Revises: 18a26fcdea5d
-Create Date: 2026-01-29 11:54:37.244069
+Create Date: 2026-01-29 12:33:00.064562
 
 """
 
 import sqlalchemy as sa
-import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "bb5d46d6158c"
+revision = "cfd13f7954e7"
 down_revision = "18a26fcdea5d"
 branch_labels = None
 depends_on = None
@@ -23,8 +22,9 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "fractal_server_version",
-                sqlmodel.sql.sqltypes.AutoString(),
-                nullable=True,
+                sa.String(),
+                server_default="pre-2.19.0",
+                nullable=False,
             )
         )
 
@@ -32,8 +32,9 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "fractal_server_version",
-                sqlmodel.sql.sqltypes.AutoString(),
-                nullable=True,
+                sa.String(),
+                server_default="pre-2.19.0",
+                nullable=False,
             )
         )
 

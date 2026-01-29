@@ -5,6 +5,7 @@ from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
+from sqlalchemy.types import String
 from sqlmodel import Field
 from sqlmodel import Index
 from sqlmodel import SQLModel
@@ -44,7 +45,9 @@ class JobV2(SQLModel, table=True):
     project_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False)
     )
-    fractal_server_version: str | None = None
+    fractal_server_version: str = Field(
+        sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
+    )
 
     worker_init: str | None = None
     working_dir: str | None = None
