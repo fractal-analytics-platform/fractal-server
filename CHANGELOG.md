@@ -17,6 +17,7 @@
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
     * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
     * Drop `DatasetV2.history` (\#3160).
+    * Add `fractal_server_version` column to `JobV2` and `TaskGroupActivityV2` (\#3161).
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:

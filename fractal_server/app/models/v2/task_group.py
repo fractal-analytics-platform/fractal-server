@@ -4,6 +4,7 @@ from datetime import timezone
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
+from sqlalchemy.types import String
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -150,4 +151,7 @@ class TaskGroupActivityV2(SQLModel, table=True):
     timestamp_ended: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True)),
+    )
+    fractal_server_version: str = Field(
+        sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
     )
