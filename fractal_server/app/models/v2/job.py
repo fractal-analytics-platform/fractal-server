@@ -44,6 +44,7 @@ class JobV2(SQLModel, table=True):
     project_dump: dict[str, Any] = Field(
         sa_column=Column(JSONB, nullable=False)
     )
+    fractal_server_version: str | None = None
 
     worker_init: str | None = None
     working_dir: str | None = None
