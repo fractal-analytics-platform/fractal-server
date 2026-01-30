@@ -45,7 +45,7 @@ class WorkflowUpdate(BaseModel):
 
     name: NonEmptyStr = None
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
-    description: str | None = None
+    description: NonEmptyStr | None = None
 
 
 class WorkflowImport(BaseModel):
@@ -58,6 +58,7 @@ class WorkflowImport(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     name: NonEmptyStr
+    description: NonEmptyStr | None = None
     task_list: list[WorkflowTaskImport]
 
 
@@ -70,4 +71,5 @@ class WorkflowExport(BaseModel):
     """
 
     name: str
+    description: str | None
     task_list: list[WorkflowTaskExport]
