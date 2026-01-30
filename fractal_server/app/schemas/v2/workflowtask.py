@@ -24,6 +24,8 @@ class WorkflowTaskCreate(BaseModel):
     args_non_parallel: WorkflowTaskArgument | None = None
     args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = Field(default_factory=dict)
+    description: NonEmptyStr | None = None
+    alias: NonEmptyStr | None = None
 
 
 class WorkflowTaskReplace(BaseModel):
