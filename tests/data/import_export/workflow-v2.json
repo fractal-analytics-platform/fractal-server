@@ -1,5 +1,6 @@
 {
     "name": "MyWorkflow-V2",
+    "description": "example workflow",
     "task_list": [
         {
             "args_parallel": {
@@ -16,14 +17,16 @@
                 "name": "NAME1",
                 "pkg_name": "PKG_NAME1",
                 "version": "0.0.1"
-            }
+            },
+            "description": "example workflow task"
         },
         {
            "task": {
                 "name": "NAME2",
                 "pkg_name": "PKG_NAME2",
                 "version": "0.0.2"
-            }
+            },
+            "alias": "task2"
         }
     ]
 }
