@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from fractal_server.types import DictStrAny
+from fractal_server.types import NonEmptyStr
 from fractal_server.types import TypeFilters
 from fractal_server.types import WorkflowTaskArgument
 
@@ -65,8 +66,8 @@ class WorkflowTaskUpdate(BaseModel):
     args_non_parallel: WorkflowTaskArgument | None = None
     args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = None
-    description: str | None = None
-    alias: str | None = None
+    description: NonEmptyStr | None = None
+    alias: NonEmptyStr | None = None
 
 
 class WorkflowTaskImport(BaseModel):
@@ -78,6 +79,8 @@ class WorkflowTaskImport(BaseModel):
     args_parallel: DictStrAny | None = None
     type_filters: TypeFilters | None = None
     input_filters: dict[str, Any] | None = None
+    description: NonEmptyStr | None = None
+    alias: NonEmptyStr | None = None
 
     task: TaskImport
 
@@ -116,5 +119,7 @@ class WorkflowTaskExport(BaseModel):
     args_non_parallel: dict[str, Any] | None = None
     args_parallel: dict[str, Any] | None = None
     type_filters: dict[str, bool] = Field(default_factory=dict)
+    description: str | None = None
+    alias: str | None = None
 
     task: TaskExport
