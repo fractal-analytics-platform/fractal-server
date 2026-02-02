@@ -15,7 +15,7 @@
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
-    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
+    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156, \#3164).
     * Drop `DatasetV2.history` (\#3160).
     * Add `fractal_server_version` column to `JobV2` and `TaskGroupActivityV2` (\#3161).
 * Internal:
