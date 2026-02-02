@@ -122,6 +122,53 @@ async def test_post_worfkflow_task(
         assert res.status_code == 201
 
 
+async def test_post_worfkflow_task_with_description_and_alias(
+    client,
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(profile_id=profile.id) as user:
+        proj = await project_factory(user)
+        wf = await workflow_factory(project_id=proj.id)
+        wf_id = wf.id
+        task = await post_task(client, label=0)
+        # OK
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="foo", alias="bar"),
+        )
+        assert res.status_code == 201
+        workflow = await get_workflow(client, proj.id, wf_id)
+        assert workflow["task_list"][-1]["description"] == "foo"
+        assert workflow["task_list"][-1]["alias"] == "bar"
+        # FAIL
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="  ", alias="bar"),
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "String should have at least 1 character"
+        )
+        # FAIL
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="foo", alias="   "),
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "String should have at least 1 character"
+        )
+
+
 async def test_post_worfkflow_task_failures(
     client,
     MockCurrentUser,

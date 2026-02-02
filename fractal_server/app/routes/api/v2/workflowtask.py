@@ -93,6 +93,8 @@ async def create_workflowtask(
         args_non_parallel=wftask.args_non_parallel,
         args_parallel=wftask.args_parallel,
         type_filters=wftask.type_filters,
+        description=wftask.description,
+        alias=wftask.alias,
         db=db,
     )
 
