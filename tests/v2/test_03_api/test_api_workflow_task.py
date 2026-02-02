@@ -127,7 +127,6 @@ async def test_post_worfkflow_task_with_description_and_alias(
     MockCurrentUser,
     project_factory,
     workflow_factory,
-    task_factory,
     local_resource_profile_db,
 ):
     resource, profile = local_resource_profile_db
