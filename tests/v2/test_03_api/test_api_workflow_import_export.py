@@ -71,8 +71,18 @@ async def test_import_export(
             workflow_from_file["task_list"]
         )
         workflow_imported_id = workflow_imported["id"]
-        assert workflow_imported["task_list"][0]["task"]["id"] == task_0.id
-        assert workflow_imported["task_list"][1]["task"]["id"] == task_1.id
+        assert (
+            workflow_imported["description"]
+            == (workflow_from_file["description"])
+        )
+        for i, task in enumerate([task_0, task_1]):
+            assert workflow_imported["task_list"][i]["task"]["id"] == task.id
+            assert workflow_imported["task_list"][i]["alias"] == (
+                workflow_from_file["task_list"][i].get("alias")
+            )
+            assert workflow_imported["task_list"][0]["description"] == (
+                workflow_from_file["task_list"][0].get("description")
+            )
 
         # Export the workflow we just imported
         res = await client.get(
