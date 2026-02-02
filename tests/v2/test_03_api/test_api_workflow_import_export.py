@@ -80,8 +80,8 @@ async def test_import_export(
             assert workflow_imported["task_list"][i]["alias"] == (
                 workflow_from_file["task_list"][i].get("alias")
             )
-            assert workflow_imported["task_list"][0]["description"] == (
-                workflow_from_file["task_list"][0].get("description")
+            assert workflow_imported["task_list"][i]["description"] == (
+                workflow_from_file["task_list"][i].get("description")
             )
 
         # Export the workflow we just imported
