@@ -20,6 +20,7 @@ class WorkflowCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
+    description: NonEmptyStr | None = None
 
 
 class WorkflowRead(BaseModel):
@@ -29,6 +30,7 @@ class WorkflowRead(BaseModel):
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: AwareDatetime
+    description: str | None
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -44,6 +46,7 @@ class WorkflowUpdate(BaseModel):
 
     name: NonEmptyStr = None
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
+    description: NonEmptyStr | None = None
 
 
 class WorkflowImport(BaseModel):
@@ -56,6 +59,7 @@ class WorkflowImport(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     name: NonEmptyStr
+    description: NonEmptyStr | None = None
     task_list: list[WorkflowTaskImport]
 
 
@@ -68,4 +72,5 @@ class WorkflowExport(BaseModel):
     """
 
     name: str
+    description: str | None
     task_list: list[WorkflowTaskExport]

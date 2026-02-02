@@ -10,6 +10,7 @@ from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -182,6 +183,7 @@ async def collect_task_pixi(
         action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()

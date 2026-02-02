@@ -122,6 +122,53 @@ async def test_post_worfkflow_task(
         assert res.status_code == 201
 
 
+async def test_post_worfkflow_task_with_description_and_alias(
+    client,
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(profile_id=profile.id) as user:
+        proj = await project_factory(user)
+        wf = await workflow_factory(project_id=proj.id)
+        wf_id = wf.id
+        task = await post_task(client, label=0)
+        # OK
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="foo", alias="bar"),
+        )
+        assert res.status_code == 201
+        workflow = await get_workflow(client, proj.id, wf_id)
+        assert workflow["task_list"][-1]["description"] == "foo"
+        assert workflow["task_list"][-1]["alias"] == "bar"
+        # FAIL
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="  ", alias="bar"),
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "String should have at least 1 character"
+        )
+        # FAIL
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(description="foo", alias="   "),
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "String should have at least 1 character"
+        )
+
+
 async def test_post_worfkflow_task_failures(
     client,
     MockCurrentUser,
@@ -359,6 +406,8 @@ async def test_patch_workflow_task(
             meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
             type_filters={"e": True, "f": False, "g": True},
+            alias="foo",
+            description="bar",
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -383,6 +432,8 @@ async def test_patch_workflow_task(
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
         )
         assert patched_workflow_task["type_filters"] == payload["type_filters"]
+        assert patched_workflow_task["alias"] == payload["alias"]
+        assert patched_workflow_task["description"] == payload["description"]
         assert res.status_code == 200
 
         payload_up = dict(
@@ -390,6 +441,8 @@ async def test_patch_workflow_task(
             args_parallel={"x": "y"},
             meta_non_parallel={"foo": "bar"},
             meta_parallel={"oof": "arb"},
+            alias=None,
+            description=None,
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -413,6 +466,8 @@ async def test_patch_workflow_task(
             patched_workflow_task_up["meta_parallel"]
             == payload_up["meta_parallel"]
         )
+        assert patched_workflow_task_up["alias"] is None
+        assert patched_workflow_task_up["description"] is None
         assert res.status_code == 200
 
         # Remove an argument

@@ -11,13 +11,22 @@
     * Prevent guest users from self update (\#3142).
     * Deprecate use of `TaskV2.source` in workflow imports and superuser-only task queries(\#3147, \#3148).
     * Improve definition of *latest version* in task import (\#3153).
+    * Remove `GET /project/{project_id}/status-legacy/` endpoint (\#3160).
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
+    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156, \#3164).
+    * Drop `DatasetV2.history` (\#3160).
+    * Add `fractal_server_version` column to `JobV2` and `TaskGroupActivityV2` (\#3161).
 * Internal:
     * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
 * Testing:
     *  Run some GitHub Actions when targeting `ihb-develop` branch (\#3138).
+* Documentation:
+    * Introduce `CONTRIBUTING.md` (\#3157).
+* Dependencies:
+    * Bump `gunicorn` to v24 (\#3158).
+    * Remove `pre-commit` from project dependencies (\#3157).
 
 # 2.18.6
 
@@ -273,8 +282,8 @@ resource&profile concepts, and a review of the application settings.
 * Task life cycle:
     * Switch to PyPI Index API for finding latest package versions (\#2790).
 * SSH:
-    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#XXX).
-    * Introduce structured logs for SSH-lock dynamics (\#XXX).
+    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#2826).
+    * Introduce structured logs for SSH-lock dynamics (\#2826).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Internal:

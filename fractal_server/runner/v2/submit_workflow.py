@@ -13,7 +13,6 @@ from typing import Protocol
 
 from sqlalchemy.orm import Session as DBSyncSession
 
-from fractal_server import __VERSION__
 from fractal_server.app.db import DB
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -224,7 +223,6 @@ def submit_workflow(
             f'Start execution of workflow "{workflow.name}"; '
             f"more logs at {str(log_file_path)}"
         )
-        logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"Resource name: {resource.name}")
         logger.debug(f"Profile name: {profile.name}")
         logger.debug(f"Username: {profile.username}")

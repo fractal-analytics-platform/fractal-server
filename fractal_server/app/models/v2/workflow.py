@@ -32,3 +32,5 @@ class WorkflowV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+
+    description: str | None = Field(default=None, nullable=True)

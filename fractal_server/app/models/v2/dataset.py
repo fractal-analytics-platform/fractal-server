@@ -27,10 +27,6 @@ class DatasetV2(SQLModel, table=True):
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
 
-    history: list[dict[str, Any]] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
-    )
-
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

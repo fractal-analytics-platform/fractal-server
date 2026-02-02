@@ -93,6 +93,8 @@ async def create_workflowtask(
         args_non_parallel=wftask.args_non_parallel,
         args_parallel=wftask.args_parallel,
         type_filters=wftask.type_filters,
+        description=wftask.description,
+        alias=wftask.alias,
         db=db,
     )
 
@@ -193,13 +195,8 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        elif key in ["meta_parallel", "meta_non_parallel", "type_filters"]:
-            setattr(db_wf_task, key, value)
         else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"patch_workflow_task endpoint cannot set {key=}",
-            )
+            setattr(db_wf_task, key, value)
 
     await db.commit()
     await db.refresh(db_wf_task)
