@@ -90,6 +90,15 @@ async def test_post_workflow(db, client, MockCurrentUser, project_factory):
         assert res.status_code == 201
         assert res.json()["description"] == "lorem ipsum"
 
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/",
+            json=dict(
+                name="workflow-with-description",
+                description="   ",
+            ),
+        )
+        assert res.status_code == 422
+
 
 async def test_delete_workflow(
     project_factory,

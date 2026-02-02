@@ -20,7 +20,7 @@ class WorkflowCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: NonEmptyStr
-    description: str | None = None
+    description: NonEmptyStr | None = None
 
 
 class WorkflowRead(BaseModel):
