@@ -416,6 +416,8 @@ async def _workflow_insert_task(
         args_non_parallel:
         args_parallel:
         type_filters:
+        description:
+        alias:
         db:
     """
     db_workflow = await db.get(WorkflowV2, workflow_id)
