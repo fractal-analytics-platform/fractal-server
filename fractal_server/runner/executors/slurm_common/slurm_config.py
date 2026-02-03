@@ -88,7 +88,7 @@ class SlurmConfig(BaseModel):
     time: str | None = None
     account: str | None = None
     nodelist: str | None = None
-    nodes: int | None = (None,)
+    nodes: int | None = None
     exclude: str | None = None
 
     # Free-field attribute for extra lines to be added to the SLURM job
