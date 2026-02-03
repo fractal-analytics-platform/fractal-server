@@ -41,6 +41,7 @@ STDERR_IGNORE_PATTERNS = [
     "step creation temporarily disabled, retrying",
     "step creation still disabled, retrying",
     "srun: step created for stepid=",
+    "srun: warning: can't run 1 processes on ",
 ]
 
 
