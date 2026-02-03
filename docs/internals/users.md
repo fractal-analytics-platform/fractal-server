@@ -13,7 +13,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## First user
 
 To manage `fractal-server` you need to create a first user with superuser privileges.
-This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../install_and_deploy.md/#2-initialize-the-database-data) or at a later stage.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../install_and_deploy.md/#initialize-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
