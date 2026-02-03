@@ -39,6 +39,7 @@ class SlurmConfig(BaseModel):
         gpus: Corresponds to SLURM option.
         time: Corresponds to SLURM option (WARNING: not fully supported).
         nodelist: Corresponds to SLURM option.
+        nodes: Corresponds to SLURM option.
         exclude: Corresponds to SLURM option.
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
@@ -87,6 +88,7 @@ class SlurmConfig(BaseModel):
     time: str | None = None
     account: str | None = None
     nodelist: str | None = None
+    nodes: int | None = (None,)
     exclude: str | None = None
 
     # Free-field attribute for extra lines to be added to the SLURM job
@@ -188,6 +190,7 @@ class SlurmConfig(BaseModel):
             "account",
             "exclude",
             "nodelist",
+            "nodes",
         ]:
             value = getattr(self, key)
             if value is not None:

@@ -22,6 +22,7 @@ SLURM_CONFIG = {
         "mem": "100M",
         "shebang_line": "#!/bin/bash",
         "use_mem_per_cpu": False,
+        "nodes": 1,
     },
     "gpu_slurm_config": {},
     "batching_config": {
