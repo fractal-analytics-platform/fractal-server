@@ -44,7 +44,6 @@ logger = set_logger(__name__)
 class TaskAvailable(BaseModel):
     task_id: int
     taskgroup_id: int
-    taskgroup_write_access: bool
     version: str | None
     active: bool
 
@@ -157,7 +156,6 @@ async def _get_task_by_taskimport(
             TaskAvailable(
                 task_id=next(task.id for task in tg.task_list),
                 taskgroup_id=tg.id,
-                taskgroup_write_access=(tg.user_id == user_id),
                 version=tg.version,
                 active=tg.active,
             ).model_dump()

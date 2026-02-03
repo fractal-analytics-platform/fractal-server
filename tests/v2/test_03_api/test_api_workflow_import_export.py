@@ -316,7 +316,6 @@ async def test_unit_get_task_by_taskimport():
         {
             "task_id": task.id,
             "taskgroup_id": task_group.id,
-            "taskgroup_write_access": True,
             "version": task_group.version,
             "active": True,
         }
