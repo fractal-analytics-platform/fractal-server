@@ -19,7 +19,6 @@ from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
-from fractal_server.app.routes.aux._versions import _version_sort_key
 from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
@@ -121,27 +120,17 @@ async def _get_task_by_taskimport(
         )
         return []
 
-    # Determine target `version`
-    if task_import.version is None:
-        logger.debug(
-            "[_get_task_by_taskimport] "
-            "No version requested, looking for latest."
-        )
-        target_version = max(
-            [tg.version for tg in matching_task_groups], key=_version_sort_key
-        )
-        logger.debug(
-            f"[_get_task_by_taskimport] Latest version set to {target_version}."
+    if task_import.version is not None:
+        final_matching_task_groups = list(
+            filter(
+                lambda tg: tg.version == task_import.version,
+                matching_task_groups,
+            )
         )
     else:
-        target_version = task_import.version
+        final_matching_task_groups = matching_task_groups
 
-    # Filter task groups by version
-    final_matching_task_groups = list(
-        filter(lambda tg: tg.version == target_version, matching_task_groups)
-    )
-
-    if len(final_matching_task_groups) < 1:
+    if task_import.version is None or len(final_matching_task_groups) < 1:
         logger.debug(
             "[_get_task_by_taskimport] "
             "No task group left after filtering by version."
