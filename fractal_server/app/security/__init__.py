@@ -194,14 +194,18 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         # check password length
         min_length = 4
         max_length = 72
-        if len(password) < min_length:
+        len_password = len(password)
+        if len_password < min_length:
             raise InvalidPasswordException(
-                f"The password is too short (minimum length: {min_length})."
+                "The password is too short "
+                f"(length = {len_password}, minimum length = {min_length})."
             )
-        if len(password.encode("utf-8")) > max_length:
+        len_encoded_password = len(password.encode("utf-8"))
+        if len_encoded_password > max_length:
             raise InvalidPasswordException(
                 "The password is too long "
-                f"(maximum length: {max_length} bytes)."
+                f"(length = {len_encoded_password} bytes, "
+                f"maximum length = {max_length} bytes)."
             )
 
     @override
