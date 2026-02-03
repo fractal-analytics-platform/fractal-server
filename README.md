@@ -134,7 +134,7 @@
 | fractal\_server/runner/executors/slurm\_common/\_\_init\_\_.py               |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/executors/slurm\_common/\_batching.py                 |       67 |        1 |       28 |        1 |     98% |        44 |
 | fractal\_server/runner/executors/slurm\_common/\_job\_states.py              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/runner/executors/slurm\_common/base\_slurm\_runner.py        |      433 |        6 |      110 |        6 |     98% |200, 217, 251, 254, 488, 535->541, 856->863, 898, 967->974, 1037->1009 |
+| fractal\_server/runner/executors/slurm\_common/base\_slurm\_runner.py        |      433 |        6 |      110 |        6 |     98% |201, 218, 252, 255, 489, 536->542, 857->864, 899, 968->975, 1038->1010 |
 | fractal\_server/runner/executors/slurm\_common/get\_slurm\_config.py         |       74 |        4 |       34 |        4 |     93% |47, 59->63, 85->89, 107-114 |
 | fractal\_server/runner/executors/slurm\_common/remote.py                     |       51 |        6 |       10 |        2 |     87% |59->66, 108-127 |
 | fractal\_server/runner/executors/slurm\_common/slurm\_config.py              |       68 |        4 |       24 |        4 |     91% |117, 162, 167, 197 |
