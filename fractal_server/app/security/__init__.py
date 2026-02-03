@@ -191,17 +191,22 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
     @override
     async def validate_password(self, password: str, user: UserOAuth) -> None:
-        # check password length
         min_length = 4
-        max_length = 72
-        if len(password) < min_length:
+        len_password = len(password)
+        if len_password < min_length:
             raise InvalidPasswordException(
-                f"The password is too short (minimum length: {min_length})."
+                "The password is too short "
+                f"(length = {len_password}, minimum length = {min_length})."
             )
-        if len(password.encode("utf-8")) > max_length:
+        max_length_in_bytes = 72
+        len_password_in_bytes = len(password.encode("utf-8"))
+        if len_password_in_bytes > max_length_in_bytes:
+            # See:
+            # https://github.com/pyca/bcrypt/blob/f0451e42e3ab6f6e1b9ac8b09bf04104bf8bdef8/src/_bcrypt/src/lib.rs#L85-L89
             raise InvalidPasswordException(
                 "The password is too long "
-                f"(maximum length: {max_length} bytes)."
+                f"(length = {len_password_in_bytes} bytes, "
+                f"maximum length = {max_length_in_bytes} bytes)."
             )
 
     @override
