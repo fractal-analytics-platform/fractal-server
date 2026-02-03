@@ -2,7 +2,6 @@ import json
 
 import pytest  # noqa
 from devtools import debug
-from fastapi import HTTPException
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
@@ -60,9 +59,7 @@ async def test_import_export(
             },
         )
         assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "Missing match for task_import.name='x' task_import.pkg_name='y'"
-        )
+        assert res.json()["detail"] == "[HAS_ERROR_DATA]"
 
         # Import workflow
         res = await client.post(
@@ -171,6 +168,7 @@ async def test_import_export(
         )
         assert res.json()["task_list"][0]["warning"] is not None
 
+        # No version provided
         valid_payload_miss_version = wf_modify(
             new_name="foo2",
             task_import={
@@ -182,7 +180,8 @@ async def test_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/",
             json=valid_payload_miss_version,
         )
-        assert res.status_code == 201
+        assert res.status_code == 422
+        assert res.json()["detail"] == "[HAS_ERROR_DATA]"
 
         # Add task no version latest group
         # Test the disambiguation based on the oldest UserGroup
@@ -214,6 +213,7 @@ async def test_import_export(
             task_import={
                 "pkg_name": "fractal-tasks-core",
                 "name": "cellpose_segmentation",
+                "version": "0",
             },
         )
         res = await client.post(
@@ -274,32 +274,6 @@ async def test_unit_get_task_by_taskimport():
     )
     assert task_id == task1.id
 
-    # Test with latest version
-    task_id = await _get_task_by_taskimport(
-        task_import=TaskImport(
-            name="task",
-            pkg_name="pkg",
-        ),
-        user_id=1,
-        task_groups_list=task_groups,
-        default_group_id=1,
-        db=None,
-    )
-    assert task_id == task2.id
-
-    # Test with latest version equal to None
-    task_id = await _get_task_by_taskimport(
-        task_import=TaskImport(
-            name="task",
-            pkg_name="pkg",
-        ),
-        user_id=1,
-        task_groups_list=[task_group3],
-        default_group_id=1,
-        db=None,
-    )
-    assert task_id == task3.id
-
     # Test with non-matching version
     res = await _get_task_by_taskimport(
         task_import=TaskImport(
@@ -323,7 +297,7 @@ async def test_unit_get_task_by_taskimport():
     ]
 
     # Test with non-matching pkg_name
-    with pytest.raises(HTTPException) as e:
+    assert (
         await _get_task_by_taskimport(
             task_import=TaskImport(
                 name="task",
@@ -334,11 +308,12 @@ async def test_unit_get_task_by_taskimport():
             default_group_id=1,
             db=None,
         )
-    assert "Missing match" in e._excinfo[1].detail
+        == []
+    )
 
     # Test with non-matching name
-    with pytest.raises(HTTPException) as e:
-        task_id = await _get_task_by_taskimport(
+    assert (
+        await _get_task_by_taskimport(
             task_import=TaskImport(
                 name="invalid",
                 pkg_name="pkg",
@@ -348,7 +323,8 @@ async def test_unit_get_task_by_taskimport():
             default_group_id=1,
             db=None,
         )
-    assert "Missing match" in e._excinfo[1].detail
+        == []
+    )
 
 
 async def test_unit_disambiguate_task_groups(
