@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
 from sqlmodel import or_
@@ -120,12 +119,7 @@ async def _get_task_by_taskimport(
             f"No task group with {task_import.pkg_name=} "
             f"and a task with {task_import.name=}."
         )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Missing match for {task_import.name=} {task_import.pkg_name=}"
-            ),
-        )
+        return []
 
     # Determine target `version`
     if task_import.version is None:
@@ -183,13 +177,7 @@ async def _get_task_by_taskimport(
             logger.debug(
                 "[_get_task_by_taskimport] Disambiguation returned None."
             )
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Disambiguation returned None for requested task "
-                    f"{task_import}."
-                ),
-            )
+            return []
 
     # Find task with given name
     task_id = next(
@@ -205,7 +193,7 @@ async def _get_task_by_taskimport(
             "[_get_task_by_taskimport] UnreachableBranchError:"
             "likely be due to a race condition on TaskGroups."
         )
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+        return []
 
     logger.debug(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
 
