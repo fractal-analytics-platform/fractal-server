@@ -198,7 +198,6 @@ async def import_workflow(
     workflow_import: WorkflowImport,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-    flexible_version: bool = False,
 ):
     """
     Import an existing workflow into a project and create required objects.
