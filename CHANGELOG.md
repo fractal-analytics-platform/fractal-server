@@ -4,6 +4,7 @@
 
 * Runner:
     * Expand `STDERR_IGNORE_PATTERNS` for SLURM errors with `srun: warning: can't run 1 processes on 8 nodes, setting nnodes to 1` (\#3169).
+    * Expose SLURM `nodes` parameter (\#3171).
 
 # 2.19.0
 
