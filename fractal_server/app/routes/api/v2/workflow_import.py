@@ -79,14 +79,14 @@ async def _get_user_accessible_taskgroups(
     return accessible_task_groups
 
 
-async def _get_task_by_taskimport(
+async def _get_task_id_or_available_tasks(
     *,
     task_import: TaskImport,
     task_groups_list: list[TaskGroupV2],
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
-) -> tuple[bool, int | list[dict[str, str | int]]]:
+) -> tuple[bool, int | list[TaskAvailable]]:
     """
     Find a task based on `task_import`.
 
@@ -101,7 +101,7 @@ async def _get_task_by_taskimport(
         `id` of the matching task, or a list of available tasks.
     """
 
-    logger.debug(f"[_get_task_by_taskimport] START, {task_import=}")
+    logger.debug(f"[_get_task_id_or_available_tasks] START, {task_import=}")
 
     # Filter by `pkg_name` and by presence of a task with given `name`.
     matching_task_groups = [
@@ -114,7 +114,7 @@ async def _get_task_by_taskimport(
     ]
     if len(matching_task_groups) < 1:
         logger.debug(
-            "[_get_task_by_taskimport] "
+            "[_get_task_id_or_available_tasks] "
             f"No task group with {task_import.pkg_name=} "
             f"and a task with {task_import.name=}."
         )
@@ -132,7 +132,7 @@ async def _get_task_by_taskimport(
 
     if task_import.version is None or len(final_matching_task_groups) < 1:
         logger.debug(
-            "[_get_task_by_taskimport] "
+            "[_get_task_id_or_available_tasks] "
             "No task group left after filtering by version."
         )
         return (
@@ -143,19 +143,19 @@ async def _get_task_by_taskimport(
                     taskgroup_id=tg.id,
                     version=tg.version,
                     active=tg.active,
-                ).model_dump()
+                )
                 for tg in matching_task_groups
             ],
         )
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
         logger.debug(
-            "[_get_task_by_taskimport] "
+            "[_get_task_id_or_available_tasks] "
             "Found a single task group, after filtering by version."
         )
     else:
         logger.debug(
-            "[_get_task_by_taskimport] "
+            "[_get_task_id_or_available_tasks] "
             f"Found {len(final_matching_task_groups)} task groups, "
             "after filtering by version."
         )
@@ -167,7 +167,8 @@ async def _get_task_by_taskimport(
         )
         if final_task_group is None:
             logger.debug(
-                "[_get_task_by_taskimport] Disambiguation returned None."
+                "[_get_task_id_or_available_tasks] "
+                "Disambiguation returned None."
             )
             return (False, [])
 
@@ -182,12 +183,14 @@ async def _get_task_by_taskimport(
     )
     if task_id is None:
         logger.error(
-            "[_get_task_by_taskimport] UnreachableBranchError:"
+            "[_get_task_id_or_available_tasks] UnreachableBranchError:"
             "likely be due to a race condition on TaskGroups."
         )
         return (False, [])
 
-    logger.debug(f"[_get_task_by_taskimport] END, {task_import=}, {task_id=}.")
+    logger.debug(
+        f"[_get_task_id_or_available_tasks] END, {task_import=}, {task_id=}."
+    )
 
     return (True, task_id)
 
@@ -230,7 +233,7 @@ async def import_workflow(
 
     list_wf_tasks = []
     list_results = [
-        await _get_task_by_taskimport(
+        await _get_task_id_or_available_tasks(
             task_import=wf_task.task,
             user_id=user.id,
             default_group_id=default_group_id,
@@ -257,7 +260,10 @@ async def import_workflow(
                     "pkg_name": wf_task.task.pkg_name,
                     "version": wf_task.task.version,
                     "task_name": wf_task.task.name,
-                    "available_tasks": task_id_or_available_tasks,
+                    "available_tasks": [
+                        available_task.model_dump()
+                        for available_task in task_id_or_available_tasks
+                    ],
                 }
                 for wf_task, (success, task_id_or_available_tasks) in zip(
                     workflow_import.task_list, list_results

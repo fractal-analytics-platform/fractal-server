@@ -228,9 +228,9 @@ async def test_import_export(
         )
 
 
-async def test_unit_get_task_by_taskimport():
+async def test_unit_get_task_id_or_available_tasks():
     from fractal_server.app.routes.api.v2.workflow_import import (
-        _get_task_by_taskimport,
+        _get_task_id_or_available_tasks,
     )
 
     task1 = TaskV2(id=1, name="task")
@@ -265,7 +265,7 @@ async def test_unit_get_task_by_taskimport():
     task_groups = [task_group1, task_group2, task_group3]
 
     # Test with matching version
-    task_id = await _get_task_by_taskimport(
+    task_id = await _get_task_id_or_available_tasks(
         task_import=TaskImport(name="task", pkg_name="pkg", version="1.0.0"),
         user_id=1,
         task_groups_list=task_groups,
@@ -275,7 +275,7 @@ async def test_unit_get_task_by_taskimport():
     assert task_id == task1.id
 
     # Test with non-matching version
-    res = await _get_task_by_taskimport(
+    res = await _get_task_id_or_available_tasks(
         task_import=TaskImport(
             name="task",
             pkg_name="pkg",
@@ -298,7 +298,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with non-matching pkg_name
     assert (
-        await _get_task_by_taskimport(
+        await _get_task_id_or_available_tasks(
             task_import=TaskImport(
                 name="task",
                 pkg_name="invalid",
@@ -313,7 +313,7 @@ async def test_unit_get_task_by_taskimport():
 
     # Test with non-matching name
     assert (
-        await _get_task_by_taskimport(
+        await _get_task_id_or_available_tasks(
             task_import=TaskImport(
                 name="invalid",
                 pkg_name="pkg",
