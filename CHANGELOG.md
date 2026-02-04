@@ -1,6 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.19.0 (unreleased)
+# 2.19.1
+
+* Runner:
+    * Expand `STDERR_IGNORE_PATTERNS` for SLURM errors with `srun: warning: can't run 1 processes on 8 nodes, setting nnodes to 1` (\#3169).
+    * Expose SLURM `nodes` parameter (\#3171).
+* Dependencies:
+    * Bump documentation dependencies (\#3172).
+
+# 2.19.0
 
 * API:
     * Add `POST /admin/v2/linkuserproject/verify/` (\#3130).

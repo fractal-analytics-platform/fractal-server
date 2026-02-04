@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.19.0"
+version = "2.19.1"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -58,16 +58,15 @@ dev = [
 
 docs = [
     "mkdocs==1.6.1",
-    "mkdocstrings[python]==0.30.1",
-    "mkdocs-material==9.7.0",
-    "mkdocs-gen-files==0.5.0",
+    "mkdocstrings[python]>=1.0.2,<1.1.0",
+    "mkdocs-material==9.7.1",
+    "mkdocs-gen-files==0.6.0",
     "mkdocs-literate-nav==0.6.2",
     "mkdocs-section-index==0.3.10",
-    "mkdocs-include-markdown-plugin==7.2.0",
+    "mkdocs-include-markdown-plugin==7.2.1",
     "mkdocs-render-swagger-plugin==0.1.2",
     "pyyaml>=6.0.0",
-    "click == 8.2.1"
-]
+    ]
 
 
 [build-system]
@@ -92,7 +91,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth"]
 
 [tool.bumpver]
-current_version = "2.19.0"
+current_version = "2.19.1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
