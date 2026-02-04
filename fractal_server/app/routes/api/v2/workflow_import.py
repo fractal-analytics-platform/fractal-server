@@ -88,7 +88,8 @@ async def _get_task_id_or_available_tasks(
     db: AsyncSession,
 ) -> tuple[bool, int | list[TaskAvailable]]:
     """
-    Find a task based on `task_import`.
+    Find a task id based on `task_import`.
+    If the task is not found, return the list of available versions.
 
     Args:
         task_import: Info on task to be imported.
@@ -98,6 +99,7 @@ async def _get_task_id_or_available_tasks(
         db: Asynchronous database session.
 
     Return:
+        success
         `id` of the matching task, or a list of available tasks.
     """
 
