@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -e
+
+write_log(){
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    echo "[collect-task, $TIMESTAMP] $1"
+}
+
+
+# Variables to be filled within fractal-server
+PACKAGE_ENV_DIR=/home/yuri/lavoro/fractal/fractal-server/data-tasks/1/fractal-tasks-mock/0.0.2/venv
+PACKAGE_NAME=fractal-tasks-mock
+
+
+TIME_START=$(date +%s)
+
+VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
+write_log "Python interpreter: $VENVPYTHON"
+echo
+
+# Extract information about paths
+# WARNING: this block will fail for paths which include whitespace characters
+write_log "START pip show"
+PIP_SHOW_OUTPUT=$($VENVPYTHON -m pip show ${PACKAGE_NAME})
+write_log "END   pip show"
+echo
+PACKAGE_NAME=$(echo "$PIP_SHOW_OUTPUT" | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
+write_log "Package name: $PACKAGE_NAME"
+echo
+PACKAGE_VERSION=$(echo "$PIP_SHOW_OUTPUT" | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
+write_log "Package version: $PACKAGE_VERSION"
+echo
+PACKAGE_PARENT_FOLDER=$(echo "$PIP_SHOW_OUTPUT" | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
+write_log "Package parent folder: $PACKAGE_PARENT_FOLDER"
+echo
+MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show "$PACKAGE_NAME" --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
+write_log "Manifest relative path: $MANIFEST_RELATIVE_PATH"
+echo
+if [ "$MANIFEST_RELATIVE_PATH" != "" ]; then
+    write_log "OK: manifest path exists"
+    echo
+else
+    write_log "ERROR: manifest path not found for $PACKAGE_NAME"
+    exit 2
+fi
+MANIFEST_ABSOLUTE_PATH="${PACKAGE_PARENT_FOLDER}/${MANIFEST_RELATIVE_PATH}"
+write_log "Manifest absolute path: $MANIFEST_ABSOLUTE_PATH"
+echo
+
+# End
+TIME_END=$(date +%s)
+write_log "All good up to here."
+write_log "Elapsed: $((TIME_END - TIME_START)) seconds"
+write_log "Exit."
+echo

@@ -272,7 +272,7 @@ async def test_unit_get_task_id_or_available_tasks():
         default_group_id=1,
         db=None,
     )
-    assert task_id == task1.id
+    assert task_id == (True, task1.id)
 
     # Test with non-matching version
     res = await _get_task_id_or_available_tasks(
@@ -297,34 +297,28 @@ async def test_unit_get_task_id_or_available_tasks():
     ]
 
     # Test with non-matching pkg_name
-    assert (
-        await _get_task_id_or_available_tasks(
-            task_import=TaskImport(
-                name="task",
-                pkg_name="invalid",
-            ),
-            user_id=1,
-            task_groups_list=task_groups,
-            default_group_id=1,
-            db=None,
-        )
-        == []
-    )
+    assert await _get_task_id_or_available_tasks(
+        task_import=TaskImport(
+            name="task",
+            pkg_name="invalid",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    ) == (False, [])
 
     # Test with non-matching name
-    assert (
-        await _get_task_id_or_available_tasks(
-            task_import=TaskImport(
-                name="invalid",
-                pkg_name="pkg",
-            ),
-            user_id=1,
-            task_groups_list=task_groups,
-            default_group_id=1,
-            db=None,
-        )
-        == []
-    )
+    assert await _get_task_id_or_available_tasks(
+        task_import=TaskImport(
+            name="invalid",
+            pkg_name="pkg",
+        ),
+        user_id=1,
+        task_groups_list=task_groups,
+        default_group_id=1,
+        db=None,
+    ) == (False, [])
 
 
 async def test_unit_disambiguate_task_groups(
