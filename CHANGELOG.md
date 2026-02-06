@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.19.2 (unreleased)
+
+* Dependencies:
+    * Bump `gunicorn` to v25 (\#3174).
+
 # 2.19.1
 
 * Runner:
