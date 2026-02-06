@@ -1,3 +1,4 @@
+import re
 from typing import Annotated
 from typing import Any
 from typing import Union
@@ -25,10 +26,11 @@ NonEmptyStr = Annotated[
 """
 A non-empty string, with no leading/trailing whitespaces.
 """
-
-NonEmptySecureStr = Annotated[
+SafeNonEmptyStr = Annotated[
     NonEmptyStr,
-    StringConstraints(pattern=r"^(?!__)(?! )((?!^.+$)[a-zA-Z0-9_. -]+)(?<! )$"),
+    StringConstraints(
+        pattern=re.compile(r"^(?!__)((?!^.+$)[a-zA-Z0-9_. -]+)$")
+    ),
 ]
 """
 A non-empty string restricted to alphanumeric characters, underscores, dots,
@@ -54,6 +56,7 @@ RelativePathStr = Annotated[
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
+    StringConstraints(pattern=re.compile(r"^([a-zA-Z0-9_. -/]+)$")),
 ]
 
 HttpUrlStr = Annotated[
