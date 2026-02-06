@@ -26,6 +26,15 @@ NonEmptyStr = Annotated[
 A non-empty string, with no leading/trailing whitespaces.
 """
 
+NonEmptySecureStr = Annotated[
+    NonEmptyStr,
+    StringConstraints(pattern=r"^(?!__)(?! )((?!^.+$)[a-zA-Z0-9_. -]+)(?<! )$"),
+]
+"""
+A non-empty string restricted to alphanumeric characters, underscores, dots,
+spaces, and hyphens, with no leading or trailing spaces and not starting with
+double underscores.
+"""
 
 AbsolutePathStr = Annotated[
     NonEmptyStr,

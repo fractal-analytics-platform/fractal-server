@@ -5,13 +5,13 @@ from pydantic import ConfigDict
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
-from fractal_server.types import NonEmptyStr
+from fractal_server.types import NonEmptySecureStr
 
 
 class ProjectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr
+    name: NonEmptySecureStr
 
 
 class ProjectRead(BaseModel):
@@ -27,4 +27,4 @@ class ProjectRead(BaseModel):
 class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr = None
+    name: NonEmptySecureStr = None
