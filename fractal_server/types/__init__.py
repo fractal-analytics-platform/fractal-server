@@ -26,11 +26,10 @@ NonEmptyStr = Annotated[
 """
 A non-empty string, with no leading/trailing whitespaces.
 """
+regex1 = re.compile(r"^(?!__)((?!^.+$)[a-zA-Z0-9_. -]+)$")
 SafeNonEmptyStr = Annotated[
     NonEmptyStr,
-    StringConstraints(
-        pattern=re.compile(r"^(?!__)((?!^.+$)[a-zA-Z0-9_. -]+)$")
-    ),
+    StringConstraints(pattern=regex1),
 ]
 """
 A non-empty string restricted to alphanumeric characters, underscores, dots,
@@ -50,13 +49,13 @@ String representing an absolute path.
 Validation fails if the path is not absolute or if it contains a
 parent-directory reference "/../".
 """
-
+regex2 = re.compile(r"^([a-zA-Z0-9_. -/]+)$")
 RelativePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
-    StringConstraints(pattern=re.compile(r"^([a-zA-Z0-9_. -/]+)$")),
+    StringConstraints(pattern=regex2),
 ]
 
 HttpUrlStr = Annotated[
