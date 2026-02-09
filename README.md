@@ -195,7 +195,7 @@
 | fractal\_server/tasks/v2/utils\_pixi.py                                      |       48 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_python\_interpreter.py                       |        6 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_templates.py                                 |       43 |        0 |       10 |        0 |    100% |           |
-| fractal\_server/types/\_\_init\_\_.py                                        |       51 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/types/\_\_init\_\_.py                                        |       54 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/types/validators/\_\_init\_\_.py                             |        9 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/types/validators/\_common\_validators.py                     |       36 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/types/validators/\_filter\_validators.py                     |       11 |        0 |        6 |        0 |    100% |           |
@@ -203,7 +203,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10058** |  **190** | **1822** |   **93** | **97%** |           |
+| **TOTAL**                                                                    | **10061** |  **190** | **1822** |   **93** | **97%** |           |
 
 
 ## Setup coverage badge
