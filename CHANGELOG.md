@@ -2,6 +2,8 @@
 
 # 2.19.2 (unreleased)
 
+* API:
+    * Add regex validator to `Project` and `Dataset` schemas (\#3175).
 * Dependencies:
     * Bump `gunicorn` to v25 (\#3174).
 
