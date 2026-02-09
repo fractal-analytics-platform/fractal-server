@@ -52,7 +52,7 @@ SafeRelativePathStr = Annotated[
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
-    StringConstraints(pattern=r"^([a-zA-Z0-9_. -/]+)$"),
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. /-]+)$"),
 ]
 
 HttpUrlStr = Annotated[
