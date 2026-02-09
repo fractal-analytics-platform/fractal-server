@@ -260,7 +260,7 @@ async def test_unit_get_task_id_or_available_tasks():
         user_id=1,
         user_group_id=2,
         pkg_name="pkg",
-        version=None,
+        version="99.99.99",
     )
     task_groups = [task_group1, task_group2, task_group3]
 
