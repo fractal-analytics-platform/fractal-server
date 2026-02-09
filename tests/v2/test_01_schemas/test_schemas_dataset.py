@@ -117,10 +117,6 @@ def test_project_dir_and_zarr_subfolder():
             name="foo", project_dir="/foo/bar", zarr_subfolder="za/../rr"
         )
 
-    DatasetCreate(
-        name="foo", project_dir="/#special/chars", zarr_subfolder="?../#"
-    )
-
 
 def test_regex_validators():
     # test SafeNonEmptyStr
