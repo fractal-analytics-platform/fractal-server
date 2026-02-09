@@ -97,7 +97,7 @@ class DatasetImport(BaseModel):
         images:
     """
 
-    name: str
+    name: SafeNonEmptyStr
     zarr_dir: ZarrDirStr
     images: list[SingleImage] = Field(default_factory=list)
 
