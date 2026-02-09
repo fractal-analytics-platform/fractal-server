@@ -120,3 +120,53 @@ def test_project_dir_and_zarr_subfolder():
     DatasetCreate(
         name="foo", project_dir="/#special/chars", zarr_subfolder="?../#"
     )
+
+
+def test_regex_validators():
+    # test SafeNonEmptyStr
+    invalid_names = [
+        "name#",
+        "na$me",
+        "na%me",
+        "na&me",
+        "na(me)",
+        "nice😊name",
+        "nàmé",
+        "na/me",
+    ]
+    for name in invalid_names:
+        with pytest.raises(ValidationError):
+            DatasetCreate(name=name)
+
+    valid_names = [
+        "......................",
+        "  name  with  spaces  ",
+        "name-with-hyphens",
+    ]
+    for name in valid_names:
+        DatasetCreate(name=name)
+
+    # test SafeRelativePathStr
+    invalid_zarr_subfolders = [
+        "zarr#",
+        "za$rr",
+        "za%rr",
+        "za&rr",
+        "za(rr)",
+        "nice😊zarr",
+        "zàrṛ",
+    ]
+    for zarr_subfolder in invalid_zarr_subfolders:
+        with pytest.raises(ValidationError):
+            DatasetCreate(
+                name="name", project_dir="/", zarr_subfolder=zarr_subfolder
+            )
+
+    valid_zarr_subfolders = [
+        "very/long/path",
+        "path/......./with/............/dots",
+    ]
+    for zarr_subfolder in valid_zarr_subfolders:
+        DatasetCreate(
+            name="name", project_dir="/", zarr_subfolder=zarr_subfolder
+        )
