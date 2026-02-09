@@ -1,4 +1,3 @@
-import re
 from typing import Annotated
 from typing import Any
 from typing import Union
@@ -26,10 +25,9 @@ NonEmptyStr = Annotated[
 """
 A non-empty string, with no leading/trailing whitespaces.
 """
-regex1 = re.compile(r"^(?!__)((?!^.+$)[a-zA-Z0-9_. -]+)$")
 SafeNonEmptyStr = Annotated[
     NonEmptyStr,
-    StringConstraints(pattern=regex1),
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. -]+)$"),
 ]
 """
 A non-empty string restricted to alphanumeric characters, underscores, dots,
@@ -49,13 +47,12 @@ String representing an absolute path.
 Validation fails if the path is not absolute or if it contains a
 parent-directory reference "/../".
 """
-regex2 = re.compile(r"^([a-zA-Z0-9_. -/]+)$")
-RelativePathStr = Annotated[
+SafeRelativePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
-    StringConstraints(pattern=regex2),
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. -/]+)$"),
 ]
 
 HttpUrlStr = Annotated[
