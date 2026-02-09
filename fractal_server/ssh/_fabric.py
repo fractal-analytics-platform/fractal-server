@@ -14,6 +14,7 @@ import paramiko.sftp_client
 from fabric import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.ssh_exception import SSHException
 from pydantic import BaseModel
 
 from fractal_server.logger import close_logger
@@ -307,7 +308,7 @@ class FractalSSH:
                     "[check_connection] SSH connection is already OK, exit."
                 )
                 return
-            except (OSError, EOFError) as e:
+            except (OSError, EOFError, SSHException) as e:
                 self.logger.warning(
                     f"[check_connection] Detected error {str(e)}, re-open."
                 )
