@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
 from pydantic import BaseModel
+from sqlalchemy.sql.operators import is_not
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -40,20 +41,19 @@ logger = set_logger(__name__)
 
 
 class TaskAvailable(BaseModel):
-    task_id: int
-    taskgroup_id: int
-    version: str | None
+    version: str
     active: bool
 
 
-async def _get_user_accessible_taskgroups(
+async def _get_user_accessible_taskgroups_with_version(
     *,
     user_id: int,
     user_resource_id: int,
     db: AsyncSession,
 ) -> list[TaskGroupV2]:
     """
-    Retrieve list of task groups that the user has access to.
+    Retrieve list of task groups with non-null version that the user has access
+    to.
     """
 
     stm = (
@@ -69,6 +69,7 @@ async def _get_user_accessible_taskgroups(
             )
         )
         .where(TaskGroupV2.resource_id == user_resource_id)
+        .where(is_not(TaskGroupV2.version, None))
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
@@ -93,14 +94,18 @@ async def _get_task_id_or_available_tasks(
 
     Args:
         task_import: Info on task to be imported.
-        task_groups_list: Current list of valid task groups.
+        task_groups_list: Current list of valid task groups with not-null
+            version.
         user_id: ID of current user.
         default_group_id: ID of default user group.
         db: Asynchronous database session.
 
     Return:
-        success
-        `id` of the matching task, or a list of available tasks.
+        A tuple `(success, result)` where:
+        - `success` is `True` if a matching task was found, `False` otherwise.
+        - `result` is:
+            - the `id` of the matching task when `success` is `True`,
+            - a list of `TaskAvailable` instances when `success` is `False`.
     """
 
     logger.debug(f"[_get_task_id_or_available_tasks] START, {task_import=}")
@@ -140,12 +145,7 @@ async def _get_task_id_or_available_tasks(
         return (
             False,
             [
-                TaskAvailable(
-                    task_id=next(task.id for task in tg.task_list),
-                    taskgroup_id=tg.id,
-                    version=tg.version,
-                    active=tg.active,
-                )
+                TaskAvailable(version=tg.version, active=tg.active)
                 for tg in matching_task_groups
             ],
         )
@@ -168,9 +168,10 @@ async def _get_task_id_or_available_tasks(
             default_group_id=default_group_id,
         )
         if final_task_group is None:
-            logger.debug(
-                "[_get_task_id_or_available_tasks] "
-                "Disambiguation returned None."
+            logger.error(
+                "[_get_task_id_or_available_tasks] UnreachableBranchError: "
+                "disambiguation returned None, likely be due to a race "
+                "condition on TaskGroups."
             )
             return (False, [])
 
@@ -185,7 +186,7 @@ async def _get_task_id_or_available_tasks(
     )
     if task_id is None:
         logger.error(
-            "[_get_task_id_or_available_tasks] UnreachableBranchError:"
+            "[_get_task_id_or_available_tasks] UnreachableBranchError: "
             "likely be due to a race condition on TaskGroups."
         )
         return (False, [])
@@ -226,7 +227,7 @@ async def import_workflow(
         db=db,
     )
 
-    task_group_list = await _get_user_accessible_taskgroups(
+    task_group_list = await _get_user_accessible_taskgroups_with_version(
         user_id=user.id,
         db=db,
         user_resource_id=user_resource_id,
