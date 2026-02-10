@@ -25,7 +25,15 @@ NonEmptyStr = Annotated[
 """
 A non-empty string, with no leading/trailing whitespaces.
 """
-
+SafeNonEmptyStr = Annotated[
+    NonEmptyStr,
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. -]+)$"),
+]
+"""
+A non-empty string restricted to the characters matching the regex, i.e.
+alphanumerics, underscores, dots, spaces, and hyphens, with no leading or
+trailing spaces.
+"""
 
 AbsolutePathStr = Annotated[
     NonEmptyStr,
@@ -40,12 +48,21 @@ Validation fails if the path is not absolute or if it contains a
 parent-directory reference "/../".
 """
 
-RelativePathStr = Annotated[
+SafeRelativePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. /-]+)$"),
 ]
+"""
+String representing a relative path.
+
+Validation fails if the path is absolute, if it contains a parent-directory
+reference "/../" or if it doesn't match the regex, i.e. if it contains
+characters which are not alphanumerics, underscores, dots, spaces, hyphens
+or slashes.
+"""
 
 HttpUrlStr = Annotated[
     NonEmptyStr,
