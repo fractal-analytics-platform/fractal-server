@@ -6,6 +6,7 @@
     * Add regex validator to `Project` and `Dataset` schemas (\#3175).
 * Dependencies:
     * Bump `gunicorn` to v25 (\#3174).
+    * Bump `packaging` to v26 (\#3178).
 
 # 2.19.1
 
