@@ -251,3 +251,26 @@ def test_pixi_slurm_config():
         cpus=1,
         mem="10G",
     )
+
+    PixiSLURMConfig(
+        partition="fake",
+        time="100",
+        cpus=1,
+        mem_per_cpu="10G",
+    )
+
+    with pytest.raises(ValidationError, match="You must set either"):
+        PixiSLURMConfig(
+            partition="fake",
+            time="100",
+            cpus=1,
+        )
+
+    with pytest.raises(ValidationError, match="You must set either"):
+        PixiSLURMConfig(
+            partition="fake",
+            time="100",
+            cpus=1,
+            mem="4G",
+            mem_per_cpu="4G",
+        )
