@@ -20,6 +20,9 @@ def _check_pixi_slurm_memory(mem: str) -> str:
     return mem
 
 
+PixiMemoryStr = Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
+
+
 class PixiSLURMConfig(BaseModel):
     """
     Parameters that are passed directly to a `sbatch` command.
@@ -35,18 +38,14 @@ class PixiSLURMConfig(BaseModel):
     """
     `-c, --cpus-per-task=<ncpus>
     """
-    mem: (
-        Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)] | None
-    ) = None
+    mem: PixiMemoryStr | None = None
     """
     `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
     From `sbatch` docs: Specify the real memory required per node. Default
     units are megabytes. Different units can be specified using the suffix
     [K|M|G|T].
     """
-    mem_per_cpu: (
-        Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)] | None
-    ) = None
+    mem_per_cpu: PixiMemoryStr | None = None
     """
     `--mem-per-cpu=<size>[units]` (examples: `"10M"`, `"10G"`).
     From `sbatch` docs: Minimum memory required per usable allocated CPU.
