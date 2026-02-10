@@ -7,7 +7,9 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
+from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskImport
+from fractal_server.utils import get_timestamp
 
 PREFIX = "api/v2"
 
@@ -623,6 +625,7 @@ async def test_import_multiple_task_groups_same_version(
     task_factory,
     project_factory,
     db,
+    monkeypatch,
 ):
     """
     Represent regression described in
@@ -694,3 +697,64 @@ async def test_import_multiple_task_groups_same_version(
             ),
         )
         assert res.json()["task_list"][0]["task"]["version"] == V2
+
+        import fractal_server.app.routes.api.v2.workflow_import as wf_import
+
+        async def fake_disambiguate_task_groups_1(*args, **kwargs):
+            return None
+
+        monkeypatch.setattr(
+            wf_import,
+            "_disambiguate_task_groups",
+            fake_disambiguate_task_groups_1,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/import/",
+            json=dict(
+                name="fake",
+                task_list=[
+                    dict(
+                        task=dict(
+                            pkg_name=PKG_NAME,
+                            version=V2,
+                            name=TASK_NAME,
+                        )
+                    )
+                ],
+            ),
+        )
+        debug(res.json())
+
+        async def fake_disambiguate_task_groups_2(*args, **kwargs):
+            return TaskGroupRead(
+                id=99999,
+                task_list=[],
+                user_id=99999,
+                origin="other",
+                pkg_name="foo",
+                active=False,
+                timestamp_created=get_timestamp(),
+                timestamp_last_used=get_timestamp(),
+            )
+
+        monkeypatch.setattr(
+            wf_import,
+            "_disambiguate_task_groups",
+            fake_disambiguate_task_groups_2,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/import/",
+            json=dict(
+                name="fake2",
+                task_list=[
+                    dict(
+                        task=dict(
+                            pkg_name=PKG_NAME,
+                            version=V2,
+                            name=TASK_NAME,
+                        )
+                    )
+                ],
+            ),
+        )
+        debug(res.json())
