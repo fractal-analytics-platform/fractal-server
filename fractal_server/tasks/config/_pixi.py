@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Annotated
+from typing import Self
 
 from pydantic import AfterValidator
 from pydantic import BaseModel
@@ -34,9 +35,20 @@ class PixiSLURMConfig(BaseModel):
     """
     `-c, --cpus-per-task=<ncpus>
     """
-    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
+    mem: (
+        Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)] | None
+    ) = None
     """
     `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
+    From `sbatch` docs: Specify the real memory required per node. Default
+    units are megabytes. Different units can be specified using the suffix
+    [K|M|G|T].
+    """
+    mem_per_cpu: (
+        Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)] | None
+    ) = None
+    """
+    `--mem-per-cpu=<size>[units]` (examples: `"10M"`, `"10G"`).
     From `sbatch` docs: Specify the real memory required per node. Default
     units are megabytes. Different units can be specified using the suffix
     [K|M|G|T].
@@ -49,6 +61,17 @@ class PixiSLURMConfig(BaseModel):
     "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
     "days-hours:minutes:seconds".
     """
+
+    @model_validator(mode="after")
+    def _memory_validator(self: Self) -> Self:
+        if self.mem is None and self.mem_per_cpu is None:
+            raise ValueError("Cannot set both `mem` and `mem_per_cpu` to None.")
+        if self.mem is not None and self.mem_per_cpu is not None:
+            raise ValueError(
+                f"Cannot set both mem={self.mem} and "
+                f"mem_per_cpu={self.mem_per_cpu}."
+            )
+        return self
 
 
 class TasksPixiSettings(BaseModel):
