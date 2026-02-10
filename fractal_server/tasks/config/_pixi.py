@@ -64,13 +64,10 @@ class PixiSLURMConfig(BaseModel):
 
     @model_validator(mode="after")
     def _memory_validator(self: Self) -> Self:
-        if self.mem is None and self.mem_per_cpu is None:
-            raise ValueError("Cannot set both `mem` and `mem_per_cpu` to None.")
-        if self.mem is not None and self.mem_per_cpu is not None:
-            raise ValueError(
-                f"Cannot set both mem={self.mem} and "
-                f"mem_per_cpu={self.mem_per_cpu}."
-            )
+        if (self.mem is None and self.mem_per_cpu is None) or (
+            self.mem is not None and self.mem_per_cpu is not None
+        ):
+            raise ValueError("You must set either `mem` or `mem_per_cpu`.")
         return self
 
 
