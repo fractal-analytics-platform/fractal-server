@@ -14,7 +14,7 @@ from fractal_server.types import NonEmptyStr
 def _check_pixi_slurm_memory(mem: str) -> str:
     if mem[-1] not in ["K", "M", "G", "T"]:
         raise ValueError(
-            f"Invalid memory requirement {mem=} for `pixi`, "
+            f"Invalid memory requirement '{mem}' for `pixi`, "
             "please set a K/M/G/T units suffix."
         )
     return mem
