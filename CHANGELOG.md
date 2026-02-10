@@ -2,6 +2,8 @@
 
 # 2.19.2 (unreleased)
 
+* Runner:
+    * Also log workflowtask `alias` field, if present (\#3179).
 * API:
     * Add regex validator to `Project` and `Dataset` schemas (\#3175).
 * Dependencies:
