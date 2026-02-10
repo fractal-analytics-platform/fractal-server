@@ -168,11 +168,15 @@ def run_script_on_remote_slurm(
     stderr_remote = os.path.join(workdir_remote, f"{prefix}-err.txt")
     stdout_remote = os.path.join(workdir_remote, f"{prefix}-out.txt")
     success_file_remote = os.path.join(workdir_remote, f"{prefix}-success.txt")
+    if slurm_config_obj.mem is not None:
+        memory_line = f"#SBATCH --mem={slurm_config_obj.mem}"
+    else:
+        memory_line = f"#SBATCH --mem-per-cpu={slurm_config_obj.mem_per_cpu}"
     script_lines = [
         "#!/bin/bash",
         f"#SBATCH --partition={slurm_config_obj.partition}",
         f"#SBATCH --cpus-per-task={slurm_config_obj.cpus}",
-        f"#SBATCH --mem={slurm_config_obj.mem}",
+        memory_line,
         f"#SBATCH --time={slurm_config_obj.time}",
         f"#SBATCH --err={stderr_remote}",
         f"#SBATCH --out={stdout_remote}",

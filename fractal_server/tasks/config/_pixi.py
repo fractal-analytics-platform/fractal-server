@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Annotated
+from typing import Self
 
 from pydantic import AfterValidator
 from pydantic import BaseModel
@@ -13,10 +14,13 @@ from fractal_server.types import NonEmptyStr
 def _check_pixi_slurm_memory(mem: str) -> str:
     if mem[-1] not in ["K", "M", "G", "T"]:
         raise ValueError(
-            f"Invalid memory requirement {mem=} for `pixi`, "
+            f"Invalid memory requirement '{mem}' for `pixi`, "
             "please set a K/M/G/T units suffix."
         )
     return mem
+
+
+PixiMemoryStr = Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
 
 
 class PixiSLURMConfig(BaseModel):
@@ -34,12 +38,19 @@ class PixiSLURMConfig(BaseModel):
     """
     `-c, --cpus-per-task=<ncpus>
     """
-    mem: Annotated[NonEmptyStr, AfterValidator(_check_pixi_slurm_memory)]
+    mem: PixiMemoryStr | None = None
     """
     `--mem=<size>[units]` (examples: `"10M"`, `"10G"`).
     From `sbatch` docs: Specify the real memory required per node. Default
     units are megabytes. Different units can be specified using the suffix
     [K|M|G|T].
+    """
+    mem_per_cpu: PixiMemoryStr | None = None
+    """
+    `--mem-per-cpu=<size>[units]` (examples: `"10M"`, `"10G"`).
+    From `sbatch` docs: Minimum memory required per usable allocated CPU.
+    Default units are megabytes. [..] The --mem, --mem-per-cpu and
+    --mem-per-gpu options are mutually exclusive.
     """
     time: NonEmptyStr
     """
@@ -49,6 +60,14 @@ class PixiSLURMConfig(BaseModel):
     "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
     "days-hours:minutes:seconds".
     """
+
+    @model_validator(mode="after")
+    def _memory_validator(self: Self) -> Self:
+        if (self.mem is None and self.mem_per_cpu is None) or (
+            self.mem is not None and self.mem_per_cpu is not None
+        ):
+            raise ValueError("You must set either `mem` or `mem_per_cpu`.")
+        return self
 
 
 class TasksPixiSettings(BaseModel):
