@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.19.2 (unreleased)
+# 2.19.2
 
 * Task lifecycle:
     * Support both `--mem` and `--mem-per-cpu` for pixi/SLURM collection (\#3180).
