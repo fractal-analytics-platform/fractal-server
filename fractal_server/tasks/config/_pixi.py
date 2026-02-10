@@ -49,9 +49,9 @@ class PixiSLURMConfig(BaseModel):
     ) = None
     """
     `--mem-per-cpu=<size>[units]` (examples: `"10M"`, `"10G"`).
-    From `sbatch` docs: Specify the real memory required per node. Default
-    units are megabytes. Different units can be specified using the suffix
-    [K|M|G|T].
+    From `sbatch` docs: Minimum memory required per usable allocated CPU.
+    Default units are megabytes. [..] The --mem, --mem-per-cpu and
+    --mem-per-gpu options are mutually exclusive.
     """
     time: NonEmptyStr
     """
