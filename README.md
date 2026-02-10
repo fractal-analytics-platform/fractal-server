@@ -166,7 +166,7 @@
 | fractal\_server/syringe.py                                                   |       28 |        4 |        2 |        0 |     87% |     91-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                        |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/config/\_\_init\_\_.py                                 |        3 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/config/\_pixi.py                                       |       54 |        0 |       12 |        0 |    100% |           |
+| fractal\_server/tasks/config/\_pixi.py                                       |       57 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/tasks/config/\_python.py                                     |       13 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/utils.py                                               |        7 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v2/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
@@ -180,7 +180,7 @@
 | fractal\_server/tasks/v2/local/reactivate.py                                 |       70 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/local/reactivate\_pixi.py                           |       77 |        8 |        4 |        0 |     90% |   188-199 |
 | fractal\_server/tasks/v2/ssh/\_\_init\_\_.py                                 |        7 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/v2/ssh/\_pixi\_slurm\_ssh.py                           |       94 |        2 |       16 |        2 |     96% |   45, 136 |
+| fractal\_server/tasks/v2/ssh/\_pixi\_slurm\_ssh.py                           |       95 |        2 |       16 |        2 |     96% |   45, 136 |
 | fractal\_server/tasks/v2/ssh/\_utils.py                                      |       57 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/v2/ssh/collect.py                                      |      121 |        1 |       12 |        0 |     99% |       293 |
 | fractal\_server/tasks/v2/ssh/collect\_pixi.py                                |      118 |        8 |        8 |        0 |     94% |   327-343 |
@@ -203,7 +203,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10075** |  **190** | **1826** |   **93** | **97%** |           |
+| **TOTAL**                                                                    | **10079** |  **190** | **1826** |   **93** | **97%** |           |
 
 
 ## Setup coverage badge
