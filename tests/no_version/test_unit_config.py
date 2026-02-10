@@ -259,6 +259,14 @@ def test_pixi_slurm_config():
         mem_per_cpu="10G",
     )
 
+    with pytest.raises(ValidationError, match="Invalid memory requirement"):
+        PixiSLURMConfig(
+            partition="fake",
+            time="100",
+            cpus=1,
+            mem_per_cpu="something invalid",
+        )
+
     with pytest.raises(ValidationError, match="You must set either"):
         PixiSLURMConfig(
             partition="fake",
