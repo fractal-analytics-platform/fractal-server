@@ -1,11 +1,21 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.19.2 (unreleased)
+# 2.19.3
 
+* Task lifecycle:
+    * Expose `preamble` for pixi/SLURM task collection (\#3182).
+
+# 2.19.2
+
+* Task lifecycle:
+    * Support both `--mem` and `--mem-per-cpu` for pixi/SLURM task collection (\#3180).
+* Runner:
+    * Also log workflowtask `alias` field, if present (\#3179).
 * API:
     * Add regex validator to `Project` and `Dataset` schemas (\#3175).
 * Dependencies:
     * Bump `gunicorn` to v25 (\#3174).
+    * Bump `packaging` to v26 (\#3178).
 
 # 2.19.1
 
