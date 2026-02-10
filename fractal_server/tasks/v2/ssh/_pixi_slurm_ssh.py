@@ -183,6 +183,7 @@ def run_script_on_remote_slurm(
         f"#SBATCH -D {workdir_remote}",
         "",
     ]
+    script_lines.extend(slurm_config_obj.preamble)
     for script_path in script_paths:
         script_lines.append(f"bash {script_path}")
     script_lines.append(f"touch {success_file_remote}")

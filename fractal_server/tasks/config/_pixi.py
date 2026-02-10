@@ -4,6 +4,7 @@ from typing import Self
 
 from pydantic import AfterValidator
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import PositiveInt
 from pydantic import model_validator
 
@@ -59,6 +60,10 @@ class PixiSLURMConfig(BaseModel):
     imposed. Acceptable time formats include "minutes", "minutes:seconds",
     "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
     "days-hours:minutes:seconds".
+    """
+    preamble: list[str] = Field(default_factory=list)
+    """
+    Lines to be included at the beginning of the SLURM submission script.
     """
 
     @model_validator(mode="after")

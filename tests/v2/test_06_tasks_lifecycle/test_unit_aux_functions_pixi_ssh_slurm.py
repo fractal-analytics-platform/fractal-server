@@ -123,7 +123,11 @@ def test_sbatch_failure(
         run_script_on_remote_slurm(
             script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
-                mem_per_cpu="1G", cpus=1, partition="main", time="10"
+                mem_per_cpu="1G",
+                cpus=1,
+                partition="main",
+                time="10",
+                preamble=["whoami"],
             ).model_dump(),
             fractal_ssh=MockFractalSSH(connection=None),
             logger_name="my-logger",
