@@ -2,6 +2,8 @@
 
 # 2.19.2 (unreleased)
 
+* Task lifecycle:
+    * Support both `--mem` and `--mem-per-cpu` for pixi/SLURM collection (\#3180).
 * Runner:
     * Also log workflowtask `alias` field, if present (\#3179).
 * API:
