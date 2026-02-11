@@ -119,6 +119,7 @@ async def test_post_task(
     client,
     MockCurrentUser,
     local_resource_profile_db,
+    db,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(profile_id=profile.id):

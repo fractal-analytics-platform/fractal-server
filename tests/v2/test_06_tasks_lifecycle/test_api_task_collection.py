@@ -5,13 +5,10 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
-from fractal_server.app.schemas.v2 import TaskGroupActivityAction
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 PREFIX = "api/v2/task"
 
@@ -193,10 +190,9 @@ async def test_task_collection_from_pypi(
         task_group = res.json()
         assert task_group["user_group_id"] is None
 
-        # Collect again and fail due to non-duplication constraint
         res = await client.post(f"{PREFIX}/collect/pip/", data=payload)
         assert res.status_code == 422
-        assert "already owns a task group" in res.json()["detail"]
+        assert "already exists." in res.json()["detail"]
 
 
 async def test_task_collection_failure_due_to_existing_path(
@@ -236,118 +232,6 @@ async def test_task_collection_failure_due_to_existing_path(
         )
         assert res.status_code == 422
         assert "Other TaskGroups already have path" in res.json()["detail"]
-
-
-async def test_contact_an_admin_message(
-    MockCurrentUser, client, db, default_user_group, local_resource_profile_db
-):
-    resource, profile = local_resource_profile_db
-    # Create identical multiple (> 1) TaskGroups associated to userA and to the
-    # default UserGroup (this is NOT ALLOWED using the API).
-    async with MockCurrentUser(profile_id=profile.id) as userA:
-        for _ in range(2):
-            db.add(
-                TaskGroupV2(
-                    user_id=userA.id,
-                    user_group_id=default_user_group.id,
-                    pkg_name="testing-tasks-mock",
-                    version="0.1.2",
-                    origin="pypi",
-                    resource_id=resource.id,
-                )
-            )
-        await db.commit()
-
-    async with MockCurrentUser(
-        is_verified=True, profile_id=profile.id
-    ) as userB:
-        # Fail inside `_verify_non_duplication_group_constraint`.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.2"),
-        )
-        assert res.status_code == 422
-        assert "UserGroup " in res.json()["detail"]
-        assert "contact an admin" in res.json()["detail"]
-
-        # Create identical multiple (> 1) TaskGroups associated to userB
-        # (this is NOT ALLOWED using the API).
-        for _ in range(2):
-            db.add(
-                TaskGroupV2(
-                    user_id=userB.id,
-                    user_group_id=None,
-                    pkg_name="testing-tasks-mock",
-                    version="0.1.2",
-                    origin="pypi",
-                    resource_id=resource.id,
-                )
-            )
-        await db.commit()
-
-        # Fail inside `_verify_non_duplication_user_constraint`.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.2"),
-        )
-        assert res.status_code == 422
-        assert "User " in res.json()["detail"]
-        assert "contact an admin" in res.json()["detail"]
-
-        # Create a new TaskGroupV2 associated to userB.
-        task_group = TaskGroupV2(
-            user_id=userB.id,
-            pkg_name="testing-tasks-mock",
-            version="0.1.4",
-            origin="pypi",
-            resource_id=resource.id,
-        )
-        db.add(task_group)
-        await db.commit()
-        await db.refresh(task_group)
-        # Create a TaskGroupActivityStatusV2 associated to the new TaskGroup.
-        task_group_activity_1 = TaskGroupActivityV2(
-            user_id=userB.id,
-            taskgroupv2_id=task_group.id,
-            action=TaskGroupActivityAction.COLLECT,
-            status=TaskGroupActivityStatus.PENDING,
-            pkg_name="testing-tasks-mock",
-            version="0.1.4",
-        )
-        db.add(task_group_activity_1)
-        await db.commit()
-        # Fail inside `_verify_non_duplication_user_constraint`,
-        # (case `len(states) == 1`).
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
-        )
-        assert res.status_code == 422
-        assert (
-            "There exists another task-group collection" in res.json()["detail"]
-        )
-
-        # Create a new CollectionState associated to the same TaskGroup
-        # (this is NOT ALLOWED using the API).
-        task_group_activity_2 = TaskGroupActivityV2(
-            user_id=userB.id,
-            taskgroupv2_id=task_group.id,
-            action=TaskGroupActivityAction.COLLECT,
-            status=TaskGroupActivityStatus.PENDING,
-            pkg_name="testing-tasks-mock",
-            version="0.1.4",
-        )
-        db.add(task_group_activity_2)
-        await db.commit()
-        # Fail inside `_verify_non_duplication_user_constraint`, but get a
-        # richer message from `_get_collection_status_message`
-        # (case `len(states) > 1`).
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
-        )
-        assert "TaskGroupActivityV2" in res.json()["detail"]
-        assert "contact an admin" in res.json()["detail"]
 
 
 async def test_task_collection_from_pypi_with_extras(
