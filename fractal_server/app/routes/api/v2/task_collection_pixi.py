@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
+from sqlalchemy.exc import IntegrityError
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
@@ -18,15 +19,6 @@ from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_valid_user_group_id,
-)
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_group_constraint,
-)
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_group_path,
-)
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_user_constraint,
 )
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
@@ -144,25 +136,6 @@ async def collect_task_pixi(
         path=task_group_path,
     )
 
-    await _verify_non_duplication_user_constraint(
-        user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        user_resource_id=resource_id,
-        db=db,
-    )
-    await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        db=db,
-    )
-    await _verify_non_duplication_group_path(
-        path=task_group_attrs["path"],
-        resource_id=resource_id,
-        db=db,
-    )
-
     if resource.type != ResourceType.SLURM_SSH:
         if Path(task_group_path).exists():
             raise HTTPException(
@@ -172,7 +145,14 @@ async def collect_task_pixi(
 
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(e),
+        )
     await db.refresh(task_group)
     db.expunge(task_group)
 

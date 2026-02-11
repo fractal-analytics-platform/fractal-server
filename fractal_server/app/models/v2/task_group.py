@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import String
 from sqlmodel import Field
+from sqlmodel import Index
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
@@ -86,6 +87,32 @@ class TaskGroupV2(SQLModel, table=True):
             server_default=(
                 datetime(2024, 11, 20, tzinfo=timezone.utc).isoformat()
             ),
+        ),
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_taskgroupv2_user_unique_constraint",
+            "user_id",
+            "pkg_name",
+            "version",
+            "resource_id",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+        ),
+        Index(
+            "ix_taskgroupv2_usergroup_unique_constraint",
+            "user_group_id",
+            "pkg_name",
+            "version",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+        ),
+        Index(
+            "ix_taskgroupv2_path_unique_constraint",
+            "path",
+            "resource_id",
+            unique=True,
         ),
     )
 

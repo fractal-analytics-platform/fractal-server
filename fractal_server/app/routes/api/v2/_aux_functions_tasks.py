@@ -11,7 +11,6 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
-from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -277,124 +276,6 @@ async def _get_collection_task_group_activity_status_message(
     else:
         msg = ""
     return msg
-
-
-async def _verify_non_duplication_user_constraint(
-    *,
-    db: AsyncSession,
-    user_id: int,
-    pkg_name: str,
-    version: str | None,
-    user_resource_id: int,
-):
-    stm = (
-        select(TaskGroupV2)
-        .where(TaskGroupV2.user_id == user_id)
-        .where(TaskGroupV2.pkg_name == pkg_name)
-        .where(TaskGroupV2.version == version)
-        .where(TaskGroupV2.resource_id == user_resource_id)
-    )
-    res = await db.execute(stm)
-    duplicate = res.scalars().all()
-    if duplicate:
-        user = await db.get(UserOAuth, user_id)
-        if len(duplicate) > 1:
-            error_msg = (
-                f"User '{user.email}' already owns {len(duplicate)} task "
-                f"groups with name='{pkg_name}' and {version=} "
-                f"(IDs: {[group.id for group in duplicate]})."
-            )
-            logger.error(f"UnreachableBranchError: {error_msg}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Invalid state: {error_msg}\n"
-                    "This should have not happened: please contact an admin."
-                ),
-            )
-        state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"User '{user.email}' already owns a task group "
-                f"with name='{pkg_name}' and {version=}.{state_msg}"
-            ),
-        )
-
-
-async def _verify_non_duplication_group_constraint(
-    db: AsyncSession,
-    user_group_id: int | None,
-    pkg_name: str,
-    version: str | None,
-):
-    if user_group_id is None:
-        return
-
-    stm = (
-        select(TaskGroupV2)
-        .where(TaskGroupV2.user_group_id == user_group_id)
-        .where(TaskGroupV2.pkg_name == pkg_name)
-        .where(TaskGroupV2.version == version)
-    )
-    res = await db.execute(stm)
-    duplicate = res.scalars().all()
-    if duplicate:
-        user_group = await db.get(UserGroup, user_group_id)
-        if len(duplicate) > 1:
-            error_msg = (
-                f"UserGroup '{user_group.name}' already owns "
-                f"{len(duplicate)} task groups with name='{pkg_name}' and "
-                f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
-            )
-            logger.error(error_msg)
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Invalid state:\n{error_msg}"
-                    "This should have not happened: please contact an admin."
-                ),
-            )
-        state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"UserGroup {user_group.name} already owns a task group "
-                f"with {pkg_name=} and {version=}.{state_msg}"
-            ),
-        )
-
-
-async def _verify_non_duplication_group_path(
-    *,
-    path: str | None,
-    resource_id: int,
-    db: AsyncSession,
-) -> None:
-    """
-    Verify uniqueness of non-`None` `TaskGroupV2.path`
-    """
-    if path is None:
-        return
-    stm = (
-        select(TaskGroupV2.id)
-        .where(TaskGroupV2.path == path)
-        .where(TaskGroupV2.resource_id == resource_id)
-    )
-    res = await db.execute(stm)
-    duplicate_ids = res.scalars().all()
-    if duplicate_ids:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Other TaskGroups already have {path=}: "
-                f"{sorted(duplicate_ids)}."
-            ),
-        )
 
 
 async def _add_warnings_to_workflow_tasks(

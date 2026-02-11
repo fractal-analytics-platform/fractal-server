@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import get_async_db
@@ -30,8 +31,6 @@ from fractal_server.tasks.v2.utils_database import (
 )
 
 from ._aux_functions_tasks import _get_valid_user_group_id
-from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 
 router = APIRouter()
 
@@ -155,24 +154,16 @@ async def collect_task_custom(
     )
     TaskGroupCreate(**task_group_attrs)
 
-    # Verify non-duplication constraints
-    await _verify_non_duplication_user_constraint(
-        user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        user_resource_id=resource_id,
-        db=db,
-    )
-    await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
-        db=db,
-    )
-
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(e),
+        )
     await db.refresh(task_group)
     db.expunge(task_group)
 

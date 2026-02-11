@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from pydantic.types import AwareDatetime
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -33,7 +34,6 @@ from fractal_server.logger import set_logger
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
-from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 
 router = APIRouter()
@@ -202,16 +202,7 @@ async def patch_task_group(
         user_id=user.id,
         db=db,
     )
-    if (
-        "user_group_id" in task_group_update.model_dump(exclude_unset=True)
-        and task_group_update.user_group_id != task_group.user_group_id
-    ):
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            pkg_name=task_group.pkg_name,
-            version=task_group.version,
-            user_group_id=task_group_update.user_group_id,
-        )
+
     for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
             await _verify_user_belongs_to_group(
@@ -220,6 +211,13 @@ async def patch_task_group(
         setattr(task_group, key, value)
 
     db.add(task_group)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(e),
+        )
     await db.refresh(task_group)
     return task_group
