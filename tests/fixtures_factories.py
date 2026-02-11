@@ -2,6 +2,9 @@ import json
 from typing import Literal
 
 import pytest
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
@@ -17,12 +20,6 @@ from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_group_constraint,
-)  # noqa
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_user_constraint,
-)  # noqa
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
@@ -295,20 +292,6 @@ async def task_factory(db: AsyncSession):
         )
         resource_id = res.scalar_one()
 
-        await _verify_non_duplication_user_constraint(
-            db=db,
-            user_id=user_id,
-            pkg_name=pkg_name,
-            version=version,
-            user_resource_id=resource_id,
-        )
-        await _verify_non_duplication_group_constraint(
-            db=db,
-            user_group_id=user_group_id,
-            pkg_name=pkg_name,
-            version=version,
-        )
-
         task_group = TaskGroupV2(
             user_id=user_id,
             user_group_id=user_group_id,
@@ -323,7 +306,13 @@ async def task_factory(db: AsyncSession):
             task_list=[task],
         )
         db.add(task_group)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(e),
+            )
 
         await db.refresh(task)
         return task
