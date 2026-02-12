@@ -345,6 +345,10 @@ async def _verify_non_duplication_group_constraint(
 
 @asynccontextmanager
 async def integrity_error_to_422(db):
+    """
+    If an IntegrityError occurs inside the context, rolls back the current
+    transaction and raises an HTTPException with status code 422.
+    """
     try:
         yield
     except IntegrityError as e:
