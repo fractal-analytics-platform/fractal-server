@@ -3,7 +3,7 @@
 # 2.19.4 (unreleased)
 
 * Database:
-    * Move some non-duplication constraints on `TaskGroupV2` from aux functions to database level (\#3185).
+    * Enforce non-duplication `TaskGroupV2` constraints for via `unique` database checks (\#3185).
 
 # 2.19.3
 
