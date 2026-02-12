@@ -348,6 +348,10 @@ async def integrity_error_to_422(db):
     try:
         yield
     except IntegrityError as e:
+        logger.warning(
+            "Unexpected IntegrityError caught in `integrity_error_to_422`."
+            f"Original error: {str(e)}"
+        )
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
