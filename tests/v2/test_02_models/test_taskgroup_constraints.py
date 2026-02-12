@@ -109,7 +109,7 @@ async def test_taskgroup_unique_contraints(
 
         await add_taskgroup(
             # constrained args
-            user_group_id=group1.id,
+            user_group_id=group1_id,
             pkg_name="pkg_name2",
             version=None,
             # other args
