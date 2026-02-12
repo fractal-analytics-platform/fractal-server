@@ -1,0 +1,5 @@
+{
+  "name": "SLURM/sudo profile",
+  "resource_type": "slurm_sudo",
+  "username": "slurm-username"
+}
