@@ -25,6 +25,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    integrity_error_to_422,
+)
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
@@ -164,7 +167,8 @@ async def collect_task_pixi(
 
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
-    await db.commit()
+    async with integrity_error_to_422(db):
+        await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
 
