@@ -54,7 +54,9 @@ async def test_taskgroup_unique_contraints(
             db=db,
         )
         ## same -> fail
-        with pytest.raises(IntegrityError):
+        with pytest.raises(
+            IntegrityError, match="ix_taskgroupv2_user_unique_constraint"
+        ):
             await add_taskgroup(
                 user_id=user.id,
                 pkg_name="pkg_name1",
@@ -116,12 +118,14 @@ async def test_taskgroup_unique_contraints(
             db=db,
         )
         ## same -> fail
-        with pytest.raises(IntegrityError):
+        with pytest.raises(
+            IntegrityError, match="ix_taskgroupv2_usergroup_unique_constraint"
+        ):
             await add_taskgroup(
                 user_group_id=group1_id,
                 pkg_name="pkg_name2",
                 version=None,
-                user_id=user.id,
+                user_id=userA_id,
                 resource_id=resource.id,
                 db=db,
             )
@@ -178,7 +182,9 @@ async def test_taskgroup_unique_contraints(
             db=db,
         )
         ## same -> fail
-        with pytest.raises(IntegrityError):
+        with pytest.raises(
+            IntegrityError, match="ix_taskgroupv2_path_unique_constraint"
+        ):
             await add_taskgroup(
                 path="/path1",  # same
                 resource_id=resource.id,  # same
