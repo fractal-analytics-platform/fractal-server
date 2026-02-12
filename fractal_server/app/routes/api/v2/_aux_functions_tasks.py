@@ -351,7 +351,7 @@ async def integrity_error_to_422(db):
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(str(e.orig) if e.orig else str(e)),
+            detail=str(e.orig or e),
         )
 
 
