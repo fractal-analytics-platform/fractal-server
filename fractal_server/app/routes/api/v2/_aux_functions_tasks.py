@@ -3,10 +3,12 @@ Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
 
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -338,6 +340,18 @@ async def _verify_non_duplication_group_constraint(
                 f"UserGroup {user_group.name} already owns a task group "
                 f"with {pkg_name=} and {version=}.{state_msg}"
             ),
+        )
+
+
+@asynccontextmanager
+async def integrity_error_to_422(db):
+    try:
+        yield
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(str(e.orig) if e.orig else str(e)),
         )
 
 
