@@ -1,15 +1,16 @@
 """Add unique constraint to Task Groups
 
-Revision ID: 75e08c5da996
+Revision ID: 5294b61d7d41
 Revises: cfd13f7954e7
-Create Date: 2026-02-11 17:06:39.030337
+Create Date: 2026-02-12 01:09:30.936106
 
 """
 
+import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "75e08c5da996"
+revision = "5294b61d7d41"
 down_revision = "cfd13f7954e7"
 branch_labels = None
 depends_on = None
@@ -34,6 +35,7 @@ def upgrade() -> None:
             ["user_group_id", "pkg_name", "version"],
             unique=True,
             postgresql_nulls_not_distinct=True,
+            postgresql_where=sa.text("user_group_id IS NOT NULL"),
         )
 
     # ### end Alembic commands ###
@@ -45,6 +47,7 @@ def downgrade() -> None:
         batch_op.drop_index(
             "ix_taskgroupv2_usergroup_unique_constraint",
             postgresql_nulls_not_distinct=True,
+            postgresql_where=sa.text("user_group_id IS NOT NULL"),
         )
         batch_op.drop_index(
             "ix_taskgroupv2_user_unique_constraint",
