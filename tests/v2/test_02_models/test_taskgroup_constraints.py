@@ -38,9 +38,9 @@ async def test_taskgroup_unique_contraints(
     resource, profile = local_resource_profile_db
     slurm_resource, _ = slurm_sudo_resource_profile_db
     async with MockCurrentUser(profile_id=profile.id) as userA:
-        pass
+        userA_id = userA.id
     async with MockCurrentUser(profile_id=profile.id) as userB:
-        pass
+        userB_id = userB.id
 
     async with MockCurrentUser(profile_id=profile.id) as user:
         # 1) ix_taskgroupv2_user_unique_constraint
@@ -65,7 +65,7 @@ async def test_taskgroup_unique_contraints(
         await db.rollback()
         ## change `user_id` -> ok
         await add_taskgroup(
-            user_id=userA.id,
+            user_id=userA_id,
             pkg_name="pkg_name1",
             version=None,
             resource_id=resource.id,
@@ -98,10 +98,10 @@ async def test_taskgroup_unique_contraints(
 
         # 2) ix_taskgroupv2_usergroup_unique_constraint
         group1 = await user_group_factory(
-            "group1", user.id, userA.id, userB.id, db=db
+            "group1", user.id, userA_id, userB_id, db=db
         )
         group2 = await user_group_factory(
-            "group2", user.id, userA.id, userB.id, db=db
+            "group2", user.id, userA_id, userB_id, db=db
         )
         group1_id, group2_id = group1.id, group2.id
 
@@ -184,7 +184,7 @@ async def test_taskgroup_unique_contraints(
                 resource_id=resource.id,  # same
                 pkg_name="foo",
                 version="bar",
-                user_id=userA.id,
+                user_id=userA_id,
                 db=db,
             )
         await db.rollback()
@@ -194,7 +194,7 @@ async def test_taskgroup_unique_contraints(
             resource_id=resource.id,  # same
             pkg_name="foo",
             version="bar",
-            user_id=userA.id,
+            user_id=userA_id,
             db=db,
         )
         ## change resource -> ok
@@ -203,7 +203,7 @@ async def test_taskgroup_unique_contraints(
             resource_id=slurm_resource.id,
             pkg_name="foo",
             version="bar",
-            user_id=userA.id,
+            user_id=userA_id,
             db=db,
         )
         ## don't fail if `path` is None
