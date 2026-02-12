@@ -45,7 +45,6 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
 
 router = APIRouter()
@@ -300,11 +299,6 @@ async def collect_tasks_pip(
         user_group_id=task_group_attrs["user_group_id"],
         pkg_name=task_group_attrs["pkg_name"],
         version=task_group_attrs["version"],
-        db=db,
-    )
-    await _verify_non_duplication_group_path(
-        path=task_group_attrs["path"],
-        resource_id=resource_id,
         db=db,
     )
 
