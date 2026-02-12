@@ -238,7 +238,7 @@ async def test_task_collection_failure_due_to_existing_path(
         assert "ix_taskgroupv2_path_unique_constraint" in res.json()["detail"]
 
 
-async def test_contact_an_admin_message(
+async def test_adding_task_group_activity(
     MockCurrentUser, client, db, default_user_group, local_resource_profile_db
 ):
     resource, profile = local_resource_profile_db
