@@ -107,7 +107,7 @@ class TaskGroupV2(SQLModel, table=True):
             "pkg_name",
             "version",
             unique=True,
-            postrgresql_nulls_not_distinct=True,
+            postgresql_nulls_not_distinct=True,
             postgresql_where=column("user_group_id").is_not(None),
         ),
         Index(

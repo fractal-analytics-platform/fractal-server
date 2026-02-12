@@ -34,7 +34,7 @@ def upgrade() -> None:
             "ix_taskgroupv2_usergroup_unique_constraint",
             ["user_group_id", "pkg_name", "version"],
             unique=True,
-            postrgresql_nulls_not_distinct=True,
+            postgresql_nulls_not_distinct=True,
             postgresql_where=sa.text("user_group_id IS NOT NULL"),
         )
 
@@ -46,7 +46,7 @@ def downgrade() -> None:
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
         batch_op.drop_index(
             "ix_taskgroupv2_usergroup_unique_constraint",
-            postrgresql_nulls_not_distinct=True,
+            postgresql_nulls_not_distinct=True,
             postgresql_where=sa.text("user_group_id IS NOT NULL"),
         )
         batch_op.drop_index(
