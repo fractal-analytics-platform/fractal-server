@@ -5,6 +5,8 @@ from datetime import datetime
 from itertools import chain
 
 from fastapi import FastAPI
+from fastapi import Request
+from starlette.responses import JSONResponse
 from starlette.types import Message
 from starlette.types import Receive
 from starlette.types import Scope
@@ -12,6 +14,7 @@ from starlette.types import Send
 
 from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.exceptions import HTTPExceptionWithData
 
 from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.shutdown import cleanup_after_shutdown
@@ -185,6 +188,16 @@ class SlowResponseMiddleware:
             )
 
 
+def data_exception_handler(
+    request: Request,
+    exc: HTTPExceptionWithData,
+):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "data": exc.data},
+    )
+
+
 def start_application() -> FastAPI:
     """
     Create the application, initialise it and collect all available routers.
@@ -199,6 +212,10 @@ def start_application() -> FastAPI:
     app.add_middleware(
         SlowResponseMiddleware,
         time_threshold=settings.FRACTAL_LONG_REQUEST_TIME,
+    )
+    app.add_exception_handler(
+        HTTPExceptionWithData,
+        handler=data_exception_handler,
     )
 
     collect_routers(app)
