@@ -45,8 +45,8 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_functions_tasks import _verify_non_duplication_group_path
 from ._aux_functions_tasks import _verify_non_duplication_user_constraint
+from ._aux_functions_tasks import integrity_error_to_422
 
 router = APIRouter()
 
@@ -302,11 +302,6 @@ async def collect_tasks_pip(
         version=task_group_attrs["version"],
         db=db,
     )
-    await _verify_non_duplication_group_path(
-        path=task_group_attrs["path"],
-        resource_id=resource_id,
-        db=db,
-    )
 
     # On-disk checks
 
@@ -321,7 +316,8 @@ async def collect_tasks_pip(
     # Create TaskGroupV2 object
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
-    await db.commit()
+    async with integrity_error_to_422(db):
+        await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
 

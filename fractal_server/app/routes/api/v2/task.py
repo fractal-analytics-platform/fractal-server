@@ -13,7 +13,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from ._aux_functions import _get_user_resource_id
-from ._aux_functions_tasks import _get_task_full_access
+from ._aux_functions_tasks import _get_task_full_access, integrity_error_to_422
 from ._aux_functions_tasks import _get_task_read_access
 from ._aux_functions_tasks import _get_valid_user_group_id
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
@@ -213,7 +213,8 @@ async def create_task(
         pkg_name=pkg_name,
     )
     db.add(db_task_group)
-    await db.commit()
+    async with integrity_error_to_422(db):
+        await db.commit()
     await db.refresh(db_task)
 
     return db_task

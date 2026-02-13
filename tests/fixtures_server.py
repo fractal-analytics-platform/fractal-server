@@ -559,6 +559,7 @@ async def user_group_factory(db: AsyncSession):
             db.add(LinkUserGroup(user_id=other_user_id, group_id=user_group.id))
 
         await db.commit()
+        await db.refresh(user_group)
 
         return user_group
 
