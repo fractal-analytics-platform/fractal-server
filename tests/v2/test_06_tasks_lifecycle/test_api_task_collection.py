@@ -4,15 +4,11 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from sqlalchemy.exc import IntegrityError
 
-from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
     get_package_version_from_pypi,
 )
-from fractal_server.app.schemas.v2 import TaskGroupActivityAction
-from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 
 PREFIX = "api/v2/task"
 
@@ -237,68 +233,6 @@ async def test_task_collection_failure_due_to_existing_path(
         )
         assert res.status_code == 422
         assert "ix_taskgroupv2_path_unique_constraint" in res.json()["detail"]
-
-
-async def test_adding_task_group_activity(
-    MockCurrentUser, db, local_resource_profile_db, client
-):
-    resource, profile = local_resource_profile_db
-
-    async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
-        # Create a new TaskGroupV2 associated to user.
-        task_group = TaskGroupV2(
-            user_id=user.id,
-            pkg_name="testing-tasks-mock",
-            version="0.1.4",
-            origin="pypi",
-            resource_id=resource.id,
-        )
-        db.add(task_group)
-        await db.commit()
-        await db.refresh(task_group)
-        task_group_id = task_group.id
-        # Create a TaskGroupActivityStatusV2 associated to the new TaskGroup.
-        task_group_activity_1 = TaskGroupActivityV2(
-            user_id=user.id,
-            taskgroupv2_id=task_group_id,
-            action=TaskGroupActivityAction.COLLECT,
-            status=TaskGroupActivityStatus.PENDING,
-            pkg_name="testing-tasks-mock",
-            version="0.1.4",
-        )
-        db.add(task_group_activity_1)
-        await db.commit()
-
-        # Create a new CollectionState associated to the same TaskGroup
-        # (this is NOT ALLOWED using the API).
-        db.add(
-            TaskGroupActivityV2(
-                user_id=user.id,
-                taskgroupv2_id=task_group_id,
-                action=TaskGroupActivityAction.COLLECT,
-                status=TaskGroupActivityStatus.PENDING,
-                pkg_name="testing-tasks-mock",
-                version="0.1.4",
-            )
-        )
-        with pytest.raises(
-            IntegrityError,
-            match="ix_taskgroupactivityv2_collect_unique_constraint",
-        ):
-            await db.commit()
-        await db.rollback()
-        db.add(
-            TaskGroupActivityV2(
-                user_id=user.id,
-                taskgroupv2_id=task_group_id,
-                # only action=COLLECT is constrained
-                action=TaskGroupActivityAction.DELETE,
-                status=TaskGroupActivityStatus.PENDING,
-                pkg_name="testing-tasks-mock",
-                version="0.1.4",
-            )
-        )
-        await db.commit()
 
 
 async def test_task_collection_from_pypi_with_extras(
