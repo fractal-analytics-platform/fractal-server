@@ -161,7 +161,7 @@
 | fractal\_server/runner/v2/submit\_workflow.py                                |      140 |        4 |       26 |        4 |     95% |133-138, 146->153, 153->161, 183->211, 251->258 |
 | fractal\_server/runner/v2/task\_interface.py                                 |       39 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/ssh/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/ssh/\_fabric.py                                              |      309 |        2 |       40 |        2 |     99% |210->212, 310-311, 356->358 |
+| fractal\_server/ssh/\_fabric.py                                              |      310 |        2 |       40 |        2 |     99% |211->213, 313-314, 359->361 |
 | fractal\_server/string\_tools.py                                             |       27 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/syringe.py                                                   |       28 |        4 |        2 |        0 |     87% |     91-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                                        |        0 |        0 |        0 |        0 |    100% |           |
@@ -203,7 +203,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10079** |  **190** | **1826** |   **93** | **97%** |           |
+| **TOTAL**                                                                    | **10080** |  **190** | **1826** |   **93** | **97%** |           |
 
 
 ## Setup coverage badge
