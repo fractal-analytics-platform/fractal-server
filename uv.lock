@@ -700,7 +700,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.0,<2.13.0" },
     { name = "pydantic-settings", specifier = "==2.12.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.23,<2.1" },
-    { name = "sqlmodel", specifier = "==0.0.31" },
+    { name = "sqlmodel", specifier = "==0.0.33" },
     { name = "tomli-w", specifier = ">=1.2.0,<1.3.0" },
     { name = "uvicorn", specifier = ">=0.40.0,<0.41.0" },
     { name = "uvicorn-worker", specifier = "==0.4.0" },
@@ -1762,15 +1762,15 @@ asyncio = [
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.31"
+version = "0.0.33"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/56/b8/e7cd6def4a773f25d6e29ffce63ccbfd6cf9488b804ab6fb9b80d334b39d/sqlmodel-0.0.31.tar.gz", hash = "sha256:2d41a8a9ee05e40736e2f9db8ea28cbfe9b5d4e5a18dd139e80605025e0c516c", size = 94952, upload-time = "2025-12-28T12:35:01.436Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/62/22c287122598e61d07d005eec0b4eb97e6bde9a1b051bcd66c2bca846ea8/sqlmodel-0.0.33.tar.gz", hash = "sha256:b473544ed5fc2097894d89033049e569e1f138363dd3ec2ed4b6932cc9f29f5f", size = 95578, upload-time = "2026-02-11T15:23:39.504Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/72/5aa5be921800f6418a949a73c9bb7054890881143e6bc604a93d228a95a3/sqlmodel-0.0.31-py3-none-any.whl", hash = "sha256:6d946d56cac4c2db296ba1541357cee2e795d68174e2043cd138b916794b1513", size = 27093, upload-time = "2025-12-28T12:35:00.108Z" },
+    { url = "https://files.pythonhosted.org/packages/63/39/13891bae4658133b489a4d8b6a2f193d56110e392289560f312748e796dc/sqlmodel-0.0.33-py3-none-any.whl", hash = "sha256:9045bb4d97d2ba099c5a068ee9525af2d106972dda1ff8488e187ce50556bf73", size = 27444, upload-time = "2026-02-11T15:23:38.678Z" },
 ]
 
 [[package]]

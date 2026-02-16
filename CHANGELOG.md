@@ -5,6 +5,7 @@
 
 * Dependencies:
     * Bump `fastapi` to `0.129.*` (\#3190).
+    * Bump `sqlmodel` to `0.0.33` (\#3190).
 
 # 2.19.3
 
