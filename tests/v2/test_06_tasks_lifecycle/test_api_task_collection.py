@@ -239,7 +239,7 @@ async def test_task_collection_failure_due_to_existing_path(
 
 
 async def test_adding_task_group_activity(
-    MockCurrentUser, db, local_resource_profile_db
+    MockCurrentUser, db, local_resource_profile_db, client
 ):
     resource, profile = local_resource_profile_db
 
@@ -266,6 +266,28 @@ async def test_adding_task_group_activity(
         )
         db.add(task_group_activity_1)
         await db.commit()
+
+        # Create a new CollectionState associated to the same TaskGroup
+        # (this is NOT ALLOWED using the API).
+        task_group_activity_2 = TaskGroupActivityV2(
+            user_id=user.id,
+            taskgroupv2_id=task_group.id,
+            action=TaskGroupActivityAction.COLLECT,
+            status=TaskGroupActivityStatus.PENDING,
+            pkg_name="testing-tasks-mock",
+            version="0.1.4",
+        )
+        db.add(task_group_activity_2)
+        await db.commit()
+        # Fail inside `_verify_non_duplication_user_constraint`, but get a
+        # richer message from `_get_collection_status_message`
+        # (case `len(states) > 1`).
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            data=dict(package="testing-tasks-mock", package_version="0.1.4"),
+        )
+        assert "TaskGroupActivityV2" in res.json()["detail"]
+        assert "please contact an admin" in res.json()["detail"]
 
 
 async def test_task_collection_from_pypi_with_extras(
