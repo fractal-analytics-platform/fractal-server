@@ -286,11 +286,11 @@ async def _verify_non_duplication_user_constraint(
         .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
-    duplicate = res.scalars().all()
+    duplicate = res.scalars().one_or_none()
     if duplicate:
         user = await db.get(UserOAuth, user_id)
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
+            duplicate.id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -317,11 +317,11 @@ async def _verify_non_duplication_group_constraint(
         .where(TaskGroupV2.version == version)
     )
     res = await db.execute(stm)
-    duplicate = res.scalars().all()
+    duplicate = res.scalars().one_or_none()
     if duplicate:
         user_group = await db.get(UserGroup, user_group_id)
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
+            duplicate.id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
