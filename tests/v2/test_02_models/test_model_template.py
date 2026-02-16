@@ -10,21 +10,19 @@ async def test_workflow_template(
     db, MockCurrentUser, user_group_factory, project_factory
 ):
     # Setup
-    async with MockCurrentUser() as user1:
-        user1_id = user1.id
-        project1 = await project_factory(user1)
-        project1_id = project1.id
-    async with MockCurrentUser() as user2:
-        user2_id = user2.id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory(user)
+        project_id = project.id
 
-    group1 = await user_group_factory("group1", user1_id, user2_id, db=db)
-    group1_id = group1.id
+    user_group = await user_group_factory("group", user_id, db=db)
+    user_group_id = user_group.id
 
     # Test mandatory args
 
     mandatory_args = dict(
-        user_id=user1_id,
-        name="template1",
+        user_id=user_id,
+        name="template",
         version=1,
         data={},
     )
@@ -51,20 +49,20 @@ async def test_workflow_template(
     # Test UserGroup foreign key
 
     template2 = WorkflowTemplate(
-        user_id=user1_id,
-        name="template2",
+        user_id=user_id,
+        name="template 2",
         version=1,
         data={},
-        user_group_id=group1_id,
+        user_group_id=user_group_id,
     )
     db.add(template2)
     await db.commit()
 
     await db.refresh(template2)
-    assert template2.user_group_id == group1_id
+    assert template2.user_group_id == user_group_id
 
-    group1 = await db.get(UserGroup, group1_id)
-    await db.delete(group1)
+    user_group = await db.get(UserGroup, user_group_id)
+    await db.delete(user_group)
     await db.commit()
 
     await db.refresh(template2)
@@ -85,7 +83,7 @@ async def test_workflow_template(
 
     workflow = WorkflowV2(
         name="workflow",
-        project_id=project1_id,
+        project_id=project_id,
         template_id=template1_id,
     )
     db.add(workflow)
