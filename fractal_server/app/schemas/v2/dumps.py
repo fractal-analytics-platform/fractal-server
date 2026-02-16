@@ -58,7 +58,6 @@ class WorkflowDump(BaseModel):
     id: int
     name: str
     project_id: int
-    template_id: int | None = None
     timestamp_created: str
 
 
