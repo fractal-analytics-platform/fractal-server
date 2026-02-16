@@ -1,7 +1,10 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.models.v2.task_group import TaskGroupV2
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 
 
 async def add_taskgroup(
@@ -223,3 +226,74 @@ async def test_taskgroup_unique_contraints(
                 resource_id=slurm_resource.id,
                 db=db,
             )
+
+
+async def test_taskgroup_activity_contraints(
+    MockCurrentUser,
+    db,
+    task_factory,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser(profile_id=profile.id) as user:
+        task = await task_factory(
+            user_id=user.id,
+            task_group_kwargs=dict(resource_id=resource.id),
+        )
+        taskgroup_id = task.taskgroupv2_id
+        common_args = dict(
+            user_id=user.id,
+            pkg_name="aaa",
+            version="1",
+            status=TaskGroupActivityStatus.OK,
+        )
+        for _ in range(2):
+            # we can any number of COLLECT, if `taskgroupv2_id` is null
+            db.add(
+                TaskGroupActivityV2(
+                    action=TaskGroupActivityAction.COLLECT,
+                    taskgroupv2_id=None,
+                    **common_args,
+                )
+            )
+            await db.commit()
+
+        db.add(
+            TaskGroupActivityV2(
+                action=TaskGroupActivityAction.COLLECT,
+                taskgroupv2_id=taskgroup_id,
+                **common_args,
+            )
+        )
+        await db.commit()
+        # we can only have one COLLECT per `taskgroupv2_id`,
+        # if `taskgroupv2_id` is not null
+        db.add(
+            TaskGroupActivityV2(
+                action=TaskGroupActivityAction.COLLECT,
+                taskgroupv2_id=taskgroup_id,
+                **common_args,
+            )
+        )
+        with pytest.raises(
+            IntegrityError,
+            match="ix_taskgroupactivityv2_collect_unique_constraint",
+        ):
+            await db.commit()
+        await db.rollback()
+
+        # no constraint for action != COLLECT
+        for action in [
+            TaskGroupActivityAction.DEACTIVATE,
+            TaskGroupActivityAction.REACTIVATE,
+            TaskGroupActivityAction.DELETE,
+        ]:
+            for _ in range(2):
+                db.add(
+                    TaskGroupActivityV2(
+                        action=action,
+                        taskgroupv2_id=taskgroup_id,
+                        **common_args,
+                    )
+                )
+        await db.commit()
