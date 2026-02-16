@@ -248,7 +248,8 @@ async def test_taskgroup_activity_contraints(
             status=TaskGroupActivityStatus.OK,
         )
         for _ in range(2):
-            # we can any number of COLLECT, if `taskgroupv2_id` is null
+            # we can have any number of COLLECT activity,
+            # if `taskgroupv2_id` is null
             db.add(
                 TaskGroupActivityV2(
                     action=TaskGroupActivityAction.COLLECT,
