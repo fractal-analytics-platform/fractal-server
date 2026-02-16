@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.19.4
+
+
+* Dependencies:
+    * Bump `fastapi` to `0.129.*` (\#3190).
+
 # 2.19.3
 
 * Task lifecycle:
