@@ -1,8 +1,8 @@
 """Add WorkflowTemplate table
 
-Revision ID: 5b56c6ecb438
+Revision ID: 59820266be0a
 Revises: 6d679918c883
-Create Date: 2026-02-16 15:06:52.365858
+Create Date: 2026-02-16 15:26:25.120609
 
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "5b56c6ecb438"
+revision = "59820266be0a"
 down_revision = "6d679918c883"
 branch_labels = None
 depends_on = None
@@ -34,7 +34,7 @@ def upgrade() -> None:
             "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.Column(
-            "data", postgresql.JSON(astext_type=sa.Text()), nullable=True
+            "data", postgresql.JSON(astext_type=sa.Text()), nullable=False
         ),
         sa.ForeignKeyConstraint(
             ["user_group_id"],

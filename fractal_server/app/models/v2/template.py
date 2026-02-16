@@ -28,7 +28,7 @@ class WorkflowTemplate(SQLModel, table=True):
     )
 
     description: str | None = Field(default=None, nullable=True)
-    data: dict[str, Any] = Field(sa_column=Column(JSON))
+    data: dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
 
     __table_args__ = (
         Index(
