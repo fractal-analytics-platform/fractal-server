@@ -256,25 +256,14 @@ async def _get_collection_task_group_activity_status_message(
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
         .where(TaskGroupActivityV2.action == TaskGroupActivityAction.COLLECT)
     )
-    task_group_activity_list = res.scalars().all()
-    if len(task_group_activity_list) > 1:
-        msg_short = (
-            "Expected only one TaskGroupActivityV2 associated to TaskGroup "
-            f"{task_group_id}, found {len(task_group_activity_list)} "
-            f"(IDs: {[tga.id for tga in task_group_activity_list]})."
-        )
-        logger.error(f"UnreachableBranchError: {msg_short}")
-        msg = (
-            f"\nWarning: {msg_short}\n"
-            "Warning: this should have not happened, please contact an admin."
-        )
-    elif len(task_group_activity_list) == 1:
+    task_group_collect_activity = res.scalars().one_or_none()
+    if task_group_collect_activity:
         msg = (
             "\nNote: "
             "There exists another task-group collection "
-            f"(activity ID={task_group_activity_list[0].id}) for "
+            f"(activity ID={task_group_collect_activity.id}) for "
             f"this task group (ID={task_group_id}), with status "
-            f"'{task_group_activity_list[0].status}'."
+            f"'{task_group_collect_activity.status}'."
         )
     else:
         msg = ""

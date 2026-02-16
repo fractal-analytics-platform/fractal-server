@@ -10,7 +10,9 @@ from sqlmodel import Index
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 from sqlmodel import column
+from sqlmodel import text
 
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.utils import get_timestamp
 
 from .task import TaskV2
@@ -183,4 +185,15 @@ class TaskGroupActivityV2(SQLModel, table=True):
     )
     fractal_server_version: str = Field(
         sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_taskgroupactivityv2_collect_unique_constraint",
+            "taskgroupv2_id",
+            unique=True,
+            postgresql_where=text(
+                f"action = '{TaskGroupActivityAction.COLLECT}'"
+            ),
+        ),
     )
