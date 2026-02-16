@@ -342,7 +342,7 @@ async def integrity_error_to_422(db):
         yield
     except IntegrityError as e:
         logger.warning(
-            "Unexpected IntegrityError caught in `integrity_error_to_422`."
+            "Unexpected IntegrityError caught in `integrity_error_to_422`. "
             f"Original error: {str(e)}"
         )
         await db.rollback()
