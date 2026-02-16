@@ -3,7 +3,7 @@
 # 2.19.5 (unreleased)
 
 * Database:
-    * Enforce non-duplication `TaskGroupV2` constraints for via `unique` database checks (\#3185).
+    * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
 
 # 2.19.4
 
