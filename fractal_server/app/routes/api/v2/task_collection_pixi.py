@@ -23,10 +23,10 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_group_constraint,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_group_path,
+    _verify_non_duplication_user_constraint,
 )
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_user_constraint,
+    integrity_error_to_422,
 )
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
@@ -157,11 +157,6 @@ async def collect_task_pixi(
         version=task_group_attrs["version"],
         db=db,
     )
-    await _verify_non_duplication_group_path(
-        path=task_group_attrs["path"],
-        resource_id=resource_id,
-        db=db,
-    )
 
     if resource.type != ResourceType.SLURM_SSH:
         if Path(task_group_path).exists():
@@ -172,7 +167,8 @@ async def collect_task_pixi(
 
     task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
-    await db.commit()
+    async with integrity_error_to_422(db):
+        await db.commit()
     await db.refresh(task_group)
     db.expunge(task_group)
 

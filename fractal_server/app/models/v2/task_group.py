@@ -6,9 +6,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import String
 from sqlmodel import Field
+from sqlmodel import Index
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
+from sqlmodel import column
+from sqlmodel import text
 
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.utils import get_timestamp
 
 from .task import TaskV2
@@ -89,6 +93,33 @@ class TaskGroupV2(SQLModel, table=True):
         ),
     )
 
+    __table_args__ = (
+        Index(
+            "ix_taskgroupv2_user_unique_constraint",
+            "user_id",
+            "pkg_name",
+            "version",
+            "resource_id",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+        ),
+        Index(
+            "ix_taskgroupv2_usergroup_unique_constraint",
+            "user_group_id",
+            "pkg_name",
+            "version",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+            postgresql_where=column("user_group_id").is_not(None),
+        ),
+        Index(
+            "ix_taskgroupv2_path_unique_constraint",
+            "path",
+            "resource_id",
+            unique=True,
+        ),
+    )
+
     @property
     def pip_install_string(self) -> str:
         """
@@ -154,4 +185,15 @@ class TaskGroupActivityV2(SQLModel, table=True):
     )
     fractal_server_version: str = Field(
         sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_taskgroupactivityv2_collect_unique_constraint",
+            "taskgroupv2_id",
+            unique=True,
+            postgresql_where=text(
+                f"action = '{TaskGroupActivityAction.COLLECT}'"
+            ),
+        ),
     )
