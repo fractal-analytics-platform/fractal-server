@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.19.4
+
+* SSH:
+    * Try to refresh SSH connection upon `paramiko.ssh_exception.SSHException` (\#3189).
+* Dependencies:
+    * Bump `fastapi` to `0.129.*` (\#3190).
+    * Bump `sqlmodel` to `0.0.33` (\#3190).
+
 # 2.19.3
 
 * Task lifecycle:

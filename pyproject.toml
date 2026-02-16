@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.19.3"
+version = "2.19.4"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -14,8 +14,8 @@ license-files = ["LICENSE"]
 
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "fastapi >= 0.128.0, <0.129.0",
-    "sqlmodel == 0.0.31",
+    "fastapi >= 0.129.0, <0.130.0",
+    "sqlmodel == 0.0.33",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
@@ -91,7 +91,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth"]
 
 [tool.bumpver]
-current_version = "2.19.3"
+current_version = "2.19.4"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
