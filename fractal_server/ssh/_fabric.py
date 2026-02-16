@@ -14,6 +14,7 @@ import paramiko.sftp_client
 from fabric import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.ssh_exception import SSHException
 from pydantic import BaseModel
 
 from fractal_server.logger import close_logger
@@ -295,6 +296,8 @@ class FractalSSH:
             # external reasons (e.g. the socket is closed because the SSH
             # server was restarted). In these cases, we catch the error and
             # try to re-open the connection.
+            # NOTE: Several specific errors inherit from `SSHException`,
+            # including errors related to authentication.
             try:
                 self.logger.info(
                     "[check_connection] Run dummy command to check connection."
@@ -307,7 +310,7 @@ class FractalSSH:
                     "[check_connection] SSH connection is already OK, exit."
                 )
                 return
-            except (OSError, EOFError) as e:
+            except (OSError, EOFError, SSHException) as e:
                 self.logger.warning(
                     f"[check_connection] Detected error {str(e)}, re-open."
                 )
