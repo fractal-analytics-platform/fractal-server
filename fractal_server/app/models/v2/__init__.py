@@ -17,6 +17,7 @@ from .resource import Resource
 from .task import TaskV2
 from .task_group import TaskGroupActivityV2
 from .task_group import TaskGroupV2
+from .template import WorkflowTemplate
 from .workflow import WorkflowV2
 from .workflowtask import WorkflowTaskV2
 
@@ -32,6 +33,7 @@ __all__ = [
     "TaskV2",
     "WorkflowV2",
     "WorkflowTaskV2",
+    "WorkflowTemplate",
     "HistoryRun",
     "HistoryUnit",
     "HistoryImageCache",
