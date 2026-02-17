@@ -2,6 +2,8 @@ from typing import Literal
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from sqlmodel import func
 from sqlmodel import select
 
@@ -78,4 +80,33 @@ async def get_workflow_template_list(
             )
             for workflow_template, email in workflow_templates_and_user_email
         ],
+    )
+
+
+@router.get(
+    "/workflow_template/{workflow_template_id}/",
+    response_model=WorkflowTemplateRead,
+)
+async def get_workflow_template(
+    workflow_template_id: int,
+    user: UserOAuth = Depends(get_api_guest),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowTemplateRead:
+    res = await db.execute(
+        select(WorkflowTemplate, UserOAuth.email)
+        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
+        .where(WorkflowTemplate.id == workflow_template_id)
+    )
+    workflow_template_and_user_email = res.one_or_none()
+
+    if workflow_template_and_user_email is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+        )
+    workflow_template, user_email = workflow_template_and_user_email
+
+    return dict(
+        user_email=user_email,
+        **workflow_template.model_dump(exclude={"user_id"}),
     )
