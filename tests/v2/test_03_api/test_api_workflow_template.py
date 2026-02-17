@@ -95,17 +95,53 @@ async def test_get_template(db, client, MockCurrentUser):
 
 
 async def test_post_template(
-    db, client, MockCurrentUser, workflow_factory, project_factory
+    project_factory,
+    workflow_factory,
+    user_group_factory,
+    MockCurrentUser,
+    client,
+    db,
 ):
-    async with MockCurrentUser() as user:
-        project = await project_factory(user)
+    async with MockCurrentUser() as user0:
+        group0 = await user_group_factory("group0", user0.id, db=db)
+        group0_id = group0.id
+
+    async with MockCurrentUser() as user1:
+        group1 = await user_group_factory("group1", user1.id, db=db)
+        project = await project_factory(user1)
         workflow = await workflow_factory(project_id=project.id, name="foo")
+        #
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
         )
         assert res.status_code == 201
-        assert res.json()["user_email"] == user.email
+        assert res.json()["user_email"] == user1.email
         assert res.json()["name"] == "template"
         assert res.json()["version"] == 1
+        assert res.json()["user_group_id"] is None
         assert res.json()["data"]["name"] == "foo"
+        # Test duplicate
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=1),
+        )
+        assert res.status_code == 422
+        assert "There is already a WorkflowTemplate" in res.json()["detail"]
+        # Test `user_group_id`
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=2, user_group_id=9999),
+        )
+        assert res.status_code == 404
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=2, user_group_id=group0_id),
+        )
+        assert res.status_code == 403
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=2, user_group_id=group1.id),
+        )
+        assert res.status_code == 201
+        assert res.json()["user_group_id"] == group1.id
