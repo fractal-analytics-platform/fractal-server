@@ -38,14 +38,25 @@ async def get_workflow_template_list(
     stm = select(WorkflowTemplate)
     stm_count = select(func.count(WorkflowTemplate.id))
 
-    # FIXME: filter with query parameters:
-    #   `is_owner` - restricts listing to my own templates
-    #   `user_email` - exact match
-    #   `name` - icontains
-    #   `version` - exact match
+    if is_owner:
+        stm = stm.where(WorkflowTemplate.user_id == user.id)
+        stm_count = stm_count.where(WorkflowTemplate.user_id == user.id)
+    if user_email:
+        stm = stm.join(
+            UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
+        ).where(UserOAuth.email == user_email)
+        stm_count = stm_count.join(
+            UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
+        ).where(UserOAuth.email == user_email)
+    if name:
+        stm = stm.where(WorkflowTemplate.name.icontains(name))
+        stm_count = stm_count.where(WorkflowTemplate.name.icontains(name))
+    if version:
+        stm = stm.where(WorkflowTemplate.version == version)
+        stm_count = stm_count.where(WorkflowTemplate.version == version)
+
     # FIXME: sort with `sort_by`
 
-    # Find total number of elements
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
     if page_size is None:
