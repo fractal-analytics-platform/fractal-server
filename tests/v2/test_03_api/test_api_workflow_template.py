@@ -48,6 +48,7 @@ async def test_get_template(db, client, MockCurrentUser):
         assert items[1]["user_email"] == user1_email
         assert items[2]["id"] == template3.id
         assert items[2]["user_email"] == user2_email
+        # TODO: test sorting
         # Test pagination
         res = await client.get("api/v2/workflow_template/?page_size=2&page=2")
         assert res.status_code == 200
@@ -85,9 +86,26 @@ async def test_get_template(db, client, MockCurrentUser):
         items = res.json()["items"]
         assert len(items) == 1
         assert items[0]["id"] == template2.id
-
+        # Test GET single template
         res = await client.get(f"api/v2/workflow_template/{template3.id}/")
         assert res.status_code == 200
         assert res.json()["user_email"] == user2_email
         res = await client.get("api/v2/workflow_template/9999/")
         assert res.status_code == 404
+
+
+async def test_post_template(
+    db, client, MockCurrentUser, workflow_factory, project_factory
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id, name="foo")
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=1),
+        )
+        assert res.status_code == 201
+        assert res.json()["user_email"] == user.email
+        assert res.json()["name"] == "template"
+        assert res.json()["version"] == 1
+        assert res.json()["data"]["name"] == "foo"
