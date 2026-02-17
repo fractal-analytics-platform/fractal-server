@@ -26,7 +26,7 @@ async def get_workflow_template_list(
     is_owner: bool = False,
     user_email: str | None = None,
     name: str | None = None,
-    version: str | None = None,
+    version: int | None = None,
     sort_by: Literal["user-name-version", "timestamp"] = "user-name-version",
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
