@@ -7,7 +7,7 @@ from fractal_server.app.schemas.v2.workflow import WorkflowExport
 class WorkflowTemplateRead(BaseModel):
     id: int
 
-    user_id: int
+    user_email: str
     name: str
     version: int
 

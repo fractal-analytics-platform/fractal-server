@@ -35,16 +35,16 @@ async def get_workflow_template_list(
     page = pagination.page
     page_size = pagination.page_size
 
-    stm = select(WorkflowTemplate)
+    stm = select(WorkflowTemplate, UserOAuth.email).join(
+        UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
+    )
     stm_count = select(func.count(WorkflowTemplate.id))
 
     if is_owner:
         stm = stm.where(WorkflowTemplate.user_id == user.id)
         stm_count = stm_count.where(WorkflowTemplate.user_id == user.id)
     if user_email:
-        stm = stm.join(
-            UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
-        ).where(UserOAuth.email == user_email)
+        stm = stm.where(UserOAuth.email == user_email)
         stm_count = stm_count.join(
             UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
         ).where(UserOAuth.email == user_email)
@@ -65,11 +65,17 @@ async def get_workflow_template_list(
         stm = stm.offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stm)
-    workflow_templates = res.scalars().all()
+    workflow_templates_and_user_email = res.all()
 
     return dict(
         total_count=total_count,
         page_size=page_size,
         current_page=page,
-        items=workflow_templates,
+        items=[
+            dict(
+                user_email=email,
+                **workflow_template.model_dump(exclude={"user_id"}),
+            )
+            for workflow_template, email in workflow_templates_and_user_email
+        ],
     )
