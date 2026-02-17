@@ -75,4 +75,5 @@ from .workflowtask import WorkflowTaskRead  # noqa F401
 from .workflowtask import WorkflowTaskReadWithWarning  # noqa F401
 from .workflowtask import WorkflowTaskReplace  # noqa F401
 from .workflowtask import WorkflowTaskUpdate  # noqa F401
+from .workflow_template import WorkflowTemplateCreate  # noqa F401
 from .workflow_template import WorkflowTemplateRead  # noqa F401

@@ -11,11 +11,22 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import WorkflowTemplate
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_workflow_check_access,
+)
+from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
+from fractal_server.app.routes.api.v2.workflow import export_workflow
 from fractal_server.app.routes.auth import get_api_guest
+from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.auth._aux_auth import (
+    _verify_user_belongs_to_group,
+)
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 router = APIRouter()
 
@@ -108,5 +119,75 @@ async def get_workflow_template(
 
     return dict(
         user_email=user_email,
+        **workflow_template.model_dump(exclude={"user_id"}),
+    )
+
+
+@router.post(
+    "/workflow_template/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=WorkflowTemplateRead,
+)
+async def post_workflow_template(
+    workflow_id: int,
+    workflow_template_create: WorkflowTemplateCreate,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowTemplateRead:
+    """
+    The JSON data is obtained by wrapping the existing export-workflow endpoint.
+    This requires a refactor of the export-workflow endpoint first,
+    or a small code duplication.
+    """
+    workflow = await _get_workflow_or_404(workflow_id=workflow_id, db=db)
+    await _get_workflow_check_access(
+        project_id=workflow.project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
+    )
+    if workflow_template_create.user_group_id:
+        await _verify_user_belongs_to_group(
+            user_id=user.id,
+            user_group_id=workflow_template_create.user_group_id,
+            db=db,
+        )
+
+    res = await db.execute(
+        select(WorkflowTemplate)
+        .where(WorkflowTemplate.user_id == user.id)
+        .where(WorkflowTemplate.name == workflow_template_create.name)
+        .where(WorkflowTemplate.version == workflow_template_create.version)
+    )
+    duplicate = res.one_or_none()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "There is already a WorkflowTemplate with "
+                f"user_id='{user.id}', "
+                f"name='{workflow_template_create.name}', "
+                f"version='{workflow_template_create.version}'."
+            ),
+        )
+    data = await export_workflow(
+        project_id=workflow.project_id,
+        workflow_id=workflow_id,
+        user=user,
+        db=db,
+    )
+
+    workflow_template = WorkflowTemplate(
+        user_id=user.id,
+        data=data.model_dump(),
+        **workflow_template_create.model_dump(),
+    )
+    db.add(workflow_template)
+    await db.commit()
+    await db.refresh(workflow_template)
+
+    return dict(
+        user_email=user.email,
         **workflow_template.model_dump(exclude={"user_id"}),
     )
