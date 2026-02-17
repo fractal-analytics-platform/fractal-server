@@ -48,6 +48,15 @@ async def test_get_template(db, client, MockCurrentUser):
         assert items[1]["user_email"] == user1_email
         assert items[2]["id"] == template3.id
         assert items[2]["user_email"] == user2_email
+        # Test pagination
+        res = await client.get("api/v2/workflow_template/?page_size=2&page=2")
+        assert res.status_code == 200
+        assert res.json()["current_page"] == 2
+        assert res.json()["page_size"] == 2
+        assert res.json()["total_count"] == 3
+        items = res.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == template3.id
         # Filter by `is_owner`
         res = await client.get("api/v2/workflow_template/?is_owner=true")
         assert res.status_code == 200
@@ -76,3 +85,9 @@ async def test_get_template(db, client, MockCurrentUser):
         items = res.json()["items"]
         assert len(items) == 1
         assert items[0]["id"] == template2.id
+
+        res = await client.get(f"api/v2/workflow_template/{template3.id}/")
+        assert res.status_code == 200
+        assert res.json()["user_email"] == user2_email
+        res = await client.get("api/v2/workflow_template/9999/")
+        assert res.status_code == 404
