@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main", 'ihb-develop']
   pull_request:
-    branches: ["main", 'ihb-develop']
+    branches: ["main", 'ihb-develop', '3144-make-workflow-import-more-flexible']
 
 env:
   JWT_SECRET_KEY: fake
