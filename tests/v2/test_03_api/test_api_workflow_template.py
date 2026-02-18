@@ -221,8 +221,11 @@ async def test_export_import_template(
     client,
     db,
 ):
+    async with MockCurrentUser() as user0:
+        user0_id = user0.id
+
     async with MockCurrentUser() as user:
-        group = await user_group_factory("group1", user.id, db=db)
+        group = await user_group_factory("group1", user.id, user0_id, db=db)
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="foo")
         res = await client.post(
@@ -262,3 +265,12 @@ async def test_export_import_template(
             json=template_file,
         )
         assert res.status_code == 201
+
+    async with MockCurrentUser(user_id=user0_id) as user0:
+        project2 = await project_factory(user0)
+        res = await client.post(
+            f"api/v2/project/{project2.id}/workflow/import-from-template/"
+            f"?template_id={template_id}"
+        )
+        assert res.status_code == 201
+        assert res.json()["name"] == "foo"
