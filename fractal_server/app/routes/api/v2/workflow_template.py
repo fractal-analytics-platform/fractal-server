@@ -4,12 +4,15 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi import status
+from sqlmodel import exists
 from sqlmodel import func
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_access,
@@ -63,19 +66,39 @@ async def get_workflow_template_list(
     page = pagination.page
     page_size = pagination.page_size
 
-    stm = select(WorkflowTemplate, UserOAuth.email).join(
-        UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
+    stm = (
+        select(WorkflowTemplate, UserOAuth.email)
+        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
+        .where(
+            or_(
+                WorkflowTemplate.user_id == user.id,
+                exists().where(
+                    LinkUserGroup.user_id == user.id,
+                    LinkUserGroup.group_id == WorkflowTemplate.user_group_id,
+                ),
+            )
+        )
     )
-    stm_count = select(func.count(WorkflowTemplate.id))
+    stm_count = (
+        select(func.count(WorkflowTemplate.id))
+        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
+        .where(
+            or_(
+                WorkflowTemplate.user_id == user.id,
+                exists().where(
+                    LinkUserGroup.group_id == WorkflowTemplate.user_group_id,
+                    LinkUserGroup.user_id == user.id,
+                ),
+            )
+        )
+    )
 
     if is_owner:
         stm = stm.where(WorkflowTemplate.user_id == user.id)
         stm_count = stm_count.where(WorkflowTemplate.user_id == user.id)
     if user_email:
         stm = stm.where(UserOAuth.email == user_email)
-        stm_count = stm_count.join(
-            UserOAuth, UserOAuth.id == WorkflowTemplate.user_id
-        ).where(UserOAuth.email == user_email)
+        stm_count = stm_count.where(UserOAuth.email == user_email)
     if name:
         stm = stm.where(WorkflowTemplate.name.icontains(name))
         stm_count = stm_count.where(WorkflowTemplate.name.icontains(name))
