@@ -163,12 +163,13 @@ async def test_post_patch_delete_template(
         # Test PATCH
         res = await client.patch("api/v2/workflow_template/9999/", json=dict())
         assert res.status_code == 404
+        assert "not found" in res.json()["detail"]
         res = await client.patch(
             f"api/v2/workflow_template/{template0_id}/",
             json=dict(),
         )
         assert res.status_code == 403
-        assert "not authorized to edit" in res.json()["detail"]
+        assert "not the owner" in res.json()["detail"]
         res = await client.patch(
             f"api/v2/workflow_template/{template1_id}/",
             json=dict(user_group_id=group0_id),
@@ -185,8 +186,10 @@ async def test_post_patch_delete_template(
         # Test DELETE
         res = await client.delete("api/v2/workflow_template/9999/")
         assert res.status_code == 404
+        assert "not found" in res.json()["detail"]
         res = await client.delete(f"api/v2/workflow_template/{template0_id}/")
         assert res.status_code == 403
+        assert "not the owner" in res.json()["detail"]
         res = await client.delete(f"api/v2/workflow_template/{template1_id}/")
         assert res.status_code == 204
         template1 = await db.get(WorkflowTemplate, template1_id)
