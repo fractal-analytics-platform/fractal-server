@@ -7,7 +7,7 @@ from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
 
 
-async def _get_template_check_owner(
+async def _get_template_full_access(
     *, user_id: int, template_id: int, db: AsyncSession
 ) -> WorkflowTemplate:
     template = await db.get(WorkflowTemplate, template_id)
@@ -26,7 +26,7 @@ async def _get_template_check_owner(
     return template
 
 
-async def _get_template_check_owner_or_group(
+async def _get_template_read_access(
     *, user_id: int, template_id: int, db: AsyncSession
 ) -> WorkflowTemplate:
     template = await db.get(WorkflowTemplate, template_id)

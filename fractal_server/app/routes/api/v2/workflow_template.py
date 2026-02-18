@@ -23,10 +23,10 @@ from fractal_server.app.routes.api.v2._aux_functions_templates import (
     _check_template_duplication,
 )
 from fractal_server.app.routes.api.v2._aux_functions_templates import (
-    _get_template_check_owner,
+    _get_template_full_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions_templates import (
-    _get_template_check_owner_or_group,
+    _get_template_read_access,
 )
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
@@ -139,10 +139,10 @@ async def get_workflow_template_list(
 )
 async def get_workflow_template(
     template_id: int,
-    user: UserOAuth = Depends(get_api_user),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    template = await _get_template_check_owner_or_group(
+    template = await _get_template_read_access(
         user_id=user.id, template_id=template_id, db=db
     )
     res = await db.execute(
@@ -229,7 +229,7 @@ async def patch_workflow_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    template = await _get_template_check_owner(
+    template = await _get_template_full_access(
         user_id=user.id, template_id=template_id, db=db
     )
     if template_update.user_group_id:
@@ -258,7 +258,7 @@ async def delete_workflow_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    template = await _get_template_check_owner(
+    template = await _get_template_full_access(
         user_id=user.id, template_id=template_id, db=db
     )
     await db.delete(template)
@@ -310,10 +310,10 @@ async def import_workflow_template(
 )
 async def export_workflow_template(
     template_id: int,
-    user: UserOAuth = Depends(get_api_user),
+    user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateExport:
-    template = await _get_template_check_owner(
+    template = await _get_template_full_access(
         user_id=user.id, template_id=template_id, db=db
     )
     return template.model_dump()

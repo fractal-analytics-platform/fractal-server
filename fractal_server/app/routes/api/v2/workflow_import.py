@@ -34,7 +34,7 @@ from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from ._aux_functions_tasks import _check_type_filters_compatibility
-from ._aux_functions_templates import _get_template_check_owner_or_group
+from ._aux_functions_templates import _get_template_read_access
 
 router = APIRouter()
 
@@ -232,7 +232,7 @@ async def import_workflow_from_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowReadWithWarnings:
-    template = await _get_template_check_owner_or_group(
+    template = await _get_template_read_access(
         user_id=user.id,
         template_id=template_id,
         db=db,
