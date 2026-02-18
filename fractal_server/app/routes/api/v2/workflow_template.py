@@ -36,6 +36,9 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 router = APIRouter()
 
 
+# ALL USERS endpoints
+
+
 @router.get(
     "/workflow_template/",
     response_model=PaginationResponse[WorkflowTemplateRead],
@@ -128,6 +131,9 @@ async def get_workflow_template(
     )
 
 
+# TEMPLATE PRODUCER endpoints
+
+
 @router.post(
     "/workflow_template/",
     status_code=status.HTTP_201_CREATED,
@@ -136,6 +142,7 @@ async def get_workflow_template(
 async def post_workflow_template(
     workflow_id: int,
     workflow_template_create: WorkflowTemplateCreate,
+    user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
@@ -147,10 +154,10 @@ async def post_workflow_template(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    if workflow_template_create.user_group_id:
+    if user_group_id:
         await _verify_user_belongs_to_group(
             user_id=user.id,
-            user_group_id=workflow_template_create.user_group_id,
+            user_group_id=user_group_id,
             db=db,
         )
 
@@ -180,6 +187,7 @@ async def post_workflow_template(
 
     workflow_template = WorkflowTemplate(
         user_id=user.id,
+        user_group_id=user_group_id,
         data=data.model_dump(),
         **workflow_template_create.model_dump(),
     )

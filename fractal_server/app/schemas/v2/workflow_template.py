@@ -24,7 +24,6 @@ class WorkflowTemplateRead(BaseModel):
 class WorkflowTemplateCreate(BaseModel):
     name: NonEmptyStr
     version: PositiveInt
-    user_group_id: int | None = None
     description: NonEmptyStr | None = None
 
 
