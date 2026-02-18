@@ -15,6 +15,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
@@ -587,6 +588,28 @@ async def _get_template_check_owner(
                 f"You are not the owner of WorkflowTemplate[{template_id}]."
             ),
         )
+    return template
+
+
+async def _get_template_check_owner_or_group(
+    *, user_id: int, template_id: int, db: AsyncSession
+) -> WorkflowTemplate:
+    template = await db.get(WorkflowTemplate, template_id)
+    if template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTemplate[{template_id}] not found.",
+        )
+    if template.user_id != user_id:
+        link = await db.get(LinkUserGroup, (template.user_group_id, user_id))
+        if link is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "You are not authorized to "
+                    f"WorkflowTemplate[{template_id}]."
+                ),
+            )
     return template
 
 

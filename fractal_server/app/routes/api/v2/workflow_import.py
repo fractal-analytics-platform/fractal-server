@@ -29,6 +29,7 @@ from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_access
+from ._aux_functions import _get_template_check_owner_or_group
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
@@ -194,7 +195,47 @@ async def import_workflow(
     """
     Import an existing workflow into a project and create required objects.
     """
+    return await _import_workflow(
+        project_id=project_id,
+        workflow_import=workflow_import,
+        user=user,
+        db=db,
+    )
 
+
+@router.post(
+    "/project/{project_id}/workflow/import-from-template/",
+    response_model=WorkflowReadWithWarnings,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_from_template(
+    project_id: int,
+    template_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowReadWithWarnings:
+    template = await _get_template_check_owner_or_group(
+        user_id=user.id,
+        template_id=template_id,
+        db=db,
+    )
+    return await _import_workflow(
+        project_id=project_id,
+        template_id=template_id,
+        workflow_import=WorkflowImport(**template.data),
+        user=user,
+        db=db,
+    )
+
+
+async def _import_workflow(
+    *,
+    project_id: int,
+    workflow_import: WorkflowImport,
+    user: UserOAuth,
+    db: AsyncSession,
+    template_id: int | None = None,
+) -> WorkflowReadWithWarnings:
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
     # Preliminary checks
@@ -249,6 +290,7 @@ async def import_workflow(
     # Create new Workflow
     db_workflow = WorkflowV2(
         project_id=project_id,
+        template_id=template_id,
         **workflow_import.model_dump(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
