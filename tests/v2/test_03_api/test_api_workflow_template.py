@@ -1,4 +1,7 @@
 from fractal_server.app.models.v2.workflow_template import WorkflowTemplate
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 
 WORKFLOW_EXPORT_MOCK = dict(name="workflow", description=None, task_list=[])
 
@@ -112,6 +115,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
 async def test_post_patch_delete_template(
     project_factory,
     workflow_factory,
+    task_factory,
     user_group_factory,
     MockCurrentUser,
     client,
@@ -136,6 +140,10 @@ async def test_post_patch_delete_template(
         group2 = await user_group_factory("group2", user1.id, db=db)
         project = await project_factory(user1)
         workflow = await workflow_factory(project_id=project.id, name="foo")
+        task = await task_factory(user_id=user1.id, name="my_task")
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         # Test POST
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
@@ -148,6 +156,7 @@ async def test_post_patch_delete_template(
         assert res.json()["user_group_id"] is None
         assert res.json()["description"] is None
         assert res.json()["data"]["name"] == "foo"
+        assert res.json()["data"]["task_list"][0]["task"]["name"] == "my_task"
         # Test POST duplicate
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
