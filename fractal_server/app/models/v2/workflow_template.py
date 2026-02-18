@@ -27,7 +27,7 @@ class WorkflowTemplate(SQLModel, table=True):
         foreign_key="usergroup.id", default=None, ondelete="SET NULL"
     )
 
-    description: str | None = Field(default=None, nullable=True)
+    description: str | None = None
     data: dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
 
     __table_args__ = (
