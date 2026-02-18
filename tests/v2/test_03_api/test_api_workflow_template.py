@@ -197,3 +197,54 @@ async def test_post_patch_delete_template(
         assert res.status_code == 204
         template1 = await db.get(WorkflowTemplate, template1_id)
         assert template1 is None
+
+
+async def test_export_import_template(
+    project_factory,
+    workflow_factory,
+    user_group_factory,
+    MockCurrentUser,
+    client,
+    db,
+):
+    async with MockCurrentUser() as user:
+        group = await user_group_factory("group1", user.id, db=db)
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id, name="foo")
+        res = await client.post(
+            "api/v2/workflow_template/"
+            f"?workflow_id={workflow.id}&user_group_id={group.id}",
+            json=dict(name="template", version=1),
+        )
+        template_id = res.json()["id"]
+
+        # Export
+        res = await client.get(
+            f"api/v2/workflow_template/{template_id}/export/"
+        )
+        assert res.status_code == 200
+        template_file = res.json()
+        assert template_file == {
+            "name": "template",
+            "version": 1,
+            "description": None,
+            "data": {
+                "name": "foo",
+                "description": None,
+                "task_list": [],
+            },
+        }
+
+        # Import
+        res = await client.post(
+            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            json=template_file,
+        )
+        assert res.status_code == 422
+        assert "There is already a WorkflowTemplate" in res.json()["detail"]
+        template_file["version"] = 2
+        res = await client.post(
+            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            json=template_file,
+        )
+        assert res.status_code == 201
