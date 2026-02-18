@@ -32,6 +32,7 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
+from fractal_server.app.schemas.v2 import WorkflowTemplateFile
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
 from fractal_server.app.schemas.v2 import WorkflowTemplateUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
@@ -239,3 +240,56 @@ async def delete_workflow_template(
     await db.delete(workflow_template)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/workflow_template/import/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=WorkflowTemplateRead,
+)
+async def import_workflow_template(
+    workflow_template_import: WorkflowTemplateFile,
+    user_group_id: int | None = None,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowTemplateRead:
+    if user_group_id:
+        await _verify_user_belongs_to_group(
+            user_id=user.id,
+            user_group_id=user_group_id,
+            db=db,
+        )
+    await _check_template_duplication(
+        user_id=user.id,
+        name=workflow_template_import.name,
+        version=workflow_template_import.version,
+        db=db,
+    )
+    workflow_template = WorkflowTemplate(
+        user_id=user.id,
+        user_group_id=user_group_id,
+        **workflow_template_import.model_dump(),
+    )
+    db.add(workflow_template)
+    await db.commit()
+    await db.refresh(workflow_template)
+
+    return dict(
+        user_email=user.email,
+        **workflow_template.model_dump(exclude={"user_id"}),
+    )
+
+
+@router.get(
+    "/workflow_template/{workflow_template_id}/export/",
+    response_model=WorkflowTemplateFile,
+)
+async def export_workflow_template(
+    workflow_template_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowTemplateFile:
+    workflow_template = await _get_template_check_owner(
+        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    )
+    return workflow_template.model_dump()

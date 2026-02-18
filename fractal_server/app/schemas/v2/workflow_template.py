@@ -27,6 +27,10 @@ class WorkflowTemplateCreate(BaseModel):
     description: NonEmptyStr | None = None
 
 
+class WorkflowTemplateFile(WorkflowTemplateCreate):
+    data: WorkflowExport
+
+
 class WorkflowTemplateUpdate(BaseModel):
     user_group_id: int | None = None
     description: NonEmptyStr | None = None
