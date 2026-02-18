@@ -88,9 +88,11 @@ async def test_get_template(db, client, MockCurrentUser):
         assert len(items) == 1
         assert items[0]["id"] == template2.id
         # Test GET single template
-        res = await client.get(f"api/v2/workflow_template/{template3.id}/")
+        res = await client.get(f"api/v2/workflow_template/{template2.id}/")
         assert res.status_code == 200
-        assert res.json()["user_email"] == user2_email
+        assert res.json()["user_email"] == user1_email
+        res = await client.get(f"api/v2/workflow_template/{template3.id}/")
+        assert res.status_code == 403
         res = await client.get("api/v2/workflow_template/9999/")
         assert res.status_code == 404
 
