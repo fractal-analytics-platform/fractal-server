@@ -26,3 +26,8 @@ class WorkflowTemplateCreate(BaseModel):
     version: PositiveInt
     user_group_id: int | None = None
     description: NonEmptyStr | None = None
+
+
+class WorkflowTemplateUpdate(BaseModel):
+    user_group_id: int | None = None
+    description: NonEmptyStr | None = None

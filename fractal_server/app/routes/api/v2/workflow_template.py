@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from sqlmodel import func
 from sqlmodel import select
@@ -26,6 +27,7 @@ from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
+from fractal_server.app.schemas.v2 import WorkflowTemplateUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 router = APIRouter()
@@ -134,11 +136,6 @@ async def post_workflow_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    """
-    The JSON data is obtained by wrapping the existing export-workflow endpoint.
-    This requires a refactor of the export-workflow endpoint first,
-    or a small code duplication.
-    """
     workflow = await _get_workflow_or_404(workflow_id=workflow_id, db=db)
     await _get_workflow_check_access(
         project_id=workflow.project_id,
@@ -191,3 +188,74 @@ async def post_workflow_template(
         user_email=user.email,
         **workflow_template.model_dump(exclude={"user_id"}),
     )
+
+
+@router.patch(
+    "/workflow_template/{workflow_template_id}/",
+    response_model=WorkflowTemplateRead,
+)
+async def patch_workflow_template(
+    workflow_template_id: int,
+    workflow_template_update: WorkflowTemplateUpdate,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowTemplateRead:
+    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
+    if workflow_template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+        )
+    if workflow_template.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are not authorized to edit "
+                f"WorkflowTemplate[{workflow_template_id}]."
+            ),
+        )
+    if workflow_template_update.user_group_id:
+        await _verify_user_belongs_to_group(
+            user_id=user.id,
+            user_group_id=workflow_template_update.user_group_id,
+            db=db,
+        )
+    for key, value in workflow_template_update.model_dump(
+        exclude_unset=True
+    ).items():
+        setattr(workflow_template, key, value)
+    await db.commit()
+    await db.refresh(workflow_template)
+
+    return dict(
+        user_email=user.email,
+        **workflow_template.model_dump(exclude={"user_id"}),
+    )
+
+
+@router.delete(
+    "/workflow_template/{workflow_template_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_workflow_template(
+    workflow_template_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
+    if workflow_template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+        )
+    if workflow_template.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are not authorized to delete "
+                f"WorkflowTemplate[{workflow_template_id}]."
+            ),
+        )
+    await db.delete(workflow_template)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
