@@ -589,3 +589,23 @@ async def _get_template_check_owner(
             ),
         )
     return workflow_template
+
+
+async def _check_template_duplication(
+    *, user_id: int, name: str, version: int, db: AsyncSession
+):
+    res = await db.execute(
+        select(WorkflowTemplate)
+        .where(WorkflowTemplate.user_id == user_id)
+        .where(WorkflowTemplate.name == name)
+        .where(WorkflowTemplate.version == version)
+    )
+    duplicate = res.one_or_none()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "There is already a WorkflowTemplate with "
+                f"{user_id=}, {name=}, {version=}."
+            ),
+        )

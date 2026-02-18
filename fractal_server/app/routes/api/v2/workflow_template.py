@@ -13,6 +13,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
+    _check_template_duplication,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
     _get_template_check_owner,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -160,24 +163,12 @@ async def post_workflow_template(
             user_group_id=user_group_id,
             db=db,
         )
-
-    res = await db.execute(
-        select(WorkflowTemplate)
-        .where(WorkflowTemplate.user_id == user.id)
-        .where(WorkflowTemplate.name == workflow_template_create.name)
-        .where(WorkflowTemplate.version == workflow_template_create.version)
+    await _check_template_duplication(
+        user_id=user.id,
+        name=workflow_template_create.name,
+        version=workflow_template_create.version,
+        db=db,
     )
-    duplicate = res.one_or_none()
-    if duplicate:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "There is already a WorkflowTemplate with "
-                f"user_id='{user.id}', "
-                f"name='{workflow_template_create.name}', "
-                f"version='{workflow_template_create.version}'."
-            ),
-        )
     data = await export_workflow(
         project_id=workflow.project_id,
         workflow_id=workflow_id,
