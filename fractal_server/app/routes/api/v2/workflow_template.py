@@ -13,15 +13,15 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
-    _check_template_duplication,
-)
-from fractal_server.app.routes.api.v2._aux_functions import (
-    _get_template_check_owner,
-)
-from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
+from fractal_server.app.routes.api.v2._aux_functions_templates import (
+    _check_template_duplication,
+)
+from fractal_server.app.routes.api.v2._aux_functions_templates import (
+    _get_template_check_owner,
+)
 from fractal_server.app.routes.api.v2.workflow import export_workflow
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user

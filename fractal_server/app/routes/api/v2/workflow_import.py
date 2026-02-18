@@ -29,11 +29,11 @@ from fractal_server.logger import set_logger
 
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_access
-from ._aux_functions import _get_template_check_owner_or_group
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from ._aux_functions_tasks import _check_type_filters_compatibility
+from ._aux_functions_templates import _get_template_check_owner_or_group
 
 router = APIRouter()
 
