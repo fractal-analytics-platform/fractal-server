@@ -32,7 +32,8 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
-from fractal_server.app.schemas.v2 import WorkflowTemplateFile
+from fractal_server.app.schemas.v2 import WorkflowTemplateExport
+from fractal_server.app.schemas.v2 import WorkflowTemplateImport
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
 from fractal_server.app.schemas.v2 import WorkflowTemplateUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
@@ -246,7 +247,7 @@ async def delete_workflow_template(
     response_model=WorkflowTemplateRead,
 )
 async def import_workflow_template(
-    template_import: WorkflowTemplateFile,
+    template_import: WorkflowTemplateImport,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
@@ -280,13 +281,13 @@ async def import_workflow_template(
 
 @router.get(
     "/workflow_template/{template_id}/export/",
-    response_model=WorkflowTemplateFile,
+    response_model=WorkflowTemplateExport,
 )
 async def export_workflow_template(
     template_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateFile:
+) -> WorkflowTemplateExport:
     template = await _get_template_check_owner(
         user_id=user.id, template_id=template_id, db=db
     )

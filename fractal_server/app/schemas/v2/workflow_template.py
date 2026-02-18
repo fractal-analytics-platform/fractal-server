@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from pydantic.types import AwareDatetime
 from pydantic.types import PositiveInt
 
-from fractal_server.app.schemas.v2.workflow import WorkflowExport
+from fractal_server.app.schemas.v2 import WorkflowExport
+from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.types import NonEmptyStr
 
 
@@ -27,7 +28,17 @@ class WorkflowTemplateCreate(BaseModel):
     description: NonEmptyStr | None = None
 
 
-class WorkflowTemplateFile(WorkflowTemplateCreate):
+class WorkflowTemplateImport(BaseModel):
+    name: NonEmptyStr
+    version: PositiveInt
+    description: NonEmptyStr | None = None
+    data: WorkflowImport
+
+
+class WorkflowTemplateExport(BaseModel):
+    name: str
+    version: int
+    description: str | None = None
     data: WorkflowExport
 
 
