@@ -21,6 +21,7 @@ from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ProjectPermissions
@@ -568,3 +569,23 @@ async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
     )
     resource_id = res.scalar_one_or_none()
     return resource_id
+
+
+async def _get_template_check_owner(
+    *, user_id: int, workflow_template_id: int, db: AsyncSession
+) -> WorkflowTemplate:
+    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
+    if workflow_template is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+        )
+    if workflow_template.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are not the owner of "
+                f"WorkflowTemplate[{workflow_template_id}]."
+            ),
+        )
+    return workflow_template

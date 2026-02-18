@@ -13,6 +13,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
+    _get_template_check_owner,
+)
+from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_access,
 )
 from fractal_server.app.routes.api.v2._aux_functions import _get_workflow_or_404
@@ -200,20 +203,9 @@ async def patch_workflow_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
-    if workflow_template is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
-        )
-    if workflow_template.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "You are not authorized to edit "
-                f"WorkflowTemplate[{workflow_template_id}]."
-            ),
-        )
+    workflow_template = await _get_template_check_owner(
+        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    )
     if workflow_template_update.user_group_id:
         await _verify_user_belongs_to_group(
             user_id=user.id,
@@ -242,20 +234,9 @@ async def delete_workflow_template(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
-    if workflow_template is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
-        )
-    if workflow_template.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "You are not authorized to delete "
-                f"WorkflowTemplate[{workflow_template_id}]."
-            ),
-        )
+    workflow_template = await _get_template_check_owner(
+        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    )
     await db.delete(workflow_template)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
