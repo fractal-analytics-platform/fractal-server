@@ -2,7 +2,6 @@ from typing import Literal
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from sqlmodel import func
@@ -21,6 +20,9 @@ from fractal_server.app.routes.api.v2._aux_functions_templates import (
 )
 from fractal_server.app.routes.api.v2._aux_functions_templates import (
     _get_template_check_owner,
+)
+from fractal_server.app.routes.api.v2._aux_functions_templates import (
+    _get_template_check_owner_or_group,
 )
 from fractal_server.app.routes.api.v2.workflow import export_workflow
 from fractal_server.app.routes.auth import get_api_guest
@@ -113,23 +115,16 @@ async def get_workflow_template_list(
 )
 async def get_workflow_template(
     template_id: int,
-    user: UserOAuth = Depends(get_api_guest),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    res = await db.execute(
-        select(WorkflowTemplate, UserOAuth.email)
-        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
-        .where(WorkflowTemplate.id == template_id)
+    template = await _get_template_check_owner_or_group(
+        user_id=user.id, template_id=template_id, db=db
     )
-    template_and_user_email = res.one_or_none()
-
-    if template_and_user_email is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{template_id}] not found.",
-        )
-    template, user_email = template_and_user_email
-
+    res = await db.execute(
+        select(UserOAuth.email).where(UserOAuth.id == template.user_id)
+    )
+    user_email = res.scalars().one()
     return dict(
         user_email=user_email,
         **template.model_dump(exclude={"user_id"}),
