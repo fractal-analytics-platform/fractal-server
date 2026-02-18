@@ -1,5 +1,7 @@
 from fractal_server.app.models.v2.workflow_template import WorkflowTemplate
 
+WORKFLOW_EXPORT_MOCK = dict(name="workflow", description=None, task_list=[])
+
 
 async def test_get_template(db, client, MockCurrentUser):
     async with MockCurrentUser() as user1:
@@ -9,24 +11,23 @@ async def test_get_template(db, client, MockCurrentUser):
         user2_id = user2.id
         user2_email = user2.email
 
-    fake_workflow_export = dict(name="workflow", description=None, task_list=[])
     template1 = WorkflowTemplate(
         user_id=user1_id,
         name="template",
         version=1,
-        data=fake_workflow_export,
+        data=WORKFLOW_EXPORT_MOCK,
     )
     template2 = WorkflowTemplate(
         user_id=user1_id,
         name="other",
         version=2,
-        data=fake_workflow_export,
+        data=WORKFLOW_EXPORT_MOCK,
     )
     template3 = WorkflowTemplate(
         user_id=user2_id,
         name="template2",
         version=1,
-        data=fake_workflow_export,
+        data=WORKFLOW_EXPORT_MOCK,
     )
     db.add_all([template1, template2, template3])
     await db.commit()
@@ -94,7 +95,7 @@ async def test_get_template(db, client, MockCurrentUser):
         assert res.status_code == 404
 
 
-async def test_post_template(
+async def test_post_patch_delete_template(
     project_factory,
     workflow_factory,
     user_group_factory,
@@ -105,12 +106,23 @@ async def test_post_template(
     async with MockCurrentUser() as user0:
         group0 = await user_group_factory("group0", user0.id, db=db)
         group0_id = group0.id
+        template0 = WorkflowTemplate(
+            user_id=user0.id,
+            name="template0",
+            version=1,
+            data=WORKFLOW_EXPORT_MOCK,
+        )
+        db.add(template0)
+        await db.commit()
+        await db.refresh(template0)
+        template0_id = template0.id
 
     async with MockCurrentUser() as user1:
         group1 = await user_group_factory("group1", user1.id, db=db)
+        group2 = await user_group_factory("group2", user1.id, db=db)
         project = await project_factory(user1)
         workflow = await workflow_factory(project_id=project.id, name="foo")
-        #
+        # Test POST
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
@@ -120,15 +132,16 @@ async def test_post_template(
         assert res.json()["name"] == "template"
         assert res.json()["version"] == 1
         assert res.json()["user_group_id"] is None
+        assert res.json()["description"] is None
         assert res.json()["data"]["name"] == "foo"
-        # Test duplicate
+        # Test POST duplicate
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
         )
         assert res.status_code == 422
         assert "There is already a WorkflowTemplate" in res.json()["detail"]
-        # Test `user_group_id`
+        # Test POST with `user_group_id`
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
             json=dict(name="template", version=2, user_group_id=9999),
@@ -145,3 +158,36 @@ async def test_post_template(
         )
         assert res.status_code == 201
         assert res.json()["user_group_id"] == group1.id
+        assert res.json()["description"] is None
+        template1_id = res.json()["id"]
+        # Test PATCH
+        res = await client.patch("api/v2/workflow_template/9999/", json=dict())
+        assert res.status_code == 404
+        res = await client.patch(
+            f"api/v2/workflow_template/{template0_id}/",
+            json=dict(),
+        )
+        assert res.status_code == 403
+        assert "not authorized to edit" in res.json()["detail"]
+        res = await client.patch(
+            f"api/v2/workflow_template/{template1_id}/",
+            json=dict(user_group_id=group0_id),
+        )
+        assert res.status_code == 403
+        assert "not belong to UserGroup" in res.json()["detail"]
+        res = await client.patch(
+            f"api/v2/workflow_template/{template1_id}/",
+            json=dict(user_group_id=group2.id, description="description"),
+        )
+        assert res.status_code == 200
+        assert res.json()["user_group_id"] == group2.id
+        assert res.json()["description"] == "description"
+        # Test DELETE
+        res = await client.delete("api/v2/workflow_template/9999/")
+        assert res.status_code == 404
+        res = await client.delete(f"api/v2/workflow_template/{template0_id}/")
+        assert res.status_code == 403
+        res = await client.delete(f"api/v2/workflow_template/{template1_id}/")
+        assert res.status_code == 204
+        template1 = await db.get(WorkflowTemplate, template1_id)
+        assert template1 is None
