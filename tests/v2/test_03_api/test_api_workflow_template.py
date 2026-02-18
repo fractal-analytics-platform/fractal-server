@@ -3,13 +3,15 @@ from fractal_server.app.models.v2.workflow_template import WorkflowTemplate
 WORKFLOW_EXPORT_MOCK = dict(name="workflow", description=None, task_list=[])
 
 
-async def test_get_template(db, client, MockCurrentUser):
+async def test_get_template(db, client, MockCurrentUser, user_group_factory):
     async with MockCurrentUser() as user1:
         user1_id = user1.id
         user1_email = user1.email
     async with MockCurrentUser() as user2:
         user2_id = user2.id
         user2_email = user2.email
+
+    group = await user_group_factory("group", user1.id, user2.id, db=db)
 
     template1 = WorkflowTemplate(
         user_id=user1_id,
@@ -25,15 +27,23 @@ async def test_get_template(db, client, MockCurrentUser):
     )
     template3 = WorkflowTemplate(
         user_id=user2_id,
+        user_group_id=group.id,
         name="template2",
         version=1,
         data=WORKFLOW_EXPORT_MOCK,
     )
-    db.add_all([template1, template2, template3])
+    template4 = WorkflowTemplate(
+        user_id=user2_id,
+        name="template2",
+        version=2,
+        data=WORKFLOW_EXPORT_MOCK,
+    )
+    db.add_all([template1, template2, template3, template4])
     await db.commit()
     await db.refresh(template1)
     await db.refresh(template2)
     await db.refresh(template3)
+    await db.refresh(template4)
 
     async with MockCurrentUser(user_id=user1_id):
         res = await client.get("api/v2/workflow_template/")
@@ -92,6 +102,8 @@ async def test_get_template(db, client, MockCurrentUser):
         assert res.status_code == 200
         assert res.json()["user_email"] == user1_email
         res = await client.get(f"api/v2/workflow_template/{template3.id}/")
+        assert res.status_code == 200
+        res = await client.get(f"api/v2/workflow_template/{template4.id}/")
         assert res.status_code == 403
         res = await client.get("api/v2/workflow_template/9999/")
         assert res.status_code == 404
