@@ -143,18 +143,21 @@ async def test_post_patch_delete_template(
         assert "There is already a WorkflowTemplate" in res.json()["detail"]
         # Test POST with `user_group_id`
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
-            json=dict(name="template", version=2, user_group_id=9999),
+            "api/v2/workflow_template/"
+            f"?workflow_id={workflow.id}&user_group_id=9999",
+            json=dict(name="template", version=2),
         )
         assert res.status_code == 404
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
-            json=dict(name="template", version=2, user_group_id=group0_id),
+            "api/v2/workflow_template/"
+            f"?workflow_id={workflow.id}&user_group_id={group0_id}",
+            json=dict(name="template", version=2),
         )
         assert res.status_code == 403
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
-            json=dict(name="template", version=2, user_group_id=group1.id),
+            "api/v2/workflow_template/"
+            f"?workflow_id={workflow.id}&user_group_id={group1.id}",
+            json=dict(name="template", version=2),
         )
         assert res.status_code == 201
         assert res.json()["user_group_id"] == group1.id
