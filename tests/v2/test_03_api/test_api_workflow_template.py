@@ -19,66 +19,87 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
     template1 = WorkflowTemplate(
         user_id=user1_id,
         name="template",
-        version=1,
+        version=2,
         data=WORKFLOW_EXPORT_MOCK,
     )
     template2 = WorkflowTemplate(
         user_id=user1_id,
         name="other",
-        version=2,
+        version=1,
         data=WORKFLOW_EXPORT_MOCK,
     )
     template3 = WorkflowTemplate(
+        user_id=user1_id,
+        name="other",
+        version=2,
+        data=WORKFLOW_EXPORT_MOCK,
+    )
+    template4 = WorkflowTemplate(
         user_id=user2_id,
         user_group_id=group.id,
         name="template2",
         version=1,
         data=WORKFLOW_EXPORT_MOCK,
     )
-    template4 = WorkflowTemplate(
+    template5 = WorkflowTemplate(
         user_id=user2_id,
         name="template2",
         version=2,
         data=WORKFLOW_EXPORT_MOCK,
     )
-    db.add_all([template1, template2, template3, template4])
+    db.add_all([template1, template2, template3, template4, template5])
     await db.commit()
     await db.refresh(template1)
     await db.refresh(template2)
     await db.refresh(template3)
     await db.refresh(template4)
+    await db.refresh(template5)
 
     async with MockCurrentUser(user_id=user1_id):
         res = await client.get("api/v2/workflow_template/")
         assert res.status_code == 200
         assert res.json()["current_page"] == 1
-        assert res.json()["page_size"] == 3
-        assert res.json()["total_count"] == 3
+        assert res.json()["page_size"] == 4
+        assert res.json()["total_count"] == 4
         items = res.json()["items"]
-        assert len(items) == 3
-        assert items[0]["id"] == template1.id
+        assert len(items) == 4
+        assert items[0]["id"] == template2.id
         assert items[0]["user_email"] == user1_email
-        assert items[1]["id"] == template2.id
+        assert items[1]["id"] == template3.id
         assert items[1]["user_email"] == user1_email
-        assert items[2]["id"] == template3.id
-        assert items[2]["user_email"] == user2_email
-        # TODO: test sorting
+        assert items[2]["id"] == template1.id
+        assert items[2]["user_email"] == user1_email
+        assert items[3]["id"] == template4.id
+        assert items[3]["user_email"] == user2_email
+        # Test `sort_by=timestamp`
+        res = await client.get("api/v2/workflow_template/?sort_by=timestamp")
+        assert res.status_code == 200
+        assert res.json()["current_page"] == 1
+        assert res.json()["page_size"] == 4
+        assert res.json()["total_count"] == 4
+        items = res.json()["items"]
+        assert len(items) == 4
+        assert items[0]["id"] == template4.id
+        assert items[1]["id"] == template3.id
+        assert items[2]["id"] == template2.id
+        assert items[3]["id"] == template1.id
         # Test pagination
-        res = await client.get("api/v2/workflow_template/?page_size=2&page=2")
+        res = await client.get("api/v2/workflow_template/?page_size=3&page=2")
         assert res.status_code == 200
         assert res.json()["current_page"] == 2
-        assert res.json()["page_size"] == 2
-        assert res.json()["total_count"] == 3
+        assert res.json()["page_size"] == 3
+        assert res.json()["total_count"] == 4
         items = res.json()["items"]
         assert len(items) == 1
-        assert items[0]["id"] == template3.id
+        assert items[0]["id"] == template4.id
         # Filter by `is_owner`
         res = await client.get("api/v2/workflow_template/?is_owner=true")
         assert res.status_code == 200
         items = res.json()["items"]
-        assert len(items) == 2
-        assert items[0]["id"] == template1.id
-        assert items[1]["id"] == template2.id
+        assert len(items) == 3
+        assert items[0]["id"] == template2.id
+        assert items[1]["id"] == template3.id
+        assert items[2]["id"] == template1.id
         # Filter by `user_email`
         res = await client.get(
             f"api/v2/workflow_template/?user_email={user2_email}"
@@ -86,27 +107,28 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 1
-        assert items[0]["id"] == template3.id
+        assert items[0]["id"] == template4.id
         # Filter by `name`
         res = await client.get("api/v2/workflow_template/?name=template")
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 2
         assert items[0]["id"] == template1.id
-        assert items[1]["id"] == template3.id
+        assert items[1]["id"] == template4.id
         # Filter by `version`
         res = await client.get("api/v2/workflow_template/?version=2")
         assert res.status_code == 200
         items = res.json()["items"]
-        assert len(items) == 1
-        assert items[0]["id"] == template2.id
+        assert len(items) == 2
+        assert items[0]["id"] == template3.id
+        assert items[1]["id"] == template1.id
         # Test GET single template
         res = await client.get(f"api/v2/workflow_template/{template2.id}/")
         assert res.status_code == 200
         assert res.json()["user_email"] == user1_email
-        res = await client.get(f"api/v2/workflow_template/{template3.id}/")
-        assert res.status_code == 200
         res = await client.get(f"api/v2/workflow_template/{template4.id}/")
+        assert res.status_code == 200
+        res = await client.get(f"api/v2/workflow_template/{template5.id}/")
         assert res.status_code == 403
         res = await client.get("api/v2/workflow_template/9999/")
         assert res.status_code == 404
