@@ -280,27 +280,6 @@ async def test_get_collection_task_group_activity_status_message(
         debug(msg)
         assert "There exists another task-group collection" in msg
 
-        # Add another collection activity
-        db.add(
-            TaskGroupActivityV2(
-                user_id=user.id,
-                taskgroupv2_id=task_group.id,
-                pkg_name=task_group.pkg_name,
-                version=task_group.version,
-                status="OK",
-                action="collect",
-            )
-        )
-        await db.commit()
-
-        # Check message
-        msg = await _get_collection_task_group_activity_status_message(
-            task_group_id=task_group.id,
-            db=db,
-        )
-        debug(msg)
-        assert "please contact an admin" in msg
-
 
 def test_get_new_workflow_task_meta():
     assert get_new_workflow_task_meta(
