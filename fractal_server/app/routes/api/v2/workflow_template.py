@@ -107,7 +107,15 @@ async def get_workflow_template_list(
         stm = stm.where(WorkflowTemplate.version == version)
         stm_count = stm_count.where(WorkflowTemplate.version == version)
 
-    # FIXME: sort with `sort_by`
+    match sort_by:
+        case "user-name-version":
+            stm = stm.order_by(
+                WorkflowTemplate.user_id,
+                WorkflowTemplate.name,
+                WorkflowTemplate.version,
+            )
+        case "timestamp":
+            stm = stm.order_by(WorkflowTemplate.timestamp_created.desc())
 
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
