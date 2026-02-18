@@ -90,7 +90,7 @@ async def get_workflow_template_list(
         stm = stm.offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stm)
-    workflow_templates_and_user_email = res.all()
+    templates_and_user_email = res.all()
 
     return dict(
         total_count=total_count,
@@ -99,39 +99,39 @@ async def get_workflow_template_list(
         items=[
             dict(
                 user_email=email,
-                **workflow_template.model_dump(exclude={"user_id"}),
+                **template.model_dump(exclude={"user_id"}),
             )
-            for workflow_template, email in workflow_templates_and_user_email
+            for template, email in templates_and_user_email
         ],
     )
 
 
 @router.get(
-    "/workflow_template/{workflow_template_id}/",
+    "/workflow_template/{template_id}/",
     response_model=WorkflowTemplateRead,
 )
 async def get_workflow_template(
-    workflow_template_id: int,
+    template_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
     res = await db.execute(
         select(WorkflowTemplate, UserOAuth.email)
         .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
-        .where(WorkflowTemplate.id == workflow_template_id)
+        .where(WorkflowTemplate.id == template_id)
     )
-    workflow_template_and_user_email = res.one_or_none()
+    template_and_user_email = res.one_or_none()
 
-    if workflow_template_and_user_email is None:
+    if template_and_user_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+            detail=f"WorkflowTemplate[{template_id}] not found.",
         )
-    workflow_template, user_email = workflow_template_and_user_email
+    template, user_email = template_and_user_email
 
     return dict(
         user_email=user_email,
-        **workflow_template.model_dump(exclude={"user_id"}),
+        **template.model_dump(exclude={"user_id"}),
     )
 
 
@@ -145,7 +145,7 @@ async def get_workflow_template(
 )
 async def post_workflow_template(
     workflow_id: int,
-    workflow_template_create: WorkflowTemplateCreate,
+    template_create: WorkflowTemplateCreate,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
@@ -166,8 +166,8 @@ async def post_workflow_template(
         )
     await _check_template_duplication(
         user_id=user.id,
-        name=workflow_template_create.name,
-        version=workflow_template_create.version,
+        name=template_create.name,
+        version=template_create.version,
         db=db,
     )
     data = await export_workflow(
@@ -177,67 +177,65 @@ async def post_workflow_template(
         db=db,
     )
 
-    workflow_template = WorkflowTemplate(
+    template = WorkflowTemplate(
         user_id=user.id,
         user_group_id=user_group_id,
         data=data.model_dump(),
-        **workflow_template_create.model_dump(),
+        **template_create.model_dump(),
     )
-    db.add(workflow_template)
+    db.add(template)
     await db.commit()
-    await db.refresh(workflow_template)
+    await db.refresh(template)
 
     return dict(
         user_email=user.email,
-        **workflow_template.model_dump(exclude={"user_id"}),
+        **template.model_dump(exclude={"user_id"}),
     )
 
 
 @router.patch(
-    "/workflow_template/{workflow_template_id}/",
+    "/workflow_template/{template_id}/",
     response_model=WorkflowTemplateRead,
 )
 async def patch_workflow_template(
-    workflow_template_id: int,
-    workflow_template_update: WorkflowTemplateUpdate,
+    template_id: int,
+    template_update: WorkflowTemplateUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateRead:
-    workflow_template = await _get_template_check_owner(
-        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    template = await _get_template_check_owner(
+        user_id=user.id, template_id=template_id, db=db
     )
-    if workflow_template_update.user_group_id:
+    if template_update.user_group_id:
         await _verify_user_belongs_to_group(
             user_id=user.id,
-            user_group_id=workflow_template_update.user_group_id,
+            user_group_id=template_update.user_group_id,
             db=db,
         )
-    for key, value in workflow_template_update.model_dump(
-        exclude_unset=True
-    ).items():
-        setattr(workflow_template, key, value)
+    for key, value in template_update.model_dump(exclude_unset=True).items():
+        setattr(template, key, value)
     await db.commit()
-    await db.refresh(workflow_template)
+    await db.refresh(template)
 
     return dict(
         user_email=user.email,
-        **workflow_template.model_dump(exclude={"user_id"}),
+        **template.model_dump(exclude={"user_id"}),
     )
 
 
 @router.delete(
-    "/workflow_template/{workflow_template_id}/",
+    "/workflow_template/{template_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_workflow_template(
-    workflow_template_id: int,
+    template_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    workflow_template = await _get_template_check_owner(
-        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    template = await _get_template_check_owner(
+        user_id=user.id, template_id=template_id, db=db
     )
-    await db.delete(workflow_template)
+    await db.delete(template)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -248,7 +246,7 @@ async def delete_workflow_template(
     response_model=WorkflowTemplateRead,
 )
 async def import_workflow_template(
-    workflow_template_import: WorkflowTemplateFile,
+    template_import: WorkflowTemplateFile,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
@@ -261,35 +259,35 @@ async def import_workflow_template(
         )
     await _check_template_duplication(
         user_id=user.id,
-        name=workflow_template_import.name,
-        version=workflow_template_import.version,
+        name=template_import.name,
+        version=template_import.version,
         db=db,
     )
-    workflow_template = WorkflowTemplate(
+    template = WorkflowTemplate(
         user_id=user.id,
         user_group_id=user_group_id,
-        **workflow_template_import.model_dump(),
+        **template_import.model_dump(),
     )
-    db.add(workflow_template)
+    db.add(template)
     await db.commit()
-    await db.refresh(workflow_template)
+    await db.refresh(template)
 
     return dict(
         user_email=user.email,
-        **workflow_template.model_dump(exclude={"user_id"}),
+        **template.model_dump(exclude={"user_id"}),
     )
 
 
 @router.get(
-    "/workflow_template/{workflow_template_id}/export/",
+    "/workflow_template/{template_id}/export/",
     response_model=WorkflowTemplateFile,
 )
 async def export_workflow_template(
-    workflow_template_id: int,
+    template_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateFile:
-    workflow_template = await _get_template_check_owner(
-        user_id=user.id, workflow_template_id=workflow_template_id, db=db
+    template = await _get_template_check_owner(
+        user_id=user.id, template_id=template_id, db=db
     )
-    return workflow_template.model_dump()
+    return template.model_dump()

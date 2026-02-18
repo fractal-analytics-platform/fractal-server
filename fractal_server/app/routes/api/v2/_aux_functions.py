@@ -572,23 +572,22 @@ async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
 
 
 async def _get_template_check_owner(
-    *, user_id: int, workflow_template_id: int, db: AsyncSession
+    *, user_id: int, template_id: int, db: AsyncSession
 ) -> WorkflowTemplate:
-    workflow_template = await db.get(WorkflowTemplate, workflow_template_id)
-    if workflow_template is None:
+    template = await db.get(WorkflowTemplate, template_id)
+    if template is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{workflow_template_id}] not found.",
+            detail=f"WorkflowTemplate[{template_id}] not found.",
         )
-    if workflow_template.user_id != user_id:
+    if template.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                "You are not the owner of "
-                f"WorkflowTemplate[{workflow_template_id}]."
+                f"You are not the owner of WorkflowTemplate[{template_id}]."
             ),
         )
-    return workflow_template
+    return template
 
 
 async def _check_template_duplication(
