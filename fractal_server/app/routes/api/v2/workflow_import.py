@@ -24,6 +24,7 @@ from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.app.schemas.v2.workflow import WorkflowReadWithWarnings
 from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import set_logger
 
