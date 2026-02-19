@@ -145,9 +145,10 @@ async def get_workflow_template_list(
                 ),
             )
         )
+        .order_by(UserOAuth.email.asc())
     )
     res = await db.execute(stm_email)
-    email_list = res.scalars().all()
+    email_list = res.unique().scalars().all()
 
     return dict(
         total_count=total_count,
