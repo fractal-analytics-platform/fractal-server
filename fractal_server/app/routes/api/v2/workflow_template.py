@@ -73,9 +73,10 @@ async def get_workflow_template_list(
         .where(
             or_(
                 WorkflowTemplate.user_id == user.id,
-                exists().where(
-                    LinkUserGroup.user_id == user.id,
-                    LinkUserGroup.group_id == WorkflowTemplate.user_group_id,
+                WorkflowTemplate.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user.id
+                    )
                 ),
             )
         )
