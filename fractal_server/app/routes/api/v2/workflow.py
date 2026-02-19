@@ -12,8 +12,10 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
-from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _create_workflow_export,
+)
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import WorkflowCreate
@@ -257,7 +259,7 @@ async def export_workflow(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowExport | None:
+) -> WorkflowExport:
     """
     Export an existing workflow, after stripping all IDs
     """
@@ -268,21 +270,8 @@ async def export_workflow(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    wf_task_list = []
-    for wftask in workflow.task_list:
-        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-        wf_task_list.append(wftask.model_dump())
-        wf_task_list[-1]["task"] = dict(
-            pkg_name=task_group.pkg_name,
-            version=task_group.version,
-            name=wftask.task.name,
-        )
-
-    wf = WorkflowExport(
-        **workflow.model_dump(),
-        task_list=wf_task_list,
-    )
-    return wf
+    workflow_export = await _create_workflow_export(workflow=workflow, db=db)
+    return workflow_export
 
 
 class WorkflowTaskTypeFiltersInfo(BaseModel):

@@ -14,7 +14,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
-from fractal_server.app.models.v2.task_group import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _create_workflow_export,
+)
 from fractal_server.app.routes.api.v2._aux_functions import (
     _get_workflow_check_access,
 )
@@ -42,7 +44,6 @@ from fractal_server.app.schemas.v2 import WorkflowTemplateImport
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
 from fractal_server.app.schemas.v2 import WorkflowTemplateUpdate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
-from fractal_server.app.schemas.v2.workflow import WorkflowExport
 
 router = APIRouter()
 
@@ -200,23 +201,12 @@ async def post_workflow_template(
         db=db,
     )
 
-    wf_task_list = []
-    for wftask in workflow.task_list:
-        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
-        wf_task_list.append(wftask.model_dump())
-        wf_task_list[-1]["task"] = dict(
-            pkg_name=task_group.pkg_name,
-            version=task_group.version,
-            name=wftask.task.name,
-        )
+    workflow_export = await _create_workflow_export(workflow=workflow, db=db)
 
     template = WorkflowTemplate(
         user_id=user.id,
         user_group_id=user_group_id,
-        data=WorkflowExport(
-            task_list=wf_task_list,
-            **workflow.model_dump(),
-        ).model_dump(),
+        data=workflow_export.model_dump(),
         **template_create.model_dump(),
     )
     db.add(template)
