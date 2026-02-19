@@ -7,8 +7,8 @@ from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
 
 
-async def _get_template_full_access(
-    *, user_id: int, template_id: int, db: AsyncSession
+async def _get_template_or_404(
+    *, template_id: int, db: AsyncSession
 ) -> WorkflowTemplate:
     template = await db.get(WorkflowTemplate, template_id)
     if template is None:
@@ -16,6 +16,13 @@ async def _get_template_full_access(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"WorkflowTemplate[{template_id}] not found.",
         )
+    return template
+
+
+async def _get_template_full_access(
+    *, user_id: int, template_id: int, db: AsyncSession
+) -> WorkflowTemplate:
+    template = await _get_template_or_404(template_id=template_id, db=db)
     if template.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -29,12 +36,7 @@ async def _get_template_full_access(
 async def _get_template_read_access(
     *, user_id: int, template_id: int, db: AsyncSession
 ) -> WorkflowTemplate:
-    template = await db.get(WorkflowTemplate, template_id)
-    if template is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"WorkflowTemplate[{template_id}] not found.",
-        )
+    template = await _get_template_or_404(template_id=template_id, db=db)
     if template.user_id != user_id:
         link = await db.get(LinkUserGroup, (template.user_group_id, user_id))
         if link is None:
