@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.19.5 (unreleased)
+# 2.20.0 (unreleased)
 
 * API:
     * Introduce version flexibility in workflow-import endpoint (\#3154).
