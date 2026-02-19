@@ -92,6 +92,14 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         items = res.json()["items"]
         assert len(items) == 1
         assert items[0]["id"] == template4.id
+        # Filter by `template_id`
+        res = await client.get(
+            f"api/v2/workflow_template/?template_id={template3.id}"
+        )
+        assert res.status_code == 200
+        items = res.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == template3.id
         # Filter by `is_owner`
         res = await client.get("api/v2/workflow_template/?is_owner=true")
         assert res.status_code == 200

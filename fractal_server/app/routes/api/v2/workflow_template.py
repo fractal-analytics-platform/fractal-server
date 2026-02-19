@@ -56,6 +56,7 @@ router = APIRouter()
     response_model=PaginationResponse[WorkflowTemplateRead],
 )
 async def get_workflow_template_list(
+    template_id: int | None = None,
     is_owner: bool = False,
     user_email: str | None = None,
     name: str | None = None,
@@ -96,6 +97,9 @@ async def get_workflow_template_list(
         )
     )
 
+    if template_id:
+        stm = stm.where(WorkflowTemplate.id == template_id)
+        stm_count = stm_count.where(WorkflowTemplate.id == template_id)
     if is_owner:
         stm = stm.where(WorkflowTemplate.user_id == user.id)
         stm_count = stm_count.where(WorkflowTemplate.user_id == user.id)
