@@ -54,6 +54,7 @@ class WorkflowTaskDump(BaseModel):
 
 
 class WorkflowDump(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     id: int
     name: str
     project_id: int
