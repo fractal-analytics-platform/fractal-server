@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main", '3144-make-workflow-import-more-flexible']
+    branches: ["main"]
 
 jobs:
 
