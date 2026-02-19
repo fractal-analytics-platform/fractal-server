@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
@@ -200,52 +202,6 @@ async def _get_task_id_or_available_tasks(
     return (True, task_id)
 
 
-@router.post(
-    "/project/{project_id}/workflow/import/",
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow(
-    project_id: int,
-    workflow_import: WorkflowImport,
-    user: UserOAuth = Depends(get_api_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings:
-    """
-    Import an existing workflow into a project and create required objects.
-    """
-    return await _import_workflow(
-        project_id=project_id,
-        workflow_import=workflow_import,
-        user=user,
-        db=db,
-    )
-
-
-@router.post(
-    "/project/{project_id}/workflow/import-from-template/",
-    response_model=WorkflowReadWithWarnings,
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow_from_template(
-    project_id: int,
-    template_id: int,
-    user: UserOAuth = Depends(get_api_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings:
-    template = await _get_template_read_access(
-        user_id=user.id,
-        template_id=template_id,
-        db=db,
-    )
-    return await _import_workflow(
-        project_id=project_id,
-        template_id=template_id,
-        workflow_import=WorkflowImport(**template.data),
-        user=user,
-        db=db,
-    )
-
-
 async def _import_workflow(
     *,
     project_id: int,
@@ -253,7 +209,10 @@ async def _import_workflow(
     user: UserOAuth,
     db: AsyncSession,
     template_id: int | None = None,
-) -> WorkflowReadWithWarnings:
+) -> dict[str, Any]:
+    """
+    Import a workflow into a project and create required objects.
+    """
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
     # Preliminary checks
@@ -358,3 +317,50 @@ async def _import_workflow(
     )
 
     return workflow_data
+
+
+@router.post(
+    "/project/{project_id}/workflow/import/",
+    response_model=WorkflowReadWithWarnings,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow(
+    project_id: int,
+    workflow_import: WorkflowImport,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowReadWithWarnings:
+    workflow = await _import_workflow(
+        project_id=project_id,
+        workflow_import=workflow_import,
+        user=user,
+        db=db,
+    )
+    return workflow
+
+
+@router.post(
+    "/project/{project_id}/workflow/import-from-template/",
+    response_model=WorkflowReadWithWarnings,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_from_template(
+    project_id: int,
+    template_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowReadWithWarnings:
+    template = await _get_template_read_access(
+        user_id=user.id,
+        template_id=template_id,
+        db=db,
+    )
+    workflow_import = WorkflowImport(**template.data)
+    workflow = await _import_workflow(
+        project_id=project_id,
+        template_id=template_id,
+        workflow_import=workflow_import,
+        user=user,
+        db=db,
+    )
+    return workflow
