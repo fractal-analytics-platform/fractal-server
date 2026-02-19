@@ -7,12 +7,12 @@ WORKFLOW_EXPORT_MOCK = dict(name="workflow", description=None, task_list=[])
 
 
 async def test_get_template(db, client, MockCurrentUser, user_group_factory):
-    async with MockCurrentUser() as user1:
+    user1_email = "b@example.org"
+    user2_email = "a@example.org"
+    async with MockCurrentUser(user_email=user1_email) as user1:
         user1_id = user1.id
-        user1_email = user1.email
-    async with MockCurrentUser() as user2:
+    async with MockCurrentUser(user_email=user2_email) as user2:
         user2_id = user2.id
-        user2_email = user2.email
 
     group = await user_group_factory("group", user1.id, user2.id, db=db)
 
@@ -61,6 +61,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert res.json()["current_page"] == 1
         assert res.json()["page_size"] == 4
         assert res.json()["total_count"] == 4
+        assert res.json()["email_list"] == [user2_email, user1_email]
         items = res.json()["items"]
         assert len(items) == 4
         assert items[0]["id"] == template3.id
@@ -103,6 +104,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         # Filter by `is_owner`
         res = await client.get("api/v2/workflow_template/?is_owner=true")
         assert res.status_code == 200
+        assert res.json()["email_list"] == [user2_email, user1_email]
         items = res.json()["items"]
         assert len(items) == 3
         assert items[0]["id"] == template3.id
