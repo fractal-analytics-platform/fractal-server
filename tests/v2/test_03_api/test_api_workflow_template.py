@@ -231,6 +231,13 @@ async def test_post_patch_delete_template(
         assert res.status_code == 200
         assert res.json()["user_group_id"] == group2.id
         assert res.json()["description"] == "description"
+        res = await client.patch(
+            f"api/v2/workflow_template/{template1_id}/",
+            json=dict(user_group_id=None),
+        )
+        assert res.status_code == 200
+        assert res.json()["user_group_id"] is None
+        assert res.json()["description"] == "description"
         # Test DELETE
         res = await client.delete("api/v2/workflow_template/9999/")
         assert res.status_code == 404
