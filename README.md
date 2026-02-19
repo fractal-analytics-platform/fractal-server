@@ -64,7 +64,7 @@
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                  |      116 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_version\_update.py                   |       88 |        1 |       16 |        1 |     98% |       208 |
 | fractal\_server/app/routes/api/v2/workflow.py                                |      109 |        0 |       20 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/workflow\_import.py                        |       92 |        2 |       18 |        1 |     97% |   163-166 |
+| fractal\_server/app/routes/api/v2/workflow\_import.py                        |       89 |        0 |       18 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/workflowtask.py                            |       75 |        1 |       26 |        1 |     98% |       190 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                              |       34 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/\_aux\_auth.py                               |       78 |        0 |       18 |        1 |     99% |  241->254 |
@@ -111,13 +111,13 @@
 | fractal\_server/config/\_main.py                                             |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_oauth.py                                            |       25 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_settings\_config.py                                 |        2 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/exceptions.py                                                |        2 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/exceptions.py                                                |        8 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/\_\_init\_\_.py                                       |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                             |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/status\_tools.py                                      |       48 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/tools.py                                              |       47 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/logger.py                                                    |       44 |        3 |       14 |        4 |     88% |96->99, 115, 164, 168 |
-| fractal\_server/main.py                                                      |      104 |        1 |       16 |        1 |     98% |       127 |
+| fractal\_server/main.py                                                      |      110 |        1 |       16 |        1 |     98% |       130 |
 | fractal\_server/runner/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/components.py                                         |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/config/\_\_init\_\_.py                                |        2 |        0 |        0 |        0 |    100% |           |
@@ -203,7 +203,7 @@
 | fractal\_server/urls.py                                                      |        8 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10079** |  **190** | **1816** |   **93** | **97%** |           |
+| **TOTAL**                                                                    | **10088** |  **188** | **1816** |   **92** | **97%** |           |
 
 
 ## Setup coverage badge
