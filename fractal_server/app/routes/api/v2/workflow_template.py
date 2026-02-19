@@ -114,7 +114,7 @@ async def get_workflow_template_list(
             stm = stm.order_by(
                 WorkflowTemplate.user_id,
                 WorkflowTemplate.name,
-                WorkflowTemplate.version,
+                WorkflowTemplate.version.desc(),
             )
         case "timestamp":
             stm = stm.order_by(WorkflowTemplate.timestamp_created.desc())

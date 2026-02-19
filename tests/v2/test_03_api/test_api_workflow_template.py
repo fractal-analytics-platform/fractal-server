@@ -63,9 +63,9 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert res.json()["total_count"] == 4
         items = res.json()["items"]
         assert len(items) == 4
-        assert items[0]["id"] == template2.id
+        assert items[0]["id"] == template3.id
         assert items[0]["user_email"] == user1_email
-        assert items[1]["id"] == template3.id
+        assert items[1]["id"] == template2.id
         assert items[1]["user_email"] == user1_email
         assert items[2]["id"] == template1.id
         assert items[2]["user_email"] == user1_email
@@ -97,8 +97,8 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 3
-        assert items[0]["id"] == template2.id
-        assert items[1]["id"] == template3.id
+        assert items[0]["id"] == template3.id
+        assert items[1]["id"] == template2.id
         assert items[2]["id"] == template1.id
         # Filter by `user_email`
         res = await client.get(
