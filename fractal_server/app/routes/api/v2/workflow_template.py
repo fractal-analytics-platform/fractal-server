@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi import status
-from sqlmodel import exists
+from pydantic import EmailStr
 from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
@@ -48,13 +48,11 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 router = APIRouter()
 
 
-# ALL USERS endpoints
+class TemplatePage(PaginationResponse[WorkflowTemplateRead]):
+    email_list: list[EmailStr]
 
 
-@router.get(
-    "/workflow_template/",
-    response_model=PaginationResponse[WorkflowTemplateRead],
-)
+@router.get("/workflow_template/", response_model=TemplatePage)
 async def get_workflow_template_list(
     template_id: int | None = None,
     is_owner: bool = False,
@@ -65,7 +63,7 @@ async def get_workflow_template_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[WorkflowTemplateRead]:
+) -> TemplatePage:
     page = pagination.page
     page_size = pagination.page_size
 
@@ -89,9 +87,10 @@ async def get_workflow_template_list(
         .where(
             or_(
                 WorkflowTemplate.user_id == user.id,
-                exists().where(
-                    LinkUserGroup.group_id == WorkflowTemplate.user_group_id,
-                    LinkUserGroup.user_id == user.id,
+                WorkflowTemplate.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user.id
+                    )
                 ),
             )
         )
@@ -133,6 +132,23 @@ async def get_workflow_template_list(
     res = await db.execute(stm)
     templates_and_user_email = res.all()
 
+    stm_email = (
+        select(UserOAuth.email)
+        .join(WorkflowTemplate, WorkflowTemplate.user_id == UserOAuth.id)
+        .where(
+            or_(
+                WorkflowTemplate.user_id == user.id,
+                WorkflowTemplate.user_group_id.in_(
+                    select(LinkUserGroup.group_id).where(
+                        LinkUserGroup.user_id == user.id
+                    )
+                ),
+            )
+        )
+    )
+    res = await db.execute(stm_email)
+    email_list = res.scalars().all()
+
     return dict(
         total_count=total_count,
         page_size=page_size,
@@ -144,6 +160,7 @@ async def get_workflow_template_list(
             )
             for template, email in templates_and_user_email
         ],
+        email_list=email_list,
     )
 
 
@@ -167,9 +184,6 @@ async def get_workflow_template(
         user_email=user_email,
         **template.model_dump(exclude={"user_id"}),
     )
-
-
-# TEMPLATE PRODUCER endpoints
 
 
 @router.post(
