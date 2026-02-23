@@ -1,6 +1,6 @@
 # Fractal task-execution
 
-This page describes how `fractal-server` runs Fractal tasks and processes the metadata they produce.
+This page describes how `fractal-server` runs a sequence of Fractal tasks and processes the metadata they produce.
 
 > NOTE: The process of defining a single full specification for this interface is still ongoing.
 
