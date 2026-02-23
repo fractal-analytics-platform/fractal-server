@@ -98,6 +98,9 @@ def execute_tasks(
     job_attribute_filters: AttributeFilters,
     resource_id: int,
 ) -> None:
+    """
+    Execute a list of task on a given dataset.
+    """
     logger = get_logger(logger_name=logger_name)
 
     if not workflow_dir_local.exists():
@@ -114,7 +117,7 @@ def execute_tasks(
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
     tmp_images = deepcopy(dataset.images)
-    current_dataset_type_filters = copy(job_type_filters)
+    current_type_filters = copy(job_type_filters)
 
     ENRICH_IMAGES_WITH_STATUS: bool = (
         IMAGE_STATUS_KEY in job_attribute_filters.keys()
@@ -137,7 +140,7 @@ def execute_tasks(
             TaskType.NON_PARALLEL,
         ]:
             # Non-converter task
-            type_filters = copy(current_dataset_type_filters)
+            type_filters = copy(current_type_filters)
             type_filters_patch = merge_type_filters(
                 task_input_types=task.input_types,
                 wftask_type_filters=wftask.type_filters,
@@ -439,7 +442,7 @@ def execute_tasks(
 
             # Update type_filters based on task-manifest output_types
             type_filters_from_task_manifest = task.output_types
-            current_dataset_type_filters.update(type_filters_from_task_manifest)
+            current_type_filters.update(type_filters_from_task_manifest)
         except Exception as e:
             logger.error(
                 "Unexpected error in post-task-execution block. "

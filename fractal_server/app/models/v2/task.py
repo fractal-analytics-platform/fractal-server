@@ -8,6 +8,32 @@ from sqlmodel import SQLModel
 
 
 class TaskV2(SQLModel, table=True):
+    """
+    Model for the `taskv2` database table.
+
+    Attributes:
+        id:
+        name:
+        type:
+        version:
+        command_non_parallel:
+        command_parallel:
+        meta_non_parallel:
+        meta_parallel:
+        input_types:
+        output_types:
+        taskgroupv2_id:
+        args_schema_version:
+        args_schema_non_parallel:
+        args_schema_parallel:
+        docs_info:
+        docs_link:
+        category:
+        modality:
+        authors:
+        tags:
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     name: str
 

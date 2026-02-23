@@ -11,6 +11,16 @@ from fractal_server.types import ZarrUrlStr
 
 
 class TaskOutput(BaseModel):
+    """
+    Model for task output.
+
+    Attrs:
+        image_list_updates:
+            List of image-list elements to be created or updated.
+        image_list_removals:
+            List of Zarr URLs to be removed from the dataset image list.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     image_list_updates: list[SingleImageTaskOutput] = Field(
