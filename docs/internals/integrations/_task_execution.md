@@ -13,7 +13,7 @@ The `command_non_parallel` and `command_parallel` attributes, when set, represen
 ```
 For Fractal tasks that are developed in Python, the `fractal-task-tools` exposes [a helper tool to implement this command-line interface](https://fractal-analytics-platform.github.io/fractal-task-tools/usage/run_task).
 
-The main entrypoint for task execution in `fractal-server` is the `execute_tasks` function. Its input arguments include:
+The main entrypoint for task execution in `fractal-server` is the `execute_tasks` function, which executes a list of tasks (that is, part of a Fractal workflow). Its input arguments include:
 
 * a Fractal dataset (which also contains an [image list](https://fractal-analytics-platform.github.io/image_list)),
 * a list of workflow tasks (each one associated to a [`TaskV2` object](../../../reference/app/models/v2/task#fractal_server.app.models.v2.task.TaskV2)),
