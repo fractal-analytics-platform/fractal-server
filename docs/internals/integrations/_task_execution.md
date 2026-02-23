@@ -74,13 +74,13 @@ elif task.type in [TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND]:
         # ...
     )
 ```
-where each value of `outcomes_dict` is a `SubmissionOutcome` object and may have a `task_output` attribute which is a [`TaskOutput` object](../../../reference/runner/v2/runner/#fractal_server.runner.v2.task_interface.TaskOutput).
+where each value of `outcomes_dict` is a `SubmissionOutcome` object and may have a `task_output` attribute which is a [`TaskOutput` object](../../../reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
 
 The inner working of e.g. the `run_task_non_parallel` function is not described here, and it is implemented in a specific [job runner](../integrations/runners.md).
 
 ## Post-task-execution phase
 
-* Metadata outputs from all units are merged into a single [`TaskOutput` object](../../../reference/runner/v2/runner/#fractal_server.runner.v2.task_interface.TaskOutput).
+* Metadata outputs from all units are merged into a single [`TaskOutput` object](../../../reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
 * If there are no images to be created or updated, all input images in `filtered_images` are flagged as "to be updated", so that they will be updated e.g. with the new types set by the task.
 * For each image that should be created or updated, the image `attributes`, `types` and `origin` properties are updated as appropriate.
 * All images marked as "to be removed" are removed from the image list.
