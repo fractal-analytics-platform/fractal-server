@@ -6,6 +6,8 @@
     * Introduce version flexibility in workflow-import endpoint (\#3154).
 * Database:
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
+* Documentation:
+    * Draft Fractal-runner specification (\#3196).
 
 # 2.19.4
 
