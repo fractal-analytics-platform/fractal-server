@@ -10,7 +10,7 @@ from fractal_server.types import ZarrUrlStr
 
 class SingleImageBase(BaseModel):
     """
-    Base for SingleImage and SingleImageTaskOutput.
+    Base for `SingleImage` and `SingleImageTaskOutput`.
 
     Attributes:
         zarr_url:

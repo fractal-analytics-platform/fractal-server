@@ -14,7 +14,7 @@ class TaskOutput(BaseModel):
     """
     Model for task output.
 
-    Attrs:
+    Attributes:
         image_list_updates:
             List of image-list elements to be created or updated.
         image_list_removals:
