@@ -1,4 +1,4 @@
-# Fractal runner interface
+# Fractal task-execution
 
 This page describes how `fractal-server` runs Fractal tasks and processes the metadata they produce.
 
@@ -53,11 +53,30 @@ This procedure leads to a `filtered_images` list, with all OME-Zarr images that 
 
 ## Task execution
 
-Call one of `run_task_non_parallel`, `run_task_parallel` or `run_task_compound`, which returns a dictionary of task outcomes and their number.
+This part is covered by task-type specific code blocks like
+```python
+if task.type in [TaskType.NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL]:
+    outcomes_dict, num_tasks = run_task_non_parallel(
+        images=filtered_images,
+        zarr_dir=zarr_dir,
+        wftask=wftask,
+        task=task,
+        dataset_id=dataset.id,
+        task_type=task.type,
+        # ...
+    )
+elif task.type == TaskType.PARALLEL:
+    outcomes_dict, num_tasks = run_task_parallel(
+        # ...
+    )
+elif task.type in [TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND]:
+    outcomes_dict, num_tasks = run_task_compound(
+        # ...
+    )
+```
+where each value of `outcomes_dict` is a `SubmissionOutcome` object and may have a `task_output` attribute which is a [`TaskOutput` object](../../../reference/runner/v2/runner/#fractal_server.runner.v2.task_interface.TaskOutput).
 
-Each computational unit optionally returns a [`TaskOutput` object](../../../reference/runner/v2/runner/#fractal_server.runner.v2.task_interface.TaskOutput).
-
-FIXME
+The inner working of e.g. the `run_task_non_parallel` function is not described here, and it is implemented in a specific [job runner](../integrations/runners.md).
 
 ## Post-task-execution phase
 
