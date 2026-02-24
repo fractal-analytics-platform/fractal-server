@@ -22,6 +22,17 @@ class WorkflowTemplateRead(BaseModel):
     data: WorkflowExport
 
 
+class WorkflowTemplateGroupMember(BaseModel):
+    template_id: int
+    template_version: int
+
+
+class WorkflowTemplateGroup(BaseModel):
+    user_email: str
+    template_name: str
+    templates: list[WorkflowTemplateGroupMember]
+
+
 class WorkflowTemplateCreate(BaseModel):
     name: NonEmptyStr
     version: PositiveInt

@@ -80,3 +80,4 @@ from .workflow_template import WorkflowTemplateRead  # noqa F401
 from .workflow_template import WorkflowTemplateUpdate  # noqa F401
 from .workflow_template import WorkflowTemplateExport  # noqa F401
 from .workflow_template import WorkflowTemplateImport  # noqa F401
+from .workflow_template import WorkflowTemplateGroup  # noqa F401

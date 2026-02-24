@@ -1,10 +1,9 @@
-from typing import Literal
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi import status
 from pydantic import EmailStr
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
@@ -40,6 +39,7 @@ from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
 from fractal_server.app.schemas.v2 import WorkflowTemplateExport
+from fractal_server.app.schemas.v2 import WorkflowTemplateGroup
 from fractal_server.app.schemas.v2 import WorkflowTemplateImport
 from fractal_server.app.schemas.v2 import WorkflowTemplateRead
 from fractal_server.app.schemas.v2 import WorkflowTemplateUpdate
@@ -48,7 +48,7 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 router = APIRouter()
 
 
-class TemplatePage(PaginationResponse[WorkflowTemplateRead]):
+class TemplatePage(PaginationResponse[WorkflowTemplateGroup]):
     email_list: list[EmailStr]
 
 
@@ -59,7 +59,7 @@ async def get_workflow_template_list(
     user_email: str | None = None,
     name: str | None = None,
     version: int | None = None,
-    sort_by: Literal["user-name-version", "timestamp"] = "user-name-version",
+    # sort_by: Literal["user-name-version", "timestamp"] = "user-name-version",
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -68,7 +68,16 @@ async def get_workflow_template_list(
     page_size = pagination.page_size
 
     stm = (
-        select(WorkflowTemplate, UserOAuth.email)
+        select(
+            UserOAuth.email,
+            WorkflowTemplate.name,
+            func.array_agg(
+                aggregate_order_by(
+                    func.row(WorkflowTemplate.id, WorkflowTemplate.version),
+                    WorkflowTemplate.version.desc(),
+                )
+            ),
+        )
         .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
         .where(
             or_(
@@ -80,10 +89,19 @@ async def get_workflow_template_list(
                 ),
             )
         )
+        .group_by(
+            WorkflowTemplate.user_id,
+            WorkflowTemplate.name,
+            UserOAuth.email,
+        )
+        .order_by(UserOAuth.email, WorkflowTemplate.name)
     )
-    stm_count = (
-        select(func.count(WorkflowTemplate.id))
-        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
+
+    stm_count = select(func.count()).select_from(
+        select(
+            WorkflowTemplate.user_id,
+            WorkflowTemplate.name,
+        )
         .where(
             or_(
                 WorkflowTemplate.user_id == user.id,
@@ -94,6 +112,11 @@ async def get_workflow_template_list(
                 ),
             )
         )
+        .group_by(
+            WorkflowTemplate.user_id,
+            WorkflowTemplate.name,
+        )
+        .subquery()
     )
 
     if template_id:
@@ -112,16 +135,6 @@ async def get_workflow_template_list(
         stm = stm.where(WorkflowTemplate.version == version)
         stm_count = stm_count.where(WorkflowTemplate.version == version)
 
-    match sort_by:
-        case "user-name-version":
-            stm = stm.order_by(
-                WorkflowTemplate.user_id,
-                WorkflowTemplate.name,
-                WorkflowTemplate.version.desc(),
-            )
-        case "timestamp":
-            stm = stm.order_by(WorkflowTemplate.timestamp_created.desc())
-
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
     if page_size is None:
@@ -130,7 +143,7 @@ async def get_workflow_template_list(
         stm = stm.offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stm)
-    templates_and_user_email = res.all()
+    template_groups = res.all()
 
     stm_email = (
         select(UserOAuth.email)
@@ -157,9 +170,16 @@ async def get_workflow_template_list(
         items=[
             dict(
                 user_email=email,
-                **template.model_dump(exclude={"user_id"}),
+                template_name=template_name,
+                templates=[
+                    {
+                        "template_id": template_id,
+                        "template_version": template_version,
+                    }
+                    for template_id, template_version in members
+                ],
             )
-            for template, email in templates_and_user_email
+            for email, template_name, members in template_groups
         ],
         email_list=email_list,
     )
