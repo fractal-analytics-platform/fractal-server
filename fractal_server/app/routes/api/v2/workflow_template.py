@@ -4,6 +4,7 @@ from fastapi import Response
 from fastapi import status
 from pydantic import EmailStr
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlmodel import case
 from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
@@ -94,7 +95,14 @@ async def get_workflow_template_list(
             WorkflowTemplate.name,
             UserOAuth.email,
         )
-        .order_by(UserOAuth.email, WorkflowTemplate.name)
+        .order_by(
+            case(
+                (WorkflowTemplate.user_id == user.id, 0),
+                else_=1,
+            ),
+            UserOAuth.email,
+            WorkflowTemplate.name,
+        )
     )
 
     stm_count = select(func.count()).select_from(
