@@ -359,7 +359,7 @@ async def export_workflow_template(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowTemplateExport:
-    template = await _get_template_full_access(
+    template = await _get_template_read_access(
         user_id=user.id, template_id=template_id, db=db
     )
     return template.model_dump()
