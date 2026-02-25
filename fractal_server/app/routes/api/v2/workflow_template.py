@@ -105,11 +105,12 @@ async def get_workflow_template_list(
         )
     )
 
-    stm_count = select(func.count()).select_from(
+    stm_count_subquery = (
         select(
             WorkflowTemplate.user_id,
             WorkflowTemplate.name,
         )
+        .join(UserOAuth, UserOAuth.id == WorkflowTemplate.user_id)
         .where(
             or_(
                 WorkflowTemplate.user_id == user.id,
@@ -120,29 +121,40 @@ async def get_workflow_template_list(
                 ),
             )
         )
-        .group_by(
-            WorkflowTemplate.user_id,
-            WorkflowTemplate.name,
-        )
-        .subquery()
     )
 
     if template_id:
         stm = stm.where(WorkflowTemplate.id == template_id)
-        stm_count = stm_count.where(WorkflowTemplate.id == template_id)
+        stm_count_subquery = stm_count_subquery.where(
+            WorkflowTemplate.id == template_id
+        )
     if is_owner:
         stm = stm.where(WorkflowTemplate.user_id == user.id)
-        stm_count = stm_count.where(WorkflowTemplate.user_id == user.id)
+        stm_count_subquery = stm_count_subquery.where(
+            WorkflowTemplate.user_id == user.id
+        )
     if user_email:
         stm = stm.where(UserOAuth.email == user_email)
-        stm_count = stm_count.where(UserOAuth.email == user_email)
+        stm_count_subquery = stm_count_subquery.where(
+            UserOAuth.email == user_email
+        )
     if name:
         stm = stm.where(WorkflowTemplate.name.icontains(name))
-        stm_count = stm_count.where(WorkflowTemplate.name.icontains(name))
+        stm_count_subquery = stm_count_subquery.where(
+            WorkflowTemplate.name.icontains(name)
+        )
     if version:
         stm = stm.where(WorkflowTemplate.version == version)
-        stm_count = stm_count.where(WorkflowTemplate.version == version)
+        stm_count_subquery = stm_count_subquery.where(
+            WorkflowTemplate.version == version
+        )
 
+    stm_count = select(func.count()).select_from(
+        stm_count_subquery.group_by(
+            WorkflowTemplate.user_id,
+            WorkflowTemplate.name,
+        ).subquery()
+    )
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
     if page_size is None:
