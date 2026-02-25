@@ -125,11 +125,14 @@ def execute_tasks(
 
     for ind_wftask, wftask in enumerate(wf_task_list):
         task = wftask.task
-        task_name = task.name
-        alias_string = f"alias={wftask.alias}, " if wftask.alias else ""
-        logger.debug(
-            f'SUBMIT {wftask.order}-th task ({alias_string}name="{task_name}")'
+        with next(get_sync_db()) as db:
+            task_group = db.get(TaskGroupV2, task.taskgroupv2_id)
+        alias_string = f"'{wftask.alias}', " if wftask.alias else ""
+        task_log_description = (
+            f"{wftask.order}-th task ({alias_string}'{task.name}', "
+            f"{task_group.pkg_name} {task_group.version})"
         )
+        logger.debug(f"SUBMIT {task_log_description}")
 
         # PRE TASK EXECUTION
 
@@ -508,10 +511,7 @@ def execute_tasks(
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-                logger.warning(
-                    f'END    {wftask.order}-th task (name="{task_name}") - '
-                    "ERROR."
-                )
+                logger.warning(f"END    {task_log_description} - ERROR.")
                 # Raise first error
                 raise JobExecutionError(
                     info=(
@@ -527,7 +527,4 @@ def execute_tasks(
                     db_sync=db,
                 )
                 db.commit()
-                logger.debug(
-                    f"END    {wftask.order}-th task "
-                    f'({alias_string}name="{task_name}")'
-                )
+                logger.debug(f"END    {task_log_description}")
