@@ -19,11 +19,13 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ProjectPermissions
+from fractal_server.app.schemas.v2 import WorkflowExport
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -568,3 +570,22 @@ async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
     )
     resource_id = res.scalar_one_or_none()
     return resource_id
+
+
+async def _create_workflow_export(
+    workflow: WorkflowV2, db: AsyncSession
+) -> WorkflowExport:
+    wf_task_list = []
+    for wftask in workflow.task_list:
+        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        wf_task_list.append(wftask.model_dump())
+        wf_task_list[-1]["task"] = dict(
+            pkg_name=task_group.pkg_name,
+            version=task_group.version,
+            name=wftask.task.name,
+        )
+    workflow_export = WorkflowExport(
+        **workflow.model_dump(),
+        task_list=wf_task_list,
+    )
+    return workflow_export

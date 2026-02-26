@@ -420,7 +420,9 @@ async def test_project_apply_workflow_subset(
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
-                wf.model_dump_json(exclude={"task_list", "description"})
+                wf.model_dump_json(
+                    exclude={"task_list", "description", "template_id"}
+                )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(

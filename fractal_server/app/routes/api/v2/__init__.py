@@ -24,6 +24,7 @@ from .task_group_lifecycle import router as task_group_lifecycle_router
 from .task_version_update import router as task_version_update_router
 from .workflow import router as workflow_router
 from .workflow_import import router as workflow_import_router
+from .workflow_template import router as workflow_template_router
 from .workflowtask import router as workflowtask_router
 
 router_api = APIRouter()
@@ -67,4 +68,5 @@ router_api.include_router(
 )
 router_api.include_router(workflow_router, tags=["Workflow"])
 router_api.include_router(workflow_import_router, tags=["Workflow Import"])
+router_api.include_router(workflow_template_router, tags=["Workflow Template"])
 router_api.include_router(workflowtask_router, tags=["WorkflowTask"])

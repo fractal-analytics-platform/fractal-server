@@ -28,6 +28,10 @@ class WorkflowV2(SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
+    template_id: int | None = Field(
+        foreign_key="workflowtemplate.id", default=None, ondelete="SET NULL"
+    )
+
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

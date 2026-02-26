@@ -63,6 +63,11 @@ class WorkflowImport(BaseModel):
     task_list: list[WorkflowTaskImport]
 
 
+class WorkflowImportFromTemplate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: NonEmptyStr
+
+
 class WorkflowExport(BaseModel):
     """
     Class for `Workflow` export.
