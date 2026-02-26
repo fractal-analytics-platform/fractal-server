@@ -22,6 +22,10 @@ class WorkflowTemplate(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+    timestamp_last_used: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True)),
+    )
 
     user_group_id: int | None = Field(
         foreign_key="usergroup.id", default=None, ondelete="SET NULL"

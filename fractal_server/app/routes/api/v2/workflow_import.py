@@ -29,6 +29,7 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.app.schemas.v2.workflow import WorkflowReadWithWarnings
 from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import set_logger
+from fractal_server.utils import get_timestamp
 
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_access
@@ -363,4 +364,6 @@ async def import_workflow_from_template(
         user=user,
         db=db,
     )
+    template.timestamp_last_used = get_timestamp()
+    await db.commit()
     return workflow

@@ -15,6 +15,7 @@ class WorkflowTemplateRead(BaseModel):
     version: int
 
     timestamp_created: AwareDatetime
+    timestamp_last_used: AwareDatetime | None = None
 
     user_group_id: int | None = None
 

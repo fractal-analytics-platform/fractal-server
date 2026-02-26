@@ -281,6 +281,7 @@ async def test_export_import_template(
             f"?workflow_id={workflow.id}&user_group_id={group.id}",
             json=dict(name="template", version=1),
         )
+        assert res.status_code == 201
         template_id = res.json()["id"]
 
         # Export
@@ -316,9 +317,18 @@ async def test_export_import_template(
 
     async with MockCurrentUser(user_id=user0_id) as user0:
         project2 = await project_factory(user0)
+
+        res = await client.get(f"api/v2/workflow_template/{template_id}/")
+        assert res.status_code == 200
+        assert res.json()["timestamp_last_used"] is None
+
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
             f"?template_id={template_id}"
         )
         assert res.status_code == 201
         assert res.json()["name"] == "foo"
+
+        res = await client.get(f"api/v2/workflow_template/{template_id}/")
+        assert res.status_code == 200
+        assert res.json()["timestamp_last_used"] is not None
