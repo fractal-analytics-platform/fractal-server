@@ -8,6 +8,8 @@
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
 * Application:
     * Improve lifespan logging (\#XXX).
+* Runner:
+    * Mention package name/version in job logs (\#3200)
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
 
