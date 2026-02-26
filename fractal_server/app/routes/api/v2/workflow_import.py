@@ -24,9 +24,10 @@ from fractal_server.app.routes.auth._aux_auth import (
 )
 from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
+from fractal_server.app.schemas.v2 import WorkflowImportFromTemplate
+from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
-from fractal_server.app.schemas.v2.workflow import WorkflowReadWithWarnings
 from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import set_logger
 from fractal_server.utils import get_timestamp
@@ -348,6 +349,7 @@ async def import_workflow(
 async def import_workflow_from_template(
     project_id: int,
     template_id: int,
+    workflow_import_from_template: WorkflowImportFromTemplate | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowReadWithWarnings:
@@ -357,6 +359,9 @@ async def import_workflow_from_template(
         db=db,
     )
     workflow_import = WorkflowImport(**template.data)
+    if workflow_import_from_template:
+        workflow_import.name = workflow_import_from_template.name
+
     workflow = await _import_workflow(
         project_id=project_id,
         template_id=template_id,

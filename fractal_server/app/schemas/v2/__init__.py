@@ -65,6 +65,7 @@ from .task_group import TaskGroupOriginEnum  # noqa F401
 from .workflow import WorkflowCreate  # noqa F401
 from .workflow import WorkflowExport  # noqa F401
 from .workflow import WorkflowImport  # noqa F401
+from .workflow import WorkflowImportFromTemplate  # noqa F401
 from .workflow import WorkflowRead  # noqa F401
 from .workflow import WorkflowReadWithWarnings  # noqa F401
 from .workflow import WorkflowUpdate  # noqa F401
