@@ -31,6 +31,7 @@ class WorkflowRead(BaseModel):
     project: ProjectRead
     timestamp_created: AwareDatetime
     description: str | None
+    template_id: int | None = None
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
