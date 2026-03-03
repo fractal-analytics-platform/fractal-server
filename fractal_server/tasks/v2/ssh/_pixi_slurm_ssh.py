@@ -139,6 +139,7 @@ def _verify_success_file_exists(
 
 def run_script_on_remote_slurm(
     *,
+    job_name: str,
     script_paths: list[str],
     slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
@@ -174,6 +175,7 @@ def run_script_on_remote_slurm(
         memory_line = f"#SBATCH --mem-per-cpu={slurm_config_obj.mem_per_cpu}"
     script_lines = [
         "#!/bin/bash",
+        f"#SBATCH --job-name={job_name}",
         f"#SBATCH --partition={slurm_config_obj.partition}",
         f"#SBATCH --cpus-per-task={slurm_config_obj.cpus}",
         memory_line,
