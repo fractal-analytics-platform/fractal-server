@@ -132,3 +132,7 @@ async def test_accounting_slurm(
         assert res.status_code == 200
         debug(res.json())
         assert set(res.json()) == {1, 2, 3, 4}
+
+        # Test adding a record with no SLURM jobs
+        db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[]))
+        await db.commit()

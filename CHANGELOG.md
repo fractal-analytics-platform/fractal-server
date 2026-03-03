@@ -6,6 +6,16 @@
     * Introduce version flexibility in workflow-import endpoint (\#3154).
 * Database:
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
+* Application:
+    * Improve lifespan logging (\#3201).
+* Runner:
+    * Mention package name/version in job logs (\#3200)
+    * Expand logging of `scancel_jobs` method (\#3209).
+    * Always create an `AccountingRecordSlurm` entry from `multisubmit` method (\#3210).
+* Task lifecycle:
+    * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
+* Documentation:
+    * Draft Fractal-runner specification (\#3196).
 
 # 2.19.4
 

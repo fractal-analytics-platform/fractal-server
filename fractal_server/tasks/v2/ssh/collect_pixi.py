@@ -246,6 +246,7 @@ def collect_ssh_pixi(
 
                     # Run scripts 2 and 3
                     stdout = run_script_on_remote_slurm(
+                        job_name=LOGGER_NAME,
                         script_paths=[
                             remote_script2_path,
                             remote_script3_path,

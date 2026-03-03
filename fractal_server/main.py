@@ -47,7 +47,7 @@ def collect_routers(app: FastAPI) -> None:
     app.include_router(router_auth, prefix="/auth", tags=["Authentication"])
 
 
-def check_settings() -> None:
+def check_settings(logger_name: str) -> None:
     """
     Check and register the settings
 
@@ -60,7 +60,7 @@ def check_settings() -> None:
     settings = Inject(get_settings)
     db_settings = Inject(get_db_settings)
     email_settings = Inject(get_email_settings)
-    logger = set_logger("fractal_server_settings")
+    logger = get_logger(logger_name)
     logger.debug("Fractal Settings:")
     for key, value in chain(
         db_settings.model_dump().items(),
@@ -70,15 +70,14 @@ def check_settings() -> None:
         if any(s in key.upper() for s in ["PASSWORD", "SECRET", "KEY"]):
             value = "*****"
         logger.debug(f"  {key}: {value}")
-    reset_logger_handlers(logger)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.jobs = []
-    logger = set_logger("fractal_server.lifespan")
-    logger.info(f"[startup] START (fractal-server {__VERSION__})")
-    check_settings()
+    logger_startup = set_logger("lifespan.startup")
+    logger_startup.info(f"START (fractal-server {__VERSION__})")
+    check_settings(logger_name="lifespan.startup")
     settings = Inject(get_settings)
 
     if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
@@ -86,32 +85,32 @@ async def lifespan(app: FastAPI):
 
         app.state.fractal_ssh_list = FractalSSHList()
 
-        logger.info(
-            "[startup] Added empty FractalSSHList to app.state "
+        logger_startup.info(
+            "Added empty FractalSSHList to app.state "
             f"(id={id(app.state.fractal_ssh_list)})."
         )
     else:
         app.state.fractal_ssh_list = None
 
     config_uvicorn_loggers()
-    logger.info("[startup] END")
-    reset_logger_handlers(logger)
+    logger_startup.info("END")
+    reset_logger_handlers(logger_startup)
 
     yield
 
-    logger = get_logger("fractal_server.lifespan")
-    logger.info("[teardown] START")
+    logger_teardown = set_logger("lifespan.teardown")
+    logger_teardown.info("START")
 
     if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
-        logger.info(
-            "[teardown] Close FractalSSH connections "
+        logger_teardown.info(
+            "Close FractalSSH connections "
             f"(current size: {app.state.fractal_ssh_list.size})."
         )
 
         app.state.fractal_ssh_list.close_all()
 
-    logger.info(
-        f"[teardown] Current worker with pid {os.getpid()} is shutting down. "
+    logger_teardown.info(
+        f"Current worker with pid {os.getpid()} is shutting down. "
         f"Current jobs: {app.state.jobs=}"
     )
     if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
@@ -121,18 +120,16 @@ async def lifespan(app: FastAPI):
                 logger_name="fractal_server.lifespan",
             )
         except Exception as e:
-            logger.error(
+            logger_teardown.error(
                 "Something went wrong during shutdown phase, "
                 "some of running jobs are not shutdown properly. "
                 f"Original error: {e}"
             )
     else:
-        logger.info(
-            "[teardown] Shutdown not available for this backend runner."
-        )
+        logger_teardown.info("Shutdown not available for this backend runner.")
 
-    logger.info("[teardown] END")
-    reset_logger_handlers(logger)
+    logger_teardown.info("END")
+    reset_logger_handlers(logger_teardown)
 
 
 slow_response_logger = set_logger("slow-response")
