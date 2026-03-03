@@ -105,6 +105,7 @@ def test_sbatch_failure(
 
     with pytest.raises(ValueError, match="sbatch"):
         run_script_on_remote_slurm(
+            job_name="test",
             script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
                 mem="1G", cpus=1, partition="main", time="10"
@@ -121,6 +122,7 @@ def test_sbatch_failure(
     # Repeat, with different memory configuration
     with pytest.raises(ValueError, match="sbatch"):
         run_script_on_remote_slurm(
+            job_name="test",
             script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
                 mem_per_cpu="1G",
