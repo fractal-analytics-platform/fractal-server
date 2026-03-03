@@ -3,6 +3,7 @@ Submodule to handle the SLURM configuration for a WorkflowTask
 """
 
 from pathlib import Path
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -122,7 +123,7 @@ class SlurmConfig(BaseModel):
 
         return sorted(self.extra_lines, key=_no_prefix)
 
-    def sort_script_lines(self, script_lines: list[str]) -> list[str]:
+    def sort_script_lines(self: Self, script_lines: list[str]) -> list[str]:
         """
         Return a copy of `script_lines`, where lines are sorted as in:
 
