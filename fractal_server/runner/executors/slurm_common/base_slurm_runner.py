@@ -957,13 +957,7 @@ class BaseSlurmRunner(BaseRunner):
                     submit_command=submit_command,
                     slurm_job=slurm_job,
                 )
-
             logger.info(f"[multisubmit] END submission phase, {self.job_ids=}")
-
-            create_accounting_record_slurm(
-                user_id=user_id,
-                slurm_job_ids=self.job_ids_int,
-            )
 
         except Exception as e:
             logger.error(
@@ -983,6 +977,14 @@ class BaseSlurmRunner(BaseRunner):
                 ind: e for ind in range(len(list_parameters))
             }
             return results, exceptions
+
+        finally:
+            # Always create a `AccountingRecordSlurm` row, even if the SLURM
+            # jobs have already been `scancel`-led - useful for accounting.
+            create_accounting_record_slurm(
+                user_id=user_id,
+                slurm_job_ids=self.job_ids_int,
+            )
 
         # Retrieval phase
         logger.debug("[multisubmit] START retrieval phase")
