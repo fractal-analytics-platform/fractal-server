@@ -597,6 +597,9 @@ class BaseSlurmRunner(BaseRunner):
 
     @property
     def job_ids(self) -> list[str]:
+        """
+        Keys of `self.jobs`
+        """
         return list(self.jobs.keys())
 
     @property
@@ -1093,6 +1096,7 @@ class BaseSlurmRunner(BaseRunner):
     def scancel_jobs(self) -> list[str]:
         logger.info("[scancel_jobs] START")
         scancelled_job_ids = self.job_ids
+        logger.info(f"[scancel_jobs] {len(scancelled_job_ids)=}")
         if self.jobs:
             scancel_string = " ".join(scancelled_job_ids)
             scancel_cmd = f"scancel {scancel_string}"
