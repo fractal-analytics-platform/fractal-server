@@ -11,6 +11,8 @@
 * Runner:
     * Mention package name/version in job logs (\#3200)
     * Expand logging of `scancel_jobs` method (\#3209).
+* Task lifecycle:
+    * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
 
