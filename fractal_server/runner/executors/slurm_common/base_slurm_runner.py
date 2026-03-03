@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import Any
 from typing import Literal
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -158,16 +159,18 @@ class BaseSlurmRunner(BaseRunner):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self: Self, exc_type, exc_val, exc_tb):
         return False
 
-    def _run_remote_cmd(self, cmd: str) -> str:
+    def _run_remote_cmd(self: Self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def run_squeue(self, *, job_ids: list[str]) -> str:
+    def run_squeue(self: Self, *, job_ids: list[str]) -> str:
         raise NotImplementedError("Implement in child class.")
 
-    def _is_squeue_error_recoverable(self, exception: BaseException) -> bool:
+    def _is_squeue_error_recoverable(
+        self: Self, exception: BaseException
+    ) -> bool:
         """
         Determine whether a `squeue` error is considered recoverable.
 
@@ -195,7 +198,7 @@ class BaseSlurmRunner(BaseRunner):
         else:
             return False
 
-    def _get_finished_jobs(self, job_ids: list[str]) -> set[str]:
+    def _get_finished_jobs(self: Self, job_ids: list[str]) -> set[str]:
         #  If there is no Slurm job to check, return right away
         if not job_ids:
             return set()
@@ -248,10 +251,10 @@ class BaseSlurmRunner(BaseRunner):
         }
         return finished_jobs
 
-    def _mkdir_local_folder(self, folder: str) -> None:
+    def _mkdir_local_folder(self: Self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
 
-    def _mkdir_remote_folder(self, folder: str) -> None:
+    def _mkdir_remote_folder(self: Self, folder: str) -> None:
         raise NotImplementedError("Implement in child class.")
 
     def _enrich_slurm_config(
@@ -544,7 +547,7 @@ class BaseSlurmRunner(BaseRunner):
             Path(task.input_file_local).unlink(missing_ok=True)
             Path(task.output_file_local).unlink(missing_ok=True)
 
-    def _extract_slurm_error(self, slurm_job: SlurmJob) -> str | None:
+    def _extract_slurm_error(self: Self, slurm_job: SlurmJob) -> str | None:
         """
         Extract stderr of SLURM job, or `None`.
 
@@ -574,7 +577,7 @@ class BaseSlurmRunner(BaseRunner):
 
         return None
 
-    def _set_executor_error_log(self, slurm_jobs: list[SlurmJob]) -> None:
+    def _set_executor_error_log(self: Self, slurm_jobs: list[SlurmJob]) -> None:
         """
         If `executor_error_log` is unset, update it based on a list of jobs.
 

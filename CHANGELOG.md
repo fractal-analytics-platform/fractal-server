@@ -10,6 +10,7 @@
     * Improve lifespan logging (\#3201).
 * Runner:
     * Mention package name/version in job logs (\#3200)
+    * Expand logging of `scancel_jobs` method (\#3209).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
 
