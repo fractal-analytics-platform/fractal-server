@@ -4,6 +4,7 @@ import shlex
 import subprocess  # nosec
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Self
 from typing import override
 
 from fractal_server.app.models import Profile
@@ -87,16 +88,16 @@ class SlurmSudoRunner(BaseSlurmRunner):
         )
 
     @override
-    def _mkdir_local_folder(self, folder: str) -> None:
+    def _mkdir_local_folder(self: Self, folder: str) -> None:
         original_umask = os.umask(0)
         Path(folder).mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
     @override
-    def _mkdir_remote_folder(self, folder: str) -> None:
+    def _mkdir_remote_folder(self: Self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
 
-    def _fetch_artifacts_single_job(self, job: SlurmJob) -> None:
+    def _fetch_artifacts_single_job(self: Self, job: SlurmJob) -> None:
         """
         Fetch artifacts for a single SLURM jobs.
         """
@@ -168,7 +169,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
         logger.debug("[_fetch_artifacts] END.")
 
     @override
-    def _run_remote_cmd(self, cmd: str) -> str:
+    def _run_remote_cmd(self: Self, cmd: str) -> str:
         res = _run_command_as_user(
             cmd=cmd,
             user=self.slurm_user,
@@ -177,7 +178,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
         return res.stdout
 
     @override
-    def run_squeue(self, *, job_ids: list[str]) -> str:
+    def run_squeue(self: Self, *, job_ids: list[str]) -> str:
         """
         Run `squeue` for a set of SLURM job IDs.
         """

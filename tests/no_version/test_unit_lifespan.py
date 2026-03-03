@@ -113,6 +113,16 @@ async def test_lifespan_shutdown_raise_error(
     caplog,
     db,
 ):
+    # Mock set_logger to set propagate=True
+    from fractal_server.logger import set_logger
+
+    def set_logger_propagate(*args, **kwargs):
+        logger = set_logger(*args, **kwargs)
+        logger.propagate = True
+        return logger
+
+    monkeypatch.setattr("fractal_server.main.set_logger", set_logger_propagate)
+
     # mock function to trigger except
 
     async def raise_error(*, jobs: list[int], logger_name: str):
@@ -126,7 +136,7 @@ async def test_lifespan_shutdown_raise_error(
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
-        logger = logging.getLogger("fractal_server.lifespan")
+        logger = logging.getLogger("lifespan.teardown")
         logger.propagate = True
 
     log_text = (

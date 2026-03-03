@@ -14,4 +14,5 @@ uv run --frozen gunicorn fractal_server.main:app \
     --access-logfile - \
     --error-logfile - \
     --worker-class fractal_server.gunicorn_fractal.FractalWorker \
-    --logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger
+    --logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger \
+    --graceful-timeout 2

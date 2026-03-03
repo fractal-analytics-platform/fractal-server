@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from typing import Self
 from typing import override
 
 from fractal_server.app.models import Profile
@@ -66,11 +67,11 @@ class SlurmSSHRunner(BaseSlurmRunner):
         )
 
     @override
-    def _mkdir_local_folder(self, folder: str) -> None:
+    def _mkdir_local_folder(self: Self, folder: str) -> None:
         Path(folder).mkdir(parents=True)
 
     @override
-    def _mkdir_remote_folder(self, folder: str):
+    def _mkdir_remote_folder(self: Self, folder: str):
         self.fractal_ssh.mkdir(
             folder=folder,
             parents=True,
@@ -173,7 +174,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         logger.info(f"[_fetch_artifacts] End - elapsed={t_1 - t_0:.3f} s")
 
     @override
-    def _run_remote_cmd(self, cmd: str) -> str:
+    def _run_remote_cmd(self: Self, cmd: str) -> str:
         stdout = self.fractal_ssh.run_command(cmd=cmd)
         return stdout
 
@@ -237,7 +238,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         logger.debug("[_send_many_job_inputs] END.")
 
     @override
-    def run_squeue(self, *, job_ids: list[str]) -> str:
+    def run_squeue(self: Self, *, job_ids: list[str]) -> str:
         """
         Run `squeue` for a set of SLURM job IDs.
 
