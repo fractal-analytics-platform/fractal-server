@@ -1,3 +1,4 @@
+from fractal_server import __VERSION__ as fractal_server_version
 from fractal_server.app.models.v2.workflow_template import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -21,18 +22,21 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         name="template",
         version=2,
         data=WORKFLOW_EXPORT_MOCK,
+        fractal_server_version=fractal_server_version,
     )
     template2 = WorkflowTemplate(
         user_id=user1_id,
         name="other",
         version=1,
         data=WORKFLOW_EXPORT_MOCK,
+        fractal_server_version=fractal_server_version,
     )
     template3 = WorkflowTemplate(
         user_id=user1_id,
         name="other",
         version=2,
         data=WORKFLOW_EXPORT_MOCK,
+        fractal_server_version=fractal_server_version,
     )
     template4 = WorkflowTemplate(
         user_id=user2_id,
@@ -40,12 +44,14 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         name="template2",
         version=1,
         data=WORKFLOW_EXPORT_MOCK,
+        fractal_server_version=fractal_server_version,
     )
     template5 = WorkflowTemplate(
         user_id=user2_id,
         name="template2",
         version=2,
         data=WORKFLOW_EXPORT_MOCK,
+        fractal_server_version=fractal_server_version,
     )
     db.add_all([template1, template2, template3, template4, template5])
     await db.commit()
@@ -161,6 +167,7 @@ async def test_post_patch_delete_template(
             name="template0",
             version=1,
             data=WORKFLOW_EXPORT_MOCK,
+            fractal_server_version=fractal_server_version,
         )
         db.add(template0)
         await db.commit()
@@ -299,6 +306,7 @@ async def test_export_import_template(
                 "description": None,
                 "task_list": [],
             },
+            "fractal_server_version": fractal_server_version,
         }
 
         # Import

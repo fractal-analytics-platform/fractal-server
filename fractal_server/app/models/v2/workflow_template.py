@@ -18,6 +18,7 @@ class WorkflowTemplate(SQLModel, table=True):
     name: str
     version: int
 
+    fractal_server_version: str
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

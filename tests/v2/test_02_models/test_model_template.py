@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from fractal_server import __VERSION__ as fractal_server_version
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.models.v2 import WorkflowV2
@@ -25,6 +26,7 @@ async def test_workflow_template(
         name="template",
         version=1,
         data={},
+        fractal_server_version=fractal_server_version,
     )
     for missing in mandatory_args:
         db.add(
@@ -54,6 +56,7 @@ async def test_workflow_template(
         version=1,
         data={},
         user_group_id=user_group_id,
+        fractal_server_version=fractal_server_version,
     )
     db.add(template2)
     await db.commit()
