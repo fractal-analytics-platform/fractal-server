@@ -202,7 +202,10 @@ async def test_post_patch_delete_template(
             json=dict(name="template", version=1),
         )
         assert res.status_code == 422
-        assert "There is already a WorkflowTemplate" in res.json()["detail"]
+        assert (
+            "The current user already own a workflow template with"
+            in res.json()["detail"]
+        )
         # Test POST with `user_group_id`
         res = await client.post(
             "api/v2/workflow_template/"
@@ -315,7 +318,10 @@ async def test_export_import_template(
             json=template_file,
         )
         assert res.status_code == 422
-        assert "There is already a WorkflowTemplate" in res.json()["detail"]
+        assert (
+            "The current user already own a workflow template with"
+            in res.json()["detail"]
+        )
         template_file["version"] = 2
         res = await client.post(
             f"api/v2/workflow_template/import/?user_group_id={group.id}",

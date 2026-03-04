@@ -131,7 +131,7 @@ async def _check_template_duplication(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                "There is already a WorkflowTemplate with "
-                f"{user_id=}, {name=}, {version=}."
+                "The current user already own a workflow template with "
+                f"{name=} and {version=}."
             ),
         )
