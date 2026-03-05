@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import EmailStr
@@ -248,6 +249,11 @@ async def post_workflow_template(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
+    if workflow.task_list == []:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Workflow {workflow_id} has empty `task_list`.",
+        )
     if user_group_id:
         await _verify_user_belongs_to_group(
             user_id=user.id,
@@ -349,11 +355,18 @@ async def import_workflow_template(
         version=template_import.version,
         db=db,
     )
+    if template_import.data.task_list == []:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Imported template has empty `data.task_list`.",
+        )
+
     template = WorkflowTemplate(
         user_id=user.id,
         user_group_id=user_group_id,
         **template_import.model_dump(),
     )
+
     db.add(template)
     await db.commit()
     await db.refresh(template)
