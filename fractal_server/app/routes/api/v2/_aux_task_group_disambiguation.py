@@ -4,6 +4,7 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
 from fractal_server.exceptions import UnreachableBranchError
@@ -164,3 +165,20 @@ async def remove_duplicate_task_groups(
         )
     ]
     return new_task_groups
+
+
+async def add_user_email_to_task_group(
+    *,
+    task_group: TaskGroupV2,
+    db: AsyncSession,
+) -> dict:
+    res = await db.execute(
+        select(UserOAuth.email)
+        .join(TaskGroupV2, TaskGroupV2.user_id == UserOAuth.id)
+        .where(TaskGroupV2.id == task_group.id)
+    )
+    user_email = res.scalar_one()
+    return dict(
+        user_email=user_email,
+        **task_group.model_dump(),
+    )
