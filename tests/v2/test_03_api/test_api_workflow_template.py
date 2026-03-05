@@ -204,10 +204,19 @@ async def test_post_patch_delete_template(
         project = await project_factory(user1)
         workflow = await workflow_factory(project_id=project.id, name="foo")
         task = await task_factory(user_id=user1.id, name="my_task")
+        # Test POST workflow without tasks
+        res = await client.post(
+            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            json=dict(name="template", version=1),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"Workflow {workflow.id} has empty `task_list`."
+        )
+        # Test POST
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        # Test POST
         res = await client.post(
             f"api/v2/workflow_template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
@@ -377,6 +386,16 @@ async def test_export_import_template(
             json=template_file,
         )
         assert res.status_code == 201
+        template_file["version"] = 3
+        template_file["data"]["task_list"] = []
+        res = await client.post(
+            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            json=template_file,
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Imported template has empty `data.task_list`."
+        )
 
     async with MockCurrentUser(user_id=user0_id) as user0:
         project2 = await project_factory(user0)
@@ -395,3 +414,19 @@ async def test_export_import_template(
         res = await client.get(f"api/v2/workflow_template/{template_id}/")
         assert res.status_code == 200
         assert res.json()["timestamp_last_used"] is not None
+
+        res = await client.post(
+            f"api/v2/project/{project2.id}/workflow/import-from-template/"
+            f"?template_id={template_id}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"Workflow with name='foo' and project_id={project2.id} already "
+            "exists."
+        )
+        res = await client.post(
+            f"api/v2/project/{project2.id}/workflow/import-from-template/"
+            f"?template_id={template_id}",
+            json={"name": "bar"},
+        )
+        assert res.status_code == 201
