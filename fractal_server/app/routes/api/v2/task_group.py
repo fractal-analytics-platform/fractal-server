@@ -139,7 +139,7 @@ async def get_task_group_list(
         stm = stm.where(TaskGroupV2.active)
 
     res = await db.execute(stm)
-    task_groups_and_email = res.scalars().all()
+    task_groups_and_email = res.all()
 
     task_groups = [item[0] for item in task_groups_and_email]
     task_group_id_email_map = {
@@ -181,6 +181,9 @@ async def get_task_group_list(
             [
                 dict(
                     user_email=task_group_id_email_map[task_group.id],
+                    task_list=[
+                        task.model_dump() for task in task_group.task_list
+                    ],
                     **task_group.model_dump(),
                 )
                 for task_group in task_group_list

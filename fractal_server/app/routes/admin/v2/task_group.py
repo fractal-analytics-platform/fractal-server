@@ -219,7 +219,7 @@ async def query_task_group_list(
             user_email=user_email,
             **task_group.model_dump(),
         )
-        for task_group, user_email in res.scalars().all()
+        for task_group, user_email in res.all()
     ]
 
     return dict(
