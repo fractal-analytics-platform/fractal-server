@@ -69,7 +69,7 @@ class TaskGroupRead(BaseModel):
     id: int
     task_list: list[TaskRead]
 
-    user_id: int
+    user_email: str
     user_group_id: int | None = None
 
     origin: TaskGroupOriginEnum
@@ -94,6 +94,7 @@ class TaskGroupRead(BaseModel):
 
 
 class TaskGroupReadSuperuser(TaskGroupRead):
+    user_id: int
     resource_id: int
 
 

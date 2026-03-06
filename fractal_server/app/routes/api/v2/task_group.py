@@ -34,6 +34,7 @@ from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
+from ._aux_task_group_disambiguation import add_user_email_to_task_group
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 
 router = APIRouter()
@@ -128,7 +129,8 @@ async def get_task_group_list(
 
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
     stm = (
-        select(TaskGroupV2)
+        select(TaskGroupV2, UserOAuth.email)
+        .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.resource_id == user_resource_id)
         .where(condition)
         .order_by(TaskGroupV2.pkg_name)
@@ -137,7 +139,13 @@ async def get_task_group_list(
         stm = stm.where(TaskGroupV2.active)
 
     res = await db.execute(stm)
-    task_groups = res.scalars().all()
+    task_groups_and_email = res.all()
+
+    task_groups = [item[0] for item in task_groups_and_email]
+    task_group_id_email_map = {
+        task_group.id: user_email
+        for task_group, user_email in task_groups_and_email
+    }
 
     if args_schema is False:
         for taskgroup in task_groups:
@@ -167,7 +175,24 @@ async def get_task_group_list(
             task_groups, key=lambda tg: tg.pkg_name
         )
     ]
-    return grouped_result
+    grouped_result_with_emails = [
+        (
+            pkg_name,
+            [
+                dict(
+                    user_email=task_group_id_email_map[task_group.id],
+                    task_list=[
+                        task.model_dump() for task in task_group.task_list
+                    ],
+                    **task_group.model_dump(),
+                )
+                for task_group in task_group_list
+            ],
+        )
+        for pkg_name, task_group_list in grouped_result
+    ]
+
+    return grouped_result_with_emails
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupRead)
@@ -184,7 +209,10 @@ async def get_task_group(
         user_id=user.id,
         db=db,
     )
-    return task_group
+    task_grop_with_email = await add_user_email_to_task_group(
+        task_group=task_group, db=db
+    )
+    return task_grop_with_email
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupRead)
@@ -222,4 +250,7 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return task_group
+    task_grop_with_email = await add_user_email_to_task_group(
+        task_group=task_group, db=db
+    )
+    return task_grop_with_email
