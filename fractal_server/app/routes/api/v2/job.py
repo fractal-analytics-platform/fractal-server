@@ -17,11 +17,12 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
-from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
@@ -38,6 +39,9 @@ async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
 
 
 router = APIRouter()
+
+
+logger = set_logger(__name__)
 
 
 @router.get("/job/", response_model=list[JobRead])
@@ -254,6 +258,6 @@ async def stop_job(
     )
     job = output["job"]
 
-    _write_shutdown_file(job=job)
+    _write_shutdown_file_or_422(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
