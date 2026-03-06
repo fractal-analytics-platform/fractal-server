@@ -180,5 +180,6 @@ async def add_user_email_to_task_group(
     user_email = res.scalar_one()
     return dict(
         user_email=user_email,
+        task_list=[task.model_dump() for task in task_group.task_list],
         **task_group.model_dump(),
     )

@@ -118,14 +118,18 @@ async def query_task_group(
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
-    task_group_and_email = res.scalars().one_or_none()
+    task_group_and_email = res.one_or_none()
     if task_group_and_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroup {task_group_id} not found",
         )
     task_group, user_email = task_group_and_email
-    return dict(user_email=user_email, **task_group.model_dump())
+    return dict(
+        user_email=user_email,
+        task_list=[task.model_dump() for task in task_group.task_list],
+        **task_group.model_dump(),
+    )
 
 
 @router.get("/", response_model=PaginationResponse[TaskGroupReadSuperuser])
@@ -217,6 +221,7 @@ async def query_task_group_list(
     task_groups_list = [
         dict(
             user_email=user_email,
+            task_list=[task.model_dump() for task in task_group.task_list],
             **task_group.model_dump(),
         )
         for task_group, user_email in res.all()
@@ -242,7 +247,7 @@ async def patch_task_group(
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
-    task_group_and_email = res.scalars().one_or_none()
+    task_group_and_email = res.one_or_none()
     if task_group_and_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -262,5 +267,6 @@ async def patch_task_group(
     await db.refresh(task_group)
     return dict(
         user_email=user_email,
+        task_list=[task.model_dump() for task in task_group.task_list],
         **task_group.model_dump(),
     )
