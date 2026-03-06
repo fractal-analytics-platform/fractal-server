@@ -19,7 +19,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
-from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
@@ -28,14 +28,11 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import JobUpdate
-from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
 router = APIRouter()
-
-logger = set_logger(__name__)
 
 
 @router.get("/", response_model=PaginationResponse[JobRead])
@@ -272,17 +269,8 @@ async def stop_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
-    try:
-        _write_shutdown_file(job=job)
-    except Exception as e:
-        logger.error(
-            "An error was raised by `_write_shutdown_file` during  "
-            f"Job {job_id} shutdown. Original error: '{str(e)}'."
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Could not shutdown Job {job_id}, please try again.",
-        )
+
+    _write_shutdown_file_or_422(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
 

@@ -17,7 +17,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
-from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
@@ -258,16 +258,6 @@ async def stop_job(
     )
     job = output["job"]
 
-    try:
-        _write_shutdown_file(job=job)
-    except Exception as e:
-        logger.error(
-            "An error was raised by `_write_shutdown_file` during  "
-            f"Job {job_id} shutdown. Original error: '{str(e)}'."
-        )
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Could not shutdown Job {job_id}, please try again.",
-        )
+    _write_shutdown_file_or_422(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
