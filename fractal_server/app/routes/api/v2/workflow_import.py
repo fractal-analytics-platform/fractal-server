@@ -2,6 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
 from sqlalchemy.sql.operators import is_not
@@ -349,7 +350,7 @@ async def import_workflow(
 async def import_workflow_from_template(
     project_id: int,
     template_id: int,
-    workflow_import_from_template: WorkflowImportFromTemplate | None = None,
+    workflow_import_from_template: WorkflowImportFromTemplate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> WorkflowReadWithWarnings:
@@ -359,8 +360,26 @@ async def import_workflow_from_template(
         db=db,
     )
     workflow_import = WorkflowImport(**template.data)
-    if workflow_import_from_template:
+
+    if workflow_import_from_template.name:
         workflow_import.name = workflow_import_from_template.name
+
+    if workflow_import_from_template.override_versions:
+        if len(workflow_import_from_template.override_versions) != len(
+            workflow_import.task_list
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Length of body argument 'override_versions' must be "
+                    f"{len(workflow_import.task_list)}, provided"
+                    f"{len(workflow_import_from_template.override_versions)}."
+                ),
+            )
+        for i, _ in enumerate(workflow_import.task_list):
+            workflow_import.task_list[
+                i
+            ].task.version = workflow_import_from_template.override_versions[i]
 
     workflow = await _import_workflow(
         project_id=project_id,

@@ -66,7 +66,8 @@ class WorkflowImport(BaseModel):
 
 class WorkflowImportFromTemplate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: NonEmptyStr
+    name: NonEmptyStr | None = None
+    override_versions: list[NonEmptyStr] | None = None
 
 
 class WorkflowExport(BaseModel):
