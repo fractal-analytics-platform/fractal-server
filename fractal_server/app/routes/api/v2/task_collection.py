@@ -14,12 +14,13 @@ from pydantic import BaseModel
 from pydantic import ValidationError
 from pydantic import model_validator
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -158,7 +159,7 @@ async def collect_tasks_pip(
     request_data: CollectionRequestData = Depends(parse_request_data),
     private: bool = False,
     user_group_id: int | None = None,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityRead:
     """
@@ -332,6 +333,7 @@ async def collect_tasks_pip(
         action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()

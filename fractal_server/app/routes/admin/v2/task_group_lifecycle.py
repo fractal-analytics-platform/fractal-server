@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -93,6 +94,7 @@ async def deactivate_task_group(
             ),
             timestamp_started=get_timestamp(),
             timestamp_ended=get_timestamp(),
+            fractal_server_version=__VERSION__,
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -108,6 +110,7 @@ async def deactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()
@@ -188,6 +191,7 @@ async def reactivate_task_group(
             ),
             timestamp_started=get_timestamp(),
             timestamp_ended=get_timestamp(),
+            fractal_server_version=__VERSION__,
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -211,6 +215,7 @@ async def reactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()
@@ -264,6 +269,7 @@ async def delete_task_group(
         pkg_name=task_group.pkg_name,
         version=(task_group.version or "N/A"),
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()

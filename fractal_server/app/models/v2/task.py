@@ -14,7 +14,6 @@ class TaskV2(SQLModel, table=True):
     type: str
     command_non_parallel: str | None = None
     command_parallel: str | None = None
-    source: str | None = None
 
     meta_non_parallel: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)

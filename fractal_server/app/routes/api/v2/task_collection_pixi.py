@@ -10,6 +10,7 @@ from fastapi import Response
 from fastapi import UploadFile
 from fastapi import status
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -27,7 +28,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_user_constraint,
 )
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -83,7 +84,7 @@ async def collect_task_pixi(
     pixi_version: NonEmptyStr | None = Form(None),
     private: bool = False,
     user_group_id: int | None = None,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityRead:
     # Get validated resource and profile
@@ -182,6 +183,7 @@ async def collect_task_pixi(
         action=TaskGroupActivityAction.COLLECT,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()

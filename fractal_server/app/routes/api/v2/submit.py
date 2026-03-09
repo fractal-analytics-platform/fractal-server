@@ -11,6 +11,7 @@ from fastapi import status
 from sqlmodel import select
 from sqlmodel import update
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
@@ -20,7 +21,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
 )
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -59,7 +60,7 @@ async def submit_job(
     job_create: JobCreate,
     background_tasks: BackgroundTasks,
     request: Request,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> JobRead | None:
     # Remove non-submitted Jobs from the app state when the list grows
@@ -216,11 +217,12 @@ async def submit_job(
             dataset.model_dump_json(exclude={"images", "history"})
         ),
         workflow_dump=json.loads(
-            workflow.model_dump_json(exclude={"task_list"})
+            workflow.model_dump_json(exclude={"task_list", "description"})
         ),
         project_dump=json.loads(
             project.model_dump_json(exclude={"resource_id"})
         ),
+        fractal_server_version=__VERSION__,
         **job_create.model_dump(),
     )
 

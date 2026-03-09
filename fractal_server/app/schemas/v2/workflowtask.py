@@ -11,7 +11,6 @@ from fractal_server.types import WorkflowTaskArgument
 
 from .task import TaskExport
 from .task import TaskImport
-from .task import TaskImportLegacy
 from .task import TaskRead
 from .task import TaskType
 
@@ -50,6 +49,9 @@ class WorkflowTaskRead(BaseModel):
     task_id: int
     task: TaskRead
 
+    alias: str | None = None
+    description: str | None = None
+
 
 class WorkflowTaskReadWithWarning(WorkflowTaskRead):
     warning: str | None = None
@@ -63,6 +65,8 @@ class WorkflowTaskUpdate(BaseModel):
     args_non_parallel: WorkflowTaskArgument | None = None
     args_parallel: WorkflowTaskArgument | None = None
     type_filters: TypeFilters = None
+    description: str | None = None
+    alias: str | None = None
 
 
 class WorkflowTaskImport(BaseModel):
@@ -75,7 +79,7 @@ class WorkflowTaskImport(BaseModel):
     type_filters: TypeFilters | None = None
     input_filters: dict[str, Any] | None = None
 
-    task: TaskImport | TaskImportLegacy
+    task: TaskImport
 
     @model_validator(mode="before")
     @classmethod

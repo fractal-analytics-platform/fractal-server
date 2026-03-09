@@ -37,9 +37,19 @@ async def test_register_user(
         f"{PREFIX}/register/", json=payload_register
     )
     assert res.status_code == 201
-    assert res.json()["email"] == EMAIL
-    assert res.json()["oauth_accounts"] == []
-    assert res.json()["profile_id"] is None
+    assert res.json() == {
+        "id": res.json()["id"],
+        "email": EMAIL,
+        "is_active": True,
+        "is_superuser": False,
+        "is_verified": False,
+        "is_guest": False,
+        "group_ids_names": None,
+        "oauth_accounts": [],
+        "profile_id": None,
+        "project_dirs": ["/fake/placeholder"],
+        "slurm_accounts": [],
+    }
 
     # Superuser: ALLOWED
     EMAIL = "asd2@example.org"
@@ -112,6 +122,86 @@ async def test_register_user(
     )
     assert res.status_code == 422
     assert "absolute path" in (res.json()["detail"][0]["msg"])
+
+    # on register `is_superuser` is always set to False, so `is_guest` is
+    # always possible
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(
+            email="guest@example.org",
+            password="12345",
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+            is_superuser=True,
+            is_guest=True,
+        ),
+    )
+    assert res.status_code == 201
+    assert res.json()["is_superuser"] is False
+    assert res.json()["is_guest"] is True
+
+
+async def test_password_length(registered_superuser_client):
+    """
+    Test that passwords cannot be longer than 72 (once encoded in utf-8).
+    """
+
+    latin_char = "a"
+    assert len(latin_char.encode("utf-8")) == 1
+
+    res = await registered_superuser_client.post(
+        "/auth/register/",
+        json=dict(
+            email="user1@example.org",
+            password=latin_char * 71,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        ),
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/",
+        json=dict(
+            email="user2@example.org",
+            password=latin_char * 72,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        ),
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/",
+        json=dict(
+            email="user3@example.org",
+            password=latin_char * 73,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        ),
+    )
+    assert res.status_code == 400
+    assert "password is too long" in res.json()["detail"]["reason"]
+
+    chinese_char = "界"
+    assert len(chinese_char.encode("utf-8")) == 3
+
+    res = await registered_superuser_client.post(
+        "/auth/register/",
+        json=dict(
+            email="user4@example.org",
+            password=chinese_char * 24,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        ),
+    )
+    assert res.status_code == 201
+
+    res = await registered_superuser_client.post(
+        "/auth/register/",
+        json=dict(
+            email="user5@example.org",
+            password=chinese_char * 24 + latin_char,
+            project_dirs=[PROJECT_DIR_PLACEHOLDER],
+        ),
+    )
+    assert res.status_code == 400
+    assert "password is too long" in res.json()["detail"]["reason"]
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -295,6 +385,22 @@ async def test_edit_users_as_superuser(
     assert res.status_code == 200
     users = res.json()
     assert len(users) == 0
+
+    # Fail because superuser cannot be guest
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(is_guest=True),
+    )
+    assert res.status_code == 422
+    assert res.json()["detail"] == "Superuser cannot be guest."
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(is_guest=True, is_superuser=False),
+    )
+    assert res.status_code == 200
+    assert res.json()["is_superuser"] is False
+    assert res.json()["is_guest"] is True
 
 
 async def test_edit_user_project_dirs(

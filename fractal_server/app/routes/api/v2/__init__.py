@@ -14,7 +14,6 @@ from .job import router as job_router
 from .pre_submission_checks import router as pre_submission_checks_router
 from .project import router as project_router
 from .sharing import router as sharing_router
-from .status_legacy import router as status_legacy_router
 from .submit import router as submit_job_router
 from .task import router as task_router
 from .task_collection import router as task_collection_router
@@ -37,7 +36,6 @@ router_api.include_router(sharing_router, tags=["Project Sharing"])
 router_api.include_router(project_router, tags=["Project"])
 router_api.include_router(submit_job_router, tags=["Job"])
 router_api.include_router(history_router, tags=["History"])
-router_api.include_router(status_legacy_router, tags=["Status Legacy"])
 
 
 settings = Inject(get_settings)

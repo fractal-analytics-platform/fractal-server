@@ -9,9 +9,9 @@ name: migrations
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", 'ihb-develop']
   pull_request:
-    branches: ["main"]
+    branches: ["main", 'ihb-develop']
 
 permissions: {}
 
@@ -34,7 +34,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v5

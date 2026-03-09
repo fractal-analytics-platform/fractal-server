@@ -39,3 +39,6 @@ class WorkflowTaskV2(SQLModel, table=True):
     task_type: str
     task_id: int = Field(foreign_key="taskv2.id")
     task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
+
+    alias: str | None = Field(default=None, nullable=True)
+    description: str | None = Field(default=None, nullable=True)

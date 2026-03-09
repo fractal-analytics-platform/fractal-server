@@ -382,6 +382,26 @@ async def test_patch_workflow(
         res = await client.get(f"{PREFIX}/project/{project.id}/workflow/")
         assert len(res.json()) == 2
 
+        # Set description
+        patch = {"description": "foo"}
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/", json=patch
+        )
+        assert res.status_code == 200
+
+        new_workflow = await get_workflow(client, project.id, wf_id)
+        assert new_workflow["description"] == "foo"
+
+        # Unset description
+        patch = {"description": None}
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/", json=patch
+        )
+        assert res.status_code == 200
+
+        new_workflow = await get_workflow(client, project.id, wf_id)
+        assert new_workflow["description"] is None
+
 
 async def test_delete_workflow_with_job(
     client,

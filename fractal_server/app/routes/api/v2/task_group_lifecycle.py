@@ -5,11 +5,12 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
-from fractal_server.app.routes.auth import current_user_act_ver_prof
+from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -51,7 +52,7 @@ async def deactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityRead:
     """
@@ -99,6 +100,7 @@ async def deactivate_task_group(
             ),
             timestamp_started=get_timestamp(),
             timestamp_ended=get_timestamp(),
+            fractal_server_version=__VERSION__,
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -114,6 +116,7 @@ async def deactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     task_group.active = False
     db.add(task_group)
@@ -155,7 +158,7 @@ async def reactivate_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupRead:
     """
@@ -202,6 +205,7 @@ async def reactivate_task_group(
             ),
             timestamp_started=get_timestamp(),
             timestamp_ended=get_timestamp(),
+            fractal_server_version=__VERSION__,
         )
         db.add(task_group)
         db.add(task_group_activity)
@@ -225,6 +229,7 @@ async def reactivate_task_group(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()
@@ -263,7 +268,7 @@ async def delete_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: UserOAuth = Depends(current_user_act_ver_prof),
+    user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupActivityRead:
     """
@@ -288,6 +293,7 @@ async def delete_task_group(
         pkg_name=task_group.pkg_name,
         version=(task_group.version or "N/A"),
         timestamp_started=get_timestamp(),
+        fractal_server_version=__VERSION__,
     )
     db.add(task_group_activity)
     await db.commit()

@@ -1,6 +1,34 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.19.0 (unreleased)
+
+* API:
+    * Add `POST /admin/v2/linkuserproject/verify/` (\#3130).
+    * Include new `is_guest` field in users CRUD (\#3130).
+    * Return empty list of project-sharing invitations for `is_guest=True` users (\#3130).
+    * Rename `current_user_act_ver_prof` into `get_api_guest`, and add a more restrictive `get_api_user` dependency for non-read-only endpoints (\#3130).
+    * Make `UserManager.validate_password` fail if password is longer than 72 bytes (\#3141).
+    * Prevent guest users from self update (\#3142).
+    * Deprecate use of `TaskV2.source` in workflow imports and superuser-only task queries(\#3147, \#3148).
+    * Improve definition of *latest version* in task import (\#3153).
+    * Remove `GET /project/{project_id}/status-legacy/` endpoint (\#3160).
+* Database:
+    * Drop `TaskV2.source` (\#3147).
+    * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
+    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
+    * Drop `DatasetV2.history` (\#3160).
+    * Add `fractal_server_version` column to `JobV2` and `TaskGroupActivityV2` (\#3161).
+* Internal:
+    * Refactor modules for endpoints in `/api/` but not in `/api/v2/` (\#3132).
+* Testing:
+    *  Run some GitHub Actions when targeting `ihb-develop` branch (\#3138).
+* Documentation:
+    * Introduce `CONTRIBUTING.md` (\#3157).
+* Dependencies:
+    * Bump `gunicorn` to v24 (\#3158).
+    * Remove `pre-commit` from project dependencies (\#3157).
+
+# 2.18.6
 
 * API:
     * Drop all redundant `db.close()` statements (\#3118).
@@ -9,6 +37,7 @@
     * Use `autoflush=True` also for sync db sessions (\#3119).
 * Dependencies:
     * Drop `mypy` dev dependency (\#3123).
+    * Drop support for Python 3.11 (\#3129).
 * Testing:
     * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124, \#3125).
     * Remove `GitHubSecurityLab/actions-permissions/monitor` to avoid TLS issues (\#3124).
@@ -255,8 +284,8 @@ resource&profile concepts, and a review of the application settings.
 * Task life cycle:
     * Switch to PyPI Index API for finding latest package versions (\#2790).
 * SSH:
-    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#XXX).
-    * Introduce structured logs for SSH-lock dynamics (\#XXX).
+    * Bump default lock-acquisition timeout from 250 to 500 seconds (\#2826).
+    * Introduce structured logs for SSH-lock dynamics (\#2826).
 * API:
     * Replace `HTTP_422_UNPROCESSABLE_CONTENT` with `HTTP_422_UNPROCESSABLE_CONTENT` (\#2790).
 * Internal:

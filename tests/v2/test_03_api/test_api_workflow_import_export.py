@@ -29,17 +29,36 @@ async def test_import_export(
         wf_from_file["task_list"][0]["task"] = task_import
         return wf_from_file
 
-    wf_file_task_source_0 = workflow_from_file["task_list"][0]["task"]["source"]
-    wf_file_task_source_1 = workflow_from_file["task_list"][1]["task"]["source"]
+    task0 = workflow_from_file["task_list"][0]["task"]
+    task1 = workflow_from_file["task_list"][1]["task"]
 
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
-        task_with_source0 = await task_factory(
-            user_id=user.id, source=wf_file_task_source_0, name="0"
+        task_0 = await task_factory(
+            user_id=user.id,
+            name=task0["name"],
+            version=task0["version"],
+            task_group_kwargs=dict(pkg_name=task0["pkg_name"]),
         )
-        task_with_source1 = await task_factory(
-            user_id=user.id, source=wf_file_task_source_1, name="1"
+        task_1 = await task_factory(
+            user_id=user.id,
+            name=task1["name"],
+            version=task1["version"],
+            task_group_kwargs=dict(pkg_name=task1["pkg_name"]),
         )
+
+        # Import fail
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json={
+                "name": "Name",
+                "task_list": [
+                    {"task": {"name": "x", "pkg_name": "y", "version": "z"}}
+                ],
+            },
+        )
+        assert res.status_code == 422
+        assert "Could not find a task matching with" in res.json()["detail"]
 
         # Import workflow
         res = await client.post(
@@ -52,14 +71,8 @@ async def test_import_export(
             workflow_from_file["task_list"]
         )
         workflow_imported_id = workflow_imported["id"]
-        assert (
-            workflow_imported["task_list"][0]["task"]["id"]
-            == task_with_source0.id
-        )
-        assert (
-            workflow_imported["task_list"][1]["task"]["id"]
-            == task_with_source1.id
-        )
+        assert workflow_imported["task_list"][0]["task"]["id"] == task_0.id
+        assert workflow_imported["task_list"][1]["task"]["id"] == task_1.id
 
         # Export the workflow we just imported
         res = await client.get(
@@ -113,35 +126,6 @@ async def test_import_export(
             f"{PREFIX}/project/{prj.id}/workflow/import/", json=invalid_payload
         )
         assert res.status_code == 422
-
-        # Valid request: source-based
-        valid_payload_full = wf_modify(
-            new_name="new_name_source_1",
-            task_import={
-                "source": wf_file_task_source_0,
-            },
-        )
-        debug(valid_payload_full)
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=valid_payload_full,
-        )
-        debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["task_list"][0]["task"]["id"] == task_with_source0.id
-
-        # Valid request: source-based, but invalid source
-        valid_payload_full = wf_modify(
-            new_name="new_name_source_2",
-            task_import={"source": "INVALID"},
-        )
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=valid_payload_full,
-        )
-        assert res.status_code == 422
-        error_msg = "Could not find a task matching with source='INVALID'."
-        assert error_msg in res.json()["detail"]
 
         first_task_no_source = await task_factory(
             user_id=user.id,
@@ -228,36 +212,6 @@ async def test_import_export(
             res.json()["task_list"][0]["task"]["taskgroupv2_id"]
             == first_task_no_source.taskgroupv2_id
         )
-
-
-async def test_unit_get_task_by_source():
-    from fractal_server.app.routes.api.v2.workflow_import import (
-        _get_task_by_source,
-    )
-
-    task1 = TaskV2(id=1, name="task1", source="source1")
-    task2 = TaskV2(id=2, name="task2", source="source2")
-    task3 = TaskV2(id=3, name="task3", source="source3")
-    task_group = [
-        TaskGroupV2(
-            task_list=[task1, task2],
-            user_id=1,
-            pkg_name="pkgA",
-        ),
-        TaskGroupV2(
-            task_list=[task3],
-            user_id=1,
-            pkg_name="pkgB",
-        ),
-    ]
-
-    # Test matching source
-    task_id = await _get_task_by_source("source1", task_group)
-    assert task_id == 1
-
-    # Test non-matching source
-    task_id = await _get_task_by_source("nonexistent_source", task_group)
-    assert task_id is None
 
 
 async def test_unit_get_task_by_taskimport():
@@ -622,8 +576,9 @@ async def test_import_filters_compatibility(
         prj = await project_factory(user)
         await task_factory(
             user_id=user.id,
-            source="foo",
             input_types={"a": True, "b": False},
+            name="foo",
+            version="0.0.1",
         )
 
         res = await client.post(
@@ -631,7 +586,14 @@ async def test_import_filters_compatibility(
             json=dict(
                 name="Workflow Ok",
                 task_list=[
-                    {"task": {"source": "foo"}, "type_filters": {"a": True}}
+                    {
+                        "task": {
+                            "name": "foo",
+                            "pkg_name": "foo",
+                            "version": "0.0.1",
+                        },
+                        "type_filters": {"a": True},
+                    }
                 ],
             ),
         )
@@ -642,7 +604,14 @@ async def test_import_filters_compatibility(
             json=dict(
                 name="Workflow Fail",
                 task_list=[
-                    {"task": {"source": "foo"}, "type_filters": {"b": True}}
+                    {
+                        "task": {
+                            "name": "foo",
+                            "pkg_name": "foo",
+                            "version": "0.0.1",
+                        },
+                        "type_filters": {"b": True},
+                    }
                 ],
             ),
         )

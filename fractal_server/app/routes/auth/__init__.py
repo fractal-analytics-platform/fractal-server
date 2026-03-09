@@ -57,7 +57,7 @@ current_user_act_ver = fastapi_users.current_user(
 )
 
 
-async def current_user_act_ver_prof(
+async def get_api_guest(
     user: UserOAuth = Depends(current_user_act_ver),
 ) -> UserOAuth:
     """
@@ -72,6 +72,23 @@ async def current_user_act_ver_prof(
             detail=(
                 f"Forbidden access ({user.is_verified=} {user.profile_id=})."
             ),
+        )
+    return user
+
+
+async def get_api_user(
+    user: UserOAuth = Depends(get_api_guest),
+) -> UserOAuth:
+    """
+    Require a active&verified non-guest user, with a non-null `profile_id`.
+
+    Raises 401 if user does not exist or is not active.
+    Raises 403 if user is not verified, is a guest or has null `profile_id`.
+    """
+    if user.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This feature is not available for guest users.",
         )
     return user
 

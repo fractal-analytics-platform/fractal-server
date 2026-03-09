@@ -29,6 +29,7 @@ class WorkflowRead(BaseModel):
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: AwareDatetime
+    description: str | None
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -44,6 +45,7 @@ class WorkflowUpdate(BaseModel):
 
     name: NonEmptyStr = None
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
+    description: str | None = None
 
 
 class WorkflowImport(BaseModel):

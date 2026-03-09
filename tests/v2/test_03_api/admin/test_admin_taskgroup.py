@@ -359,7 +359,10 @@ async def test_admin_deactivate_task_group_api(
     async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
         non_active_task = await task_factory(
-            user_id=user.id, name="task", task_group_kwargs=dict(active=False)
+            user_id=user.id,
+            name="task",
+            version="123",
+            task_group_kwargs=dict(active=False),
         )
         task_other = await task_factory(
             user_id=user.id,
@@ -452,7 +455,9 @@ async def test_reactivate_task_group_api(
 
     async with MockCurrentUser(profile_id=profile.id) as user:
         # Create mock task groups
-        active_task = await task_factory(user_id=user.id, name="task")
+        active_task = await task_factory(
+            user_id=user.id, name="task", version="123"
+        )
 
         task_other = await task_factory(
             user_id=user.id,
