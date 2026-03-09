@@ -11,9 +11,9 @@ from pydantic.types import AwareDatetime
 from fractal_server.app.schemas.v2.project import ProjectRead
 from fractal_server.images import SingleImage
 from fractal_server.types import AbsolutePathStr
-from fractal_server.types import NonEmptyStr
-from fractal_server.types import RelativePathStr
 from fractal_server.types import S3PathStr
+from fractal_server.types import SafeNonEmptyStr
+from fractal_server.types import SafeRelativePathStr
 from fractal_server.types import ZarrDirStr
 
 
@@ -29,9 +29,9 @@ class DatasetCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr
+    name: SafeNonEmptyStr
     project_dir: AbsolutePathStr | S3PathStr | None = None
-    zarr_subfolder: RelativePathStr | None = None
+    zarr_subfolder: SafeRelativePathStr | None = None
 
     @model_validator(mode="after")
     def validate_zarr_dir(self):
@@ -81,7 +81,7 @@ class DatasetUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr = None
+    name: SafeNonEmptyStr = None
 
 
 class DatasetImport(BaseModel):
@@ -98,7 +98,7 @@ class DatasetImport(BaseModel):
         images:
     """
 
-    name: str
+    name: SafeNonEmptyStr
     zarr_dir: ZarrDirStr
     images: list[SingleImage] = Field(default_factory=list)
 

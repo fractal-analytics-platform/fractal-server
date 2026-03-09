@@ -400,6 +400,8 @@ async def _workflow_insert_task(
     args_non_parallel: dict[str, Any] | None = None,
     args_parallel: dict[str, Any] | None = None,
     type_filters: dict[str, bool] | None = None,
+    description: str | None = None,
+    alias: str | None = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -414,6 +416,8 @@ async def _workflow_insert_task(
         args_non_parallel:
         args_parallel:
         type_filters:
+        description:
+        alias:
         db:
     """
     db_workflow = await db.get(WorkflowV2, workflow_id)
@@ -448,6 +452,8 @@ async def _workflow_insert_task(
         meta_parallel=final_meta_parallel,
         meta_non_parallel=final_meta_non_parallel,
         type_filters=(type_filters or dict()),
+        description=description,
+        alias=alias,
     )
     db_workflow.task_list.append(wf_task)
     flag_modified(db_workflow, "task_list")

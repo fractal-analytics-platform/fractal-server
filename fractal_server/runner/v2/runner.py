@@ -123,7 +123,10 @@ def execute_tasks(
     for ind_wftask, wftask in enumerate(wf_task_list):
         task = wftask.task
         task_name = task.name
-        logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
+        alias_string = f"alias={wftask.alias}, " if wftask.alias else ""
+        logger.debug(
+            f'SUBMIT {wftask.order}-th task ({alias_string}name="{task_name}")'
+        )
 
         # PRE TASK EXECUTION
 
@@ -522,5 +525,6 @@ def execute_tasks(
                 )
                 db.commit()
                 logger.debug(
-                    f'END    {wftask.order}-th task (name="{task_name}")'
+                    f"END    {wftask.order}-th task "
+                    f'({alias_string}name="{task_name}")'
                 )

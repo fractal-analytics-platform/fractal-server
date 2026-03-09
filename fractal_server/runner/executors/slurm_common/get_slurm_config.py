@@ -118,6 +118,7 @@ def _get_slurm_config_internal(
             "gpus",
             "constraint",
             "nodelist",
+            "nodes",
             "exclude",
         ]:
             value = wftask_meta.get(key, None)

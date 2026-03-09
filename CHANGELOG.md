@@ -1,6 +1,39 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.19.0 (unreleased)
+# 2.19.4
+
+* SSH:
+    * Try to refresh SSH connection upon `paramiko.ssh_exception.SSHException` (\#3189).
+* Dependencies:
+    * Bump `fastapi` to `0.129.*` (\#3190).
+    * Bump `sqlmodel` to `0.0.33` (\#3190).
+
+# 2.19.3
+
+* Task lifecycle:
+    * Expose `preamble` for pixi/SLURM task collection (\#3182).
+
+# 2.19.2
+
+* Task lifecycle:
+    * Support both `--mem` and `--mem-per-cpu` for pixi/SLURM task collection (\#3180).
+* Runner:
+    * Also log workflowtask `alias` field, if present (\#3179).
+* API:
+    * Add regex validator to `Project` and `Dataset` schemas (\#3175).
+* Dependencies:
+    * Bump `gunicorn` to v25 (\#3174).
+    * Bump `packaging` to v26 (\#3178).
+
+# 2.19.1
+
+* Runner:
+    * Expand `STDERR_IGNORE_PATTERNS` for SLURM errors with `srun: warning: can't run 1 processes on 8 nodes, setting nnodes to 1` (\#3169).
+    * Expose SLURM `nodes` parameter (\#3171).
+* Dependencies:
+    * Bump documentation dependencies (\#3172).
+
+# 2.19.0
 
 * API:
     * Add `POST /admin/v2/linkuserproject/verify/` (\#3130).
@@ -15,7 +48,7 @@
 * Database:
     * Drop `TaskV2.source` (\#3147).
     * Add `UserOAuth.is_guest` boolean column and corresponding `CHECK` constraint (\#3130).
-    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156).
+    * Add `description` to workflow and `description` and `alias` to workflow task (\#3156, \#3164).
     * Drop `DatasetV2.history` (\#3160).
     * Add `fractal_server_version` column to `JobV2` and `TaskGroupActivityV2` (\#3161).
 * Internal:

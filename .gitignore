@@ -23,6 +23,7 @@ nohup.out
 fractal.log
 logs
 site/
+data-tasks/
 
 tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
 

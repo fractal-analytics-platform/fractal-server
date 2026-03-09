@@ -31,6 +31,7 @@ class SlurmConfigSet(BaseModel):
         time:
         exclude:
         nodelist:
+        nodes:
         account:
         extra_lines:
         gpus:
@@ -47,6 +48,7 @@ class SlurmConfigSet(BaseModel):
     gres: NonEmptyStr | None = None
     exclude: NonEmptyStr | None = None
     nodelist: NonEmptyStr | None = None
+    nodes: int | None = None
     time: NonEmptyStr | None = None
     account: NonEmptyStr | None = None
     extra_lines: list[NonEmptyStr] = Field(default_factory=list)

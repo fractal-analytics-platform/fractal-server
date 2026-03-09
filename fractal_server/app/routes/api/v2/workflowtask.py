@@ -93,6 +93,8 @@ async def create_workflowtask(
         args_non_parallel=wftask.args_non_parallel,
         args_parallel=wftask.args_parallel,
         type_filters=wftask.type_filters,
+        description=wftask.description,
+        alias=wftask.alias,
         db=db,
     )
 
@@ -183,7 +185,6 @@ async def update_workflowtask(
         exclude_unset=True
     ).items():
         if key == "args_parallel":
-            # Get default arguments via a Task property method
             actual_args = deepcopy(value)
             if not actual_args:
                 actual_args = None

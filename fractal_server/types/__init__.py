@@ -26,7 +26,15 @@ NonEmptyStr = Annotated[
 """
 A non-empty string, with no leading/trailing whitespaces.
 """
-
+SafeNonEmptyStr = Annotated[
+    NonEmptyStr,
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. -]+)$"),
+]
+"""
+A non-empty string restricted to the characters matching the regex, i.e.
+alphanumerics, underscores, dots, spaces, and hyphens, with no leading or
+trailing spaces.
+"""
 
 AbsolutePathStr = Annotated[
     NonEmptyStr,
@@ -51,12 +59,21 @@ String representing an S3 path (e.g., s3://bucket/key).
 Validation fails if the string does not start with "s3://".
 """
 
-RelativePathStr = Annotated[
+SafeRelativePathStr = Annotated[
     NonEmptyStr,
     AfterValidator(val_no_dotdot_in_path),
     AfterValidator(val_os_path_normpath),
     AfterValidator(val_non_absolute_path),
+    StringConstraints(pattern=r"^([a-zA-Z0-9_. /-]+)$"),
 ]
+"""
+String representing a relative path.
+
+Validation fails if the path is absolute, if it contains a parent-directory
+reference "/../" or if it doesn't match the regex, i.e. if it contains
+characters which are not alphanumerics, underscores, dots, spaces, hyphens
+or slashes.
+"""
 
 HttpUrlStr = Annotated[
     NonEmptyStr,

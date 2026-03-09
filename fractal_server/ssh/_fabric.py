@@ -296,6 +296,8 @@ class FractalSSH:
             # external reasons (e.g. the socket is closed because the SSH
             # server was restarted). In these cases, we catch the error and
             # try to re-open the connection.
+            # NOTE: Several specific errors inherit from `SSHException`,
+            # including errors related to authentication.
             try:
                 self.logger.info(
                     "[check_connection] Run dummy command to check connection."

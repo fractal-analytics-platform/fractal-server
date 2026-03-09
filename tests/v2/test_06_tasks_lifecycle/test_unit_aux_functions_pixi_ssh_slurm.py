@@ -102,17 +102,32 @@ def test_sbatch_failure(
     script_path = (tmp777_path / "script.sh").as_posix()
     log_file_path = tmp777_path / "logs"
     log_file_path.touch()
-    with pytest.raises(
-        ValueError,
-        match="sbatch",
-    ):
+
+    with pytest.raises(ValueError, match="sbatch"):
         run_script_on_remote_slurm(
             script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
-                mem="1G",
+                mem="1G", cpus=1, partition="main", time="10"
+            ).model_dump(),
+            fractal_ssh=MockFractalSSH(connection=None),
+            logger_name="my-logger",
+            log_file_path=log_file_path,
+            prefix="prefix",
+            activity=MockActivity(),
+            db=None,
+            poll_interval=1,
+        )
+
+    # Repeat, with different memory configuration
+    with pytest.raises(ValueError, match="sbatch"):
+        run_script_on_remote_slurm(
+            script_paths=[script_path],
+            slurm_config=PixiSLURMConfig(
+                mem_per_cpu="1G",
                 cpus=1,
                 partition="main",
                 time="10",
+                preamble=["whoami"],
             ).model_dump(),
             fractal_ssh=MockFractalSSH(connection=None),
             logger_name="my-logger",
