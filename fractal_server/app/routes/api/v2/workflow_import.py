@@ -23,6 +23,7 @@ from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
+from fractal_server.app.routes.aux._versions import _version_sort_key
 from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
 from fractal_server.app.schemas.v2 import WorkflowImportFromTemplate
@@ -49,6 +50,7 @@ logger = set_logger(__name__)
 
 class TaskAvailable(BaseModel):
     version: str
+    older: bool
     active: bool
 
 
@@ -152,7 +154,14 @@ async def _get_task_id_or_available_tasks(
         return (
             False,
             [
-                TaskAvailable(version=tg.version, active=tg.active)
+                TaskAvailable(
+                    version=tg.version,
+                    older=(
+                        _version_sort_key(tg.version)
+                        < _version_sort_key(task_import.version)
+                    ),
+                    active=tg.active,
+                )
                 for tg in matching_task_groups
             ],
         )
