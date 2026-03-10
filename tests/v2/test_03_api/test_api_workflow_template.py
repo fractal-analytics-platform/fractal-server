@@ -326,6 +326,12 @@ async def test_export_import_template(
             version="1.0.0",
             task_group_kwargs=dict(pkg_name="fake_tasks", version="1.0.0"),
         )
+        task2 = await task_factory(
+            user_id=user.id,
+            name="task0",
+            version="1.0.1",
+            task_group_kwargs=dict(pkg_name="fake_tasks", version="1.0.1"),
+        )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
@@ -406,10 +412,12 @@ async def test_export_import_template(
 
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
-            f"?template_id={template_id}"
+            f"?template_id={template_id}",
+            json={},
         )
         assert res.status_code == 201
         assert res.json()["name"] == "foo"
+        assert res.json()["task_list"][0]["task"]["id"] == task.id
 
         res = await client.get(f"api/v2/workflow_template/{template_id}/")
         assert res.status_code == 200
@@ -417,7 +425,8 @@ async def test_export_import_template(
 
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
-            f"?template_id={template_id}"
+            f"?template_id={template_id}",
+            json={},
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -427,6 +436,7 @@ async def test_export_import_template(
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
             f"?template_id={template_id}",
-            json={"name": "bar"},
+            json={"name": "bar", "override_versions": [task2.version]},
         )
         assert res.status_code == 201
+        assert res.json()["task_list"][0]["task"]["id"] == task2.id
