@@ -381,7 +381,7 @@ async def import_workflow_from_template(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=(
                     "Length of body argument 'override_versions' must be "
-                    f"{len(workflow_import.task_list)}, provided"
+                    f"{len(workflow_import.task_list)}, provided "
                     f"{len(workflow_import_from_template.override_versions)}."
                 ),
             )

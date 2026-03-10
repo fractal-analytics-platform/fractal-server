@@ -440,3 +440,13 @@ async def test_export_import_template(
         )
         assert res.status_code == 201
         assert res.json()["task_list"][0]["task"]["id"] == task2.id
+
+        res = await client.post(
+            f"api/v2/project/{project2.id}/workflow/import-from-template/"
+            f"?template_id={template_id}",
+            json={"name": "xxx", "override_versions": ["1", "2", "3"]},
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Length of body argument 'override_versions' must be 1, provided 3."
+        )
