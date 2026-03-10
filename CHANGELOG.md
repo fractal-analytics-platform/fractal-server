@@ -4,6 +4,7 @@
 
 * API:
     * Introduce version flexibility in workflow-import endpoint (\#3154).
+    * Handle `TypeError` inside images `aggregate_attributes` method (\#3223).
 * Database:
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
 * Application:
