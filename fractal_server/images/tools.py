@@ -3,9 +3,12 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from fractal_server.logger import set_logger
 from fractal_server.types import AttributeFilters
 
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
+
+logger = set_logger(__name__)
 
 
 def find_image_by_zarr_url(
@@ -122,6 +125,20 @@ def merge_type_filters(
     return merged_dict
 
 
+def _sort_with_fallback(value: list[Any]) -> list[Any]:
+    """
+    Returns the `value` list sorted using the `sorted` method.
+    If the list is non-homogeneous (i.e. "TypeError: '<' not supported between
+    instances of 'x' and 'y'") returns the original `value` list.
+    """
+    try:
+        sorted_value = sorted(value)
+    except TypeError:
+        logger.warning(f"Error sorting a non-homogeneous list: '{value}'.")
+        return value
+    return sorted_value
+
+
 def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
     """
     Given a list of images, this function returns a dictionary of all image
@@ -134,7 +151,7 @@ def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
     for k, v in attributes.items():
         attributes[k] = list(set(v))
     sorted_attributes = {
-        key: sorted(value) for key, value in attributes.items()
+        key: _sort_with_fallback(value) for key, value in attributes.items()
     }
     return sorted_attributes
 
