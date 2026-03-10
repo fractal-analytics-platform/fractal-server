@@ -300,10 +300,12 @@ async def test_import_flexibility(
                         {
                             "version": "1.0.0",
                             "active": True,
+                            "older": True,
                         },
                         {
                             "version": "0.1.0",
                             "active": True,
+                            "older": True,
                         },
                     ],
                 },
@@ -317,10 +319,12 @@ async def test_import_flexibility(
                         {
                             "version": "1.0.0",
                             "active": True,
+                            "older": False,
                         },
                         {
                             "version": "0.1.0",
                             "active": True,
+                            "older": False,
                         },
                     ],
                 },
