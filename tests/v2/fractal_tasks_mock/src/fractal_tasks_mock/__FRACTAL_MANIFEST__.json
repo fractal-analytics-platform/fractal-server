@@ -168,6 +168,83 @@
       "docs_info": "## create_cellvoyager_ome_zarr_multiplex\nDummy task description.\n## fill_cellvoyager_ome_zarr\nDummy task description.\n"
     },
     {
+      "name": "dummy_converter_compound_s3",
+      "type": "converter_compound",
+      "executable_non_parallel": "dummy_converter_compound_s3.py",
+      "executable_parallel": "dummy_converter_s3.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "S3 URL where the OME-Zarr files will be stored"
+          },
+          "image_dir": {
+            "title": "Image Dir",
+            "type": "string",
+            "description": "S3 URL where the raw images are located"
+          },
+          "num_images": {
+            "default": 2,
+            "title": "Num Images",
+            "type": "integer",
+            "description": "Number of images that this dummy task will produce."
+          }
+        },
+        "required": [
+          "zarr_dir",
+          "image_dir"
+        ],
+        "type": "object",
+        "title": "DummyConverterCompoundS3"
+      },
+      "args_schema_parallel": {
+        "$defs": {
+          "InitArgsCellVoyager": {
+            "description": "Dummy model description.",
+            "properties": {
+              "raw_zarr_url": {
+                "title": "Raw Zarr Url",
+                "type": "string",
+                "description": "dummy attribute description."
+              },
+              "acquisition": {
+                "title": "Acquisition",
+                "type": "integer",
+                "description": "dummy attribute description."
+              }
+            },
+            "required": [
+              "raw_zarr_url"
+            ],
+            "title": "InitArgsCellVoyager",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "S3 URL where the OME-Zarr files will be stored"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsCellVoyager",
+            "title": "Init Args",
+            "description": "Initialization arguments for the task"
+          }
+        },
+        "required": [
+          "zarr_url",
+          "init_args"
+        ],
+        "type": "object",
+        "title": "DummyConverterS3"
+      },
+      "docs_info": "## dummy_converter_compound_s3\nDummy task to check that a compound converter task can properly\nhandle S3 urls, and pass them to the subtasks.\n## dummy_converter_s3\nDummy task description.\n"
+    },
+    {
       "name": "MIP_compound",
       "input_types": {
         "3D": true
