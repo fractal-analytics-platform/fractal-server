@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -15,6 +14,7 @@ from fractal_server.types import S3PathStr
 from fractal_server.types import SafeNonEmptyStr
 from fractal_server.types import SafeRelativePathStr
 from fractal_server.types import ZarrDirStr
+from fractal_server.urls import url_is_relative_to
 
 
 class DatasetCreate(BaseModel):
@@ -105,7 +105,7 @@ class DatasetImport(BaseModel):
     @model_validator(mode="after")
     def validate_image_zarr_url(self):
         for image in self.images:
-            if not Path(image.zarr_url).is_relative_to(self.zarr_dir):
+            if not url_is_relative_to(image.zarr_url, self.zarr_dir):
                 raise ValueError(
                     f"{image.zarr_url=} is not relative to {self.zarr_dir=}."
                 )
