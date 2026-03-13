@@ -40,9 +40,10 @@ def test_call_command_wrapper(tmp_path):
         )
 
     # Command that actually fails with returncode!=0
+    # The error message depends on the OS. The following works on Mac and Linux
     with pytest.raises(
         TaskExecutionError,
-        match="unrecognized option",
+        match="(unrecognized|illegal) option",
     ):
         call_command_wrapper(
             cmd="sleep --fake-arg",

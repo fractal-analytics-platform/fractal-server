@@ -1,3 +1,4 @@
+import platform
 import shutil
 import subprocess
 from pathlib import Path
@@ -75,6 +76,10 @@ def test_compress_and_extract_without_filelist(tmp_path: Path):
     assert (extracted_path / "subfolder/file3.txt").exists()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="tar option used in this test is not supported on Mac (BSD tar)",
+)
 def test_compress_and_extract_with_filelist(tmp_path: Path):
     subfolder_path = Path(f"{tmp_path}/subfolder")
     create_test_files(subfolder_path)
