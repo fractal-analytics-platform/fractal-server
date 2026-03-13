@@ -1,12 +1,15 @@
 import json
 
-from devtools import debug  # noqa
+import pytest  # noqa
+from devtools import debug
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserGroup
+from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskImport
+from fractal_server.utils import get_timestamp
 
 PREFIX = "api/v2"
 
@@ -46,19 +49,6 @@ async def test_import_export(
             version=task1["version"],
             task_group_kwargs=dict(pkg_name=task1["pkg_name"]),
         )
-
-        # Import fail
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json={
-                "name": "Name",
-                "task_list": [
-                    {"task": {"name": "x", "pkg_name": "y", "version": "z"}}
-                ],
-            },
-        )
-        assert res.status_code == 422
-        assert "Could not find a task matching with" in res.json()["detail"]
 
         # Import workflow
         res = await client.post(
@@ -167,19 +157,6 @@ async def test_import_export(
         )
         assert res.json()["task_list"][0]["warning"] is not None
 
-        valid_payload_miss_version = wf_modify(
-            new_name="foo2",
-            task_import={
-                "pkg_name": "fractal-tasks-core",
-                "name": "cellpose_segmentation",
-            },
-        )
-        res = await client.post(
-            f"{PREFIX}/project/{prj.id}/workflow/import/",
-            json=valid_payload_miss_version,
-        )
-        assert res.status_code == 201
-
         # Add task no version latest group
         # Test the disambiguation based on the oldest UserGroup
         # add a new group and a new task associated with that user group
@@ -210,6 +187,7 @@ async def test_import_export(
             task_import={
                 "pkg_name": "fractal-tasks-core",
                 "name": "cellpose_segmentation",
+                "version": "0",
             },
         )
         res = await client.post(
@@ -224,16 +202,144 @@ async def test_import_export(
         )
 
 
-async def test_unit_get_task_by_taskimport():
+async def test_import_flexibility(
+    client, MockCurrentUser, project_factory, task_factory
+):
+    async with MockCurrentUser() as user:
+        # Collect the tasks
+        for version in ["1.0.0", "0.1.0", None]:
+            await task_factory(
+                user_id=user.id,
+                name="task_name",
+                version=version,
+                task_group_kwargs=dict(pkg_name="package_name"),
+            )
+
+        prj = await project_factory(user)
+        res = await client.post(
+            f"{PREFIX}/project/{prj.id}/workflow/import/",
+            json=dict(
+                name="workflow",
+                task_list=[
+                    # OK
+                    {
+                        "task": dict(
+                            name="task_name",
+                            pkg_name="package_name",
+                            version="1.0.0",
+                        )
+                    },
+                    # Wrong name
+                    {
+                        "task": dict(
+                            name="task name",
+                            pkg_name="package_name",
+                            version="1.0.0",
+                        )
+                    },
+                    # Wrong pkg_name
+                    {
+                        "task": dict(
+                            name="task_name",
+                            pkg_name="package name",
+                            version="1.0.0",
+                        )
+                    },
+                    # Wrong version
+                    {
+                        "task": dict(
+                            name="task_name",
+                            pkg_name="package_name",
+                            version="1.0.1",
+                        )
+                    },
+                    # No version (i.e. version==None)
+                    {
+                        "task": dict(
+                            name="task_name",
+                            pkg_name="package_name",
+                        )
+                    },
+                ],
+            ),
+        )
+        assert res.json() == {
+            "detail": "[HAS_ERROR_DATA]",
+            "data": [
+                # OK
+                {
+                    "outcome": "success",
+                    "pkg_name": "package_name",
+                    "version": "1.0.0",
+                    "task_name": "task_name",
+                    "task_id": 1,
+                },
+                # Wrong name
+                {
+                    "outcome": "fail",
+                    "pkg_name": "package_name",
+                    "version": "1.0.0",
+                    "task_name": "task name",
+                    "available_tasks": [],
+                },
+                # Wrong pkg_name
+                {
+                    "outcome": "fail",
+                    "pkg_name": "package name",
+                    "version": "1.0.0",
+                    "task_name": "task_name",
+                    "available_tasks": [],
+                },
+                # Wrong version
+                {
+                    "outcome": "fail",
+                    "pkg_name": "package_name",
+                    "version": "1.0.1",
+                    "task_name": "task_name",
+                    "available_tasks": [
+                        {
+                            "version": "1.0.0",
+                            "active": True,
+                        },
+                        {
+                            "version": "0.1.0",
+                            "active": True,
+                        },
+                    ],
+                },
+                # version==None
+                {
+                    "outcome": "fail",
+                    "pkg_name": "package_name",
+                    "version": None,
+                    "task_name": "task_name",
+                    "available_tasks": [
+                        {
+                            "version": "1.0.0",
+                            "active": True,
+                        },
+                        {
+                            "version": "0.1.0",
+                            "active": True,
+                        },
+                    ],
+                },
+            ],
+        }
+
+
+async def test_unit_get_task_id_or_available_tasks():
     from fractal_server.app.routes.api.v2.workflow_import import (
-        _get_task_by_taskimport,
+        _get_task_id_or_available_tasks,
     )
 
     task1 = TaskV2(id=1, name="task")
     task2 = TaskV2(id=2, name="task")
     task3 = TaskV2(id=3, name="task")
+    tasks = [task1, task2, task3]
 
     task_group1 = TaskGroupV2(
+        id=1,
         task_list=[task1],
         user_id=1,
         user_group_id=1,
@@ -241,6 +347,7 @@ async def test_unit_get_task_by_taskimport():
         version="1.0.0",
     )
     task_group2 = TaskGroupV2(
+        id=2,
         task_list=[task2],
         user_id=1,
         user_group_id=2,
@@ -248,52 +355,27 @@ async def test_unit_get_task_by_taskimport():
         version="2.0.0",
     )
     task_group3 = TaskGroupV2(
+        id=3,
         task_list=[task3],
         user_id=1,
         user_group_id=2,
         pkg_name="pkg",
-        version=None,
+        version="99.99.99",
     )
     task_groups = [task_group1, task_group2, task_group3]
 
     # Test with matching version
-    task_id = await _get_task_by_taskimport(
+    task_id = await _get_task_id_or_available_tasks(
         task_import=TaskImport(name="task", pkg_name="pkg", version="1.0.0"),
         user_id=1,
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
     )
-    assert task_id == task1.id
-
-    # Test with latest version
-    task_id = await _get_task_by_taskimport(
-        task_import=TaskImport(
-            name="task",
-            pkg_name="pkg",
-        ),
-        user_id=1,
-        task_groups_list=task_groups,
-        default_group_id=1,
-        db=None,
-    )
-    assert task_id == task2.id
-
-    # Test with latest version equal to None
-    task_id = await _get_task_by_taskimport(
-        task_import=TaskImport(
-            name="task",
-            pkg_name="pkg",
-        ),
-        user_id=1,
-        task_groups_list=[task_group3],
-        default_group_id=1,
-        db=None,
-    )
-    assert task_id == task3.id
+    assert task_id == (True, task1.id)
 
     # Test with non-matching version
-    task_id = await _get_task_by_taskimport(
+    res = await _get_task_id_or_available_tasks(
         task_import=TaskImport(
             name="task",
             pkg_name="pkg",
@@ -304,10 +386,18 @@ async def test_unit_get_task_by_taskimport():
         default_group_id=1,
         db=None,
     )
-    assert task_id is None
+    res == [
+        {
+            "task_id": task.id,
+            "taskgroup_id": task_group.id,
+            "version": task_group.version,
+            "active": True,
+        }
+        for task, task_group in zip(tasks, task_groups)
+    ]
 
     # Test with non-matching pkg_name
-    task_id = await _get_task_by_taskimport(
+    assert await _get_task_id_or_available_tasks(
         task_import=TaskImport(
             name="task",
             pkg_name="invalid",
@@ -316,11 +406,10 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
-    )
-    assert task_id is None
+    ) == (False, [])
 
     # Test with non-matching name
-    task_id = await _get_task_by_taskimport(
+    assert await _get_task_id_or_available_tasks(
         task_import=TaskImport(
             name="invalid",
             pkg_name="pkg",
@@ -329,8 +418,7 @@ async def test_unit_get_task_by_taskimport():
         task_groups_list=task_groups,
         default_group_id=1,
         db=None,
-    )
-    assert task_id is None
+    ) == (False, [])
 
 
 async def test_unit_disambiguate_task_groups(
@@ -635,6 +723,7 @@ async def test_import_multiple_task_groups_same_version(
     task_factory,
     project_factory,
     db,
+    monkeypatch,
 ):
     """
     Represent regression described in
@@ -706,3 +795,64 @@ async def test_import_multiple_task_groups_same_version(
             ),
         )
         assert res.json()["task_list"][0]["task"]["version"] == V2
+
+        import fractal_server.app.routes.api.v2.workflow_import as wf_import
+
+        async def fake_disambiguate_task_groups_1(*args, **kwargs):
+            return None
+
+        monkeypatch.setattr(
+            wf_import,
+            "_disambiguate_task_groups",
+            fake_disambiguate_task_groups_1,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/import/",
+            json=dict(
+                name="fake",
+                task_list=[
+                    dict(
+                        task=dict(
+                            pkg_name=PKG_NAME,
+                            version=V2,
+                            name=TASK_NAME,
+                        )
+                    )
+                ],
+            ),
+        )
+        debug(res.json())
+
+        async def fake_disambiguate_task_groups_2(*args, **kwargs):
+            return TaskGroupRead(
+                id=99999,
+                task_list=[],
+                user_id=99999,
+                origin="other",
+                pkg_name="foo",
+                active=False,
+                timestamp_created=get_timestamp(),
+                timestamp_last_used=get_timestamp(),
+            )
+
+        monkeypatch.setattr(
+            wf_import,
+            "_disambiguate_task_groups",
+            fake_disambiguate_task_groups_2,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/import/",
+            json=dict(
+                name="fake2",
+                task_list=[
+                    dict(
+                        task=dict(
+                            pkg_name=PKG_NAME,
+                            version=V2,
+                            name=TASK_NAME,
+                        )
+                    )
+                ],
+            ),
+        )
+        debug(res.json())

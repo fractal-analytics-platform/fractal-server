@@ -306,7 +306,7 @@ async def test_get_task_group_activity_list(
             user_id=user.id,
             pkg_name="foo",
             version="2",
-            status=TaskGroupActivityStatus.FAILED,
+            status=TaskGroupActivityStatus.ONGOING,
             action=TaskGroupActivityAction.COLLECT,
             taskgroupv2_id=task.taskgroupv2_id,
         )
@@ -314,8 +314,8 @@ async def test_get_task_group_activity_list(
             user_id=user.id,
             pkg_name="foo",
             version="1",
-            status=TaskGroupActivityStatus.OK,
-            action=TaskGroupActivityAction.COLLECT,
+            status=TaskGroupActivityStatus.FAILED,
+            action=TaskGroupActivityAction.DEACTIVATE,
             taskgroupv2_id=task.taskgroupv2_id,
         )
         for activity in [activity1, activity2, activity3, activity4]:
@@ -349,20 +349,20 @@ async def test_get_task_group_activity_list(
         assert len(res.json()) == 0
         # status
         res = await client.get(f"{PREFIX}/activity/?status=OK")
-        assert len(res.json()) == 3
+        assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/activity/?status=failed")
         assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/activity/?status=ongoing")
-        assert len(res.json()) == 0
+        assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/activity/?status=xxx")
         assert res.status_code == 422
         # action
         res = await client.get(f"{PREFIX}/activity/?action=collect")
-        assert len(res.json()) == 3
+        assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/activity/?action=reactivate")
         assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/activity/?action=deactivate")
-        assert len(res.json()) == 0
+        assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/activity/?action=xxx")
         assert res.status_code == 422
         # timestamp_started_min
@@ -378,7 +378,7 @@ async def test_get_task_group_activity_list(
         assert len(res.json()) == 2
         # combination and iconstains
         res = await client.get(f"{PREFIX}/activity/?status=OK&pkg_name=O")
-        assert len(res.json()) == 2
+        assert len(res.json()) == 1
 
     async with MockCurrentUser(profile_id=profile.id):
         res = await client.get(f"{PREFIX}/activity/")

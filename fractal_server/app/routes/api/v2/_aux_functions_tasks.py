@@ -3,10 +3,12 @@ Auxiliary functions to get task and task-group object from the database or
 perform simple checks
 """
 
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -254,25 +256,14 @@ async def _get_collection_task_group_activity_status_message(
         .where(TaskGroupActivityV2.taskgroupv2_id == task_group_id)
         .where(TaskGroupActivityV2.action == TaskGroupActivityAction.COLLECT)
     )
-    task_group_activity_list = res.scalars().all()
-    if len(task_group_activity_list) > 1:
-        msg_short = (
-            "Expected only one TaskGroupActivityV2 associated to TaskGroup "
-            f"{task_group_id}, found {len(task_group_activity_list)} "
-            f"(IDs: {[tga.id for tga in task_group_activity_list]})."
-        )
-        logger.error(f"UnreachableBranchError: {msg_short}")
-        msg = (
-            f"\nWarning: {msg_short}\n"
-            "Warning: this should have not happened, please contact an admin."
-        )
-    elif len(task_group_activity_list) == 1:
+    task_group_collect_activity = res.scalars().one_or_none()
+    if task_group_collect_activity:
         msg = (
             "\nNote: "
             "There exists another task-group collection "
-            f"(activity ID={task_group_activity_list[0].id}) for "
+            f"(activity ID={task_group_collect_activity.id}) for "
             f"this task group (ID={task_group_id}), with status "
-            f"'{task_group_activity_list[0].status}'."
+            f"'{task_group_collect_activity.status}'."
         )
     else:
         msg = ""
@@ -295,25 +286,11 @@ async def _verify_non_duplication_user_constraint(
         .where(TaskGroupV2.resource_id == user_resource_id)
     )
     res = await db.execute(stm)
-    duplicate = res.scalars().all()
+    duplicate = res.scalars().one_or_none()
     if duplicate:
         user = await db.get(UserOAuth, user_id)
-        if len(duplicate) > 1:
-            error_msg = (
-                f"User '{user.email}' already owns {len(duplicate)} task "
-                f"groups with name='{pkg_name}' and {version=} "
-                f"(IDs: {[group.id for group in duplicate]})."
-            )
-            logger.error(f"UnreachableBranchError: {error_msg}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Invalid state: {error_msg}\n"
-                    "This should have not happened: please contact an admin."
-                ),
-            )
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
+            duplicate.id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -340,25 +317,11 @@ async def _verify_non_duplication_group_constraint(
         .where(TaskGroupV2.version == version)
     )
     res = await db.execute(stm)
-    duplicate = res.scalars().all()
+    duplicate = res.scalars().one_or_none()
     if duplicate:
         user_group = await db.get(UserGroup, user_group_id)
-        if len(duplicate) > 1:
-            error_msg = (
-                f"UserGroup '{user_group.name}' already owns "
-                f"{len(duplicate)} task groups with name='{pkg_name}' and "
-                f"{version=} (IDs: {[group.id for group in duplicate]}).\n"
-            )
-            logger.error(error_msg)
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Invalid state:\n{error_msg}"
-                    "This should have not happened: please contact an admin."
-                ),
-            )
         state_msg = await _get_collection_task_group_activity_status_message(
-            duplicate[0].id, db
+            duplicate.id, db
         )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -369,31 +332,23 @@ async def _verify_non_duplication_group_constraint(
         )
 
 
-async def _verify_non_duplication_group_path(
-    *,
-    path: str | None,
-    resource_id: int,
-    db: AsyncSession,
-) -> None:
+@asynccontextmanager
+async def integrity_error_to_422(db):
     """
-    Verify uniqueness of non-`None` `TaskGroupV2.path`
+    If an IntegrityError occurs inside the context, rolls back the current
+    transaction and raises an HTTPException with status code 422.
     """
-    if path is None:
-        return
-    stm = (
-        select(TaskGroupV2.id)
-        .where(TaskGroupV2.path == path)
-        .where(TaskGroupV2.resource_id == resource_id)
-    )
-    res = await db.execute(stm)
-    duplicate_ids = res.scalars().all()
-    if duplicate_ids:
+    try:
+        yield
+    except IntegrityError as e:
+        logger.warning(
+            "Unexpected IntegrityError caught in `integrity_error_to_422`. "
+            f"Original error: {str(e)}"
+        )
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Other TaskGroups already have {path=}: "
-                f"{sorted(duplicate_ids)}."
-            ),
+            detail=str(e.orig or e),
         )
 
 

@@ -227,7 +227,7 @@ async def test_get_task_group_activity(
             pkg_name="foo",
             version="1",
             status=TaskGroupActivityStatus.OK,
-            action=TaskGroupActivityAction.COLLECT,
+            action=TaskGroupActivityAction.DEACTIVATE,
             taskgroupv2_id=task.taskgroupv2_id,
         )
 
@@ -291,7 +291,7 @@ async def test_get_task_group_activity(
         assert res.status_code == 422
         # action
         res = await client.get(f"{PREFIX}/task-group/activity/?action=collect")
-        assert len(res.json()["items"]) == 3
+        assert len(res.json()["items"]) == 2
         res = await client.get(
             f"{PREFIX}/task-group/activity/?action=reactivate"
         )
@@ -299,7 +299,7 @@ async def test_get_task_group_activity(
         res = await client.get(
             f"{PREFIX}/task-group/activity/?action=deactivate"
         )
-        assert len(res.json()["items"]) == 0
+        assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/task-group/activity/?action=xxx")
         assert res.status_code == 422
         # timestamp_started_min
