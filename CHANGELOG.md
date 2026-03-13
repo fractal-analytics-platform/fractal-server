@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.0 (unreleased)
+
+* Runner
+    * Added support for S3
+* Testing:
+    * Made test pass on Mac arm (not container and not oauth)
+
 # 2.19.4
 
 * SSH:
@@ -75,8 +82,6 @@
     * Implement some more `zizmor` recommendations (\#3121, \#3122, \#3124, \#3125).
     * Remove `GitHubSecurityLab/actions-permissions/monitor` to avoid TLS issues (\#3124).
     * Bump `uv` version in GitHub Actions (\#3124).
-* Runner
-    * Added support for S3
 
 # 2.18.5
 
