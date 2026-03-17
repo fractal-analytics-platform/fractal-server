@@ -36,6 +36,7 @@ from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_task_group_disambiguation import add_user_email_to_task_group
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
+from ._aux_task_group_disambiguation import serialize_task_group_with_email
 
 router = APIRouter()
 
@@ -179,12 +180,9 @@ async def get_task_group_list(
         (
             pkg_name,
             [
-                dict(
+                serialize_task_group_with_email(
+                    task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
-                    task_list=[
-                        task.model_dump() for task in task_group.task_list
-                    ],
-                    **task_group.model_dump(),
                 )
                 for task_group in task_group_list
             ],

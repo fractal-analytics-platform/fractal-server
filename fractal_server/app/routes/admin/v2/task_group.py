@@ -13,6 +13,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
+    serialize_task_group_with_email,
+)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -125,10 +128,8 @@ async def query_task_group(
             detail=f"TaskGroup {task_group_id} not found",
         )
     task_group, user_email = task_group_and_email
-    return dict(
-        user_email=user_email,
-        task_list=[task.model_dump() for task in task_group.task_list],
-        **task_group.model_dump(),
+    return serialize_task_group_with_email(
+        task_group=task_group, user_email=user_email
     )
 
 
@@ -219,10 +220,8 @@ async def query_task_group_list(
     stm = stm.order_by(TaskGroupV2.id)
     res = await db.execute(stm)
     task_groups_list = [
-        dict(
-            user_email=user_email,
-            task_list=[task.model_dump() for task in task_group.task_list],
-            **task_group.model_dump(),
+        serialize_task_group_with_email(
+            task_group=task_group, user_email=user_email
         )
         for task_group, user_email in res.all()
     ]
@@ -265,8 +264,6 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return dict(
-        user_email=user_email,
-        task_list=[task.model_dump() for task in task_group.task_list],
-        **task_group.model_dump(),
+    return serialize_task_group_with_email(
+        task_group=task_group, user_email=user_email
     )
