@@ -209,10 +209,10 @@ async def get_task_group(
         user_id=user.id,
         db=db,
     )
-    task_grop_with_email = await add_user_email_to_task_group(
+    task_group_with_email = await add_user_email_to_task_group(
         task_group=task_group, db=db
     )
-    return task_grop_with_email
+    return task_group_with_email
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupRead)
@@ -250,7 +250,7 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    task_grop_with_email = await add_user_email_to_task_group(
+    task_group_with_email = await add_user_email_to_task_group(
         task_group=task_group, db=db
     )
-    return task_grop_with_email
+    return task_group_with_email
