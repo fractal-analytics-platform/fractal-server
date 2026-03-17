@@ -46,7 +46,6 @@ class WorkflowTemplateImport(BaseModel):
     version: PositiveInt
     description: NonEmptyStr | None = None
     data: WorkflowImport
-    fractal_server_version: str
 
 
 class WorkflowTemplateExport(BaseModel):
@@ -54,7 +53,6 @@ class WorkflowTemplateExport(BaseModel):
     version: int
     description: str | None = None
     data: WorkflowExport
-    fractal_server_version: str
 
 
 class WorkflowTemplateUpdate(BaseModel):

@@ -10,7 +10,7 @@ from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
-from fractal_server import __VERSION__ as fractal_server_version
+from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
@@ -274,7 +274,7 @@ async def post_workflow_template(
         user_id=user.id,
         user_group_id=user_group_id,
         data=workflow_export.model_dump(),
-        fractal_server_version=fractal_server_version,
+        fractal_server_version=__VERSION__,
         **template_create.model_dump(),
     )
     db.add(template)
@@ -365,6 +365,7 @@ async def import_workflow_template(
     template = WorkflowTemplate(
         user_id=user.id,
         user_group_id=user_group_id,
+        fractal_server_version=__VERSION__,
         **template_import.model_dump(),
     )
 
