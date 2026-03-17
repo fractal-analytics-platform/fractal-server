@@ -575,6 +575,9 @@ async def _get_user_resource_id(user_id: int, db: AsyncSession) -> int | None:
 async def _create_workflow_export(
     workflow: WorkflowV2, db: AsyncSession
 ) -> WorkflowExport:
+    """
+    Return the export representation of a workflow.
+    """
     wf_task_list = []
     for wftask in workflow.task_list:
         task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
