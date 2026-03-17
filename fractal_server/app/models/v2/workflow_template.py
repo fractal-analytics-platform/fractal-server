@@ -12,6 +12,22 @@ from fractal_server.utils import get_timestamp
 
 
 class WorkflowTemplate(SQLModel, table=True):
+    """
+    Model for the `workflowtemplate` database table.
+
+    Attributes:
+        id:
+        user_id:
+        name:
+        version:
+        fractal_server_version:
+        timestamp_created:
+        timestamp_last_used:
+        user_group_id:
+        description:
+        data:
+    """
+
     id: int | None = Field(default=None, primary_key=True)
 
     user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
@@ -23,9 +39,9 @@ class WorkflowTemplate(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    timestamp_last_used: datetime | None = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True)),
+    timestamp_last_used: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
     user_group_id: int | None = Field(
