@@ -30,7 +30,7 @@ class WorkflowRead(BaseModel):
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: AwareDatetime
-    description: str | None
+    description: str | None = None
     template_id: int | None = None
 
     @field_serializer("timestamp_created")
@@ -79,5 +79,5 @@ class WorkflowExport(BaseModel):
     """
 
     name: str
-    description: str | None
+    description: str | None = None
     task_list: list[WorkflowTaskExport]
