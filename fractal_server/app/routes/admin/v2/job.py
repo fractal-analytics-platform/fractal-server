@@ -19,7 +19,7 @@ from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
-from fractal_server.app.routes.aux._job import _write_shutdown_file
+from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
@@ -270,7 +270,7 @@ async def stop_job(
             detail=f"Job {job_id} not found",
         )
 
-    _write_shutdown_file(job=job)
+    _write_shutdown_file_or_422(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
 

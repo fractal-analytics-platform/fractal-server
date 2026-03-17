@@ -495,6 +495,32 @@ async def test_stop_job_slurm(
         debug(shutdown_file)
         assert shutdown_file.exists()
 
+        # Test error with `_write_shutdown_file`
+        not_existing_working_dir = tmp_path / "foo"
+        dataset2 = await dataset_factory(project_id=project.id)
+        job2 = JobV2(
+            working_dir=not_existing_working_dir.as_posix(),
+            project_id=project.id,
+            dataset_id=dataset2.id,
+            workflow_id=workflow.id,
+            status=JobStatusType.SUBMITTED,
+            user_email="fake@example.org",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=0,
+        )
+        db.add(job2)
+        await db.commit()
+        await db.refresh(job2)
+
+        res = await client.get(f"{PREFIX}/job/{job2.id}/stop/")
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"Could not shutdown Job {job2.id}, please try again."
+        )
+
 
 async def test_download_job_logs(
     client,
