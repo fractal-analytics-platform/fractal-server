@@ -62,7 +62,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
     await db.refresh(template5)
 
     async with MockCurrentUser(user_id=user1_id):
-        res = await client.get("api/v2/workflow_template/")
+        res = await client.get("api/v2/workflow-template/")
         assert res.status_code == 200
         assert res.json()["current_page"] == 1
         assert res.json()["page_size"] == 3
@@ -96,7 +96,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
 
         # FIXME
         # Test `sort_by=timestamp`
-        # res = await client.get("api/v2/workflow_template/?sort_by=timestamp")
+        # res = await client.get("api/v2/workflow-template/?sort_by=timestamp")
         # assert res.status_code == 200
         # assert res.json()["current_page"] == 1
         # assert res.json()["page_size"] == 4
@@ -109,7 +109,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         # assert items[3]["id"] == template1.id
 
         # Test pagination
-        res = await client.get("api/v2/workflow_template/?page_size=2&page=2")
+        res = await client.get("api/v2/workflow-template/?page_size=2&page=2")
         assert res.status_code == 200
         assert res.json()["current_page"] == 2
         assert res.json()["page_size"] == 2
@@ -119,14 +119,14 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert items[0]["templates"][0]["template_id"] == template4.id
         # Filter by `template_id`
         res = await client.get(
-            f"api/v2/workflow_template/?template_id={template3.id}"
+            f"api/v2/workflow-template/?template_id={template3.id}"
         )
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 1 and len(items[0]["templates"]) == 1
         assert items[0]["templates"][0]["template_id"] == template3.id
         # Filter by `is_owner`
-        res = await client.get("api/v2/workflow_template/?is_owner=true")
+        res = await client.get("api/v2/workflow-template/?is_owner=true")
         assert res.status_code == 200
         assert res.json()["email_list"] == [user2_email, user1_email]
         items = res.json()["items"]
@@ -138,14 +138,14 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert items[1]["templates"][0]["template_id"] == template1.id
         # Filter by `user_email`
         res = await client.get(
-            f"api/v2/workflow_template/?user_email={user2_email}"
+            f"api/v2/workflow-template/?user_email={user2_email}"
         )
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == len(items[0]["templates"]) == 1
         assert items[0]["templates"][0]["template_id"] == template4.id
         # Filter by `name`
-        res = await client.get("api/v2/workflow_template/?name=template")
+        res = await client.get("api/v2/workflow-template/?name=template")
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 2
@@ -154,7 +154,7 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert len(items[1]["templates"]) == 1
         assert items[1]["templates"][0]["template_id"] == template4.id
         # Filter by `version`
-        res = await client.get("api/v2/workflow_template/?version=2")
+        res = await client.get("api/v2/workflow-template/?version=2")
         assert res.status_code == 200
         items = res.json()["items"]
         assert len(items) == 2
@@ -163,14 +163,14 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
         assert len(items[1]["templates"]) == 1
         assert items[1]["templates"][0]["template_id"] == template1.id
         # Test GET single template
-        res = await client.get(f"api/v2/workflow_template/{template2.id}/")
+        res = await client.get(f"api/v2/workflow-template/{template2.id}/")
         assert res.status_code == 200
         assert res.json()["user_email"] == user1_email
-        res = await client.get(f"api/v2/workflow_template/{template4.id}/")
+        res = await client.get(f"api/v2/workflow-template/{template4.id}/")
         assert res.status_code == 200
-        res = await client.get(f"api/v2/workflow_template/{template5.id}/")
+        res = await client.get(f"api/v2/workflow-template/{template5.id}/")
         assert res.status_code == 403
-        res = await client.get("api/v2/workflow_template/9999/")
+        res = await client.get("api/v2/workflow-template/9999/")
         assert res.status_code == 404
 
 
@@ -206,7 +206,7 @@ async def test_post_patch_delete_template(
         task = await task_factory(user_id=user1.id, name="my_task")
         # Test POST workflow without tasks
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            f"api/v2/workflow-template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
         )
         assert res.status_code == 422
@@ -218,7 +218,7 @@ async def test_post_patch_delete_template(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            f"api/v2/workflow-template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
         )
         assert res.status_code == 201
@@ -231,7 +231,7 @@ async def test_post_patch_delete_template(
         assert res.json()["data"]["task_list"][0]["task"]["name"] == "my_task"
         # Test POST duplicate
         res = await client.post(
-            f"api/v2/workflow_template/?workflow_id={workflow.id}",
+            f"api/v2/workflow-template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
         )
         assert res.status_code == 422
@@ -241,19 +241,19 @@ async def test_post_patch_delete_template(
         )
         # Test POST with `user_group_id`
         res = await client.post(
-            "api/v2/workflow_template/"
+            "api/v2/workflow-template/"
             f"?workflow_id={workflow.id}&user_group_id=9999",
             json=dict(name="template", version=2),
         )
         assert res.status_code == 404
         res = await client.post(
-            "api/v2/workflow_template/"
+            "api/v2/workflow-template/"
             f"?workflow_id={workflow.id}&user_group_id={group0_id}",
             json=dict(name="template", version=2),
         )
         assert res.status_code == 403
         res = await client.post(
-            "api/v2/workflow_template/"
+            "api/v2/workflow-template/"
             f"?workflow_id={workflow.id}&user_group_id={group1.id}",
             json=dict(name="template", version=2),
         )
@@ -262,43 +262,43 @@ async def test_post_patch_delete_template(
         assert res.json()["description"] is None
         template1_id = res.json()["id"]
         # Test PATCH
-        res = await client.patch("api/v2/workflow_template/9999/", json=dict())
+        res = await client.patch("api/v2/workflow-template/9999/", json=dict())
         assert res.status_code == 404
         assert "not found" in res.json()["detail"]
         res = await client.patch(
-            f"api/v2/workflow_template/{template0_id}/",
+            f"api/v2/workflow-template/{template0_id}/",
             json=dict(),
         )
         assert res.status_code == 403
         assert "not the owner" in res.json()["detail"]
         res = await client.patch(
-            f"api/v2/workflow_template/{template1_id}/",
+            f"api/v2/workflow-template/{template1_id}/",
             json=dict(user_group_id=group0_id),
         )
         assert res.status_code == 403
         assert "not belong to UserGroup" in res.json()["detail"]
         res = await client.patch(
-            f"api/v2/workflow_template/{template1_id}/",
+            f"api/v2/workflow-template/{template1_id}/",
             json=dict(user_group_id=group2.id, description="description"),
         )
         assert res.status_code == 200
         assert res.json()["user_group_id"] == group2.id
         assert res.json()["description"] == "description"
         res = await client.patch(
-            f"api/v2/workflow_template/{template1_id}/",
+            f"api/v2/workflow-template/{template1_id}/",
             json=dict(user_group_id=None),
         )
         assert res.status_code == 200
         assert res.json()["user_group_id"] is None
         assert res.json()["description"] == "description"
         # Test DELETE
-        res = await client.delete("api/v2/workflow_template/9999/")
+        res = await client.delete("api/v2/workflow-template/9999/")
         assert res.status_code == 404
         assert "not found" in res.json()["detail"]
-        res = await client.delete(f"api/v2/workflow_template/{template0_id}/")
+        res = await client.delete(f"api/v2/workflow-template/{template0_id}/")
         assert res.status_code == 403
         assert "not the owner" in res.json()["detail"]
-        res = await client.delete(f"api/v2/workflow_template/{template1_id}/")
+        res = await client.delete(f"api/v2/workflow-template/{template1_id}/")
         assert res.status_code == 204
         template1 = await db.get(WorkflowTemplate, template1_id)
         assert template1 is None
@@ -336,7 +336,7 @@ async def test_export_import_template(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         res = await client.post(
-            "api/v2/workflow_template/"
+            "api/v2/workflow-template/"
             f"?workflow_id={workflow.id}&user_group_id={group.id}",
             json=dict(name="template", version=1),
         )
@@ -345,7 +345,7 @@ async def test_export_import_template(
 
         # Export
         res = await client.get(
-            f"api/v2/workflow_template/{template_id}/export/"
+            f"api/v2/workflow-template/{template_id}/export/"
         )
         assert res.status_code == 200
         template_file = res.json()
@@ -378,7 +378,7 @@ async def test_export_import_template(
 
         # Import
         res = await client.post(
-            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            f"api/v2/workflow-template/import/?user_group_id={group.id}",
             json=template_file,
         )
         assert res.status_code == 422
@@ -388,14 +388,14 @@ async def test_export_import_template(
         )
         template_file["version"] = 2
         res = await client.post(
-            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            f"api/v2/workflow-template/import/?user_group_id={group.id}",
             json=template_file,
         )
         assert res.status_code == 201
         template_file["version"] = 3
         template_file["data"]["task_list"] = []
         res = await client.post(
-            f"api/v2/workflow_template/import/?user_group_id={group.id}",
+            f"api/v2/workflow-template/import/?user_group_id={group.id}",
             json=template_file,
         )
         assert res.status_code == 422
@@ -406,7 +406,7 @@ async def test_export_import_template(
     async with MockCurrentUser(user_id=user0_id) as user0:
         project2 = await project_factory(user0)
 
-        res = await client.get(f"api/v2/workflow_template/{template_id}/")
+        res = await client.get(f"api/v2/workflow-template/{template_id}/")
         assert res.status_code == 200
         assert res.json()["timestamp_last_used"] is None
 
@@ -419,7 +419,7 @@ async def test_export_import_template(
         assert res.json()["name"] == "foo"
         assert res.json()["task_list"][0]["task"]["id"] == task.id
 
-        res = await client.get(f"api/v2/workflow_template/{template_id}/")
+        res = await client.get(f"api/v2/workflow-template/{template_id}/")
         assert res.status_code == 200
         assert res.json()["timestamp_last_used"] is not None
 

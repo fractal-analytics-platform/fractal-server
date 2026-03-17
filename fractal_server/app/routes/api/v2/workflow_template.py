@@ -55,7 +55,7 @@ class TemplatePage(PaginationResponse[WorkflowTemplateGroup]):
     email_list: list[EmailStr]
 
 
-@router.get("/workflow_template/", response_model=TemplatePage)
+@router.get("/workflow-template/", response_model=TemplatePage)
 async def get_workflow_template_list(
     template_id: int | None = None,
     is_owner: bool = False,
@@ -209,7 +209,7 @@ async def get_workflow_template_list(
 
 
 @router.get(
-    "/workflow_template/{template_id}/",
+    "/workflow-template/{template_id}/",
     response_model=WorkflowTemplateRead,
 )
 async def get_workflow_template(
@@ -231,7 +231,7 @@ async def get_workflow_template(
 
 
 @router.post(
-    "/workflow_template/",
+    "/workflow-template/",
     status_code=status.HTTP_201_CREATED,
     response_model=WorkflowTemplateRead,
 )
@@ -287,7 +287,7 @@ async def post_workflow_template(
 
 
 @router.patch(
-    "/workflow_template/{template_id}/",
+    "/workflow-template/{template_id}/",
     response_model=WorkflowTemplateRead,
 )
 async def patch_workflow_template(
@@ -317,7 +317,7 @@ async def patch_workflow_template(
 
 
 @router.delete(
-    "/workflow_template/{template_id}/",
+    "/workflow-template/{template_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_workflow_template(
@@ -334,7 +334,7 @@ async def delete_workflow_template(
 
 
 @router.post(
-    "/workflow_template/import/",
+    "/workflow-template/import/",
     status_code=status.HTTP_201_CREATED,
     response_model=WorkflowTemplateRead,
 )
@@ -379,7 +379,7 @@ async def import_workflow_template(
 
 
 @router.get(
-    "/workflow_template/{template_id}/export/",
+    "/workflow-template/{template_id}/export/",
     response_model=WorkflowTemplateExport,
 )
 async def export_workflow_template(
