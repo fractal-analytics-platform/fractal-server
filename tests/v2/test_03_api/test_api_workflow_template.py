@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fractal_server import __VERSION__ as fractal_server_version
 from fractal_server.app.models.v2.workflow_template import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -408,7 +410,17 @@ async def test_export_import_template(
 
         res = await client.get(f"api/v2/workflow-template/{template_id}/")
         assert res.status_code == 200
-        assert res.json()["timestamp_last_used"] is None
+        timestamp_created_0 = datetime.fromisoformat(
+            res.json()["timestamp_created"]
+        )
+        timestamp_last_used_0 = datetime.fromisoformat(
+            res.json()["timestamp_last_used"]
+        )
+        assert timestamp_last_used_0 > timestamp_created_0
+        time_span_0 = timestamp_last_used_0 - timestamp_created_0
+        assert time_span_0.days == 0
+        assert time_span_0.seconds == 0
+        assert time_span_0.microseconds > 0
 
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
@@ -421,7 +433,11 @@ async def test_export_import_template(
 
         res = await client.get(f"api/v2/workflow-template/{template_id}/")
         assert res.status_code == 200
-        assert res.json()["timestamp_last_used"] is not None
+
+        assert (
+            datetime.fromisoformat(res.json()["timestamp_last_used"])
+            > timestamp_last_used_0
+        )
 
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"

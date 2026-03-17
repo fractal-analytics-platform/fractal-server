@@ -35,7 +35,7 @@ def upgrade() -> None:
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column(
-            "timestamp_last_used", sa.DateTime(timezone=True), nullable=True
+            "timestamp_last_used", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
         sa.Column(
