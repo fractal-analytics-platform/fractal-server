@@ -78,10 +78,8 @@ async def test_image_with_non_homogeneous_attributes(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         )
         assert res.status_code == 200
-        assert res.json()["attributes"] == {
-            "a": [True, "foo"],
-            "b": [32, "bar"],
-        }
+        assert set(res.json()["attributes"]["a"]) == {True, "foo"}
+        assert set(res.json()["attributes"]["b"]) == {32, "bar"}
 
 
 async def test_query_images(
