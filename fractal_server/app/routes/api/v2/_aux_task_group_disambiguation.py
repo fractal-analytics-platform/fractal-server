@@ -172,6 +172,10 @@ async def add_user_email_to_task_group(
     task_group: TaskGroupV2,
     db: AsyncSession,
 ) -> dict:
+    """
+    Enrich a TaskGroupV2 instance with the associated user's email and
+    return it as a serialized dictionary.
+    """
     res = await db.execute(
         select(UserOAuth.email)
         .join(TaskGroupV2, TaskGroupV2.user_id == UserOAuth.id)
