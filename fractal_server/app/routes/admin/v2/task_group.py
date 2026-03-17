@@ -29,11 +29,8 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.app.schemas.v2 import TaskGroupReadSuperuser
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
-from fractal_server.logger import set_logger
 
 router = APIRouter()
-
-logger = set_logger(__name__)
 
 
 @router.get(
