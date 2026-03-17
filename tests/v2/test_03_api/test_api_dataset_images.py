@@ -45,6 +45,45 @@ def assert_expected_attributes_and_flags(res, tot_images: int):
     )
 
 
+async def test_image_with_non_homogeneous_attributes(
+    MockCurrentUser,
+    client,
+    project_factory,
+    dataset_factory,
+):
+    images = [
+        SingleImage(
+            zarr_url=f"{ZARR_DIR}/A",
+            attributes={
+                "a": True,
+                "b": 32,
+            },
+            types={},
+        ).model_dump(),
+        SingleImage(
+            zarr_url=f"{ZARR_DIR}/B",
+            attributes={
+                "a": "foo",
+                "b": "bar",
+            },
+            types={},
+        ).model_dump(),
+    ]
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(
+            project_id=project.id, zarr_dir=ZARR_DIR, images=images
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
+        )
+        assert res.status_code == 200
+        assert res.json()["attributes"] == {
+            "a": [True, "foo"],
+            "b": [32, "bar"],
+        }
+
+
 async def test_query_images(
     MockCurrentUser,
     client,
