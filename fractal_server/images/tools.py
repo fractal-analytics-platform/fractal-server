@@ -132,11 +132,12 @@ def _sort_with_fallback(value: list[Any]) -> list[Any]:
     instances of 'x' and 'y'") returns the original `value` list.
     """
     try:
-        sorted_value = sorted(value)
-    except TypeError:
-        logger.warning(f"Error sorting a non-homogeneous list: '{value}'.")
+        return sorted(value)
+    except TypeError as e:
+        logger.warning(
+            f"Error sorting a non-homogeneous list. Original error: {str(e)}"
+        )
         return value
-    return sorted_value
 
 
 def aggregate_attributes(images: list[dict[str, Any]]) -> dict[str, list[Any]]:
