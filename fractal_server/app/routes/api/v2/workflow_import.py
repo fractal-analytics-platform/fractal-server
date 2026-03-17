@@ -48,9 +48,14 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-class TaskAvailable(BaseModel):
+class AvailableTask(BaseModel):
+    """
+    Represents an alternative for a workflow task that one has attempted to
+    import but which is not available.
+    """
+
     version: str
-    older: bool
+    older_than_target: bool
     active: bool
 
 
@@ -96,7 +101,7 @@ async def _get_task_id_or_available_tasks(
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
-) -> tuple[bool, int | list[TaskAvailable]]:
+) -> tuple[bool, int | list[AvailableTask]]:
     """
     Find a task id based on `task_import`.
     If the task is not found, return the list of available versions.
@@ -114,7 +119,7 @@ async def _get_task_id_or_available_tasks(
         - `success` is `True` if a matching task was found, `False` otherwise.
         - `result` is:
             - the `id` of the matching task when `success` is `True`,
-            - a list of `TaskAvailable` instances when `success` is `False`.
+            - a list of `AvailableTask` instances when `success` is `False`.
     """
 
     logger.debug(f"[_get_task_id_or_available_tasks] START, {task_import=}")
@@ -154,9 +159,9 @@ async def _get_task_id_or_available_tasks(
         return (
             False,
             [
-                TaskAvailable(
+                AvailableTask(
                     version=tg.version,
-                    older=(
+                    older_than_target=(
                         _version_sort_key(tg.version)
                         < _version_sort_key(task_import.version)
                     ),
