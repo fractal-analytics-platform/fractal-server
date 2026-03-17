@@ -826,8 +826,8 @@ async def test_import_multiple_task_groups_same_version(
         async def fake_disambiguate_task_groups_2(*args, **kwargs):
             return TaskGroupRead(
                 id=99999,
+                user_email="fake@example.org",
                 task_list=[],
-                user_id=99999,
                 origin="other",
                 pkg_name="foo",
                 active=False,

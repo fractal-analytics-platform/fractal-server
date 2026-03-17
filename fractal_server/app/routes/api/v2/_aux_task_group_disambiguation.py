@@ -1,9 +1,11 @@
 import itertools
+from typing import Any
 
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
 from fractal_server.exceptions import UnreachableBranchError
@@ -164,3 +166,36 @@ async def remove_duplicate_task_groups(
         )
     ]
     return new_task_groups
+
+
+def serialize_task_group_with_email(
+    *,
+    task_group: TaskGroupV2,
+    user_email: str,
+) -> dict[str, Any]:
+    return dict(
+        user_email=user_email,
+        task_list=[task.model_dump() for task in task_group.task_list],
+        **task_group.model_dump(),
+    )
+
+
+async def add_user_email_to_task_group(
+    *,
+    task_group: TaskGroupV2,
+    db: AsyncSession,
+) -> dict[str, Any]:
+    """
+    Enrich a TaskGroupV2 instance with the associated user's email and
+    return it as a serialized dictionary.
+    """
+    res = await db.execute(
+        select(UserOAuth.email)
+        .join(TaskGroupV2, TaskGroupV2.user_id == UserOAuth.id)
+        .where(TaskGroupV2.id == task_group.id)
+    )
+    user_email = res.scalar_one()
+    return serialize_task_group_with_email(
+        task_group=task_group,
+        user_email=user_email,
+    )

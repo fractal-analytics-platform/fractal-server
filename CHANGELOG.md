@@ -4,6 +4,7 @@
 
 * API:
     * Introduce version flexibility in workflow-import endpoint (\#3154).
+    * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
     * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
 * Database:
