@@ -62,8 +62,6 @@ async def get_workflow_template_list(
     user_email: str | None = None,
     name: str | None = None,
     version: int | None = None,
-    # FIXME:
-    # sort_by: Literal["user-name-version", "timestamp"] = "user-name-version",
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
