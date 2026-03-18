@@ -389,4 +389,4 @@ async def export_workflow_template(
     template = await _get_template_read_access(
         user_id=user.id, template_id=template_id, db=db
     )
-    return template.model_dump()
+    return template
