@@ -96,20 +96,6 @@ async def test_get_template(db, client, MockCurrentUser, user_group_factory):
             }
         ]
 
-        # FIXME
-        # Test `sort_by=timestamp`
-        # res = await client.get("api/v2/workflow-template/?sort_by=timestamp")
-        # assert res.status_code == 200
-        # assert res.json()["current_page"] == 1
-        # assert res.json()["page_size"] == 4
-        # assert res.json()["total_count"] == 4
-        # items = res.json()["items"]
-        # assert len(items) == 4
-        # assert items[0]["id"] == template4.id
-        # assert items[1]["id"] == template3.id
-        # assert items[2]["id"] == template2.id
-        # assert items[3]["id"] == template1.id
-
         # Test pagination
         res = await client.get("api/v2/workflow-template/?page_size=2&page=2")
         assert res.status_code == 200
