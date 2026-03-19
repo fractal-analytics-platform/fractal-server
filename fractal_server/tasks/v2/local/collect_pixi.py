@@ -88,6 +88,7 @@ def collect_local_pixi(
                 task_group.archive_path = archive_path
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
+                logger.info(f"{use_pixi_lockfile=}")
                 frozen_option = "--frozen" if use_pixi_lockfile else ""
                 common_args = dict(
                     replacements={
