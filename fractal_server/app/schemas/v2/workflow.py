@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
@@ -67,7 +68,7 @@ class WorkflowImport(BaseModel):
 class WorkflowImportFromTemplate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: NonEmptyStr | None = None
-    override_versions: list[NonEmptyStr] | None = None
+    override_versions: dict[int, NonEmptyStr] = Field(default_factory=dict)
 
 
 class WorkflowExport(BaseModel):
