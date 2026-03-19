@@ -8,6 +8,7 @@
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
     * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
+    * Transform log-reading error log from error to warning in `read_log_file` (\#3236).
 * Database:
     * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
