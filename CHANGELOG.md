@@ -4,7 +4,7 @@
 
 * API:
     * Introduce `/api/v2/workflow-template/` API block (\#3191).
-    * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191).
+    * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
     * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
