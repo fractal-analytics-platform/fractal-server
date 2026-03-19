@@ -82,7 +82,7 @@ async def collect_task_pixi(
     background_tasks: BackgroundTasks,
     file: UploadFile,
     pixi_version: NonEmptyStr | None = Form(None),
-    use_pixi_lockfile: bool = True,
+    use_pixi_lockfile: bool = Form(True),
     private: bool = False,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
