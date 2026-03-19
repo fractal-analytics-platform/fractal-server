@@ -3,8 +3,13 @@
 # 2.20.0 (unreleased)
 
 * API:
-    * Introduce version flexibility in workflow-import endpoint (\#3154).
+    * Introduce `/api/v2/workflow-template/` API block (\#3191, \#3232).
+    * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
+    * Introduce flexible version matching in workflow-import endpoint (\#3154).
+    * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
+    * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
 * Database:
+    * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
 * Application:
     * Improve lifespan logging (\#3201).

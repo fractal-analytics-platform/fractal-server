@@ -420,7 +420,9 @@ async def test_project_apply_workflow_subset(
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
-                wf.model_dump_json(exclude={"task_list", "description"})
+                wf.model_dump_json(
+                    exclude={"task_list", "description", "template_id"}
+                )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(
@@ -812,6 +814,24 @@ async def test_stop_job(
             assert shutdown_file.exists()
         else:
             assert res.status_code == 422
+
+        # Test error with `_write_shutdown_file`
+        if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+            not_existing_working_dir = tmp_path / "foo"
+            ds2 = await dataset_factory(project_id=project.id)
+            job2 = await job_factory(
+                working_dir=not_existing_working_dir.as_posix(),
+                project_id=project.id,
+                dataset_id=ds2.id,
+                workflow_id=wf.id,
+            )
+            res = await client.get(
+                f"{PREFIX}/project/{project.id}/job/{job2.id}/stop/"
+            )
+            assert res.status_code == 422
+            assert res.json()["detail"] == (
+                f"Could not shutdown Job {job2.id}, please try again."
+            )
 
 
 async def test_update_timestamp_taskgroup(
