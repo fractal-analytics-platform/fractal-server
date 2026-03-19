@@ -3,8 +3,6 @@ from pathlib import Path
 
 from pydantic import validate_call
 
-import fractal_tasks_mock  # noqa
-
 
 @validate_call
 def create_cellvoyager_ome_zarr(

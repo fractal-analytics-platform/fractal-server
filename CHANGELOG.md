@@ -25,6 +25,7 @@
     * Draft Fractal-runner specification (\#3196).
 * Testing:
     * Make (not container and not oauth) tests pass on Mac arm  (\#3127).
+    * Use `fractal-tasks-tools` 0.4.0 in mock tasks (\#3237).
 
 # 2.19.4
 

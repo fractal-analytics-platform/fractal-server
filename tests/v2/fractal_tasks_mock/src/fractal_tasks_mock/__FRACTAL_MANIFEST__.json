@@ -51,14 +51,14 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "acquisition": {
+                "description": "dummy attribute description.",
                 "title": "Acquisition",
-                "type": "integer",
-                "description": "dummy attribute description."
+                "type": "integer"
               }
             },
             "required": [
@@ -128,14 +128,14 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "acquisition": {
+                "description": "dummy attribute description.",
                 "title": "Acquisition",
-                "type": "integer",
-                "description": "dummy attribute description."
+                "type": "integer"
               }
             },
             "required": [
@@ -205,14 +205,14 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "acquisition": {
+                "description": "dummy attribute description.",
                 "title": "Acquisition",
-                "type": "integer",
-                "description": "dummy attribute description."
+                "type": "integer"
               }
             },
             "required": [
@@ -296,14 +296,14 @@
             "description": "Dummy model description.",
             "properties": {
               "new_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "New Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "new_plate": {
+                "description": "dummy attribute description.",
                 "title": "New Plate",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               }
             },
             "required": [
@@ -424,20 +424,21 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "subsets": {
                 "additionalProperties": {
                   "type": "integer"
                 },
+                "default": {},
+                "description": "dummy attribute description.",
                 "propertyNames": {
                   "const": "C_index"
                 },
                 "title": "Subsets",
-                "type": "object",
-                "description": "dummy attribute description."
+                "type": "object"
               }
             },
             "required": [
@@ -548,9 +549,9 @@
             "description": "Dummy model description.",
             "properties": {
               "ref_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Ref Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               }
             },
             "required": [
@@ -929,10 +930,12 @@
             "description": "Dummy model description.",
             "properties": {
               "argument": {
+                "description": "dummy attribute description.",
                 "title": "Argument",
                 "type": "integer"
               },
               "ind": {
+                "description": "dummy attribute description.",
                 "title": "Ind",
                 "type": "integer"
               }
