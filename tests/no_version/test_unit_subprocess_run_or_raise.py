@@ -33,4 +33,5 @@ def test_subprocess_run_or_raise(tmp_path: pathlib.Path):
     debug(e)
     debug(e.value)
     debug(e.value.info)
-    assert "ls: unrecognized option '--invalid-option'" in e.value.info
+    # The error message depends on the OS. The following works on Mac and Linux
+    assert "--invalid-option" in e.value.info

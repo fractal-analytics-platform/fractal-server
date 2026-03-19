@@ -1,5 +1,6 @@
 import inspect
 import logging
+import re
 import time
 
 from asgi_lifespan import LifespanManager
@@ -41,11 +42,16 @@ async def test_app_with_middleware(caplog):
 
         caplog.clear()
         await client.get("/?sleep=0.12")
-        assert "0.12," in caplog.text
+        # we search for "0.12,"" but depending on the timing of the test,
+        # it could add some milliseconds,
+        # so we accept 0.12, 0.13 or 0.14
+        assert re.search(r"0\.1[2-4],", caplog.text)
+        assert "GET /?sleep=0.12" in caplog.text
 
         caplog.clear()
         await client.get("/?sleep=0.33&foo=bar")
-        assert "0.33," in caplog.text
+        # same here, accept 0.33, 0.34 or 0.35
+        assert re.search(r"0\.3[3-5],", caplog.text)
         assert "GET /?sleep=0.33&foo=bar" in caplog.text
 
 

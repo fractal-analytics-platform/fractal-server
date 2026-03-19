@@ -44,4 +44,5 @@ async def test_send_fractal_email_or_log_failure(caplog, monkeypatch):
         subject="subject", msg="msg", email_settings=email_settings_public
     )
     assert "Could not send self-registration email" in caplog.text
-    assert "[Errno 111] Connection refused" in caplog.text
+    # The error message depends on the OS. The following works on Mac and Linux
+    assert "Connection refused" in caplog.text

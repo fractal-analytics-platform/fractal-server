@@ -23,6 +23,11 @@ TASK_LIST = [
         modality="HCS",
         tags=["Yokogawa", "Cellvoyager"],
     ),
+    ConverterCompoundTask(
+        name="dummy_converter_compound_s3",
+        executable_init="dummy_converter_s3_init.py",
+        executable="dummy_converter_s3_compute.py",
+    ),
     CompoundTask(
         name="MIP_compound",
         input_types={"3D": True},

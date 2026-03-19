@@ -406,6 +406,16 @@ async def test_dataset_import(
         assert res.status_code == 422
         assert "is not relative to" in res.json()["detail"][0]["msg"]
 
+        # FAILURE: zarr_dir is not relative to any project_dirs
+        payload = dict(
+            name="Dataset",
+            zarr_dir="/invalid",
+            images=[],
+        )
+        res = await client.post(ENDPOINT_URL, json=payload)
+        assert res.status_code == 422
+        assert "is not relative to" in res.json()["detail"]
+
         # SUCCESS, with new filters (which are ignored)
         payload = dict(
             name="Dataset1",

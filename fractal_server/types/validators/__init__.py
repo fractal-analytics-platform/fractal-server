@@ -1,4 +1,5 @@
 from ._common_validators import val_absolute_path  # noqa F401
+from ._common_validators import val_s3_url  # noqa F401
 from ._common_validators import val_no_dotdot_in_path  # noqa F401
 from ._common_validators import val_os_path_normpath  # noqa F401
 from ._common_validators import val_http_url  # noqa F401
