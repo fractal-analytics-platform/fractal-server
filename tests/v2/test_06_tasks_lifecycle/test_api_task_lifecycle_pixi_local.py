@@ -251,3 +251,51 @@ async def test_task_group_lifecycle_pixi_local(
         activity = res.json()
         debug(activity)
         assert activity["status"] == "OK"
+
+
+async def test_task_group_lifecycle_pixi_local_lock_no_lock(
+    client,
+    MockCurrentUser,
+    pixi: TasksPixiSettings,
+    pixi_pkg_targz_no_pixi_lock: Path,
+    db,
+    local_resource_profile_db,
+):
+    resource, profile = local_resource_profile_db
+    resource.tasks_pixi_config = pixi.model_dump()
+    db.add(resource)
+    await db.commit()
+
+    with pixi_pkg_targz_no_pixi_lock.open("rb") as f:
+        files = {
+            "file": (
+                pixi_pkg_targz_no_pixi_lock.name,
+                f.read(),
+                "application/gzip",
+            )
+        }
+
+    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
+        # Failed collection (pixi lock is missing)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        assert res.json()["status"] == "failed"
+
+        # Successful collection (with different API parameter)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data=dict(use_pixi_lockfile=False),
+            files=files,
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        assert res.json()["status"] == "OK"
