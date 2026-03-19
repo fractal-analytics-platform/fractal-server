@@ -64,6 +64,7 @@ async def test_collect_local_pixi_path_exists(
         ),
         resource=resource,
         profile=profile,
+        use_pixi_lockfile=True,
     )
     # Verify that collection failed
     task_group_activity = await db.get(
