@@ -6,14 +6,14 @@ readme = "README.md"
 authors = [
     { name = "Your Name", email = "first.last@example.com" },
 ]
-requires-python = ">=3.9"
-dependencies = ["pydantic>=2", "fractal-task-tools==0.4.0"]
+requires-python = ">=3.11"
+dependencies = ["fractal-task-tools==0.4.0"]
 
 [project.optional-dependencies]
 dev = ["devtools", "build"]
 
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools >= 80.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
