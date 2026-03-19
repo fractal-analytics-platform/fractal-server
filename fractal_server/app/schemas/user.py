@@ -8,9 +8,9 @@ from pydantic import EmailStr
 from pydantic import Field
 
 from fractal_server.string_tools import validate_cmd
-from fractal_server.types import ListUniqueAbsolutePathStr
 from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import ListUniqueNonNegativeInt
+from fractal_server.types import ListUniqueProjectDir
 from fractal_server.types import NonEmptyStr
 
 
@@ -83,7 +83,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_guest: bool = None
     profile_id: int | None = None
     project_dirs: Annotated[
-        ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
+        ListUniqueProjectDir, AfterValidator(_validate_cmd_list)
     ] = Field(default=None, min_length=1)
     slurm_accounts: ListUniqueNonEmptyString = None
 
@@ -114,7 +114,7 @@ class UserCreate(schemas.BaseUserCreate):
     is_guest: bool = False
     profile_id: int | None = None
     project_dirs: Annotated[
-        ListUniqueAbsolutePathStr, AfterValidator(_validate_cmd_list)
+        ListUniqueProjectDir, AfterValidator(_validate_cmd_list)
     ] = Field(min_length=1)
     slurm_accounts: list[str] = Field(default_factory=list)
 

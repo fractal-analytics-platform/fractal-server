@@ -6,7 +6,7 @@ import fractal_tasks_mock  # noqa
 
 
 @validate_call
-def dummy_converter_compound_s3(
+def dummy_converter_s3_init(
     *,
     zarr_dir: str,
     image_dir: str,
@@ -30,10 +30,10 @@ def dummy_converter_compound_s3(
     plate_zarr_name = "my_plate.zarr"
     zarr_path: str = f"{zarr_dir}/{plate_zarr_name}"
 
-    logging.info("[dummy_converter_compound_s3] START")
-    logging.info(f"[dummy_converter_compound_s3] {image_dir=}")
-    logging.info(f"[dummy_converter_compound_s3] {zarr_dir=}")
-    logging.info(f"[dummy_converter_compound_s3] {zarr_path=}")
+    logging.info("[dummy_converter_s3_init] START")
+    logging.info(f"[dummy_converter_s3_init] {image_dir=}")
+    logging.info(f"[dummy_converter_s3_init] {zarr_dir=}")
+    logging.info(f"[dummy_converter_s3_init] {zarr_path=}")
 
     # Prepare fake list of OME-Zarr images
     image_relative_paths = [
@@ -53,11 +53,11 @@ def dummy_converter_compound_s3(
                 init_args=dict(raw_zarr_url=raw_zarr_url),
             )
         )
-    logging.info("[dummy_converter_compound_s3] END")
+    logging.info("[dummy_converter_s3_init] END")
     return dict(parallelization_list=parallelization_list)
 
 
 if __name__ == "__main__":
     from fractal_task_tools.task_wrapper import run_fractal_task
 
-    run_fractal_task(task_function=dummy_converter_compound_s3)
+    run_fractal_task(task_function=dummy_converter_s3_init)

@@ -145,12 +145,13 @@ List of unique non-negative-integer items.
 """
 
 
-ListUniqueAbsolutePathStr = Annotated[
+ListUniqueProjectDir = Annotated[
     list[AbsolutePathStr | S3PathStr],
     AfterValidator(val_unique_list),
 ]
 """
-List of unique absolute-path-string items.
+List of unique project directories,
+ which can be either absolute paths or S3 paths.
 """
 
 WorkflowTaskArgument = Annotated[

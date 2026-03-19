@@ -105,7 +105,7 @@ class DatasetImport(BaseModel):
     @model_validator(mode="after")
     def validate_image_zarr_url(self):
         for image in self.images:
-            if not url_is_relative_to(image.zarr_url, self.zarr_dir):
+            if not url_is_relative_to(url=image.zarr_url, base=self.zarr_dir):
                 raise ValueError(
                     f"{image.zarr_url=} is not relative to {self.zarr_dir=}."
                 )

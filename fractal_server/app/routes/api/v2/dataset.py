@@ -268,7 +268,7 @@ async def import_dataset(
     )
 
     if not any(
-        url_is_relative_to(dataset.zarr_dir, project_dir)
+        url_is_relative_to(url=dataset.zarr_dir, base=project_dir)
         for project_dir in user.project_dirs
     ):
         raise HTTPException(

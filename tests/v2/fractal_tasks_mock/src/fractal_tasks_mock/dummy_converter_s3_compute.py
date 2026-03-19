@@ -6,7 +6,7 @@ from fractal_tasks_mock.input_models import InitArgsCellVoyager
 
 
 @validate_call
-def dummy_converter_s3(
+def dummy_converter_s3_compute(
     *,
     zarr_url: str,
     init_args: InitArgsCellVoyager,
@@ -22,8 +22,8 @@ def dummy_converter_s3(
     if not zarr_url.startswith("s3://"):
         raise ValueError(f"zarr_url must start with 's3://', got {zarr_url}")
 
-    logging.info("[dummy_converter_s3] START")
-    logging.info(f"[dummy_converter_s3] {zarr_url=}")
+    logging.info("[dummy_converter_s3_compute] START")
+    logging.info(f"[dummy_converter_s3_compute] {zarr_url=}")
 
     raw_zarr_url = init_args.raw_zarr_url
     if not raw_zarr_url.startswith("s3://"):
@@ -42,8 +42,8 @@ def dummy_converter_s3(
     # Read 3D from data
     is_3D = True  # Mock
 
-    logging.info(f"[dummy_converter_s3] {raw_zarr_url=}")
-    logging.info("[dummy_converter_s3] END")
+    logging.info(f"[dummy_converter_s3_compute] {raw_zarr_url=}")
+    logging.info("[dummy_converter_s3_compute] END")
     attributes = dict(well=well, plate=plate)
     if init_args.acquisition is not None:
         attributes["acquisition"] = init_args.acquisition
@@ -62,4 +62,4 @@ def dummy_converter_s3(
 if __name__ == "__main__":
     from fractal_task_tools.task_wrapper import run_fractal_task
 
-    run_fractal_task(task_function=dummy_converter_s3)
+    run_fractal_task(task_function=dummy_converter_s3_compute)

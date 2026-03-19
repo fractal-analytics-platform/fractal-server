@@ -213,7 +213,7 @@ async def _check_project_dirs_update(
         old_project_dir
         for old_project_dir in old_project_dirs
         if not any(
-            url_is_relative_to(old_project_dir, new_project_dir)
+            url_is_relative_to(url=old_project_dir, base=new_project_dir)
             for new_project_dir in new_project_dirs
         )
     ]
@@ -261,11 +261,11 @@ async def _check_project_dirs_update(
         if any(
             (
                 any(
-                    url_is_relative_to(zarr_dir, old_project_dir)
+                    url_is_relative_to(url=zarr_dir, base=old_project_dir)
                     for old_project_dir in removed_project_dirs
                 )
                 and not any(
-                    url_is_relative_to(zarr_dir, new_project_dir)
+                    url_is_relative_to(url=zarr_dir, base=new_project_dir)
                     for new_project_dir in new_project_dirs
                 )
             )

@@ -36,7 +36,7 @@ def url_join(base: str, *parts: str) -> str:
     return normpath(joined)
 
 
-def url_is_relative_to(url: str, base: str) -> bool:
+def url_is_relative_to(*, url: str, base: str) -> bool:
     """
     S3-aware replacement for `Path(url).is_relative_to(base)`.
     """
