@@ -8,61 +8,69 @@ from pydantic import Field
 class InitArgsRegistration(BaseModel):
     """
     Dummy model description.
-
-    Attributes:
-        ref_zarr_url: dummy attribute description.
     """
 
     ref_zarr_url: str
+    """
+    dummy attribute description.
+    """
 
 
 class InitArgsCellVoyager(BaseModel):
     """
     Dummy model description.
-
-    Attributes:
-        raw_zarr_url: dummy attribute description.
-        acquisition: dummy attribute description.
     """
 
     raw_zarr_url: str
+    """
+    dummy attribute description.
+    """
     acquisition: Optional[int] = None
+    """
+    dummy attribute description.
+    """
 
 
 class InitArgsGeneric(BaseModel):
     """
     Dummy model description.
-
-    Attributes:
-        argument: dummy attribute description.
-        ind: dummy attribute description
     """
 
     argument: int
+    """
+    dummy attribute description.
+    """
     ind: int
+    """
+    dummy attribute description.
+    """
 
 
 class InitArgsIllumination(BaseModel):
     """
     Dummy model description.
-
-    Attributes:
-        raw_zarr_url: dummy attribute description.
-        subsets: dummy attribute description.
     """
 
     raw_zarr_url: str
+    """
+    dummy attribute description.
+    """
     subsets: dict[Literal["C_index"], int] = Field(default_factory=dict)
+    """
+    dummy attribute description.
+    """
 
 
 class InitArgsMIP(BaseModel):
     """
     Dummy model description.
-
-    Attributes:
-        new_zarr_url: dummy attribute description.
-        new_plate: dummy attribute description.
     """
 
     new_zarr_url: str
+    """
+    dummy attribute description.
+    """
     new_plate: str
+    """
+    dummy attribute description.
+    """
