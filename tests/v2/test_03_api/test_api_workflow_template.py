@@ -437,7 +437,7 @@ async def test_export_import_template(
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
             f"?template_id={template_id}",
-            json={"name": "bar", "override_versions": [task2.version]},
+            json={"name": "bar", "override_versions": {"0": task2.version}},
         )
         assert res.status_code == 201
         assert res.json()["task_list"][0]["task"]["id"] == task2.id
@@ -445,9 +445,20 @@ async def test_export_import_template(
         res = await client.post(
             f"api/v2/project/{project2.id}/workflow/import-from-template/"
             f"?template_id={template_id}",
-            json={"name": "xxx", "override_versions": ["1", "2", "3"]},
+            json={"name": "xxx", "override_versions": {"1": task2.version}},
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Length of body argument 'override_versions' must be 1, provided 3."
+            "Task index out of bound in `override_versions`."
+        )
+
+        res = await client.post(
+            f"api/v2/project/{project2.id}/workflow/import-from-template/"
+            f"?template_id={template_id}",
+            json={"name": "xxx", "override_versions": {"a": task2.version}},
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Input should be a valid integer, "
+            "unable to parse string as an integer"
         )

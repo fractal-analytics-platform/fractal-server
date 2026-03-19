@@ -384,7 +384,7 @@ async def import_workflow_from_template(
             value,
         ) in workflow_import_from_template.override_versions.items():
             workflow_import.task_list[key].task.version = value
-    except KeyError:
+    except IndexError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Task index out of bound in `override_versions`.",
