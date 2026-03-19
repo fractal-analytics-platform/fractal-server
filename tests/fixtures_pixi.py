@@ -27,7 +27,7 @@ def run_cmd(cmd: str):
 
 @pytest.fixture(scope="session")
 def pixi_pkg_targz(testdata_path: Path) -> Path:
-    return testdata_path / "mock_pixi_tasks-0.2.1.tar.gz"
+    return testdata_path / "pixi_tasks/mock_pixi_tasks-1.2.3.tar.gz"
 
 
 @pytest.fixture(scope="session")
