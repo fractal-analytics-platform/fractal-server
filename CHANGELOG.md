@@ -19,6 +19,7 @@
     * Always create an `AccountingRecordSlurm` entry from `multisubmit` method (\#3210).
 * Task lifecycle:
     * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
+    * Introduce `use_pixi_lockfile` flag for pixi task collection (\#3230).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
 
