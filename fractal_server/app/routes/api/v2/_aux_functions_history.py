@@ -112,7 +112,7 @@ def read_log_file(
                 f"{dataset_id} are not available."
             )
     except Exception as e:
-        logger.error(
+        logger.warning(
             f"Error while retrieving logs for {logfile=} and {archive_path=}. "
             f"Original error: {str(e)}"
         )
