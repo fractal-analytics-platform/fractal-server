@@ -1,6 +1,8 @@
+import platform
 import shutil
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -118,6 +120,10 @@ async def test_pixi_collection_path_already_exists(
         assert "already exists" in res.json()["detail"]
 
 
+@pytest.mark.skipif(
+    platform.machine() == "arm64",
+    reason="Pixi panics on ARM (osx-arm64 not in supported platforms)",
+)
 async def test_task_group_lifecycle_pixi_local(
     client,
     MockCurrentUser,

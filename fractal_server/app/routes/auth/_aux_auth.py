@@ -1,6 +1,3 @@
-from os.path import normpath
-from pathlib import Path
-
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +18,8 @@ from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
+from fractal_server.urls import normalize_url
+from fractal_server.urls import url_is_relative_to
 
 logger = set_logger(__name__)
 
@@ -201,8 +200,9 @@ async def _check_project_dirs_update(
     removing the access to a `zarr_dir` used by some dataset.
 
     Note both `old_project_dirs` and `new_project_dirs` have been
-    normalized through `os.path.normpath`, which notably strips any trailing
-    `/` character. To be safe, we also re-normalize them within this function.
+    normalized through `normalize_url`, which notably strips any trailing
+    `/` character for local paths. To be safe, we also re-normalize them
+    within this function.
     """
     # Create a list of all the old project dirs that will lose privileges.
     # E.g.:
@@ -213,7 +213,7 @@ async def _check_project_dirs_update(
         old_project_dir
         for old_project_dir in old_project_dirs
         if not any(
-            Path(old_project_dir).is_relative_to(new_project_dir)
+            url_is_relative_to(url=old_project_dir, base=new_project_dir)
             for new_project_dir in new_project_dirs
         )
     ]
@@ -232,7 +232,9 @@ async def _check_project_dirs_update(
             .where(
                 or_(
                     *[
-                        DatasetV2.zarr_dir.startswith(normpath(old_project_dir))
+                        DatasetV2.zarr_dir.startswith(
+                            normalize_url(old_project_dir)
+                        )
                         for old_project_dir in removed_project_dirs
                     ]
                 )
@@ -244,7 +246,7 @@ async def _check_project_dirs_update(
                     *[
                         not_(
                             DatasetV2.zarr_dir.startswith(
-                                normpath(new_project_dir)
+                                normalize_url(new_project_dir)
                             )
                         )
                         for new_project_dir in new_project_dirs
@@ -259,11 +261,11 @@ async def _check_project_dirs_update(
         if any(
             (
                 any(
-                    Path(zarr_dir).is_relative_to(old_project_dir)
+                    url_is_relative_to(url=zarr_dir, base=old_project_dir)
                     for old_project_dir in removed_project_dirs
                 )
                 and not any(
-                    Path(zarr_dir).is_relative_to(new_project_dir)
+                    url_is_relative_to(url=zarr_dir, base=new_project_dir)
                     for new_project_dir in new_project_dirs
                 )
             )

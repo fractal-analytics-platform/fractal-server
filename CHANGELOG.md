@@ -18,10 +18,13 @@
     * Mention package name/version in job logs (\#3200)
     * Expand logging of `scancel_jobs` method (\#3209).
     * Always create an `AccountingRecordSlurm` entry from `multisubmit` method (\#3210).
+    * Add support for S3 for data (\#3127).
 * Task lifecycle:
     * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
+* Testing:
+    * Make (not container and not oauth) tests pass on Mac arm  (\#3127).
 
 # 2.19.4
 

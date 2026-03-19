@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -23,6 +20,8 @@ from fractal_server.app.schemas.v2.dataset import DatasetImport
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
+from fractal_server.urls import url_is_relative_to
+from fractal_server.urls import url_join
 
 from ._aux_functions import _get_dataset_check_access
 from ._aux_functions import _get_project_check_access
@@ -81,7 +80,7 @@ async def create_dataset(
     else:
         zarr_subfolder = dataset.zarr_subfolder
 
-    zarr_dir = os.path.join(project_dir, zarr_subfolder)
+    zarr_dir = url_join(project_dir, zarr_subfolder)
     db_dataset.zarr_dir = normalize_url(zarr_dir)
 
     db.add(db_dataset)
@@ -269,7 +268,7 @@ async def import_dataset(
     )
 
     if not any(
-        Path(dataset.zarr_dir).is_relative_to(project_dir)
+        url_is_relative_to(url=dataset.zarr_dir, base=project_dir)
         for project_dir in user.project_dirs
     ):
         raise HTTPException(

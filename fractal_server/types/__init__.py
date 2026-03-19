@@ -13,6 +13,7 @@ from .validators import val_http_url
 from .validators import val_no_dotdot_in_path
 from .validators import val_non_absolute_path
 from .validators import val_os_path_normpath
+from .validators import val_s3_url
 from .validators import val_unique_list
 from .validators import valdict_keys
 from .validators import validate_attribute_filters
@@ -46,6 +47,16 @@ String representing an absolute path.
 
 Validation fails if the path is not absolute or if it contains a
 parent-directory reference "/../".
+"""
+
+S3PathStr = Annotated[
+    NonEmptyStr,
+    AfterValidator(val_s3_url),
+]
+"""
+String representing an S3 path (e.g., s3://bucket/key).
+
+Validation fails if the string does not start with "s3://".
 """
 
 SafeRelativePathStr = Annotated[
@@ -134,12 +145,13 @@ List of unique non-negative-integer items.
 """
 
 
-ListUniqueAbsolutePathStr = Annotated[
-    list[AbsolutePathStr],
+ListUniqueProjectDir = Annotated[
+    list[AbsolutePathStr | S3PathStr],
     AfterValidator(val_unique_list),
 ]
 """
-List of unique absolute-path-string items.
+List of unique project directories,
+ which can be either absolute paths or S3 paths.
 """
 
 WorkflowTaskArgument = Annotated[
