@@ -3,7 +3,7 @@
 # 2.20.0 (unreleased)
 
 * API:
-    * Introduce `/api/v2/workflow-template/` API block (\#3191).
+    * Introduce `/api/v2/workflow-template/` API block (\#3191, \#3232).
     * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
