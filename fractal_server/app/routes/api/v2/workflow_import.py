@@ -378,22 +378,19 @@ async def import_workflow_from_template(
     if workflow_import_from_template.name:
         workflow_import.name = workflow_import_from_template.name
 
-    if workflow_import_from_template.override_versions:
-        if len(workflow_import_from_template.override_versions) != len(
-            workflow_import.task_list
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Length of body argument 'override_versions' must be "
-                    f"{len(workflow_import.task_list)}, provided "
-                    f"{len(workflow_import_from_template.override_versions)}."
-                ),
-            )
-        for i, _ in enumerate(workflow_import.task_list):
-            workflow_import.task_list[
-                i
-            ].task.version = workflow_import_from_template.override_versions[i]
+    try:
+        for (
+            key,
+            value,
+        ) in workflow_import_from_template.override_versions.items():
+            workflow_import.task_list[key].task.version = value
+    except IndexError as e:
+        error_msg = "Task index out of bound in `override_versions`."
+        logger.warning(f"{error_msg} Original error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=error_msg,
+        )
 
     workflow = await _import_workflow(
         project_id=project_id,
