@@ -21,6 +21,7 @@
     * Add support for S3 for data (\#3127).
 * Task lifecycle:
     * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
+    * Introduce `use_pixi_lockfile` flag for pixi task collection (\#3230).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
 * Testing:
