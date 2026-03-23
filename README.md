@@ -36,7 +36,7 @@
 | fractal\_server/app/routes/admin/v2/resource.py                              |       86 |        0 |        8 |        1 |     99% |  130->134 |
 | fractal\_server/app/routes/admin/v2/sharing.py                               |       61 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task.py                                  |       77 |        0 |       22 |        0 |    100% |           |
-| fractal\_server/app/routes/admin/v2/task\_group.py                           |      130 |        0 |       50 |        0 |    100% |           |
+| fractal\_server/app/routes/admin/v2/task\_group.py                           |      135 |        0 |       50 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group\_lifecycle.py                |      106 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/app/routes/api/\_\_init\_\_.py                               |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/alive.py                                      |        6 |        0 |        0 |        0 |    100% |           |
@@ -49,7 +49,7 @@
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_task\_version\_update.py |       12 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_tasks.py                 |      125 |        1 |       36 |        1 |     99% |       204 |
 | fractal\_server/app/routes/api/v2/\_aux\_functions\_templates.py             |       28 |        0 |       10 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/\_aux\_task\_group\_disambiguation.py      |       46 |        3 |        4 |        2 |     90% |55->73, 125-130 |
+| fractal\_server/app/routes/api/v2/\_aux\_task\_group\_disambiguation.py      |       54 |        3 |        4 |        2 |     91% |57->75, 127-132 |
 | fractal\_server/app/routes/api/v2/dataset.py                                 |       99 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/history.py                                 |      177 |        2 |       34 |        2 |     98% |  214, 449 |
 | fractal\_server/app/routes/api/v2/images.py                                  |      102 |        1 |       26 |        1 |     98% |       152 |
@@ -62,7 +62,7 @@
 | fractal\_server/app/routes/api/v2/task\_collection.py                        |      146 |        2 |       32 |        1 |     98% |246->256, 283-284 |
 | fractal\_server/app/routes/api/v2/task\_collection\_custom.py                |       71 |        0 |       18 |        1 |     99% |   63->100 |
 | fractal\_server/app/routes/api/v2/task\_collection\_pixi.py                  |       85 |        0 |       18 |        1 |     99% |  105->115 |
-| fractal\_server/app/routes/api/v2/task\_group.py                             |       95 |        0 |       32 |        1 |     99% |  216->220 |
+| fractal\_server/app/routes/api/v2/task\_group.py                             |      102 |        0 |       32 |        1 |     99% |  242->246 |
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                  |      116 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_version\_update.py                   |       88 |        1 |       16 |        1 |     98% |       208 |
 | fractal\_server/app/routes/api/v2/workflow.py                                |      104 |        0 |       18 |        0 |    100% |           |
@@ -207,7 +207,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10407** |  **181** | **1878** |   **92** | **98%** |           |
+| **TOTAL**                                                                    | **10427** |  **181** | **1878** |   **92** | **98%** |           |
 
 
 ## Setup coverage badge
