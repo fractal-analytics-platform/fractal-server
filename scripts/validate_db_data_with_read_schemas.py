@@ -92,7 +92,11 @@ with next(get_sync_db()) as db:
         task_list = []
         for task in task_group.task_list:
             task_list.append(TaskRead(**task.model_dump()))
-        TaskGroupRead(**task_group.model_dump(), task_list=task_list)
+        TaskGroupRead(
+            **task_group.model_dump(),
+            task_list=task_list,
+            user_email="fractal@example.org",
+        )
         print(f"TaskGroup {task_group.id} validated")
 
     # TASK GROUP ACTIVITIES

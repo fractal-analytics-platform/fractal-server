@@ -13,6 +13,9 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
+    serialize_task_group_with_email,
+)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -110,13 +113,21 @@ async def query_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> TaskGroupReadSuperuser:
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
+    res = await db.execute(
+        select(TaskGroupV2, UserOAuth.email)
+        .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
+        .where(TaskGroupV2.id == task_group_id)
+    )
+    task_group_and_email = res.one_or_none()
+    if task_group_and_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroup {task_group_id} not found",
         )
-    return task_group
+    task_group, user_email = task_group_and_email
+    return serialize_task_group_with_email(
+        task_group=task_group, user_email=user_email
+    )
 
 
 @router.get("/", response_model=PaginationResponse[TaskGroupReadSuperuser])
@@ -138,7 +149,9 @@ async def query_task_group_list(
     page = pagination.page
     page_size = pagination.page_size
 
-    stm = select(TaskGroupV2)
+    stm = select(TaskGroupV2, UserOAuth.email).join(
+        UserOAuth, UserOAuth.id == TaskGroupV2.user_id
+    )
     stm_count = select(func.count(TaskGroupV2.id))
 
     if user_group_id is not None and private is True:
@@ -203,7 +216,12 @@ async def query_task_group_list(
 
     stm = stm.order_by(TaskGroupV2.id)
     res = await db.execute(stm)
-    task_groups_list = res.scalars().all()
+    task_groups_list = [
+        serialize_task_group_with_email(
+            task_group=task_group, user_email=user_email
+        )
+        for task_group, user_email in res.all()
+    ]
 
     return dict(
         total_count=total_count,
@@ -220,12 +238,18 @@ async def patch_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskGroupReadSuperuser]:
-    task_group = await db.get(TaskGroupV2, task_group_id)
-    if task_group is None:
+    res = await db.execute(
+        select(TaskGroupV2, UserOAuth.email)
+        .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
+        .where(TaskGroupV2.id == task_group_id)
+    )
+    task_group_and_email = res.one_or_none()
+    if task_group_and_email is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroupV2 {task_group_id} not found",
         )
+    task_group, user_email = task_group_and_email
 
     for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
@@ -237,4 +261,6 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return task_group
+    return serialize_task_group_with_email(
+        task_group=task_group, user_email=user_email
+    )

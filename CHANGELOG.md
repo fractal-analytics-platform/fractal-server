@@ -3,6 +3,7 @@
 # 2.20.0 (unreleased)
 
 * API:
+    * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).
     * Introduce `/api/v2/workflow-template/` API block (\#3191, \#3232).
     * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).

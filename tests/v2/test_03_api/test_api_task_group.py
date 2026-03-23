@@ -28,7 +28,7 @@ async def test_get_single_task_group(client, MockCurrentUser, task_factory, db):
 
         res = await client.get(f"{PREFIX}/{task.taskgroupv2_id}/")
         assert res.status_code == 200
-        assert res.json()["user_id"] == user1.id
+        assert res.json()["user_email"] == user1.email
         assert res.json()["user_group_id"] == new_group.id
         assert len(res.json()["task_list"]) == 1
         assert res.json()["task_list"][0]["id"] == task.id

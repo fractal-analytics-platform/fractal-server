@@ -50,7 +50,8 @@ async def test_task_group_admin(
         res = await client.get(f"/api/v2/task-group/{task2.taskgroupv2_id}/")
         task_group_2 = res.json()
         assert "resource_id" not in task_group_2
-        debug(task_group_2)
+        assert "user_id" not in task_group_2
+        assert "user_email" in task_group_2
 
     async with MockCurrentUser() as user2:
         task3 = await task_factory(user_id=user2.id, name="bbbbbbbb")
@@ -64,6 +65,8 @@ async def test_task_group_admin(
             res = await client.get(f"{PREFIX}/task-group/{task_group['id']}/")
             assert res.status_code == 200
             assert "resource_id" in res.json()
+            assert "user_id" in res.json()
+            assert "user_email" in res.json()
 
         res = await client.get(f"{PREFIX}/task-group/9999/")
         assert res.status_code == 404
