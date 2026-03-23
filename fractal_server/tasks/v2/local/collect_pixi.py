@@ -40,6 +40,7 @@ def collect_local_pixi(
     tar_gz_file: FractalUploadedFile,
     resource: Resource,
     profile: Profile,
+    use_pixi_lockfile: bool,
 ) -> None:
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
 
@@ -87,6 +88,8 @@ def collect_local_pixi(
                 task_group.archive_path = archive_path
                 task_group = add_commit_refresh(obj=task_group, db=db)
 
+                logger.info(f"{use_pixi_lockfile=}")
+                frozen_option = "--frozen" if use_pixi_lockfile else ""
                 common_args = dict(
                     replacements={
                         (
@@ -102,7 +105,7 @@ def collect_local_pixi(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__FROZEN_OPTION__", ""),
+                        ("__FROZEN_OPTION__", frozen_option),
                         (
                             "__TOKIO_WORKER_THREADS__",
                             str(

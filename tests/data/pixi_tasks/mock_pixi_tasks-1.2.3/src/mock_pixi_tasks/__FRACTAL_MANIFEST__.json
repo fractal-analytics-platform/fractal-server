@@ -1,0 +1,35 @@
+{
+  "manifest_version": "2",
+  "task_list": [
+    {
+      "name": "create_images",
+      "type": "converter_non_parallel",
+      "executable_non_parallel": "create_images.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "Description of `zarr_dir`"
+          },
+          "num_images": {
+            "default": 2,
+            "title": "Num Images",
+            "type": "integer",
+            "description": "Description of `num_images`"
+          }
+        },
+        "required": [
+          "zarr_dir"
+        ],
+        "type": "object",
+        "title": "CreateImages"
+      },
+      "docs_info": "## create_images\nTask description\n"
+    }
+  ],
+  "has_args_schemas": true,
+  "args_schema_version": "pydantic_v2",
+  "authors": null
+}
