@@ -24,6 +24,7 @@ fractal.log
 logs
 site/
 data-tasks/
+data-jobs/
 
 tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
 
