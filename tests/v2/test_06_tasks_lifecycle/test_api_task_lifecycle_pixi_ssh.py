@@ -115,7 +115,7 @@ async def test_task_group_lifecycle_pixi_ssh(
             Path(profile.tasks_remote_dir)
             / str(user.id)
             / "mock-pixi-tasks"
-            / "0.2.1"
+            / "1.2.3"
         ).as_posix()
         fractal_ssh.mkdir(folder=task_group_path, parents=True)
         res = await client.post(

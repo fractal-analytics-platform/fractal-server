@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
@@ -30,7 +31,8 @@ class WorkflowRead(BaseModel):
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: AwareDatetime
-    description: str | None
+    description: str | None = None
+    template_id: int | None = None
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -63,6 +65,12 @@ class WorkflowImport(BaseModel):
     task_list: list[WorkflowTaskImport]
 
 
+class WorkflowImportFromTemplate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: NonEmptyStr | None = None
+    override_versions: dict[int, NonEmptyStr] = Field(default_factory=dict)
+
+
 class WorkflowExport(BaseModel):
     """
     Class for `Workflow` export.
@@ -72,5 +80,5 @@ class WorkflowExport(BaseModel):
     """
 
     name: str
-    description: str | None
+    description: str | None = None
     task_list: list[WorkflowTaskExport]

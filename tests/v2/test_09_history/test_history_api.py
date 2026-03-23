@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 from typing import Literal
 
 import pytest
@@ -284,8 +285,7 @@ async def test_get_history_run_list(
     client,
     MockCurrentUser,
 ):
-    local_tz = datetime.now().astimezone().tzinfo
-    timestamp = datetime.now(tz=local_tz)
+    timestamp = datetime.now(tz=timezone.utc)
 
     async with MockCurrentUser() as user:
         project = await project_factory(user)

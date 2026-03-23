@@ -62,7 +62,13 @@ async def test_unit_invalid_ssh(
 
     for function, custom_args in [
         (collect_ssh, dict(wheel_file=None)),
-        (collect_ssh_pixi, dict(tar_gz_file=None)),
+        (
+            collect_ssh_pixi,
+            dict(
+                tar_gz_file=None,
+                use_pixi_lockfile=True,
+            ),
+        ),
         (deactivate_ssh, {}),
         (deactivate_ssh_pixi, {}),
         (reactivate_ssh, {}),

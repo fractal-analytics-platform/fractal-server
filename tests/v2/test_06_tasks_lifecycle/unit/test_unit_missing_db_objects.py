@@ -48,6 +48,7 @@ def test_unit_missing_objects(
                 tar_gz_file=None,
                 resource=resource,
                 profile=profile,
+                use_pixi_lockfile=True,
             )
         else:
             function(
@@ -85,6 +86,7 @@ def test_unit_missing_objects(
                 tar_gz_file=None,
                 resource=resource,
                 profile=profile,
+                use_pixi_lockfile=True,
             )
         else:
             function(

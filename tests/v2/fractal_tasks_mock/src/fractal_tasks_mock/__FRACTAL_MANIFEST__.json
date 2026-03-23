@@ -51,14 +51,14 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "acquisition": {
+                "description": "dummy attribute description.",
                 "title": "Acquisition",
-                "type": "integer",
-                "description": "dummy attribute description."
+                "type": "integer"
               }
             },
             "required": [
@@ -128,14 +128,14 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "acquisition": {
+                "description": "dummy attribute description.",
                 "title": "Acquisition",
-                "type": "integer",
-                "description": "dummy attribute description."
+                "type": "integer"
               }
             },
             "required": [
@@ -166,6 +166,83 @@
         "title": "FillCellvoyagerOmeZarr"
       },
       "docs_info": "## create_cellvoyager_ome_zarr_multiplex\nDummy task description.\n## fill_cellvoyager_ome_zarr\nDummy task description.\n"
+    },
+    {
+      "name": "dummy_converter_compound_s3",
+      "type": "converter_compound",
+      "executable_non_parallel": "dummy_converter_s3_init.py",
+      "executable_parallel": "dummy_converter_s3_compute.py",
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_dir": {
+            "title": "Zarr Dir",
+            "type": "string",
+            "description": "S3 URL where the OME-Zarr files will be stored"
+          },
+          "image_dir": {
+            "title": "Image Dir",
+            "type": "string",
+            "description": "S3 URL where the raw images are located"
+          },
+          "num_images": {
+            "default": 2,
+            "title": "Num Images",
+            "type": "integer",
+            "description": "Number of images that this dummy task will produce."
+          }
+        },
+        "required": [
+          "zarr_dir",
+          "image_dir"
+        ],
+        "type": "object",
+        "title": "DummyConverterS3Init"
+      },
+      "args_schema_parallel": {
+        "$defs": {
+          "InitArgsCellVoyager": {
+            "description": "Dummy model description.",
+            "properties": {
+              "raw_zarr_url": {
+                "description": "dummy attribute description.",
+                "title": "Raw Zarr Url",
+                "type": "string"
+              },
+              "acquisition": {
+                "description": "dummy attribute description.",
+                "title": "Acquisition",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "raw_zarr_url"
+            ],
+            "title": "InitArgsCellVoyager",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "title": "Zarr Url",
+            "type": "string",
+            "description": "S3 URL where the OME-Zarr files will be stored"
+          },
+          "init_args": {
+            "$ref": "#/$defs/InitArgsCellVoyager",
+            "title": "Init Args",
+            "description": "Initialization arguments for the task"
+          }
+        },
+        "required": [
+          "zarr_url",
+          "init_args"
+        ],
+        "type": "object",
+        "title": "DummyConverterS3Compute"
+      },
+      "docs_info": "## dummy_converter_s3_init\nDummy task to check that a compound converter task can properly\nhandle S3 urls, and pass them to the subtasks.\n## dummy_converter_s3_compute\nDummy task description.\n"
     },
     {
       "name": "MIP_compound",
@@ -219,14 +296,14 @@
             "description": "Dummy model description.",
             "properties": {
               "new_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "New Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "new_plate": {
+                "description": "dummy attribute description.",
                 "title": "New Plate",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               }
             },
             "required": [
@@ -347,20 +424,21 @@
             "description": "Dummy model description.",
             "properties": {
               "raw_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Raw Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               },
               "subsets": {
                 "additionalProperties": {
                   "type": "integer"
                 },
+                "default": {},
+                "description": "dummy attribute description.",
                 "propertyNames": {
                   "const": "C_index"
                 },
                 "title": "Subsets",
-                "type": "object",
-                "description": "dummy attribute description."
+                "type": "object"
               }
             },
             "required": [
@@ -471,9 +549,9 @@
             "description": "Dummy model description.",
             "properties": {
               "ref_zarr_url": {
+                "description": "dummy attribute description.",
                 "title": "Ref Zarr Url",
-                "type": "string",
-                "description": "dummy attribute description."
+                "type": "string"
               }
             },
             "required": [
@@ -852,10 +930,12 @@
             "description": "Dummy model description.",
             "properties": {
               "argument": {
+                "description": "dummy attribute description.",
                 "title": "Argument",
                 "type": "integer"
               },
               "ind": {
+                "description": "dummy attribute description.",
                 "title": "Ind",
                 "type": "integer"
               }

@@ -5,9 +5,14 @@
 * API:
     * Introduce version flexibility in workflow-import endpoint (\#3154).
     * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).
+    * Introduce `/api/v2/workflow-template/` API block (\#3191, \#3232).
+    * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
+    * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
     * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
+    * Transform log-reading error log from error to warning in `read_log_file` (\#3236).
 * Database:
+    * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).
     * Enforce non-duplication constraints for `TaskGroupV2` and `TaskGroupActivityV2` via `unique` database checks (\#3185).
 * Application:
     * Improve lifespan logging (\#3201).
@@ -15,10 +20,15 @@
     * Mention package name/version in job logs (\#3200)
     * Expand logging of `scancel_jobs` method (\#3209).
     * Always create an `AccountingRecordSlurm` entry from `multisubmit` method (\#3210).
+    * Add support for S3 for data (\#3127).
 * Task lifecycle:
     * Assign job-name for SLURM-based pixi task lifecycle actions (\#3211).
+    * Introduce `use_pixi_lockfile` flag for pixi task collection (\#3230).
 * Documentation:
     * Draft Fractal-runner specification (\#3196).
+* Testing:
+    * Make (not container and not oauth) tests pass on Mac arm  (\#3127).
+    * Use `fractal-tasks-tools` 0.4.0 in mock tasks (\#3237).
 
 # 2.19.4
 

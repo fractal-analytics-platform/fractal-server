@@ -40,6 +40,7 @@ def collect_ssh_pixi(
     tar_gz_file: FractalUploadedFile,
     resource: Resource,
     profile: Profile,
+    use_pixi_lockfile: bool,
 ) -> None:
     """
     Collect a task package over SSH
@@ -140,6 +141,7 @@ def collect_ssh_pixi(
                     task_group.archive_path = archive_path
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
+                    frozen_option = "--frozen" if use_pixi_lockfile else ""
                     replacements = {
                         (
                             "__PIXI_HOME__",
@@ -154,7 +156,7 @@ def collect_ssh_pixi(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__FROZEN_OPTION__", ""),
+                        ("__FROZEN_OPTION__", frozen_option),
                         (
                             "__TOKIO_WORKER_THREADS__",
                             str(

@@ -1,5 +1,8 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
 from sqlalchemy.sql.operators import is_not
@@ -20,12 +23,16 @@ from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
     _get_default_usergroup_id_or_none,
 )
+from fractal_server.app.routes.aux._versions import _version_sort_key
 from fractal_server.app.schemas.v2 import TaskImport
 from fractal_server.app.schemas.v2 import WorkflowImport
+from fractal_server.app.schemas.v2 import WorkflowImportFromTemplate
+from fractal_server.app.schemas.v2 import WorkflowReadWithWarnings
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import set_logger
+from fractal_server.utils import get_timestamp
 
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_project_check_access
@@ -33,6 +40,7 @@ from ._aux_functions import _get_user_resource_id
 from ._aux_functions import _workflow_insert_task
 from ._aux_functions_tasks import _add_warnings_to_workflow_tasks
 from ._aux_functions_tasks import _check_type_filters_compatibility
+from ._aux_functions_templates import _get_template_read_access
 
 router = APIRouter()
 
@@ -40,8 +48,14 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-class TaskAvailable(BaseModel):
+class AvailableTask(BaseModel):
+    """
+    Represents an alternative for a workflow task that one has attempted to
+    import but which is not available.
+    """
+
     version: str
+    older_than_target: bool
     active: bool
 
 
@@ -87,7 +101,7 @@ async def _get_task_id_or_available_tasks(
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
-) -> tuple[bool, int | list[TaskAvailable]]:
+) -> tuple[bool, int | list[AvailableTask]]:
     """
     Find a task id based on `task_import`.
     If the task is not found, return the list of available versions.
@@ -105,7 +119,7 @@ async def _get_task_id_or_available_tasks(
         - `success` is `True` if a matching task was found, `False` otherwise.
         - `result` is:
             - the `id` of the matching task when `success` is `True`,
-            - a list of `TaskAvailable` instances when `success` is `False`.
+            - a list of `AvailableTask` instances when `success` is `False`.
     """
 
     logger.debug(f"[_get_task_id_or_available_tasks] START, {task_import=}")
@@ -145,7 +159,14 @@ async def _get_task_id_or_available_tasks(
         return (
             False,
             [
-                TaskAvailable(version=tg.version, active=tg.active)
+                AvailableTask(
+                    version=tg.version,
+                    older_than_target=(
+                        _version_sort_key(tg.version)
+                        < _version_sort_key(task_import.version)
+                    ),
+                    active=tg.active,
+                )
                 for tg in matching_task_groups
             ],
         )
@@ -198,20 +219,17 @@ async def _get_task_id_or_available_tasks(
     return (True, task_id)
 
 
-@router.post(
-    "/project/{project_id}/workflow/import/",
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow(
+async def _import_workflow(
+    *,
     project_id: int,
     workflow_import: WorkflowImport,
-    user: UserOAuth = Depends(get_api_user),
-    db: AsyncSession = Depends(get_async_db),
-):
+    user: UserOAuth,
+    db: AsyncSession,
+    template_id: int | None = None,
+) -> dict[str, Any]:
     """
-    Import an existing workflow into a project and create required objects.
+    Import a workflow into a project and create required objects.
     """
-
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
 
     # Preliminary checks
@@ -288,6 +306,7 @@ async def import_workflow(
     # Create new Workflow
     db_workflow = WorkflowV2(
         project_id=project_id,
+        template_id=template_id,
         **workflow_import.model_dump(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
@@ -315,3 +334,71 @@ async def import_workflow(
     )
 
     return workflow_data
+
+
+@router.post(
+    "/project/{project_id}/workflow/import/",
+    response_model=WorkflowReadWithWarnings,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow(
+    project_id: int,
+    workflow_import: WorkflowImport,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowReadWithWarnings:
+    workflow = await _import_workflow(
+        project_id=project_id,
+        workflow_import=workflow_import,
+        user=user,
+        db=db,
+    )
+    return workflow
+
+
+@router.post(
+    "/project/{project_id}/workflow/import-from-template/",
+    response_model=WorkflowReadWithWarnings,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_from_template(
+    project_id: int,
+    template_id: int,
+    workflow_import_from_template: WorkflowImportFromTemplate,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> WorkflowReadWithWarnings:
+    template = await _get_template_read_access(
+        user_id=user.id,
+        template_id=template_id,
+        db=db,
+    )
+    workflow_import = WorkflowImport(**template.data)
+
+    if workflow_import_from_template.name:
+        workflow_import.name = workflow_import_from_template.name
+
+    try:
+        for (
+            key,
+            value,
+        ) in workflow_import_from_template.override_versions.items():
+            workflow_import.task_list[key].task.version = value
+    except IndexError as e:
+        error_msg = "Task index out of bound in `override_versions`."
+        logger.warning(f"{error_msg} Original error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=error_msg,
+        )
+
+    workflow = await _import_workflow(
+        project_id=project_id,
+        template_id=template_id,
+        workflow_import=workflow_import,
+        user=user,
+        db=db,
+    )
+    template.timestamp_last_used = get_timestamp()
+    await db.commit()
+    return workflow

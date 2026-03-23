@@ -830,3 +830,70 @@ async def test_channel_parallelization_no_overwrite(
 
     # Check that there are now 4 images
     assert len(dataset_attrs["images"]) == 4
+
+
+async def test_s3_url(
+    db,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+    local_resource_profile_db,
+):
+    """
+    The purpose of this test is to check if a workflow can run with S3 URL.
+    We want to check that:
+    - Fractal server does not generate any error
+    - URL are correctly passed in and out of tasks
+    This is not to test actual S3 connectivity as fractal server is anyway
+     not accessing the data.
+    """
+    resource, _ = local_resource_profile_db
+    zarr_dir = "s3://test-bucket/zarr_dir"
+    image_dir = "s3://test-bucket/input_images"
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory(user)
+
+    dataset = await dataset_factory(project_id=project.id, zarr_dir=zarr_dir)
+    workflow = await workflow_factory(project_id=project.id)
+
+    wftask0 = await workflowtask_factory(
+        workflow_id=workflow.id,
+        task_id=fractal_tasks_mock_db["dummy_converter_compound_s3"].id,
+        order=0,
+        args_non_parallel=dict(image_dir=image_dir),
+        args_parallel={},
+    )
+    job = await job_factory(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
+    execute_tasks_mod(
+        wf_task_list=[wftask0],
+        dataset=dataset,
+        workflow_dir_local=tmp_path / "job0",
+        user_id=user_id,
+        runner=local_runner,
+        job_id=job.id,
+        resource_id=resource.id,
+    )
+    dataset_attrs = await _get_dataset_attrs(db, dataset.id)
+    assert (
+        dataset_attrs["images"][0]["zarr_url"]
+        == "s3://test-bucket/zarr_dir/my_plate.zarr/A/01/0"
+    )
+    assert (
+        dataset_attrs["images"][1]["zarr_url"]
+        == "s3://test-bucket/zarr_dir/my_plate.zarr/A/02/0"
+    )
+    assert len(dataset_attrs["images"]) == 2
