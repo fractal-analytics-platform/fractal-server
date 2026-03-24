@@ -244,8 +244,10 @@ jobs:
           FRACTAL_EMAIL_PASSWORD: fakepassword
           FRACTAL_HELP_URL: https://example.org/info
           # Coverage
-          COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+
+        run: |
+          COVERAGE_FILE=coverage-data-oauth-${{ matrix.python-version }} uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+          COVERAGE_FILE=coverage-data-basic-auth-${{ matrix.python-version }} FRACTAL_DISABLE_BASIC_AUTH=true uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
