@@ -165,9 +165,9 @@ jobs:
           path: coverage-data-containers-${{ matrix.python-version }}*
 
 
-  tests_oauth:
+  tests_auth:
 
-    name: "OAuth - Python ${{ matrix.python-version }}"
+    name: "OAuth and basic-auth - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -203,7 +203,6 @@ jobs:
       FRACTAL_EMAIL_USE_LOGIN: true
       FRACTAL_EMAIL_PASSWORD: fakepassword
       FRACTAL_HELP_URL: https://example.org/info
-
 
     services:
 
