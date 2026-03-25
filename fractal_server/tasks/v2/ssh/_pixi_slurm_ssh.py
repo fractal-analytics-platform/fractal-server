@@ -184,6 +184,7 @@ def run_script_on_remote_slurm(
         f"#SBATCH --out={stdout_remote}",
         f"#SBATCH -D {workdir_remote}",
         "",
+        "set -e",
     ]
     script_lines.extend(slurm_config_obj.preamble)
     for script_path in script_paths:
