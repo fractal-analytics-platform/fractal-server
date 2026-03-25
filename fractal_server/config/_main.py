@@ -19,6 +19,8 @@ class Settings(BaseSettings):
         JWT_SECRET_KEY:
             JWT secret.<br>
             ⚠️ Set this variable to a secure string, and do not disclose it.
+        COOKIE_EXPIRE_SECONDS:
+            Cookie token lifetime, in seconds.
         FRACTAL_RUNNER_BACKEND:
             Select which runner backend to use.
         FRACTAL_LOGGING_LEVEL:
@@ -49,6 +51,7 @@ class Settings(BaseSettings):
 
     JWT_EXPIRE_SECONDS: int = 180
     JWT_SECRET_KEY: SecretStr
+    COOKIE_EXPIRE_SECONDS: int = 86400
     # Note: we do not use ResourceType here to avoid circular imports
     FRACTAL_RUNNER_BACKEND: Literal["local", "slurm_ssh", "slurm_sudo"] = (
         "local"
