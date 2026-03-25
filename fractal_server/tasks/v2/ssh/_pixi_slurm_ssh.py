@@ -137,10 +137,10 @@ def _verify_success_file_exists(
         raise RuntimeError(error_msg)
 
 
-def run_script_on_remote_slurm(
+def run_commands_on_remote_slurm(
     *,
     job_name: str,
-    script_paths: list[str],
+    commands: list[str],
     slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -162,7 +162,7 @@ def run_script_on_remote_slurm(
     logger = get_logger(logger_name=logger_name)
 
     # (1) Prepare remote submission script
-    workdir_remote = _get_workdir_remote(script_paths)
+    workdir_remote = _get_workdir_remote(commands)
     submission_script_remote = os.path.join(
         workdir_remote, f"{prefix}-submit.sh"
     )
@@ -187,8 +187,7 @@ def run_script_on_remote_slurm(
         "set -e",
     ]
     script_lines.extend(slurm_config_obj.preamble)
-    for script_path in script_paths:
-        script_lines.append(f"bash {script_path}")
+    script_lines.extend(commands)
     script_lines.append(f"touch {success_file_remote}")
 
     script_contents = "\n".join(script_lines)
