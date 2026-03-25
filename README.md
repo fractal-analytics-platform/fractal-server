@@ -184,7 +184,7 @@
 | fractal\_server/tasks/v2/local/reactivate.py                                 |       70 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/tasks/v2/local/reactivate\_pixi.py                           |       77 |        8 |        4 |        0 |     90% |   188-199 |
 | fractal\_server/tasks/v2/ssh/\_\_init\_\_.py                                 |        7 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/v2/ssh/\_pixi\_slurm\_ssh.py                           |       95 |        2 |       16 |        2 |     96% |   45, 136 |
+| fractal\_server/tasks/v2/ssh/\_pixi\_slurm\_ssh.py                           |       96 |        2 |       16 |        2 |     96% |   45, 136 |
 | fractal\_server/tasks/v2/ssh/\_utils.py                                      |       57 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/tasks/v2/ssh/collect.py                                      |      121 |        1 |       12 |        0 |     99% |       293 |
 | fractal\_server/tasks/v2/ssh/collect\_pixi.py                                |      119 |        8 |        8 |        0 |     94% |   330-346 |
@@ -207,7 +207,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10427** |  **181** | **1878** |   **92** | **98%** |           |
+| **TOTAL**                                                                    | **10428** |  **181** | **1878** |   **92** | **98%** |           |
 
 
 ## Setup coverage badge
