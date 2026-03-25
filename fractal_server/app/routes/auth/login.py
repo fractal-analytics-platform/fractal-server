@@ -7,7 +7,6 @@ from fastapi import APIRouter
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-from . import cookie_backend
 from . import fastapi_users
 from . import token_backend
 
@@ -27,9 +26,6 @@ def get_login_router() -> APIRouter | None:
         router_login.include_router(
             fastapi_users.get_auth_router(token_backend),
             prefix="/token",
-        )
-        router_login.include_router(
-            fastapi_users.get_auth_router(cookie_backend),
         )
 
         # Add trailing slash to all routes paths

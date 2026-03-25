@@ -1,6 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.20.0 (unreleased)
+# Unreleased
+
+* API:
+    * Drop `POST /auth/login/` and `POST /auth/logout/` cookie-based endpoints (\#3242).
+
+# 2.20.0
 
 * API:
     * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).
