@@ -141,6 +141,7 @@ def run_script_on_remote_slurm(
     *,
     job_name: str,
     script_paths: list[str],
+    final_commands: list[str],
     slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -189,6 +190,7 @@ def run_script_on_remote_slurm(
     script_lines.extend(slurm_config_obj.preamble)
     for script_path in script_paths:
         script_lines.append(f"bash {script_path}")
+    script_lines.extend(final_commands)
     script_lines.append(f"touch {success_file_remote}")
 
     script_contents = "\n".join(script_lines)
