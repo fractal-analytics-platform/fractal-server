@@ -179,7 +179,7 @@ jobs:
 
     env:
       FRACTAL_RUNNER_BACKEND: local
-      JWT_SECRET_KEY: jwt_secret_key
+      JWT_SECRET_KEY: "very_secret_key-very_secret_key-very_secret_key"
       JWT_EXPIRE_SECONDS: 1000
       # Postgres
       POSTGRES_USER: postgres
