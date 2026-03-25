@@ -15,7 +15,7 @@ from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     _verify_success_file_exists,
 )
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
-    run_commands_on_remote_slurm,
+    run_script_on_remote_slurm,
 )
 
 
@@ -104,9 +104,9 @@ def test_sbatch_failure(
     log_file_path.touch()
 
     with pytest.raises(ValueError, match="sbatch"):
-        run_commands_on_remote_slurm(
+        run_script_on_remote_slurm(
             job_name="test",
-            commands=[f"bash {script_path}"],
+            script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
                 mem="1G", cpus=1, partition="main", time="10"
             ).model_dump(),
@@ -121,9 +121,9 @@ def test_sbatch_failure(
 
     # Repeat, with different memory configuration
     with pytest.raises(ValueError, match="sbatch"):
-        run_commands_on_remote_slurm(
+        run_script_on_remote_slurm(
             job_name="test",
-            commands=[f"bash {script_path}"],
+            script_paths=[script_path],
             slurm_config=PixiSLURMConfig(
                 mem_per_cpu="1G",
                 cpus=1,

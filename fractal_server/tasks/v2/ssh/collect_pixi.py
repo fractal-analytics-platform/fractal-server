@@ -28,7 +28,7 @@ from fractal_server.tasks.v2.utils_pixi import parse_collect_stdout
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
-from ._pixi_slurm_ssh import run_commands_on_remote_slurm
+from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 from ._utils import edit_pyproject_toml_in_place_ssh
 
@@ -247,11 +247,11 @@ def collect_ssh_pixi(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Run scripts 2 and 3
-                    stdout = run_commands_on_remote_slurm(
+                    stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
-                        commands=[
-                            f"bash {remote_script2_path}",
-                            f"bash {remote_script3_path}",
+                        script_paths=[
+                            remote_script2_path,
+                            remote_script3_path,
                             f"chmod -R 755 {source_dir}",
                         ],
                         slurm_config=resource.tasks_pixi_config["SLURM_CONFIG"],
