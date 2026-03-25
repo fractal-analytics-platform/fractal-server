@@ -193,16 +193,6 @@ jobs:
       OAUTH_CLIENT_SECRET: client_test_secret
       OAUTH_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
       OAUTH_OIDC_CONFIG_ENDPOINT: http://127.0.0.1:5556/dex/.well-known/openid-configuration
-      # Email
-      FRACTAL_EMAIL_SENDER: sender@example.org
-      FRACTAL_EMAIL_SMTP_SERVER: localhost
-      FRACTAL_EMAIL_SMTP_PORT: 1025
-      FRACTAL_EMAIL_INSTANCE_NAME: test
-      FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
-      FRACTAL_EMAIL_USE_STARTTLS: false
-      FRACTAL_EMAIL_USE_LOGIN: true
-      FRACTAL_EMAIL_PASSWORD: fakepassword
-      FRACTAL_HELP_URL: https://example.org/info
 
     services:
 
@@ -244,13 +234,25 @@ jobs:
 
       - name: Oauth test
         env:
+          # Email
+          FRACTAL_EMAIL_SENDER: sender@example.org
+          FRACTAL_EMAIL_SMTP_SERVER: localhost
+          FRACTAL_EMAIL_SMTP_PORT: 1025
+          FRACTAL_EMAIL_INSTANCE_NAME: test
+          FRACTAL_EMAIL_RECIPIENTS: recipient1@example.org,recipient2@example.org
+          FRACTAL_EMAIL_USE_STARTTLS: false
+          FRACTAL_EMAIL_USE_LOGIN: true
+          FRACTAL_EMAIL_PASSWORD: fakepassword
+          FRACTAL_HELP_URL: https://example.org/info
+          # Coverage
           COVERAGE_FILE: "coverage-data-oauth-${{ matrix.python-version }}"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
       - name: Basic-auth test
         env:
-          COVERAGE_FILE: "coverage-data-basic-auth-${{ matrix.python-version }}"
           FRACTAL_DISABLE_BASIC_AUTH: "true"
+          # Coverage
+          COVERAGE_FILE: "coverage-data-basic-auth-${{ matrix.python-version }}"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
 
       - uses: actions/upload-artifact@v4
