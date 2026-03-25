@@ -266,7 +266,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_api, tests_not_api, tests_containers, tests_oauth]
+    needs: [tests_api, tests_not_api, tests_containers, tests_auth]
 
     permissions:
       pull-requests: write
