@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.1
+
+* Task lifecycle:
+    * Make pixi-task-colletion SLURM job fail if one of its steps fail (\#3245).
+
 # 2.20.0
 
 * API:
