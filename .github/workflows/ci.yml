@@ -245,13 +245,13 @@ jobs:
 
       - name: Oauth test
         env:
-          COVERAGE_FILE=coverage-data-oauth-${{ matrix.python-version }}
+          COVERAGE_FILE: "coverage-data-oauth-${{ matrix.python-version }}"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
       - name: Basic-auth test
         env:
-          COVERAGE_FILE=coverage-data-basic-auth-${{ matrix.python-version }}
-          FRACTAL_DISABLE_BASIC_AUTH=true
+          COVERAGE_FILE: "coverage-data-basic-auth-${{ matrix.python-version }}"
+          FRACTAL_DISABLE_BASIC_AUTH: "true"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
 
       - uses: actions/upload-artifact@v4
