@@ -249,11 +249,15 @@ jobs:
           COVERAGE_FILE=coverage-data-oauth-${{ matrix.python-version }} uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
           COVERAGE_FILE=coverage-data-basic-auth-${{ matrix.python-version }} FRACTAL_DISABLE_BASIC_AUTH=true uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
 
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-data-oauth-${{ matrix.python-version }}
           path: coverage-data-oauth-${{ matrix.python-version }}*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-basic0auth-${{ matrix.python-version }}
+          path: coverage-data-basic-auth-${{ matrix.python-version }}*
 
   coverage:
     name: Coverage
