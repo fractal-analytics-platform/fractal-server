@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.20.0 (unreleased)
+# 2.20.0
 
 * API:
     * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).
