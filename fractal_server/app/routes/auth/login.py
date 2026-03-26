@@ -13,24 +13,28 @@ from . import token_backend
 router_login = APIRouter()
 
 
-def get_login_router() -> APIRouter | None:
+def get_login_router() -> APIRouter:
     """
-    Get the `APIRouter` object for /auth/token/login and /auth/login endpoints.
+    Get the `APIRouter` for `/auth/token/login/` and `/auth/token/logout/`
     """
     settings = Inject(get_settings)
+    router_login = APIRouter()
+    router_login.include_router(
+        fastapi_users.get_auth_router(token_backend),
+        prefix="/token",
+    )
     if settings.FRACTAL_DISABLE_BASIC_AUTH == "true":
-        return None
-    else:
-        router_login = APIRouter()
+        # Remove `/auth/token/login/`
+        original_routes = router_login.routes[:]
+        router_login.routes = [
+            route
+            for route in original_routes
+            if not route.path.startswith("/token/login")
+        ]
 
-        router_login.include_router(
-            fastapi_users.get_auth_router(token_backend),
-            prefix="/token",
-        )
+    # Add trailing slash to all routes paths
+    for route in router_login.routes:
+        if not route.path.endswith("/"):
+            route.path = f"{route.path}/"
 
-        # Add trailing slash to all routes paths
-        for route in router_login.routes:
-            if not route.path.endswith("/"):
-                route.path = f"{route.path}/"
-
-        return router_login
+    return router_login
