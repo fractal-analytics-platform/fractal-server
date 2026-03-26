@@ -66,7 +66,7 @@ async def test_no_basic_auth(
     assert await _oauth_count(db) == 1
 
     # Make sure that `/auth/token/logout/` is still in-place.
-    res = await client.post("/auth/token/logout/")
+    res = await client.post("/auth/token/logout/", data={})
     assert res.status_code == 200
 
     # Make a `GET /auth/current-user/` call via Authorization header
