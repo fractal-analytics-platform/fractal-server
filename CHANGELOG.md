@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.3
+
+* API:
+    * Always include `/auth/token/logout/`, independently on `FRACTAL_DISABLE_BASIC_AUTH` (\#3252).
+
 # 2.20.2
 
 * API:
