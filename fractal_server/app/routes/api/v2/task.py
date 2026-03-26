@@ -116,6 +116,24 @@ async def patch_task(
     )
     update = task_update.model_dump(exclude_unset=True)
 
+    task_group = await db.get(TaskGroupV2, db_task.taskgroupv2_id)
+    if task_group.origin != TaskGroupOriginEnum.OTHER and any(
+        arg in update
+        for arg in [
+            "command_parallel",
+            "command_non_parallel",
+            "input_types",
+            "output_types",
+        ]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Can only update 'category', 'modality', 'authors' and 'tags' "
+                f"when {task_group.origin=}."
+            ),
+        )
+
     # Forbid changes that set a previously unset command
     if db_task.type == TaskType.NON_PARALLEL and "command_parallel" in update:
         raise HTTPException(
