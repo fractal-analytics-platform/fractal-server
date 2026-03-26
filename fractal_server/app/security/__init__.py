@@ -9,7 +9,7 @@ library with
 SQLModel database adapter.
 
 In particular, this module links the appropriate database models, sets up
-FastAPIUsers with Barer Token and cookie transports and register local routes.
+FastAPIUsers with Barer Token transport and register local routes.
 Then, for each OAuth client defined in the Fractal Settings configuration, it
 registers the client and the relative routes.
 
