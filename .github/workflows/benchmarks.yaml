@@ -40,7 +40,7 @@ jobs:
         export POSTGRES_PASSWORD=postgres
         export POSTGRES_USER=postgres
         export POSTGRES_HOST=localhost
-        export JWT_SECRET_KEY=secret
+        export JWT_SECRET_KEY="very_secret_key-very_secret_key-very_secret_key"
         export JWT_EXPIRE_SECONDS=84600
         export FRACTAL_DEFAULT_GROUP_NAME=All
         cd benchmarks/
