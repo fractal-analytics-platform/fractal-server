@@ -1,9 +1,6 @@
 from typing import override
 
 from fastapi import APIRouter
-from fastapi_users.authentication import AuthenticationBackend
-from fastapi_users.authentication import CookieTransport
-from fastapi_users.authentication import JWTStrategy
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.openid import OpenID
@@ -16,24 +13,8 @@ from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
+from . import cookie_backend
 from . import fastapi_users
-
-cookie_transport = CookieTransport(cookie_samesite="none")
-
-
-def get_jwt_cookie_strategy() -> JWTStrategy:
-    settings = Inject(get_settings)
-    return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
-        lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
-    )
-
-
-cookie_backend = AuthenticationBackend(
-    name="cookie-jwt",
-    transport=cookie_transport,
-    get_strategy=get_jwt_cookie_strategy,
-)
 
 
 class FractalOpenID(OpenID):
