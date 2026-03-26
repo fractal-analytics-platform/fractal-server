@@ -21,7 +21,7 @@ createdb ${POSTGRES_DB}
 psql --dbname=${POSTGRES_DB} < "clean_db_fractal_$OLD_DB_VERSION.sql"
 
 echo "POSTGRES_DB=$POSTGRES_DB" > .fractal_server.env
-echo "JWT_SECRET_KEY=very_secret_key-very_secret_key-very_secret_key" >> .fractal_server.env
+echo "JWT_SECRET_KEY=fake" >> .fractal_server.env
 
 # Update database schemas
 uv run --frozen fractalctl set-db

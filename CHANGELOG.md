@@ -4,7 +4,6 @@
 
 * API:
     * Drop `POST /auth/login/` and `POST /auth/logout/` cookie-based endpoints (\#3242).
-    * Expose `FRACTAL_DISABLE_BASIC_AUTH` env variable to exclude `POST /auth/token/login/` and `POST /auth/token/logout/` (\#3241).
 
 # 2.20.1
 

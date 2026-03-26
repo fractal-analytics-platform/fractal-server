@@ -45,8 +45,6 @@ class Settings(BaseSettings):
             Time limit beyond which the execution of an API request is
             considered *slow* and an appropriate warning is logged by the
             middleware.
-        FRACTAL_DISABLE_BASIC_AUTH:
-            FIXME
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -64,4 +62,3 @@ class Settings(BaseSettings):
     FRACTAL_HELP_URL: HttpUrl | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
     FRACTAL_LONG_REQUEST_TIME: float = 30.0
-    FRACTAL_DISABLE_BASIC_AUTH: Literal["true", "false"] = "false"
