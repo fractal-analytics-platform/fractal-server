@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.20.2
 
 * API:
     * Drop `POST /auth/login/` and `POST /auth/logout/` cookie-based endpoints (\#3242, \#3249).
