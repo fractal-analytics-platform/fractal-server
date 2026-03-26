@@ -354,6 +354,11 @@ async def test_patch_task(
             user_id=user_A_id, index=2, type="non_parallel"
         )
         task_compound = await task_factory(user_id=user_A_id, index=3)
+        task_pip = await task_factory(
+            user_id=user_A_id,
+            index=4,
+            task_group_kwargs=dict(origin="pip"),
+        )
         # Test successuful patch of task_compound
         update = TaskUpdate(
             input_types={"input": True, "output": False},
@@ -378,6 +383,13 @@ async def test_patch_task(
             else:
                 # assert non patched items are still the same
                 assert v == task_compound.model_dump()[k]
+
+        res = await client.patch(f"{PREFIX}/{task_pip.id}/", json=payload)
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Can only update 'category', 'modality', 'authors' and 'tags' "
+            "when task_group.origin='pip'."
+        )
 
     async with MockCurrentUser(user_id=user_A_id):
         # Fail on updating unsetted commands
