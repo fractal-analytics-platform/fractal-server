@@ -7,7 +7,7 @@ on:
     branches: ["main", 'ihb-develop']
 
 env:
-  JWT_SECRET_KEY: fake
+  JWT_SECRET_KEY: "very_secret_key-very_secret_key-very_secret_key"
   POSTGRES_DB: fake
   OAUTH_CLIENT_NAME: oauth2-example
   OAUTH_CLIENT_ID: oidc_example_client_id

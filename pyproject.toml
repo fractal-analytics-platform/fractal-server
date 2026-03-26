@@ -88,7 +88,7 @@ filterwarnings = [
     "error::RuntimeWarning",
     "error::pytest.PytestUnraisableExceptionWarning",
 ]
-markers = ["container", "ssh", "fails_on_macos", "oauth"]
+markers = ["container", "ssh", "fails_on_macos", "oauth", "basic_auth"]
 
 [tool.bumpver]
 current_version = "2.20.1"
@@ -122,7 +122,7 @@ ignore_missing_imports = true
 
 [tool.pytest_env]
 PYTHONASYNCIODEBUG=1
-JWT_SECRET_KEY="very_secret_key"
+JWT_SECRET_KEY="very_secret_key-very_secret_key-very_secret_key"
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="postgres"
 POSTGRES_DB="fractal_test"

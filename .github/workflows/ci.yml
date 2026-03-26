@@ -48,7 +48,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth or basic_auth)" tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -96,7 +96,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth)" --ignore tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -165,9 +165,9 @@ jobs:
           path: coverage-data-containers-${{ matrix.python-version }}*
 
 
-  tests_oauth:
+  tests_auth:
 
-    name: "OAuth - Python ${{ matrix.python-version }}"
+    name: "OAuth and basic-auth - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -177,6 +177,22 @@ jobs:
         exclude:
           - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
 
+    env:
+      FRACTAL_RUNNER_BACKEND: local
+      JWT_SECRET_KEY: "very_secret_key-very_secret_key-very_secret_key"
+      JWT_EXPIRE_SECONDS: 1000
+      # Postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fractal_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      # Dex (OAuth)
+      OAUTH_CLIENT_NAME: dexidp
+      OAUTH_CLIENT_ID: client_test_id
+      OAUTH_CLIENT_SECRET: client_test_secret
+      OAUTH_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
+      OAUTH_OIDC_CONFIG_ENDPOINT: http://127.0.0.1:5556/dex/.well-known/openid-configuration
 
     services:
 
@@ -216,23 +232,8 @@ jobs:
 
       - run: uv sync --frozen --group dev
 
-      - name: Test with pytest
+      - name: Oauth test
         env:
-          FRACTAL_RUNNER_BACKEND: local
-          JWT_SECRET_KEY: jwt_secret_key
-          JWT_EXPIRE_SECONDS: 1000
-          # Postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fractal_test
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          # Dex (OAuth)
-          OAUTH_CLIENT_NAME: dexidp
-          OAUTH_CLIENT_ID: client_test_id
-          OAUTH_CLIENT_SECRET: client_test_secret
-          OAUTH_REDIRECT_URL: http://localhost:8001/auth/dexidp/callback/
-          OAUTH_OIDC_CONFIG_ENDPOINT: http://127.0.0.1:5556/dex/.well-known/openid-configuration
           # Email
           FRACTAL_EMAIL_SENDER: sender@example.org
           FRACTAL_EMAIL_SMTP_SERVER: localhost
@@ -244,19 +245,30 @@ jobs:
           FRACTAL_EMAIL_PASSWORD: fakepassword
           FRACTAL_HELP_URL: https://example.org/info
           # Coverage
-          COVERAGE_FILE: coverage-data-oauth-${{ matrix.python-version }}
+          COVERAGE_FILE: "coverage-data-oauth-${{ matrix.python-version }}"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+      - name: Basic-auth test
+        env:
+          FRACTAL_DISABLE_BASIC_AUTH: "true"
+          # Coverage
+          COVERAGE_FILE: "coverage-data-basic-auth-${{ matrix.python-version }}"
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
+
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-data-oauth-${{ matrix.python-version }}
           path: coverage-data-oauth-${{ matrix.python-version }}*
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-basic-auth-${{ matrix.python-version }}
+          path: coverage-data-basic-auth-${{ matrix.python-version }}*
+
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_api, tests_not_api, tests_containers, tests_oauth]
+    needs: [tests_api, tests_not_api, tests_containers, tests_auth]
 
     permissions:
       pull-requests: write
