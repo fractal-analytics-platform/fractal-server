@@ -294,7 +294,8 @@ async def _import_workflow(
 
     for wf_task, (_, task_id) in zip(workflow_import.task_list, list_results):
         new_wf_task = WorkflowTaskCreate(
-            **wf_task.model_dump(exclude_none=True, exclude={"task"})
+            **wf_task.model_dump(exclude_none=True, exclude={"task"}),
+            task_id=task_id,
         )
         list_wf_tasks.append(new_wf_task)
         task = await db.get(TaskV2, task_id)
@@ -313,12 +314,14 @@ async def _import_workflow(
     await db.commit()
     await db.refresh(db_workflow)
 
-    # Insert task into the workflow
-    for new_wf_task, (_, task_id) in zip(list_wf_tasks, list_results):
+    # Insert tasks into the workflow
+    for i, (new_wf_task, (_, task_id)) in enumerate(
+        zip(list_wf_tasks, list_results)
+    ):
         await _workflow_insert_task(
             **new_wf_task.model_dump(),
             workflow_id=db_workflow.id,
-            task_id=task_id,
+            order=i,
             db=db,
         )
 

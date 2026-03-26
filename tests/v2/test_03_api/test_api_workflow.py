@@ -133,9 +133,8 @@ async def test_delete_workflow(
 
         # Add a dummy task to workflow
         res = await client.post(
-            f"{PREFIX}/project/{p_id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(),
+            f"{PREFIX}/project/{p_id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": task.id}],
         )
         debug(res.json())
         debug(user)
@@ -166,14 +165,15 @@ async def test_delete_workflow(
         wf_not_deletable_1 = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id, name="task2")
         await _workflow_insert_task(
-            workflow_id=wf_deletable_1.id, task_id=task.id, db=db
+            workflow_id=wf_deletable_1.id, task_id=task.id, order=0, db=db
         )
         await _workflow_insert_task(
-            workflow_id=wf_deletable_2.id, task_id=task.id, db=db
+            workflow_id=wf_deletable_2.id, task_id=task.id, order=1, db=db
         )
         await _workflow_insert_task(
             workflow_id=wf_not_deletable_1.id,
             task_id=task.id,
+            order=2,
             db=db,
         )
         dataset = await dataset_factory(project_id=project.id)
@@ -254,9 +254,9 @@ async def test_get_workflow(
         wf = await workflow_factory(project_id=p_id, name=WORKFLOW_NAME)
         wf_id = wf.id
 
-        for task in [t1, t2, t3]:
+        for i, task in enumerate([t1, t2, t3]):
             await _workflow_insert_task(
-                workflow_id=wf_id, task_id=task.id, db=db
+                workflow_id=wf_id, task_id=task.id, order=i, db=db
             )
 
         # Get project (useful to check workflow.project relationship)
@@ -359,9 +359,9 @@ async def test_patch_workflow(
         assert res.json()["name"] == "WF"
         wf_id = res.json()["id"]
 
-        for task in [t1, t2, t3]:
+        for i, task in enumerate([t1, t2, t3]):
             await _workflow_insert_task(
-                workflow_id=wf_id, task_id=task.id, db=db
+                workflow_id=wf_id, task_id=task.id, order=i, db=db
             )
 
         res = await client.get(f"{PREFIX}/project/{project.id}/workflow/")
@@ -446,7 +446,7 @@ async def test_delete_workflow_with_job(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id, name="1")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, order=0, db=db
         )
         dataset = await dataset_factory(project_id=project.id)
 
@@ -500,21 +500,25 @@ async def test_workflow_type_filters_flow(
         wftask_converter = await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task_converter.id,
+            order=0,
             db=db,
         )
         wftask_mip = await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task_MIP.id,
+            order=1,
             db=db,
         )
         wftask_cellpose_2d = await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task_cellpose.id,
+            order=2,
             db=db,
         )
         wftask_cellpose_3d = await _workflow_insert_task(
             workflow_id=wf.id,
             task_id=task_cellpose.id,
+            order=3,
             db=db,
             type_filters={"is_3D": True},
         )

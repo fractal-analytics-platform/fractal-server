@@ -1,10 +1,12 @@
 from copy import deepcopy
+from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from fastapi.params import Query
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -29,17 +31,17 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=WorkflowTaskRead,
+    response_model=List[WorkflowTaskRead],
     status_code=status.HTTP_201_CREATED,
 )
-async def create_workflowtask(
+async def create_workflowtasks(
     project_id: int,
     workflow_id: int,
-    task_id: int,
-    wftask: WorkflowTaskCreate,
+    wftasks: List[WorkflowTaskCreate],
+    order: int | None = Query(default=None, ge=0),
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskRead | None:
+) -> List[WorkflowTaskRead] | None:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -52,53 +54,73 @@ async def create_workflowtask(
         db=db,
     )
 
-    task = await _get_task_read_access(
-        task_id=task_id, user_id=user.id, db=db, require_active=True
-    )
+    if await _workflow_has_submitted_job(workflow_id=workflow_id, db=db):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Cannot perform WorkflowTask insertion while a Job is running "
+                "for this Workflow."
+            ),
+        )
 
-    if task.type == TaskType.PARALLEL:
-        if (
-            wftask.meta_non_parallel is not None
-            or wftask.args_non_parallel is not None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
-                    "`WorkflowTask.args_non_parallel` if the associated Task "
-                    "is `parallel`."
-                ),
-            )
-    elif task.type == TaskType.NON_PARALLEL:
-        if wftask.meta_parallel is not None or wftask.args_parallel is not None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    "Cannot set `WorkflowTaskV2.meta_parallel` or "
-                    "`WorkflowTask.args_parallel` if the associated Task "
-                    "is `non_parallel`."
-                ),
-            )
+    if order is None:
+        order = len(workflow.task_list)
 
-    _check_type_filters_compatibility(
-        task_input_types=task.input_types,
-        wftask_type_filters=wftask.type_filters,
-    )
+    created_wftasks = []
 
-    wftask_db = await _workflow_insert_task(
-        workflow_id=workflow.id,
-        task_id=task_id,
-        meta_non_parallel=wftask.meta_non_parallel,
-        meta_parallel=wftask.meta_parallel,
-        args_non_parallel=wftask.args_non_parallel,
-        args_parallel=wftask.args_parallel,
-        type_filters=wftask.type_filters,
-        description=wftask.description,
-        alias=wftask.alias,
-        db=db,
-    )
+    for i, wftask in enumerate(wftasks):
+        task = await _get_task_read_access(
+            task_id=wftask.task_id, user_id=user.id, db=db, require_active=True
+        )
 
-    return wftask_db
+        if task.type == TaskType.PARALLEL:
+            if (
+                wftask.meta_non_parallel is not None
+                or wftask.args_non_parallel is not None
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=(
+                        "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
+                        "`WorkflowTask.args_non_parallel` if the associated "
+                        "Task is `parallel`."
+                    ),
+                )
+        elif task.type == TaskType.NON_PARALLEL:
+            if (
+                wftask.meta_parallel is not None
+                or wftask.args_parallel is not None
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=(
+                        "Cannot set `WorkflowTaskV2.meta_parallel` or "
+                        "`WorkflowTask.args_parallel` if the associated Task "
+                        "is `non_parallel`."
+                    ),
+                )
+
+        _check_type_filters_compatibility(
+            task_input_types=task.input_types,
+            wftask_type_filters=wftask.type_filters,
+        )
+
+        created_wft = await _workflow_insert_task(
+            workflow_id=workflow.id,
+            task_id=wftask.task_id,
+            order=order + i + 1,
+            meta_non_parallel=wftask.meta_non_parallel,
+            meta_parallel=wftask.meta_parallel,
+            args_non_parallel=wftask.args_non_parallel,
+            args_parallel=wftask.args_parallel,
+            type_filters=wftask.type_filters,
+            description=wftask.description,
+            alias=wftask.alias,
+            db=db,
+        )
+        created_wftasks.append(created_wft)
+
+    return created_wftasks
 
 
 @router.get(
