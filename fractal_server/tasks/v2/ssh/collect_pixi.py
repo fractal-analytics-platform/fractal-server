@@ -252,8 +252,8 @@ def collect_ssh_pixi(
                         script_paths=[
                             remote_script2_path,
                             remote_script3_path,
-                            f"chmod -R 755 {source_dir}",
                         ],
+                        final_commands=[f"chmod -R 755 {source_dir}"],
                         slurm_config=resource.tasks_pixi_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
