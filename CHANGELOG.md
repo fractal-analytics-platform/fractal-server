@@ -5,6 +5,12 @@
 * API:
     * Drop `POST /auth/login/` and `POST /auth/logout/` cookie-based endpoints (\#3242).
 
+# 2.20.1
+
+* Task lifecycle:
+    * Make pixi-task-colletion SLURM job fail if one of its steps fail (\#3245).
+    * Fix current usage of `bash chmod` in SLURM pixi-task-lifecycle scripts (\#3245).
+
 # 2.20.0
 
 * API:
