@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.4 (unreleased)
+
+* Testing:
+    * Update testing database to version 2.20.3 adding workflow templates (\#3253).
+
 # 2.20.3
 
 * API:
