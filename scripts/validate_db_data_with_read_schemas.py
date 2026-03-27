@@ -166,6 +166,6 @@ with next(get_sync_db()) as db:
     for template in sorted(templates, key=lambda x: x.id):
         WorkflowTemplateRead(
             user_email="user@example.org",
-            **template.model_dump(exclude={"user_id"}),
+            **template.model_dump(),
         )
         print(f"WorkflowTemplate {template.id} validated")
