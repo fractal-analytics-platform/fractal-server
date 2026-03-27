@@ -4,6 +4,8 @@
 
 * API:
     * Forbid editing some individual task properties if the origin of the task group is not "other" (\#3247).
+* Testing:
+    * Update testing database to version 2.20.3 adding workflow templates (\#3253).
 
 # 2.20.3
 
