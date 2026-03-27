@@ -12,6 +12,7 @@ from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.user_group import UserGroupRead
@@ -25,6 +26,7 @@ from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskRead
 from fractal_server.app.schemas.v2 import WorkflowRead
 from fractal_server.app.schemas.v2 import WorkflowTaskRead
+from fractal_server.app.schemas.v2 import WorkflowTemplateRead
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -157,3 +159,10 @@ with next(get_sync_db()) as db:
     for profile in sorted(profiles, key=lambda x: x.id):
         ProfileRead(**profile.model_dump())
         print(f"Profile {profile.id} validated")
+
+    # WORKFLOW TEMPLATE
+    stm = select(WorkflowTemplate)
+    templates = db.execute(stm).scalars().all()
+    for template in sorted(templates, key=lambda x: x.id):
+        WorkflowTemplateRead(**template.model_dump())
+        print(f"WorkflowTemplate {template.id} validated")
