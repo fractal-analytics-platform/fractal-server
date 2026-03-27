@@ -384,11 +384,19 @@ async def test_patch_task(
                 # assert non patched items are still the same
                 assert v == task_compound.model_dump()[k]
 
-        res = await client.patch(f"{PREFIX}/{task_pip.id}/", json=payload)
+        # Patch task-pip
+        res = await client.patch(
+            f"{PREFIX}/{task_pip.id}/", json={"command_parallel": "foo"}
+        )
         assert res.status_code == 422
         assert res.json()["detail"] == (
             "Cannot update 'command_parallel' when task_group.origin='pip'."
         )
+        res = await client.patch(
+            f"{PREFIX}/{task_pip.id}/", json={"category": "foo"}
+        )
+        assert res.status_code == 200
+        assert res.json()["category"] == "foo"
 
     async with MockCurrentUser(user_id=user_A_id):
         # Fail on updating unsetted commands
