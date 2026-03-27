@@ -387,8 +387,7 @@ async def test_patch_task(
         res = await client.patch(f"{PREFIX}/{task_pip.id}/", json=payload)
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Can only update 'category', 'modality', 'authors' and 'tags' "
-            "when task_group.origin='pip'."
+            "Cannot update 'command_parallel' when task_group.origin='pip'."
         )
 
     async with MockCurrentUser(user_id=user_A_id):
