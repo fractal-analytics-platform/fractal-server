@@ -65,12 +65,18 @@ async def test_no_basic_auth(
     await _verify_token(client, token, EMAIL)
     assert await _oauth_count(db) == 1
 
+    # Make sure that `/auth/token/logout/` is still in-place.
+    res = await client.post(
+        "/auth/token/logout/",
+        data={},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 204
+
     # Make a `GET /auth/current-user/` call via Authorization header
     res = await client.get(
         "/auth/current-user/",
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 200
     assert res.json()["email"] == EMAIL
