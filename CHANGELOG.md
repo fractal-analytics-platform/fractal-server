@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.20.4 (unreleased)
+# 2.20.4
 
 * API:
     * Forbid editing some individual task properties if the origin of the task group is not "other" (\#3247).
