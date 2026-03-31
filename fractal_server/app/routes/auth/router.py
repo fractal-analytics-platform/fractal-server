@@ -12,9 +12,7 @@ router_auth = APIRouter()
 
 router_auth.include_router(router_register)
 router_auth.include_router(router_current_user)
-router_login = get_login_router()
-if router_login is not None:
-    router_auth.include_router(router_login)
+router_auth.include_router(get_login_router())
 router_auth.include_router(router_users)
 router_auth.include_router(router_group)
 router_auth.include_router(router_viewer_paths)

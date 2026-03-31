@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict N5SGwcdyHUmQidI3HT1HCJ3RbeiMRBfiIYMWcf7nZL6IMoEbug1lt8UnlI1vrg5
+\restrict L5DhMpvOo049R0mrWS073yswnLfbhEeDSEhyOcK4YoojBGihkBg36jCHaFswwdj
 
--- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped from database version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -114,7 +114,6 @@ CREATE TABLE public.datasetv2 (
     id integer NOT NULL,
     name character varying NOT NULL,
     project_id integer NOT NULL,
-    history jsonb DEFAULT '[]'::json NOT NULL,
     timestamp_created timestamp with time zone NOT NULL,
     zarr_dir character varying NOT NULL,
     images jsonb DEFAULT '[]'::json NOT NULL
@@ -263,7 +262,8 @@ CREATE TABLE public.jobv2 (
     log character varying,
     attribute_filters jsonb DEFAULT '{}'::json NOT NULL,
     type_filters jsonb DEFAULT '{}'::json NOT NULL,
-    executor_error_log character varying
+    executor_error_log character varying,
+    fractal_server_version character varying DEFAULT 'pre-2.19.0'::character varying NOT NULL
 );
 
 
@@ -316,7 +316,7 @@ CREATE TABLE public.linkuserprojectv2 (
     permissions character varying NOT NULL,
     CONSTRAINT ck_linkuserprojectv2_owner_full_permissions CHECK ((NOT (is_owner AND ((permissions)::text <> 'rwx'::text)))),
     CONSTRAINT ck_linkuserprojectv2_owner_is_verified CHECK ((NOT (is_owner AND (NOT is_verified)))),
-    CONSTRAINT ck_linkuserprojectv2_valid_permissions CHECK (((permissions)::text = ANY ((ARRAY['r'::character varying, 'rw'::character varying, 'rwx'::character varying])::text[])))
+    CONSTRAINT ck_linkuserprojectv2_valid_permissions CHECK (((permissions)::text = ANY (ARRAY[('r'::character varying)::text, ('rw'::character varying)::text, ('rwx'::character varying)::text])))
 );
 
 
@@ -499,7 +499,8 @@ CREATE TABLE public.taskgroupactivityv2 (
     status character varying NOT NULL,
     action character varying NOT NULL,
     log character varying,
-    timestamp_ended timestamp with time zone
+    timestamp_ended timestamp with time zone,
+    fractal_server_version character varying DEFAULT 'pre-2.19.0'::character varying NOT NULL
 );
 
 
@@ -547,8 +548,6 @@ CREATE TABLE public.taskgroupv2 (
     active boolean NOT NULL,
     timestamp_created timestamp with time zone NOT NULL,
     env_info character varying,
-    "venv_size_in_kB" integer,
-    venv_file_number integer,
     timestamp_last_used timestamp with time zone NOT NULL,
     pixi_version character varying,
     pinned_package_versions_pre jsonb DEFAULT '{}'::jsonb,
@@ -590,7 +589,6 @@ CREATE TABLE public.taskv2 (
     type character varying NOT NULL,
     command_non_parallel character varying,
     command_parallel character varying,
-    source character varying,
     meta_non_parallel json DEFAULT '{}'::json NOT NULL,
     meta_parallel json DEFAULT '{}'::json NOT NULL,
     version character varying,
@@ -646,7 +644,8 @@ CREATE TABLE public.user_oauth (
     is_verified boolean NOT NULL,
     profile_id integer,
     slurm_accounts character varying[] DEFAULT '{}'::character varying[],
-    project_dirs character varying[] NOT NULL
+    project_dirs character varying[] NOT NULL,
+    is_guest boolean DEFAULT false NOT NULL
 );
 
 
@@ -723,7 +722,9 @@ CREATE TABLE public.workflowtaskv2 (
     args_non_parallel jsonb,
     task_type character varying NOT NULL,
     task_id integer NOT NULL,
-    type_filters jsonb DEFAULT '{}'::json NOT NULL
+    type_filters jsonb DEFAULT '{}'::json NOT NULL,
+    alias character varying,
+    description character varying
 );
 
 
@@ -752,6 +753,48 @@ ALTER SEQUENCE public.workflowtaskv2_id_seq OWNED BY public.workflowtaskv2.id;
 
 
 --
+-- Name: workflowtemplate; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.workflowtemplate (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    name character varying NOT NULL,
+    version integer NOT NULL,
+    fractal_server_version character varying NOT NULL,
+    timestamp_created timestamp with time zone NOT NULL,
+    timestamp_last_used timestamp with time zone NOT NULL,
+    user_group_id integer,
+    description character varying,
+    data json NOT NULL
+);
+
+
+ALTER TABLE public.workflowtemplate OWNER TO postgres;
+
+--
+-- Name: workflowtemplate_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.workflowtemplate_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.workflowtemplate_id_seq OWNER TO postgres;
+
+--
+-- Name: workflowtemplate_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.workflowtemplate_id_seq OWNED BY public.workflowtemplate.id;
+
+
+--
 -- Name: workflowv2; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -759,7 +802,9 @@ CREATE TABLE public.workflowv2 (
     id integer NOT NULL,
     name character varying NOT NULL,
     project_id integer NOT NULL,
-    timestamp_created timestamp with time zone NOT NULL
+    timestamp_created timestamp with time zone NOT NULL,
+    description character varying,
+    template_id integer
 );
 
 
@@ -900,6 +945,13 @@ ALTER TABLE ONLY public.workflowtaskv2 ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
+-- Name: workflowtemplate id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.workflowtemplate ALTER COLUMN id SET DEFAULT nextval('public.workflowtemplate_id_seq'::regclass);
+
+
+--
 -- Name: workflowv2 id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -927,7 +979,7 @@ COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids) FROM
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-b7477cc98f45
+7226c20dc233
 \.
 
 
@@ -935,8 +987,8 @@ b7477cc98f45
 -- Data for Name: datasetv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.datasetv2 (id, name, project_id, history, timestamp_created, zarr_dir, images) FROM stdin;
-1	MyDataset	1	[{"status": "done", "workflowtask": {"id": 1, "task": {"id": 1, "name": "Echo Task", "type": "compound", "owner": "admin", "source": "admin:echo-task", "version": null, "input_types": {}, "output_types": {}, "command_parallel": "echo", "command_non_parallel": "echo"}, "order": 0, "task_id": 1, "task_legacy": null, "workflow_id": 1, "type_filters": {}, "is_legacy_task": false, "task_legacy_id": null}, "parallelization": {}}]	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}]
+COPY public.datasetv2 (id, name, project_id, timestamp_created, zarr_dir, images) FROM stdin;
+1	MyDataset	1	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}]
 \.
 
 
@@ -968,8 +1020,8 @@ COPY public.historyunit (id, history_run_id, logfile, status, zarr_urls) FROM st
 -- Data for Name: jobv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.jobv2 (id, project_id, workflow_id, dataset_id, user_email, slurm_account, dataset_dump, workflow_dump, project_dump, worker_init, working_dir, working_dir_user, first_task_index, last_task_index, start_timestamp, end_timestamp, status, log, attribute_filters, type_filters, executor_error_log) FROM stdin;
-1	1	1	1	vanilla@example.org	\N	{"id": 1, "name": "MyDataset", "zarr_dir": "/invalid/zarr", "project_id": 1, "type_filters": {}, "attribute_filters": {}, "timestamp_created": "2024-04-24T10:54:44.017086+00:00"}	{"id": 1, "name": "MyWorkflow", "project_id": 1, "timestamp_created": "2024-04-24T10:54:44.034782+00:00"}	{"id": 1, "name": "MyProject_uv", "timestamp_created": "2024-04-24T10:54:43.995984+00:00"}	\N	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	0	0	2024-04-24 12:54:44.103821+02	2024-04-24 12:54:44.176501+02	done	2024-04-24 12:54:44,151 - WF1_job1 - INFO - Start execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - fractal_server.__VERSION__: 2.0.0a11\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - FRACTAL_RUNNER_BACKEND: local\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - slurm_user: vanilla-slurm\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - slurm_account: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - worker_init: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.id: 1\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir_user: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.first_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.last_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - START workflow "MyWorkflow"\n2024-04-24 12:54:44,154 - WF1_job1 - DEBUG - SUBMIT 0-th task (name="Echo Task")\n2024-04-24 12:54:44,168 - WF1_job1 - DEBUG - END    0-th task (name="Echo Task")\n2024-04-24 12:54:44,169 - WF1_job1 - INFO - End execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,169 - WF1_job1 - DEBUG - END workflow "MyWorkflow"\n	{}	{}	\N
+COPY public.jobv2 (id, project_id, workflow_id, dataset_id, user_email, slurm_account, dataset_dump, workflow_dump, project_dump, worker_init, working_dir, working_dir_user, first_task_index, last_task_index, start_timestamp, end_timestamp, status, log, attribute_filters, type_filters, executor_error_log, fractal_server_version) FROM stdin;
+1	1	1	1	vanilla@example.org	\N	{"id": 1, "name": "MyDataset", "zarr_dir": "/invalid/zarr", "project_id": 1, "type_filters": {}, "attribute_filters": {}, "timestamp_created": "2024-04-24T10:54:44.017086+00:00"}	{"id": 1, "name": "MyWorkflow", "project_id": 1, "timestamp_created": "2024-04-24T10:54:44.034782+00:00"}	{"id": 1, "name": "MyProject_uv", "timestamp_created": "2024-04-24T10:54:43.995984+00:00"}	\N	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	/private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444	0	0	2024-04-24 12:54:44.103821+02	2024-04-24 12:54:44.176501+02	done	2024-04-24 12:54:44,151 - WF1_job1 - INFO - Start execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - fractal_server.__VERSION__: 2.0.0a11\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - FRACTAL_RUNNER_BACKEND: local\n2024-04-24 12:54:44,151 - WF1_job1 - DEBUG - slurm_user: vanilla-slurm\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - slurm_account: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - worker_init: None\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.id: 1\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.working_dir_user: /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.first_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - job.last_task_index: 0\n2024-04-24 12:54:44,153 - WF1_job1 - DEBUG - START workflow "MyWorkflow"\n2024-04-24 12:54:44,154 - WF1_job1 - DEBUG - SUBMIT 0-th task (name="Echo Task")\n2024-04-24 12:54:44,168 - WF1_job1 - DEBUG - END    0-th task (name="Echo Task")\n2024-04-24 12:54:44,169 - WF1_job1 - INFO - End execution of workflow "MyWorkflow"; more logs at /private/tmp/proj_0000001_wf_0000001_job_0000001_20240424_105444/workflow.log\n2024-04-24 12:54:44,169 - WF1_job1 - DEBUG - END workflow "MyWorkflow"\n	{}	{}	\N	pre-2.19.0
 \.
 
 
@@ -991,6 +1043,7 @@ COPY public.linkusergroup (group_id, user_id, timestamp_created) FROM stdin;
 
 COPY public.linkuserprojectv2 (project_id, user_id, is_owner, is_verified, permissions) FROM stdin;
 1	28	t	t	rwx
+2	27	t	t	rwx
 \.
 
 
@@ -1017,6 +1070,7 @@ COPY public.profile (id, resource_id, resource_type, name, username, ssh_key_pat
 
 COPY public.projectv2 (id, name, timestamp_created, resource_id) FROM stdin;
 1	MyProject_uv	2024-04-24 12:54:43.995984+02	1
+2	admin_project	2026-03-27 09:34:42.201998+01	1
 \.
 
 
@@ -1033,8 +1087,8 @@ COPY public.resource (id, type, name, timestamp_created, host, jobs_local_dir, j
 -- Data for Name: taskgroupactivityv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started, pkg_name, version, status, action, log, timestamp_ended) FROM stdin;
-1	1	2	2024-11-12 15:08:40.027268+01	admin:ls-task	1.0.0	OK	collect	\N	\N
+COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started, pkg_name, version, status, action, log, timestamp_ended, fractal_server_version) FROM stdin;
+1	1	2	2024-11-12 15:08:40.027268+01	admin:ls-task	1.0.0	OK	collect	\N	\N	pre-2.19.0
 \.
 
 
@@ -1042,9 +1096,9 @@ COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started,
 -- Data for Name: taskgroupv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, archive_path, pip_extras, pinned_package_versions_post, active, timestamp_created, env_info, "venv_size_in_kB", venv_file_number, timestamp_last_used, pixi_version, pinned_package_versions_pre, resource_id) FROM stdin;
-1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	\N	\N	2024-10-29 09:05:04.891366+01	\N	{}	1
-2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	\N	\N	2024-10-29 09:05:04.91603+01	\N	{}	1
+COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, archive_path, pip_extras, pinned_package_versions_post, active, timestamp_created, env_info, timestamp_last_used, pixi_version, pinned_package_versions_pre, resource_id) FROM stdin;
+1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	2024-10-29 09:05:04.891366+01	\N	{}	1
+2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	2024-10-29 09:05:04.91603+01	\N	{}	1
 \.
 
 
@@ -1052,9 +1106,9 @@ COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, 
 -- Data for Name: taskv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, source, meta_non_parallel, meta_parallel, version, args_schema_non_parallel, args_schema_parallel, args_schema_version, docs_info, docs_link, input_types, output_types, taskgroupv2_id, category, modality, authors, tags) FROM stdin;
-1	Echo Task	compound	echo	echo	admin:echo-task	{}	{}	\N	null	null	\N	\N	\N	{}	{}	1	\N	\N	\N	[]
-2	Ls Task	non_parallel	ls	\N	admin:ls-task	{}	{}	\N	null	null	\N	\N	\N	{}	{}	2	\N	\N	\N	[]
+COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, meta_non_parallel, meta_parallel, version, args_schema_non_parallel, args_schema_parallel, args_schema_version, docs_info, docs_link, input_types, output_types, taskgroupv2_id, category, modality, authors, tags) FROM stdin;
+1	Echo Task	compound	echo	echo	{}	{}	\N	null	null	\N	\N	\N	{}	{}	1	\N	\N	\N	[]
+2	Ls Task	non_parallel	ls	\N	{}	{}	\N	null	null	\N	\N	\N	{}	{}	2	\N	\N	\N	[]
 \.
 
 
@@ -1062,11 +1116,11 @@ COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, sour
 -- Data for Name: user_oauth; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, profile_id, slurm_accounts, project_dirs) FROM stdin;
-1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	\N	{}	{/PLACEHOLDER}
-6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	\N	{}	{/PLACEHOLDER}
-27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	1	{}	{/placeholder}
-28	vanilla@example.org	$2b$12$tS4FU1JBa5XuFtqbGKZD/ubUAaTvbtsaqPJkBhLnMm0TgQwiQR8rm	t	f	t	1	{}	{/placeholder}
+COPY public.user_oauth (id, email, hashed_password, is_active, is_superuser, is_verified, profile_id, slurm_accounts, project_dirs, is_guest) FROM stdin;
+1	admin@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	t	f	\N	{}	{/PLACEHOLDER}	f
+6	user@example.org	$2b$12$qVuxg/SmyTLvtVDUcWoD..3Q9QvScTrUDbSW8IaYX1vZqbwGY0dUq	t	f	f	\N	{}	{/PLACEHOLDER}	f
+27	admin@fractal.xy	$2b$12$ya6S7rcG/S.aaJFoy6DzhOmlREv0lcJ/D1SV8lM1harCCBDlKBSXS	t	t	t	1	{}	{/placeholder}	f
+28	vanilla@example.org	$2b$12$hO31hvSO/kbPUfW1cKWy0uwfJei5z2IGo.ocNxbXd1XaCufEC/mX2	t	f	t	1	{}	{/placeholder}	f
 \.
 
 
@@ -1083,8 +1137,21 @@ COPY public.usergroup (id, name, timestamp_created) FROM stdin;
 -- Data for Name: workflowtaskv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.workflowtaskv2 (id, workflow_id, "order", meta_parallel, meta_non_parallel, args_parallel, args_non_parallel, task_type, task_id, type_filters) FROM stdin;
-1	1	0	null	null	null	null	compound	1	{}
+COPY public.workflowtaskv2 (id, workflow_id, "order", meta_parallel, meta_non_parallel, args_parallel, args_non_parallel, task_type, task_id, type_filters, alias, description) FROM stdin;
+1	1	0	null	null	null	null	compound	1	{}	\N	\N
+2	2	0	null	null	null	{"aaa": 1}	non_parallel	2	{}	\N	\N
+3	2	1	null	null	null	{"bbb": 42}	non_parallel	2	{}	\N	\N
+4	3	0	null	null	null	{"aaa": 1}	non_parallel	2	{}	\N	\N
+5	3	1	null	null	null	{"bbb": 42}	non_parallel	2	{}	\N	\N
+\.
+
+
+--
+-- Data for Name: workflowtemplate; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.workflowtemplate (id, user_id, name, version, fractal_server_version, timestamp_created, timestamp_last_used, user_group_id, description, data) FROM stdin;
+1	28	MyTemplate	1	2.20.3	2026-03-27 09:34:16.502608+01	2026-03-27 09:34:48.972247+01	1	simple template	{"name": "MyNewWorkflow", "description": null, "task_list": [{"meta_non_parallel": null, "meta_parallel": null, "args_non_parallel": {"aaa": 1}, "args_parallel": null, "type_filters": {}, "description": null, "alias": null, "task": {"pkg_name": "admin:ls-task", "version": "1.0.0", "name": "Ls Task"}}, {"meta_non_parallel": null, "meta_parallel": null, "args_non_parallel": {"bbb": 42}, "args_parallel": null, "type_filters": {}, "description": null, "alias": null, "task": {"pkg_name": "admin:ls-task", "version": "1.0.0", "name": "Ls Task"}}]}
 \.
 
 
@@ -1092,8 +1159,10 @@ COPY public.workflowtaskv2 (id, workflow_id, "order", meta_parallel, meta_non_pa
 -- Data for Name: workflowv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.workflowv2 (id, name, project_id, timestamp_created) FROM stdin;
-1	MyWorkflow	1	2024-04-24 12:54:44.034782+02
+COPY public.workflowv2 (id, name, project_id, timestamp_created, description, template_id) FROM stdin;
+1	MyWorkflow	1	2024-04-24 12:54:44.034782+02	\N	\N
+2	MyNewWorkflow	1	2026-03-27 09:33:04.186562+01	\N	\N
+3	MyNewWorkflow	2	2026-03-27 09:34:48.944925+01	\N	1
 \.
 
 
@@ -1157,7 +1226,7 @@ SELECT pg_catalog.setval('public.profile_id_seq', 1, true);
 -- Name: projectv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.projectv2_id_seq', 1, true);
+SELECT pg_catalog.setval('public.projectv2_id_seq', 2, true);
 
 
 --
@@ -1206,14 +1275,21 @@ SELECT pg_catalog.setval('public.usergroup_id_seq', 1, true);
 -- Name: workflowtaskv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.workflowtaskv2_id_seq', 1, true);
+SELECT pg_catalog.setval('public.workflowtaskv2_id_seq', 5, true);
+
+
+--
+-- Name: workflowtemplate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.workflowtemplate_id_seq', 1, true);
 
 
 --
 -- Name: workflowv2_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.workflowv2_id_seq', 1, true);
+SELECT pg_catalog.setval('public.workflowv2_id_seq', 3, true);
 
 
 --
@@ -1369,6 +1445,14 @@ ALTER TABLE ONLY public.workflowtaskv2
 
 
 --
+-- Name: workflowtemplate pk_workflowtemplate; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.workflowtemplate
+    ADD CONSTRAINT pk_workflowtemplate PRIMARY KEY (id);
+
+
+--
 -- Name: workflowv2 pk_workflowv2; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1465,10 +1549,45 @@ CREATE INDEX ix_oauthaccount_oauth_name ON public.oauthaccount USING btree (oaut
 
 
 --
+-- Name: ix_taskgroupactivityv2_collect_unique_constraint; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_taskgroupactivityv2_collect_unique_constraint ON public.taskgroupactivityv2 USING btree (taskgroupv2_id) WHERE ((action)::text = 'collect'::text);
+
+
+--
+-- Name: ix_taskgroupv2_path_unique_constraint; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_taskgroupv2_path_unique_constraint ON public.taskgroupv2 USING btree (path, resource_id);
+
+
+--
+-- Name: ix_taskgroupv2_user_unique_constraint; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_taskgroupv2_user_unique_constraint ON public.taskgroupv2 USING btree (user_id, pkg_name, version, resource_id) NULLS NOT DISTINCT;
+
+
+--
+-- Name: ix_taskgroupv2_usergroup_unique_constraint; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_taskgroupv2_usergroup_unique_constraint ON public.taskgroupv2 USING btree (user_group_id, pkg_name, version) NULLS NOT DISTINCT WHERE (user_group_id IS NOT NULL);
+
+
+--
 -- Name: ix_user_oauth_email; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE UNIQUE INDEX ix_user_oauth_email ON public.user_oauth USING btree (email);
+
+
+--
+-- Name: ix_workflowtemplate_user_name_version_unique_constraint; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_workflowtemplate_user_name_version_unique_constraint ON public.workflowtemplate USING btree (user_id, name, version);
 
 
 --
@@ -1704,11 +1823,35 @@ ALTER TABLE ONLY public.workflowtaskv2
 
 
 --
+-- Name: workflowtemplate fk_workflowtemplate_user_group_id_usergroup; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.workflowtemplate
+    ADD CONSTRAINT fk_workflowtemplate_user_group_id_usergroup FOREIGN KEY (user_group_id) REFERENCES public.usergroup(id) ON DELETE SET NULL;
+
+
+--
+-- Name: workflowtemplate fk_workflowtemplate_user_id_user_oauth; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.workflowtemplate
+    ADD CONSTRAINT fk_workflowtemplate_user_id_user_oauth FOREIGN KEY (user_id) REFERENCES public.user_oauth(id);
+
+
+--
 -- Name: workflowv2 fk_workflowv2_project_id_projectv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.workflowv2
     ADD CONSTRAINT fk_workflowv2_project_id_projectv2 FOREIGN KEY (project_id) REFERENCES public.projectv2(id) ON DELETE CASCADE;
+
+
+--
+-- Name: workflowv2 fk_workflowv2_template_id_workflowtemplate; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.workflowv2
+    ADD CONSTRAINT fk_workflowv2_template_id_workflowtemplate FOREIGN KEY (template_id) REFERENCES public.workflowtemplate(id) ON DELETE SET NULL;
 
 
 --
@@ -1723,4 +1866,4 @@ ALTER TABLE ONLY public.oauthaccount
 -- PostgreSQL database dump complete
 --
 
-\unrestrict N5SGwcdyHUmQidI3HT1HCJ3RbeiMRBfiIYMWcf7nZL6IMoEbug1lt8UnlI1vrg5
+\unrestrict L5DhMpvOo049R0mrWS073yswnLfbhEeDSEhyOcK4YoojBGihkBg36jCHaFswwdj
