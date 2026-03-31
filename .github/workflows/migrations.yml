@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
-        postgres-version: ["10", "15", "18"]
+        postgres-version: ["10", "18"]
 
     services:
       postgres:
@@ -45,7 +45,7 @@ jobs:
           POSTGRES_DB: fractal_test
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 2s
           --health-timeout 5s
           --health-retries 5
         ports:
@@ -97,7 +97,7 @@ jobs:
 
     strategy:
       matrix:
-        postgres-version: ["10", "15", "18"]
+        postgres-version: ["10", "18"]
 
     services:
       postgres:
@@ -107,7 +107,7 @@ jobs:
           POSTGRES_DB: fractal_test
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 2s
           --health-timeout 5s
           --health-retries 5
         ports:
