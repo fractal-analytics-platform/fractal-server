@@ -72,38 +72,38 @@ async def full_workflow(
         # Add "create_ome_zarr_compound" task
         task_id_A = tasks["create_ome_zarr_compound"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id_A}",
-            json=dict(
-                args_non_parallel=dict(
-                    image_dir="/somewhere", num_images=NUM_IMAGES
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[
+                dict(
+                    task_id=task_id_A,
+                    args_non_parallel=dict(
+                        image_dir="/somewhere", num_images=NUM_IMAGES
+                    ),
                 )
-            ),
+            ],
         )
         assert res.status_code == 201
-        wftask0_id = res.json()["id"]
+        wftask0_id = res.json()[0]["id"]
         debug(wftask0_id)
 
         # Add "MIP_compound" task
         task_id_B = tasks["MIP_compound"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id_B}",
-            json={},
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[{"task_id": task_id_B}],
         )
         assert res.status_code == 201
-        wftask1_id = res.json()["id"]
+        wftask1_id = res.json()[0]["id"]
         debug(wftask1_id)
 
         # Add "generic_task_parallel" task
         task_id_C = tasks["generic_task_parallel"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id_C}",
-            json={},
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[{"task_id": task_id_C}],
         )
         assert res.status_code == 201
-        wftask2_id = res.json()["id"]
+        wftask2_id = res.json()[0]["id"]
         debug(wftask2_id)
 
         # EXECUTE WORKFLOW
@@ -343,35 +343,37 @@ async def full_workflow_TaskExecutionError(
         # Add "create_ome_zarr_compound" and "MIP_compound" tasks
         task_id = tasks["create_ome_zarr_compound"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(
-                args_non_parallel=dict(
-                    image_dir="/somewhere", num_images=NUM_IMAGES
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[
+                dict(
+                    task_id=task_id,
+                    args_non_parallel=dict(
+                        image_dir="/somewhere", num_images=NUM_IMAGES
+                    ),
                 )
-            ),
+            ],
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
+        workflow_task_id = res.json()[0]["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
         task_id = tasks["MIP_compound"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json={},
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[{"task_id": task_id}],
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
+        workflow_task_id = res.json()[0]["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "done"
         # Add "generic_task" task
         task_id = tasks["generic_task"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(args_non_parallel=dict(raise_error=True)),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[
+                dict(task_id=task_id, args_non_parallel=dict(raise_error=True))
+            ],
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
+        workflow_task_id = res.json()[0]["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "failed"
 
         # EXECUTE WORKFLOW
@@ -450,9 +452,8 @@ async def non_executable_task_command(
 
         # Add task to workflow
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/",
+            json=[dict(task_id=task.id)],
         )
         debug(res.json())
         assert res.status_code == 201
@@ -528,12 +529,11 @@ async def failing_workflow_UnknownError(
         )
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task.id}",
-            json={},
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[{"task_id": task.id}],
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
+        workflow_task_id = res.json()[0]["id"]
         EXPECTED_STATUSES[str(workflow_task_id)] = "failed"
 
         # Artificially introduce failure
@@ -645,9 +645,8 @@ async def workflow_with_non_python_task(
 
         # Add task to workflow
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": task.id}],
         )
         assert res.status_code == 201
 
@@ -742,16 +741,20 @@ async def failing_workflow_post_task_execution(
 
         task_id = tasks["dummy_remove_images"].id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(
-                args_non_parallel=dict(
-                    more_zarr_urls=[Path(zarr_dir, "missing-image").as_posix()]
-                ),
-            ),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/",
+            json=[
+                dict(
+                    task_id=task_id,
+                    args_non_parallel=dict(
+                        more_zarr_urls=[
+                            Path(zarr_dir, "missing-image").as_posix()
+                        ]
+                    ),
+                )
+            ],
         )
         assert res.status_code == 201
-        wftask_id = res.json()["id"]
+        wftask_id = res.json()[0]["id"]
         debug(wftask_id)
 
         # EXECUTE WORKFLOW

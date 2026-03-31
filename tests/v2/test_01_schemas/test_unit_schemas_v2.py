@@ -41,7 +41,7 @@ def test_extra_on_create_models():
         WorkflowCreate(name="name", foo="bar")
 
     # WorkflowTask
-    WorkflowTaskCreate()
+    WorkflowTaskCreate(task_id=1)
     with pytest.raises(ValidationError):
         WorkflowTaskCreate(foo="bar")
 
