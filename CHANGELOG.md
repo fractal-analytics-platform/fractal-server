@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
+# 2.20.5
+
+* Testing:
+    * Harden GitHub Actions with `zizmor` audit (\#XXX).
+
 # 2.20.4
 
 * API:
