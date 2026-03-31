@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.5
+
+* Database:
+    * Remove `ix_taskgroupv2_usergroup_unique_constraint` and `ix_taskgroupv2_user_unique_constraint` constraints from ORM models (\#3255).
+    * Retroactively remove `ix_taskgroupv2_usergroup_unique_constraint` and `ix_taskgroupv2_user_unique_constraint` constraints from schema migration `6d679918c883` (\#3255).
+* Testing:
+    * Run `migration.yml` tests also with Postgresql v10 (\#3255).
+
 # 2.20.4
 
 * API:
