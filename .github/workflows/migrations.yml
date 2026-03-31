@@ -28,7 +28,7 @@ env:
 jobs:
 
   migrations:
-    name: "Migrations - Postgres ${{ matrix.postgres-version }}, Python ${{ matrix.python-version }}"
+    name: "Migrations - pg${{ matrix.postgres-version }} - py${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -91,7 +91,7 @@ jobs:
         run: uv run --frozen python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
-    name: "Alembic downgrade - Postgres ${{ matrix.postgres-version }}"
+    name: "Alembic downgrade - pg${{ matrix.postgres-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
