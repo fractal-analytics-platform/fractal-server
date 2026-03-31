@@ -63,9 +63,8 @@ async def test_post_worfkflow_task(
 
         # Test that adding an invalid task fails with 404
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            "?task_id=99999",
-            json=dict(),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=99999)],
         )
         debug(res.json())
         assert res.status_code == 404
@@ -74,9 +73,8 @@ async def test_post_worfkflow_task(
         for index in range(2):
             task = await post_task(client, label=index)
             res = await client.post(
-                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={task['id']}",
-                json=dict(),
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+                json=[dict(task_id=task["id"])],
             )
             workflow = await get_workflow(client, proj.id, wf_id)
             assert len(workflow["task_list"]) == index + 1
@@ -88,9 +86,8 @@ async def test_post_worfkflow_task(
         t2 = await post_task(client, 2)
         args_payload = {"a": 0, "b": 1}
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={t2['id']}",
-            json=dict(args_non_parallel=args_payload),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=t2["id"], args_non_parallel=args_payload)],
         )
         assert res.status_code == 201
 
@@ -108,16 +105,14 @@ async def test_post_worfkflow_task(
             user_id=user.id, name="A", input_types={"a": False}
         )
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(type_filters={"a": True}),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=task.id, type_filters={"a": True})],
         )
         assert res.status_code == 422
         assert "filters" in res.json()["detail"]
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(type_filters={"a": False}),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=task.id, type_filters={"a": False})],
         )
         assert res.status_code == 201
 
@@ -137,9 +132,8 @@ async def test_post_worfkflow_task_with_description_and_alias(
         task = await post_task(client, label=0)
         # OK
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task['id']}",
-            json=dict(description="foo", alias="bar"),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=task["id"], description="foo", alias="bar")],
         )
         assert res.status_code == 201
         workflow = await get_workflow(client, proj.id, wf_id)
@@ -147,9 +141,8 @@ async def test_post_worfkflow_task_with_description_and_alias(
         assert workflow["task_list"][-1]["alias"] == "bar"
         # FAIL
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task['id']}",
-            json=dict(description="  ", alias="bar"),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=task["id"], description="  ", alias="bar")],
         )
         assert res.status_code == 422
         assert (
@@ -158,9 +151,8 @@ async def test_post_worfkflow_task_with_description_and_alias(
         )
         # FAIL
         res = await client.post(
-            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task['id']}",
-            json=dict(description="foo", alias="   "),
+            f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+            json=[dict(task_id=task["id"], description="foo", alias="   ")],
         )
         assert res.status_code == 422
         assert (
@@ -224,29 +216,29 @@ async def test_post_worfkflow_task_failures(
         # Valid task
         # Non-active task
         res = await client.post(
-            f"{endpoint_path}?task_id={task_A_active.id}",
-            json=dict(),
+            endpoint_path,
+            json=[{"task_id": task_A_active.id}],
         )
         assert res.status_code == 201
 
         # Missing task
         res = await client.post(
-            f"{endpoint_path}?task_id=99999",
-            json=dict(),
+            endpoint_path,
+            json=[{"task_id": 99999}],
         )
         assert res.status_code == 404
 
         # Non-active task
         res = await client.post(
-            f"{endpoint_path}?task_id={task_A_non_active.id}",
-            json=dict(),
+            endpoint_path,
+            json=[{"task_id": task_A_non_active.id}],
         )
         assert res.status_code == 422
 
         # No read access
         res = await client.post(
-            f"{endpoint_path}?task_id={task_B.id}",
-            json=dict(),
+            endpoint_path,
+            json=[{"task_id": task_B.id}],
         )
         assert res.status_code == 403
 
@@ -257,17 +249,17 @@ async def test_post_worfkflow_task_failures(
         )
         for forbidden in ["meta_non_parallel", "args_non_parallel"]:
             res = await client.post(
-                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={parallel_task['id']}",
-                json={forbidden: {"a": "b"}},
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+                json=[{"task_id": parallel_task["id"], forbidden: {"a": "b"}}],
             )
             assert res.status_code == 422
             assert "Cannot set" in res.json()["detail"]
         for forbidden in ["meta_parallel", "args_parallel"]:
             res = await client.post(
-                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={non_parallel_task['id']}",
-                json={forbidden: {"a": "b"}},
+                f"{PREFIX}/project/{proj.id}/workflow/{wf_id}/wftask/",
+                json=[
+                    {"task_id": non_parallel_task["id"], forbidden: {"a": "b"}}
+                ],
             )
             assert res.status_code == 422
             assert "Cannot set" in res.json()["detail"]
@@ -305,13 +297,12 @@ async def test_delete_workflow_task(
         wftasks = []
         for t in [t0, t1, t2]:
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-                f"?task_id={t['id']}",
-                json=dict(),
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+                json=[{"task_id": t["id"]}],
             )
             debug(res.json())
             assert res.status_code == 201
-            wftasks.append(res.json())
+            wftasks.extend(res.json())
 
         assert (
             len((await db.execute(select(WorkflowTaskV2))).scalars().all()) == 3
@@ -387,9 +378,8 @@ async def test_patch_workflow_task(
 
         t = await post_task(client, 0)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={t['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": t["id"]}],
         )
         assert res.status_code == 201
 
@@ -506,20 +496,20 @@ async def test_patch_workflow_task(
         )
 
         parallel_wftask = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={parallel_task['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": parallel_task["id"]}],
         )
+        assert parallel_wftask.status_code == 201
         non_parallel_wftask = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={non_parallel_task['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": non_parallel_task["id"]}],
         )
+        assert non_parallel_wftask.status_code == 201
 
         for forbidden in ["args_non_parallel", "meta_non_parallel"]:
             res = await client.patch(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
-                f"wftask/{parallel_wftask.json()['id']}/",
+                f"wftask/{parallel_wftask.json()[0]['id']}/",
                 json={forbidden: {"a": "b"}},
             )
             assert res.status_code == 422
@@ -528,7 +518,7 @@ async def test_patch_workflow_task(
         for forbidden in ["args_parallel", "meta_parallel"]:
             res = await client.patch(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
-                f"wftask/{non_parallel_wftask.json()['id']}/",
+                f"wftask/{non_parallel_wftask.json()[0]['id']}/",
                 json={forbidden: {"a": "b"}},
             )
             assert res.status_code == 422
@@ -544,12 +534,11 @@ async def test_patch_workflow_task(
             user_id=user.id, name="A", input_types={"a": False}
         )
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": task.id}],
         )
         assert res.status_code == 201
-        wft_id = res.json()["id"]
+        wft_id = res.json()[0]["id"]
 
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/",
@@ -606,14 +595,13 @@ async def test_patch_workflow_task_with_args_schema(
 
         task_id = task.id
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": task_id}],
         )
-        wftask = res.json()
+        assert res.status_code == 201
+        wftask = res.json()[0]
         wftask_id = wftask["id"]
         debug(wftask)
-        assert res.status_code == 201
 
         # First update: modify existing args and add a new one
         payload = dict(
@@ -672,18 +660,18 @@ async def test_patch_workflow_task_failures(
 
         t1 = await post_task(client, 1)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/"
-            f"?task_id={t1['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/",
+            json=[{"task_id": t1["id"]}],
         )
+        assert res.status_code == 201
 
         t2 = await post_task(client, 2)
 
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/"
-            f"?task_id={t2['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/",
+            json=[{"task_id": t2["id"]}],
         )
+        assert res.status_code == 201
 
         workflow1 = await get_workflow(client, project.id, wf1_id)
         workflow2 = await get_workflow(client, project.id, wf2_id)
@@ -777,9 +765,8 @@ async def test_reorder_task_list(
             # Create `WorkflowTaskV2` objects
             for ind in range(num_tasks):
                 res = await client.post(
-                    f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-                    f"?task_id={tasks[ind]['id']}",
-                    json=dict(),
+                    f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+                    json=[{"task_id": tasks[ind]["id"]}],
                 )
                 assert res.status_code == 201
 
@@ -845,8 +832,9 @@ async def test_reorder_task_list_fail(
             t = await post_task(client, i)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_id=t["id"]),
+                json=[dict(task_id=t["id"])],
             )
+            assert res.status_code == 201
 
         # Invalid calls to PATCH endpoint to reorder the task_list
 
@@ -919,8 +907,9 @@ async def test_reorder_task_list_fail(
         await db.commit()
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/",
-            json=dict(reordered_workflowtask_ids=[]),
+            json=dict(reordered_workflowtask_ids=[3, 2, 1]),
         )
+        debug(res.json())
         assert res.status_code == 200
 
 
@@ -942,12 +931,11 @@ async def test_read_workflowtask(
 
         t = await post_task(client, 99)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
-            f"?task_id={t['id']}",
-            json=dict(),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
+            json=[{"task_id": t["id"]}],
         )
         assert res.status_code == 201
-        wft_id = res.json()["id"]
+        wft_id = res.json()[0]["id"]
         res = await client.get(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/"
         )

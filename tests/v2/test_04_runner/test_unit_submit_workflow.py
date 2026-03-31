@@ -27,7 +27,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         dataset = await dataset_factory(project_id=project.id)
 
@@ -85,7 +85,7 @@ async def test_mkdir_error(
         workflow = await workflow_factory(project_id=project.id, name="wf")  # noqa
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         job = await job_factory(
             project_id=project.id,
@@ -140,7 +140,7 @@ async def test_submit_workflow_failure(
         project = await project_factory(user=user)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(

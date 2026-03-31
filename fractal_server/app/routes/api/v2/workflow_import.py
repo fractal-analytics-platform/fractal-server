@@ -311,7 +311,7 @@ async def _import_workflow(
         **workflow_import.model_dump(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
-    await db.commit()
+    await db.flush()
     await db.refresh(db_workflow)
 
     # Insert tasks into the workflow
@@ -336,6 +336,7 @@ async def _import_workflow(
         task_list=wftask_list_with_warnings,
     )
 
+    await db.commit()
     return workflow_data
 
 

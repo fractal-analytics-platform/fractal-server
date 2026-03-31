@@ -1,5 +1,4 @@
 from copy import deepcopy
-from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -31,17 +30,17 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=List[WorkflowTaskRead],
+    response_model=list[WorkflowTaskRead],
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflowtasks(
     project_id: int,
     workflow_id: int,
-    wftasks: List[WorkflowTaskCreate],
+    wftasks: list[WorkflowTaskCreate],
     order: int | None = Query(default=None, ge=0),
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> List[WorkflowTaskRead] | None:
+) -> list[WorkflowTaskRead] | None:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -54,7 +53,11 @@ async def create_workflowtasks(
         db=db,
     )
 
-    if await _workflow_has_submitted_job(workflow_id=workflow_id, db=db):
+    if (
+        await _workflow_has_submitted_job(workflow_id=workflow_id, db=db)
+        and order is not None
+        and order != len(workflow.task_list)
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
@@ -120,6 +123,7 @@ async def create_workflowtasks(
         )
         created_wftasks.append(created_wft)
 
+    await db.commit()
     return created_wftasks
 
 

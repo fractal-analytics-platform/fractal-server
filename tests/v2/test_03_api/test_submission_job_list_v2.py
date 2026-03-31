@@ -33,7 +33,7 @@ async def test_clean_app_job_list(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
         dataset2 = await dataset_factory(project_id=project.id, name="ds-2")

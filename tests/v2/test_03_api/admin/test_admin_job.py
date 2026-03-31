@@ -48,10 +48,10 @@ async def test_view_job(
         dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
-            workflow_id=workflow1.id, task_id=task.id, db=db
+            workflow_id=workflow1.id, task_id=task.id, db=db, order=0
         )
         await _workflow_insert_task(
-            workflow_id=workflow2.id, task_id=task.id, db=db
+            workflow_id=workflow2.id, task_id=task.id, db=db, order=1
         )
 
         job1 = await job_factory(
@@ -88,10 +88,10 @@ async def test_view_job(
         dataset2 = await dataset_factory(project_id=project2.id)
 
         await _workflow_insert_task(
-            workflow_id=workflow3.id, task_id=task2.id, db=db
+            workflow_id=workflow3.id, task_id=task2.id, db=db, order=0
         )
         await _workflow_insert_task(
-            workflow_id=workflow4.id, task_id=task2.id, db=db
+            workflow_id=workflow4.id, task_id=task2.id, db=db, order=1
         )
 
         await job_factory(
@@ -255,10 +255,10 @@ async def test_view_single_job(
         dataset = await dataset_factory(project_id=project.id)
 
         await _workflow_insert_task(
-            workflow_id=workflow1.id, task_id=task.id, db=db
+            workflow_id=workflow1.id, task_id=task.id, db=db, order=0
         )
         await _workflow_insert_task(
-            workflow_id=workflow2.id, task_id=task.id, db=db
+            workflow_id=workflow2.id, task_id=task.id, db=db, order=1
         )
 
         job = await job_factory(
@@ -311,7 +311,7 @@ async def test_patch_job(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id, name="task")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
@@ -539,7 +539,7 @@ async def test_download_job_logs(
         workflow = await workflow_factory(project_id=prj.id)
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         working_dir = (tmp_path / "working_dir_for_zipping").as_posix()
         job = await job_factory(

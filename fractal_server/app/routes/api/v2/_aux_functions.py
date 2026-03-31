@@ -462,7 +462,7 @@ async def _workflow_insert_task(
     db_workflow.task_list.insert(order, wf_task)
     db_workflow.task_list.reorder()
     flag_modified(db_workflow, "task_list")
-    await db.commit()
+    await db.flush()
 
     wf_task = await db.get(
         WorkflowTaskV2,

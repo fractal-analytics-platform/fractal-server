@@ -258,6 +258,7 @@ async def test_get_workflow(
             await _workflow_insert_task(
                 workflow_id=wf_id, task_id=task.id, order=i, db=db
             )
+        await db.commit()
 
         # Get project (useful to check workflow.project relationship)
         res = await client.get(f"{PREFIX}/project/{p_id}/")
@@ -363,6 +364,7 @@ async def test_patch_workflow(
             await _workflow_insert_task(
                 workflow_id=wf_id, task_id=task.id, order=i, db=db
             )
+        await db.commit()
 
         res = await client.get(f"{PREFIX}/project/{project.id}/workflow/")
         assert len(res.json()) == 1
@@ -522,6 +524,7 @@ async def test_workflow_type_filters_flow(
             db=db,
             type_filters={"is_3D": True},
         )
+        await db.commit()
 
         # SUCCESS
         res = await client.get(
