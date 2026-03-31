@@ -118,3 +118,112 @@ jobs:
           uv run --frozen alembic history
           uv run --frozen alembic upgrade head
           uv run --frozen alembic downgrade 1eac13a26c83
+
+
+  migrations-postgres-v10:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Load database dump into postgres database
+        env:
+          PGPASSWORD: postgres
+        run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.24"
+          enable-cache: true
+
+      - run: uv sync --frozen
+
+      - name: Apply schema migration
+        run: |
+          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          uv run --frozen fractalctl set-db
+
+      - name: Apply data migration
+        env:
+          FRACTAL_DEFAULT_GROUP_NAME: All
+        run: |
+          cp $ROOTDIR/.fractal_server.env.old .
+          echo -e "yes\nyes\nyes\nyes\nyes" | uv run --frozen fractalctl update-db-data
+
+      - name: Validate new database
+        env:
+          FRACTAL_DEFAULT_GROUP_NAME: All
+        run: uv run --frozen python scripts/validate_db_data_with_read_schemas.py
+
+  downgrade-postgres-v10:
+    name: "Alembic downgrade"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.24"
+          enable-cache: true
+
+      - run: uv sync --frozen
+
+      # We only run `alembic downgrade` until the specific revision that drops
+      # V1 tables (rather than all the way to `base`), because that revision
+      # is breakingly non-reversible
+      - name: Apply upgrade and downgrade
+        run: |
+          cp $ROOTDIR/.fractal_server_postgres.env fractal_server/.fractal_server.env
+          cd fractal_server
+          uv run --frozen alembic history
+          uv run --frozen alembic upgrade head
+          uv run --frozen alembic downgrade 1eac13a26c83
