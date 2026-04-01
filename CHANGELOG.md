@@ -2,11 +2,17 @@
 
 # 2.20.5
 
+* Database:
+    * Remove `ix_taskgroupv2_usergroup_unique_constraint` and `ix_taskgroupv2_user_unique_constraint` constraints from ORM models (\#3255).
+    * Retroactively remove `ix_taskgroupv2_usergroup_unique_constraint` and `ix_taskgroupv2_user_unique_constraint` constraints from schema migration `6d679918c883` (\#3255).
 * Testing:
+    * Run `migration.yml` tests also with Postgresql v10 (\#3255).
     * Harden GitHub Actions with `zizmor` audit (\#1047).
     * Do not run `basic_auth`-marked tests in `ci_py_next.yml` (\#3258).
 
 # 2.20.4
+
+> WARNING: This version is not compatible with postgres versions below v15, please use fractal-server 2.20.5.
 
 * API:
     * Forbid editing some individual task properties if the origin of the task group is not "other" (\#3247).
@@ -15,10 +21,14 @@
 
 # 2.20.3
 
+> WARNING: This version is not compatible with postgres versions below v15, please use fractal-server 2.20.5.
+
 * API:
     * Always include `/auth/token/logout/`, independently on `FRACTAL_DISABLE_BASIC_AUTH` (\#3252).
 
 # 2.20.2
+
+> WARNING: This version is not compatible with postgres versions below v15, please use fractal-server 2.20.5.
 
 * API:
     * Drop `POST /auth/login/` and `POST /auth/logout/` cookie-based endpoints (\#3242, \#3249).
@@ -26,11 +36,15 @@
 
 # 2.20.1
 
+> WARNING: This version is not compatible with postgres versions below v15, please use fractal-server 2.20.5.
+
 * Task lifecycle:
     * Make pixi-task-colletion SLURM job fail if one of its steps fail (\#3245).
     * Fix current usage of `bash chmod` in SLURM pixi-task-lifecycle scripts (\#3245).
 
 # 2.20.0
+
+> WARNING: This version is not compatible with postgres versions below v15, please use fractal-server 2.20.5.
 
 * API:
     * Return `user_email` and not `user_id` with `TaskGroupRead` responses (\#3215).

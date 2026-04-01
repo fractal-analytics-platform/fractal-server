@@ -9,7 +9,6 @@ from sqlmodel import Field
 from sqlmodel import Index
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
-from sqlmodel import column
 from sqlmodel import text
 
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
@@ -94,24 +93,6 @@ class TaskGroupV2(SQLModel, table=True):
     )
 
     __table_args__ = (
-        Index(
-            "ix_taskgroupv2_user_unique_constraint",
-            "user_id",
-            "pkg_name",
-            "version",
-            "resource_id",
-            unique=True,
-            postgresql_nulls_not_distinct=True,
-        ),
-        Index(
-            "ix_taskgroupv2_usergroup_unique_constraint",
-            "user_group_id",
-            "pkg_name",
-            "version",
-            unique=True,
-            postgresql_nulls_not_distinct=True,
-            postgresql_where=column("user_group_id").is_not(None),
-        ),
         Index(
             "ix_taskgroupv2_path_unique_constraint",
             "path",

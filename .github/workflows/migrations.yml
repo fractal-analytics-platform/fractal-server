@@ -28,24 +28,33 @@ env:
 jobs:
 
   migrations:
-    name: "Python ${{ matrix.python-version }}"
+    name: "Migrations - pg${{ matrix.postgres-version }} - py${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     strategy:
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
+        postgres-version: ["10", "18"]
+
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
 
       - name: Load database dump into postgres database
         env:
@@ -82,20 +91,32 @@ jobs:
         run: uv run --frozen python scripts/validate_db_data_with_read_schemas.py
 
   downgrade:
-    name: "Alembic downgrade"
+    name: "Alembic downgrade - pg${{ matrix.postgres-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+
+    strategy:
+      matrix:
+        postgres-version: ["10", "18"]
+
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
-
-      - name: Start Postgres
-        run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
 
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
