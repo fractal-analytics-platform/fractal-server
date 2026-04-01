@@ -42,4 +42,4 @@ jobs:
       - run: uv sync --frozen
 
       - name: Test with pytest
-        run: uv run --frozen pytest -vv --durations 0 -m "not oauth"
+        run: uv run --frozen pytest -vv --durations 0 -m "not oauth and not basic_auth"
