@@ -100,6 +100,13 @@ async def test_admin_patch_project(
         await dataset_factory(project_id=proj4_id, zarr_dir="/shared/zarr4")
 
     async with MockCurrentUser(is_superuser=True):
+        res = await client.patch(
+            f"/admin/v2/project/9999/?user_id={new_user_id}"
+        )
+        assert res.status_code == 404
+        res = await client.patch(f"/admin/v2/project/{proj1_id}/?user_id=9999")
+        assert res.status_code == 404
+
         # Fail due to new user's `project_dirs`
         res = await client.patch(
             f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
