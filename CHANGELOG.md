@@ -7,6 +7,7 @@
     * Retroactively remove `ix_taskgroupv2_usergroup_unique_constraint` and `ix_taskgroupv2_user_unique_constraint` constraints from schema migration `6d679918c883` (\#3255).
 * Testing:
     * Run `migration.yml` tests also with Postgresql v10 (\#3255).
+    * Harden GitHub Actions with `zizmor` audit (\#1047).
     * Do not run `basic_auth`-marked tests in `ci_py_next.yml` (\#3258).
 
 # 2.20.4
