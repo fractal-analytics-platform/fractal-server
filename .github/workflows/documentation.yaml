@@ -36,7 +36,7 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
-      - run: uv run --frozen mkdocs build --config-file mkdocs.yml --site-dir site --clean --verbose
+      - run: uv run --frozen mkdocs build --config-file mkdocs.yml --site-dir site --clean
 
 
   deploy:
