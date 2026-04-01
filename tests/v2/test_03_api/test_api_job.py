@@ -64,7 +64,7 @@ async def test_submit_job_failures(
         workflow1a = await workflow_factory(project_id=project1.id)
         workflow1b = await workflow_factory(project_id=project1.id)
         await _workflow_insert_task(
-            workflow_id=workflow1a.id, task_id=task.id, db=db
+            workflow_id=workflow1a.id, task_id=task.id, db=db, order=0
         )
         # 2
         project2 = await project_factory(user)
@@ -76,7 +76,7 @@ async def test_submit_job_failures(
         )
         workflow3 = await workflow_factory(project_id=project3.id)
         await _workflow_insert_task(
-            workflow_id=workflow3.id, task_id=task.id, db=db
+            workflow_id=workflow3.id, task_id=task.id, db=db, order=1
         )
 
         # (A) Not existing workflow
@@ -131,10 +131,10 @@ async def test_submit_job_failures(
         # (F) Resource cannot accept new submissions
         resource1.prevent_new_submissions = True
         db.add(resource1)
-        await db.commit()
         await _workflow_insert_task(
-            workflow_id=workflow1b.id, task_id=task.id, db=db
+            workflow_id=workflow1b.id, task_id=task.id, db=db, order=2
         )
+        await db.commit()
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
             f"?workflow_id={workflow1b.id}&dataset_id={dataset1.id}",
@@ -170,8 +170,9 @@ async def test_submit_job_ssh_connection_failure(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id, name="1to2")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
 
         res = await client.post(
             f"/api/v2/project/{project.id}/job/submit/"
@@ -208,7 +209,9 @@ async def test_submit_incompatible_filters(
             workflow_id=workflow1.id,
             task_id=task.id,
             type_filters={"a": False},
+            order=0,
         )
+        await db.commit()
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
@@ -224,7 +227,9 @@ async def test_submit_incompatible_filters(
             workflow_id=workflow2.id,
             task_id=task.id,
             type_filters={"a": True},
+            order=1,
         )
+        await db.commit()
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
             f"?workflow_id={workflow2.id}&dataset_id={dataset.id}",
@@ -260,7 +265,7 @@ async def test_submit_jobs_with_same_dataset(
         new_task = await task_factory(user_id=user.id)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=new_task.id, db=db
+            workflow_id=workflow.id, task_id=new_task.id, db=db, order=0
         )
 
         # Existing jobs with done/running status
@@ -333,8 +338,13 @@ async def test_project_apply_workflow_subset(
 
         task12 = await task_factory(user_id=user.id, name="1to2")
         task23 = await task_factory(user_id=user.id, name="2to3")
-        await _workflow_insert_task(workflow_id=wf.id, task_id=task12.id, db=db)
-        await _workflow_insert_task(workflow_id=wf.id, task_id=task23.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=task12.id, db=db, order=0
+        )
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=task23.id, db=db, order=1
+        )
+        await db.commit()
 
         # This job (with no first_task_index or last_task_index) is submitted
         # correctly (and then fails, because tasks have invalid `command`
@@ -457,8 +467,9 @@ async def test_project_apply_slurm_account(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
 
         # User has an empty SLURM accounts list
         assert user.slurm_accounts == []
@@ -499,8 +510,9 @@ async def test_project_apply_slurm_account(
             name="ls",
         )
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=1
         )
+        await db.commit()
 
         # User has a non empty SLURM accounts list
         assert user2.slurm_accounts == SLURM_LIST
@@ -563,7 +575,7 @@ async def test_get_jobs(
         datasetA = await dataset_factory(project_id=projectA.id, name="dsA")
         workflowA = await workflow_factory(project_id=projectA.id)
         await _workflow_insert_task(
-            workflow_id=workflowA.id, task_id=task0.id, db=db
+            workflow_id=workflowA.id, task_id=task0.id, db=db, order=0
         )
         await job_factory(
             project_id=projectA.id,
@@ -577,7 +589,7 @@ async def test_get_jobs(
         datasetB = await dataset_factory(project_id=projectB.id, name="dsB")
         workflowB = await workflow_factory(project_id=projectB.id)
         await _workflow_insert_task(
-            workflow_id=workflowB.id, task_id=task0.id, db=db
+            workflow_id=workflowB.id, task_id=task0.id, db=db, order=1
         )
         await job_factory(
             project_id=projectB.id,
@@ -619,10 +631,10 @@ async def test_get_jobs(
         workflow1 = await workflow_factory(project_id=project.id)
         workflow2 = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow1.id, task_id=new_task.id, db=db
+            workflow_id=workflow1.id, task_id=new_task.id, db=db, order=0
         )
         await _workflow_insert_task(
-            workflow_id=workflow2.id, task_id=new_task.id, db=db
+            workflow_id=workflow2.id, task_id=new_task.id, db=db, order=1
         )
 
         job1 = await job_factory(
@@ -722,8 +734,9 @@ async def test_get_jobs_access_control(
         task = await task_factory(user_id=user.id)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
 
         res = await client.post(
             f"/api/v2/project/{project.id}/job/submit/"
@@ -793,7 +806,9 @@ async def test_stop_job(
         wf = await workflow_factory(project_id=project.id)
         t = await task_factory(user_id=user.id, name="task")
         ds = await dataset_factory(project_id=project.id)
-        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t.id, db=db, order=0
+        )
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
@@ -851,8 +866,9 @@ async def test_update_timestamp_taskgroup(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
 
         task_group = await db.get(TaskGroupV2, task.taskgroupv2_id)
         assert task_group.timestamp_last_used > task_group.timestamp_created
@@ -894,7 +910,7 @@ async def test_get_latest_jobs(
         task = await task_factory(user_id=user.id)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
 
         await job_factory(

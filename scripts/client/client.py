@@ -107,7 +107,7 @@ class FractalClient:
 
     def detail(self, res: httpx.Response):
         res_json = response_json(res)
-        if res_json.get("detail"):
+        if isinstance(res_json, dict) and res_json.get("detail"):
             raise ValueError(f"WARNING: {res_json.get('detail')}")
 
     def add_user(self, user: UserCreate):
@@ -195,18 +195,17 @@ class FractalClient:
         self,
         project_id: int,
         workflow_id: int,
-        task_id: int,
         wftask: WorkflowTaskCreate,
     ):
         res = self.make_request(
             endpoint=f"api/v2/project/{project_id}/workflow/"
-            f"{workflow_id}/wftask/?{task_id=}",
+            f"{workflow_id}/wftask/",
             method="POST",
-            data=wftask.model_dump(exclude_none=True),
+            data=[wftask.model_dump(exclude_none=True)],
         )
         self.detail(res)
 
-        return WorkflowTaskRead(**response_json(res))
+        return WorkflowTaskRead(**response_json(res)[0])
 
     def add_working_task(self):
         task = TaskCreate(

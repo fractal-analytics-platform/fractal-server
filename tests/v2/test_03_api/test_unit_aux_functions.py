@@ -359,10 +359,10 @@ async def test_get_job_check_access(
 
         with pytest.raises(ValueError):
             await _workflow_insert_task(
-                workflow_id=workflow.id, task_id=9999, db=db
+                workflow_id=workflow.id, task_id=9999, order=0, db=db
             )
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=t.id, db=db
+            workflow_id=workflow.id, task_id=t.id, order=1, db=db
         )
 
         dataset = await dataset_factory(project_id=project.id)

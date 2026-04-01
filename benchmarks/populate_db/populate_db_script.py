@@ -85,7 +85,9 @@ def _user_flow_vanilla(
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow"))
-    user.add_workflowtask(proj.id, wf.id, working_task_id, WorkflowTaskCreate())
+    user.add_workflowtask(
+        proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
+    )
     user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreate())
 
 
@@ -112,14 +114,14 @@ def _user_flow_power(
             proj.id, WorkflowCreate(name=f"MyWorkflow-{ind_wf}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+            proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
         )
         if ind_wf % 2 == 0:
             user.add_workflowtask(
-                proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+                proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
             )
             user.add_workflowtask(
-                proj.id, wf.id, failing_task_id, WorkflowTaskCreate()
+                proj.id, wf.id, WorkflowTaskCreate(task_id=failing_task_id)
             )
         for ind_job in range(num_jobs_per_workflow):
             ds = user.import_dataset(
@@ -170,7 +172,7 @@ def _user_flow_dataset(
             proj.id, WorkflowCreate(name=f"MyWorkflow_us-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+            proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
         )
         for ds in ds_list:
             user.submit_job(
@@ -209,7 +211,7 @@ def _user_flow_project(
             proj.id, WorkflowCreate(name=f"MyWorkflow_up-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+            proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
         )
         for i in range(num_jobs_per_workflow):
             user.submit_job(
@@ -242,7 +244,9 @@ def _user_flow_job(
         ),
     )
     wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow_uj"))
-    user.add_workflowtask(proj.id, wf.id, working_task_id, WorkflowTaskCreate())
+    user.add_workflowtask(
+        proj.id, wf.id, WorkflowTaskCreate(task_id=working_task_id)
+    )
     num_jobs_per_workflow = 100
     for i in range(num_jobs_per_workflow):
         user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreate())

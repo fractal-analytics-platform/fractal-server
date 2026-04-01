@@ -203,8 +203,9 @@ async def test_post_patch_delete_template(
         )
         # Test POST
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
         res = await client.post(
             f"api/v2/workflow-template/?workflow_id={workflow.id}",
             json=dict(name="template", version=1),
@@ -321,8 +322,9 @@ async def test_export_import_template(
             task_group_kwargs=dict(pkg_name="fake_tasks", version="1.0.1"),
         )
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
+        await db.commit()
         res = await client.post(
             "api/v2/workflow-template/"
             f"?workflow_id={workflow.id}&user_group_id={group.id}",

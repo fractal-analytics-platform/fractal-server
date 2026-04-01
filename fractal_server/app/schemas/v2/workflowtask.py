@@ -19,6 +19,7 @@ from .task import TaskType
 class WorkflowTaskCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    task_id: int
     meta_non_parallel: DictStrAny | None = None
     meta_parallel: DictStrAny | None = None
     args_non_parallel: WorkflowTaskArgument | None = None

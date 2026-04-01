@@ -552,9 +552,7 @@ async def test_lifecycle_actions_with_submitted_jobs(
         ds = await dataset_factory()
         for task in [active_task, non_active_task]:
             await _workflow_insert_task(
-                workflow_id=wf.id,
-                task_id=task.id,
-                db=db,
+                workflow_id=wf.id, task_id=task.id, db=db, order=0
             )
         db.add(
             JobV2(

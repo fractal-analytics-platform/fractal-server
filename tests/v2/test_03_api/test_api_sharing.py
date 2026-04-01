@@ -556,9 +556,8 @@ async def test_project_sharing_task_group_access(
 
         # User 2 cannot add a workflow task because User 1 can't read the task
         res = await client.post(
-            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={new_task_id}",
-            json=dict(),
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": new_task_id}],
         )
         assert res.status_code == 201
 
