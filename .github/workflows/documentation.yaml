@@ -18,40 +18,9 @@ permissions: {}
 
 jobs:
 
-  docs:
-    name: "Deploy docs"
+  build:
+    name: "Build documentation"
     runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    permissions:
-      # These permissions are probably too broad - FIXME
-      # https://github.com/actions/deploy-pages?tab=readme-ov-file
-      # https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-cloud-providers#adding-permissions-settings
-      contents: write
-      pages: write  # To create pages deployments when calling the GitHub API
-      id-token: write # To request the OIDC JWT token
-
-    steps:
-
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: '3.12'
-      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
-        with:
-          version: "0.9.24"
-          enable-cache: true
-      - run: uv sync --frozen --group docs
-      - run: uv run --frozen fractalctl openapi -f docs/openapi.json
-      - run: uv run --frozen mkdocs gh-deploy --config-file mkdocs.yml --force --verbose
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  docs-build:
-    name: "Test docs build"
-    runs-on: ubuntu-24.04
-    if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
     permissions: {}
 
     steps:
@@ -67,4 +36,22 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
-      - run: uv run --frozen mkdocs build --config-file mkdocs.yml
+      - run: uv run --frozen mkdocs build --config-file mkdocs.yml --site-dir site --clean --verbose
+
+
+  deploy:
+    name: "Deploy docs"
+    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: build
+    permissions:
+      # https://github.com/actions/deploy-pages?tab=readme-ov-file
+      # https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-cloud-providers#adding-permissions-settings
+      pages: write  # To create pages deployments when calling the GitHub API
+      id-token: write # To request the OIDC JWT token
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
+        id: deployment
