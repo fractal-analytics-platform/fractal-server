@@ -112,14 +112,14 @@ async def transfer_project_ownership(
         db=db,
     )
 
-    # Get old user and link
+    # Get old user and owner's link
     res = await db.execute(
         select(LinkUserProjectV2)
         .where(LinkUserProjectV2.project_id == project_id)
         .where(LinkUserProjectV2.is_owner.is_(True))
     )
-    link = res.scalar_one()
-    old_user = await db.get(UserOAuth, link.user_id)
+    owner_link = res.scalar_one()
+    old_user = await db.get(UserOAuth, owner_link.user_id)
 
     # Check new user's resource compatibility
     if new_user_profile.id != old_user.profile_id:
@@ -147,8 +147,14 @@ async def transfer_project_ownership(
                 detail=f"New user cannot use {zarr_dir=}",
             )
 
+    # Check new user is not already linked
+    old_link = await db.get(LinkUserProjectV2, (project_id, user_id))
+    if old_link is not None:
+        await db.delete(old_link)
+        await db.flush()
+
     # Patch
-    setattr(link, "user_id", user_id)
+    setattr(owner_link, "user_id", user_id)
     await db.commit()
 
     return dict(user_email=new_user.email, **project.model_dump())
