@@ -11,7 +11,11 @@ from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2.profile import Profile
 from fractal_server.app.routes.auth import current_superuser_act
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
@@ -90,17 +94,45 @@ async def transfer_project_ownership(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> ProjectReadSuperuser:
+    # Get project
     project = await db.get(ProjectV2, project_id)
     if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
+
+    # Get new user
     new_user = await db.get(UserOAuth, user_id)
     if new_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
+    new_user_resource, new_user_profile = await validate_user_profile(
+        user=new_user,
+        db=db,
+    )
 
+    # Get old user and link
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+    )
+    link = res.scalar_one()
+    old_user = await db.get(UserOAuth, link.user_id)
+
+    # Check new user's resource compatibility
+    if new_user_profile.id != old_user.profile_id:
+        old_user_profile = await db.get(Profile, old_user.profile_id)
+        if new_user_resource.id != old_user_profile.resource_id:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=(
+                    "Users are associated to different computational resources."
+                ),
+            )
+
+    # Check new user's project_dirs compatibility
     res = await db.execute(
         select(DatasetV2.zarr_dir).where(DatasetV2.project_id == project_id)
     )
@@ -115,16 +147,8 @@ async def transfer_project_ownership(
                 detail=f"New user cannot use {zarr_dir=}",
             )
 
-    # FIXME: add other checks
-
-    res = await db.execute(
-        select(LinkUserProjectV2)
-        .where(LinkUserProjectV2.project_id == project_id)
-        .where(LinkUserProjectV2.is_owner.is_(True))
-    )
-    link = res.scalar_one()
-    link.user_id = user_id
-    db.add(link)
+    # Patch
+    setattr(link, "user_id", user_id)
     await db.commit()
 
     return dict(user_email=new_user.email, **project.model_dump())
