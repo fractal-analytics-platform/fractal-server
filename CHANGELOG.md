@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.20.5
+
+* Testing:
+    * Do not run `basic_auth`-marked tests in `ci_py_next.yml` (\#3258).
+
 # 2.20.4
 
 * API:
