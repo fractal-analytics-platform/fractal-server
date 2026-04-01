@@ -81,3 +81,5 @@ jobs:
         push_options: '--force'
         skip_checkout: true
         file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
