@@ -23,8 +23,12 @@ jobs:
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     permissions:
+      # These permissions are probably too broad - FIXME
+      # https://github.com/actions/deploy-pages?tab=readme-ov-file
+      # https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-cloud-providers#adding-permissions-settings
       contents: write
-      id-token: write
+      pages: write  # To create pages deployments when calling the GitHub API
+      id-token: write # To request the OIDC JWT token
 
     steps:
 
