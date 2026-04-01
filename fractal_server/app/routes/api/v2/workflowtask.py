@@ -56,7 +56,7 @@ async def create_workflowtasks(
     if (
         await _workflow_has_submitted_job(workflow_id=workflow_id, db=db)
         and order is not None
-        and order != len(workflow.task_list)
+        and order < len(workflow.task_list)
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -111,7 +111,7 @@ async def create_workflowtasks(
         created_wft = await _workflow_insert_task(
             workflow_id=workflow.id,
             task_id=wftask.task_id,
-            order=order + i + 1,
+            order=order + i,
             meta_non_parallel=wftask.meta_non_parallel,
             meta_parallel=wftask.meta_parallel,
             args_non_parallel=wftask.args_non_parallel,

@@ -1125,3 +1125,164 @@ async def test_replace_task_in_workflowtask(
             json={},
         )
         assert res.status_code == 201
+
+
+async def test_insert_tasks_bulk(
+    project_factory,
+    workflow_factory,
+    task_factory,
+    client,
+    MockCurrentUser,
+    db,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        assert workflow.task_list == []
+
+        tasks = [
+            await task_factory(name=f"bulk_test_{i}", user_id=user.id)
+            for i in range(6)
+        ]
+
+        # add 2 tasks
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": tasks[0].id}, {"task_id": tasks[1].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 2
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[1].id
+
+        # add 1 task in between
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/?order=1",
+            json=[{"task_id": tasks[2].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 3
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[2].id
+        assert workflow.task_list[2].id == tasks[1].id
+
+        # add 1 task at the end
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": tasks[3].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 4
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[2].id
+        assert workflow.task_list[2].id == tasks[1].id
+        assert workflow.task_list[3].id == tasks[3].id
+
+        # add 2 tasks at the beginning
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/?order=0",
+            json=[{"task_id": tasks[4].id}, {"task_id": tasks[5].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 6
+        assert workflow.task_list[0].id == tasks[4].id
+        assert workflow.task_list[1].id == tasks[5].id
+        assert workflow.task_list[2].id == tasks[0].id
+        assert workflow.task_list[3].id == tasks[2].id
+        assert workflow.task_list[4].id == tasks[1].id
+        assert workflow.task_list[5].id == tasks[3].id
+
+
+async def test_insert_tasks_while_job_running(
+    project_factory,
+    workflow_factory,
+    task_factory,
+    client,
+    MockCurrentUser,
+    db,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        assert workflow.task_list == []
+
+        tasks = [
+            await task_factory(name=f"task_{i}", user_id=user.id)
+            for i in range(4)
+        ]
+
+        # add 2 tasks
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": tasks[0].id}, {"task_id": tasks[1].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 2
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[1].id
+
+        running_job = JobV2(
+            workflow_id=workflow.id,
+            status=JobStatusType.SUBMITTED,
+            user_email="foo@bar.com",
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            first_task_index=0,
+            last_task_index=1,
+        )
+        db.add(running_job)
+        await db.commit()
+
+        await db.refresh(workflow)
+
+        # attempt to add task in between -> must fail
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/?order=1",
+            json=[{"task_id": tasks[2].id}],
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot perform WorkflowTask insertion while a Job is running "
+            "for this Workflow."
+        )
+
+        # add task at the end is allowed - without order param
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": tasks[2].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 3
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[1].id
+        assert workflow.task_list[2].id == tasks[2].id
+
+        # add task at the end is allowed - with order param
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/?order=3",
+            json=[{"task_id": tasks[3].id}],
+        )
+        assert res.status_code == 201
+
+        await db.refresh(workflow)
+        assert len(workflow.task_list) == 4
+        assert workflow.task_list[0].id == tasks[0].id
+        assert workflow.task_list[1].id == tasks[1].id
+        assert workflow.task_list[2].id == tasks[2].id
+        assert workflow.task_list[3].id == tasks[3].id
+
+        await db.delete(running_job)  # clean up
+        await db.commit()
