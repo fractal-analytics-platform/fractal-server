@@ -1,8 +1,10 @@
+import pytest
 from devtools import debug
 
 from fractal_server.app.models import LinkUserProjectV2
 
 
+@pytest.mark.xfail(reason="Expected to fail until #3261 is ready", strict=True)
 async def test_admin_patch_project(
     db,
     client,
