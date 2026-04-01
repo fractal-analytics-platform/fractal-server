@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -7,6 +9,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
@@ -23,7 +26,7 @@ async def view_projects(
     name: str | None = None,
     user_email: str | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
-    user: UserOAuth = Depends(current_superuser_act),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[ProjectReadSuperuser]:
     # Assign pagination parameters
@@ -78,3 +81,50 @@ async def view_projects(
         current_page=page,
         items=projects,
     )
+
+
+@router.patch("/{project_id}/", response_model=ProjectReadSuperuser)
+async def transfer_project_ownership(
+    project_id: int,
+    user_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> ProjectReadSuperuser:
+    project = await db.get(ProjectV2, project_id)
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    new_user = await db.get(UserOAuth, user_id)
+    if new_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    res = await db.execute(
+        select(DatasetV2.zarr_dir).where(DatasetV2.project_id == project_id)
+    )
+    zarr_dirs = res.scalars().all()
+    for zarr_dir in zarr_dirs:
+        if all(
+            not zarr_dir.startswith(project_dir)
+            for project_dir in new_user.project_dirs
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"New user cannot use {zarr_dir=}",
+            )
+
+    # FIXME: add other checks
+
+    res = await db.execute(
+        select(LinkUserProjectV2)
+        .where(LinkUserProjectV2.project_id == project_id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
+    )
+    link = res.scalar_one()
+    link.user_id = user_id
+    db.add(link)
+    await db.commit()
+
+    return dict(user_email=new_user.email, **project.model_dump())
