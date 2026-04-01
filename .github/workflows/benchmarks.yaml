@@ -6,36 +6,42 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions: {}
+
 jobs:
 
   benchmark_api:
     name: Benchmarks
     runs-on: ubuntu-24.04
 
+    permissions:
+      pull-requests: write  # For https://github.com/mshick/add-pr-comment
+      contents: write # For https://github.com/stefanzweifel/git-auto-commit-action
+
     steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      with:
+        persist-credentials: false
 
-     - uses: actions/checkout@v5
+    - name: Start Postgres
+      run: |
+        sudo systemctl start postgresql.service
+        sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+        sudo --login -u postgres createdb fractal_test
 
-     - name: Start Postgres
-       run: |
-          sudo systemctl start postgresql.service
-          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-          sudo --login -u postgres createdb fractal_test
-
-     - name: Set up Python 3.12
-       uses: actions/setup-python@v5
-       with:
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      with:
         python-version: "3.12"
 
-     - uses: astral-sh/setup-uv@v6
-       with:
+    - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+      with:
         version: "0.9.24"
         enable-cache: true
 
-     - run: uv sync --frozen --group dev
+    - run: uv sync --frozen --group dev
 
-     - name: Run Fractal with Gunicorn
-       run: |
+    - name: Run Fractal with Gunicorn
+      run: |
         export POSTGRES_DB=fractal_test
         export POSTGRES_PASSWORD=postgres
         export POSTGRES_USER=postgres
@@ -49,31 +55,31 @@ jobs:
         uv run --frozen python populate_db/populate_db_script.py
         uv run --frozen sh serve.sh
 
-     - name: Benchmark
-       run: |
+    - name: Benchmark
+      run: |
         cd benchmarks/
         uv run --frozen python api_bench.py
 
-     - name: Print logs stderr
-       run: cat benchmarks/fractal-server.err
+    - name: Print logs stderr
+      run: cat benchmarks/fractal-server.err
 
-     - name: Print logs stdout
-       run: cat benchmarks/fractal-server.out
+    - name: Print logs stdout
+      run: cat benchmarks/fractal-server.out
 
+    - name: Add comment with preview
+      uses: mshick/add-pr-comment@ffd016c7e151d97d69d21a843022fd4cd5b96fe5
+      with:
+        message-path: benchmarks/bench_diff.md
 
-     - name: Add comment with preview
-       uses: mshick/add-pr-comment@v2
-       with:
-         message-path: |
-            benchmarks/bench_diff.md
-
-     # commit on benchmark-api removing bench_diff.html
-     - uses: stefanzweifel/git-auto-commit-action@v5
-       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-       with:
-         commit_message: Update bench.html & bench.json
-         branch: benchmark-api
-         commit_options: '--no-verify'
-         push_options: '--force'
-         skip_checkout: true
-         file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+    # commit on benchmark-api removing bench_diff.html
+    - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      with:
+        commit_message: Update bench.html & bench.json
+        branch: benchmark-api
+        commit_options: '--no-verify'
+        push_options: '--force'
+        skip_checkout: true
+        file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
