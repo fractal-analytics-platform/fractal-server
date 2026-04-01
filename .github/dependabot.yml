@@ -6,6 +6,12 @@ updates:
     versioning-strategy: "lockfile-only"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: github-actions
+    directory: /.github/workflows
+    schedule:
+      interval: "quarterly"
     cooldown:
       default-days: 7

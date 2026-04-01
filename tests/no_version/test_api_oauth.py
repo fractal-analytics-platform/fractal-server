@@ -19,9 +19,10 @@ FRACTAL_HELP_URL=https://example.org/info
 ```
 """
 
-import httpx
 import pytest
 from httpx import AsyncClient
+from httpx import Client
+from httpx import ConnectError
 from httpx_oauth.exceptions import GetIdEmailError
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,7 +55,7 @@ async def _oauth_count(db: AsyncSession) -> int:
 
 
 def _mailpit_email_count() -> int:
-    with httpx.Client() as client:
+    with Client() as client:
         response = client.get(f"{MAILPIT_URL}/api/v1/messages")
         response.raise_for_status()
         data = response.json()
@@ -65,7 +66,7 @@ def _mailpit_email_count() -> int:
 def _mailpit_read_messages() -> list[dict]:
     messages = []
 
-    with httpx.Client() as client:
+    with Client() as client:
         # Get message list
         r = client.get(f"{MAILPIT_URL}/api/v1/messages")
         r.raise_for_status()
@@ -100,17 +101,19 @@ async def _standard_login(client, username, password) -> str:
     return res.json()["access_token"]
 
 
-async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
+async def _oauth_login(
+    client: AsyncClient, oauth_settings: OAuthSettings
+) -> str:
     """
     Login via Dex as 'kilgore@kilgore.trout'
     """
     res = await client.get("/auth/dexidp/authorize/")
-    cookies = {
+    client.cookies = {
         "fastapiusersoauthcsrf": res.cookies.get("fastapiusersoauthcsrf")
     }
     authorization_url = res.json()["authorization_url"]
 
-    with httpx.Client() as httpx_client:
+    with Client() as httpx_client:
         res = httpx_client.get(authorization_url)
 
         assert res.status_code == 302
@@ -127,10 +130,7 @@ async def _oauth_login(client, oauth_settings: OAuthSettings) -> str:
         assert location.startswith(oauth_settings.OAUTH_REDIRECT_URL)
         code_and_state = location[len(oauth_settings.OAUTH_REDIRECT_URL) :]
 
-    res = await client.get(
-        f"/auth/dexidp/callback/{code_and_state}",
-        cookies=cookies,
-    )
+    res = await client.get(f"/auth/dexidp/callback/{code_and_state}")
     assert res.status_code == 204
     assert res.headers["set-cookie"].startswith("fastapiusersauth=")
 
@@ -176,7 +176,7 @@ async def test_oauth(registered_superuser_client, db, client):
                 f"Mailpit has {email_count} messages in memory. Hint: try "
                 "`docker compose -f scripts/oauth/docker-compose.yaml restart`"
             )
-    except httpx.ConnectError as e:
+    except ConnectError as e:
         raise RuntimeError(
             f"Cannot connect to Mailpit. Original error: '{e}'. "
             "Hint: is Mailpit container running? "

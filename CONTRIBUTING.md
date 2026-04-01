@@ -82,7 +82,7 @@ uv run --frozen pytest -v -s --log-cli-level info --full-trace
 [Pytest markers](https://docs.pytest.org/en/stable/example/markers.html) are used to include or exclude some specific tests, notably the ones that require access to some external resources (Docker). An example:
 ```bash
 # Run tests the do not require any Docker container
-uv run --frozen pytest -m "not container and not oauth"
+uv run --frozen pytest -m "not container and not oauth and not basic_auth"
 ```
 
 #### SLURM
@@ -102,6 +102,8 @@ For testing OAuth integration and email-sending features, we rely on containeriz
 ```bash
 ./tools/run_oauth_tests.sh
 ```
+
+Note that also tests marked as `basic_auth` rely on the Dex service being active.
 
 ### Update database schema
 

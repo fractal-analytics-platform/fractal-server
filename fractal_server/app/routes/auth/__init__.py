@@ -46,7 +46,7 @@ cookie_backend = AuthenticationBackend(
 
 fastapi_users = FastAPIUsers[UserOAuth, int](
     get_user_manager,
-    [token_backend, cookie_backend],
+    auth_backends=[token_backend, cookie_backend],
 )
 
 # Current-user dependencies
