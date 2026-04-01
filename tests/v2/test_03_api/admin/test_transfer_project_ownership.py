@@ -1,10 +1,9 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.models import LinkUserProjectV2
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 
-@pytest.mark.xfail(reason="Expected to fail until #3261 is ready", strict=True)
 async def test_admin_patch_project(
     db,
     client,
@@ -100,47 +99,56 @@ async def test_admin_patch_project(
         await workflow_factory(project_id=proj4_id)
         await dataset_factory(project_id=proj4_id, zarr_dir="/shared/zarr4")
 
-    # Fail due to new user's `project_dirs`
-    res = await client.PATCH(
-        f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
-    )
-    assert res.status_code == 422
-    debug(res.json())
-    await client.patch(
-        f"/auth/users/{new_user_id}/",
-        json=dict(
-            project_dirs=[
-                "/private-new",
-                "/shared",
-                "/private-old",
-            ]
-        ),
-    )
-    res = await client.PATCH(
-        f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
-    )
-    assert res.status_code == 200
-    # TODO: Add assertion about LinkUserProjectV2 for `old_user_id`
+    async with MockCurrentUser(is_superuser=True):
+        # Fail due to new user's `project_dirs`
+        res = await client.patch(
+            f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        await client.patch(
+            f"/auth/users/{new_user_id}/",
+            json=dict(
+                project_dirs=[
+                    "/private-new",
+                    "/shared",
+                    "/private-old",
+                ]
+            ),
+        )
+        res = await client.patch(
+            f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 200
+        # TODO: Add assertion about LinkUserProjectV2 for `old_user_id`
 
-    # Task access
-    res = await client.PATCH(
-        f"/admin/v2/project/{proj2_id}/?user_id={new_user_id}"
-    )
-    assert res.status_code == 200
-    # Add assertion about what the new user would see (e.g. warnings)
+        # Task access
+        res = await client.patch(
+            f"/admin/v2/project/{proj2_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 200
+        # Add assertion about what the new user would see (e.g. warnings)
 
-    # Test behavior for a project that had already been shared with new user
-    db.add(LinkUserProjectV2(user_id=new_user_id, project_id=proj3_id))
-    await db.commit()
-    db.expunge_all()
-    res = await client.PATCH(
-        f"/admin/v2/project/{proj3_id}/?user_id={new_user_id}"
-    )
-    assert res.status_code == 200
-    # TODO: Add assertion about LinkUserProjectV2 for `new_user_id`
+        # Test behavior for a project that had already been shared with new user
+        db.add(
+            LinkUserProjectV2(
+                user_id=new_user_id,
+                project_id=proj3_id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+        db.expunge_all()
+        res = await client.patch(
+            f"/admin/v2/project/{proj3_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 200
+        # TODO: Add assertion about LinkUserProjectV2 for `new_user_id`
 
-    # Wrong resource
-    res = await client.PATCH(
-        f"/admin/v2/project/{proj4_id}/?user_id={new_user_id}"
-    )
-    assert res.status_code == 422
+        # Wrong resource
+        res = await client.patch(
+            f"/admin/v2/project/{proj4_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 422
