@@ -13,6 +13,7 @@ async def test_admin_get_projects(
     async with MockCurrentUser(is_superuser=True):
         # no query params
         res = await client.get("/admin/v2/project/")
+        assert res.status_code == 200
         assert res.json()["total_count"] == 3
         assert res.json()["page_size"] == 3
         assert res.json()["current_page"] == 1
