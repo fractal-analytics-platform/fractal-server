@@ -4,7 +4,7 @@
 # 2.20.5
 
 * Testing:
-    * Harden GitHub Actions with `zizmor` audit (\#XXX).
+    * Harden GitHub Actions with `zizmor` audit (\#1047).
 
 # 2.20.4
 
