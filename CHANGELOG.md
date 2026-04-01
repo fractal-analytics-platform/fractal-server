@@ -1,8 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.21.0
 
-* Update `POST /api/v2/project/{project.id}/workflow/{workflow.id}/wftask/` to allow bulk insertion of workflow tasks at an arbitrary position (\#3250);
+* API:
+    * Update `POST /api/v2/project/{project.id}/workflow/{workflow.id}/wftask/` to allow bulk insertion of workflow tasks at an arbitrary position (\#3250).
 
 # 2.20.5
 
