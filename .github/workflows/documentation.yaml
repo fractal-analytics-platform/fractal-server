@@ -21,8 +21,6 @@ jobs:
   build:
     name: "Build documentation"
     runs-on: ubuntu-24.04
-    permissions: {}
-
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -38,7 +36,6 @@ jobs:
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
       - run: uv run --frozen mkdocs build --config-file mkdocs.yml --site-dir site --clean
 
-      # - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
         with:
           path: "site"
