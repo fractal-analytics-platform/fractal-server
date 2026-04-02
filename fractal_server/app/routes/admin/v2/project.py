@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from sqlalchemy import func
 from sqlmodel import and_
@@ -91,13 +92,13 @@ async def view_projects(
     )
 
 
-@router.patch("/{project_id}/", response_model=ProjectReadSuperuser)
+@router.patch("/{project_id}/", status_code=status.HTTP_200_OK)
 async def transfer_project_ownership(
     project_id: int,
     user_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectReadSuperuser:
+) -> Response:
     # Get project
     project = await db.get(ProjectV2, project_id)
     if project is None:
@@ -174,4 +175,4 @@ async def transfer_project_ownership(
     setattr(owner_link, "user_id", user_id)
     await db.commit()
 
-    return dict(user_email=new_user.email, **project.model_dump())
+    return Response(status_code=status.HTTP_200_OK)
