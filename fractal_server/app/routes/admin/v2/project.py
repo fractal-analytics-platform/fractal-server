@@ -3,6 +3,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy import func
+from sqlmodel import and_
+from sqlmodel import delete
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -120,6 +122,11 @@ async def transfer_project_ownership(
         .where(LinkUserProjectV2.is_owner.is_(True))
     )
     owner_link = res.scalar_one()
+    if owner_link.user_id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"User {user_id} is already the project's owner.",
+        )
     old_user = await db.get(UserOAuth, owner_link.user_id)
     await user_has_profile_or_422(user=old_user)
 
@@ -152,10 +159,14 @@ async def transfer_project_ownership(
             )
 
     # Check new user is not already linked
-    old_link = await db.get(LinkUserProjectV2, (project_id, user_id))
-    if old_link is not None:
-        await db.delete(old_link)
-        await db.flush()
+    await db.execute(
+        delete(LinkUserProjectV2).where(
+            and_(
+                LinkUserProjectV2.project_id == project_id,
+                LinkUserProjectV2.user_id == user_id,
+            )
+        )
+    )
 
     # Patch
     setattr(owner_link, "user_id", user_id)
