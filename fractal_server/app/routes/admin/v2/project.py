@@ -21,6 +21,7 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import ProjectReadSuperuser
+from fractal_server.urls import url_is_relative_to
 
 router = APIRouter()
 
@@ -142,7 +143,7 @@ async def transfer_project_ownership(
     zarr_dirs = res.scalars().all()
     for zarr_dir in zarr_dirs:
         if all(
-            not zarr_dir.startswith(project_dir)
+            not url_is_relative_to(url=zarr_dir, base=project_dir)
             for project_dir in new_user.project_dirs
         ):
             raise HTTPException(
