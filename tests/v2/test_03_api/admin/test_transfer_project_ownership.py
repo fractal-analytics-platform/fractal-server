@@ -107,6 +107,15 @@ async def test_admin_patch_project(
         res = await client.patch(f"/admin/v2/project/{proj1_id}/?user_id=9999")
         assert res.status_code == 404
 
+        # Fail transferring ownership to same user
+        res = await client.patch(
+            f"/admin/v2/project/{proj1_id}/?user_id={user_old_id}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"User {user_old_id} is already the owner of project {proj1_id}"
+        )
+
         # Fail due to new user's `project_dirs`
         res = await client.patch(
             f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"

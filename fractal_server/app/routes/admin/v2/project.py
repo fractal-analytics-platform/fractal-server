@@ -125,7 +125,9 @@ async def transfer_project_ownership(
     if owner_link.user_id == user_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"User {user_id} is already the project's owner.",
+            detail=(
+                f"User {user_id} is already the owner of project {project_id}"
+            ),
         )
     old_user = await db.get(UserOAuth, owner_link.user_id)
     await user_has_profile_or_422(user=old_user)
