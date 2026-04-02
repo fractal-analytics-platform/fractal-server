@@ -1,5 +1,3 @@
-from devtools import debug
-
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
@@ -34,18 +32,6 @@ async def test_admin_patch_project(
         ],
     ) as user_old:
         user_old_id = user_old.id
-        task_private = await task_factory(
-            user_id=user_old_id,
-            user_group_id=None,
-            name="private-2",
-            command_non_parallel="echo",
-        )
-        task_shared = await task_factory(
-            user_id=user_old_id,
-            user_group_id=default_user_group.id,
-            name="shared-2",
-            command_non_parallel="echo",
-        )
 
         proj1_wrong_zarr_dir = await project_factory(user=user_old)
         proj2_no_task_access = await project_factory(user=user_old)
@@ -54,39 +40,11 @@ async def test_admin_patch_project(
         proj2_id = proj2_no_task_access.id
         proj3_id = proj3_already_shared.id
 
-        wf1 = await workflow_factory(project_id=proj1_id)
-        wf2 = await workflow_factory(project_id=proj2_id)
-        wf3 = await workflow_factory(project_id=proj3_id)
-
-        await workflowtask_factory(workflow_id=wf1.id, task_id=task_shared.id)
-        await workflowtask_factory(workflow_id=wf2.id, task_id=task_private.id)
-        await workflowtask_factory(workflow_id=wf3.id, task_id=task_shared.id)
-
-        ds1 = await dataset_factory(
+        await dataset_factory(
             project_id=proj1_id, zarr_dir="/private-old/zarr1"
         )
-        ds2 = await dataset_factory(
-            project_id=proj2_id, zarr_dir="/shared/zarr2"
-        )
-        ds3 = await dataset_factory(
-            project_id=proj3_id, zarr_dir="/shared/zarr3"
-        )
-
-        res = await client.post(
-            f"/api/v2/project/{proj1_id}/job/submit/?dataset_id={ds1.id}&workflow_id={wf1.id}",
-            json={},
-        )
-        assert res.status_code == 202
-        res = await client.post(
-            f"/api/v2/project/{proj2_id}/job/submit/?dataset_id={ds2.id}&workflow_id={wf2.id}",
-            json={},
-        )
-        assert res.status_code == 202
-        res = await client.post(
-            f"/api/v2/project/{proj3_id}/job/submit/?dataset_id={ds3.id}&workflow_id={wf3.id}",
-            json={},
-        )
-        assert res.status_code == 202
+        await dataset_factory(project_id=proj2_id, zarr_dir="/shared/zarr2")
+        await dataset_factory(project_id=proj3_id, zarr_dir="/shared/zarr3")
 
     async with MockCurrentUser(
         profile_id=profile_slurm_ssh.id,
@@ -121,7 +79,8 @@ async def test_admin_patch_project(
             f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
         )
         assert res.status_code == 422
-        debug(res.json())
+
+        # Success after adding project_dirs to new_user
         await client.patch(
             f"/auth/users/{new_user_id}/",
             json=dict(
@@ -132,18 +91,15 @@ async def test_admin_patch_project(
                 ]
             ),
         )
+        link = await db.get(LinkUserProjectV2, (proj1_id, user_old_id))
+        assert link is not None
+        db.expunge(link)
         res = await client.patch(
             f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
         )
         assert res.status_code == 200
-        # TODO: Add assertion about LinkUserProjectV2 for `old_user_id`
-
-        # Task access
-        res = await client.patch(
-            f"/admin/v2/project/{proj2_id}/?user_id={new_user_id}"
-        )
-        assert res.status_code == 200
-        # Add assertion about what the new user would see (e.g. warnings)
+        link = await db.get(LinkUserProjectV2, (proj1_id, user_old_id))
+        assert link is None
 
         # Test behavior for a project that had already been shared with new user
         db.add(
@@ -161,7 +117,8 @@ async def test_admin_patch_project(
             f"/admin/v2/project/{proj3_id}/?user_id={new_user_id}"
         )
         assert res.status_code == 200
-        # TODO: Add assertion about LinkUserProjectV2 for `new_user_id`
+        link = await db.get(LinkUserProjectV2, (proj3_id, new_user_id))
+        assert link.is_owner is True
 
         # Wrong resource
         res = await client.patch(
