@@ -98,14 +98,16 @@ async def transfer_project_ownership(
     project = await db.get(ProjectV2, project_id)
     if project is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project {project_id} not found",
         )
 
     # Get new user
     new_user = await db.get(UserOAuth, user_id)
     if new_user is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {user_id} not found",
         )
     new_user_resource, new_user_profile = await validate_user_profile(
         user=new_user,
