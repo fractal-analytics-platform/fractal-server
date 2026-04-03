@@ -4,6 +4,7 @@ from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 
 async def test_admin_get_projects(
     client,
+    db,
     MockCurrentUser,
     project_factory,
 ):
@@ -14,6 +15,18 @@ async def test_admin_get_projects(
     async with MockCurrentUser(user_email="x@example.org") as user2:
         project3 = await project_factory(user=user2, name="aaa")
 
+        # User 2 has read access on project1
+        db.add(
+            LinkUserProjectV2(
+                project_id=project1.id,
+                user_id=user2.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
     async with MockCurrentUser(is_superuser=True):
         # no query params
         res = await client.get("/admin/v2/project/")
@@ -23,6 +36,7 @@ async def test_admin_get_projects(
         assert res.json()["current_page"] == 1
 
         projects = res.json()["items"]
+        assert len(projects) == 3
 
         assert projects[0]["user_email"] == user2.email
         assert projects[0]["id"] == project3.id
