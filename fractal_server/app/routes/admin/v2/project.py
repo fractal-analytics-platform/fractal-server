@@ -66,6 +66,7 @@ async def view_projects(
             stm_count.join(
                 LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id
             )
+            .where(LinkUserProjectV2.is_owner.is_(True))
             .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
             .where(UserOAuth.email == user_email)
         )
