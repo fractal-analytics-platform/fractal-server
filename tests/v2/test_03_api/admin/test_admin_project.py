@@ -11,6 +11,7 @@ async def test_admin_get_projects(
     async with MockCurrentUser(user_email="y@example.org") as user1:
         project1 = await project_factory(user=user1, name="ccc")
         project2 = await project_factory(user=user1, name="bbb")
+        user1_email = user1.email
 
     async with MockCurrentUser(user_email="x@example.org") as user2:
         project3 = await project_factory(user=user2, name="aaa")
@@ -26,6 +27,7 @@ async def test_admin_get_projects(
             )
         )
         await db.commit()
+        user2_email = user2.email
 
     async with MockCurrentUser(is_superuser=True):
         # no query params
@@ -38,13 +40,13 @@ async def test_admin_get_projects(
         projects = res.json()["items"]
         assert len(projects) == 3
 
-        assert projects[0]["user_email"] == user2.email
+        assert projects[0]["user_email"] == user2_email
         assert projects[0]["id"] == project3.id
 
-        assert projects[1]["user_email"] == user1.email
+        assert projects[1]["user_email"] == user1_email
         assert projects[1]["id"] == project2.id
 
-        assert projects[2]["user_email"] == user1.email
+        assert projects[2]["user_email"] == user1_email
         assert projects[2]["id"] == project1.id
 
         # pagination query params
@@ -54,35 +56,35 @@ async def test_admin_get_projects(
         assert res.json()["current_page"] == 2
 
         assert len(res.json()["items"]) == 1
-        assert res.json()["items"][0]["user_email"] == user1.email
+        assert res.json()["items"][0]["user_email"] == user1_email
         assert res.json()["items"][0]["id"] == project1.id
 
         # project_id
         res = await client.get(f"/admin/v2/project/?project_id={project1.id}")
         assert len(res.json()["items"]) == 1
-        assert res.json()["items"][0]["user_email"] == user1.email
+        assert res.json()["items"][0]["user_email"] == user1_email
         assert res.json()["items"][0]["id"] == project1.id
 
         # name
         res = await client.get("/admin/v2/project/?name=B")
         assert len(res.json()["items"]) == 1
-        assert res.json()["items"][0]["user_email"] == user1.email
+        assert res.json()["items"][0]["user_email"] == user1_email
         assert res.json()["items"][0]["id"] == project2.id
 
         # user_email
-        res = await client.get(f"/admin/v2/project/?user_email={user1.email}")
+        res = await client.get(f"/admin/v2/project/?user_email={user1_email}")
         assert res.json()["total_count"] == 2
         assert len(res.json()["items"]) == 2
-        assert res.json()["items"][0]["user_email"] == user1.email
+        assert res.json()["items"][0]["user_email"] == user1_email
         assert res.json()["items"][0]["id"] == project2.id
-        assert res.json()["items"][1]["user_email"] == user1.email
+        assert res.json()["items"][1]["user_email"] == user1_email
         assert res.json()["items"][1]["id"] == project1.id
 
         # user_email
-        res = await client.get(f"/admin/v2/project/?user_email={user2.email}")
+        res = await client.get(f"/admin/v2/project/?user_email={user2_email}")
         assert res.json()["total_count"] == 1
         assert len(res.json()["items"]) == 1
-        assert res.json()["items"][0]["user_email"] == user2.email
+        assert res.json()["items"][0]["user_email"] == user2_email
         assert res.json()["items"][0]["id"] == project3.id
 
 
