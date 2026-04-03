@@ -46,6 +46,7 @@ async def view_projects(
     stm = (
         select(ProjectV2, UserOAuth.email)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.is_owner.is_(True))
         .join(UserOAuth, UserOAuth.id == LinkUserProjectV2.user_id)
         .order_by(UserOAuth.email, ProjectV2.name)
     )
