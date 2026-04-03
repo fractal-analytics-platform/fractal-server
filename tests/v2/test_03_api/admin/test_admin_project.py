@@ -59,21 +59,31 @@ async def test_admin_get_projects(
 
         # project_id
         res = await client.get(f"/admin/v2/project/?project_id={project1.id}")
+        assert len(res.json()["items"]) == 1
         assert res.json()["items"][0]["user_email"] == user1.email
         assert res.json()["items"][0]["id"] == project1.id
 
         # name
         res = await client.get("/admin/v2/project/?name=B")
+        assert len(res.json()["items"]) == 1
         assert res.json()["items"][0]["user_email"] == user1.email
         assert res.json()["items"][0]["id"] == project2.id
 
         # user_email
         res = await client.get(f"/admin/v2/project/?user_email={user1.email}")
         assert res.json()["total_count"] == 2
+        assert len(res.json()["items"]) == 2
         assert res.json()["items"][0]["user_email"] == user1.email
         assert res.json()["items"][0]["id"] == project2.id
         assert res.json()["items"][1]["user_email"] == user1.email
         assert res.json()["items"][1]["id"] == project1.id
+
+        # user_email
+        res = await client.get(f"/admin/v2/project/?user_email={user2.email}")
+        assert res.json()["total_count"] == 1
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["user_email"] == user2.email
+        assert res.json()["items"][0]["id"] == project3.id
 
 
 async def test_admin_patch_project(
