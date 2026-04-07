@@ -147,7 +147,7 @@ async def transfer_project_ownership(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Users are associated to different computational resources "
-                f"({resource_names[0]} and {resource_names[1]})."
+                f"('{resource_names[0]}' and '{resource_names[1]}')."
             ),
         )
 
