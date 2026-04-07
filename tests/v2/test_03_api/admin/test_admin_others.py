@@ -54,16 +54,17 @@ async def test_task_query(
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(
-            workflow_id=workflow1.id, task_id=task1.id, db=db
+            workflow_id=workflow1.id, task_id=task1.id, db=db, order=0
         )
         await _workflow_insert_task(
-            workflow_id=workflow2.id, task_id=task1.id, db=db
+            workflow_id=workflow2.id, task_id=task1.id, db=db, order=1
         )
         # task2 to workflow2
         await _workflow_insert_task(
-            workflow_id=workflow2.id, task_id=task2.id, db=db
+            workflow_id=workflow2.id, task_id=task2.id, db=db, order=2
         )
         # task3 is orphan
+        await db.commit()
 
         # Query all Tasks
         res = await client.get(f"{PREFIX}/task/")

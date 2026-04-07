@@ -62,7 +62,7 @@ async def test_app_with_lifespan(
         workflow = await workflow_factory(project_id=project.id)
         dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
         # Create job with submitted status
         job = await job_factory(

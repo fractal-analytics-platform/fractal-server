@@ -179,7 +179,7 @@ if __name__ == "__main__":
             proj.id, WorkflowCreate(name=f"MyWorkflow_{cluster}")
         )
         wftask = user.add_workflowtask(
-            proj.id, wf.id, working_task.id, WorkflowTaskCreate()
+            proj.id, wf.id, WorkflowTaskCreate(task_id=working_task.id)
         )
 
         with next(get_sync_db()) as db:

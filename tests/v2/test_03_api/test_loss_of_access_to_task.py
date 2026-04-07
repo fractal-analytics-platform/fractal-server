@@ -69,13 +69,14 @@ async def test_loss_of_access_to_task(
             )
             workflow = await workflow_factory(project_id=project.id)
             await _workflow_insert_task(
-                workflow_id=workflow.id, task_id=task_A.id, db=db
+                workflow_id=workflow.id, task_id=task_A.id, db=db, order=0
             )
             await _workflow_insert_task(
-                workflow_id=workflow.id, task_id=task_B.id, db=db
+                workflow_id=workflow.id, task_id=task_B.id, db=db, order=1
             )
+            await db.commit()
 
-            # User A can get task_B any more
+            # User A can get task_B anymore
             res = await client.get(f"/api/v2/task/{task_B.id}/")
             assert res.status_code == 200
 
@@ -110,7 +111,7 @@ async def test_loss_of_access_to_task(
             raise RuntimeError("Wrong branch.")
 
         async with MockCurrentUser(user_id=user_A.id) as user:
-            # User A cannot get task_B any more
+            # User A cannot get task_B anymore
             res = await client.get(f"/api/v2/task/{task_B.id}/")
             assert res.status_code == 403
 

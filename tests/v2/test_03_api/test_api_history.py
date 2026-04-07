@@ -61,12 +61,11 @@ async def test_get_workflow_tasks_statuses(
     num_wftasks = 6
     for _ in range(0, num_wftasks):
         res = await client.post(
-            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task.id}",
-            json={},
+            f"/api/v2/project/{project.id}/workflow/{workflow.id}/wftask/",
+            json=[{"task_id": task.id}],
         )
         assert res.status_code == 201
-        wftask_ids.append(res.json()["id"])
+        wftask_ids.append(res.json()[0]["id"])
 
     common_job_args = dict(
         project_id=project.id,

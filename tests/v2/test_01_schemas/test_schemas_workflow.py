@@ -44,11 +44,11 @@ async def test_schemas_workflow():
 
 async def test_schemas_workflow_task():
     for attribute in ("args_parallel", "args_non_parallel"):
-        WorkflowTaskCreate(**{attribute: dict(something="else")})
+        WorkflowTaskCreate(**{"task_id": 1, attribute: dict(something="else")})
 
         WorkflowTaskUpdate(**{attribute: dict(something="else")})
 
-        WorkflowTaskCreate(**{attribute: None})
+        WorkflowTaskCreate(**{"task_id": 1, attribute: None})
 
         WorkflowTaskUpdate(**{attribute: None})
 
@@ -57,5 +57,7 @@ async def test_schemas_workflow_task():
         assert "contains the following forbidden keys" in str(e.value)
 
         with pytest.raises(ValidationError) as e:
-            WorkflowTaskCreate(**{attribute: dict(zarr_url="/something")})
+            WorkflowTaskCreate(
+                **{"task_id": 1, attribute: dict(zarr_url="/something")}
+            )
         assert "contains the following forbidden keys" in str(e.value)
