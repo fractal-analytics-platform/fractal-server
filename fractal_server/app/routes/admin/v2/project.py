@@ -106,7 +106,7 @@ async def transfer_project_ownership(
     if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project {project_id} not found",
+            detail=f"Project {project_id} not found.",
         )
 
     # Get new user
@@ -114,9 +114,14 @@ async def transfer_project_ownership(
     if new_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found",
+            detail=f"User {user_id} not found.",
         )
     await user_has_profile_or_422(user=new_user)
+    if new_user.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Cannot transfer ownership to a guest user.",
+        )
 
     # Get old user and owner's link
     res = await db.execute(
@@ -129,7 +134,7 @@ async def transfer_project_ownership(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
-                f"User {user_id} is already the owner of project {project_id}"
+                f"User {user_id} is already the owner of project {project_id}."
             ),
         )
     old_user = await db.get(UserOAuth, owner_link.user_id)
@@ -141,7 +146,7 @@ async def transfer_project_ownership(
         .join(Profile, Profile.resource_id == Resource.id)
         .where(Profile.id.in_([old_user.profile_id, new_user.profile_id]))
     )
-    resource_names = res.scalars().all()
+    resource_names = res.unique().scalars().all()
     if len(resource_names) > 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
