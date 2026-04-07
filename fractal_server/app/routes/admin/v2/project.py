@@ -160,7 +160,12 @@ async def transfer_project_ownership(
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"New user cannot use {zarr_dir=}",
+                detail=(
+                    "Cannot transfer project ownership because "
+                    f"{zarr_dir=} is not relative to one of {new_user.email} "
+                    "project dirs. "
+                    f"You can fix it by editing {new_user.email} project dirs."
+                ),
             )
 
     # Check new user is not already linked
