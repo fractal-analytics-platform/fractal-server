@@ -137,15 +137,18 @@ async def transfer_project_ownership(
 
     # Check new user's resource compatibility
     res = await db.execute(
-        select(Resource.id)
+        select(Resource.name)
         .join(Profile, Profile.resource_id == Resource.id)
         .where(Profile.id.in_([old_user.profile_id, new_user.profile_id]))
     )
-    resource_ids = res.scalars().all()
-    if len(resource_ids) > 1:
+    resource_names = res.scalars().all()
+    if len(resource_names) > 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Users are associated to different computational resources.",
+            detail=(
+                "Users are associated to different computational resources "
+                f"({resource_names[0]} and {resource_names[1]})."
+            ),
         )
 
     # Check new user's project_dirs compatibility
