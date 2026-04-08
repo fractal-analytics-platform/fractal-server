@@ -86,6 +86,7 @@ def reactivate_local_pixi(
                 pixi_cache_dir = profile.pixi_cache_dir or os.path.join(
                     pixi_home, "cache"
                 )
+                logger.info(f"Setting PIXI_CACHE_DIR to {pixi_cache_dir}")
                 common_args = dict(
                     replacements={
                         ("__PIXI_HOME__", pixi_home),
