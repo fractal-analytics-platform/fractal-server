@@ -46,6 +46,7 @@ class Profile(SQLModel, table=True):
 
     pixi_cache_dir: str | None = None
     """
-    Override for the `PIXI_CACHE_DIR` variable (which would otherwise default
-    to the `cache` subfolder of `PIXI_HOME`).
+    Override for the `PIXI_CACHE_DIR` variable, which would otherwise default
+    to the `cache` subfolder of `PIXI_HOME` (only relevant if
+    `resource_type="slurm_ssh"`)
     """
