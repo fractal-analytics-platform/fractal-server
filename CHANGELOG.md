@@ -1,5 +1,8 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+* Dependencies:
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
+
 # 2.21.0
 
 * API:
