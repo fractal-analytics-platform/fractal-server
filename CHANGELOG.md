@@ -2,7 +2,10 @@
 
 # Unreleased
 
-* Introduce `Profile.pixi_cache_dir: str | None = None` and use it to override `${PIXI_HOME}/cache` (\#3266).
+* Task lifecycle:
+    * Introduce `Profile.pixi_cache_dir: str | None = None` and use it to override `${PIXI_HOME}/cache` (\#3266).
+* Dependencies:
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
 
 # 2.21.0
 
