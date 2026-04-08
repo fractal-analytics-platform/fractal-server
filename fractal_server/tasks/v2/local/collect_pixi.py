@@ -94,13 +94,13 @@ def collect_local_pixi(
                 pixi_home = resource.tasks_pixi_config["versions"][
                     task_group.pixi_version
                 ]
+                pixi_cache_dir = profile.pixi_cache_dir or os.path.join(
+                    pixi_home, "cache"
+                )
                 common_args = dict(
                     replacements={
                         ("__PIXI_HOME__", pixi_home),
-                        (
-                            "__PIXI_CACHE_DIR__",
-                            os.path.join(pixi_home, "cache"),
-                        ),
+                        ("__PIXI_CACHE_DIR__", pixi_cache_dir),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", archive_path),
                         (
