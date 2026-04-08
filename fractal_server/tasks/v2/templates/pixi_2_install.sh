@@ -9,6 +9,7 @@ write_log(){
 
 # Replacements
 PIXI_HOME="__PIXI_HOME__"
+PIXI_CACHE_DIR="__PIXI_CACHE_DIR__"
 PACKAGE_DIR="__PACKAGE_DIR__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 FROZEN_OPTION="__FROZEN_OPTION__"
@@ -27,7 +28,7 @@ PYPROJECT_TOML="${SOURCE_DIR}/pyproject.toml"
 
 # Pixi env variable
 export PIXI_HOME="${PIXI_HOME}"
-export PIXI_CACHE_DIR="${PIXI_HOME}/cache"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR}"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 export TOKIO_WORKER_THREADS="${TOKIO_WORKER_THREADS}"
 
