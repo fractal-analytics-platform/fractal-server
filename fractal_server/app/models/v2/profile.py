@@ -43,3 +43,9 @@ class Profile(SQLModel, table=True):
     Remote path of the task folder (only relevant if
     `resource_type="slurm_ssh"`).
     """
+
+    pixi_cache_dir: str | None = None
+    """
+    Override for the `PIXI_CACHE_DIR` variable (which would otherwise default
+    to the `cache` subfolder of `PIXI_HOME`).
+    """
