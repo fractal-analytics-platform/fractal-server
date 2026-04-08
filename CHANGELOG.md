@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Introduce `Profile.pixi_cache_dir: str | None = None` and use it to override `${PIXI_HOME}/cache` (\#3266).
+
 # 2.21.0
 
 * API:
