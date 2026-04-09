@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Generic
 from typing import TypeVar
 
@@ -68,7 +67,7 @@ async def get_pagination_response(
     res = await db.execute(stm)
     records = res.scalars().all()
 
-    return PaginationResponse[Any](
+    return PaginationResponse[T](
         total_count=total_count,
         page_size=page_size,
         current_page=page,
