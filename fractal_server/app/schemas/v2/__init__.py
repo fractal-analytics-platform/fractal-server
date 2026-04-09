@@ -29,6 +29,7 @@ from .profile import ValidProfileSlurmSSH  # noqa F401
 from .profile import ValidProfileSlurmSudo  # noqa F401
 from .project import ProjectCreate  # noqa F401
 from .project import ProjectRead  # noqa F401
+from .project import ProjectReadSuperuser  # noqa F401
 from .project import ProjectUpdate  # noqa F401
 from .sharing import ProjectPermissions  # noqa F401
 from .sharing import ProjectGuestCreate  # noqa F401
