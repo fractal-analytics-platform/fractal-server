@@ -24,6 +24,10 @@ class ProjectRead(BaseModel):
         return v.isoformat()
 
 
+class ProjectReadSuperuser(ProjectRead):
+    user_email: str
+
+
 class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

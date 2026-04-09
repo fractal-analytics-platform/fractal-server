@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.21.1 (unreleased)
+
+* API:
+    * Add GET and PATCH projects admin's endpoints (\#3261).
 * Dependencies:
     * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
 
