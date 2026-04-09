@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import ValidationError
 from pydantic import model_validator
+from sqlmodel.sql.expression import Select
 from sqlmodel.sql.expression import SelectOfScalar
 
 from fractal_server.app.db import AsyncSession
@@ -57,8 +58,8 @@ class PaginationData(BaseModel):
 
 async def get_pagination_data(
     *,
-    stm,
-    stm_count,
+    stm: Select | SelectOfScalar,
+    stm_count: SelectOfScalar[int],
     pagination: PaginationRequest,
     db: AsyncSession,
 ) -> PaginationData:
@@ -81,7 +82,7 @@ async def get_pagination_data(
     )
 
 
-async def get_pagination_response(
+async def get_paginated_response(
     *,
     stm: SelectOfScalar[T],
     stm_count: SelectOfScalar[int],

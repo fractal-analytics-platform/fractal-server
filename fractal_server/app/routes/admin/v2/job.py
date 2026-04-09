@@ -23,8 +23,8 @@ from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
@@ -136,7 +136,7 @@ async def view_job(
         stm = stm.where(JobV2.end_timestamp <= end_timestamp_max)
         stm_count = stm_count.where(JobV2.end_timestamp <= end_timestamp_max)
 
-    response = await get_pagination_response(
+    response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
 

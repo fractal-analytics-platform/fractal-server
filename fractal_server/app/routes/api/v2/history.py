@@ -17,8 +17,8 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
@@ -320,9 +320,10 @@ async def get_history_run_units(
     if unit_status:
         stm = stm.where(HistoryUnit.status == unit_status)
 
-    return await get_pagination_response(
+    paginated_response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
+    return paginated_response
 
 
 @router.post("/project/{project_id}/status/images/")

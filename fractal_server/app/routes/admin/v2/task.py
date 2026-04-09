@@ -17,8 +17,8 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2.task import TaskType
 
 router = APIRouter()
@@ -105,7 +105,7 @@ async def query_tasks(
             TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
         ).where(TaskGroupV2.resource_id == resource_id)
 
-    response = await get_pagination_response(
+    response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
 

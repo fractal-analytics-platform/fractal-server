@@ -16,8 +16,8 @@ from fractal_server.app.models.v2 import AccountingRecordSlurm
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import AccountingRecordRead
 
 
@@ -54,12 +54,13 @@ async def query_accounting(
             AccountingRecord.timestamp <= query.timestamp_max
         )
 
-    return await get_pagination_response(
+    paginated_response = await get_paginated_response(
         stm=stm,
         stm_count=stm_count,
         pagination=pagination,
         db=db,
     )
+    return paginated_response
 
 
 @router.post("/slurm/")

@@ -22,9 +22,9 @@ from fractal_server.app.routes.auth._aux_auth import (
 )
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
@@ -86,9 +86,10 @@ async def get_task_group_activity_list(
             TaskGroupActivityV2.timestamp_started >= timestamp_started_min
         )
 
-    return await get_pagination_response(
+    paginated_response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
+    return paginated_response
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupReadSuperuser)
