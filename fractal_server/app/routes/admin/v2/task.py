@@ -156,6 +156,6 @@ async def query_tasks(
     return dict(
         total_count=response.total_count,
         page_size=response.page_size,
-        current_page=response.page,
+        current_page=response.current_page,
         items=task_info_list,
     )
