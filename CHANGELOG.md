@@ -2,7 +2,10 @@
 
 # 2.21.1 (unreleased)
 
-* Add GET and PATCH projects admin's endpoints (\#3261).
+* API:
+    * Add GET and PATCH projects admin's endpoints (\#3261).
+* Dependencies:
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
 
 # 2.21.0
 

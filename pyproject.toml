@@ -14,12 +14,12 @@ license-files = ["LICENSE"]
 
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "fastapi >= 0.129.0, <0.130.0",
-    "sqlmodel == 0.0.33",
+    "fastapi >= 0.135.0, <0.136.0",
+    "sqlmodel == 0.0.38",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
-    "uvicorn >= 0.40.0, <0.41.0",
+    "uvicorn >= 0.44.0, <0.45.0",
     "uvicorn-worker == 0.4.0",
     "pydantic >=2.12.0,<2.13.0",
     "pydantic-settings ==2.12.0",
