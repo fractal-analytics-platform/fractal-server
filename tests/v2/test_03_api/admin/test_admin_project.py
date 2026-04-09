@@ -101,6 +101,9 @@ async def test_admin_patch_project(
     _, profile = local_resource_profile_db
     _, profile_slurm_ssh = slurm_ssh_resource_profile_fake_db
 
+    async with MockCurrentUser(is_guest=True) as guest_user:
+        guest_user_id = guest_user.id
+
     async with MockCurrentUser(
         profile_id=profile.id,
         project_dirs=["/private-new", "/shared"],
@@ -162,6 +165,9 @@ async def test_admin_patch_project(
             f"/admin/v2/project/{proj1_id}/?user_id={new_user_id}"
         )
         assert res.status_code == 422
+        assert (
+            "Cannot transfer project ownership because zarr_dir"
+        ) in res.json()["detail"]
 
         # Success after adding project_dirs to new_user
         await client.patch(
@@ -208,3 +214,15 @@ async def test_admin_patch_project(
             f"/admin/v2/project/{proj4_id}/?user_id={new_user_id}"
         )
         assert res.status_code == 422
+        assert (
+            "Users are associated to different computational resources"
+        ) in res.json()["detail"]
+
+        # Guest user
+        res = await client.patch(
+            f"/admin/v2/project/{proj4_id}/?user_id={guest_user_id}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot transfer ownership to a guest user."
+        )
