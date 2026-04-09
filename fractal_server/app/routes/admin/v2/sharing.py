@@ -18,6 +18,7 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import LinkUserProjectRead
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
@@ -40,9 +41,6 @@ async def view_link_user_project(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[LinkUserProjectRead]:
-    page = pagination.page
-    page_size = pagination.page_size
-
     stm = (
         select(
             LinkUserProjectV2,
@@ -78,21 +76,17 @@ async def view_link_user_project(
             LinkUserProjectV2.is_verified == is_verified
         )
 
-    res_total_count = await db.execute(stm_count)
+    pagination_data = await get_pagination_data(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
 
-    total_count = res_total_count.scalar()
-    if page_size is None:
-        page_size = total_count
-    else:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
-
-    res = await db.execute(stm)
+    res = await db.execute(pagination_data.stm)
     items = res.all()
 
     return PaginationResponse[LinkUserProjectRead](
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
+        total_count=pagination_data.total_count,
+        page_size=pagination_data.page_size,
+        current_page=pagination_data.page,
         items=[
             dict(
                 # User info

@@ -39,6 +39,7 @@ from fractal_server.app.routes.auth._aux_auth import (
 )
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import WorkflowTemplateCreate
 from fractal_server.app.schemas.v2 import WorkflowTemplateExport
@@ -66,9 +67,6 @@ async def get_workflow_template_list(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> TemplatePage:
-    page = pagination.page
-    page_size = pagination.page_size
-
     stm = (
         select(
             UserOAuth.email,
@@ -156,14 +154,11 @@ async def get_workflow_template_list(
             WorkflowTemplate.name,
         ).subquery()
     )
-    res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
-    if page_size is None:
-        page_size = total_count
-    else:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
 
-    res = await db.execute(stm)
+    pagination_data = await get_pagination_data(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
+    res = await db.execute(pagination_data.stm)
     template_groups = res.all()
 
     stm_email = (
@@ -186,9 +181,9 @@ async def get_workflow_template_list(
     email_list = res.scalars().all()
 
     return dict(
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
+        total_count=pagination_data.total_count,
+        page_size=pagination_data.page_size,
+        current_page=pagination_data.page,
         items=[
             dict(
                 user_email=email,

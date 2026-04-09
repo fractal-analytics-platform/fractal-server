@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Generic
 from typing import TypeVar
 
@@ -47,13 +48,20 @@ class PaginationResponse(BaseModel, Generic[T]):
     items: list[T]
 
 
-async def get_pagination_response(
+class PaginationData(BaseModel):
+    stm: Any
+    page: int
+    page_size: int
+    total_count: int
+
+
+async def get_pagination_data(
     *,
-    stm: SelectOfScalar[T],
-    stm_count: SelectOfScalar[int],
+    stm,
+    stm_count,
     pagination: PaginationRequest,
     db: AsyncSession,
-) -> PaginationResponse[T]:
+) -> PaginationData:
     page = pagination.page
     page_size = pagination.page_size
 
@@ -65,12 +73,34 @@ async def get_pagination_response(
     else:
         page_size = total_count
 
-    res = await db.execute(stm)
+    return PaginationData(
+        stm=stm,
+        page=page,
+        page_size=page_size,
+        total_count=total_count,
+    )
+
+
+async def get_pagination_response(
+    *,
+    stm: SelectOfScalar[T],
+    stm_count: SelectOfScalar[int],
+    pagination: PaginationRequest,
+    db: AsyncSession,
+) -> PaginationResponse[T]:
+    pagination_data = await get_pagination_data(
+        stm=stm,
+        stm_count=stm_count,
+        pagination=pagination,
+        db=db,
+    )
+
+    res = await db.execute(pagination_data.stm)
     records = res.scalars().all()
 
     return PaginationResponse[T](
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
+        total_count=pagination_data.total_count,
+        page_size=pagination_data.page_size,
+        current_page=pagination_data.page,
         items=records,
     )

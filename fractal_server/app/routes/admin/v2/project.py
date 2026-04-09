@@ -22,6 +22,7 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 )
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import ProjectReadSuperuser
 from fractal_server.urls import url_is_relative_to
@@ -38,10 +39,6 @@ async def view_projects(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> PaginationResponse[ProjectReadSuperuser]:
-    # Assign pagination parameters
-    page = pagination.page
-    page_size = pagination.page_size
-
     # Prepare statements
     stm = (
         select(ProjectV2, UserOAuth.email)
@@ -71,15 +68,10 @@ async def view_projects(
             .where(UserOAuth.email == user_email)
         )
 
-    # Find total number of elements
-    res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
-    if page_size is None:
-        page_size = total_count
-    else:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
-
-    res = await db.execute(stm)
+    pagination_data = await get_pagination_data(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
+    res = await db.execute(pagination_data.stm)
 
     projects = [
         dict(user_email=email, **project.model_dump())
@@ -87,9 +79,9 @@ async def view_projects(
     ]
 
     return dict(
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
+        total_count=pagination_data.total_count,
+        page_size=pagination_data.page_size,
+        current_page=pagination_data.page,
         items=projects,
     )
 
