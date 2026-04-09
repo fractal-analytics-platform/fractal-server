@@ -24,6 +24,7 @@ from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
@@ -75,10 +76,6 @@ async def view_job(
         log: If `True`, include `job.log`, if `False`
             `job.log` is set to `None`.
     """
-
-    # Assign pagination parameters
-    page = pagination.page
-    page_size = pagination.page_size
 
     # Prepare statements
     stm = select(JobV2).order_by(JobV2.start_timestamp.desc())
@@ -139,28 +136,15 @@ async def view_job(
         stm = stm.where(JobV2.end_timestamp <= end_timestamp_max)
         stm_count = stm_count.where(JobV2.end_timestamp <= end_timestamp_max)
 
-    # Find total number of elements
-    res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
-    if page_size is None:
-        page_size = total_count
-    else:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
-
-    # Get `page_size` rows
-    res = await db.execute(stm)
-    job_list = res.scalars().all()
+    response = await get_pagination_response(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
 
     if not log:
-        for job in job_list:
+        for job in response.items:
             setattr(job, "log", None)
 
-    return dict(
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
-        items=job_list,
-    )
+    return response
 
 
 @router.get("/{job_id}/", response_model=JobRead)

@@ -48,6 +48,7 @@ class PaginationResponse(BaseModel, Generic[T]):
 
 
 async def get_pagination_response(
+    *,
     stm: SelectOfScalar[T],
     stm_count: SelectOfScalar[int],
     pagination: PaginationRequest,

@@ -18,6 +18,7 @@ from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_params
+from fractal_server.app.routes.pagination import get_pagination_response
 from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
@@ -304,32 +305,23 @@ async def get_history_run_units(
     )
 
     # Count `HistoryUnit`s
-    stmt = select(func.count(HistoryUnit.id)).where(
+    stm_count = select(func.count(HistoryUnit.id)).where(
         HistoryUnit.history_run_id == history_run_id
     )
     if unit_status:
-        stmt = stmt.where(HistoryUnit.status == unit_status)
-    res = await db.execute(stmt)
-    total_count = res.scalar()
-    page_size = pagination.page_size or total_count
+        stm_count = stm_count.where(HistoryUnit.status == unit_status)
 
     # Query `HistoryUnit`s
-    stmt = (
+    stm = (
         select(HistoryUnit)
         .where(HistoryUnit.history_run_id == history_run_id)
         .order_by(HistoryUnit.id)
     )
     if unit_status:
-        stmt = stmt.where(HistoryUnit.status == unit_status)
-    stmt = stmt.offset((pagination.page - 1) * page_size).limit(page_size)
-    res = await db.execute(stmt)
-    units = res.scalars().all()
+        stm = stm.where(HistoryUnit.status == unit_status)
 
-    return dict(
-        current_page=pagination.page,
-        page_size=page_size,
-        total_count=total_count,
-        items=units,
+    return await get_pagination_response(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
 
 
