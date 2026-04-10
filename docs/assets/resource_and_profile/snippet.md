@@ -148,6 +148,7 @@
         "username": "slurm-username",
         "ssh_key_path": "/somewhere/private.key",
         "jobs_remote_dir": "/somewhere/jobs",
-        "tasks_remote_dir": "/somewhere/tasks"
+        "tasks_remote_dir": "/somewhere/tasks",
+        "pixi_cache_dir": "/somewhere/pixi/cache"
     }
     ```

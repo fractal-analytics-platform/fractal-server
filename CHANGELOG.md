@@ -1,10 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.21.1 (unreleased)
+# Unreleased
 
 * API:
     * Add GET and PATCH projects admin's endpoints (\#3261).
     * Introduce auxiliary functions for pagination (\#3268).
+* Task lifecycle:
+    * Introduce `Profile.pixi_cache_dir: str | None = None` and use it to override `${PIXI_HOME}/cache` (\#3266).
 * Dependencies:
     * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
 
