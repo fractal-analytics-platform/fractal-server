@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.1
+
+* Task lifecycle:
+    * Fix usage of `Profile.pixi_cache_dir` in Slurm-SSH (\#3271).
+
 # 2.22.0
 
 * API:
