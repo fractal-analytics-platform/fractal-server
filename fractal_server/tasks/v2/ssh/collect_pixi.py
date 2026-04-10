@@ -1,3 +1,4 @@
+import os
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -142,13 +143,16 @@ def collect_ssh_pixi(
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                     frozen_option = "--frozen" if use_pixi_lockfile else ""
+                    pixi_home = resource.tasks_pixi_config["versions"][
+                        task_group.pixi_version
+                    ]
+                    pixi_cache_dir = profile.pixi_cache_dir or os.path.join(
+                        pixi_home, "cache"
+                    )
+                    logger.info(f"Setting PIXI_CACHE_DIR to {pixi_cache_dir}")
                     replacements = {
-                        (
-                            "__PIXI_HOME__",
-                            resource.tasks_pixi_config["versions"][
-                                task_group.pixi_version
-                            ],
-                        ),
+                        ("__PIXI_HOME__", pixi_home),
+                        ("__PIXI_CACHE_DIR__", pixi_cache_dir),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
                         (
