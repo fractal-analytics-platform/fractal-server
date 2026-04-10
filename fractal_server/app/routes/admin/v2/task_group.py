@@ -189,11 +189,11 @@ async def query_task_group_list(
         stm = stm.where(TaskGroupV2.resource_id == resource_id)
         stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
 
-    pagination_data = await get_pagination_data(
+    stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
 
-    res = await db.execute(pagination_data.stm)
+    res = await db.execute(stm)
     task_groups_list = [
         serialize_task_group_with_email(
             task_group=task_group, user_email=user_email
@@ -201,12 +201,7 @@ async def query_task_group_list(
         for task_group, user_email in res.all()
     ]
 
-    return dict(
-        total_count=pagination_data.total_count,
-        page_size=pagination_data.page_size,
-        current_page=pagination_data.page,
-        items=task_groups_list,
-    )
+    return dict(items=task_groups_list, **pagination_data.model_dump())
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupReadSuperuser)

@@ -68,22 +68,17 @@ async def view_projects(
             .where(UserOAuth.email == user_email)
         )
 
-    pagination_data = await get_pagination_data(
+    stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
-    res = await db.execute(pagination_data.stm)
+    res = await db.execute(stm)
 
     projects = [
         dict(user_email=email, **project.model_dump())
         for project, email in res.all()
     ]
 
-    return dict(
-        total_count=pagination_data.total_count,
-        page_size=pagination_data.page_size,
-        current_page=pagination_data.page,
-        items=projects,
-    )
+    return dict(items=projects, **pagination_data.model_dump())
 
 
 @router.patch("/{project_id}/", status_code=status.HTTP_200_OK)

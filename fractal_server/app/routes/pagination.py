@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Generic
 from typing import TypeVar
 
@@ -41,32 +40,49 @@ def get_pagination_params(
     return pagination
 
 
-class PaginationResponse(BaseModel, Generic[T]):
+class PaginationData(BaseModel):
+    """
+    Metadata describing the state of a paginated query.
+    """
+
     current_page: int = Field(ge=1)
     page_size: int = Field(ge=0)
     total_count: int = Field(ge=0)
 
+
+class PaginationResponse(PaginationData, Generic[T]):
+    """
+    Paginated response container including both pagination metadata and result
+    items.
+    """
+
     items: list[T]
-
-
-class PaginationData(BaseModel):
-    stm: Any
-    page: int
-    page_size: int
-    total_count: int
 
 
 async def get_pagination_data(
     *,
-    stm: Select | SelectOfScalar,
+    stm: Select[T] | SelectOfScalar[T],
     stm_count: SelectOfScalar[int],
     pagination: PaginationRequest,
     db: AsyncSession,
-) -> PaginationData:
+) -> tuple[Select[T] | SelectOfScalar[T], PaginationData]:
     """
-    Prepare pagination metadata (page, page_size and total_count) and apply
-    offset/limit to the query statement.
+    Apply pagination to a SQLAlchemy statement and compute pagination metadata.
+
+    This function executes a separate count query to determine the total number
+    of available items, then applies the appropriate OFFSET and LIMIT to the
+    provided statement based on the requested pagination parameters.
+
+
+    Returns:
+        A tuple containing:
+            - The modified SQLAlchemy statement with proper OFFSET and LIMIT.
+            - A `PaginationData` instance with:
+                * current_page: the requested page number;
+                * page_size: the effective page size;
+                * total_count: the total number of available items.
     """
+
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
 
@@ -76,11 +92,13 @@ async def get_pagination_data(
     else:
         page_size = total_count
 
-    return PaginationData(
-        stm=stm,
-        page=pagination.page,
-        page_size=page_size,
-        total_count=total_count,
+    return (
+        stm,
+        PaginationData(
+            current_page=pagination.page,
+            page_size=page_size,
+            total_count=total_count,
+        ),
     )
 
 
@@ -97,19 +115,14 @@ async def get_paginated_response(
     This only applies to `SelectOfScalar[T]` statements, i.e. applies to
     `select(X)` but not to `select(X, Y)`.
     """
-    pagination_data = await get_pagination_data(
+    stm, pagination_data = await get_pagination_data(
         stm=stm,
         stm_count=stm_count,
         pagination=pagination,
         db=db,
     )
 
-    res = await db.execute(pagination_data.stm)
+    res = await db.execute(stm)
     records = res.scalars().all()
 
-    return PaginationResponse[T](
-        total_count=pagination_data.total_count,
-        page_size=pagination_data.page_size,
-        current_page=pagination_data.page,
-        items=records,
-    )
+    return PaginationResponse[T](items=records, **pagination_data.model_dump())

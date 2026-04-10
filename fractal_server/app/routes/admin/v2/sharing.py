@@ -76,17 +76,14 @@ async def view_link_user_project(
             LinkUserProjectV2.is_verified == is_verified
         )
 
-    pagination_data = await get_pagination_data(
+    stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
 
-    res = await db.execute(pagination_data.stm)
+    res = await db.execute(stm)
     items = res.all()
 
     return PaginationResponse[LinkUserProjectRead](
-        total_count=pagination_data.total_count,
-        page_size=pagination_data.page_size,
-        current_page=pagination_data.page,
         items=[
             dict(
                 # User info
@@ -102,6 +99,7 @@ async def view_link_user_project(
             )
             for linkuserproject, user_email, project_name in items
         ],
+        **pagination_data.model_dump(),
     )
 
 

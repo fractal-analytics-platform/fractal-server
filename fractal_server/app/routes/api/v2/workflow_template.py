@@ -155,10 +155,10 @@ async def get_workflow_template_list(
         ).subquery()
     )
 
-    pagination_data = await get_pagination_data(
+    stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
     )
-    res = await db.execute(pagination_data.stm)
+    res = await db.execute(stm)
     template_groups = res.all()
 
     stm_email = (
@@ -181,9 +181,6 @@ async def get_workflow_template_list(
     email_list = res.scalars().all()
 
     return dict(
-        total_count=pagination_data.total_count,
-        page_size=pagination_data.page_size,
-        current_page=pagination_data.page,
         items=[
             dict(
                 user_email=email,
@@ -199,6 +196,7 @@ async def get_workflow_template_list(
             for email, template_name, members in template_groups
         ],
         email_list=email_list,
+        **pagination_data.model_dump(),
     )
 
 
