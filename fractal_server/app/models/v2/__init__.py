@@ -7,6 +7,7 @@ from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from .accounting import AccountingRecord
 from .accounting import AccountingRecordSlurm
 from .dataset import DatasetV2
+from .example import Example
 from .history import HistoryImageCache
 from .history import HistoryRun
 from .history import HistoryUnit
@@ -26,6 +27,7 @@ __all__ = [
     "AccountingRecordSlurm",
     "LinkUserProjectV2",
     "DatasetV2",
+    "Example",
     "JobV2",
     "ProjectV2",
     "TaskGroupV2",
