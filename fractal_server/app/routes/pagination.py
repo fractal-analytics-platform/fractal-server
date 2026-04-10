@@ -43,6 +43,11 @@ def get_pagination_params(
 class PaginationData(BaseModel):
     """
     Metadata describing the state of a paginated query.
+
+    Args:
+        current_page: int
+        page_size: int
+        total_count: int
     """
 
     current_page: int = Field(ge=1)
@@ -54,6 +59,13 @@ class PaginationResponse(PaginationData, Generic[T]):
     """
     Paginated response container including both pagination metadata and result
     items.
+
+    Args:
+        current_page: int
+        page_size: int
+        total_count: int
+        items: list[T]
+
     """
 
     items: list[T]
@@ -73,7 +85,11 @@ async def get_pagination_data(
     of available items, then applies the appropriate OFFSET and LIMIT to the
     provided statement based on the requested pagination parameters.
 
-
+    Args:
+        stm: Select[T] | SelectOfScalar[T]
+        stm_count: SelectOfScalar[int]
+        pagination: PaginationRequest
+        db: AsyncSession
     Returns:
         A tuple containing:
             - The modified SQLAlchemy statement with proper OFFSET and LIMIT.
@@ -114,6 +130,12 @@ async def get_paginated_response(
 
     This only applies to `SelectOfScalar[T]` statements, i.e. applies to
     `select(X)` but not to `select(X, Y)`.
+
+    Args:
+        stm: SelectOfScalar[T]
+        stm_count: SelectOfScalar[int]
+        pagination: PaginationRequest
+        db: AsyncSession
     """
     stm, pagination_data = await get_pagination_data(
         stm=stm,
