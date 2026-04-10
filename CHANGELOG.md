@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.22.0
 
 * API:
     * Add GET and PATCH projects admin's endpoints (\#3261).
