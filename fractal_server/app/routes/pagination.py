@@ -63,20 +63,22 @@ async def get_pagination_data(
     pagination: PaginationRequest,
     db: AsyncSession,
 ) -> PaginationData:
-    page = pagination.page
-    page_size = pagination.page_size
-
+    """
+    Prepare pagination metadata (page, page_size and total_count) and apply
+    offset/limit to the query statement.
+    """
     res_total_count = await db.execute(stm_count)
     total_count = res_total_count.scalar()
 
-    if page_size is not None:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
+    if pagination.page_size is not None:
+        page_size = pagination.page_size
+        stm = stm.offset((pagination.page - 1) * page_size).limit(page_size)
     else:
         page_size = total_count
 
     return PaginationData(
         stm=stm,
-        page=page,
+        page=pagination.page,
         page_size=page_size,
         total_count=total_count,
     )
@@ -89,6 +91,12 @@ async def get_paginated_response(
     pagination: PaginationRequest,
     db: AsyncSession,
 ) -> PaginationResponse[T]:
+    """
+    Execute a paginated query and return a structured response.
+
+    This only applies to `SelectOfScalar[T]` statements, i.e. applies to
+    `select(X)` but not to `select(X, Y)`.
+    """
     pagination_data = await get_pagination_data(
         stm=stm,
         stm_count=stm_count,
