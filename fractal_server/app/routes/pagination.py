@@ -45,9 +45,9 @@ class PaginationData(BaseModel):
     Metadata describing the state of a paginated query.
 
     Args:
-        current_page: int
-        page_size: int
-        total_count: int
+        current_page:
+        page_size:
+        total_count:
     """
 
     current_page: int = Field(ge=1)
@@ -61,10 +61,10 @@ class PaginationResponse(PaginationData, Generic[T]):
     items.
 
     Args:
-        current_page: int
-        page_size: int
-        total_count: int
-        items: list[T]
+        current_page:
+        page_size:
+        total_count:
+        items:
 
     """
 
@@ -86,10 +86,10 @@ async def get_pagination_data(
     provided statement based on the requested pagination parameters.
 
     Args:
-        stm: Select[T] | SelectOfScalar[T]
-        stm_count: SelectOfScalar[int]
-        pagination: PaginationRequest
-        db: AsyncSession
+        stm:
+        stm_count:
+        pagination:
+        db:
     Returns:
         A tuple containing:
             - The modified SQLAlchemy statement with proper OFFSET and LIMIT.
@@ -132,10 +132,10 @@ async def get_paginated_response(
     `select(X)` but not to `select(X, Y)`.
 
     Args:
-        stm: SelectOfScalar[T]
-        stm_count: SelectOfScalar[int]
-        pagination: PaginationRequest
-        db: AsyncSession
+        stm:
+        stm_count:
+        pagination:
+        db:
     """
     stm, pagination_data = await get_pagination_data(
         stm=stm,
