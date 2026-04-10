@@ -4,6 +4,7 @@
 
 * API:
     * Add GET and PATCH projects admin's endpoints (\#3261).
+    * Introduce auxiliary functions for pagination (\#3268).
 * Dependencies:
     * Bump `fastapi`, `sqlmodel` and `uvicorn` dependencies (\#3267).
 
