@@ -1,3 +1,4 @@
+import os
 import shutil
 import time
 from pathlib import Path
@@ -79,15 +80,17 @@ def reactivate_local_pixi(
             try:
                 activity.status = TaskGroupActivityStatus.ONGOING
                 activity = add_commit_refresh(obj=activity, db=db)
-
+                pixi_home = resource.tasks_pixi_config["versions"][
+                    task_group.pixi_version
+                ]
+                pixi_cache_dir = profile.pixi_cache_dir or os.path.join(
+                    pixi_home, "cache"
+                )
+                logger.info(f"Setting PIXI_CACHE_DIR to {pixi_cache_dir}")
                 common_args = dict(
                     replacements={
-                        (
-                            "__PIXI_HOME__",
-                            resource.tasks_pixi_config["versions"][
-                                task_group.pixi_version
-                            ],
-                        ),
+                        ("__PIXI_HOME__", pixi_home),
+                        ("__PIXI_CACHE_DIR__", pixi_cache_dir),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
                         (

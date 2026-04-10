@@ -179,6 +179,7 @@ def slurm_ssh_resource_profile_objects(
         ssh_key_path=ssh_keys["private"],
         jobs_remote_dir=(tmp777_path / "remote-jobs").as_posix(),
         tasks_remote_dir=(tmp777_path / "remote-tasks").as_posix(),
+        pixi_cache_dir=(tmp777_path / "pixi-cache").as_posix(),
     )
     ValidResourceSlurmSSH(**res.model_dump())
     ValidProfileSlurmSSH(**prof.model_dump())
