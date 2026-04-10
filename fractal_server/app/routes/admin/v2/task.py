@@ -17,6 +17,7 @@ from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
 
@@ -68,11 +69,6 @@ async def query_tasks(
     """
     Query `TaskV2` and get information about related workflows and projects.
     """
-
-    # Assign pagination parameters
-    page = pagination.page
-    page_size = pagination.page_size
-
     # Prepare statements
     stm = select(TaskV2).order_by(TaskV2.id)
     stm_count = select(func.count(TaskV2.id))
@@ -109,20 +105,12 @@ async def query_tasks(
             TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
         ).where(TaskGroupV2.resource_id == resource_id)
 
-    # Find total number of elements
-    res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
-    if page_size is None:
-        page_size = total_count
-    else:
-        stm = stm.offset((page - 1) * page_size).limit(page_size)
-
-    # Get `page_size` rows
-    res = await db.execute(stm)
-    task_list = res.scalars().all()
+    response = await get_paginated_response(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
 
     task_info_list = []
-    for task in task_list:
+    for task in response.items:
         stm = (
             select(WorkflowV2)
             .join(
@@ -166,8 +154,8 @@ async def query_tasks(
             )
         )
     return dict(
-        total_count=total_count,
-        page_size=page_size,
-        current_page=page,
+        total_count=response.total_count,
+        page_size=response.page_size,
+        current_page=response.current_page,
         items=task_info_list,
     )
