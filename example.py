@@ -8,9 +8,12 @@ from fractal_server.urls import url_is_relative_to
 with next(get_sync_db()) as db:
     db.add_all(
         [
+            Example(example_path="/a"),
             Example(example_path="/a/b/c"),
-            Example(example_path="/abc"),
-            Example(example_path="x/y/z"),
+            Example(example_path="/ab/c"),
+            Example(example_path="s3://x"),
+            Example(example_path="s3://x/y/z"),
+            Example(example_path="s3://xy/z"),
         ]
     )
     db.commit()
