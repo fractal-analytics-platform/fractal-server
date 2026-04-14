@@ -1,3 +1,4 @@
+import io
 from datetime import datetime
 from datetime import timezone
 from urllib.parse import quote
@@ -19,8 +20,10 @@ async def test_users_csv(
     user_group_factory,
     local_resource_profile_db,
     slurm_ssh_resource_profile_fake_db,
+    tmp_path,
 ):
     async with MockCurrentUser(
+        user_email="user1@example.org",
         project_dirs=["/tmp1", "/tmp2", "/tmp3"],
         slurm_accounts=["account1", "account2"],
         profile_id=local_resource_profile_db[1].id,
@@ -45,7 +48,8 @@ async def test_users_csv(
             )
 
     async with MockCurrentUser(
-        profile_id=slurm_ssh_resource_profile_fake_db[1].id
+        user_email="user2@example.org",
+        profile_id=slurm_ssh_resource_profile_fake_db[1].id,
     ) as user2:
         user2_id = user2.id
         t = await task_factory(user_id=user2.id, name="2")
@@ -67,23 +71,52 @@ async def test_users_csv(
     await user_group_factory("groupA", user1_id)
     await user_group_factory("groupB", user1_id, user2_id)
 
+    async def _get_csv_response(url: str) -> str:
+        # Auxiliary function
+        res = await client.get(url)
+        assert res.status_code == 200
+        assert "text/csv" in res.headers.get("content-type")
+        with io.BytesIO() as csv_data:
+            csv_data.write(res.content)
+            return csv_data.getvalue().decode()
+
     async with MockCurrentUser(
         is_superuser=True,
-        profile_id=local_resource_profile_db[1].id,
+        user_email="admin@example.org",
     ):
-        res = await client.get("/admin/v2/users-csv/")
-        assert res.status_code == 200
-
-        start_timestamp_min = quote("3000-01-01T00:00:01+00:00")
-        res = await client.get(
-            f"/admin/v2/users-csv/?start_timestamp_min={start_timestamp_min}"
+        # Case 1: All users
+        url = "/admin/v2/users-csv/"
+        data = await _get_csv_response(url)
+        assert data == (
+            "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
+            "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,4\r\n"
+            "2,user2@example.org,test01,,/fake/placeholder,All|groupB,1\r\n"
         )
-        assert res.status_code == 200
 
-        res = await client.get(
-            f"/admin/v2/users-csv/?exclude_zero_jobs=true&start_timestamp_min={start_timestamp_min}"
+        # Case 2: All users, but only counting jobs from the future
+        future_timestamp = quote("3000-01-01T00:00:01+00:00")
+        url = f"/admin/v2/users-csv/?start_timestamp_min={future_timestamp}"
+        data = await _get_csv_response(url)
+        assert data == (
+            "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
+            "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,0\r\n"
+            "2,user2@example.org,test01,,/fake/placeholder,All|groupB,0\r\n"
         )
-        assert res.status_code == 200
 
-        res = await client.get("/admin/v2/users-csv/?exclude_zero_jobs=true")
-        assert res.status_code == 200
+        # Case 3: All users, but only counting jobs until the past
+        past_timestamp = quote("1000-01-01T00:00:01+00:00")
+        url = f"/admin/v2/users-csv/?start_timestamp_max={past_timestamp}"
+        data = await _get_csv_response(url)
+        assert data == (
+            "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
+            "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,0\r\n"
+            "2,user2@example.org,test01,,/fake/placeholder,All|groupB,0\r\n"
+        )
+
+        # Case 4: Only users with jobs (at any time)
+        url = "/admin/v2/users-csv/?exclude_zero_jobs=true"
+        data = await _get_csv_response(url)
+        assert data == (
+            "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,4\r\n"
+            "2,user2@example.org,test01,,/fake/placeholder,All|groupB,1\r\n"
+        )
