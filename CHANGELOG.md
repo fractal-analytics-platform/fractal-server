@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.3 (unreleased)
+
+* API:
+    * Add `GET /admin/v2/users-csv/` (\#3276).
+
 # 2.22.2
 
 * Task lifecycle:
