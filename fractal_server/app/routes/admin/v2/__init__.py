@@ -14,6 +14,7 @@ from .sharing import router as sharing_router
 from .task import router as task_router
 from .task_group import router as task_group_router
 from .task_group_lifecycle import router as task_group_lifecycle_router
+from .users_csv import router as users_csv_router
 
 router_admin = APIRouter()
 
@@ -27,3 +28,4 @@ router_admin.include_router(resource_router, prefix="/resource")
 router_admin.include_router(profile_router, prefix="/profile")
 router_admin.include_router(sharing_router, prefix="/linkuserproject")
 router_admin.include_router(project_router, prefix="/project")
+router_admin.include_router(users_csv_router, prefix="/users-csv")
