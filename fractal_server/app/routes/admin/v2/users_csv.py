@@ -24,12 +24,19 @@ from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.auth import current_superuser_act
-from fractal_server.logger import set_logger
 
 router = APIRouter()
 
-
-logger = set_logger(__name__)
+_COLUMN_NAMES = (
+    "id",
+    "email",
+    "slurm_username",
+    "slurm_accounts",
+    "project_dirs",
+    "user_groups",
+    "num_jobs",
+)
+_ARRAY_SEPARATOR = "|"
 
 
 @router.get("/", response_class=StreamingResponse)
@@ -40,7 +47,9 @@ async def list_users(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
-    SEPARATOR = "|"
+    """
+    Provide csv table of users and some of their properties.
+    """
     stm_num_job = (
         select(func.count(JobV2.id))
         .join(ProjectV2, ProjectV2.id == JobV2.project_id)
@@ -56,7 +65,7 @@ async def list_users(
             JobV2.start_timestamp <= start_timestamp_max
         )
     stm_user_groups = (
-        select(func.aggregate_strings(UserGroup.name, SEPARATOR))
+        select(func.aggregate_strings(UserGroup.name, _ARRAY_SEPARATOR))
         .select_from(
             join(
                 LinkUserGroup,
@@ -67,25 +76,21 @@ async def list_users(
         .where(LinkUserGroup.user_id == UserOAuth.id)
     )
 
-    """
-    Columns:
-        ID
-        email
-        SLURM username
-        SLURM accounts
-        project_dirs
-        user groups
-        #jobs
-    """
     stm = (
         select(
             Bundle(
-                "placeholder",
+                "my-bundle",
                 UserOAuth.id,
                 UserOAuth.email,
                 Profile.username,
-                func.array_to_string(UserOAuth.slurm_accounts, SEPARATOR),
-                func.array_to_string(UserOAuth.project_dirs, SEPARATOR),
+                func.array_to_string(
+                    UserOAuth.slurm_accounts,
+                    _ARRAY_SEPARATOR,
+                ),
+                func.array_to_string(
+                    UserOAuth.project_dirs,
+                    _ARRAY_SEPARATOR,
+                ),
                 stm_user_groups.scalar_subquery(),
                 stm_num_job.scalar_subquery(),
             ),
@@ -96,17 +101,18 @@ async def list_users(
     res = await db.execute(stm)
     users = res.scalars().all()
 
-    # Python post-processing to apply `exclude_zero_jobs`
+    # Exclude users without jobs in the given time interval
     if exclude_zero_jobs:
         users = [row for row in users if row[-1] > 0]
 
     with io.StringIO() as output:
         writer = csv.writer(output)
+        writer.writerow(_COLUMN_NAMES)
         writer.writerows(users)
         csv_string = output.getvalue()
 
     return StreamingResponse(
-        iter(csv_string),
+        csv_string,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=users.csv"},
     )

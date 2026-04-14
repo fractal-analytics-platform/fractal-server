@@ -3,9 +3,12 @@ from datetime import datetime
 from datetime import timezone
 from urllib.parse import quote
 
+from fractal_server.app.routes.admin.v2.users_csv import _COLUMN_NAMES
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+
+COLUMNS_HEADER = ",".join(_COLUMN_NAMES)
 
 
 async def test_users_csv(
@@ -88,26 +91,29 @@ async def test_users_csv(
         url = "/admin/v2/users-csv/"
         data = await _get_csv_response(url)
         assert data == (
+            f"{COLUMNS_HEADER}\r\n"
             "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
             "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,4\r\n"
             "2,user2@example.org,test01,,/fake/placeholder,All|groupB,1\r\n"
         )
 
-        # Case 2: All users, but only counting jobs from the future
+        # Case 2: All users, but only counting jobs after some future time
         future_timestamp = quote("3000-01-01T00:00:01+00:00")
         url = f"/admin/v2/users-csv/?start_timestamp_min={future_timestamp}"
         data = await _get_csv_response(url)
         assert data == (
+            f"{COLUMNS_HEADER}\r\n"
             "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
             "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,0\r\n"
             "2,user2@example.org,test01,,/fake/placeholder,All|groupB,0\r\n"
         )
 
-        # Case 3: All users, but only counting jobs until the past
+        # Case 3: All users, but only counting jobs before some past time
         past_timestamp = quote("1000-01-01T00:00:01+00:00")
         url = f"/admin/v2/users-csv/?start_timestamp_max={past_timestamp}"
         data = await _get_csv_response(url)
         assert data == (
+            f"{COLUMNS_HEADER}\r\n"
             "3,admin@example.org,,,/fake/placeholder,All,0\r\n"
             "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,0\r\n"
             "2,user2@example.org,test01,,/fake/placeholder,All|groupB,0\r\n"
@@ -117,6 +123,7 @@ async def test_users_csv(
         url = "/admin/v2/users-csv/?exclude_zero_jobs=true"
         data = await _get_csv_response(url)
         assert data == (
+            f"{COLUMNS_HEADER}\r\n"
             "1,user1@example.org,,account1|account2,/tmp1|/tmp2|/tmp3,All|groupA|groupB,4\r\n"
             "2,user2@example.org,test01,,/fake/placeholder,All|groupB,1\r\n"
         )
