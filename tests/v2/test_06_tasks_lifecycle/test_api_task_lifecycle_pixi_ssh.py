@@ -166,6 +166,17 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert len(task_group.task_list) == 1
         assert task_group.env_info is not None
 
+        # Check that `__PIXI_CACHE_DIR__` has been replaced, within the
+        # pixi-install script
+        collect_scripts = list(
+            Path(task_group.path, "scripts").glob("*2_install.sh")
+        )
+        assert len(collect_scripts) == 1
+        with collect_scripts[0].open("r") as f:
+            script_contents = f.read()
+            assert "PIXI_CACHE_DIR" in script_contents
+            assert "__PIXI_CACHE_DIR__" not in script_contents
+
         # 3 / Failed collection - due to non-duplication constraint
         res = await client.post(
             "api/v2/task/collect/pixi/",

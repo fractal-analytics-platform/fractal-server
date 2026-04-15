@@ -27,6 +27,7 @@ class ValidProfileLocal(BaseModel):
     ssh_key_path: None = None
     jobs_remote_dir: None = None
     tasks_remote_dir: None = None
+    pixi_cache_dir: None = None
 
 
 class ValidProfileSlurmSudo(BaseModel):
@@ -47,6 +48,7 @@ class ValidProfileSlurmSudo(BaseModel):
     ssh_key_path: None = None
     jobs_remote_dir: None = None
     tasks_remote_dir: None = None
+    pixi_cache_dir: None = None
 
 
 class ValidProfileSlurmSSH(BaseModel):
@@ -65,6 +67,8 @@ class ValidProfileSlurmSSH(BaseModel):
             Base folder for task environments on the remote SLURM cluster.
         jobs_remote_dir:
             Base folder for job directories on the remote SLURM cluster.
+        pixi_cache_dir:
+            Optional override for `PIXI_CACHE_DIR`.
     """
 
     name: NonEmptyStr
@@ -73,6 +77,7 @@ class ValidProfileSlurmSSH(BaseModel):
     ssh_key_path: AbsolutePathStr
     jobs_remote_dir: AbsolutePathStr
     tasks_remote_dir: AbsolutePathStr
+    pixi_cache_dir: AbsolutePathStr | None = None
 
 
 def get_discriminator_value(v: Any) -> str:
@@ -103,6 +108,7 @@ class ProfileRead(BaseModel):
         ssh_key_path:
         jobs_remote_dir:
         tasks_remote_dir:
+        pixi_cache_dir:
     """
 
     id: int
@@ -113,6 +119,7 @@ class ProfileRead(BaseModel):
     ssh_key_path: str | None = None
     jobs_remote_dir: str | None = None
     tasks_remote_dir: str | None = None
+    pixi_cache_dir: str | None = None
 
 
 @validate_call
