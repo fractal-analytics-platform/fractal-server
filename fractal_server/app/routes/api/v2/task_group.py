@@ -109,7 +109,8 @@ async def get_task_group_activity(
 
 @router.get(
     "/",
-    response_model=list[tuple[str, list[TaskGroupRead | TaskGroupReadSlim]]],
+    response_model=list[tuple[str, list[TaskGroupRead]]]
+    | list[tuple[str, list[TaskGroupReadSlim]]],
 )
 async def get_task_group_list(
     user: UserOAuth = Depends(get_api_guest),
