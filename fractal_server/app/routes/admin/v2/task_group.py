@@ -111,7 +111,8 @@ async def query_task_group(
         )
     task_group, user_email = task_group_and_email
     return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
+        task_group=task_group,
+        user_email=user_email,
     )
 
 
@@ -235,5 +236,6 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
+        task_group=task_group,
+        user_email=user_email,
     )

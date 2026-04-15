@@ -1,4 +1,5 @@
 import itertools
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -112,7 +113,8 @@ async def get_task_group_list(
     only_active: bool = False,
     only_owner: bool = False,
     args_schema: bool = True,
-) -> list[tuple[str, list[TaskGroupRead]]]:
+    slim: bool = False,
+) -> list[tuple[str, list[dict[str, Any]]]]:
     """
     Get all accessible TaskGroups
     """
@@ -148,12 +150,12 @@ async def get_task_group_list(
         for task_group, user_email in task_groups_and_email
     }
 
+    excluded_task_fields = set()
     if args_schema is False:
-        for taskgroup in task_groups:
-            for task in taskgroup.task_list:
-                db.expunge(task)  # See issue 3101
-                setattr(task, "args_schema_non_parallel", None)
-                setattr(task, "args_schema_parallel", None)
+        excluded_task_fields = {
+            "args_schema_non_parallel",
+            "args_schema_parallel",
+        }
 
     default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
@@ -183,6 +185,7 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
+                    excluded_task_fields=excluded_task_fields,
                 )
                 for task_group in task_group_list
             ],
