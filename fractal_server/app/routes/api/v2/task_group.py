@@ -44,6 +44,17 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
+_SLIM_TASK_FIELDS = {
+    "id",
+    "name",
+    "input_types",
+    "category",
+    "modality",
+    "authors,",
+    "tags",
+    "version",
+}
+
 
 @router.get("/activity/", response_model=list[TaskGroupActivityRead])
 async def get_task_group_activity_list(
@@ -154,19 +165,6 @@ async def get_task_group_list(
         for task_group, user_email in task_groups_and_email
     }
 
-    included_task_fields = None
-    if slim is True:
-        included_task_fields = {
-            "id",
-            "name",
-            "input_types",
-            "category",
-            "modality",
-            "authors,",
-            "tags",
-            "version",
-        }
-
     default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
         (
@@ -195,7 +193,7 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
-                    included_task_fields=included_task_fields,
+                    included_task_fields=(_SLIM_TASK_FIELDS if slim else None),
                 )
                 for task_group in task_group_list
             ],
