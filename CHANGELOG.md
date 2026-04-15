@@ -4,6 +4,7 @@
 
 * API:
     * Add `GET /admin/v2/users-csv/` (\#3276).
+    * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
 
 # 2.22.2
 
