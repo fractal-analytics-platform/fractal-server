@@ -1,11 +1,9 @@
 from devtools import debug
+from sqlalchemy import delete
 
-from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import OAuthAccount
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2.dataset import DatasetV2
-from fractal_server.app.models.v2.project import ProjectV2
-from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from tests.fixtures_server import PROJECT_DIR_PLACEHOLDER
 
 PREFIX = "/auth"
@@ -404,44 +402,63 @@ async def test_edit_users_as_superuser(
 
 
 async def test_edit_user_project_dirs(
-    registered_superuser_client, local_resource_profile_db, db
+    registered_superuser_client,
+    local_resource_profile_db,
+    db,
+    project_factory,
 ):
-    resource, profile = local_resource_profile_db
+    resource, _ = local_resource_profile_db
 
     user = UserOAuth(
         email="user@example.org",
         hashed_password="12345",
-        project_dirs=["/a", "/b", "/b/c"],
+        project_dirs=[
+            "/dir1",
+            "/dir1something",
+            "/dir2/subdir",
+            "s3://bucket/dir1",
+            "s3://bucket/dir1something",
+            "s3://bucket/dir2/subdir",
+        ],
     )
     db.add(user)
-    await db.flush()
-    project = ProjectV2(name="Project", resource_id=resource.id)
-    db.add(project)
-    await db.flush()
-    db.add(
-        LinkUserProjectV2(
-            project_id=project.id,
-            user_id=user.id,
-            is_owner=True,
-            is_verified=True,
-            permissions=ProjectPermissions.EXECUTE,
-        )
-    )
-    await db.flush()
-    dataset = DatasetV2(
-        name="Dataset",
-        project_id=project.id,
-        zarr_dir="/b/c/data/zarr",
-        images=[],
-    )
-    db.add(dataset)
     await db.commit()
     await db.refresh(user)
-    await db.refresh(dataset)
+    project = await project_factory(user=user, resource_id=resource.id)
 
-    # Update 1
+    db.add_all(
+        [
+            DatasetV2(
+                name="ds-1",
+                project_id=project.id,
+                zarr_dir="/dir1/data/zarr",
+                images=[],
+            ),
+            DatasetV2(
+                name="ds-2",
+                project_id=project.id,
+                zarr_dir="/dir2/subdir/data/zarr",
+                images=[],
+            ),
+            DatasetV2(
+                name="ds-3",
+                project_id=project.id,
+                zarr_dir="s3://bucket/dir1/data/zarr",
+                images=[],
+            ),
+            DatasetV2(
+                name="ds-4",
+                project_id=project.id,
+                zarr_dir="s3://bucket/dir2/subdir/data/zarr",
+                images=[],
+            ),
+        ]
+    )
+    await db.commit()
 
-    update = dict(project_dirs=["/a", "/b/c/data"])
+    # Update 1: Add one project_dir
+
+    update = dict(project_dirs=user.project_dirs + ["/another-one"])
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
@@ -449,31 +466,40 @@ async def test_edit_user_project_dirs(
     assert res.status_code == 200
     assert res.json()["project_dirs"] == update["project_dirs"]
 
-    # Update 2
-
-    update = dict(project_dirs=["/a"])
+    # Update 2: Remove `/dir1`
+    update = dict(
+        project_dirs=[
+            "/dir1-something-else",
+            "/dir2/subdir",
+            "s3://bucket/dir1",
+            "s3://bucket/dir2/subdir",
+            "/another-one",
+        ]
+    )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
     )
     assert res.status_code == 422
+    debug(res.json()["detail"])
     assert "loose access" in res.json()["detail"]
 
-    await db.delete(dataset)
+    # Update 3: Remove the offending dataset and rety
+    await db.execute(
+        delete(DatasetV2).where(DatasetV2.zarr_dir == "/dir1/data/zarr")
+    )
     await db.commit()
-
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/",
         json=update,
     )
     assert res.status_code == 200
 
-    # Update 3
+    # Update 4 (empty `project_dirs`)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/", json=dict(project_dirs=[])
     )
     assert res.status_code == 422
-    debug(res.json())
     assert "at least 1 item" in str(res.json()["detail"])
 
 

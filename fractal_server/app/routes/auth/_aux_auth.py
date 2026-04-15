@@ -218,8 +218,14 @@ async def _check_project_dirs_update(
         )
     ]
     if removed_project_dirs:
-        # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
-        # starts with one of the project dirs in `removed_project_dirs`.
+        # Query all the `zarr_dir`s linked to the user such that `zarr_dir` may
+        # be relative to one of the `removed_project_dirs` but it is not
+        # relative to one of `new_project_dirs`.
+        # NOTE: `startswith` is a more general condition than "is relative to",
+        # but it is safe to use `startswith` in the `where` conditions below,
+        # because they only act as a preliminary filter. The actual check on
+        # `zarr_dirs_to_review` is performed below (in Python) via the safe
+        # function `url_is_relative_to`.
         stmt = (
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
@@ -230,6 +236,7 @@ async def _check_project_dirs_update(
             .where(LinkUserProjectV2.user_id == user_id)
             .where(LinkUserProjectV2.is_verified.is_(True))
             .where(
+                # zarr_dir _may_ be relative to one of `removed_project_dirs`
                 or_(
                     *[
                         DatasetV2.zarr_dir.startswith(
@@ -241,8 +248,11 @@ async def _check_project_dirs_update(
             )
         )
         if new_project_dirs:
+            # NOTE: This `if` condition is always true, because
+            # `UserUpdate.project_dirs` has `min_length=1`.
             stmt = stmt.where(
                 and_(
+                    # zarr_dir _is not_ relative to any of `new_project_dirs`
                     *[
                         not_(
                             DatasetV2.zarr_dir.startswith(
@@ -254,9 +264,10 @@ async def _check_project_dirs_update(
                 )
             )
         res = await db.execute(stmt)
+        zarr_dirs_to_review = res.scalars().all()
 
         # Raise 422 if one of the query results is relative to a path in
-        # `removed_project_dirs`, but its not relative to any path in
+        # `removed_project_dirs`, but it is not relative to any path in
         # `new_project_dirs`.
         if any(
             (
@@ -269,7 +280,7 @@ async def _check_project_dirs_update(
                     for new_project_dir in new_project_dirs
                 )
             )
-            for zarr_dir in res.scalars().all()
+            for zarr_dir in zarr_dirs_to_review
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
