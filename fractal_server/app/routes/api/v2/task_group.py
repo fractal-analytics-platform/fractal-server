@@ -117,7 +117,6 @@ async def get_task_group_list(
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
-    args_schema: bool = True,
     slim: bool = False,
 ) -> list[tuple[str, list[dict[str, Any]]]]:
     """
@@ -155,14 +154,8 @@ async def get_task_group_list(
         for task_group, user_email in task_groups_and_email
     }
 
-    excluded_task_fields = None
     included_task_fields = None
-    if args_schema is False:
-        excluded_task_fields = {
-            "args_schema_non_parallel",
-            "args_schema_parallel",
-        }
-    elif slim is True:
+    if slim is True:
         included_task_fields = {
             "id",
             "name",
@@ -203,7 +196,6 @@ async def get_task_group_list(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
                     included_task_fields=included_task_fields,
-                    excluded_task_fields=excluded_task_fields,
                 )
                 for task_group in task_group_list
             ],

@@ -134,13 +134,6 @@ async def test_get_task_group_list(
         for key in ["args_schema_non_parallel", "args_schema_parallel"]:
             assert task_groups_aaa[0]["task_list"][0][key] is not None
 
-        # Test query parameter `args_schema=false`
-        res = await client.get(f"{PREFIX}/?args_schema=false")
-        assert res.status_code == 200
-        task_groups_aaa = res.json()[0][1]
-        for key in ["args_schema_non_parallel", "args_schema_parallel"]:
-            assert task_groups_aaa[0]["task_list"][0][key] is None
-
         # Test query parameter `slim=true`
         res = await client.get(f"{PREFIX}/?slim=true")
         assert res.status_code == 200
