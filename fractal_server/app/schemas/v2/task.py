@@ -116,6 +116,15 @@ class TaskRead(BaseModel):
     tags: list[str]
 
 
+class TaskReadSlim(BaseModel):
+    id: int
+    category: str | None = None
+    modality: str | None = None
+    authors: str | None = None
+    tags: list[str]
+    version: str | None = None
+
+
 class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

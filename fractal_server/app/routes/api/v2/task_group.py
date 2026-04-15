@@ -28,6 +28,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupRead
+from fractal_server.app.schemas.v2 import TaskGroupReadSlim
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
 from fractal_server.logger import set_logger
 
@@ -106,7 +107,10 @@ async def get_task_group_activity(
     return activity
 
 
-@router.get("/", response_model=list[tuple[str, list[TaskGroupRead]]])
+@router.get(
+    "/",
+    response_model=list[tuple[str, list[TaskGroupRead | TaskGroupReadSlim]]],
+)
 async def get_task_group_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
@@ -150,11 +154,21 @@ async def get_task_group_list(
         for task_group, user_email in task_groups_and_email
     }
 
-    excluded_task_fields = set()
+    excluded_task_fields = None
+    included_task_fields = None
     if args_schema is False:
         excluded_task_fields = {
             "args_schema_non_parallel",
             "args_schema_parallel",
+        }
+    elif slim is True:
+        included_task_fields = {
+            "id",
+            "category",
+            "modality",
+            "authors,",
+            "tags",
+            "version",
         }
 
     default_group_id = await _get_default_usergroup_id_or_none(db)
@@ -185,6 +199,7 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
+                    included_task_fields=included_task_fields,
                     excluded_task_fields=excluded_task_fields,
                 )
                 for task_group in task_group_list

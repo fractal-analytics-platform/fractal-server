@@ -172,12 +172,16 @@ def serialize_task_group_with_email(
     *,
     task_group: TaskGroupV2,
     user_email: str,
+    included_task_fields: set[str] | None = None,
     excluded_task_fields: set[str] | None = None,
 ) -> dict[str, Any]:
     return dict(
         user_email=user_email,
         task_list=[
-            task.model_dump(exclude=excluded_task_fields)
+            task.model_dump(
+                include=included_task_fields,
+                exclude=excluded_task_fields,
+            )
             for task in task_group.task_list
         ],
         **task_group.model_dump(),
