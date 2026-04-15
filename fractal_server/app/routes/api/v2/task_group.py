@@ -165,6 +165,8 @@ async def get_task_group_list(
     elif slim is True:
         included_task_fields = {
             "id",
+            "name",
+            "input_types",
             "category",
             "modality",
             "authors,",
