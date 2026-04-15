@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.3 (unreleased)
+
+* API:
+    * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
+
 # 2.22.2
 
 * Task lifecycle:
