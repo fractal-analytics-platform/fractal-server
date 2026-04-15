@@ -4,6 +4,8 @@
 
 * API:
     * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
+* Dependencies:
+    * Bump `pytest` and `pytest-asyncio` (\#3278).
 
 # 2.22.2
 
