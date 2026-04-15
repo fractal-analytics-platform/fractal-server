@@ -4,6 +4,7 @@
 
 * API:
     * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
+    * Add `slim` query parameter to `GET /api/v2/task-group/` (\#3277).
 
 # 2.22.2
 
