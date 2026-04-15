@@ -1,7 +1,7 @@
 """example
 
 Revision ID: db7d18dc890c
-Revises: 7226c20dc233
+Revises: 0f916383c170
 Create Date: 2026-04-10 10:02:03.680110
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "db7d18dc890c"
-down_revision = "7226c20dc233"
+down_revision = "0f916383c170"
 branch_labels = None
 depends_on = None
 
