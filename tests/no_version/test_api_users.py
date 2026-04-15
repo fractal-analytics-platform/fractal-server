@@ -414,10 +414,10 @@ async def test_edit_user_project_dirs(
         hashed_password="12345",
         project_dirs=[
             "/dir1",
-            "/dir1something",
+            "/d",
             "/dir2/subdir",
             "s3://bucket/dir1",
-            "s3://bucket/dir1something",
+            "s3://bucket/d",
             "s3://bucket/dir2/subdir",
         ],
     )
@@ -469,8 +469,9 @@ async def test_edit_user_project_dirs(
     # Update 2: Remove `/dir1`
     update = dict(
         project_dirs=[
-            "/dir1-something-else",
+            "/d",
             "/dir2/subdir",
+            "s3://bucket/d",
             "s3://bucket/dir1",
             "s3://bucket/dir2/subdir",
             "/another-one",
@@ -495,7 +496,24 @@ async def test_edit_user_project_dirs(
     )
     assert res.status_code == 200
 
-    # Update 4 (empty `project_dirs`)
+    # Update 4: Remove `/d` and `s3://bucket/d` -> succeed because no zarr_dir
+    # is relative to one of them (even thoug some zarr_dirs start with e.g.
+    # `/d`)
+    update = dict(
+        project_dirs=[
+            "/dir2/subdir",
+            "s3://bucket/dir1",
+            "s3://bucket/dir2/subdir",
+            "/another-one",
+        ]
+    )
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user.id}/",
+        json=update,
+    )
+    assert res.status_code == 200
+
+    # Update 5 (empty `project_dirs`)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user.id}/", json=dict(project_dirs=[])
     )

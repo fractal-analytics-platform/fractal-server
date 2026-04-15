@@ -1,9 +1,7 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import and_
 from sqlmodel import asc
-from sqlmodel import not_
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -217,15 +215,15 @@ async def _check_project_dirs_update(
             for new_project_dir in new_project_dirs
         )
     ]
+
     if removed_project_dirs:
         # Query all the `zarr_dir`s linked to the user such that `zarr_dir` may
-        # be relative to one of the `removed_project_dirs` but it is not
-        # relative to one of `new_project_dirs`.
-        # NOTE: `startswith` is a more general condition than "is relative to",
-        # but it is safe to use `startswith` in the `where` conditions below,
-        # because they only act as a preliminary filter. The actual check on
-        # `zarr_dirs_to_review` is performed below (in Python) via the safe
-        # function `url_is_relative_to`.
+        # be relative to one of the `removed_project_dirs`.
+        # NOTE: `startswith` does not imply "is relative to", but it is safe to
+        # use it in the `where` condition below, because it only acts as a
+        # preliminary filter. The actual check on `zarr_dirs_to_review` is
+        # performed below (in Python) via the safe function
+        # `url_is_relative_to`.
         stmt = (
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
@@ -247,22 +245,6 @@ async def _check_project_dirs_update(
                 )
             )
         )
-        if new_project_dirs:
-            # NOTE: This `if` condition is always true, because
-            # `UserUpdate.project_dirs` has `min_length=1`.
-            stmt = stmt.where(
-                and_(
-                    # zarr_dir _is not_ relative to any of `new_project_dirs`
-                    *[
-                        not_(
-                            DatasetV2.zarr_dir.startswith(
-                                normalize_url(new_project_dir)
-                            )
-                        )
-                        for new_project_dir in new_project_dirs
-                    ]
-                )
-            )
         res = await db.execute(stmt)
         zarr_dirs_to_review = res.scalars().all()
 
