@@ -17,9 +17,7 @@ from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
-from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import Profile
-from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
@@ -50,11 +48,8 @@ async def list_users(
     """
     Provide csv table of users and some of their properties.
     """
-    stm_num_job = (
-        select(func.count(JobV2.id))
-        .join(ProjectV2, ProjectV2.id == JobV2.project_id)
-        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
-        .where(LinkUserProjectV2.user_id == UserOAuth.id)
+    stm_num_job = select(func.count(JobV2.id)).where(
+        JobV2.user_email == UserOAuth.email
     )
     if start_timestamp_min is not None:
         stm_num_job = stm_num_job.where(

@@ -42,6 +42,7 @@ async def test_users_csv(
         for ind in range(4):
             await job_factory(
                 project_id=p.id,
+                user_email=user1.email,
                 workflow_id=wf.id,
                 dataset_id=ds.id,
                 status="failed",
@@ -64,6 +65,7 @@ async def test_users_csv(
         ds = await dataset_factory(project_id=p.id)
         await job_factory(
             project_id=p.id,
+            user_email=user2.email,
             workflow_id=wf.id,
             dataset_id=ds.id,
             status="failaaed",
