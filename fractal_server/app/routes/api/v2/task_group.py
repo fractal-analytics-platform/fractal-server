@@ -50,7 +50,7 @@ _SLIM_TASK_FIELDS = {
     "input_types",
     "category",
     "modality",
-    "authors,",
+    "authors",
     "tags",
     "version",
 }
