@@ -5,6 +5,13 @@
 * API:
     * Use `distict` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
 
+# 2.22.4
+
+This fixes a minor bug introduced in 2.22.3.
+
+* API:
+    * Re-introduce `docs_info` and `docs_link` in slim task-group responses (\#3283).
+
 # 2.22.3
 
 * API:

@@ -48,6 +48,8 @@ _SLIM_TASK_FIELDS = {
     "authors",
     "tags",
     "version",
+    "docs_info",
+    "docs_link",
 }
 
 

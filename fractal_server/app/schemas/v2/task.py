@@ -125,6 +125,8 @@ class TaskReadSlim(BaseModel):
     tags: list[str]
     version: str | None = None
     input_types: dict[str, bool]
+    docs_info: str | None = None
+    docs_link: str | None = None
 
 
 class TaskUpdate(BaseModel):
