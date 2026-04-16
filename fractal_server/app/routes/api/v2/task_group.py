@@ -39,21 +39,11 @@ from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_task_group_disambiguation import add_user_email_to_task_group
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from ._aux_task_group_disambiguation import serialize_task_group_with_email
+from .task import _SLIM_TASK_FIELDS
 
 router = APIRouter()
 
 logger = set_logger(__name__)
-
-_SLIM_TASK_FIELDS = {
-    "id",
-    "name",
-    "input_types",
-    "category",
-    "modality",
-    "authors",
-    "tags",
-    "version",
-}
 
 
 @router.get(

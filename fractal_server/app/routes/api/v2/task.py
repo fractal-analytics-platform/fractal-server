@@ -12,6 +12,7 @@ from sqlmodel import select
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
+from fractal_server.app.schemas.v2.task import TaskReadSlim
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access, integrity_error_to_422
 from ._aux_functions_tasks import _get_task_read_access
@@ -37,10 +38,21 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
+_SLIM_TASK_FIELDS = {
+    "id",
+    "name",
+    "input_types",
+    "category",
+    "modality",
+    "authors",
+    "tags",
+    "version",
+}
 
-@router.get("/", response_model=list[TaskRead])
+
+@router.get("/", response_model=list[TaskRead] | list[TaskReadSlim])
 async def get_list_task(
-    args_schema: bool = True,
+    slim: bool = False,
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
@@ -78,10 +90,10 @@ async def get_list_task(
     stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = list(res.scalars().all())
-    if args_schema is False:
-        for task in task_list:
-            setattr(task, "args_schema_parallel", None)
-            setattr(task, "args_schema_non_parallel", None)
+    if slim:
+        return [
+            task.model_dump(include=_SLIM_TASK_FIELDS) for task in task_list
+        ]
 
     return task_list
 
