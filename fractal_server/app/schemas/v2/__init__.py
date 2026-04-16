@@ -61,6 +61,7 @@ from .task_group import TaskGroupCreate  # noqa F401
 from .task_group import TaskGroupCreateStrict  # noqa F401
 from .task_group import TaskGroupReadSuperuser  # noqa F401
 from .task_group import TaskGroupRead  # noqa F401
+from .task_group import TaskGroupReadSlim  # noqa F401
 from .task_group import TaskGroupUpdate  # noqa F401
 from .task_group import TaskGroupOriginEnum  # noqa F401
 from .workflow import WorkflowCreate  # noqa F401

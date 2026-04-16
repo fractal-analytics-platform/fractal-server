@@ -28,6 +28,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupRead
+from fractal_server.app.schemas.v2 import TaskGroupReadSlim
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
 from fractal_server.logger import set_logger
 
@@ -38,6 +39,7 @@ from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_task_group_disambiguation import add_user_email_to_task_group
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from ._aux_task_group_disambiguation import serialize_task_group_with_email
+from .task import _SLIM_TASK_FIELDS
 
 router = APIRouter()
 
@@ -109,13 +111,17 @@ async def get_task_group_activity(
     return activity
 
 
-@router.get("/", response_model=list[tuple[str, list[TaskGroupRead]]])
+@router.get(
+    "/",
+    response_model=list[tuple[str, list[TaskGroupRead]]]
+    | list[tuple[str, list[TaskGroupReadSlim]]],
+)
 async def get_task_group_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
-    args_schema: bool = True,
+    slim: bool = False,
 ) -> list[tuple[str, list[dict[str, Any]]]]:
     """
     Get all accessible TaskGroups
@@ -152,13 +158,6 @@ async def get_task_group_list(
         for task_group, user_email in task_groups_and_email
     }
 
-    if args_schema is False:
-        for taskgroup in task_groups:
-            for task in taskgroup.task_list:
-                db.expunge(task)  # See issue 3101
-                setattr(task, "args_schema_non_parallel", None)
-                setattr(task, "args_schema_parallel", None)
-
     default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
         (
@@ -187,6 +186,7 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
+                    included_task_fields=(_SLIM_TASK_FIELDS if slim else None),
                 )
                 for task_group in task_group_list
             ],

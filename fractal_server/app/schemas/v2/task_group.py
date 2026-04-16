@@ -8,6 +8,7 @@ from pydantic import field_serializer
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.task import TaskRead
+from fractal_server.app.schemas.v2.task import TaskReadSlim
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
@@ -91,6 +92,10 @@ class TaskGroupRead(BaseModel):
     @field_serializer("timestamp_created", "timestamp_last_used")
     def serialize_datetime(v: datetime) -> str:
         return v.isoformat()
+
+
+class TaskGroupReadSlim(TaskGroupRead):
+    task_list: list[TaskReadSlim]
 
 
 class TaskGroupReadSuperuser(TaskGroupRead):
