@@ -75,7 +75,7 @@ class TaskVersionRead(BaseModel):
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/version-update-candidates/",
-    response_model=list[list[TaskVersion]],
+    response_model=list[list[TaskVersionRead]],
 )
 async def get_workflow_version_update_candidates(
     project_id: int,
