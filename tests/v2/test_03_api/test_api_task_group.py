@@ -145,7 +145,6 @@ async def test_get_task_group_list(
             "meta_parallel",
             "meta_non_parallel",
             "args_schema_version",
-            "docs_info",
         ]:
             assert key not in task_groups_aaa[0]["task_list"][0]
 
