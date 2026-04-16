@@ -1,4 +1,5 @@
 from copy import deepcopy  # noqa
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -58,7 +59,7 @@ async def get_list_task(
     author: str | None = None,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskV2]:
+) -> list[TaskV2] | list[dict[str, Any]]:
     """
     Get list of available tasks
     """
