@@ -38,8 +38,9 @@ async def get_current_user_allowed_viewer_paths(
             )
             .where(LinkUserProjectV2.user_id == current_user.id)
             .where(LinkUserProjectV2.is_verified.is_(True))
+            .distinct()
         )
-        authorized_zarr_dirs = list(res.unique().scalars().all())
+        authorized_zarr_dirs = list(res.scalars().all())
         # Note that `project_dirs` and the `authorized_zarr_dirs` may have some
         # common elements, and then the response may include non-unique items.
         return current_user.project_dirs + authorized_zarr_dirs
