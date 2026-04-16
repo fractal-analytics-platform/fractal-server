@@ -262,6 +262,7 @@ async def reactivate_task_group(
 @router.post(
     "/{task_group_id}/delete/",
     status_code=202,
+    response_model=TaskGroupActivityRead,
 )
 async def delete_task_group(
     task_group_id: int,
