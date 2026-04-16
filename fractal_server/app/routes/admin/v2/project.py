@@ -18,6 +18,9 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _check_project_exists,
+)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux.validate_user_profile import (
     user_has_profile_or_422,
@@ -128,6 +131,11 @@ async def transfer_project_ownership(
         )
     old_user = await db.get(UserOAuth, owner_link.user_id)
     await user_has_profile_or_422(user=old_user)
+
+    # Check new user's project_name compatibility
+    await _check_project_exists(
+        project_name=project.name, user_id=user_id, db=db
+    )
 
     # Check new user's resource compatibility
     profile_old = await db.get(Profile, old_user.profile_id)
