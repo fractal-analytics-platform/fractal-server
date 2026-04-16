@@ -17,6 +17,7 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import TaskType
@@ -73,7 +74,8 @@ class TaskVersionRead(BaseModel):
 
 
 @router.get(
-    "/project/{project_id}/workflow/{workflow_id}/version-update-candidates/"
+    "/project/{project_id}/workflow/{workflow_id}/version-update-candidates/",
+    response_model=list[list[TaskVersionRead]],
 )
 async def get_workflow_version_update_candidates(
     project_id: int,
@@ -183,8 +185,7 @@ async def replace_workflowtask(
     replace: WorkflowTaskReplace,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskRead:
-    # Get objects from database
+) -> WorkflowTaskV2:
     workflow_task, workflow = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_id=workflow_id,

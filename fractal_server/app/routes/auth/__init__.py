@@ -19,7 +19,7 @@ cookie_transport = CookieTransport(cookie_samesite="none")
 def get_jwt_strategy() -> JWTStrategy:
     settings = Inject(get_settings)
     return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
+        secret=settings.JWT_SECRET_KEY,
         lifetime_seconds=settings.JWT_EXPIRE_SECONDS,
     )
 
@@ -27,7 +27,7 @@ def get_jwt_strategy() -> JWTStrategy:
 def get_jwt_cookie_strategy() -> JWTStrategy:
     settings = Inject(get_settings)
     return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
+        secret=settings.JWT_SECRET_KEY,
         lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
     )
 

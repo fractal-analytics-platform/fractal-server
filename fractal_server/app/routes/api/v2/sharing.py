@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -36,7 +38,7 @@ async def get_project_guests(
     project_id: int,
     owner: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectGuestRead]:
+) -> list[dict[str, Any]]:
     """
     Get the list of all the guests of your project (verified or not).
     """
@@ -174,7 +176,7 @@ async def revoke_guest_access(
 async def get_pending_invitations(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectInvitationRead]:
+) -> list[dict[str, Any]]:
     """
     See your current invitations.
     """
@@ -235,7 +237,7 @@ async def get_access_info(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectAccessRead:
+) -> dict[str, Any]:
     """
     Returns information on your relationship with Project[`project_id`].
     """

@@ -25,7 +25,7 @@ async def get_single_profile(
     profile_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ProfileRead:
+) -> Profile:
     """
     Query single `Profile`.
     """
@@ -37,7 +37,7 @@ async def get_single_profile(
 async def get_profile_list(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ProfileRead:
+) -> list[Profile]:
     """
     Query single `Profile`.
     """
