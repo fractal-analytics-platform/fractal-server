@@ -108,6 +108,7 @@ async def test_admin_patch_project(
         profile_id=profile.id,
         project_dirs=["/private-new", "/shared"],
     ) as new_user:
+        await project_factory(user=new_user, name="X")
         new_user_id = new_user.id
 
     async with MockCurrentUser(
@@ -119,12 +120,14 @@ async def test_admin_patch_project(
     ) as user_old:
         user_old_id = user_old.id
 
-        proj1_wrong_zarr_dir = await project_factory(user=user_old)
-        proj2_no_task_access = await project_factory(user=user_old)
-        proj3_already_shared = await project_factory(user=user_old)
+        proj1_wrong_zarr_dir = await project_factory(user=user_old, name="a")
+        proj2_no_task_access = await project_factory(user=user_old, name="b")
+        proj3_already_shared = await project_factory(user=user_old, name="c")
+        projX = await project_factory(user=user_old, name="X")
         proj1_id = proj1_wrong_zarr_dir.id
         proj2_id = proj2_no_task_access.id
         proj3_id = proj3_already_shared.id
+        projX_id = projX.id
 
         await dataset_factory(
             project_id=proj1_id, zarr_dir="/private-old/zarr1"
@@ -159,6 +162,13 @@ async def test_admin_patch_project(
         assert res.json()["detail"] == (
             f"User {user_old_id} is already the owner of project {proj1_id}."
         )
+
+        # Fail because new_user owns already a project with same name
+        res = await client.patch(
+            f"/admin/v2/project/{projX_id}/?user_id={new_user_id}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Project name (X) already in use"
 
         # Fail due to new user's `project_dirs`
         res = await client.patch(
