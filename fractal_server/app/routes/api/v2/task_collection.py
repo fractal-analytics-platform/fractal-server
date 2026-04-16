@@ -161,7 +161,7 @@ async def collect_tasks_pip(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     """
     Task-collection endpoint
     """

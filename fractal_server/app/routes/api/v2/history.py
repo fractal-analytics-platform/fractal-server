@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -49,7 +51,7 @@ def check_historyrun_related_to_dataset_and_wftask(
     history_run: HistoryRun,
     dataset_id: int,
     workflowtask_id: int,
-):
+) -> None:
     if (
         history_run.dataset_id != dataset_id
         or history_run.workflowtask_id != workflowtask_id
@@ -182,14 +184,17 @@ async def get_workflow_tasks_statuses(
     return JSONResponse(content=response, status_code=200)
 
 
-@router.get("/project/{project_id}/status/run/")
+@router.get(
+    "/project/{project_id}/status/run/",
+    response_model=list[HistoryRunReadAggregated],
+)
 async def get_history_run_list(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryRunReadAggregated]:
+) -> list[dict[str, Any]]:
     # Access control
     await get_wftask_check_access(
         project_id=project_id,
@@ -273,7 +278,10 @@ async def get_history_run_list(
     return runs
 
 
-@router.get("/project/{project_id}/status/run/{history_run_id}/units/")
+@router.get(
+    "/project/{project_id}/status/run/{history_run_id}/units/",
+    response_model=PaginationResponse[HistoryUnitRead],
+)
 async def get_history_run_units(
     project_id: int,
     dataset_id: int,
@@ -283,7 +291,7 @@ async def get_history_run_units(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[HistoryUnitRead]:
+) -> PaginationResponse[HistoryUnit]:
     # Access control
     await get_wftask_check_access(
         project_id=project_id,
@@ -326,7 +334,10 @@ async def get_history_run_units(
     return paginated_response
 
 
-@router.post("/project/{project_id}/status/images/")
+@router.post(
+    "/project/{project_id}/status/images/",
+    response_model=ImagePage,
+)
 async def get_history_images(
     project_id: int,
     dataset_id: int,
@@ -335,7 +346,7 @@ async def get_history_images(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> ImagePage:
+) -> dict[str, Any]:
     # Access control and object retrieval
     wftask = await get_wftask_check_access(
         project_id=project_id,
@@ -524,13 +535,16 @@ async def get_history_unit_log(
     return JSONResponse(content=log)
 
 
-@router.get("/project/{project_id}/dataset/{dataset_id}/history/")
+@router.get(
+    "/project/{project_id}/dataset/{dataset_id}/history/",
+    response_model=list[HistoryRunRead],
+)
 async def get_dataset_history(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryRunRead]:
+) -> list[HistoryRun]:
     """
     Returns a list of all HistoryRuns associated to a given dataset, sorted by
     timestamp.

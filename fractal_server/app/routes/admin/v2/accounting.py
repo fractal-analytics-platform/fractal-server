@@ -37,7 +37,7 @@ async def query_accounting(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[AccountingRecordRead]:
+) -> PaginationResponse[AccountingRecord]:
     stm = select(AccountingRecord).order_by(AccountingRecord.id)
     stm_count = select(func.count(AccountingRecord.id))
     if query.user_id is not None:

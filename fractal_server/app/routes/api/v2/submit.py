@@ -62,7 +62,7 @@ async def submit_job(
     request: Request,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> JobRead | None:
+) -> JobV2:
     # Remove non-submitted Jobs from the app state when the list grows
     # beyond a threshold
     # NOTE: this may lead to a race condition on `app.state.jobs` if two

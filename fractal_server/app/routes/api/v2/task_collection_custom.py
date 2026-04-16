@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
@@ -39,14 +40,18 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.post("/collect/custom/", status_code=201, response_model=list[TaskRead])
+@router.post(
+    "/collect/custom/",
+    status_code=201,
+    response_model=list[TaskRead],
+)
 async def collect_task_custom(
     task_collect: TaskCollectCustom,
     private: bool = False,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskRead]:
+) -> list[TaskV2]:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id

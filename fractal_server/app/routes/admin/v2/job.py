@@ -53,7 +53,7 @@ async def view_job(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[JobRead]:
+) -> PaginationResponse[JobV2]:
     """
     Query `JobV2` table.
 
@@ -153,7 +153,7 @@ async def view_single_job(
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> JobRead:
+) -> JobV2:
     job = await db.get(JobV2, job_id)
     if not job:
         raise HTTPException(
@@ -177,7 +177,7 @@ async def update_job(
     job_id: int,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> JobRead | None:
+) -> JobV2:
     """
     Change the status of an existing job.
 

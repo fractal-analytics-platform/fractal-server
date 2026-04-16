@@ -53,11 +53,15 @@ def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
         )
 
 
-@router.get("/", response_model=list[ResourceRead], status_code=200)
+@router.get(
+    "/",
+    response_model=list[ResourceRead],
+    status_code=200,
+)
 async def get_resource_list(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ResourceRead]:
+) -> list[Resource]:
     """
     Query `Resource` table.
     """
@@ -69,12 +73,16 @@ async def get_resource_list(
     return resource_list
 
 
-@router.get("/{resource_id}/", response_model=ResourceRead, status_code=200)
+@router.get(
+    "/{resource_id}/",
+    response_model=ResourceRead,
+    status_code=200,
+)
 async def get_resource(
     resource_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ResourceRead:
+) -> Resource:
     """
     Query single `Resource`.
     """
@@ -83,12 +91,16 @@ async def get_resource(
     return resource
 
 
-@router.post("/", response_model=ResourceRead, status_code=201)
+@router.post(
+    "/",
+    response_model=ResourceRead,
+    status_code=201,
+)
 async def post_resource(
     resource_create: ResourceCreate,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ResourceRead:
+) -> Resource:
     """
     Create new `Resource`.
     """
@@ -116,7 +128,7 @@ async def put_resource(
     resource_update: ResourceCreate,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ResourceRead:
+) -> Resource:
     """
     Overwrite a single `Resource`.
     """
@@ -144,7 +156,7 @@ async def delete_resource(
     resource_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> None:
     """
     Delete single `Resource`.
     """
@@ -173,7 +185,7 @@ async def get_resource_profiles(
     resource_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProfileRead]:
+) -> list[Profile]:
     """
     Query `Profile`s for single `Resource`.
     """
@@ -199,7 +211,7 @@ async def post_profile(
     profile_create: ProfileCreate,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ProfileRead:
+) -> Profile:
     """
     Create new `Profile`.
     """

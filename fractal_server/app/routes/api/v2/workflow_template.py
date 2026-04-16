@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -66,7 +68,7 @@ async def get_workflow_template_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> TemplatePage:
+) -> dict[str, Any]:
     stm = (
         select(
             UserOAuth.email,
@@ -208,7 +210,7 @@ async def get_workflow_template(
     template_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateRead:
+) -> dict[str, Any]:
     template = await _get_template_read_access(
         user_id=user.id, template_id=template_id, db=db
     )
@@ -233,7 +235,7 @@ async def post_workflow_template(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateRead:
+) -> dict[str, Any]:
     workflow = await _get_workflow_or_404(workflow_id=workflow_id, db=db)
     await _get_workflow_check_access(
         project_id=workflow.project_id,
@@ -287,7 +289,7 @@ async def patch_workflow_template(
     template_update: WorkflowTemplateUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateRead:
+) -> dict[str, Any]:
     template = await _get_template_full_access(
         user_id=user.id, template_id=template_id, db=db
     )
@@ -335,7 +337,7 @@ async def import_workflow_template(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateRead:
+) -> dict[str, Any]:
     if user_group_id:
         await _verify_user_belongs_to_group(
             user_id=user.id,
@@ -379,7 +381,7 @@ async def export_workflow_template(
     template_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTemplateExport:
+) -> WorkflowTemplate:
     template = await _get_template_read_access(
         user_id=user.id, template_id=template_id, db=db
     )
