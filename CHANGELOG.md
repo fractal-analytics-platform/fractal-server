@@ -3,7 +3,7 @@
 # 2.22.5
 
 * API:
-    * Use `distict` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
+    * Use `distinct` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
 
 # 2.22.4
 
