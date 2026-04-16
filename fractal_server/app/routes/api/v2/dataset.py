@@ -109,10 +109,6 @@ async def read_dataset_list(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    # Find datasets of the current project. Note: this select/where approach
-    # has much better scaling than refreshing all elements of
-    # `project.dataset_list` - ref
-    # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
     stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
