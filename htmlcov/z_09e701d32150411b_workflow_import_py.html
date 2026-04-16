@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_workflow_template_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -455,7 +455,7 @@
     <p class="run run2"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">    <span class="nam">workflow_import_from_template</span><span class="op">:</span> <span class="nam">WorkflowImportFromTemplate</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_api_user</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">WorkflowReadWithWarnings</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">WorkflowV2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">    <span class="nam">template</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">_get_template_read_access</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t376" href="#t376">376</a></span><span class="t">        <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t377" href="#t377">377</a></span><span class="t">        <span class="nam">template_id</span><span class="op">=</span><span class="nam">template_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -499,7 +499,7 @@
             <a class="nav" href="z_09e701d32150411b_workflow_template_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
     </div>
 </footer>

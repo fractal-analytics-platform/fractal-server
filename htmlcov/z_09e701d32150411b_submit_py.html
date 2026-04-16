@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_task_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -146,7 +146,7 @@
     <p class="run run2"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">request</span><span class="op">:</span> <span class="nam">Request</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_api_user</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobRead</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobV2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="com"># Remove non-submitted Jobs from the app state when the list grows</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="com"># beyond a threshold</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="com"># NOTE: this may lead to a race condition on `app.state.jobs` if two</span>&nbsp;</span><span class="r"></span></p>
@@ -372,7 +372,7 @@
             <a class="nav" href="z_09e701d32150411b_task_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
     </div>
 </footer>

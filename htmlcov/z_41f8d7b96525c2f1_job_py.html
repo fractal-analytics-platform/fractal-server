@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_41f8d7b96525c2f1_profile_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -137,7 +137,7 @@
     <p class="run run2"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">    <span class="nam">pagination</span><span class="op">:</span> <span class="nam">PaginationRequest</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_pagination_params</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_superuser_act</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">PaginationResponse</span><span class="op">[</span><span class="nam">JobRead</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">PaginationResponse</span><span class="op">[</span><span class="nam">JobV2</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="str">    Query `JobV2` table.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -237,7 +237,7 @@
     <p class="run run2"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">    <span class="nam">show_tmp_logs</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t154" href="#t154">154</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_superuser_act</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobRead</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobV2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t157" href="#t157">157</a></span><span class="t">    <span class="nam">job</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">JobV2</span><span class="op">,</span> <span class="nam">job_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">job</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -261,7 +261,7 @@
     <p class="run run2"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_superuser_act</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobRead</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">JobV2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t"><span class="str">    Change the status of an existing job.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t183" href="#t183">183</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -376,7 +376,7 @@
             <a class="nav" href="z_41f8d7b96525c2f1_profile_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
     </div>
 </footer>

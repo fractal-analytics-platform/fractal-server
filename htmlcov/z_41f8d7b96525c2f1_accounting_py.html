@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_41f8d7b96525c2f1_impersonate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -121,7 +121,7 @@
     <p class="run run2"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="nam">pagination</span><span class="op">:</span> <span class="nam">PaginationRequest</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_pagination_params</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="nam">superuser</span><span class="op">:</span> <span class="nam">UserOAuth</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_superuser_act</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">PaginationResponse</span><span class="op">[</span><span class="nam">AccountingRecordRead</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">PaginationResponse</span><span class="op">[</span><span class="nam">AccountingRecord</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">    <span class="nam">stm</span> <span class="op">=</span> <span class="nam">select</span><span class="op">(</span><span class="nam">AccountingRecord</span><span class="op">)</span><span class="op">.</span><span class="nam">order_by</span><span class="op">(</span><span class="nam">AccountingRecord</span><span class="op">.</span><span class="nam">id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="nam">stm_count</span> <span class="op">=</span> <span class="nam">select</span><span class="op">(</span><span class="nam">func</span><span class="op">.</span><span class="nam">count</span><span class="op">(</span><span class="nam">AccountingRecord</span><span class="op">.</span><span class="nam">id</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="key">if</span> <span class="nam">query</span><span class="op">.</span><span class="nam">user_id</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -175,7 +175,7 @@
             <a class="nav" href="z_41f8d7b96525c2f1_impersonate_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-04-16 09:18 +0000
+            created at 2026-04-16 09:46 +0000
         </p>
     </div>
 </footer>
