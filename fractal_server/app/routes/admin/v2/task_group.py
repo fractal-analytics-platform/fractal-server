@@ -131,7 +131,7 @@ async def query_task_group_list(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[dict[str, Any]]:
+) -> dict[str, Any]:
     stm = (
         select(TaskGroupV2, UserOAuth.email)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)

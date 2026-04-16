@@ -295,4 +295,4 @@ async def delete_task_group(
         "and return task_group_activity"
     )
     response.status_code = status.HTTP_202_ACCEPTED
-    return task_group_activity
+    return response
