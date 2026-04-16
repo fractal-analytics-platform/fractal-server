@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.4
+
+This fixes a minor bug introduced in 2.22.3.
+
+* API:
+    * Re-introduce `docs_info` and `docs_link` in slim task-group responses (\#3283).
+
 # 2.22.3
 
 * API:
