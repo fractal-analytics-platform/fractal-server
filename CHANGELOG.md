@@ -3,9 +3,12 @@
 # 2.22.3 (unreleased)
 
 * API:
+    * Add `GET /admin/v2/users-csv/` (\#3276).
     * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
     * Add `slim` query parameter to `GET /api/v2/task-group/` (\#3277).
     * Remove `args_schema` query parameter from `GET /api/v2/task-group/` (\#3277).
+* Internal:
+    * Improve type hints for endpoint functions (\#3280).
 * Dependencies:
     * Bump `pytest` and `pytest-asyncio` (\#3278).
 

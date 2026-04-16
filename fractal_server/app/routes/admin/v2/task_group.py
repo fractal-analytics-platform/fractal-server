@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -49,7 +51,7 @@ async def get_task_group_activity_list(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskGroupActivityRead]:
+) -> PaginationResponse[TaskGroupActivityV2]:
     stm = select(TaskGroupActivityV2).order_by(
         TaskGroupActivityV2.timestamp_started.desc()
     )
@@ -97,7 +99,7 @@ async def query_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupReadSuperuser:
+) -> dict[str, Any]:
     res = await db.execute(
         select(TaskGroupV2, UserOAuth.email)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
@@ -129,7 +131,7 @@ async def query_task_group_list(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskGroupReadSuperuser]:
+) -> dict[str, Any]:
     stm = (
         select(TaskGroupV2, UserOAuth.email)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
@@ -210,7 +212,7 @@ async def patch_task_group(
     task_group_update: TaskGroupUpdate,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupReadSuperuser]:
+) -> dict[str, Any]:
     res = await db.execute(
         select(TaskGroupV2, UserOAuth.email)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)

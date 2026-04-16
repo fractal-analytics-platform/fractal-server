@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -244,7 +246,7 @@ async def patch_dataset_image(
     image_update: SingleImageUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> dict[str, Any]:
     output = await _get_dataset_check_access(
         project_id=project_id,
         dataset_id=dataset_id,

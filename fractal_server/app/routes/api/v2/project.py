@@ -56,7 +56,7 @@ async def create_project(
     project: ProjectCreate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectRead | None:
+) -> ProjectV2:
     """
     Create new project
     """
@@ -97,7 +97,7 @@ async def read_project(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> ProjectRead | None:
+) -> ProjectV2:
     """
     Return info on an existing project
     """
@@ -116,7 +116,7 @@ async def update_project(
     project_update: ProjectUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> ProjectV2:
     project = await _get_project_check_access(
         project_id=project_id,
         user_id=user.id,

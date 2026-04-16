@@ -46,7 +46,7 @@ async def get_list_task(
     author: str | None = None,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskRead]:
+) -> list[TaskV2]:
     """
     Get list of available tasks
     """
@@ -91,7 +91,7 @@ async def get_task(
     task_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskRead:
+) -> TaskV2:
     """
     Get info on a specific task
     """
@@ -105,7 +105,7 @@ async def patch_task(
     task_update: TaskUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskRead | None:
+) -> TaskV2:
     """
     Edit a specific task (restricted to task owner)
     """
@@ -159,7 +159,7 @@ async def create_task(
     private: bool = False,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskRead | None:
+) -> TaskV2:
     """
     Create a new task
     """

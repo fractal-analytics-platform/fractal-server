@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -40,7 +42,7 @@ async def view_link_user_project(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[LinkUserProjectRead]:
+) -> PaginationResponse[dict[str, Any]]:
     stm = (
         select(
             LinkUserProjectV2,

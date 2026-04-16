@@ -87,7 +87,7 @@ async def collect_task_pixi(
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id

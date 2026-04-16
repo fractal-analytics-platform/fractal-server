@@ -40,7 +40,7 @@ async def create_dataset(
     dataset: DatasetCreate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetRead | None:
+) -> DatasetV2:
     """
     Add new dataset to current project
     """
@@ -98,7 +98,7 @@ async def read_dataset_list(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetRead] | None:
+) -> list[DatasetV2]:
     """
     Get dataset list for given project
     """
@@ -109,10 +109,6 @@ async def read_dataset_list(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    # Find datasets of the current project. Note: this select/where approach
-    # has much better scaling than refreshing all elements of
-    # `project.dataset_list` - ref
-    # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
     stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
@@ -128,7 +124,7 @@ async def read_dataset(
     dataset_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetRead | None:
+) -> DatasetV2:
     """
     Get info on a dataset associated to the current project
     """
@@ -153,7 +149,7 @@ async def update_dataset(
     dataset_update: DatasetUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetRead | None:
+) -> DatasetV2:
     """
     Edit a dataset associated to the current project
     """
@@ -228,7 +224,7 @@ async def export_dataset(
     dataset_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetExport | None:
+) -> DatasetV2:
     """
     Export an existing dataset
     """
@@ -254,7 +250,7 @@ async def import_dataset(
     dataset: DatasetImport,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetRead | None:
+) -> DatasetV2:
     """
     Import an existing dataset into a project
     """

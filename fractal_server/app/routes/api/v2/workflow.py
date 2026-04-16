@@ -1,4 +1,5 @@
 from copy import copy
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -44,7 +45,7 @@ async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowRead] | None:
+) -> list[WorkflowV2]:
     """
     Get workflow list for given project
     """
@@ -74,7 +75,7 @@ async def create_workflow(
     workflow: WorkflowCreate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowRead | None:
+) -> WorkflowV2:
     """
     Create a workflow, associate to a project
     """
@@ -104,7 +105,7 @@ async def read_workflow(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings | None:
+) -> dict[str, Any]:
     """
     Get info on an existing workflow
     """
@@ -139,7 +140,7 @@ async def update_workflow(
     patch: WorkflowUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings | None:
+) -> dict[str, Any]:
     """
     Edit a workflow
     """
@@ -287,7 +288,7 @@ async def get_workflow_type_filters(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowTaskTypeFiltersInfo]:
+) -> list[dict[str, Any]]:
     """
     Get info on type/type-filters flow for a workflow.
     """
