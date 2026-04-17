@@ -58,6 +58,14 @@ dev = [
 
 docs = [
     "zensical",
+    "mkdocs==1.6.1",
+    "mkdocstrings[python]>=1.0.2,<1.1.0",
+    "mkdocs-material==9.7.1",
+    "mkdocs-gen-files==0.6.0",
+    "mkdocs-literate-nav==0.6.2",
+    "mkdocs-section-index==0.3.10",
+    "mkdocs-include-markdown-plugin==7.2.1",
+    "mkdocs-render-swagger-plugin==0.1.2",
     "pyyaml>=6.0.0",
     ]
 
