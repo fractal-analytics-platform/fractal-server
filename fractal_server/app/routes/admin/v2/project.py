@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from fastapi import APIRouter
@@ -33,6 +34,7 @@ from fractal_server.app.schemas.v2 import ProjectReadSuperuser
 from fractal_server.urls import url_is_relative_to
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginationResponse[ProjectReadSuperuser])
@@ -115,6 +117,11 @@ async def transfer_project_ownership(
             detail="Cannot transfer ownership to a guest user.",
         )
 
+    logger.info(
+        f"Trying to transfer project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
+
     # Get old user and owner's link
     res = await db.execute(
         select(LinkUserProjectV2)
@@ -184,5 +191,10 @@ async def transfer_project_ownership(
     # Patch
     setattr(owner_link, "user_id", user_id)
     await db.commit()
+
+    logger.info(
+        f"Successfully transferred project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
 
     return Response(status_code=status.HTTP_200_OK)
