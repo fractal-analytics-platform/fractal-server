@@ -15,6 +15,7 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 
 class MockBaseSlurmRunner(BaseSlurmRunner):
     def __init__(self, *args, **kwargs):
+        kwargs["fractal_job_id"] = 99
         super().__init__(*args, **kwargs, poll_interval=0)
 
     def _mkdir_local_folder(self, folder: str) -> None:
