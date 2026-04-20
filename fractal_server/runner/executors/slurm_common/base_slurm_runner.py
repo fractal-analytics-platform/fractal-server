@@ -83,12 +83,14 @@ def create_accounting_record_slurm(
     *,
     user_id: int,
     slurm_job_ids: list[int],
+    fractal_job_id: int,
 ) -> None:
     with next(get_sync_db()) as db:
         db.add(
             AccountingRecordSlurm(
                 user_id=user_id,
                 slurm_job_ids=slurm_job_ids,
+                fractal_job_id=fractal_job_id,
             )
         )
         db.commit()
@@ -123,6 +125,7 @@ class BaseSlurmRunner(BaseRunner):
         common_script_lines: list[str] | None = None,
         user_cache_dir: str,
         slurm_account: str | None = None,
+        fractal_job_id: int,
     ):
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
@@ -132,6 +135,7 @@ class BaseSlurmRunner(BaseRunner):
         self.user_cache_dir = user_cache_dir
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
+        self.fractal_job_id = fractal_job_id
 
         self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
@@ -747,6 +751,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
             # Retrieval phase
@@ -984,6 +989,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
         # Retrieval phase

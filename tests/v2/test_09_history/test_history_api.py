@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timezone
+from typing import Any
 from typing import Literal
 
 import pytest
@@ -13,6 +14,24 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import HistoryUnitStatusWithUnset
 from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+
+
+def _assert_dict_equal_with_timestamps(
+    data1: dict[str, Any], data2: dict[str, Any]
+) -> None:
+    """
+    Helper function to avoid spurious differences in timestamp strings when
+    they have a different timezone.
+    """
+    assert set(data1.keys()) == set(data2.keys())
+    for key, value1 in data1.items():
+        value2 = data2[key]
+        if "timestamp" in key:
+            assert datetime.fromisoformat(value1) == datetime.fromisoformat(
+                value2
+            )
+        else:
+            assert value1 == value2
 
 
 async def test_status_api(
@@ -385,7 +404,8 @@ async def test_get_history_run_list(
             f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
-        assert res.json() == [
+        _assert_dict_equal_with_timestamps(
+            res.json()[0],
             {
                 "id": hr1.id,
                 "num_done_units": 10,
@@ -397,6 +417,9 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": "3.1.4",
             },
+        )
+        _assert_dict_equal_with_timestamps(
+            res.json()[1],
             {
                 "id": hr2.id,
                 "num_done_units": 20,
@@ -408,14 +431,14 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": "3.1.4",
             },
-        ]
+        )
 
         res = await client.get(
             f"/api/v2/project/{project.id}/status/run/"
             f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
         )
-        assert res.status_code == 200
-        assert res.json() == [
+        _assert_dict_equal_with_timestamps(
+            res.json()[0],
             {
                 "id": hr3.id,
                 "num_done_units": 0,
@@ -427,6 +450,9 @@ async def test_get_history_run_list(
                 "args_schema_parallel": {"foo": "bar"},
                 "version": "1.2",
             },
+        )
+        _assert_dict_equal_with_timestamps(
+            res.json()[1],
             {
                 "id": hr4.id,
                 "num_done_units": 0,
@@ -438,7 +464,7 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": None,
             },
-        ]
+        )
 
 
 async def test_get_history_run_units(

@@ -21,6 +21,7 @@ async def test_submit_exception(
     monkey_slurm,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -33,6 +34,7 @@ async def test_submit_exception(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         runner.jobs = {"0": "fake"}
 
@@ -67,6 +69,7 @@ async def test_multisubmit_exception_submission(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     """
     Fail because of invalid parameters.
@@ -81,6 +84,7 @@ async def test_multisubmit_exception_submission(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -122,6 +126,7 @@ async def test_multisubmit_exception_fetch_artifacts(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     def fake_fetch_artifacts(*args, **kwargs):
         raise RuntimeError("Error from fake_fetch_artifacts.")
@@ -135,6 +140,7 @@ async def test_multisubmit_exception_fetch_artifacts(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         runner._fetch_artifacts = fake_fetch_artifacts
 
@@ -176,6 +182,7 @@ async def test_multisubmit_exception_postprocess_single_task(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     def fake_postprocess_single_task(*args, **kwargs):
         raise RuntimeError("Error from fake_postprocess_single_task.")
@@ -189,6 +196,7 @@ async def test_multisubmit_exception_postprocess_single_task(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         runner._postprocess_single_task = fake_postprocess_single_task
 

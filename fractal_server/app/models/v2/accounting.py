@@ -40,3 +40,8 @@ class AccountingRecordSlurm(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(ARRAY(Integer)),
     )
+    fractal_job_id: int = Field(
+        foreign_key="jobv2.id",
+        nullable=True,
+        default=None,
+    )

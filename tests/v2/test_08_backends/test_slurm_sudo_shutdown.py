@@ -63,6 +63,7 @@ async def test_submit_shutdown(
     monkey_slurm,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -73,6 +74,7 @@ async def test_submit_shutdown(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
 
         def main_thread():
@@ -123,6 +125,7 @@ async def test_multisubmit_shutdown(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -133,6 +136,7 @@ async def test_multisubmit_shutdown(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
 
         def main_thread():
@@ -193,6 +197,7 @@ async def test_shutdown_before_submit(
     monkey_slurm,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -203,6 +208,7 @@ async def test_shutdown_before_submit(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         # Write shudown file
         runner.shutdown_file.touch()
@@ -246,6 +252,7 @@ async def test_shutdown_before_multisubmit(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -256,6 +263,7 @@ async def test_shutdown_before_multisubmit(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         # Write shutdown file right away
         runner.shutdown_file.touch()
