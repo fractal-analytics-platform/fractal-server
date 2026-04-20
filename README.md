@@ -33,7 +33,7 @@
 | fractal\_server/app/routes/admin/v2/impersonate.py                           |       19 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/job.py                                   |      127 |        0 |       44 |        1 |     99% | 222-\>233 |
 | fractal\_server/app/routes/admin/v2/profile.py                               |       46 |        0 |        6 |        1 |     98% |   61-\>64 |
-| fractal\_server/app/routes/admin/v2/project.py                               |       78 |        0 |       20 |        0 |    100% |           |
+| fractal\_server/app/routes/admin/v2/project.py                               |       82 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/resource.py                              |       86 |        0 |        8 |        1 |     99% | 142-\>146 |
 | fractal\_server/app/routes/admin/v2/sharing.py                               |       57 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task.py                                  |       71 |        0 |       20 |        0 |    100% |           |
@@ -209,7 +209,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10581** |  **181** | **1896** |   **91** | **98%** |           |
+| **TOTAL**                                                                    | **10585** |  **181** | **1896** |   **91** | **98%** |           |
 
 
 ## Setup coverage badge
