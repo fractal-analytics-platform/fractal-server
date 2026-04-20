@@ -114,9 +114,9 @@ async def test_accounting_slurm(
     db,
     client,
     MockCurrentUser,
-    job_factory2,
+    job_factory_full,
 ):
-    job = await job_factory2()
+    job = await job_factory_full()
     async with MockCurrentUser(is_superuser=True) as user:
         timestamp_min = get_timestamp().isoformat()
         db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[1, 4]))

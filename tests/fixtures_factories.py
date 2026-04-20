@@ -218,7 +218,7 @@ async def job_factory(db: AsyncSession):
 
 
 @pytest.fixture
-async def job_factory2(
+async def job_factory_full(
     db: AsyncSession,
     MockCurrentUser,
     project_factory,
@@ -229,6 +229,10 @@ async def job_factory2(
     job_factory,
     tmp_path,
 ):
+    """
+    Wrapper of `job_factory` which also creates other objects.
+    """
+
     async def __job_factory() -> JobV2:
         async with MockCurrentUser() as user:
             project = await project_factory(user)
