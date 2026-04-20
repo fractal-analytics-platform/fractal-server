@@ -29,7 +29,7 @@ async def fractal_job_id_mock(
     task_factory,
     job_factory,
     tmp_path,
-) -> HistoryRun:
+) -> int:
     async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)

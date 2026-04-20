@@ -114,13 +114,20 @@ async def test_accounting_slurm(
     db,
     client,
     MockCurrentUser,
+    job_factory2,
 ):
+    job = await job_factory2()
     async with MockCurrentUser(is_superuser=True) as user:
         timestamp_min = get_timestamp().isoformat()
         db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[1, 4]))
-        db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[2, 3]))
+        db.add(
+            AccountingRecordSlurm(
+                user_id=user.id, slurm_job_ids=[2, 3], fractal_job_id=job.id
+            )
+        )
         timestamp_max = get_timestamp().isoformat()
         await db.commit()
+
         res = await client.post(
             "/admin/v2/accounting/slurm/",
             json=dict(
@@ -136,3 +143,11 @@ async def test_accounting_slurm(
         # Test adding a record with no SLURM jobs
         db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[]))
         await db.commit()
+
+        # Test `fractal_job_id`
+        res = await client.post(
+            "/admin/v2/accounting/slurm/",
+            json=dict(fractal_job_id=job.id),
+        )
+        assert res.status_code == 200
+        assert set(res.json()) == {2, 3}

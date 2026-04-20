@@ -159,7 +159,7 @@ async def job_factory(db: AsyncSession):
         working_dir: str,
         db: AsyncSession = db,
         **kwargs,
-    ):
+    ) -> JobV2:
         workflow = await db.get(WorkflowV2, workflow_id)
         if workflow is None:
             raise IndexError(
@@ -213,6 +213,40 @@ async def job_factory(db: AsyncSession):
         await db.commit()
         await db.refresh(job)
         return job
+
+    return __job_factory
+
+
+@pytest.fixture
+async def job_factory2(
+    db: AsyncSession,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    task_factory,
+    job_factory,
+    tmp_path,
+):
+    async def __job_factory() -> JobV2:
+        async with MockCurrentUser() as user:
+            project = await project_factory(user)
+            dataset = await dataset_factory(project_id=project.id)
+            workflow = await workflow_factory(project_id=project.id)
+            task = await task_factory(
+                user_id=user.id, task_group_kwargs=dict(user_group_id=None)
+            )
+            await workflowtask_factory(workflow_id=workflow.id, task_id=task.id)
+            job = await job_factory(
+                project_id=project.id,
+                dataset_id=dataset.id,
+                workflow_id=workflow.id,
+                working_dir=tmp_path.as_posix(),
+                status="done",
+                last_task_index=0,
+            )
+            return job
 
     return __job_factory
 
