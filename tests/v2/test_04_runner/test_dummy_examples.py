@@ -93,6 +93,7 @@ def local_runner(
         root_dir_local=root_dir_local,
         resource=resource,
         profile=profile,
+        fractal_job_id=99,
     ) as r:
         yield r
 

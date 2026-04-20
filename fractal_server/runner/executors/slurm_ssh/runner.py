@@ -44,6 +44,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         profile: Profile,
         user_cache_dir: str,
         fractal_ssh: FractalSSH,
+        fractal_job_id: int,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -64,6 +65,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
             poll_interval=resource.jobs_poll_interval,
             python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,
+            fractal_job_id=fractal_job_id,
         )
 
     @override

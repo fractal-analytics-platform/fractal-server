@@ -68,7 +68,7 @@ class BaseRunner:
     """
 
     shared_config: JobRunnerConfigLocal | JobRunnerConfigSLURM
-
+    fractal_job_id: int
     executor_error_log: str | None = None
 
     def submit(
