@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.5 (unreleased)
+# 2.22.5
 
 * API:
     * Use `distinct` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
