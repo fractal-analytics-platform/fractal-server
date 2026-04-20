@@ -989,6 +989,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
         # Retrieval phase
