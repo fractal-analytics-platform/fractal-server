@@ -109,5 +109,4 @@ async def list_users(
     return StreamingResponse(
         csv_string,
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=users.csv"},
     )
