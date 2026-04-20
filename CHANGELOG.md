@@ -5,6 +5,7 @@
 * API:
     * Use `distinct` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
     * Add logging to project-transfer endpoint (\#3286).
+    * Remove filename in `GET /admin/v2/users-csv/` (\#3287).
 
 # 2.22.4
 
