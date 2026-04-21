@@ -797,6 +797,7 @@ class BaseSlurmRunner(BaseRunner):
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
+                        db.commit()
 
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
