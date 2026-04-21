@@ -136,11 +136,11 @@
 | fractal\_server/runner/executors/call\_command\_wrapper.py                   |       32 |        2 |        8 |        1 |     92% |52-54, 58-\>62 |
 | fractal\_server/runner/executors/local/\_\_init\_\_.py                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/executors/local/get\_local\_config.py                 |       14 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/runner/executors/local/runner.py                             |      129 |        1 |       24 |        3 |     97% |248-\>255, 281-\>264, 324 |
+| fractal\_server/runner/executors/local/runner.py                             |      133 |        1 |       24 |        3 |     97% |253-\>260, 286-\>269, 330 |
 | fractal\_server/runner/executors/slurm\_common/\_\_init\_\_.py               |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/executors/slurm\_common/\_batching.py                 |       67 |        1 |       28 |        1 |     98% |        44 |
 | fractal\_server/runner/executors/slurm\_common/\_job\_states.py              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/runner/executors/slurm\_common/base\_slurm\_runner.py        |      436 |        6 |      110 |        6 |     98% |208, 225, 259, 262, 496, 543-\>549, 868-\>875, 910, 973-\>980, 1052-\>1024 |
+| fractal\_server/runner/executors/slurm\_common/base\_slurm\_runner.py        |      440 |        6 |      110 |        6 |     98% |210, 227, 261, 264, 498, 545-\>551, 873-\>880, 915, 978-\>985, 1057-\>1029 |
 | fractal\_server/runner/executors/slurm\_common/get\_slurm\_config.py         |       74 |        4 |       34 |        4 |     93% |47, 59-\>63, 85-\>89, 107-114 |
 | fractal\_server/runner/executors/slurm\_common/remote.py                     |       51 |        6 |       10 |        2 |     87% |59-\>66, 108-127 |
 | fractal\_server/runner/executors/slurm\_common/slurm\_config.py              |       70 |        4 |       24 |        4 |     91% |120, 165, 170, 201 |
@@ -159,11 +159,11 @@
 | fractal\_server/runner/v2/\_local.py                                         |       18 |        1 |        2 |        1 |     90% |        75 |
 | fractal\_server/runner/v2/\_slurm\_ssh.py                                    |       20 |        1 |        2 |        1 |     91% |       104 |
 | fractal\_server/runner/v2/\_slurm\_sudo.py                                   |       18 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/runner/v2/db\_tools.py                                       |       41 |        2 |       10 |        2 |     92% |    26, 40 |
+| fractal\_server/runner/v2/db\_tools.py                                       |       41 |        1 |       10 |        1 |     96% |        26 |
 | fractal\_server/runner/v2/deduplicate\_list.py                               |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/runner/v2/merge\_outputs.py                                  |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/runner/v2/runner.py                                          |      204 |        2 |       44 |        3 |     98% |301, 350, 368-\>385 |
-| fractal\_server/runner/v2/runner\_functions.py                               |      192 |       11 |       48 |        8 |     92% |141, 171, 201-\>204, 280, 365-370, 429-\>433, 481-482, 579-584 |
+| fractal\_server/runner/v2/runner\_functions.py                               |      195 |       11 |       48 |        8 |     92% |141, 171, 201-\>204, 281, 366-371, 431-\>435, 483-484, 582-587 |
 | fractal\_server/runner/v2/submit\_workflow.py                                |      140 |        4 |       26 |        4 |     95% |133-138, 146-\>153, 153-\>161, 183-\>211, 251-\>258 |
 | fractal\_server/runner/v2/task\_interface.py                                 |       39 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/ssh/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
@@ -209,7 +209,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10591** |  **181** | **1898** |   **88** | **98%** |           |
+| **TOTAL**                                                                    | **10602** |  **180** | **1898** |   **87** | **98%** |           |
 
 
 ## Setup coverage badge
