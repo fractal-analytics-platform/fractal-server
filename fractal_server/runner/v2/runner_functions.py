@@ -260,6 +260,7 @@ def run_task_non_parallel(
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
+            db.commit()
     return outcome, num_tasks
 
 
@@ -382,6 +383,7 @@ def run_task_parallel(
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
     num_tasks = len(images)
     return outcome, num_tasks
 
@@ -503,6 +505,7 @@ def run_task_compound(
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
+            db.commit()
         positional_index = 0
         init_outcome = {
             positional_index: _process_task_output(

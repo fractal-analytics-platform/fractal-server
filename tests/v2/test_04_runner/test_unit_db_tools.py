@@ -80,6 +80,7 @@ async def test_update_status_of_history_unit(
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db_sync,
             )
+        db.commit()
         stop = time.perf_counter()
         non_bulk_time = stop - start
 

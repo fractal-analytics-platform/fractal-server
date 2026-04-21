@@ -40,7 +40,7 @@ def update_status_of_history_unit(
         raise ValueError(f"HistoryUnit {history_unit_id} not found.")
     unit.status = status
     db_sync.merge(unit)
-    db_sync.commit()
+    db_sync.flush()
 
 
 def bulk_update_status_of_history_unit(

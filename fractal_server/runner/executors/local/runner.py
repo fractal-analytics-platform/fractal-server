@@ -152,6 +152,7 @@ class LocalRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
                 return None, exception
 
         # RETRIEVAL PHASE
@@ -168,6 +169,7 @@ class LocalRunner(BaseRunner):
                         status=HistoryUnitStatus.DONE,
                         db_sync=db,
                     )
+                    db.commit()
                 return result, None
             except Exception as e:
                 logger.debug("[submit] END with exception")
@@ -176,6 +178,7 @@ class LocalRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
                 return None, TaskExecutionError(str(e))
 
     def multisubmit(
@@ -285,6 +288,7 @@ class LocalRunner(BaseRunner):
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
                             )
+                            db.commit()
             while active_futures:
                 finished_futures = [
                     index_and_future
@@ -310,6 +314,7 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
+                                db.commit()
 
                         except Exception as e:
                             logger.debug(
@@ -326,6 +331,7 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
+                                db.commit()
 
         logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 
