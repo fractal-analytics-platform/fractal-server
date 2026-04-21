@@ -244,6 +244,16 @@ async def get_history_run_list(
     for run_id, unit_status, count in unit_counts:
         count_map[run_id][f"num_{unit_status}_units"] = count
 
+    # Add number of warnings
+    stm = (
+        select(HistoryUnit.history_run_id, func.count(HistoryUnit.warnings))
+        .where(HistoryUnit.history_run_id.in_(run_ids))
+        .group_by(HistoryUnit.history_run_id, HistoryUnit.status)
+    )
+    res = await db.execute(stm)
+    for run_id, num_warnings in res.all():
+        count_map[run_id]["num_warnings"] = num_warnings
+
     res = await db.execute(
         select(
             TaskV2.id,
@@ -401,6 +411,8 @@ async def get_history_images(
 
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(final_images_with_status)=}")
+
+    # FIXME: TBD whether we should enrich response items with warnings
 
     # (5) Apply pagination logic
     total_count = len(final_images_with_status)

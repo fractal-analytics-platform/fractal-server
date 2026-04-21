@@ -27,12 +27,14 @@ def _enriched_image(
     }
 
 
-def _prepare_query(
+def _prepare_query_url_status(
     *,
     dataset_id: int,
     workflowtask_id: int,
 ) -> Select:
     """
+    Query to attach `status` to `zarr_url`.
+
     Note: the query does not include `.order_by`.
     """
     stm = (
@@ -118,7 +120,7 @@ async def enrich_images_unsorted_async(
     # Get `(zarr_url, status)` for _all_ processed images (including those that
     # are not part of the target image set)
     res = await db.execute(
-        _prepare_query(
+        _prepare_query_url_status(
             dataset_id=dataset_id,
             workflowtask_id=workflowtask_id,
         )
@@ -164,7 +166,7 @@ def enrich_images_unsorted_sync(
     # are not part of the target image set)
     with next(get_sync_db()) as db:
         res = db.execute(
-            _prepare_query(
+            _prepare_query_url_status(
                 dataset_id=dataset_id,
                 workflowtask_id=workflowtask_id,
             )
