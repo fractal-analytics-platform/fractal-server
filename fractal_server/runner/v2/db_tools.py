@@ -29,7 +29,7 @@ def update_status_of_history_run(
     db_sync.commit()
 
 
-def update_status_of_history_unit(
+def update_status_of_history_unit_no_commit(
     *,
     history_unit_id: int,
     status: HistoryUnitStatus,

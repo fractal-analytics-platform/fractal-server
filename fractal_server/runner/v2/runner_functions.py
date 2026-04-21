@@ -34,7 +34,7 @@ from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
 
-from .db_tools import update_status_of_history_unit
+from .db_tools import update_status_of_history_unit_no_commit
 from .deduplicate_list import deduplicate_list
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
@@ -255,7 +255,7 @@ def run_task_non_parallel(
     # tasks it was already handled within submit
     if outcome[0].invalid_output:
         with next(get_sync_db()) as db:
-            update_status_of_history_unit(
+            update_status_of_history_unit_no_commit(
                 history_unit_id=history_unit_id,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
@@ -378,7 +378,7 @@ def run_task_parallel(
         # tasks it was already handled within multisubmit
         if outcome[ind].invalid_output:
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_ids[ind],
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
@@ -500,7 +500,7 @@ def run_task_compound(
 
     if len(parallelization_list) == 0:
         with next(get_sync_db()) as db:
-            update_status_of_history_unit(
+            update_status_of_history_unit_no_commit(
                 history_unit_id=init_history_unit_id,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
