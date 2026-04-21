@@ -31,7 +31,9 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    update_status_of_history_unit_no_commit,
+)
 
 from ._job_states import STATES_FINISHED
 from .slurm_config import SlurmConfig
@@ -689,11 +691,12 @@ class BaseSlurmRunner(BaseRunner):
 
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
-                    update_status_of_history_unit(
+                    update_status_of_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
                     )
+                    db.commit()
 
                 return None, SHUTDOWN_EXCEPTION
 
@@ -782,7 +785,7 @@ class BaseSlurmRunner(BaseRunner):
                         )
 
                         if exception is not None:
-                            update_status_of_history_unit(
+                            update_status_of_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
@@ -792,11 +795,12 @@ class BaseSlurmRunner(BaseRunner):
                                 TaskType.COMPOUND,
                                 TaskType.CONVERTER_COMPOUND,
                             ]:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
+                        db.commit()
 
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
@@ -809,11 +813,12 @@ class BaseSlurmRunner(BaseRunner):
                 f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
             self.scancel_jobs()
             return None, e
 
@@ -1050,7 +1055,7 @@ class BaseSlurmRunner(BaseRunner):
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
@@ -1060,14 +1065,14 @@ class BaseSlurmRunner(BaseRunner):
                         else:
                             results[task.index] = result
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
-
+                db.commit()
             if len(self.jobs) > 0:
                 scancelled_job_ids = self.wait_and_check_shutdown()
 

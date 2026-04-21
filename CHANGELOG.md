@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Reduce number of `db.commit` statements when updating `HistoryUnit` statuses (\#3290).
+
 # 2.22.5
 
 * API:
