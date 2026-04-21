@@ -314,7 +314,6 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
-                                db.commit()
 
                         except Exception as e:
                             logger.debug(
@@ -331,7 +330,7 @@ class LocalRunner(BaseRunner):
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
-                                db.commit()
+                    db.commit()
 
         logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 
