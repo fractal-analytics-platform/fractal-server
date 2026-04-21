@@ -115,7 +115,7 @@ async def test_update_status_of_history_unit(
         )
 
         # Test failure due to wrong primary key
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="not found"):
             update_status_of_history_unit_no_commit(
                 history_unit_id=1111111111,
                 status=HistoryUnitStatus.FAILED,
