@@ -113,3 +113,11 @@ async def test_update_status_of_history_unit(
             f"Non bulk time:    {non_bulk_time}\n"
             f"Bulk time:        {bulk_time}\n"
         )
+
+        # Test failure due to wrong primary key
+        with pytest.raises(ValueError):
+            update_status_of_history_unit_no_commit(
+                history_unit_id=1111111111,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db_sync,
+            )
