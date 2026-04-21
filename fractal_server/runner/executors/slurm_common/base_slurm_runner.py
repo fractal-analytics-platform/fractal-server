@@ -694,6 +694,7 @@ class BaseSlurmRunner(BaseRunner):
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
                     )
+                    db.commit()
 
                 return None, SHUTDOWN_EXCEPTION
 
@@ -815,6 +816,7 @@ class BaseSlurmRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
             self.scancel_jobs()
             return None, e
 

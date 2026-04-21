@@ -169,7 +169,6 @@ class LocalRunner(BaseRunner):
                         status=HistoryUnitStatus.DONE,
                         db_sync=db,
                     )
-                    db.commit()
                 return result, None
             except Exception as e:
                 logger.debug("[submit] END with exception")
@@ -178,8 +177,9 @@ class LocalRunner(BaseRunner):
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
-                db.commit()
                 return None, TaskExecutionError(str(e))
+            finally:
+                db.commit()
 
     def multisubmit(
         self,
