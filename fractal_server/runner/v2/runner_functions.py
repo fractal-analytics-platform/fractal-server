@@ -360,7 +360,7 @@ def run_task_parallel(
         user_id=user_id,
     )
 
-    outcome = {}
+    outcome: dict[int, SubmissionOutcome] = {}
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
             error_msg = (
