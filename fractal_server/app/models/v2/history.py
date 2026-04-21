@@ -66,6 +66,7 @@ class HistoryUnit(SQLModel, table=True):
         sa_column=Column(ARRAY(String)),
         default_factory=list,
     )
+    warnings: str | None = None
 
 
 class HistoryImageCache(SQLModel, table=True):

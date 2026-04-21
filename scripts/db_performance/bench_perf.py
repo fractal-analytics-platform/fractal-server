@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import HistoryImageCache
-from fractal_server.images.status_tools import _prepare_query
+from fractal_server.images.status_tools import _prepare_query_url_status
 from fractal_server.images.status_tools import enrich_images_unsorted_sync
 from fractal_server.runner.v2.db_tools import bulk_upsert_image_cache_fast
 
@@ -70,7 +70,7 @@ def measure_query_time(
     for rep in range(REPETITIONS):
         with next(get_sync_db()) as db:
             start = time.perf_counter()
-            stm = _prepare_query(
+            stm = _prepare_query_url_status(
                 dataset_id=dataset_id,
                 workflowtask_id=wftask_id,
                 # zarr_urls=zarr_urls,

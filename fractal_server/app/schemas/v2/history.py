@@ -43,6 +43,7 @@ class HistoryUnitRead(BaseModel):
     logfile: str | None = None
     status: HistoryUnitStatus
     zarr_urls: list[str]
+    warnings: str | None = None
 
 
 class HistoryRunRead(BaseModel):
@@ -68,6 +69,7 @@ class HistoryRunReadAggregated(BaseModel):
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
+    num_warnings: int
     args_schema_parallel: dict[str, Any] | None = None
     args_schema_non_parallel: dict[str, Any] | None = None
     version: str | None = None
