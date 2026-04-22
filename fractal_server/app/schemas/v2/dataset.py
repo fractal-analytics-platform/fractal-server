@@ -53,6 +53,7 @@ class DatasetRead(BaseModel):
         project:
         timestamp_created:
         zarr_dir:
+        tags:
     """
 
     id: int
@@ -64,6 +65,7 @@ class DatasetRead(BaseModel):
     timestamp_created: AwareDatetime
 
     zarr_dir: str
+    tags: list[str]
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
