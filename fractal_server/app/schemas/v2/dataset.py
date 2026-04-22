@@ -34,7 +34,7 @@ class DatasetCreate(BaseModel):
     name: SafeNonEmptyStr
     project_dir: AbsolutePathStr | S3PathStr | None = None
     zarr_subfolder: SafeRelativePathStr | None = None
-    tags: ListUniqueNonEmptyString = []
+    tags: ListUniqueNonEmptyString = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_zarr_dir(self):
