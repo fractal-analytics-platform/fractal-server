@@ -34,7 +34,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
       - pypi: https://files.pythonhosted.org/packages/78/b6/6307fbef88d9b5ee7421e68d78a9f162e0da4900bc5f5793f6d3d0e34fb8/annotated_types-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/ad/3ceb4840530423221a7ca7edcd88db7c23c5b811bdda2c97ca4a9b5d7e73/fractal_task_tools-0.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/3c/41/d5c727c0a7ff30c8270d4bab4bd1726f701938181174c792aad898c38ac8/fractal_task_tools-0.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/87/b70ad306ebb6f9b585f114d0ac2137d792b48be34d732d60e597c2f8465a/pydantic-2.12.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/4c/d2/ef2074dc020dd6e109611a8be4449b98cd25e1b9b8a303c2f0fca2f2bcf7/pydantic_core-2.41.5-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl
@@ -59,7 +59,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: https://files.pythonhosted.org/packages/78/b6/6307fbef88d9b5ee7421e68d78a9f162e0da4900bc5f5793f6d3d0e34fb8/annotated_types-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/ad/3ceb4840530423221a7ca7edcd88db7c23c5b811bdda2c97ca4a9b5d7e73/fractal_task_tools-0.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/3c/41/d5c727c0a7ff30c8270d4bab4bd1726f701938181174c792aad898c38ac8/fractal_task_tools-0.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/87/b70ad306ebb6f9b585f114d0ac2137d792b48be34d732d60e597c2f8465a/pydantic-2.12.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ea/28/46b7c5c9635ae96ea0fbb779e271a38129df2550f763937659ee6c5dbc65/pydantic_core-2.41.5-cp314-cp314-macosx_10_12_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl
@@ -85,7 +85,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: https://files.pythonhosted.org/packages/78/b6/6307fbef88d9b5ee7421e68d78a9f162e0da4900bc5f5793f6d3d0e34fb8/annotated_types-0.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/ad/3ceb4840530423221a7ca7edcd88db7c23c5b811bdda2c97ca4a9b5d7e73/fractal_task_tools-0.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/3c/41/d5c727c0a7ff30c8270d4bab4bd1726f701938181174c792aad898c38ac8/fractal_task_tools-0.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/87/b70ad306ebb6f9b585f114d0ac2137d792b48be34d732d60e597c2f8465a/pydantic-2.12.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/74/1a/145646e5687e8d9a1e8d09acb278c8535ebe9e972e1f162ed338a622f193/pydantic_core-2.41.5-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl
@@ -164,10 +164,10 @@ packages:
   - pydoctor>=25.4.0 ; extra == 'docs'
   - pytest ; extra == 'test'
   requires_python: '>=3.8'
-- pypi: https://files.pythonhosted.org/packages/f8/ad/3ceb4840530423221a7ca7edcd88db7c23c5b811bdda2c97ca4a9b5d7e73/fractal_task_tools-0.4.0-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/3c/41/d5c727c0a7ff30c8270d4bab4bd1726f701938181174c792aad898c38ac8/fractal_task_tools-0.5.0-py3-none-any.whl
   name: fractal-task-tools
-  version: 0.4.0
-  sha256: fba892c25e6d0bbed08b0dd6242d5ba341b567a529f7ba48460968991beb96d2
+  version: 0.5.0
+  sha256: 12318c71a044c12076e5feab27aa84a0579b05041f6e161c1727506199bf3e23
   requires_dist:
   - pydantic>=2.11.0,<2.13.0
   - docstring-parser>=0.15,<=0.17
@@ -176,7 +176,7 @@ packages:
   - pytest>=8.3.0,<9.0.0 ; extra == 'dev'
   - coverage>=7.6.0,<7.7.0 ; extra == 'dev'
   - jsonschema>=4 ; extra == 'dev'
-  - requests>2.32.0,<2.33.0 ; extra == 'dev'
+  - requests>2.33.0,<2.34.0 ; extra == 'dev'
   - mkdocs==1.6.1 ; extra == 'docs'
   - mkdocstrings[python]>=1.0.2,<1.1.0 ; extra == 'docs'
   - mkdocs-material==9.7.1 ; extra == 'docs'
@@ -474,9 +474,9 @@ packages:
 - pypi: ./
   name: mock-pixi-tasks
   version: 1.2.3
-  sha256: b84dd96d4b02ff2c41513c85f3ddbe7eecfdb228a5f279970526cf8a93d19452
+  sha256: f9313c986c2571586405496b03ee2a3776a0d9d54e6722e0b80c705dc1be0661
   requires_dist:
-  - fractal-task-tools==0.4.0
+  - fractal-task-tools==0.5.0
   requires_python: '>=3.11,<3.15'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
   sha256: 3fde293232fa3fca98635e1167de6b7c7fda83caf24b9d6c91ec9eefb4f4d586
