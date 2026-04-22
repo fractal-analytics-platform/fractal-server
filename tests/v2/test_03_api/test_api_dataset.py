@@ -473,3 +473,27 @@ async def test_export_dataset(
         )
         assert res.status_code == 200
         assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()
+
+
+async def test_get_tags_single_project(
+    client, MockCurrentUser, project_factory, dataset_factory
+):
+    async with MockCurrentUser() as user:
+        project1 = await project_factory(user)
+        project2 = await project_factory(user)
+        project3 = await project_factory(user)
+        await dataset_factory(project_id=project1.id, tags=["a", "b", "c"])
+        await dataset_factory(
+            project_id=project1.id, tags=["z", "b", "x", "bb"]
+        )
+        await dataset_factory(project_id=project2.id, tags=["n", "m"])
+        await dataset_factory(project_id=project3.id)
+        res = await client.get(f"/api/v2/project/{project1.id}/dataset-tag/")
+        assert res.status_code == 200
+        assert res.json() == ["a", "b", "bb", "c", "x", "z"]
+        res = await client.get(f"/api/v2/project/{project2.id}/dataset-tag/")
+        assert res.status_code == 200
+        assert res.json() == ["m", "n"]
+        res = await client.get(f"/api/v2/project/{project3.id}/dataset-tag/")
+        assert res.status_code == 200
+        assert res.json() == []

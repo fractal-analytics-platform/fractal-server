@@ -3,6 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
@@ -285,3 +286,40 @@ async def import_dataset(
     await db.refresh(db_dataset)
 
     return db_dataset
+
+
+"""
+ Add a GET /api/v2/project/{project_id}/dataset-tag/ endpoint which lists all
+ distinct tags of datasets in the project.
+ This is useful to populate dropdown menus in the frontend without
+ getting&parsing the full list of project datasets.
+ """
+
+
+@router.get(
+    "/project/{project_id}/dataset-tag/",
+    response_model=list[str],
+)
+async def get_dataset_tags_for_single_project(
+    project_id: int,
+    user: UserOAuth = Depends(get_api_guest),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[str]:
+    """
+    Get all distinct tags of datasets in a single project.
+    """
+    # Access control
+    await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.READ,
+        db=db,
+    )
+    # Query
+    res = await db.execute(
+        select(func.jsonb_array_elements_text(DatasetV2.tags))
+        .where(DatasetV2.project_id == project_id)
+        .distinct()
+    )
+    tags = sorted(res.scalars().all())
+    return tags
