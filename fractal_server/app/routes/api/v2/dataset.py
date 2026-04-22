@@ -319,6 +319,7 @@ async def get_dataset_tags_for_single_project(
     return tags
 
 
+#  FIXME: remove if not needed
 @router.get(
     "/dataset/tags/",
     response_model=list[str],

@@ -561,3 +561,8 @@ async def test_get_tags_all_projects(
         res = await client.get("/api/v2/dataset/tags/")
         assert res.status_code == 200
         assert res.json() == ["a0", "a1", "a2", "b0", "b1", "b2", "c1"]
+
+    async with MockCurrentUser():
+        res = await client.get("/api/v2/dataset/tags/")
+        assert res.status_code == 200
+        assert res.json() == []
