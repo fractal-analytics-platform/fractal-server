@@ -122,6 +122,19 @@ async def test_new_dataset(
             f"api/v2/project/{p2_id}/dataset/{dataset2['id']}/"
         )
         assert res.json()["name"] == NEW_NAME
+        assert res.json()["tags"] == ["z", "y", "x"]
+
+        NEW_TAG_LIST = ["a", "b"]
+        res = await client.patch(
+            f"api/v2/project/{p2_id}/dataset/{dataset2['id']}/",
+            json=dict(tags=NEW_TAG_LIST),
+        )
+        assert res.status_code == 200
+        res = await client.get(
+            f"api/v2/project/{p2_id}/dataset/{dataset2['id']}/"
+        )
+        assert res.json()["name"] == NEW_NAME
+        assert res.json()["tags"] == NEW_TAG_LIST
 
         # DELETE
 

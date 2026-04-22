@@ -87,6 +87,7 @@ class DatasetUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: SafeNonEmptyStr = None
+    tags: ListUniqueNonEmptyString = None
 
 
 class DatasetImport(BaseModel):
