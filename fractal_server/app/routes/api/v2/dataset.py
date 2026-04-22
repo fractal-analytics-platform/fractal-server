@@ -3,7 +3,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import distinct
 from sqlmodel import func
 from sqlmodel import select
 
@@ -313,9 +312,9 @@ async def get_dataset_tags_for_single_project(
 
     # Query
     res = await db.execute(
-        select(distinct(func.unnest(DatasetV2.tags))).where(
-            DatasetV2.project_id == project_id
-        )
+        select(func.unnest(DatasetV2.tags))
+        .where(DatasetV2.project_id == project_id)
+        .distinct()
     )
     tags = sorted(res.scalars().all())
     return tags
@@ -334,10 +333,11 @@ async def get_dataset_tags_for_all_projects(
     Get all distinct tags of datasets in projects that the user has access to.
     """
     res = await db.execute(
-        select(distinct(func.unnest(DatasetV2.tags)))
+        select(func.unnest(DatasetV2.tags))
         .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
+        .distinct()
     )
     tags = sorted(res.scalars().all())
     return tags
