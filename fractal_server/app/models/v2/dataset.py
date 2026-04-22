@@ -37,6 +37,10 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(JSONB, server_default="[]", nullable=False)
     )
 
+    tags: list[str] = Field(
+        sa_column=Column(JSONB, server_default="[]", nullable=False)
+    )
+
     @property
     def image_zarr_urls(self) -> list[str]:
         return [image["zarr_url"] for image in self.images]
