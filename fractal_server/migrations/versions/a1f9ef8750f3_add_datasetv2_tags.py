@@ -1,8 +1,8 @@
 """Add DatasetV2.tags
 
-Revision ID: e6a4746ddcd2
+Revision ID: a1f9ef8750f3
 Revises: 0016fee8b597
-Create Date: 2026-04-22 09:04:09.707746
+Create Date: 2026-04-22 11:19:02.529567
 
 """
 
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "e6a4746ddcd2"
+revision = "a1f9ef8750f3"
 down_revision = "0016fee8b597"
 branch_labels = None
 depends_on = None
@@ -23,8 +23,8 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "tags",
-                postgresql.JSONB(astext_type=sa.Text()),
-                server_default="[]",
+                postgresql.ARRAY(sa.String()),
+                server_default="{}",
                 nullable=False,
             )
         )

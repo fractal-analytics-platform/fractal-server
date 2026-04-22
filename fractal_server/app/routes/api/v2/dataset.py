@@ -3,6 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import distinct
 from sqlmodel import func
 from sqlmodel import select
 
@@ -291,7 +292,7 @@ async def import_dataset(
 
 
 @router.get(
-    "/project/{project_id}/dataset-tags/",
+    "/project/{project_id}/dataset-tag/",
     response_model=list[str],
 )
 async def get_dataset_tags_for_single_project(
@@ -309,11 +310,12 @@ async def get_dataset_tags_for_single_project(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
+
     # Query
     res = await db.execute(
-        select(func.jsonb_array_elements_text(DatasetV2.tags))
-        .where(DatasetV2.project_id == project_id)
-        .distinct()
+        select(distinct(func.unnest(DatasetV2.tags))).where(
+            DatasetV2.project_id == project_id
+        )
     )
     tags = sorted(res.scalars().all())
     return tags
@@ -332,11 +334,10 @@ async def get_dataset_tags_for_all_projects(
     Get all distinct tags of datasets in projects that the user has access to.
     """
     res = await db.execute(
-        select(func.jsonb_array_elements_text(DatasetV2.tags))
+        select(distinct(func.unnest(DatasetV2.tags)))
         .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .distinct()
     )
     tags = sorted(res.scalars().all())
     return tags

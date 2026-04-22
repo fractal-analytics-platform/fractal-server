@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import ConfigDict
 from sqlalchemy import Column
+from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
@@ -38,7 +40,7 @@ class DatasetV2(SQLModel, table=True):
     )
 
     tags: list[str] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
+        sa_column=Column(ARRAY(String), server_default="{}", nullable=False),
     )
 
     @property
