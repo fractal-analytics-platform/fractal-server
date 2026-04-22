@@ -60,6 +60,7 @@ async def test_new_dataset(
         )
         assert res.status_code == 201
         dataset1 = res.json()
+        assert dataset1["tags"] == []
 
         res = await client.post(
             f"api/v2/project/{p2_id}/dataset/",
@@ -67,10 +68,26 @@ async def test_new_dataset(
                 name="dataset",
                 project_dir=user.project_dirs[0],
                 zarr_subfolder="tmp",
+                tags=[" z ", " y", "x"],
             ),
         )
         assert res.status_code == 201
         dataset2 = res.json()
+        assert dataset2["tags"] == ["z", "y", "x"]
+
+        res = await client.post(
+            f"api/v2/project/{p2_id}/dataset/",
+            json=dict(
+                name="dataset",
+                project_dir=user.project_dirs[0],
+                zarr_subfolder="tmp",
+                tags=["   a ", " a   "],
+            ),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Value error, List has repetitions"
+        )
 
         # GET (2 different ones)
 
