@@ -1,12 +1,14 @@
 from devtools import debug
 from sqlmodel import func
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2.dataset import DatasetExport
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -527,3 +529,35 @@ async def test_get_tags_single_project(
         res = await client.get(f"/api/v2/project/{project3.id}/dataset-tag/")
         assert res.status_code == 200
         assert res.json() == []
+
+
+async def test_get_tags_all_projects(
+    client, MockCurrentUser, project_factory, dataset_factory, db
+):
+    async with MockCurrentUser() as user0:
+        project0 = await project_factory(user0)
+        await dataset_factory(project_id=project0.id, tags=["a0", "b0"])
+        project0_id = project0.id
+
+    async with MockCurrentUser() as user:
+        db.add(
+            LinkUserProjectV2(
+                project_id=project0_id,
+                user_id=user.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        project1 = await project_factory(user)
+        project2 = await project_factory(user)
+        await dataset_factory(project_id=project1.id, tags=["a1", "b1", "c1"])
+        await dataset_factory(
+            project_id=project2.id, tags=["b2", "a2", "a1", "a0"]
+        )
+
+        res = await client.get("/api/v2/dataset/tags/")
+        assert res.status_code == 200
+        assert res.json() == ["a0", "a1", "a2", "b0", "b1", "b2", "c1"]

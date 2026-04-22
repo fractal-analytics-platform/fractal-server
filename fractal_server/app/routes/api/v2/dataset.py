@@ -9,8 +9,10 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import DatasetCreate
@@ -289,7 +291,7 @@ async def import_dataset(
 
 
 @router.get(
-    "/project/{project_id}/dataset-tag/",
+    "/project/{project_id}/dataset-tags/",
     response_model=list[str],
 )
 async def get_dataset_tags_for_single_project(
@@ -311,6 +313,28 @@ async def get_dataset_tags_for_single_project(
     res = await db.execute(
         select(func.jsonb_array_elements_text(DatasetV2.tags))
         .where(DatasetV2.project_id == project_id)
+        .distinct()
+    )
+    tags = sorted(res.scalars().all())
+    return tags
+
+
+@router.get(
+    "/dataset/tags/",
+    response_model=list[str],
+)
+async def get_dataset_tags_for_all_projects(
+    user: UserOAuth = Depends(get_api_guest),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[str]:
+    """
+    Get all distinct tags of datasets in projects that the user has access to.
+    """
+    res = await db.execute(
+        select(func.jsonb_array_elements_text(DatasetV2.tags))
+        .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
         .distinct()
     )
     tags = sorted(res.scalars().all())
