@@ -288,14 +288,6 @@ async def import_dataset(
     return db_dataset
 
 
-"""
- Add a GET /api/v2/project/{project_id}/dataset-tag/ endpoint which lists all
- distinct tags of datasets in the project.
- This is useful to populate dropdown menus in the frontend without
- getting&parsing the full list of project datasets.
- """
-
-
 @router.get(
     "/project/{project_id}/dataset-tag/",
     response_model=list[str],
