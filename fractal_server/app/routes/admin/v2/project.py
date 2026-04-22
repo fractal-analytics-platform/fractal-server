@@ -1,3 +1,6 @@
+import logging
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -16,6 +19,9 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _check_project_exists,
+)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux.validate_user_profile import (
     user_has_profile_or_422,
@@ -28,6 +34,7 @@ from fractal_server.app.schemas.v2 import ProjectReadSuperuser
 from fractal_server.urls import url_is_relative_to
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginationResponse[ProjectReadSuperuser])
@@ -38,7 +45,7 @@ async def view_projects(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[ProjectReadSuperuser]:
+) -> PaginationResponse[dict[str, Any]]:
     # Prepare statements
     stm = (
         select(ProjectV2, UserOAuth.email)
@@ -110,6 +117,11 @@ async def transfer_project_ownership(
             detail="Cannot transfer ownership to a guest user.",
         )
 
+    logger.info(
+        f"Trying to transfer project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
+
     # Get old user and owner's link
     res = await db.execute(
         select(LinkUserProjectV2)
@@ -126,6 +138,11 @@ async def transfer_project_ownership(
         )
     old_user = await db.get(UserOAuth, owner_link.user_id)
     await user_has_profile_or_422(user=old_user)
+
+    # Check new user's project_name compatibility
+    await _check_project_exists(
+        project_name=project.name, user_id=user_id, db=db
+    )
 
     # Check new user's resource compatibility
     profile_old = await db.get(Profile, old_user.profile_id)
@@ -174,5 +191,10 @@ async def transfer_project_ownership(
     # Patch
     setattr(owner_link, "user_id", user_id)
     await db.commit()
+
+    logger.info(
+        f"Successfully transferred project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
 
     return Response(status_code=status.HTTP_200_OK)

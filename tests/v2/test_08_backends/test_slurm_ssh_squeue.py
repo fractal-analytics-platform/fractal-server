@@ -15,6 +15,7 @@ async def test_run_squeue(
     tmp777_path,
     fractal_ssh: FractalSSH,
     slurm_ssh_resource_profile_db,
+    fractal_job_id_mock,
 ):
     fractal_ssh.default_lock_timeout = 1.0
     resource, profile = slurm_ssh_resource_profile_db[:]
@@ -26,6 +27,7 @@ async def test_run_squeue(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         # Start a long SLURM job
         stdout = fractal_ssh.run_command(

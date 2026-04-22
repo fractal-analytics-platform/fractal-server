@@ -371,7 +371,7 @@ async def import_workflow_from_template(
     workflow_import_from_template: WorkflowImportFromTemplate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings:
+) -> WorkflowV2:
     template = await _get_template_read_access(
         user_id=user.id,
         template_id=template_id,

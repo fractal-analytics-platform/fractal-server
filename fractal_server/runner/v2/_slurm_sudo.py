@@ -58,7 +58,7 @@ def process_workflow(
     """
     Run a workflow through a `slurm_sudo` backend.
 
-        Args:
+    Args:
         job_id: Job ID.
         workflow: Workflow to be run
         dataset: Dataset to be used.
@@ -108,6 +108,7 @@ def process_workflow(
         profile=profile,
         user_cache_dir=user_cache_dir,
         slurm_account=slurm_account,
+        fractal_job_id=job_id,
     ) as runner:
         execute_tasks(
             wf_task_list=workflow.task_list[

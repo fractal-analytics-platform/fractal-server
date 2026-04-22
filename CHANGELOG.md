@@ -1,5 +1,42 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Reduce number of `db.commit` statements when updating `HistoryUnit` statuses (\#3290).
+
+# 2.22.5
+
+* API:
+    * Use `distinct` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
+    * Add logging to project-transfer endpoint (\#3286).
+    * Remove filename in `GET /admin/v2/users-csv/` (\#3287).
+    * Include `fractal_job_id` in request body for `POST /admin/v2/accounting/slurm/` (\#3288).
+* Database:
+    * Introduce `AccountingRecordSlurm.fractal_job_id` column (\#3288).
+
+# 2.22.4
+
+This fixes a minor bug introduced in 2.22.3.
+
+* API:
+    * Re-introduce `docs_info` and `docs_link` in slim task-group responses (\#3283).
+
+# 2.22.3
+
+* API:
+    * Add `GET /admin/v2/users-csv/` (\#3276).
+    * Fix handling of edge case upon updating user's `project_dirs` (\#3270).
+    * Add `slim` query parameter to `GET /api/v2/task-group/` (\#3277).
+    * Remove `args_schema` query parameter from `GET /api/v2/task-group/` (\#3277).
+    * Add `slim` query parameter to `GET /api/v2/task/` (\#3277).
+    * Remove `args_schema` query parameter from `GET /api/v2/task/` (\#3277).
+    * Prevent setting non unique project names via project transfer (\#3281).
+* Internal:
+    * Improve type hints for endpoint functions (\#3280).
+* Dependencies:
+    * Bump `pytest` and `pytest-asyncio` (\#3278).
+
 # 2.22.2
 
 * Task lifecycle:

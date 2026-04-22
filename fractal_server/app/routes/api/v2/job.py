@@ -45,7 +45,7 @@ async def get_user_jobs(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobRead]:
+) -> list[JobV2]:
     """
     Returns all the jobs from projects linked to the current user
     """
@@ -76,7 +76,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobRead] | None:
+) -> list[JobV2]:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -96,14 +96,17 @@ async def get_workflow_jobs(
     return job_list
 
 
-@router.get("/project/{project_id}/latest-job/")
+@router.get(
+    "/project/{project_id}/latest-job/",
+    response_model=JobRead,
+)
 async def get_latest_job(
     project_id: int,
     workflow_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> JobRead:
+) -> JobV2:
     await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,
@@ -139,7 +142,7 @@ async def read_job(
     show_tmp_logs: bool = False,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> JobRead | None:
+) -> JobV2:
     """
     Return info on an existing job
     """
@@ -204,7 +207,7 @@ async def get_job_list(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobRead] | None:
+) -> list[JobV2]:
     """
     Get job list for given project
     """

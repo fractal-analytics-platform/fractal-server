@@ -19,6 +19,7 @@ async def test_submit_with_slurm_account_and_worker_init(
     monkey_slurm,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     """
     Test that SLURM account and `worker_init` are set in submission script.
@@ -37,6 +38,7 @@ async def test_submit_with_slurm_account_and_worker_init(
         profile=profile,
         slurm_account=SLURM_ACCOUNT,
         common_script_lines=COMMON_SCRIPT_LINES,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",

@@ -25,6 +25,7 @@ class AccountingQuery(BaseModel):
     user_id: int | None = None
     timestamp_min: AwareDatetime | None = None
     timestamp_max: AwareDatetime | None = None
+    fractal_job_id: int | None = None
 
 
 router = APIRouter()
@@ -37,7 +38,7 @@ async def query_accounting(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[AccountingRecordRead]:
+) -> PaginationResponse[AccountingRecord]:
     stm = select(AccountingRecord).order_by(AccountingRecord.id)
     stm_count = select(func.count(AccountingRecord.id))
     if query.user_id is not None:
@@ -77,6 +78,10 @@ async def query_accounting_slurm(
         stm = stm.where(AccountingRecordSlurm.timestamp >= query.timestamp_min)
     if query.timestamp_max is not None:
         stm = stm.where(AccountingRecordSlurm.timestamp <= query.timestamp_max)
+    if query.fractal_job_id is not None:
+        stm = stm.where(
+            AccountingRecordSlurm.fractal_job_id == query.fractal_job_id
+        )
 
     res = await db.execute(stm)
     nested_slurm_job_ids = res.scalars().all()

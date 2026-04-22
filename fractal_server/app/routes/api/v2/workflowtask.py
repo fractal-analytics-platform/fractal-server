@@ -10,6 +10,7 @@ from fastapi.params import Query
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import WorkflowTaskV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.schemas.v2 import TaskType
@@ -40,7 +41,7 @@ async def create_workflowtasks(
     order: int | None = Query(default=None, ge=0),
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowTaskRead] | None:
+) -> list[WorkflowTaskV2]:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -137,7 +138,7 @@ async def read_workflowtask(
     workflow_task_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> WorkflowTaskV2:
     workflow_task, _ = await _get_workflow_task_check_access(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
@@ -160,7 +161,7 @@ async def update_workflowtask(
     workflow_task_update: WorkflowTaskUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowTaskRead | None:
+) -> WorkflowTaskV2:
     """
     Edit a WorkflowTask of a Workflow
     """

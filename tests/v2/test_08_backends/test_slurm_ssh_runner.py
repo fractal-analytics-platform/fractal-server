@@ -49,6 +49,7 @@ async def test_submit_success(
     task_type: str,
     valid_user_id,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_objects[:]
 
@@ -66,6 +67,7 @@ async def test_submit_success(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -122,6 +124,7 @@ async def test_submit_fail(
     task_type: str,
     valid_user_id,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_objects[:]
 
@@ -139,6 +142,7 @@ async def test_submit_fail(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -183,6 +187,7 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
     valid_user_id,
+    fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_objects[:]
 
@@ -195,6 +200,7 @@ async def test_multisubmit_parallel(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -246,6 +252,7 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
     valid_user_id,
+    fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_objects[:]
 
@@ -258,6 +265,7 @@ async def test_multisubmit_compound(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         list_task_files = [
             get_dummy_task_files(
@@ -318,6 +326,7 @@ def test_send_many_job_inputs_failure(
     tmp777_path: Path,
     fractal_ssh,
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    fractal_job_id_mock,
 ):
     root_dir_local = tmp777_path / "server"
     root_dir_local.mkdir(parents=True)
@@ -333,6 +342,7 @@ def test_send_many_job_inputs_failure(
         user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
         resource=res,
         profile=prof,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         # Set connection to None, so that all SSH-related `fractal_ssh`
         # methods will fail

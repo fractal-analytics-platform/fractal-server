@@ -31,7 +31,9 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    update_status_of_history_unit_no_commit,
+)
 
 from ._job_states import STATES_FINISHED
 from .slurm_config import SlurmConfig
@@ -83,12 +85,14 @@ def create_accounting_record_slurm(
     *,
     user_id: int,
     slurm_job_ids: list[int],
+    fractal_job_id: int,
 ) -> None:
     with next(get_sync_db()) as db:
         db.add(
             AccountingRecordSlurm(
                 user_id=user_id,
                 slurm_job_ids=slurm_job_ids,
+                fractal_job_id=fractal_job_id,
             )
         )
         db.commit()
@@ -123,6 +127,7 @@ class BaseSlurmRunner(BaseRunner):
         common_script_lines: list[str] | None = None,
         user_cache_dir: str,
         slurm_account: str | None = None,
+        fractal_job_id: int,
     ):
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
@@ -132,6 +137,7 @@ class BaseSlurmRunner(BaseRunner):
         self.user_cache_dir = user_cache_dir
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
+        self.fractal_job_id = fractal_job_id
 
         self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
@@ -685,11 +691,12 @@ class BaseSlurmRunner(BaseRunner):
 
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
-                    update_status_of_history_unit(
+                    update_status_of_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
                     )
+                    db.commit()
 
                 return None, SHUTDOWN_EXCEPTION
 
@@ -747,6 +754,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
             # Retrieval phase
@@ -777,7 +785,7 @@ class BaseSlurmRunner(BaseRunner):
                         )
 
                         if exception is not None:
-                            update_status_of_history_unit(
+                            update_status_of_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
@@ -787,11 +795,12 @@ class BaseSlurmRunner(BaseRunner):
                                 TaskType.COMPOUND,
                                 TaskType.CONVERTER_COMPOUND,
                             ]:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
+                        db.commit()
 
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
@@ -804,11 +813,12 @@ class BaseSlurmRunner(BaseRunner):
                 f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
             self.scancel_jobs()
             return None, e
 
@@ -984,6 +994,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
         # Retrieval phase
@@ -1044,7 +1055,7 @@ class BaseSlurmRunner(BaseRunner):
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
@@ -1054,14 +1065,14 @@ class BaseSlurmRunner(BaseRunner):
                         else:
                             results[task.index] = result
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
-
+                db.commit()
             if len(self.jobs) > 0:
                 scancelled_job_ids = self.wait_and_check_shutdown()
 

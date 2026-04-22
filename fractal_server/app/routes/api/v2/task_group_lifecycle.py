@@ -19,7 +19,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
-from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import deactivate_local_pixi
@@ -54,7 +53,7 @@ async def deactivate_task_group(
     response: Response,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     """
     Deactivate task-group venv
     """
@@ -160,7 +159,7 @@ async def reactivate_task_group(
     response: Response,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupRead:
+) -> TaskGroupActivityV2:
     """
     Deactivate task-group venv
     """
@@ -263,6 +262,7 @@ async def reactivate_task_group(
 @router.post(
     "/{task_group_id}/delete/",
     status_code=202,
+    response_model=TaskGroupActivityRead,
 )
 async def delete_task_group(
     task_group_id: int,
@@ -270,7 +270,7 @@ async def delete_task_group(
     response: Response,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     """
     Deletion of task-group from db and file system
     """

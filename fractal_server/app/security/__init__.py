@@ -111,12 +111,12 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
             select(self.oauth_account_model)
             .where(self.oauth_account_model.oauth_name == oauth)
             .where(self.oauth_account_model.account_id == account_id)
-            .options(selectinload(self.oauth_account_model.user))  # type: ignore  # noqa
+            .options(selectinload(self.oauth_account_model.user))  # noqa
         )
         results = await self.session.execute(statement)
         oauth_account = results.first()
         if oauth_account:
-            user = oauth_account[0].user  # type: ignore
+            user = oauth_account[0].user
             return user
         return None
 
@@ -147,7 +147,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
             raise NotImplementedError()
 
         oauth_account = self.oauth_account_model(**create_dict)
-        user.oauth_accounts.append(oauth_account)  # type: ignore
+        user.oauth_accounts.append(oauth_account)
         self.session.add(user)
 
         await self.session.commit()

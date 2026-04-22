@@ -51,6 +51,7 @@ async def test_submit_success(
         tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -110,6 +111,7 @@ async def test_submit_fail(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -165,6 +167,7 @@ async def test_submit_inner_failure(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -208,6 +211,7 @@ async def test_multisubmit_parallel(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -255,6 +259,7 @@ async def test_multisubmit_compound(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -308,6 +313,7 @@ async def test_multisubmit_in_chunks(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -359,6 +365,7 @@ async def test_multisubmit_parallel_fail(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -415,6 +422,7 @@ async def test_multisubmit_inner_failure(
         root_dir_local=tmp_path,
         resource=res,
         profile=prof,
+        fractal_job_id=99,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",

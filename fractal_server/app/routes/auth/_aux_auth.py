@@ -1,9 +1,7 @@
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import and_
 from sqlmodel import asc
-from sqlmodel import not_
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -217,9 +215,15 @@ async def _check_project_dirs_update(
             for new_project_dir in new_project_dirs
         )
     ]
+
     if removed_project_dirs:
-        # Query all the `zarr_dir`s linked to the user such that `zarr_dir`
-        # starts with one of the project dirs in `removed_project_dirs`.
+        # Query all the `zarr_dir`s linked to the user such that `zarr_dir` may
+        # be relative to one of the `removed_project_dirs`.
+        # NOTE: `startswith` does not imply "is relative to", but it is safe to
+        # use it in the `where` condition below, because it only acts as a
+        # preliminary filter. The actual check on `zarr_dirs_to_review` is
+        # performed below (in Python) via the safe function
+        # `url_is_relative_to`.
         stmt = (
             select(DatasetV2.zarr_dir)
             .join(ProjectV2, ProjectV2.id == DatasetV2.project_id)
@@ -230,6 +234,7 @@ async def _check_project_dirs_update(
             .where(LinkUserProjectV2.user_id == user_id)
             .where(LinkUserProjectV2.is_verified.is_(True))
             .where(
+                # zarr_dir _may_ be relative to one of `removed_project_dirs`
                 or_(
                     *[
                         DatasetV2.zarr_dir.startswith(
@@ -240,23 +245,11 @@ async def _check_project_dirs_update(
                 )
             )
         )
-        if new_project_dirs:
-            stmt = stmt.where(
-                and_(
-                    *[
-                        not_(
-                            DatasetV2.zarr_dir.startswith(
-                                normalize_url(new_project_dir)
-                            )
-                        )
-                        for new_project_dir in new_project_dirs
-                    ]
-                )
-            )
         res = await db.execute(stmt)
+        zarr_dirs_to_review = res.scalars().all()
 
         # Raise 422 if one of the query results is relative to a path in
-        # `removed_project_dirs`, but its not relative to any path in
+        # `removed_project_dirs`, but it is not relative to any path in
         # `new_project_dirs`.
         if any(
             (
@@ -269,7 +262,7 @@ async def _check_project_dirs_update(
                     for new_project_dir in new_project_dirs
                 )
             )
-            for zarr_dir in res.scalars().all()
+            for zarr_dir in zarr_dirs_to_review
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

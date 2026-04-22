@@ -24,7 +24,7 @@ async def impersonate_user(
 
     settings = Inject(get_settings)
     jwt_strategy = JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,  # type: ignore
+        secret=settings.JWT_SECRET_KEY,
         lifetime_seconds=7200,  # 2 hours
     )
     token = await jwt_strategy.write_token(user)

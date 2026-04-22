@@ -55,7 +55,7 @@ async def deactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     """
     Deactivate task-group venv
     """
@@ -151,7 +151,7 @@ async def reactivate_task_group(
     response: Response,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupActivityRead:
+) -> TaskGroupActivityV2:
     """
     Deactivate task-group venv
     """
@@ -246,14 +246,18 @@ async def reactivate_task_group(
     return task_group_activity
 
 
-@router.post("/{task_group_id}/delete/", status_code=202)
+@router.post(
+    "/{task_group_id}/delete/",
+    status_code=202,
+    response_model=TaskGroupActivityRead,
+)
 async def delete_task_group(
     task_group_id: int,
     background_tasks: BackgroundTasks,
     response: Response,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> TaskGroupActivityV2:
     task_group = await _get_task_group_or_404(
         task_group_id=task_group_id, db=db
     )
