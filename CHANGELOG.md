@@ -4,6 +4,8 @@
 
 * Runner:
     * Reduce number of `db.commit` statements when updating `HistoryUnit` statuses (\#3290).
+* Tests:
+    * Bump `fractal-task-tools` to 0.5.0 in mock tasks (\#3274).
 
 # 2.22.5
 
