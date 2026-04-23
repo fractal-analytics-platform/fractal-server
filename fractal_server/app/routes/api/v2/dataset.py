@@ -3,15 +3,22 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_paginated_response
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import DatasetCreate
 from fractal_server.app.schemas.v2 import DatasetRead
 from fractal_server.app.schemas.v2 import DatasetUpdate
@@ -285,3 +292,49 @@ async def import_dataset(
     await db.refresh(db_dataset)
 
     return db_dataset
+
+
+@router.get("/dataset/", response_model=PaginationResponse[DatasetRead])
+async def get_all_datasets(
+    project_id: int | None = None,
+    project_name: str | None = None,
+    dataset_name: str | None = None,
+    only_owned: bool = False,
+    user: UserOAuth = Depends(get_api_guest),
+    db: AsyncSession = Depends(get_async_db),
+    pagination: PaginationRequest = Depends(get_pagination_params),
+) -> PaginationResponse[DatasetV2]:
+    stm = select(DatasetV2).order_by(DatasetV2.timestamp_created)
+    stm_count = select(func.count(DatasetV2.id))
+
+    if project_id is not None or project_name is not None or only_owned is True:
+        stm = (
+            stm.join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
+            .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
+            .where(DatasetV2.project_id == ProjectV2.id)
+        )
+        stm_count = (
+            stm_count.join(
+                LinkUserProjectV2, LinkUserProjectV2.user_id == user.id
+            )
+            .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
+            .where(DatasetV2.project_id == ProjectV2.id)
+        )
+        if project_id is not None:
+            stm = stm.where(ProjectV2.id == project_id)
+            stm_count = stm_count.where(ProjectV2.id == project_id)
+        if project_name is not None:
+            stm = stm.where(ProjectV2.name.icontains(project_name))
+            stm_count = stm_count.where(ProjectV2.name.icontains(project_name))
+        if only_owned is True:
+            stm = stm.where(LinkUserProjectV2.is_owner.is_(True))
+            stm_count = stm_count.where(LinkUserProjectV2.is_owner.is_(True))
+
+    if dataset_name is not None:
+        stm = stm.where(DatasetV2.name.icontains(dataset_name))
+        stm_count = stm_count.where(DatasetV2.name.icontains(dataset_name))
+
+    paginated_response = await get_paginated_response(
+        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    )
+    return paginated_response
