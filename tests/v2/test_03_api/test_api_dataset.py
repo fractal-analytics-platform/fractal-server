@@ -1,12 +1,14 @@
 from devtools import debug
 from sqlmodel import func
 
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2.dataset import DatasetExport
+from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
@@ -473,3 +475,45 @@ async def test_export_dataset(
         )
         assert res.status_code == 200
         assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()
+
+
+async def test_get_datasets(
+    project_factory,
+    dataset_factory,
+    MockCurrentUser,
+    client,
+    db,
+):
+    async with MockCurrentUser() as user0:
+        project0 = await project_factory(user0, name="project0")
+        await dataset_factory(project_id=project0.id, name="dataset00")
+        await dataset_factory(project_id=project0.id, name="dataset01")
+
+        project1 = await project_factory(user0, name="project1")
+        await dataset_factory(project_id=project1.id, name="dataset10")
+
+    async with MockCurrentUser() as user1:
+        db.add(
+            LinkUserProjectV2(
+                user_id=user1.id,
+                project_id=project0.id,
+                is_owner=False,
+                is_verified=True,
+                permissions=ProjectPermissions.READ,
+            )
+        )
+        await db.commit()
+
+        project2 = await project_factory(user1, name="project2")
+        await dataset_factory(project_id=project2.id, name="dataset20")
+
+        res = await client.get("api/v2/dataset/")
+        assert res.status_code == 200
+        assert res.json()["current_page"] == 1
+        assert res.json()["page_size"] == 3
+        assert res.json()["total_count"] == 3
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset00",
+            "dataset01",
+            "dataset20",
+        ]
