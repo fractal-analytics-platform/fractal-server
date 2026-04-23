@@ -304,32 +304,29 @@ async def get_all_datasets(
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> PaginationResponse[DatasetV2]:
-    stm = select(DatasetV2).order_by(DatasetV2.timestamp_created)
-    stm_count = select(func.count(DatasetV2.id))
+    stm = (
+        select(DatasetV2)
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
+        .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
+        .where(DatasetV2.project_id == ProjectV2.id)
+        .order_by(DatasetV2.timestamp_created)
+    )
+    stm_count = (
+        select(func.count(DatasetV2.id))
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
+        .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
+        .where(DatasetV2.project_id == ProjectV2.id)
+    )
 
-    if project_id is not None or project_name is not None or only_owned is True:
-        stm = (
-            stm.join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
-            .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
-            .where(DatasetV2.project_id == ProjectV2.id)
-        )
-        stm_count = (
-            stm_count.join(
-                LinkUserProjectV2, LinkUserProjectV2.user_id == user.id
-            )
-            .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
-            .where(DatasetV2.project_id == ProjectV2.id)
-        )
-        if project_id is not None:
-            stm = stm.where(ProjectV2.id == project_id)
-            stm_count = stm_count.where(ProjectV2.id == project_id)
-        if project_name is not None:
-            stm = stm.where(ProjectV2.name.icontains(project_name))
-            stm_count = stm_count.where(ProjectV2.name.icontains(project_name))
-        if only_owned is True:
-            stm = stm.where(LinkUserProjectV2.is_owner.is_(True))
-            stm_count = stm_count.where(LinkUserProjectV2.is_owner.is_(True))
-
+    if project_id is not None:
+        stm = stm.where(ProjectV2.id == project_id)
+        stm_count = stm_count.where(ProjectV2.id == project_id)
+    if project_name is not None:
+        stm = stm.where(ProjectV2.name.icontains(project_name))
+        stm_count = stm_count.where(ProjectV2.name.icontains(project_name))
+    if only_owned is True:
+        stm = stm.where(LinkUserProjectV2.is_owner.is_(True))
+        stm_count = stm_count.where(LinkUserProjectV2.is_owner.is_(True))
     if dataset_name is not None:
         stm = stm.where(DatasetV2.name.icontains(dataset_name))
         stm_count = stm_count.where(DatasetV2.name.icontains(dataset_name))
