@@ -517,3 +517,55 @@ async def test_get_datasets(
             "dataset01",
             "dataset00",
         ]
+
+        # project_id
+        res = await client.get(f"api/v2/dataset/?project_id={project0.id}")
+        assert res.status_code == 200
+        assert res.json()["current_page"] == 1
+        assert res.json()["page_size"] == 2
+        assert res.json()["total_count"] == 2
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset01",
+            "dataset00",
+        ]
+        res = await client.get(f"api/v2/dataset/?project_id={project1.id}")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 0
+        res = await client.get("api/v2/dataset/?project_id=999999999")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 0
+
+        # project_name
+        res = await client.get("api/v2/dataset/?project_name=T")
+        assert res.status_code == 200
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset20",
+            "dataset01",
+            "dataset00",
+        ]
+        res = await client.get("api/v2/dataset/?project_name=2")
+        assert res.status_code == 200
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset20"
+        ]
+
+        # only_owned
+        res = await client.get("api/v2/dataset/?only_owned=true")
+        assert res.status_code == 200
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset20"
+        ]
+
+        # dataset_name
+        res = await client.get("api/v2/dataset/?dataset_name=T")
+        assert res.status_code == 200
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset20",
+            "dataset01",
+            "dataset00",
+        ]
+        res = await client.get("api/v2/dataset/?dataset_name=1")
+        assert res.status_code == 200
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            "dataset01",
+        ]
