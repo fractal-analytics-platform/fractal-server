@@ -513,7 +513,7 @@ async def test_get_datasets(
         assert res.json()["page_size"] == 3
         assert res.json()["total_count"] == 3
         assert [dataset["name"] for dataset in res.json()["items"]] == [
-            "dataset00",
-            "dataset01",
             "dataset20",
+            "dataset01",
+            "dataset00",
         ]

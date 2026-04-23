@@ -309,7 +309,7 @@ async def get_all_datasets(
         .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
         .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
         .where(DatasetV2.project_id == ProjectV2.id)
-        .order_by(DatasetV2.timestamp_created)
+        .order_by(DatasetV2.timestamp_created.desc())
     )
     stm_count = (
         select(func.count(DatasetV2.id))
