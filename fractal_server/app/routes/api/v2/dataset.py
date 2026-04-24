@@ -23,7 +23,7 @@ from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import DatasetCreate
 from fractal_server.app.schemas.v2 import DatasetRead
-from fractal_server.app.schemas.v2 import DatasetReadWithImages
+from fractal_server.app.schemas.v2 import DatasetReadExpanded
 from fractal_server.app.schemas.v2 import DatasetUpdate
 from fractal_server.app.schemas.v2.dataset import DatasetExport
 from fractal_server.app.schemas.v2.dataset import DatasetImport
@@ -297,9 +297,7 @@ async def import_dataset(
     return db_dataset
 
 
-@router.get(
-    "/dataset/", response_model=PaginationResponse[DatasetReadWithImages]
-)
+@router.get("/dataset/", response_model=PaginationResponse[DatasetReadExpanded])
 async def get_all_datasets(
     project_id: int | None = None,
     project_name: str | None = None,
@@ -310,10 +308,25 @@ async def get_all_datasets(
     pagination: PaginationRequest = Depends(get_pagination_params),
 ) -> dict[str, Any]:
     stm = (
-        select(DatasetV2, func.jsonb_array_length(DatasetV2.images))
-        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
-        .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
-        .where(DatasetV2.project_id == ProjectV2.id)
+        select(
+            DatasetV2,
+            (
+                select(UserOAuth.email)
+                .join(
+                    LinkUserProjectV2,
+                    UserOAuth.id == LinkUserProjectV2.user_id,
+                )
+                .where(
+                    LinkUserProjectV2.project_id == DatasetV2.project_id,
+                    LinkUserProjectV2.is_owner.is_(True),
+                )
+                .scalar_subquery()
+            ),
+            func.jsonb_array_length(DatasetV2.images),
+        )
+        .join(ProjectV2, DatasetV2.project_id == ProjectV2.id)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
         .order_by(DatasetV2.timestamp_created.desc())
     )
     stm_count = (
@@ -350,10 +363,11 @@ async def get_all_datasets(
         items=[
             dict(
                 image_count=image_count,
+                owner_email=owner_email,
                 project=dataset.project.model_dump(),
                 **dataset.model_dump(),
             )
-            for dataset, image_count in records
+            for dataset, owner_email, image_count in records
         ],
         **pagination_data.model_dump(),
     )

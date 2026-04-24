@@ -70,9 +70,9 @@ class DatasetRead(BaseModel):
         return v.isoformat()
 
 
-class DatasetReadWithImages(DatasetRead):
+class DatasetReadExpanded(DatasetRead):
     """
-    DatasetReadWithImages
+    DatasetReadExpanded
 
     Attributes:
         id:
@@ -81,9 +81,11 @@ class DatasetReadWithImages(DatasetRead):
         project:
         timestamp_created:
         zarr_dir:
+        owner_email:
         image_count:
     """
 
+    owner_email: str
     image_count: int
 
 
