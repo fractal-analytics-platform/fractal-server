@@ -299,7 +299,6 @@ async def import_dataset(
 
 @router.get("/dataset/", response_model=PaginationResponse[DatasetReadExpanded])
 async def get_all_datasets(
-    project_id: int | None = None,
     project_name: str | None = None,
     dataset_name: str | None = None,
     only_owned: bool = False,
@@ -336,9 +335,6 @@ async def get_all_datasets(
         .where(DatasetV2.project_id == ProjectV2.id)
     )
 
-    if project_id is not None:
-        stm = stm.where(ProjectV2.id == project_id)
-        stm_count = stm_count.where(ProjectV2.id == project_id)
     if project_name is not None:
         stm = stm.where(ProjectV2.name.icontains(project_name))
         stm_count = stm_count.where(ProjectV2.name.icontains(project_name))
