@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.7 (unreleased)
+
+* Task-group lifecycle:
+    * Fix activate/deactivate background-task functions for admin endpoints for pixi task groups (\#3299).
+
 # 2.22.6
 
 * Runner:
