@@ -484,6 +484,7 @@ async def test_get_datasets(
     db,
 ):
     async with MockCurrentUser() as user0:
+        user0_email = user0.email
         project0 = await project_factory(user0, name="project0")
         await dataset_factory(project_id=project0.id, name="dataset00")
         await dataset_factory(
@@ -527,7 +528,11 @@ async def test_get_datasets(
             1,
             0,
         ]
-
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user1.email,
+            user0_email,
+            user0_email,
+        ]
         # project_id
         res = await client.get(f"api/v2/dataset/?project_id={project0.id}")
         assert res.status_code == 200
@@ -541,6 +546,10 @@ async def test_get_datasets(
         assert [dataset["image_count"] for dataset in res.json()["items"]] == [
             1,
             0,
+        ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user0_email,
+            user0_email,
         ]
         res = await client.get(f"api/v2/dataset/?project_id={project1.id}")
         assert res.status_code == 200
@@ -562,6 +571,11 @@ async def test_get_datasets(
             1,
             0,
         ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user1.email,
+            user0_email,
+            user0_email,
+        ]
         res = await client.get("api/v2/dataset/?project_name=2")
         assert res.status_code == 200
         assert [dataset["name"] for dataset in res.json()["items"]] == [
@@ -569,6 +583,9 @@ async def test_get_datasets(
         ]
         assert [dataset["image_count"] for dataset in res.json()["items"]] == [
             3
+        ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user1.email
         ]
         # only_owned
         res = await client.get("api/v2/dataset/?only_owned=true")
@@ -578,6 +595,9 @@ async def test_get_datasets(
         ]
         assert [dataset["image_count"] for dataset in res.json()["items"]] == [
             3
+        ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user1.email
         ]
 
         # dataset_name
@@ -593,6 +613,11 @@ async def test_get_datasets(
             1,
             0,
         ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user1.email,
+            user0_email,
+            user0_email,
+        ]
         res = await client.get("api/v2/dataset/?dataset_name=1")
         assert res.status_code == 200
         assert [dataset["name"] for dataset in res.json()["items"]] == [
@@ -600,4 +625,7 @@ async def test_get_datasets(
         ]
         assert [dataset["image_count"] for dataset in res.json()["items"]] == [
             1
+        ]
+        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
+            user0_email
         ]
