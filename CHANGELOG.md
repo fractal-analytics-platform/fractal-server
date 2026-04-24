@@ -1,9 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.22.6
 
 * Runner:
     * Reduce number of `db.commit` statements when updating `HistoryUnit` statuses (\#3290).
+    * Introduce additional `YYYY-MM` nesting of job folders and zipped folders (\#3296).
 * Tests:
     * Bump `fractal-task-tools` to 0.5.0 in mock tasks (\#3274).
 
