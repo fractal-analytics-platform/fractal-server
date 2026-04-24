@@ -3,7 +3,7 @@
 # 2.22.7
 
 * Task-group lifecycle:
-    * Fix activate/deactivate background-task functions for admin endpoints for pixi task groups (\#3299).
+    * Fix bug in admin endpoints to activate/deactivate pixi task groups (\#3299).
 
 # 2.22.6
 
