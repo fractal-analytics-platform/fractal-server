@@ -246,13 +246,13 @@ async def submit_job(
     # Define server-side and user-side job directories
     yyyy_mm = job.start_timestamp.strftime(r"%Y-%m")
     timestamp_string = job.start_timestamp.strftime(r"%Y%m%d_%H%M%S")
-    working_dir = (
-        Path(resource.jobs_local_dir)
-        / yyyy_mm
-        / (
+    working_dir = Path(
+        resource.jobs_local_dir,
+        yyyy_mm,
+        (
             f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
             f"_{timestamp_string}"
-        )
+        ),
     )
     match resource.type:
         case ResourceType.LOCAL:
