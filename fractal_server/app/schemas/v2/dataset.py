@@ -70,6 +70,23 @@ class DatasetRead(BaseModel):
         return v.isoformat()
 
 
+class DatasetReadWithImages(DatasetRead):
+    """
+    DatasetReadWithImages
+
+    Attributes:
+        id:
+        name:
+        project_id:
+        project:
+        timestamp_created:
+        zarr_dir:
+        image_count:
+    """
+
+    image_count: int
+
+
 class DatasetUpdate(BaseModel):
     """
     DatasetUpdate

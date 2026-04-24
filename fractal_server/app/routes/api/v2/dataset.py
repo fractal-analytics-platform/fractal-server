@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -17,10 +19,11 @@ from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.routes.pagination import get_paginated_response
+from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import DatasetCreate
 from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import DatasetReadWithImages
 from fractal_server.app.schemas.v2 import DatasetUpdate
 from fractal_server.app.schemas.v2.dataset import DatasetExport
 from fractal_server.app.schemas.v2.dataset import DatasetImport
@@ -294,7 +297,9 @@ async def import_dataset(
     return db_dataset
 
 
-@router.get("/dataset/", response_model=PaginationResponse[DatasetRead])
+@router.get(
+    "/dataset/", response_model=PaginationResponse[DatasetReadWithImages]
+)
 async def get_all_datasets(
     project_id: int | None = None,
     project_name: str | None = None,
@@ -303,9 +308,9 @@ async def get_all_datasets(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[DatasetV2]:
+) -> dict[str, Any]:
     stm = (
-        select(DatasetV2)
+        select(DatasetV2, func.jsonb_array_length(DatasetV2.images))
         .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
         .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
         .where(DatasetV2.project_id == ProjectV2.id)
@@ -331,7 +336,24 @@ async def get_all_datasets(
         stm = stm.where(DatasetV2.name.icontains(dataset_name))
         stm_count = stm_count.where(DatasetV2.name.icontains(dataset_name))
 
-    paginated_response = await get_paginated_response(
-        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    stm, pagination_data = await get_pagination_data(
+        stm=stm,
+        stm_count=stm_count,
+        pagination=pagination,
+        db=db,
     )
-    return paginated_response
+
+    res = await db.execute(stm)
+    records = res.all()
+
+    return dict(
+        items=[
+            dict(
+                image_count=image_count,
+                project=dataset.project.model_dump(),
+                **dataset.model_dump(),
+            )
+            for dataset, image_count in records
+        ],
+        **pagination_data.model_dump(),
+    )
