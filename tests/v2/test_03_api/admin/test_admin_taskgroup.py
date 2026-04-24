@@ -521,7 +521,7 @@ async def test_admin_reactivate_task_group_api(
             task_group_kwargs=dict(
                 origin="pixi",
                 active=False,
-                venv_path="/invalid/so/it/fails",
+                path="/invalid/so/it/fails",
                 python_version=current_py_version,
             ),
         )
