@@ -244,11 +244,11 @@ async def submit_job(
     cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
 
     # Define server-side and user-side job directories
-    month_prefix = job.start_timestamp.strftime(r"%Y-%m")
+    yyyy_mm = job.start_timestamp.strftime(r"%Y-%m")
     timestamp_string = job.start_timestamp.strftime(r"%Y%m%d_%H%M%S")
     working_dir = (
         Path(resource.jobs_local_dir)
-        / month_prefix
+        / yyyy_mm
         / (
             f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
             f"_{timestamp_string}"
@@ -258,10 +258,10 @@ async def submit_job(
         case ResourceType.LOCAL:
             working_dir_user = working_dir
         case ResourceType.SLURM_SUDO:
-            working_dir_user = cache_dir / month_prefix / working_dir.name
+            working_dir_user = cache_dir / yyyy_mm / working_dir.name
         case ResourceType.SLURM_SSH:
             working_dir_user = Path(
-                profile.jobs_remote_dir, month_prefix, working_dir.name
+                profile.jobs_remote_dir, yyyy_mm, working_dir.name
             )
     job.working_dir = working_dir.as_posix()
     job.working_dir_user = working_dir_user.as_posix()
