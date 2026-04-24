@@ -13,11 +13,6 @@ from fractal_server.images import SingleImage
 from fractal_server.string_tools import sanitize_string
 from fractal_server.urls import normalize_url
 
-PREFIX = "api/v2"
-
-
-ZARR_DIR = "/zarr_dir"
-
 
 def n_images(n: int) -> list[dict]:
     return [
@@ -35,6 +30,10 @@ def n_images(n: int) -> list[dict]:
         ).model_dump()
         for i in range(n)
     ]
+
+
+PREFIX = "api/v2"
+ZARR_DIR = "/zarr_dir"
 
 
 async def test_new_dataset(
@@ -487,10 +486,14 @@ async def test_get_datasets(
     async with MockCurrentUser() as user0:
         project0 = await project_factory(user0, name="project0")
         await dataset_factory(project_id=project0.id, name="dataset00")
-        await dataset_factory(project_id=project0.id, name="dataset01")
+        await dataset_factory(
+            project_id=project0.id, name="dataset01", images=n_images(1)
+        )
 
         project1 = await project_factory(user0, name="project1")
-        await dataset_factory(project_id=project1.id, name="dataset10")
+        await dataset_factory(
+            project_id=project1.id, name="dataset10", images=n_images(2)
+        )
 
     async with MockCurrentUser() as user1:
         db.add(
@@ -505,7 +508,9 @@ async def test_get_datasets(
         await db.commit()
 
         project2 = await project_factory(user1, name="project2")
-        await dataset_factory(project_id=project2.id, name="dataset20")
+        await dataset_factory(
+            project_id=project2.id, name="dataset20", images=n_images(3)
+        )
 
         res = await client.get("api/v2/dataset/")
         assert res.status_code == 200
@@ -517,6 +522,11 @@ async def test_get_datasets(
             "dataset01",
             "dataset00",
         ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            3,
+            1,
+            0,
+        ]
 
         # project_id
         res = await client.get(f"api/v2/dataset/?project_id={project0.id}")
@@ -527,6 +537,10 @@ async def test_get_datasets(
         assert [dataset["name"] for dataset in res.json()["items"]] == [
             "dataset01",
             "dataset00",
+        ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            1,
+            0,
         ]
         res = await client.get(f"api/v2/dataset/?project_id={project1.id}")
         assert res.status_code == 200
@@ -543,17 +557,27 @@ async def test_get_datasets(
             "dataset01",
             "dataset00",
         ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            3,
+            1,
+            0,
+        ]
         res = await client.get("api/v2/dataset/?project_name=2")
         assert res.status_code == 200
         assert [dataset["name"] for dataset in res.json()["items"]] == [
             "dataset20"
         ]
-
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            3
+        ]
         # only_owned
         res = await client.get("api/v2/dataset/?only_owned=true")
         assert res.status_code == 200
         assert [dataset["name"] for dataset in res.json()["items"]] == [
             "dataset20"
+        ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            3
         ]
 
         # dataset_name
@@ -564,8 +588,16 @@ async def test_get_datasets(
             "dataset01",
             "dataset00",
         ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            3,
+            1,
+            0,
+        ]
         res = await client.get("api/v2/dataset/?dataset_name=1")
         assert res.status_code == 200
         assert [dataset["name"] for dataset in res.json()["items"]] == [
             "dataset01",
+        ]
+        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
+            1
         ]
