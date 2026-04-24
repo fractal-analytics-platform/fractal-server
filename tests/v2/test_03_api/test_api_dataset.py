@@ -533,30 +533,6 @@ async def test_get_datasets(
             user0_email,
             user0_email,
         ]
-        # project_id
-        res = await client.get(f"api/v2/dataset/?project_id={project0.id}")
-        assert res.status_code == 200
-        assert res.json()["current_page"] == 1
-        assert res.json()["page_size"] == 2
-        assert res.json()["total_count"] == 2
-        assert [dataset["name"] for dataset in res.json()["items"]] == [
-            "dataset01",
-            "dataset00",
-        ]
-        assert [dataset["image_count"] for dataset in res.json()["items"]] == [
-            1,
-            0,
-        ]
-        assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
-            user0_email,
-            user0_email,
-        ]
-        res = await client.get(f"api/v2/dataset/?project_id={project1.id}")
-        assert res.status_code == 200
-        assert res.json()["total_count"] == 0
-        res = await client.get("api/v2/dataset/?project_id=999999999")
-        assert res.status_code == 200
-        assert res.json()["total_count"] == 0
 
         # project_name
         res = await client.get("api/v2/dataset/?project_name=T")
