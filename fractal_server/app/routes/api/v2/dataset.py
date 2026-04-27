@@ -320,6 +320,7 @@ async def get_all_datasets(
                     LinkUserProjectV2.is_owner.is_(True),
                 )
                 .scalar_subquery()
+                .correlate(DatasetV2)
             ),
             func.jsonb_array_length(DatasetV2.images),
         )
