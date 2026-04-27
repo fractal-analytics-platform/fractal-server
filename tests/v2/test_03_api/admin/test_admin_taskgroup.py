@@ -377,7 +377,17 @@ async def test_admin_deactivate_task_group_api(
             name="task",
             version="1.2.3",
             task_group_kwargs=dict(
-                origin="pypi", venv_path="/invalid/so/it/fails"
+                origin="pypi",
+                venv_path="/invalid/so/background/task/fails",
+            ),
+        )
+        task_pixi = await task_factory(
+            user_id=user.id,
+            name="task-pixi",
+            version="1.2.3",
+            task_group_kwargs=dict(
+                origin="pixi",
+                path="/invalid/so/background/task/fails",
             ),
         )
 
@@ -430,11 +440,31 @@ async def test_admin_deactivate_task_group_api(
         else:
             assert "does not exist" in res.log
 
+        # API success with `origin="pixi"`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_pixi.taskgroupv2_id}/deactivate/"
+        )
+        debug(res.json())
+        assert res.status_code == 202
+        activity = res.json()
+        task_group_pixi = await db.get(TaskGroupV2, task_pixi.taskgroupv2_id)
+        activity_id = activity["id"]
+        assert activity["version"] == task_group_pixi.version
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
+        assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is None
+        res = await db.get(TaskGroupActivityV2, activity_id)
+        if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
+            assert "Cannot establish SSH connection" in res.log
+        else:
+            assert "does not exist" in res.log
+
 
 @pytest.mark.parametrize(
     "FRACTAL_RUNNER_BACKEND", [ResourceType.LOCAL, ResourceType.SLURM_SSH]
 )
-async def test_reactivate_task_group_api(
+async def test_admin_reactivate_task_group_api(
     app,
     client,
     MockCurrentUser,
@@ -450,6 +480,9 @@ async def test_reactivate_task_group_api(
     This tests _only_ the API of the admin `reactivate` endpoint.
     """
 
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+    )
     if FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
         resource, profile = slurm_ssh_resource_profile_fake_db
         app.state.fractal_ssh_list = MockFractalSSHList()
@@ -477,6 +510,18 @@ async def test_reactivate_task_group_api(
                 origin="pypi",
                 active=False,
                 venv_path="/invalid/so/it/fails",
+                python_version=current_py_version,
+            ),
+        )
+
+        task_pixi = await task_factory(
+            user_id=user.id,
+            name="task-pixi",
+            version="1.2.3",
+            task_group_kwargs=dict(
+                origin="pixi",
+                active=False,
+                path="/invalid/so/it/fails",
                 python_version=current_py_version,
             ),
         )
@@ -530,6 +575,32 @@ async def test_reactivate_task_group_api(
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
         await db.refresh(task_group_pypi)
+
+        # Check that background task failed
+        activity = await db.get(TaskGroupActivityV2, activity_id)
+        assert activity.status == "failed"
+
+        # Set env_info
+        task_group_pixi = await db.get(TaskGroupV2, task_pixi.taskgroupv2_id)
+        task_group_pixi.env_info = "fake-pixi-lock-contents"
+        db.add(task_group_pixi)
+        await db.commit()
+        await db.refresh(task_group_pixi)
+
+        # API success with `origin="pixi"`
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group_pixi.id}/reactivate/"
+        )
+        activity = res.json()
+        debug(activity)
+        activity_id = activity["id"]
+        assert res.status_code == 202
+        assert activity["version"] == task_group_pixi.version
+        assert activity["status"] == TaskGroupActivityStatus.PENDING
+        assert activity["action"] == TaskGroupActivityAction.REACTIVATE
+        assert activity["timestamp_started"] is not None
+        assert activity["timestamp_ended"] is None
+        await db.refresh(task_group_pixi)
 
         # Check that background task failed
         activity = await db.get(TaskGroupActivityV2, activity_id)
