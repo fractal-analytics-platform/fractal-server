@@ -2,7 +2,12 @@
 
 # 2.22.8 (unreleased)
 
-* Add new `GET /api/v2/dataset/` endpoint (\#3294).
+* API:
+    * Add new `GET /api/v2/dataset/` endpoint (\#3294).
+* Dependencies:
+    * Bump `fastapi` to `0.136.x` (\#3302).
+    * Bump `uvicorn` to `0.46.x` (\#3302).
+    * Bump `pydantic` to `2.13.x` (\#3302).
 
 # 2.22.7
 
