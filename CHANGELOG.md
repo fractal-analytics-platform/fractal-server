@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.8 (unreleased)
+# 2.22.8
 
 * API:
     * Add new `GET /api/v2/dataset/` endpoint (\#3294).
