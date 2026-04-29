@@ -171,6 +171,15 @@ class SlurmSudoRunner(BaseSlurmRunner):
         logger.debug("[_fetch_artifacts] END.")
 
     @override
+    def _run_local_cmd(self: Self, cmd: str) -> str:
+        res = _run_command_as_user(
+            cmd=cmd,
+            user=None,
+            check=True,
+        )
+        return res.stdout
+
+    @override
     def _run_remote_cmd(self: Self, cmd: str) -> str:
         res = _run_command_as_user(
             cmd=cmd,
