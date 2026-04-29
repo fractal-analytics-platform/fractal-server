@@ -168,6 +168,9 @@ class BaseSlurmRunner(BaseRunner):
     def __exit__(self: Self, exc_type, exc_val, exc_tb):
         return False
 
+    def _run_local_cmd(self: Self, cmd: str) -> str:
+        raise NotImplementedError("Implement in child class.")
+
     def _run_remote_cmd(self: Self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
 
@@ -1094,7 +1097,10 @@ class BaseSlurmRunner(BaseRunner):
             f"{self.python_worker_interpreter} "
             "-m fractal_server.runner.versions"
         )
-        stdout = self._run_remote_cmd(cmd)
+        if self.slurm_runner_type == "ssh":
+            stdout = self._run_remote_cmd(cmd)
+        else:
+            stdout = self._run_local_cmd(cmd)
         remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
 
         # Verify local/remote version match
