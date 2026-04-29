@@ -1087,11 +1087,6 @@ class BaseSlurmRunner(BaseRunner):
         Compare fractal-server versions of local/remote Python interpreters.
         """
 
-        # Skip check when the local and remote interpreters are the same
-        # (notably for some sudo-slurm deployments)
-        if self.python_worker_interpreter == sys.executable:
-            return
-
         # Fetch remote fractal-server version
         cmd = (
             f"{self.python_worker_interpreter} "
@@ -1099,18 +1094,24 @@ class BaseSlurmRunner(BaseRunner):
         )
         if self.slurm_runner_type == "ssh":
             stdout = self._run_remote_cmd(cmd)
+        elif self.python_worker_interpreter == sys.executable:
+            # Skip if local and worker interpreters are the same
+            return
         else:
+            # Run a local command (with the same user that runs fractal) for the
+            # worker interpreter. Note that this worker typically belongs (or it
+            # must be accessible) to the fractal-running user.
             stdout = self._run_local_cmd(cmd)
-        remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
+        worker_version = json.loads(stdout.strip("\n"))["fractal_server"]
 
         # Verify local/remote version match
-        if remote_version != __VERSION__:
+        if worker_version != __VERSION__:
             error_msg = (
                 "Fractal-server version mismatch.\n"
                 "Local interpreter: "
                 f"({sys.executable}): {__VERSION__}.\n"
                 "Remote interpreter: "
-                f"({self.python_worker_interpreter}): {remote_version}."
+                f"({self.python_worker_interpreter}): {worker_version}."
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
