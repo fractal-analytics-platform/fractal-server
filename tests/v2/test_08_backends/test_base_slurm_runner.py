@@ -119,6 +119,8 @@ async def test_not_implemented_errors(tmp_path: Path):
         python_worker_interpreter=sys.executable,
     ) as runner:
         with pytest.raises(NotImplementedError):
+            runner._run_local_cmd(cmd="ls")
+        with pytest.raises(NotImplementedError):
             runner._run_remote_cmd(cmd="ls")
 
         with pytest.raises(NotImplementedError):

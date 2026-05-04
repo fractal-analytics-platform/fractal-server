@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.9 (unreleased)
+
+* Runner:
+    * Run worker-version-checking command without `sudo`, on `slurm_sudo` deployments with a non-trivial `python_worker_interpreter` set (\#3304).
+
+
+
 # 2.22.8
 
 * API:
