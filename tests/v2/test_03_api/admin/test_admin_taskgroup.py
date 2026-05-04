@@ -86,6 +86,9 @@ async def test_task_group_admin(
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
         assert res.json()["items"][0]["id"] == task_group_1["id"]
+        res = await client.get(f"{PREFIX}/task-group/?task_group_id=999999")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 0
 
         # Filter using `user_id`
         res = await client.get(f"{PREFIX}/task-group/?user_id={user1.id}")
