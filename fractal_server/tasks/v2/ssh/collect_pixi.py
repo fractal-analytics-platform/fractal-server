@@ -125,6 +125,18 @@ def collect_ssh_pixi(
                     fractal_ssh.mkdir(folder=task_group.path, parents=True)
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
+                    # Write txt file locally and send it to remote path
+                    txt_filename = "fractal_task_group_id.txt"
+                    txt_path = (Path(task_group.path) / txt_filename).as_posix()
+                    tmp_txt_path = (Path(tmpdir) / txt_filename).as_posix()
+                    logger.info(f"Write txt file into {tmp_txt_path}")
+                    with open(tmp_txt_path, "w") as f:
+                        f.write(str(task_group_id))
+                    fractal_ssh.send_file(
+                        local=tmp_txt_path,
+                        remote=txt_path,
+                    )
+
                     # Write tar.gz file locally and send it to remote path,
                     # and set task_group.archive_path
                     tar_gz_filename = tar_gz_file.filename

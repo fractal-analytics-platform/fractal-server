@@ -80,6 +80,15 @@ def collect_local_pixi(
             try:
                 Path(task_group.path).mkdir(parents=True)
                 logger.info(f"Created {task_group.path}")
+
+                # Write txt file in task_group.path
+                txt_path = (
+                    Path(task_group.path) / "fractal_task_group_id.txt"
+                ).as_posix()
+                logger.info(f"Write txt-file contents into {txt_path}")
+                with open(txt_path, "w") as f:
+                    f.write(str(task_group_id))
+
                 archive_path = Path(
                     task_group.path, tar_gz_file.filename
                 ).as_posix()
