@@ -166,6 +166,12 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert len(task_group.task_list) == 1
         assert task_group.env_info is not None
 
+        # Check that txt file with task_group_id exists
+        txt_file = Path(task_group.path) / "fractal_task_group_id.txt"
+        assert txt_file.exists()
+        with txt_file.open("r") as f:
+            assert f.read() == str(task_group.id)
+
         # Check that `__PIXI_CACHE_DIR__` has been replaced, within the
         # pixi-install script
         collect_scripts = list(
