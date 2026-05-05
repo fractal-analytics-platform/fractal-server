@@ -13,6 +13,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
@@ -167,7 +168,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert task_group.env_info is not None
 
         # Check that txt file with task_group_id exists
-        txt_file = Path(task_group.path) / "fractal_task_group_id.txt"
+        txt_file = Path(task_group.path) / TASK_GROUP_ID_FILENAME
         assert txt_file.exists()
         with txt_file.open("r") as f:
             assert f.read() == str(task_group.id)

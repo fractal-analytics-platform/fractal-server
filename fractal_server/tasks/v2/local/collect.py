@@ -14,6 +14,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
@@ -103,7 +104,7 @@ def collect_local(
 
                 # Write txt file in task_group.path
                 txt_path = (
-                    Path(task_group.path) / "fractal_task_group_id.txt"
+                    Path(task_group.path) / TASK_GROUP_ID_FILENAME
                 ).as_posix()
                 logger.info(f"Write txt-file contents into {txt_path}")
                 with open(txt_path, "w") as f:

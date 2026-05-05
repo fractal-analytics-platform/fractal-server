@@ -13,6 +13,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
@@ -128,9 +129,12 @@ def collect_ssh(
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
 
                     # Write txt file locally and send it to remote path
-                    txt_filename = "fractal_task_group_id.txt"
-                    txt_path = (Path(task_group.path) / txt_filename).as_posix()
-                    tmp_txt_path = (Path(tmpdir) / txt_filename).as_posix()
+                    txt_path = (
+                        Path(task_group.path) / TASK_GROUP_ID_FILENAME
+                    ).as_posix()
+                    tmp_txt_path = (
+                        Path(tmpdir) / TASK_GROUP_ID_FILENAME
+                    ).as_posix()
                     logger.info(f"Write txt file into {tmp_txt_path}")
                     with open(tmp_txt_path, "w") as f:
                         f.write(str(task_group_id))
