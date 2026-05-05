@@ -298,6 +298,10 @@ async def _aux_test_lifecycle(
         assert (Path(task_group.path) / Path(archive_path).name).as_posix() == (
             Path(task_group_archive_path).as_posix()
         )
+        txt_file_path = Path(task_group.path) / "fractal_task_group_id.txt"
+        assert txt_file_path.exists()
+        with txt_file_path.open("r") as f:
+            assert f.read() == str(task_group.id)
 
         # STEP 2: Deactivate task group
         res = await client.post(
