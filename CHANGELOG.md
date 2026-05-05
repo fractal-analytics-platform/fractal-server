@@ -4,8 +4,8 @@
 
 * Runner:
     * Run worker-version-checking command without `sudo`, on `slurm_sudo` deployments with a non-trivial `python_worker_interpreter` set (\#3304).
-
-
+* Dependencies:
+    * Bump `gunicorn` to v26 (\#3306).
 
 # 2.22.8
 
