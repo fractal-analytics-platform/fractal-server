@@ -2,6 +2,8 @@
 
 # 2.22.9 (unreleased)
 
+* API:
+    * Add `task_group_id` query parameter to `GET /admin/v2/task-group/` (\#3305).
 * Runner:
     * Run worker-version-checking command without `sudo`, on `slurm_sudo` deployments with a non-trivial `python_worker_interpreter` set (\#3304).
 * Dependencies:
