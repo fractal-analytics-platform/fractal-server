@@ -6,6 +6,7 @@
     * Add `task_group_id` query parameter to `GET /admin/v2/task-group/` (\#3305).
 * Task-group lifecycle:
     * Store the task group ID in a txt file inside `TaskGroup.path` folder (\#3308).
+    * Fix `task_group.active` property after deactivation failure (\#3310).
 * Runner:
     * Run worker-version-checking command without `sudo`, on `slurm_sudo` deployments with a non-trivial `python_worker_interpreter` set (\#3304).
 * Dependencies:
