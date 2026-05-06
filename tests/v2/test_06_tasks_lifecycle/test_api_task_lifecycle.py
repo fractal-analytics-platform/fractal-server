@@ -17,6 +17,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 
 settings = Inject(get_settings)
 
@@ -298,6 +299,10 @@ async def _aux_test_lifecycle(
         assert (Path(task_group.path) / Path(archive_path).name).as_posix() == (
             Path(task_group_archive_path).as_posix()
         )
+        txt_file_path = Path(task_group.path) / TASK_GROUP_ID_FILENAME
+        assert txt_file_path.exists()
+        with txt_file_path.open("r") as f:
+            assert f.read() == str(task_group.id)
 
         # STEP 2: Deactivate task group
         res = await client.post(

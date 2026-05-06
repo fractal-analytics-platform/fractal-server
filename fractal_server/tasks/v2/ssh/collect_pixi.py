@@ -14,6 +14,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
@@ -124,7 +125,10 @@ def collect_ssh_pixi(
                     ).as_posix()
                     fractal_ssh.mkdir(folder=task_group.path, parents=True)
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
-
+                    fractal_ssh.write_remote_file(
+                        path=f"{task_group.path}/{TASK_GROUP_ID_FILENAME}",
+                        content=str(task_group_id),
+                    )
                     # Write tar.gz file locally and send it to remote path,
                     # and set task_group.archive_path
                     tar_gz_filename = tar_gz_file.filename
