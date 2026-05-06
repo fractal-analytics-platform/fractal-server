@@ -70,8 +70,12 @@ def fail_and_cleanup(
     task_group_activity.timestamp_ended = get_timestamp()
     task_group_activity.log = get_current_log(log_file_path)
     task_group_activity = add_commit_refresh(obj=task_group_activity, db=db)
-    if task_group_activity.action == TaskGroupActivityAction.COLLECT:
-        db.delete(task_group)
+    match task_group_activity.action:
+        case TaskGroupActivityAction.COLLECT:
+            db.delete(task_group)
+        case TaskGroupActivityAction.DEACTIVATE:
+            task_group.active = True
+            db.add(task_group)
     db.commit()
     reset_logger_handlers(logger)
 
