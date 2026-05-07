@@ -182,7 +182,7 @@ async def update_dataset(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/",
+    "/project/{project_id}/dataset/{dataset_id}/pin/",
     response_model=DatasetRead,
 )
 async def pin_dataset(
@@ -214,7 +214,7 @@ async def pin_dataset(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/",
+    "/project/{project_id}/dataset/{dataset_id}/unpin/",
     response_model=DatasetRead,
 )
 async def unpin_dataset(
