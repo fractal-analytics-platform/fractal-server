@@ -625,7 +625,7 @@ async def test_get_datasets(
 
         # After pinning
         dataset00.is_starred = True
-        dataset01.is_pis_starredinned = True
+        dataset01.is_starred = True
         db.add_all([dataset00, dataset01])
         await db.commit()
         res = await client.get("api/v2/dataset/")
@@ -668,7 +668,7 @@ async def test_pinning_dataset(
         assert res.status_code == 200
         assert res.json()["is_starred"] is False
         await db.refresh(dataset)
-        assert dataset.is_pis_starredinned is False
+        assert dataset.is_starred is False
 
         res = await client.patch(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
