@@ -181,6 +181,70 @@ async def update_dataset(
     return db_dataset
 
 
+@router.patch(
+    "/project/{project_id}/dataset/{dataset_id}/",
+    response_model=DatasetRead,
+)
+async def pin_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> DatasetV2:
+    """
+    Pin a dataset
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    if dataset.is_pinned:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Dataset {dataset.id} is already pinned.",
+        )
+    dataset.is_pinned = True
+    db.add(dataset)
+    await db.commit()
+    return dataset
+
+
+@router.patch(
+    "/project/{project_id}/dataset/{dataset_id}/",
+    response_model=DatasetRead,
+)
+async def unpin_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> DatasetV2:
+    """
+    Unpin a dataset
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    if not dataset.is_pinned:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Dataset {dataset.id} is not pinned.",
+        )
+    dataset.is_pinned = False
+    db.add(dataset)
+    await db.commit()
+    return dataset
+
+
 @router.delete(
     "/project/{project_id}/dataset/{dataset_id}/",
     status_code=204,
