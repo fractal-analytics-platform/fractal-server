@@ -92,7 +92,7 @@ async def test_new_dataset(
         assert res.status_code == 200
         ds2 = res.json()
 
-        assert project_dataset_list == [ds1, ds2]
+        assert project_dataset_list == [ds2, ds1]
 
         # UPDATE
 
@@ -117,7 +117,9 @@ async def test_new_dataset(
         assert len(res.json()) == 1
 
 
-async def test_get_dataset(client, MockCurrentUser, project_factory):
+async def test_get_project_datasets(
+    client, MockCurrentUser, project_factory, dataset_factory
+):
     async with MockCurrentUser() as user:
         project = await project_factory(user)
         p_id = project.id
@@ -132,13 +134,13 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
             ),
         )
         assert res.status_code == 201
-        ds_id = res.json()["id"]
+        ds1_id = res.json()["id"]
         # Get project (useful to check dataset.project relationship)
         res = await client.get(f"{PREFIX}/project/{p_id}/")
         assert res.status_code == 200
         EXPECTED_PROJECT = res.json()
         # Get dataset, and check relationship
-        res = await client.get(f"{PREFIX}/project/{p_id}/dataset/{ds_id}/")
+        res = await client.get(f"{PREFIX}/project/{p_id}/dataset/{ds1_id}/")
         debug(res.json())
         assert res.status_code == 200
 
@@ -152,12 +154,25 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         assert res.status_code == 404
 
         # Get list of project datasets
+        ds2 = await dataset_factory(project_id=p_id)
+
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/")
         assert res.status_code == 200
         datasets = res.json()
-        assert len(datasets) == 1
+        assert len(datasets) == 2
         assert datasets[0]["project"] == EXPECTED_PROJECT
-        debug(datasets[0]["timestamp_created"])
+        assert datasets[0]["id"] == ds2.id
+        assert datasets[1]["project"] == EXPECTED_PROJECT
+        assert datasets[1]["id"] == ds1_id
+
+        await client.patch(f"api/v2/project/{p_id}/dataset/{ds1_id}/pin/")
+
+        res = await client.get(f"{PREFIX}/project/{p_id}/dataset/")
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(datasets) == 2
+        assert datasets[0]["id"] == ds1_id
+        assert datasets[1]["id"] == ds2.id
 
 
 async def test_post_dataset(client, MockCurrentUser, project_factory, db):
@@ -486,8 +501,10 @@ async def test_get_datasets(
     async with MockCurrentUser() as user0:
         user0_email = user0.email
         project0 = await project_factory(user0, name="project0")
-        await dataset_factory(project_id=project0.id, name="dataset00")
-        await dataset_factory(
+        dataset00 = await dataset_factory(
+            project_id=project0.id, name="dataset00"
+        )
+        dataset01 = await dataset_factory(
             project_id=project0.id, name="dataset01", images=n_images(1)
         )
 
@@ -604,6 +621,21 @@ async def test_get_datasets(
         ]
         assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
             user0_email
+        ]
+
+        # After pinning
+        dataset00.is_pinned = True
+        dataset01.is_pinned = True
+        db.add_all([dataset00, dataset01])
+        await db.commit()
+        res = await client.get("api/v2/dataset/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert [dataset["name"] for dataset in res.json()["items"]] == [
+            # The "unpinned" order was 20 - 01 - 00
+            "dataset01",
+            "dataset00",
+            "dataset20",
         ]
 
 
