@@ -605,3 +605,40 @@ async def test_get_datasets(
         assert [dataset["owner_email"] for dataset in res.json()["items"]] == [
             user0_email
         ]
+
+
+async def test_pinning_dataset(
+    client, MockCurrentUser, project_factory, dataset_factory, db
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        assert dataset.is_pinned is False
+
+        # PIN
+        res = await client.patch(
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/pin/"
+        )
+        assert res.status_code == 200
+        assert res.json()["is_pinned"] is True
+        await db.refresh(dataset)
+        assert dataset.is_pinned is True
+
+        res = await client.patch(
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/pin/"
+        )
+        assert res.status_code == 422
+
+        # UNPIN
+        res = await client.patch(
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/unpin/"
+        )
+        assert res.status_code == 200
+        assert res.json()["is_pinned"] is False
+        await db.refresh(dataset)
+        assert dataset.is_pinned is False
+
+        res = await client.patch(
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/unpin/"
+        )
+        assert res.status_code == 422
