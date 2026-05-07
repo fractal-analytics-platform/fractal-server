@@ -27,7 +27,7 @@ class DatasetV2(SQLModel, table=True):
     project: "ProjectV2" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
-    is_pinned: bool = Field(
+    is_starred: bool = Field(
         sa_column=Column(
             BOOLEAN,
             server_default="false",

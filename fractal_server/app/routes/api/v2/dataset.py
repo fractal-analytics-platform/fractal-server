@@ -122,7 +122,7 @@ async def read_dataset_list(
     stm = (
         select(DatasetV2)
         .where(DatasetV2.project_id == project.id)
-        .order_by(DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created)
+        .order_by(DatasetV2.is_starred.desc(), DatasetV2.name)
     )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
@@ -186,7 +186,7 @@ async def update_dataset(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/pin/",
+    "/project/{project_id}/dataset/{dataset_id}/star/",
     response_model=DatasetRead,
 )
 async def pin_dataset(
@@ -206,19 +206,19 @@ async def pin_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    if dataset.is_pinned:
+    if dataset.is_starred:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Dataset {dataset.id} is already pinned.",
+            detail=f"Dataset {dataset.id} is already starred.",
         )
-    dataset.is_pinned = True
+    dataset.is_starred = True
     db.add(dataset)
     await db.commit()
     return dataset
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/unpin/",
+    "/project/{project_id}/dataset/{dataset_id}/unstar/",
     response_model=DatasetRead,
 )
 async def unpin_dataset(
@@ -238,12 +238,12 @@ async def unpin_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    if not dataset.is_pinned:
+    if not dataset.is_starred:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Dataset {dataset.id} is not pinned.",
+            detail=f"Dataset {dataset.id} is not starred.",
         )
-    dataset.is_pinned = False
+    dataset.is_starred = False
     db.add(dataset)
     await db.commit()
     return dataset
@@ -396,7 +396,7 @@ async def get_all_datasets(
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
         .order_by(
-            DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created.desc()
+            DatasetV2.is_starred.desc(), DatasetV2.timestamp_created.desc()
         )
     )
     stm_count = (

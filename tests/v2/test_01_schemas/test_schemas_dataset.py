@@ -59,7 +59,7 @@ async def test_schemas_dataset():
         zarr_dir=os.path.join(
             dataset_create.project_dir, dataset_create.zarr_subfolder
         ),
-        is_pinned=False,
+        is_starred=False,
     )
 
     # Read

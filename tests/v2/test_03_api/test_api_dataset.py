@@ -165,7 +165,7 @@ async def test_get_project_datasets(
         assert datasets[1]["project"] == EXPECTED_PROJECT
         assert datasets[1]["id"] == ds2.id
 
-        await client.patch(f"api/v2/project/{p_id}/dataset/{ds2.id}/pin/")
+        await client.patch(f"api/v2/project/{p_id}/dataset/{ds2.id}/star/")
 
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/")
         assert res.status_code == 200
@@ -624,8 +624,8 @@ async def test_get_datasets(
         ]
 
         # After pinning
-        dataset00.is_pinned = True
-        dataset01.is_pinned = True
+        dataset00.is_starred = True
+        dataset01.is_pis_starredinned = True
         db.add_all([dataset00, dataset01])
         await db.commit()
         res = await client.get("api/v2/dataset/")
@@ -645,32 +645,32 @@ async def test_pinning_dataset(
     async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
-        assert dataset.is_pinned is False
+        assert dataset.is_starred is False
 
         # PIN
         res = await client.patch(
-            f"api/v2/project/{project.id}/dataset/{dataset.id}/pin/"
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
         assert res.status_code == 200
-        assert res.json()["is_pinned"] is True
+        assert res.json()["is_starred"] is True
         await db.refresh(dataset)
-        assert dataset.is_pinned is True
+        assert dataset.is_starred is True
 
         res = await client.patch(
-            f"api/v2/project/{project.id}/dataset/{dataset.id}/pin/"
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
         assert res.status_code == 422
 
         # UNPIN
         res = await client.patch(
-            f"api/v2/project/{project.id}/dataset/{dataset.id}/unpin/"
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
         assert res.status_code == 200
-        assert res.json()["is_pinned"] is False
+        assert res.json()["is_starred"] is False
         await db.refresh(dataset)
-        assert dataset.is_pinned is False
+        assert dataset.is_pis_starredinned is False
 
         res = await client.patch(
-            f"api/v2/project/{project.id}/dataset/{dataset.id}/unpin/"
+            f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
         assert res.status_code == 422
