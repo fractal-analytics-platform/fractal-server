@@ -195,7 +195,7 @@
 | fractal\_server/tasks/v2/ssh/delete.py                                       |       51 |        2 |        8 |        2 |     93% |    60, 81 |
 | fractal\_server/tasks/v2/ssh/reactivate.py                                   |       81 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/tasks/v2/ssh/reactivate\_pixi.py                             |       94 |        8 |        8 |        0 |     92% |   264-279 |
-| fractal\_server/tasks/v2/utils\_background.py                                |       68 |        0 |       20 |        0 |    100% |           |
+| fractal\_server/tasks/v2/utils\_background.py                                |       72 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_database.py                                  |       21 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_package\_names.py                            |       23 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/tasks/v2/utils\_pixi.py                                      |       48 |        0 |        8 |        0 |    100% |           |
@@ -209,7 +209,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10668** |  **172** | **1916** |   **86** | **98%** |           |
+| **TOTAL**                                                                    | **10672** |  **172** | **1918** |   **86** | **98%** |           |
 
 
 ## Setup coverage badge
