@@ -87,10 +87,12 @@ async def test_deactivate_local_fail(
         venv_path=venv_path.as_posix(),
         user_id=first_user.id,
         resource_id=resource.id,
+        active=True,
     )
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
+
     task_group_activity = TaskGroupActivityV2(
         user_id=first_user.id,
         taskgroupv2_id=task_group.id,
@@ -99,6 +101,8 @@ async def test_deactivate_local_fail(
         pkg_name="pkg",
         version="1.0.0",
     )
+    task_group.active = False
+    db.add(task_group)
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
@@ -119,6 +123,9 @@ async def test_deactivate_local_fail(
     activity = await db.get(TaskGroupActivityV2, task_group_activity.id)
     assert activity.status == "failed"
     assert FAKE_ERROR_MSG in activity.log
+
+    task_group = await db.get(TaskGroupV2, task_group.id)
+    assert task_group.active is True
 
 
 async def test_deactivate_wheel_no_archive_path(
