@@ -119,7 +119,13 @@ async def read_dataset_list(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
+    stm = (
+        select(DatasetV2)
+        .where(DatasetV2.project_id == project.id)
+        .order_by(
+            DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created.desc()
+        )
+    )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     return dataset_list
@@ -391,7 +397,9 @@ async def get_all_datasets(
         .join(ProjectV2, DatasetV2.project_id == ProjectV2.id)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .order_by(DatasetV2.timestamp_created.desc())
+        .order_by(
+            DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created.desc()
+        )
     )
     stm_count = (
         select(func.count(DatasetV2.id))
