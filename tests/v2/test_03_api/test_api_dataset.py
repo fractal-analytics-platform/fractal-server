@@ -92,7 +92,7 @@ async def test_new_dataset(
         assert res.status_code == 200
         ds2 = res.json()
 
-        assert project_dataset_list == [ds2, ds1]
+        assert project_dataset_list == [ds1, ds2]
 
         # UPDATE
 
@@ -161,18 +161,18 @@ async def test_get_project_datasets(
         datasets = res.json()
         assert len(datasets) == 2
         assert datasets[0]["project"] == EXPECTED_PROJECT
-        assert datasets[0]["id"] == ds2.id
+        assert datasets[0]["id"] == ds1_id
         assert datasets[1]["project"] == EXPECTED_PROJECT
-        assert datasets[1]["id"] == ds1_id
+        assert datasets[1]["id"] == ds2.id
 
-        await client.patch(f"api/v2/project/{p_id}/dataset/{ds1_id}/pin/")
+        await client.patch(f"api/v2/project/{p_id}/dataset/{ds2.id}/pin/")
 
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/")
         assert res.status_code == 200
         datasets = res.json()
         assert len(datasets) == 2
-        assert datasets[0]["id"] == ds1_id
-        assert datasets[1]["id"] == ds2.id
+        assert datasets[0]["id"] == ds2.id
+        assert datasets[1]["id"] == ds1_id
 
 
 async def test_post_dataset(client, MockCurrentUser, project_factory, db):

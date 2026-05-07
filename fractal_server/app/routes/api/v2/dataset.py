@@ -122,9 +122,7 @@ async def read_dataset_list(
     stm = (
         select(DatasetV2)
         .where(DatasetV2.project_id == project.id)
-        .order_by(
-            DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created.desc()
-        )
+        .order_by(DatasetV2.is_pinned.desc(), DatasetV2.timestamp_created)
     )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
