@@ -83,6 +83,7 @@ class DatasetReadExpanded(DatasetRead):
         project:
         timestamp_created:
         zarr_dir:
+        is_pinned:
         owner_email:
         image_count:
     """
