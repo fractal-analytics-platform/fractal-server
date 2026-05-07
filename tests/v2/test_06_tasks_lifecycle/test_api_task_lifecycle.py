@@ -119,9 +119,6 @@ async def test_deactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
-        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        assert activity["version"] == task_group_pypi.version
-        assert task_group_pypi.active is False
 
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
@@ -130,6 +127,10 @@ async def test_deactivate_task_group_api(
             assert "Cannot establish SSH connection" in res.json()["log"]
         else:
             assert "does not exist" in res.json()["log"]
+
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
+        assert activity["version"] == task_group_pypi.version
+        assert task_group_pypi.active is True
 
 
 @pytest.mark.parametrize(
