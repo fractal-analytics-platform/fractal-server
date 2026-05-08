@@ -165,7 +165,7 @@ async def test_get_project_datasets(
         assert datasets[1]["project"] == EXPECTED_PROJECT
         assert datasets[1]["id"] == ds2.id
 
-        await client.patch(f"api/v2/project/{p_id}/dataset/{ds2.id}/star/")
+        await client.post(f"api/v2/project/{p_id}/dataset/{ds2.id}/star/")
 
         res = await client.get(f"{PREFIX}/project/{p_id}/dataset/")
         assert res.status_code == 200
@@ -648,7 +648,7 @@ async def test_pinning_dataset(
         assert dataset.is_starred is False
 
         # PIN
-        res = await client.patch(
+        res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
         assert res.status_code == 200
@@ -656,13 +656,13 @@ async def test_pinning_dataset(
         await db.refresh(dataset)
         assert dataset.is_starred is True
 
-        res = await client.patch(
+        res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
         assert res.status_code == 422
 
         # UNPIN
-        res = await client.patch(
+        res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
         assert res.status_code == 200
@@ -670,7 +670,7 @@ async def test_pinning_dataset(
         await db.refresh(dataset)
         assert dataset.is_starred is False
 
-        res = await client.patch(
+        res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
         assert res.status_code == 422

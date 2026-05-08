@@ -185,18 +185,18 @@ async def update_dataset(
     return db_dataset
 
 
-@router.patch(
+@router.post(
     "/project/{project_id}/dataset/{dataset_id}/star/",
     response_model=DatasetRead,
 )
-async def pin_dataset(
+async def star_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> DatasetV2:
     """
-    Pin a dataset
+    Set `DatasetV2.is_starred` to `True`
     """
     output = await _get_dataset_check_access(
         project_id=project_id,
@@ -217,18 +217,18 @@ async def pin_dataset(
     return dataset
 
 
-@router.patch(
+@router.post(
     "/project/{project_id}/dataset/{dataset_id}/unstar/",
     response_model=DatasetRead,
 )
-async def unpin_dataset(
+async def unstar_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> DatasetV2:
     """
-    Unpin a dataset
+    Set `DatasetV2.is_starred` to `False`
     """
     output = await _get_dataset_check_access(
         project_id=project_id,
