@@ -206,11 +206,6 @@ async def star_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    if dataset.is_starred:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Dataset {dataset.id} is already starred.",
-        )
     dataset.is_starred = True
     db.add(dataset)
     await db.commit()
@@ -238,11 +233,6 @@ async def unstar_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    if not dataset.is_starred:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Dataset {dataset.id} is not starred.",
-        )
     dataset.is_starred = False
     db.add(dataset)
     await db.commit()

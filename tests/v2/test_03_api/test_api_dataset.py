@@ -623,7 +623,7 @@ async def test_get_datasets(
             user0_email
         ]
 
-        # After pinning
+        # After starring
         dataset00.is_starred = True
         dataset01.is_starred = True
         db.add_all([dataset00, dataset01])
@@ -632,14 +632,14 @@ async def test_get_datasets(
         assert res.status_code == 200
         debug(res.json())
         assert [dataset["name"] for dataset in res.json()["items"]] == [
-            # The "unpinned" order was 20 - 01 - 00
+            # The "unstarred" order was 20 - 01 - 00
             "dataset01",
             "dataset00",
             "dataset20",
         ]
 
 
-async def test_pinning_dataset(
+async def test_starring_dataset(
     client, MockCurrentUser, project_factory, dataset_factory, db
 ):
     async with MockCurrentUser() as user:
@@ -647,30 +647,32 @@ async def test_pinning_dataset(
         dataset = await dataset_factory(project_id=project.id)
         assert dataset.is_starred is False
 
-        # PIN
+        # STAR
         res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
         assert res.status_code == 200
-        assert res.json()["is_starred"] is True
         await db.refresh(dataset)
         assert dataset.is_starred is True
 
         res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/star/"
         )
-        assert res.status_code == 422
+        assert res.status_code == 200
+        await db.refresh(dataset)
+        assert dataset.is_starred is True
 
-        # UNPIN
+        # UNSTAR
         res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
         assert res.status_code == 200
-        assert res.json()["is_starred"] is False
         await db.refresh(dataset)
         assert dataset.is_starred is False
 
         res = await client.post(
             f"api/v2/project/{project.id}/dataset/{dataset.id}/unstar/"
         )
-        assert res.status_code == 422
+        assert res.status_code == 200
+        await db.refresh(dataset)
+        assert dataset.is_starred is False
