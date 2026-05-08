@@ -187,14 +187,14 @@ async def update_dataset(
 
 @router.post(
     "/project/{project_id}/dataset/{dataset_id}/star/",
-    response_model=DatasetRead,
+    status_code=status.HTTP_200_OK,
 )
 async def star_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetV2:
+) -> Response:
     """
     Set `DatasetV2.is_starred` to `True`
     """
@@ -214,19 +214,19 @@ async def star_dataset(
     dataset.is_starred = True
     db.add(dataset)
     await db.commit()
-    return dataset
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post(
     "/project/{project_id}/dataset/{dataset_id}/unstar/",
-    response_model=DatasetRead,
+    status_code=status.HTTP_200_OK,
 )
 async def unstar_dataset(
     project_id: int,
     dataset_id: int,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> DatasetV2:
+) -> Response:
     """
     Set `DatasetV2.is_starred` to `False`
     """
@@ -246,7 +246,7 @@ async def unstar_dataset(
     dataset.is_starred = False
     db.add(dataset)
     await db.commit()
-    return dataset
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete(
