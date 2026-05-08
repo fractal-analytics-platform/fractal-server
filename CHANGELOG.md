@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.9 (unreleased)
+# 2.22.9
 
 * API:
     * Add `task_group_id` query parameter to `GET /admin/v2/task-group/` (\#3305).
