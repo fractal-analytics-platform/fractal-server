@@ -2,6 +2,9 @@
 
 # 2.22.10 (unreleased)
 
+
+* Task-group lifecycle:
+    * Introduce `POST /admin/v2/task-group/{id}/reset/pip/` (\#3314).
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
 
