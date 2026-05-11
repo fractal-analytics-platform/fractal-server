@@ -21,6 +21,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.aux._python_interpreter import (
+    get_python_interpreter_or_422,
+)
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -38,9 +41,6 @@ from fractal_server.tasks.v2.local.collect import collect_local
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
-from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter,
-)
 
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -190,18 +190,9 @@ async def collect_tasks_pip(
         ]
     else:
         task_group_attrs["python_version"] = task_collect.python_version
-    try:
-        get_python_interpreter(
+        get_python_interpreter_or_422(
             python_version=task_group_attrs["python_version"],
             resource=resource,
-        )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Python version {task_group_attrs['python_version']} "
-                "is not available on this Fractal instance."
-            ),
         )
 
     # Set pip_extras
