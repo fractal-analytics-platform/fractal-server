@@ -27,9 +27,9 @@ async def test_reset_pip(
         )
     else:
         archive_path = (
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            testdata_path
+            / "testing-tasks-mock/dist"
+            / "testing_tasks_mock-0.1.4-py3-none-any.whl"
         )
         with archive_path.open("rb") as f:
             request = dict(
