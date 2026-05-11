@@ -1,25 +1,45 @@
 from pathlib import Path
 
+import pytest
+
 from fractal_server.app.models.v2 import TaskGroupV2
 
 
-async def test_reset(
+@pytest.mark.parametrize("package_origin", ("pypi", "wheel"))
+async def test_reset_pip(
     db,
     client,
     MockCurrentUser,
     current_py_version,
     override_settings_factory,
     local_resource_profile_db,
+    package_origin,
+    testdata_path,
 ):
     resource, profile = local_resource_profile_db
+
+    if package_origin == "pypi":
+        request = dict(
+            data=dict(
+                package="testing-tasks-mock",
+                python_version=current_py_version,
+            )
+        )
+    else:
+        archive_path = (
+            testdata_path.parent
+            / "v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        )
+        with archive_path.open("rb") as f:
+            request = dict(
+                files={"file": (archive_path.name, f.read(), "application/zip")}
+            )
 
     async with MockCurrentUser(profile_id=profile.id):
         res = await client.post(
             "api/v2/task/collect/pip/",
-            data=dict(
-                package="testing-tasks-mock",
-                python_version=current_py_version,
-            ),
+            **request,
         )
         assert res.status_code == 202
         taskgroupv2_id = res.json()["taskgroupv2_id"]

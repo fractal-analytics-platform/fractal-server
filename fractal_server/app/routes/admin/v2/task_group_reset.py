@@ -102,7 +102,11 @@ async def recollect_tasks_pip(
     resource, profile = await validate_user_profile(user=owner, db=db)
 
     if (
-        task_group.origin != TaskGroupOriginEnum.PYPI
+        task_group.origin
+        not in (
+            TaskGroupOriginEnum.PYPI,
+            TaskGroupOriginEnum.WHEELFILE,
+        )
         or resource.type == ResourceType.SLURM_SSH
     ):
         raise HTTPException(
