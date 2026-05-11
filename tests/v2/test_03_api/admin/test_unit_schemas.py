@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.app.routes.admin.v2.task_group_recollect import (
+from fractal_server.app.routes.admin.v2.task_group_reset import (
     TaskGroupOverridesPip,
 )
 from fractal_server.app.schemas.v2.profile import (
@@ -32,7 +32,7 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
         ValidResourceBase(**res.model_dump())
 
 
-def test_recollection_schemas():
+def test_TaskGroupOverridesPip():
     obj = TaskGroupOverridesPip()
     assert obj.python_version is None
     assert obj.pip_extras is None
