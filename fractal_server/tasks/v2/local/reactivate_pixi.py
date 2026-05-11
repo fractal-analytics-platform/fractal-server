@@ -1,5 +1,4 @@
 import os
-import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -23,6 +22,7 @@ from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 from ._utils import edit_pyproject_toml_in_place_local
+from ._utils import rmtree_nofail
 
 
 def reactivate_local_pixi(
@@ -189,15 +189,10 @@ def reactivate_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted source_dir
-                try:
-                    logger.info(f"Now delete folder {source_dir}")
-                    shutil.rmtree(source_dir)
-                    logger.info(f"Deleted folder {source_dir}")
-                except Exception as rm_e:
-                    logger.error(
-                        f"Removing folder failed. Original error: {str(rm_e)}"
-                    )
+                rmtree_nofail(
+                    folder_path=source_dir,
+                    logger_name=LOGGER_NAME,
+                )
 
                 fail_and_cleanup(
                     task_group=task_group,
