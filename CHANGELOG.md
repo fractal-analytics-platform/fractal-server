@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.10 (unreleased)
+
+* Dependencies:
+    * Require `paramiko>5.0.0,<5.1.0` (\#3313).
+
 # 2.22.9
 
 * API:
