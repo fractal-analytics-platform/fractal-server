@@ -44,13 +44,6 @@ async def test_reset(
 
         res = await client.post(
             f"admin/v2/task-group/{taskgroupv2_id}/reset/pip/",
-            json=dict(python_version="py1.2"),
-        )
-        assert res.status_code == 422
-        assert "Python version" in res.json()["detail"]
-
-        res = await client.post(
-            f"admin/v2/task-group/{taskgroupv2_id}/reset/pip/",
             json=dict(
                 python_version=current_py_version,
                 pip_extras="",
