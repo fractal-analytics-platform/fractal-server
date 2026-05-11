@@ -27,7 +27,7 @@ from fractal_server.utils import get_timestamp
 from ._utils import _customize_and_run_template
 
 
-def collect_local(
+def recollect_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
