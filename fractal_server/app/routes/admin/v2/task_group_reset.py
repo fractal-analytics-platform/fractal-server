@@ -89,14 +89,6 @@ async def recollect_tasks_pip(
         task_group_id=task_group_id,
         db=db,
     )
-    if task_group.origin != TaskGroupOriginEnum.PYPI:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "This is the endpoint for PyPI or wheel-file task groups "
-                "(note: wheel-file support is not there yet)."
-            ),
-        )
     if task_group.active is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -108,10 +100,16 @@ async def recollect_tasks_pip(
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
     owner = await db.get(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=owner, db=db)
-    if resource.type == ResourceType.SLURM_SSH:
+
+    if (
+        task_group.origin != TaskGroupOriginEnum.PYPI
+        or resource.type == ResourceType.SLURM_SSH
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="This feature is not yet implemented for SSH resources.",
+            detail=(
+                f"Not implemented ({task_group.origin=}, {resource.type=})."
+            ),
         )
 
     logger.info(
