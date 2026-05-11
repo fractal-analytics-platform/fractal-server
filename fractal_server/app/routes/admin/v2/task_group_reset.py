@@ -119,7 +119,10 @@ async def recollect_tasks_pip(
         f"({task_group.pkg_name} {task_group.version})"
     )
     if req_body.python_version is not None:
-        get_python_interpreter_or_422(req_body.python_version)
+        get_python_interpreter_or_422(
+            python_version=req_body.python_version,
+            resource=resource,
+        )
         logger.info(
             f"Replacing {task_group.python_version=} with "
             f"{req_body.python_version=}."
