@@ -4,6 +4,8 @@
 
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
+* Task-group lifecycle:
+    * Include `export PYTHONNOUSERSITE=1` in pixi-project Python wrapper (\#XXXX).
 
 # 2.22.9
 

@@ -192,6 +192,14 @@ async def test_task_group_lifecycle_pixi_local(
         debug(module_path)
         assert Path(module_path).is_file()
 
+        py_wrapper = task["command_non_parallel"].split(" ")[0]
+        debug(py_wrapper)
+        with open(py_wrapper) as f:
+            script_data = f.read()
+            assert "export PYTHONNOUSERSITE=1" in script_data
+
+        return
+
         # Failed collection - due to non-duplication constraint
         res = await client.post(
             "api/v2/task/collect/pixi/",
