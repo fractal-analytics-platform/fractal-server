@@ -40,7 +40,7 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-class TaskGroupOverridesPyPI(BaseModel):
+class TaskGroupOverridesPip(BaseModel):
     """
     Overrides of the original task-group properties.
 
@@ -68,7 +68,7 @@ class TaskGroupOverridesPyPI(BaseModel):
 async def recollect_tasks_pip_pypi(
     task_group_id: int,
     response: Response,
-    req_body: TaskGroupOverridesPyPI,
+    req_body: TaskGroupOverridesPip,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_db),
     _superuser: UserOAuth = Depends(current_superuser_act),
