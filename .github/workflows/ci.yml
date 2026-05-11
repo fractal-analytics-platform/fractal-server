@@ -59,9 +59,9 @@ jobs:
           path: coverage-data-api-${{ matrix.python-version }}*
 
 
-  tests_not_api:
+  tests_tasks:
 
-    name: "Not API - Python ${{ matrix.python-version }}"
+    name: "Task lifecycle - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -96,20 +96,68 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: coverage-data-not-api-${{ matrix.python-version }}
+          COVERAGE_FILE: coverage-data-tasks-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
-          name: coverage-data-not-api-${{ matrix.python-version }}
-          path: coverage-data-not-api-${{ matrix.python-version }}*
+          name: coverage-data-tasks-${{ matrix.python-version }}
+          path: coverage-data-tasks-${{ matrix.python-version }}*
 
 
-  tests_containers:
+  tests_other:
 
-    name: "Containers - Python ${{ matrix.python-version }}"
+    name: "Other - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+        exclude:
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+        with:
+          version: "0.9.24"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-other-${{ matrix.python-version }}
+          DO_NOT_USE_DOCKER: 1
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore=tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: coverage-data-other-${{ matrix.python-version }}
+          path: coverage-data-other-${{ matrix.python-version }}*
+
+
+  tests_containers_ssh:
+
+    name: "Containers SSH - Python ${{ matrix.python-version }}"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -157,14 +205,77 @@ jobs:
 
       - name: Test with pytest
         env:
-          COVERAGE_FILE: coverage-data-containers-${{ matrix.python-version }}
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container" --durations 0
+          COVERAGE_FILE: coverage-data-containers-ssh-${{ matrix.python-version }}
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container and ssh" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
-          name: coverage-data-containers-${{ matrix.python-version }}
-          path: coverage-data-containers-${{ matrix.python-version }}*
+          name: coverage-data-containers-ssh-${{ matrix.python-version }}
+          path: coverage-data-containers-ssh-${{ matrix.python-version }}*
+
+
+
+  tests_containers_non_ssh:
+
+    name: "Containers non-SSH - Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Start Postgres
+        run: |
+          sudo systemctl start postgresql.service
+          sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+          sudo --login -u postgres createdb fractal_test
+
+      - name: Cache SLURM Docker images
+        id: cache-docker-ubuntu24-slurm-multipy
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: ci/cache/docker/ubuntu24-slurm-multipy
+          key: cache-docker-ubuntu24-slurm-multipy
+
+      - name: Use Ubuntu24 SLURM Docker Image Cache if cache hit
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit == 'true'
+        run: docker image load --input ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
+
+      - name: Update Ubuntu24 SLURM Docker Image Cache if cache miss
+        if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
+        run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+        with:
+          version: "0.9.24"
+          enable-cache: true
+
+      - run: uv sync --frozen --group dev
+
+      - name: Test with pytest
+        env:
+          COVERAGE_FILE: coverage-data-containers-non-ssh-${{ matrix.python-version }}
+        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container and not ssh" --durations 0
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: coverage-data-containers-non-ssh-${{ matrix.python-version }}
+          path: coverage-data-containers-non-ssh-${{ matrix.python-version }}*
+
+
 
 
   tests_auth:
