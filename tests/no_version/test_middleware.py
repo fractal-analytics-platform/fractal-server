@@ -111,4 +111,5 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
         ("POST", "/admin/v2/task-group/{task_group_id}/deactivate/"),
         ("POST", "/admin/v2/task-group/{task_group_id}/reactivate/"),
         ("POST", "/admin/v2/task-group/{task_group_id}/delete/"),
+        ("POST", "/admin/v2/task-group/{task_group_id}/recollect/pip/"),
     }
