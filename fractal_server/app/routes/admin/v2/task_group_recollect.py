@@ -65,7 +65,7 @@ class TaskGroupOverridesPip(BaseModel):
     "/{task_group_id}/recollect/pip/",
     response_model=TaskGroupActivityRead,
 )
-async def recollect_tasks_pip_pypi(
+async def recollect_tasks_pip(
     task_group_id: int,
     response: Response,
     req_body: TaskGroupOverridesPip,
