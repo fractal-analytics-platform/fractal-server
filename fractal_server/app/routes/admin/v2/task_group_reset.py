@@ -20,6 +20,9 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_group_or_404,
 )
 from fractal_server.app.routes.auth import current_superuser_act
+from fractal_server.app.routes.aux._python_interpreter import (
+    get_python_interpreter_or_422,
+)
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -32,9 +35,6 @@ from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local.reset import reset_local
-from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter,
-)
 from fractal_server.types import NonEmptyStr
 
 router = APIRouter()
@@ -102,7 +102,7 @@ async def recollect_tasks_pip(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Cannot re-collect an active task group. "
-                "Please deactivate it first.",
+                "Please deactivate it first."
             ),
         )
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
@@ -119,19 +119,7 @@ async def recollect_tasks_pip(
         f"({task_group.pkg_name} {task_group.version})"
     )
     if req_body.python_version is not None:
-        try:
-            get_python_interpreter(
-                python_version=req_body.python_version,
-                resource=resource,
-            )
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Python version {req_body.python_version} "
-                    "is not available on this Fractal instance."
-                ),
-            )
+        get_python_interpreter_or_422(req_body.python_version)
         logger.info(
             f"Replacing {task_group.python_version=} with "
             f"{req_body.python_version=}."
