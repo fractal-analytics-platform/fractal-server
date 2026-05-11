@@ -149,19 +149,25 @@ async def get_workflow_tasks_statuses(
             latest_run.num_available_images
         )
 
-        for target_status in HistoryUnitStatus:
-            stm = (
-                select(func.count(HistoryImageCache.zarr_url))
-                .join(
-                    HistoryUnit,
-                    HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
-                )
-                .where(HistoryImageCache.dataset_id == dataset_id)
-                .where(HistoryImageCache.workflowtask_id == wftask.id)
-                .where(HistoryUnit.status == target_status)
+        stm = (
+            select(HistoryUnit.status, func.count(HistoryImageCache.zarr_url))
+            .join(
+                HistoryUnit,
+                HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
             )
-            res = await db.execute(stm)
-            num_images = res.scalar()
+            .where(HistoryImageCache.dataset_id == dataset_id)
+            .where(HistoryImageCache.workflowtask_id == wftask.id)
+            .group_by(HistoryUnit.status)
+        )
+
+        res = await db.execute(stm)
+        rows = res.all()  # list of (status, num_images)
+
+        # initialize zeros for all statuses
+        for target_status in HistoryUnitStatus:
+            response[wftask.id][f"num_{target_status}_images"] = 0
+
+        for target_status, num_images in rows:
             response[wftask.id][f"num_{target_status}_images"] = num_images
 
     # Set `num_available_images=None` for cases where it would be
