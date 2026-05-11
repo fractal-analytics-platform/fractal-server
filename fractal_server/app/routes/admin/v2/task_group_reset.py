@@ -171,12 +171,8 @@ async def recollect_tasks_pip(
         task_group_activity_id=task_group_activity.id,
         resource=resource,
         profile=profile,
-        wheel_file=None,
     )
 
-    logger.debug(
-        "Task-collection endpoint: start background collection "
-        "and return task_group_activity"
-    )
+    logger.debug("Start background reset and return task_group_activity")
     response.status_code = status.HTTP_202_ACCEPTED
     return task_group_activity

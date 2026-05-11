@@ -5,7 +5,6 @@ from tempfile import TemporaryDirectory
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
-from fractal_server.app.schemas.v2 import FractalUploadedFile
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.logger import reset_logger_handlers
@@ -20,7 +19,6 @@ from fractal_server.tasks.v2.utils_python_interpreter import (
 )
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.tasks.v2.utils_templates import get_collection_replacements
-from fractal_server.tasks.v2.utils_templates import parse_script_pip_show_stdout
 from fractal_server.utils import get_timestamp
 
 from ._utils import _customize_and_run_template
@@ -33,7 +31,6 @@ def reset_local(
     task_group_id: int,
     resource: Resource,
     profile: Profile,
-    wheel_file: FractalUploadedFile | None = None,
 ) -> None:
     """
     Re-collect a task package.
@@ -47,10 +44,10 @@ def reset_local(
 
 
     Args:
-        task_group_id:
         task_group_activity_id:
-        resource: Resource
-        wheel_file:
+        task_group_id:
+        resource:
+        profile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -73,25 +70,7 @@ def reset_local(
             if not db_objects_ok:
                 return
 
-            # Check that the (local) task_group path does exist
-            if not Path(task_group.path).exists():
-                error_msg = f"{task_group.path} does not exist."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileNotFoundError(error_msg),
-                    db=db,
-                )
-                return
-
             try:
-                # Write wheel file and set task_group.archive_path
-                # TODO: Verify that wheel file exists - or replace it
-                # if needed
-
                 # Prepare replacements for templates
                 python_bin = get_python_interpreter(
                     python_version=task_group.python_version,
@@ -121,7 +100,7 @@ def reset_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 1
-                stdout = _customize_and_run_template(
+                _customize_and_run_template(
                     template_filename="1_create_venv.sh",
                     **common_args,
                 )
@@ -129,7 +108,7 @@ def reset_local(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Run script 2
-                stdout = _customize_and_run_template(
+                _customize_and_run_template(
                     template_filename="2_pip_install.sh",
                     **common_args,
                 )
@@ -144,18 +123,6 @@ def reset_local(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 4
-                stdout = _customize_and_run_template(
-                    template_filename="4_pip_show.sh",
-                    **common_args,
-                )
-                activity.log = get_current_log(log_file_path)
-                activity = add_commit_refresh(obj=activity, db=db)
-
-                pkg_attrs = parse_script_pip_show_stdout(stdout)
-                for key, value in pkg_attrs.items():
-                    logger.debug(f"Parsed from pip-show: {key}={value}")
-
                 # Update task_group data
                 logger.info("Update TaskGroupV2 - start")
                 task_group.env_info = pip_freeze_stdout
@@ -165,7 +132,6 @@ def reset_local(
 
                 # Finalize (write metadata to DB)
                 logger.info("finalising - START")
-                task_group.active = True
                 activity.status = TaskGroupActivityStatus.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
