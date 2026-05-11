@@ -28,7 +28,9 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local.reset import reset_local
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
@@ -73,6 +75,16 @@ async def recollect_tasks_pip(
     db: AsyncSession = Depends(get_async_db),
     _superuser: UserOAuth = Depends(current_superuser_act),
 ) -> TaskGroupActivityV2:
+    settings = Inject(get_settings)
+    if settings.FRACTAL_ENABLE_TASK_GROUP_RESET != "true":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            details=(
+                "FRACTAL_ENABLE_TASK_GROUP_RESET="
+                f"{settings.FRACTAL_ENABLE_TASK_GROUP_RESET}"
+            ),
+        )
+
     task_group = await _get_task_group_or_404(
         task_group_id=task_group_id,
         db=db,

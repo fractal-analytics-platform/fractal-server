@@ -67,3 +67,4 @@ class Settings(BaseSettings):
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
     FRACTAL_LONG_REQUEST_TIME: float = 30.0
     FRACTAL_DISABLE_BASIC_AUTH: Literal["true", "false"] = "false"
+    FRACTAL_ENABLE_TASK_GROUP_RESET: Literal["true", "false"] = "false"
