@@ -64,7 +64,7 @@ class TaskGroupOverridesPip(BaseModel):
 
 
 @router.post(
-    "/{task_group_id}/recollect/pip/",
+    "/{task_group_id}/reset/pip/",
     response_model=TaskGroupActivityRead,
 )
 async def recollect_tasks_pip(
