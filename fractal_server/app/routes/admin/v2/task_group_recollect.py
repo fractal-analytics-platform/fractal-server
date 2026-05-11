@@ -62,7 +62,7 @@ class TaskGroupOverridesPyPI(BaseModel):
 
 
 @router.post(
-    "/{task_group_id}/recollect/pypi/",
+    "/{task_group_id}/recollect/pip/",
     response_model=TaskGroupActivityRead,
 )
 async def recollect_tasks_pip_pypi(
@@ -80,7 +80,10 @@ async def recollect_tasks_pip_pypi(
     if task_group.origin != TaskGroupOriginEnum.PYPI:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            details="This is the endpoint for PyPI task groups.",
+            details=(
+                "This is the endpoint for PyPI or wheel-file task groups "
+                "(note: wheel-file support is not there yet)."
+            ),
         )
     if task_group.active is True:
         raise HTTPException(
