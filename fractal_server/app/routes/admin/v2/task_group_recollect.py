@@ -51,7 +51,7 @@ class TaskGroupOverridesPip(BaseModel):
         pinned_package_versions_post:
     """
 
-    pip_extras: NonEmptyStr | None = None
+    pip_extras: str | None = None
     python_version: NonEmptyStr | None = None
     pinned_package_versions_pre: Json[dict[NonEmptyStr, NonEmptyStr]] = Field(
         default_factory=dict
@@ -103,7 +103,7 @@ async def recollect_tasks_pip(
         )
 
     logger.info(
-        f"Running recollection for {task_group.id} "
+        f"Running recollection for {task_group.id=} "
         f"({task_group.pkg_name} {task_group.version})"
     )
     if req_body.python_version is not None:
@@ -131,21 +131,21 @@ async def recollect_tasks_pip(
         )
         task_group.pip_extras = req_body.pip_extras
     logger.info(
-        f"Replacing {task_group.pinned_package_versions_pre} with "
-        f"{req_body.pinned_package_versions_pre}"
+        f"Replacing {task_group.pinned_package_versions_pre=} with "
+        f"{req_body.pinned_package_versions_pre=}"
     )
     task_group.pinned_package_versions_pre = (
         req_body.pinned_package_versions_pre
     )
     logger.info(
-        f"Replacing {task_group.pinned_package_versions_post} with "
-        f"{req_body.pinned_package_versions_post}"
+        f"Replacing {task_group.pinned_package_versions_post=} with "
+        f"{req_body.pinned_package_versions_post=}"
     )
     task_group.pinned_package_versions_pre = (
         req_body.pinned_package_versions_post
     )
     db.add(task_group)
-    db.commit()
+    await db.commit()
 
     task_group_activity = TaskGroupActivityV2(
         user_id=task_group.user_id,
