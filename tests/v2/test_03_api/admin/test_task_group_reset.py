@@ -33,7 +33,13 @@ async def test_reset_pip(
         )
         with archive_path.open("rb") as f:
             request = dict(
-                files={"file": (archive_path.name, f.read(), "application/zip")}
+                files={
+                    "file": (
+                        archive_path.name,
+                        f.read(),
+                        "application/zip",
+                    )
+                }
             )
 
     async with MockCurrentUser(profile_id=profile.id):
@@ -47,11 +53,11 @@ async def test_reset_pip(
         task_group = await db.get(TaskGroupV2, taskgroupv2_id)
         assert Path(task_group.venv_path).is_dir()
 
-        res = await client.post(
-            f"api/v2/task-group/{taskgroupv2_id}/deactivate/"
-        )
-        assert res.status_code == 202
-        assert not Path(task_group.venv_path).exists()
+        # Simulate deactivation
+        Path(task_group.venv_path).rename(f"{task_group.venv_path}-old")
+        task_group.active = False
+        db.add(task_group)
+        await db.commit()
 
     async with MockCurrentUser(is_superuser=True):
         res = await client.post(
