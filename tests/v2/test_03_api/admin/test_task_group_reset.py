@@ -7,13 +7,13 @@ from fractal_server.app.models.v2 import TaskGroupV2
 
 @pytest.mark.parametrize("package_origin", ("pypi", "wheel"))
 async def test_reset_pip(
+    package_origin,
     db,
     client,
     MockCurrentUser,
     current_py_version,
     override_settings_factory,
     local_resource_profile_db,
-    package_origin,
     testdata_path,
 ):
     resource, profile = local_resource_profile_db
@@ -43,10 +43,7 @@ async def test_reset_pip(
             )
 
     async with MockCurrentUser(profile_id=profile.id):
-        res = await client.post(
-            "api/v2/task/collect/pip/",
-            **request,
-        )
+        res = await client.post("api/v2/task/collect/pip/", **request)
         assert res.status_code == 202
         taskgroupv2_id = res.json()["taskgroupv2_id"]
 
@@ -73,7 +70,6 @@ async def test_reset_pip(
             json=dict(
                 python_version=current_py_version,
                 pip_extras="",
-                pinned_package_versions_pre='{"devtools": "0.12.1"}',
             ),
         )
         assert res.status_code == 202
