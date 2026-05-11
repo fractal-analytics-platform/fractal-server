@@ -79,7 +79,7 @@ async def recollect_tasks_pip(
     if settings.FRACTAL_ENABLE_TASK_GROUP_RESET != "true":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            details=(
+            detail=(
                 "FRACTAL_ENABLE_TASK_GROUP_RESET="
                 f"{settings.FRACTAL_ENABLE_TASK_GROUP_RESET}"
             ),
@@ -92,7 +92,7 @@ async def recollect_tasks_pip(
     if task_group.origin != TaskGroupOriginEnum.PYPI:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            details=(
+            detail=(
                 "This is the endpoint for PyPI or wheel-file task groups "
                 "(note: wheel-file support is not there yet)."
             ),
@@ -100,7 +100,7 @@ async def recollect_tasks_pip(
     if task_group.active is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            details=(
+            detail=(
                 "Cannot re-collect an active task group. "
                 "Please deactivate it first.",
             ),
@@ -111,7 +111,7 @@ async def recollect_tasks_pip(
     if resource.type == ResourceType.SLURM_SSH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            details="This feature is not yet implemented for SSH resources.",
+            detail="This feature is not yet implemented for SSH resources.",
         )
 
     logger.info(
