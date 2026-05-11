@@ -36,8 +36,6 @@ from fractal_server.images.tools import filter_image_list
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_dataset_check_access
-from ._aux_functions import _get_submitted_jobs_statement
-from ._aux_functions import _get_workflow_check_access
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
@@ -67,127 +65,6 @@ def check_historyrun_related_to_dataset_and_wftask(
 
 router = APIRouter()
 logger = set_logger(__name__)
-
-
-@router.get("/project/{project_id}/status/")
-async def get_workflow_tasks_statuses(
-    project_id: int,
-    dataset_id: int,
-    workflow_id: int,
-    user: UserOAuth = Depends(get_api_guest),
-    db: AsyncSession = Depends(get_async_db),
-) -> JSONResponse:
-    # Access control
-    workflow = await _get_workflow_check_access(
-        project_id=project_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        required_permissions=ProjectPermissions.READ,
-        db=db,
-    )
-    await _get_dataset_check_access(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        required_permissions=ProjectPermissions.READ,
-        db=db,
-    )
-
-    res = await db.execute(
-        _get_submitted_jobs_statement()
-        .where(JobV2.dataset_id == dataset_id)
-        .where(JobV2.workflow_id == workflow_id)
-    )
-    running_job = res.scalars().one_or_none()
-
-    if running_job is not None:
-        running_wftasks = workflow.task_list[
-            running_job.first_task_index : running_job.last_task_index + 1
-        ]
-        running_wftask_ids = [wft.id for wft in running_wftasks]
-    else:
-        running_wftask_ids = []
-
-    response: dict[int, dict[str, int | str] | None] = {}
-    for wftask in workflow.task_list:
-        res = await db.execute(
-            select(HistoryRun)
-            .where(HistoryRun.dataset_id == dataset_id)
-            .where(HistoryRun.workflowtask_id == wftask.id)
-            .order_by(HistoryRun.timestamp_started.desc())
-            .limit(1)
-        )
-        latest_run = res.scalar_one_or_none()
-
-        if latest_run is None:
-            if wftask.id in running_wftask_ids:
-                logger.debug(f"A1: No HistoryRun for {wftask.id=}.")
-                response[wftask.id] = dict(status=HistoryUnitStatus.SUBMITTED)
-            else:
-                logger.debug(f"A2: No HistoryRun for {wftask.id=}.")
-                response[wftask.id] = None
-            continue
-        else:
-            if wftask.id in running_wftask_ids:
-                if latest_run.job_id == running_job.id:
-                    logger.debug(
-                        f"B1 for {wftask.id} and {latest_run.job_id=}."
-                    )
-                    response[wftask.id] = dict(status=latest_run.status)
-                else:
-                    logger.debug(
-                        f"B2 for {wftask.id} and {latest_run.job_id=}."
-                    )
-                    response[wftask.id] = dict(
-                        status=HistoryUnitStatus.SUBMITTED
-                    )
-            else:
-                logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
-                response[wftask.id] = dict(status=latest_run.status)
-
-        response[wftask.id]["num_available_images"] = (
-            latest_run.num_available_images
-        )
-
-        stm = (
-            select(HistoryUnit.status, func.count(HistoryImageCache.zarr_url))
-            .join(
-                HistoryUnit,
-                HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
-            )
-            .where(HistoryImageCache.dataset_id == dataset_id)
-            .where(HistoryImageCache.workflowtask_id == wftask.id)
-            .group_by(HistoryUnit.status)
-        )
-
-        res = await db.execute(stm)
-        rows = res.all()  # list of (status, num_images)
-
-        # initialize zeros for all statuses
-        for target_status in HistoryUnitStatus:
-            response[wftask.id][f"num_{target_status}_images"] = 0
-
-        for target_status, num_images in rows:
-            response[wftask.id][f"num_{target_status}_images"] = num_images
-
-    # Set `num_available_images=None` for cases where it would be
-    # smaller than `num_total_images`
-    values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
-    response_update = {}
-    for wftask_id, status_value in response.items():
-        if status_value in values_to_skip:
-            # Skip cases where status has no image counters
-            continue
-        num_total_images = sum(
-            status_value[f"num_{target_status}_images"]
-            for target_status in HistoryUnitStatus
-        )
-        if num_total_images > status_value["num_available_images"]:
-            status_value["num_available_images"] = None
-            response_update[wftask_id] = status_value
-    response.update(response_update)
-
-    return JSONResponse(content=response, status_code=200)
 
 
 @router.get(
