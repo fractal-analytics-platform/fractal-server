@@ -29,7 +29,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
-from fractal_server.tasks.v2.local.recollect import recollect_local
+from fractal_server.tasks.v2.local.reset import reset_local
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
 )
@@ -151,7 +151,7 @@ async def recollect_tasks_pip(
         user_id=task_group.user_id,
         taskgroupv2_id=task_group.id,
         status=TaskGroupActivityStatus.PENDING,
-        action=TaskGroupActivityAction.RECOLLECT,
+        action=TaskGroupActivityAction.RESET,
         pkg_name=task_group.pkg_name,
         version=task_group.version,
         fractal_server_version=__VERSION__,
@@ -161,7 +161,7 @@ async def recollect_tasks_pip(
     await db.refresh(task_group_activity)
 
     background_tasks.add_task(
-        recollect_local,
+        reset_local,
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         resource=resource,

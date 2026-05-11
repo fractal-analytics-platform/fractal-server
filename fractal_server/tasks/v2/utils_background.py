@@ -76,7 +76,7 @@ def fail_and_cleanup(
         case TaskGroupActivityAction.DEACTIVATE:
             task_group.active = True
             db.add(task_group)
-        case TaskGroupActivityAction.RECOLLECT:
+        case TaskGroupActivityAction.RESET:
             task_group.active = False
             db.add(task_group)
     db.commit()

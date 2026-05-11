@@ -27,7 +27,7 @@ from ._utils import _customize_and_run_template
 from ._utils import rmtree_nofail
 
 
-def recollect_local(
+def reset_local(
     *,
     task_group_activity_id: int,
     task_group_id: int,
@@ -110,7 +110,7 @@ def recollect_local(
                         Path(task_group.path) / SCRIPTS_SUBFOLDER
                     ).as_posix(),
                     prefix=(
-                        f"{int(time.time())}_{TaskGroupActivityAction.RECOLLECT}"
+                        f"{int(time.time())}_{TaskGroupActivityAction.RESET}"
                     ),
                     logger_name=LOGGER_NAME,
                 )
