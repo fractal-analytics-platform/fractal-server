@@ -111,6 +111,10 @@ def rmtree_nofail(
 ) -> None:
     """
     Wrap a `shutil.rmtree` with try/except and logs.
+
+    Args:
+        folder_path: Folder to be deleted.
+        logger_name: Logger name.
     """
     logger = get_logger(logger_name)
     try:
