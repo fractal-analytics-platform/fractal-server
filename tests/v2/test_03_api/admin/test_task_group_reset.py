@@ -9,6 +9,9 @@ from fractal_server.app.routes.admin.v2.task_group_reset import (
     _verify_reset_enabled_or_422,
 )
 from fractal_server.app.routes.admin.v2.task_group_reset import _verify_support
+from fractal_server.app.routes.admin.v2.task_group_reset import (
+    _verify_task_group_non_active_or_422,
+)
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
@@ -51,6 +54,9 @@ async def test_unit_preliminary_checks(
             pip_or_pixi="pip",
             resource=resource,
         )
+
+    with pytest.raises(HTTPException, match="Please deactivate"):
+        _verify_task_group_non_active_or_422(task_group=task_group_pixi)
 
 
 @pytest.mark.parametrize("package_origin", ("pypi", "wheel", "pixi"))
