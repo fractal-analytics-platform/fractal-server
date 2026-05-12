@@ -232,12 +232,12 @@ async def full_workflow(
 
         # GET workflow status
         url = (
-            f"api/v2/project/{project_id}/status/"
+            f"api/v2/project/{project_id}/latest-job/"
             f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
         )
         res = await client.get(url)
         assert res.status_code == 200
-        assert res.json() == {
+        assert res.json()["task_statuses"] == {
             # Converter compound task
             "1": {
                 "status": "done",
@@ -575,13 +575,13 @@ async def failing_workflow_UnknownError(
 
         # GET workflow status and assert that there is no "submitted"
         url = (
-            f"api/v2/project/{project_id}/status/"
+            f"api/v2/project/{project_id}/latest-job/"
             f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
         )
         res = await client.get(url)
         assert res.status_code == 200
         debug(res.json())
-        assert res.json() == {
+        assert res.json()["task_statuses"] == {
             f"{workflow_task_id}": {
                 "status": "failed",
                 "num_available_images": 1,
@@ -781,13 +781,13 @@ async def failing_workflow_post_task_execution(
 
         # GET workflow status
         url = (
-            f"api/v2/project/{project_id}/status/"
+            f"api/v2/project/{project_id}/latest-job/"
             f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
         )
         res = await client.get(url)
         assert res.status_code == 200
         debug(res.json())
-        assert res.json() == {
+        assert res.json()["task_statuses"] == {
             str(wftask_id): {
                 "status": "submitted",
                 "num_available_images": 2,

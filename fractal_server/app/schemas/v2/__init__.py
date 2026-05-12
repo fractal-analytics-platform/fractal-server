@@ -45,7 +45,6 @@ from .resource import ResourceType  # noqa F401
 from .resource import ValidResourceLocal  # noqa F401
 from .resource import ValidResourceSlurmSSH  # noqa F401
 from .resource import ValidResourceSlurmSudo  # noqa F401
-from .status_legacy import WorkflowTaskStatusType  # noqa F401
 from .task import TaskCreate  # noqa F401
 from .task import TaskExport  # noqa F401
 from .task import TaskImport  # noqa F401
