@@ -381,7 +381,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
-    needs: [tests_api, tests_tasks, tests_other, tests_containers_ssh, tests_containers_ssh, tests_auth]
+    needs: [tests_api, tests_tasks, tests_other, tests_containers_ssh, tests_containers_non_ssh, tests_auth]
 
     permissions:
       pull-requests: write
