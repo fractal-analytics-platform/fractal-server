@@ -18,9 +18,6 @@ async def test_unit_preliminary_checks(
     MockCurrentUser,
     override_settings_factory,
     slurm_ssh_resource_profile_fake_objects,
-    pixi: TasksPixiSettings,
-    pixi_pkg_targz: Path,
-    testdata_path,
     task_factory,
 ):
     resource, profile = slurm_ssh_resource_profile_fake_objects
