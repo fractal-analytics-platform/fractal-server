@@ -150,8 +150,5 @@ async def test_task_group_reset(
                 pip_extras="",
             ),
         )
-        from devtools import debug
-
-        debug(res.json())
         assert res.status_code == 202
         assert Path(internal_path).is_dir()
