@@ -137,7 +137,7 @@ async def test_status_api(
         )
         assert res.status_code == 200
         debug(res.json())
-        res.json()["task_statuses"] == {
+        assert res.json()["task_statuses"] == {
             str(wftask1.id): {
                 "status": "submitted",
                 "num_available_images": 3,
