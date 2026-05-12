@@ -85,12 +85,12 @@ def _verify_support(
     if PIP_OR_PIXI_OR_OTHER[task_group.origin] != pip_or_pixi:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(f"Invalid {task_group.origin=} (expected: {pip_or_pixi})."),
+            detail=(f"Invalid {task_group.origin=} (expected {pip_or_pixi})."),
         )
     if resource.type == ResourceType.SLURM_SSH:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Resource type {resource.type=} not supported.",
+            detail=f"Resource type {resource.type} not supported.",
         )
 
 

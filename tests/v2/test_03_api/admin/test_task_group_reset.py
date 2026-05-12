@@ -2,15 +2,58 @@ import platform
 from pathlib import Path
 
 import pytest
+from fastapi import HTTPException
 
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.routes.admin.v2.task_group_reset import (
+    _verify_reset_enabled_or_422,
+)
+from fractal_server.app.routes.admin.v2.task_group_reset import _verify_support
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
-async def test_unit_preliminary_checks():
-    # FIXME
-    pass
+async def test_unit_preliminary_checks(
+    db,
+    MockCurrentUser,
+    override_settings_factory,
+    slurm_ssh_resource_profile_fake_objects,
+    pixi: TasksPixiSettings,
+    pixi_pkg_targz: Path,
+    testdata_path,
+    task_factory,
+):
+    resource, profile = slurm_ssh_resource_profile_fake_objects
+    override_settings_factory(FRACTAL_ENABLE_TASK_GROUP_RESET="false")
+    with pytest.raises(HTTPException):
+        _verify_reset_enabled_or_422()
+
+    async with MockCurrentUser() as user:
+        task_pixi = await task_factory(
+            user_id=user.id,
+            name="pixi",
+            task_group_kwargs=dict(origin="pixi"),
+        )
+        task_group_pixi = await db.get(TaskGroupV2, task_pixi.taskgroupv2_id)
+        task_wheel = await task_factory(
+            user_id=user.id,
+            name="wheel-file",
+            task_group_kwargs=dict(origin="wheel-file"),
+        )
+        task_group_wheel = await db.get(TaskGroupV2, task_wheel.taskgroupv2_id)
+    with pytest.raises(HTTPException, match="slurm_ssh not supported"):
+        _verify_support(
+            task_group=task_group_wheel,
+            pip_or_pixi="pip",
+            resource=resource,
+        )
+
+    with pytest.raises(HTTPException, match="Invalid task_group.origin"):
+        _verify_support(
+            task_group=task_group_pixi,
+            pip_or_pixi="pip",
+            resource=resource,
+        )
 
 
 @pytest.mark.parametrize("package_origin", ("pypi", "wheel", "pixi"))
