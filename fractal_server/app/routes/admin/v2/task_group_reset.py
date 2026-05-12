@@ -146,7 +146,7 @@ async def recollect_tasks_pip(
         f"Replacing {task_group.pinned_package_versions_post=} with "
         f"{req_body.pinned_package_versions_post=}"
     )
-    task_group.pinned_package_versions_pre = (
+    task_group.pinned_package_versions_post = (
         req_body.pinned_package_versions_post
     )
     db.add(task_group)
