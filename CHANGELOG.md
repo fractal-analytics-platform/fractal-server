@@ -2,6 +2,10 @@
 
 # 2.22.10 (unreleased)
 
+* API:
+    * Introduce `/star/` and `/unstar/` endpoints for datasets (\#3311).
+* Database:
+    * Introduce `DatasetV2.is_starred` (\#3311).
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
 * Testing:
