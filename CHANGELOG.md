@@ -11,6 +11,8 @@
     * Introduce `DatasetV2.is_starred` (\#3311).
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
+* Testing:
+    * Increase parallelization of GitHub CI (\#3316).
 
 # 2.22.9
 
