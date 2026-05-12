@@ -3,8 +3,12 @@
 # 2.22.10 (unreleased)
 
 
+* API:
+    * Introduce `/star/` and `/unstar/` endpoints for datasets (\#3311).
 * Task-group lifecycle:
     * Introduce `POST /admin/v2/task-group/{id}/reset/pip/` (\#3314).
+* Database:
+    * Introduce `DatasetV2.is_starred` (\#3311).
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
 

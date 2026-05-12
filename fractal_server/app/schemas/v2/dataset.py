@@ -53,6 +53,7 @@ class DatasetRead(BaseModel):
         project:
         timestamp_created:
         zarr_dir:
+        is_starred:
     """
 
     id: int
@@ -64,6 +65,7 @@ class DatasetRead(BaseModel):
     timestamp_created: AwareDatetime
 
     zarr_dir: str
+    is_starred: bool
 
     @field_serializer("timestamp_created")
     def serialize_datetime(v: datetime) -> str:
@@ -81,6 +83,7 @@ class DatasetReadExpanded(DatasetRead):
         project:
         timestamp_created:
         zarr_dir:
+        is_starred:
         owner_email:
         image_count:
     """
