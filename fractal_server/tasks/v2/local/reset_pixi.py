@@ -7,11 +7,10 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.utils import get_log_path
-from fractal_server.tasks.v2.local._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
@@ -21,27 +20,36 @@ from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
+from ._utils import _customize_and_run_template
 from ._utils import edit_pyproject_toml_in_place_local
 from ._utils import rmtree_nofail
 
 
-def reactivate_local_pixi(
+def reset_local_pixi(
     *,
     task_group_activity_id: int,
     task_group_id: int,
     resource: Resource,
     profile: Profile,
+    use_pixi_lockfile: bool,
 ) -> None:
     """
-    Reactivate a task group venv.
+    Re-collect a task package via pixi.
 
-    This function is run as a background task, therefore exceptions must be
+    This function runs as a background task, therefore exceptions must be
     handled.
 
+    NOTE:  since this function is sync, it runs within a thread - due to
+    starlette/fastapi handling of background tasks (see
+    https://github.com/encode/starlette/blob/master/starlette/background.py).
+
+
     Args:
-        task_group_id:
         task_group_activity_id:
+        task_group_id:
         resource:
+        profile:
+        use_pixi_lockfile:
     """
 
     LOGGER_NAME = f"{__name__}.ID{task_group_activity_id}"
@@ -52,7 +60,8 @@ def reactivate_local_pixi(
             logger_name=LOGGER_NAME,
             log_file_path=log_file_path,
         )
-        logger.debug("START")
+
+        logger.info("START")
         with next(get_sync_db()) as db:
             db_objects_ok, task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
@@ -63,23 +72,11 @@ def reactivate_local_pixi(
             if not db_objects_ok:
                 return
 
-            source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
-            if Path(source_dir).exists():
-                error_msg = f"{source_dir} already exists."
-                logger.error(error_msg)
-                fail_and_cleanup(
-                    task_group=task_group,
-                    task_group_activity=activity,
-                    logger_name=LOGGER_NAME,
-                    log_file_path=log_file_path,
-                    exception=FileExistsError(error_msg),
-                    db=db,
-                )
-                return
-
             try:
-                activity.status = TaskGroupActivityStatus.ONGOING
-                activity = add_commit_refresh(obj=activity, db=db)
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+
+                logger.info(f"{use_pixi_lockfile=}")
+                frozen_option = "--frozen" if use_pixi_lockfile else ""
                 pixi_home = resource.tasks_pixi_config["versions"][
                     task_group.pixi_version
                 ]
@@ -98,7 +95,7 @@ def reactivate_local_pixi(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__FROZEN_OPTION__", "--frozen"),
+                        ("__FROZEN_OPTION__", frozen_option),
                         (
                             "__TOKIO_WORKER_THREADS__",
                             str(
@@ -128,13 +125,16 @@ def reactivate_local_pixi(
                         task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix(),
                     prefix=(
-                        f"{int(time.time())}_"
-                        f"{TaskGroupActivityAction.REACTIVATE}"
+                        f"{int(time.time())}_{TaskGroupActivityAction.RESET}"
                     ),
                     logger_name=LOGGER_NAME,
                 )
 
-                # Run script 1 - extract tar.gz into `source_dir`
+                activity.status = TaskGroupActivityStatus.ONGOING
+                activity.log = get_current_log(log_file_path)
+                activity = add_commit_refresh(obj=activity, db=db)
+
+                # Run script 1
                 _customize_and_run_template(
                     template_filename="pixi_1_extract.sh",
                     **common_args,
@@ -148,13 +148,7 @@ def reactivate_local_pixi(
                     pyproject_toml_path, resource=resource
                 )
 
-                # Write pixi.lock into `source_dir`
-                logger.debug(f"start - writing {source_dir}/pixi.lock")
-                with Path(source_dir, "pixi.lock").open("w") as f:
-                    f.write(task_group.env_info)
-                logger.debug(f"end - writing {source_dir}/pixi.lock")
-
-                # Run script 2 - run pixi-install command
+                # Run script 2
                 _customize_and_run_template(
                     template_filename="pixi_2_install.sh",
                     **common_args,
@@ -162,7 +156,7 @@ def reactivate_local_pixi(
                 activity.log = get_current_log(log_file_path)
                 activity = add_commit_refresh(obj=activity, db=db)
 
-                # Run script 3 - post-install
+                # Run script 3
                 _customize_and_run_template(
                     template_filename="pixi_3_post_install.sh",
                     **common_args,
@@ -171,35 +165,42 @@ def reactivate_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Make task folder 755
-                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
                 command = f"chmod -R 755 {source_dir}"
                 execute_command_sync(
                     command=command,
                     logger_name=LOGGER_NAME,
                 )
 
-                activity.log = get_current_log(log_file_path)
+                # Update task_group data
+                logger.info("Add env_info to TaskGroupV2 - start")
+                with Path(source_dir, "pixi.lock").open() as f:
+                    pixi_lock_contents = f.read()
+                task_group.env_info = pixi_lock_contents
+                task_group.active = True
+                task_group = add_commit_refresh(obj=task_group, db=db)
+                logger.info("Add env_info to TaskGroupV2 - end")
+
+                # Finalize (write metadata to DB)
+                logger.info("finalising - START")
                 activity.status = TaskGroupActivityStatus.OK
                 activity.timestamp_ended = get_timestamp()
                 activity = add_commit_refresh(obj=activity, db=db)
-                task_group.active = True
-                task_group = add_commit_refresh(obj=task_group, db=db)
-                logger.debug("END")
+                logger.info("finalising - END")
+                logger.info("END")
 
                 reset_logger_handlers(logger)
 
-            except Exception as reactivate_e:
+            except Exception as e:
                 rmtree_nofail(
                     folder_path=source_dir,
                     logger_name=LOGGER_NAME,
                 )
-
                 fail_and_cleanup(
                     task_group=task_group,
                     task_group_activity=activity,
                     logger_name=LOGGER_NAME,
                     log_file_path=log_file_path,
-                    exception=reactivate_e,
+                    exception=e,
                     db=db,
                 )
         return

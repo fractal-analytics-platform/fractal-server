@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -33,6 +32,7 @@ from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 from ._utils import edit_pyproject_toml_in_place_local
+from ._utils import rmtree_nofail
 
 
 def collect_local_pixi(
@@ -256,14 +256,10 @@ def collect_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as collection_e:
-                try:
-                    logger.info(f"Now delete folder {task_group.path}")
-                    shutil.rmtree(task_group.path)
-                    logger.info(f"Deleted folder {task_group.path}")
-                except Exception as rm_e:
-                    logger.error(
-                        f"Removing folder failed. Original error: {str(rm_e)}"
-                    )
+                rmtree_nofail(
+                    folder_path=task_group.path,
+                    logger_name=LOGGER_NAME,
+                )
                 fail_and_cleanup(
                     task_group=task_group,
                     task_group_activity=activity,

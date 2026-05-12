@@ -1,5 +1,8 @@
 import pytest
 
+from fractal_server.app.routes.admin.v2.task_group_reset import (
+    TaskGroupOverridesPip,
+)
 from fractal_server.app.schemas.v2.profile import (
     get_discriminator_value as get_2,
 )
@@ -27,3 +30,27 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
         ValidResourceBase(**res.model_dump())
+
+
+def test_TaskGroupOverridesPip():
+    obj = TaskGroupOverridesPip()
+    assert obj.python_version is None
+    assert obj.pip_extras is None
+    assert obj.pinned_package_versions_pre == {}
+    assert obj.pinned_package_versions_post == {}
+
+    obj = TaskGroupOverridesPip(pinned_package_versions_pre="{}")
+    assert obj.pinned_package_versions_pre == {}
+
+    obj = TaskGroupOverridesPip(
+        pinned_package_versions_pre='{"dask": "1.2.3"}',
+        pinned_package_versions_post='{"zarr": "3.2.1"}',
+    )
+    assert obj.pinned_package_versions_pre == {"dask": "1.2.3"}
+    assert obj.pinned_package_versions_post == {"zarr": "3.2.1"}
+
+    with pytest.raises(ValueError, match="at least 1 character"):
+        TaskGroupOverridesPip(pinned_package_versions_pre='{"dask": ""}')
+
+    with pytest.raises(ValueError, match="should be a valid dictionary"):
+        TaskGroupOverridesPip(pinned_package_versions_pre="[1, 2, 3]")

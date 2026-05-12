@@ -1,5 +1,4 @@
 import json
-import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,6 +34,7 @@ from fractal_server.tasks.v2.utils_templates import parse_script_pip_show_stdout
 from fractal_server.utils import get_timestamp
 
 from ._utils import _customize_and_run_template
+from ._utils import rmtree_nofail
 
 
 def collect_local(
@@ -257,15 +257,10 @@ def collect_local(
                 reset_logger_handlers(logger)
 
             except Exception as collection_e:
-                # Delete corrupted package dir
-                try:
-                    logger.info(f"Now delete folder {task_group.path}")
-                    shutil.rmtree(task_group.path)
-                    logger.info(f"Deleted folder {task_group.path}")
-                except Exception as rm_e:
-                    logger.error(
-                        f"Removing folder failed.\nOriginal error:\n{str(rm_e)}"
-                    )
+                rmtree_nofail(
+                    folder_path=task_group.path,
+                    logger_name=LOGGER_NAME,
+                )
 
                 fail_and_cleanup(
                     task_group=task_group,

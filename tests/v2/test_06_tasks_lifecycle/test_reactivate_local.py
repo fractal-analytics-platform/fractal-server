@@ -77,7 +77,7 @@ async def test_reactivate_local_fail(
     2. The removal of the venv path fails.
     """
 
-    import fractal_server.tasks.v2.local.reactivate
+    import fractal_server.tasks.v2.local._utils
 
     FAILED_RMTREE_MESSAGE = "Broken rm"
 
@@ -88,7 +88,7 @@ async def test_reactivate_local_fail(
             logging.warning("Mock of `shutil.rmtree`.")
 
     monkeypatch.setattr(
-        fractal_server.tasks.v2.local.reactivate.shutil,
+        fractal_server.tasks.v2.local._utils.shutil,
         "rmtree",
         patched_rmtree,
     )

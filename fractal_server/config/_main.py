@@ -46,7 +46,9 @@ class Settings(BaseSettings):
             considered *slow* and an appropriate warning is logged by the
             middleware.
         FRACTAL_DISABLE_BASIC_AUTH:
-            FIXME
+            Remove endpoints starting with `/token/login`.
+        FRACTAL_ENABLE_TASK_GROUP_RESET:
+            Enable admin-only endpoint to reset task groups.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -65,3 +67,4 @@ class Settings(BaseSettings):
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
     FRACTAL_LONG_REQUEST_TIME: float = 30.0
     FRACTAL_DISABLE_BASIC_AUTH: Literal["true", "false"] = "false"
+    FRACTAL_ENABLE_TASK_GROUP_RESET: Literal["true", "false"] = "false"
