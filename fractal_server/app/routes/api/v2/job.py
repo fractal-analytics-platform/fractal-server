@@ -27,7 +27,8 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2.job import JobWithTaskStatuses
-from fractal_server.app.schemas.v2.job import TaskStatus
+from fractal_server.app.schemas.v2.job import TaskStatusImages
+from fractal_server.app.schemas.v2.job import TaskStatusSimple
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -164,7 +165,9 @@ async def get_latest_job(
     else:
         running_wftask_ids = []
 
-    statuses: dict[int, TaskStatus | None] = {}
+    statuses: dict[int, TaskStatusSimple | TaskStatusImages | None] = {}
+    ids_to_skip = []
+
     for wftask in workflow.task_list:
         res = await db.execute(
             select(HistoryRun)
@@ -178,12 +181,13 @@ async def get_latest_job(
         if latest_run is None:
             if wftask.id in running_wftask_ids:
                 logger.debug(f"A1: No HistoryRun for {wftask.id=}.")
-                statuses[wftask.id] = TaskStatus(
+                statuses[wftask.id] = TaskStatusSimple(
                     status=HistoryUnitStatus.SUBMITTED
                 )
             else:
                 logger.debug(f"A2: No HistoryRun for {wftask.id=}.")
                 statuses[wftask.id] = None
+            ids_to_skip.append(wftask.id)
             continue
         else:
             if wftask.id in running_wftask_ids:
@@ -191,17 +195,19 @@ async def get_latest_job(
                     logger.debug(
                         f"B1 for {wftask.id} and {latest_run.job_id=}."
                     )
-                    statuses[wftask.id] = TaskStatus(status=latest_run.status)
+                    statuses[wftask.id] = TaskStatusImages(
+                        status=latest_run.status
+                    )
                 else:
                     logger.debug(
                         f"B2 for {wftask.id} and {latest_run.job_id=}."
                     )
-                    statuses[wftask.id] = TaskStatus(
+                    statuses[wftask.id] = TaskStatusImages(
                         status=HistoryUnitStatus.SUBMITTED
                     )
             else:
                 logger.debug(f"C1: {wftask.id=} not in {running_wftask_ids=}.")
-                statuses[wftask.id] = TaskStatus(status=latest_run.status)
+                statuses[wftask.id] = TaskStatusImages(status=latest_run.status)
 
         statuses[
             wftask.id
@@ -232,10 +238,9 @@ async def get_latest_job(
 
     # Set `num_available_images=None` for cases where it would be
     # smaller than `num_total_images`
-    values_to_skip = (None, {"status": HistoryUnitStatus.SUBMITTED})
     statuses_update = {}
     for wftask_id, status_value in statuses.items():
-        if status_value in values_to_skip:
+        if wftask_id in ids_to_skip:
             # Skip cases where status has no image counters
             continue
         num_total_images = sum(

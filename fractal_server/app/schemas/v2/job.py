@@ -106,7 +106,11 @@ class JobUpdate(BaseModel):
     status: JobStatusType
 
 
-class TaskStatus(BaseModel):
+class TaskStatusSimple(BaseModel):
+    status: JobStatusType
+
+
+class TaskStatusImages(BaseModel):
     status: JobStatusType
     num_submitted_images: int = 0
     num_done_images: int = 0
@@ -115,4 +119,4 @@ class TaskStatus(BaseModel):
 
 
 class JobWithTaskStatuses(JobRead):
-    task_statuses: dict[int, TaskStatus | None]
+    task_statuses: dict[int, TaskStatusSimple | TaskStatusImages | None]

@@ -132,12 +132,12 @@ async def test_status_api(
         )
 
         res = await client.get(
-            f"/api/v2/project/{project.id}/status/"
+            f"/api/v2/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
         debug(res.json())
-        assert res.json() == {
+        res.json()["task_statuses"] == {
             str(wftask1.id): {
                 "status": "submitted",
                 "num_available_images": 3,
@@ -154,11 +154,11 @@ async def test_status_api(
         await db.commit()
         db.expunge_all()
         res = await client.get(
-            f"/api/v2/project/{project.id}/status/"
+            f"/api/v2/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
-        assert res.json() == {
+        assert res.json()["task_statuses"] == {
             "1": {
                 "status": "submitted",
                 "num_available_images": None,

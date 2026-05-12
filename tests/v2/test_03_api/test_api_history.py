@@ -1,3 +1,5 @@
+import json
+
 from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import JobV2
 from fractal_server.app.models import TaskGroupV2
@@ -72,9 +74,17 @@ async def test_get_workflow_tasks_statuses(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         user_email="",
-        dataset_dump={},
-        workflow_dump={},
-        project_dump={},
+        dataset_dump=json.loads(
+            dataset.model_dump_json(exclude={"images", "history"})
+        ),
+        workflow_dump=json.loads(
+            workflow.model_dump_json(
+                exclude={"task_list", "description", "template_id"}
+            )
+        ),
+        project_dump=json.loads(
+            project.model_dump_json(exclude={"resource_id"})
+        ),
     )
     job_A = JobV2(
         first_task_index=0,
@@ -135,11 +145,11 @@ async def test_get_workflow_tasks_statuses(
     await db.commit()
 
     res = await client.get(
-        f"api/v2/project/{project.id}/status/"
+        f"api/v2/project/{project.id}/latest-job/"
         f"?dataset_id={dataset.id}&workflow_id={workflow.id}"
     )
     assert res.status_code == 200
-    assert res.json() == {
+    assert res.json()["task_statuses"] == {
         str(wftask_ids[0]): {
             "status": "done",
             "num_available_images": 0,
