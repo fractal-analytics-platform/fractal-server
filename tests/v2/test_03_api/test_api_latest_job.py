@@ -38,6 +38,7 @@ async def test_get_latest_jobs(
     ) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id, name="dataset")
+        dataset2 = await dataset_factory(project_id=project.id, name="dataset2")
         task = await task_factory(user_id=user.id)
         workflow = await workflow_factory(project_id=project.id)
         await _workflow_insert_task(
@@ -83,16 +84,32 @@ async def test_get_latest_jobs(
 
         # 404
 
+        # missing workflow
         res = await client.get(
             f"{PREFIX}/project/{project.id}/latest-job/"
             f"?workflow_id={workflow.id + 1}&dataset_id={dataset.id}"
         )
         assert res.status_code == 404
+        assert res.json()["detail"] == "Workflow not found"
+
+        # missing dataset
         res = await client.get(
             f"{PREFIX}/project/{project.id}/latest-job/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id + 1}"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id + 2}"
         )
         assert res.status_code == 404
+        assert res.json()["detail"] == "Dataset not found"
+
+        # missing job
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/latest-job/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset2.id}"
+        )
+        assert res.status_code == 404
+        assert (
+            res.json()["detail"] == f"Job with workflow_id={workflow.id} and "
+            f"dataset_id={dataset2.id} not found."
+        )
 
 
 async def test_get_latest_job_tasks_statuses(
