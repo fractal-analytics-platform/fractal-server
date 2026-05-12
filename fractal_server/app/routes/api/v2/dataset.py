@@ -119,7 +119,11 @@ async def read_dataset_list(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
+    stm = (
+        select(DatasetV2)
+        .where(DatasetV2.project_id == project.id)
+        .order_by(DatasetV2.is_starred.desc(), DatasetV2.name)
+    )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     return dataset_list
@@ -179,6 +183,60 @@ async def update_dataset(
     await db.commit()
     await db.refresh(db_dataset)
     return db_dataset
+
+
+@router.post(
+    "/project/{project_id}/dataset/{dataset_id}/star/",
+    status_code=status.HTTP_200_OK,
+)
+async def star_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `DatasetV2.is_starred` to `True`
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    dataset.is_starred = True
+    db.add(dataset)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/project/{project_id}/dataset/{dataset_id}/unstar/",
+    status_code=status.HTTP_200_OK,
+)
+async def unstar_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `DatasetV2.is_starred` to `False`
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    dataset.is_starred = False
+    db.add(dataset)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete(
@@ -327,7 +385,9 @@ async def get_all_datasets(
         .join(ProjectV2, DatasetV2.project_id == ProjectV2.id)
         .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
         .where(LinkUserProjectV2.user_id == user.id)
-        .order_by(DatasetV2.timestamp_created.desc())
+        .order_by(
+            DatasetV2.is_starred.desc(), DatasetV2.timestamp_created.desc()
+        )
     )
     stm_count = (
         select(func.count(DatasetV2.id))

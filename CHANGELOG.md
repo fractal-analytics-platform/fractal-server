@@ -2,10 +2,18 @@
 
 # 2.22.10 (unreleased)
 
+* API:
+    * Introduce `/star/` and `/unstar/` endpoints for datasets (\#3311).
+    * Remove `/project/{project_id}/status/` and move its logic to `/project/{project_id}/latest-job/` (\#3317).
+* Database:
+    * Introduce `DatasetV2.is_starred` (\#3311).
 * Dependencies:
     * Require `paramiko>5.0.0,<5.1.0` (\#3313).
 * Task-group lifecycle:
     * Include `export PYTHONNOUSERSITE=1` in pixi-project Python wrapper (\#3315).
+    * Bump `mkdocs-material` to `v9.7.6` (\#3318).
+* Testing:
+    * Increase parallelization of GitHub CI (\#3316).
 
 # 2.22.9
 
