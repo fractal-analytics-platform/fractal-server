@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.admin.v2.task_group_reset import (
     _verify_reset_enabled_or_422,
@@ -139,6 +140,36 @@ async def test_task_group_reset(
         # Simulate deactivation
         Path(internal_path).rename(f"{internal_path}-old")
         task_group.active = False
+        db.add(task_group)
+        await db.commit()
+
+    async with MockCurrentUser(is_superuser=True):
+        if package_origin == "pypi":
+            original_version = task_group.version
+            task_group.version = "999.999.999"
+        elif package_origin in ("wheel", "pixi"):
+            original_archive_path = task_group.archive_path
+            task_group.archive_path = "/missing/file"
+        db.add(task_group)
+        await db.commit()
+
+        res = await client.post(
+            f"admin/v2/task-group/{taskgroupv2_id}/reset/{pip_or_pixi}/",
+            json=dict(
+                python_version=current_py_version,
+                pip_extras="",
+            ),
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        activity = await db.get(TaskGroupActivityV2, activity_id)
+        assert activity.status == "failed"
+        assert not Path(internal_path).exists()
+
+        if package_origin == "pypi":
+            task_group.version = original_version
+        elif package_origin in ("wheel", "pixi"):
+            task_group.archive_path = original_archive_path
         db.add(task_group)
         await db.commit()
 

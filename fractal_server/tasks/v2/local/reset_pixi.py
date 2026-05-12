@@ -73,6 +73,8 @@ def reset_local_pixi(
                 return
 
             try:
+                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
+
                 logger.info(f"{use_pixi_lockfile=}")
                 frozen_option = "--frozen" if use_pixi_lockfile else ""
                 pixi_home = resource.tasks_pixi_config["versions"][
@@ -141,7 +143,6 @@ def reset_local_pixi(
                 activity = add_commit_refresh(obj=activity, db=db)
 
                 # Simplify `pyproject.toml`
-                source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
                 pyproject_toml_path = Path(source_dir, "pyproject.toml")
                 edit_pyproject_toml_in_place_local(
                     pyproject_toml_path, resource=resource
