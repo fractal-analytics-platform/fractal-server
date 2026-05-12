@@ -10,6 +10,7 @@ from pydantic.types import AwareDatetime
 from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2.dumps import DatasetDump
 from fractal_server.app.schemas.v2.dumps import ProjectDump
 from fractal_server.app.schemas.v2.dumps import WorkflowDump
@@ -107,11 +108,11 @@ class JobUpdate(BaseModel):
 
 
 class TaskStatusSimple(BaseModel):
-    status: JobStatusType
+    status: HistoryUnitStatus
 
 
 class TaskStatusImages(BaseModel):
-    status: JobStatusType
+    status: HistoryUnitStatus
     num_submitted_images: int = 0
     num_done_images: int = 0
     num_failed_images: int = 0
