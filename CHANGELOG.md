@@ -1,11 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.22.11 (unreleased)
+
+* Task-group lifecycle:
+    * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
+
 # 2.22.10
 
 * API:
     * Introduce `/star/` and `/unstar/` endpoints for datasets (\#3311).
 * Task-group lifecycle:
     * Introduce `POST /admin/v2/task-group/{id}/reset/pip/` (\#3314).
+    * Introduce `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3314).
     * Remove `/project/{project_id}/status/` and move its logic to `/project/{project_id}/latest-job/` (\#3317).
 * Database:
     * Introduce `DatasetV2.is_starred` (\#3311).
