@@ -8,7 +8,7 @@ def check_pixi_version(
     *,
     pixi_version: str,
     resource: Resource,
-) -> str:
+) -> None:
     """
     Verify that the requested pixi version is available for this resource.
 
