@@ -218,7 +218,7 @@ class TaskGroupOverridesPixi(BaseModel):
         use_pixi_lockfile:
     """
 
-    use_pixi_lockfile: bool = True
+    use_pixi_lockfile: bool = False
 
 
 @router.post(
