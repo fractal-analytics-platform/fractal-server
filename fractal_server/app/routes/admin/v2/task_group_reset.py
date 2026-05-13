@@ -26,6 +26,7 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._python_interpreter import (
     get_python_interpreter_or_422,
 )
+from fractal_server.app.routes.aux.pixi_version import check_pixi_version
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -115,6 +116,19 @@ class TaskGroupOverridesPip(BaseModel):
     pinned_package_versions_post: Json[dict[NonEmptyStr, NonEmptyStr]] = Field(
         default_factory=dict
     )
+
+
+class TaskGroupOverridesPixi(BaseModel):
+    """
+    Overrides of the original task-group properties.
+
+    Attributes:
+        use_pixi_lockfile:
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    use_pixi_lockfile: bool = False
 
 
 async def _create_activity(
@@ -212,19 +226,6 @@ async def reset_tasks_pip(
     return task_group_activity
 
 
-class TaskGroupOverridesPixi(BaseModel):
-    """
-    Overrides of the original task-group properties.
-
-    Attributes:
-        use_pixi_lockfile:
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    use_pixi_lockfile: bool = False
-
-
 @router.post(
     "/{task_group_id}/reset/pixi/",
     response_model=TaskGroupActivityRead,
@@ -250,6 +251,8 @@ async def reset_tasks_pixi(
     _verify_support(
         pip_or_pixi="pixi", task_group=task_group, resource=resource
     )
+
+    check_pixi_version(pixi_version=task_group.pixi_version, resource=resource)
 
     logger.info(
         f"Running {task_group.origin} reset for {task_group.id=} "
