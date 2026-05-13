@@ -20,10 +20,14 @@ def test_get_python_interpreter_or_422(
         get_python_interpreter_or_422(python_version="1.2", resource=resource)
 
 
-def test_check_pixi_version(
-    local_resource_profile_objects,
-    pixi: TasksPixiSettings,
-):
+def test_check_pixi_version(local_resource_profile_objects):
+    actual_version = "0.54.1"
+
+    pixi = TasksPixiSettings(
+        default_version=actual_version,
+        versions={actual_version: f"/something/{actual_version}"},
+    )
+
     resource, _ = local_resource_profile_objects
     with pytest.raises(
         HTTPException,
@@ -39,4 +43,4 @@ def test_check_pixi_version(
     ):
         check_pixi_version(pixi_version="0.1.2", resource=resource)
 
-    check_pixi_version(pixi_version=pixi.default_version, resource=resource)
+    check_pixi_version(pixi_version=actual_version, resource=resource)
