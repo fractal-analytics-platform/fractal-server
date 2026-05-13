@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import Json
 
@@ -105,6 +106,7 @@ class TaskGroupOverridesPip(BaseModel):
         pinned_package_versions_post:
     """
 
+    model_config = ConfigDict(extra="forbid")
     pip_extras: str | None = None
     python_version: NonEmptyStr | None = None
     pinned_package_versions_pre: Json[dict[NonEmptyStr, NonEmptyStr]] = Field(
@@ -217,6 +219,8 @@ class TaskGroupOverridesPixi(BaseModel):
     Attributes:
         use_pixi_lockfile:
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     use_pixi_lockfile: bool = False
 
