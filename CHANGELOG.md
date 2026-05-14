@@ -6,6 +6,8 @@
     * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
     * Reject extras in `POST /admin/v2/task-group/{id}/reset/pixi/` request body (\#3324).
     * Fail fast if pixi version is not available, in `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3324).
+* Internal:
+    * Introduce `get_pixi_version` auxiliary function (\#3324).
 
 
 # 2.22.10
