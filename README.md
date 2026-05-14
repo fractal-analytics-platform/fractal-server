@@ -39,7 +39,7 @@
 | fractal\_server/app/routes/admin/v2/task.py                                  |       71 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group.py                           |      126 |        0 |       48 |        0 |    100% |           |
 | fractal\_server/app/routes/admin/v2/task\_group\_lifecycle.py                |      118 |        0 |       24 |        0 |    100% |           |
-| fractal\_server/app/routes/admin/v2/task\_group\_reset.py                    |      103 |        0 |       12 |        2 |     98% |166-\>176, 176-\>181 |
+| fractal\_server/app/routes/admin/v2/task\_group\_reset.py                    |      108 |        0 |       12 |        2 |     98% |182-\>192, 192-\>197 |
 | fractal\_server/app/routes/admin/v2/users\_csv.py                            |       40 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/api/\_\_init\_\_.py                               |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/alive.py                                      |        6 |        0 |        0 |        0 |    100% |           |
@@ -65,7 +65,7 @@
 | fractal\_server/app/routes/api/v2/task.py                                    |       95 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_collection.py                        |      143 |        2 |       32 |        1 |     98% |237-\>247, 274-275 |
 | fractal\_server/app/routes/api/v2/task\_collection\_custom.py                |       72 |        0 |       18 |        1 |     99% |  68-\>105 |
-| fractal\_server/app/routes/api/v2/task\_collection\_pixi.py                  |       85 |        0 |       18 |        1 |     99% | 105-\>115 |
+| fractal\_server/app/routes/api/v2/task\_collection\_pixi.py                  |       81 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_group.py                             |       99 |        0 |       26 |        1 |     99% | 246-\>250 |
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                  |      115 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_version\_update.py                   |       89 |        1 |       16 |        1 |     98% |       209 |
@@ -88,6 +88,7 @@
 | fractal\_server/app/routes/aux/\_python\_interpreter.py                      |        9 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_runner.py                                   |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_versions.py                                 |       17 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/app/routes/aux/pixi\_version.py                              |       11 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/validate\_user\_profile.py                    |       28 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/routes/pagination.py                                     |       43 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                                  |        2 |        0 |        0 |        0 |    100% |           |
@@ -213,7 +214,7 @@
 | fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **10956** |  **171** | **1938** |   **90** | **98%** |           |
+| **TOTAL**                                                                    | **10968** |  **171** | **1938** |   **89** | **98%** |           |
 
 
 ## Setup coverage badge
