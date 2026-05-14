@@ -49,7 +49,7 @@ class TaskFiles(BaseModel):
     component: str | None = None
     prefix: str | None = None
 
-    def _check_component(self):
+    def _check_component(self) -> None:
         if self.component is None:
             raise ValueError("`component` cannot be None")
 
@@ -70,7 +70,7 @@ class TaskFiles(BaseModel):
         return self.root_dir_local / self.subfolder_name
 
     @property
-    def prefix_component(self):
+    def prefix_component(self) -> str | None:
         if self.prefix is None:
             return self.component
         else:

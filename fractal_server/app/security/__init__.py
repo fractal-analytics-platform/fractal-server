@@ -81,7 +81,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         session: AsyncSession,
         user_model: type[UP],
         oauth_account_model: type[OAuthAccount] | None = None,
-    ):
+    ) -> None:
         self.session = session
         self.user_model = user_model
         self.oauth_account_model = oauth_account_model
@@ -179,7 +179,7 @@ password_helper = PasswordHelper(password_hash=password_hash)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
-    def __init__(self, user_db):
+    def __init__(self, user_db) -> None:
         """
         Override `__init__` of `BaseUserManager` to define custom
         `password_helper`.
@@ -454,7 +454,7 @@ async def _create_first_user(
         close_logger(function_logger)
 
 
-def _create_first_group():
+def _create_first_group() -> None:
     """
     Create a `UserGroup` named `FRACTAL_DEFAULT_GROUP_NAME`, if this variable
     is set and if such a group does not already exist.

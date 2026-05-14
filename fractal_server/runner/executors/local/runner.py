@@ -3,6 +3,7 @@ from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from typing import Self
 from typing import override
 
 from fractal_server.app.db import get_sync_db
@@ -76,7 +77,7 @@ class LocalRunner(BaseRunner):
         resource: Resource,
         profile: Profile,
         fractal_job_id: int,
-    ):
+    ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
@@ -84,11 +85,11 @@ class LocalRunner(BaseRunner):
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
         self.fractal_job_id = fractal_job_id
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         logger.debug("Enter LocalRunner")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool | None:
         logger.debug("Exit LocalRunner")
         self.executor.shutdown(
             wait=False,

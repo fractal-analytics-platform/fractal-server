@@ -153,7 +153,7 @@ class FractalSSH:
         sftp_get_prefetch: bool = False,
         sftp_get_max_requests: int = 64,
         logger_name: str = __name__,
-    ):
+    ) -> None:
         self._lock = Lock()
         self._connection = connection
         self.default_lock_timeout = default_timeout
@@ -654,7 +654,7 @@ class FractalSSHList:
         *,
         timeout: float = 5.0,
         logger_name: str = "fractal_server.FractalSSHList",
-    ):
+    ) -> None:
         self._lock = Lock()
         self._data = {}
         self._timeout = timeout
@@ -772,7 +772,7 @@ class FractalSSHList:
             )
             fractal_ssh_obj.close()
 
-    def close_all(self, *, timeout: float = 5.0):
+    def close_all(self, *, timeout: float = 5.0) -> None:
         """
         Close all `FractalSSH` objects in the collection.
 

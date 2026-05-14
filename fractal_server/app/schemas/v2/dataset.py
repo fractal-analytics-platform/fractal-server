@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -34,7 +35,7 @@ class DatasetCreate(BaseModel):
     zarr_subfolder: SafeRelativePathStr | None = None
 
     @model_validator(mode="after")
-    def validate_zarr_dir(self):
+    def validate_zarr_dir(self) -> Self:
         if (self.project_dir is None) and (self.zarr_subfolder is not None):
             raise ValueError(
                 "Cannot provide `zarr_subfolder` without `project_dir`"
@@ -125,7 +126,7 @@ class DatasetImport(BaseModel):
     images: list[SingleImage] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def validate_image_zarr_url(self):
+    def validate_image_zarr_url(self) -> Self:
         for image in self.images:
             if not url_is_relative_to(url=image.zarr_url, base=self.zarr_dir):
                 raise ValueError(
