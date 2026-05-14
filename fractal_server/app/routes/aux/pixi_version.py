@@ -4,7 +4,7 @@ from fastapi import status
 from fractal_server.app.models import Resource
 
 
-def get_pixi_version(
+def get_pixi_version_or_422(
     *,
     pixi_version: str | None,
     resource: Resource,

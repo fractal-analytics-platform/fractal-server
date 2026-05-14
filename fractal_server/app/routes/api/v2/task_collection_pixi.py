@@ -29,7 +29,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     integrity_error_to_422,
 )
 from fractal_server.app.routes.auth import get_api_user
-from fractal_server.app.routes.aux.pixi_version import get_pixi_version
+from fractal_server.app.routes.aux.pixi_version import get_pixi_version_or_422
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -93,7 +93,7 @@ async def collect_task_pixi(
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
 
-    pixi_version = get_pixi_version(
+    pixi_version = get_pixi_version_or_422(
         resource=resource,
         pixi_version=pixi_version,
     )
