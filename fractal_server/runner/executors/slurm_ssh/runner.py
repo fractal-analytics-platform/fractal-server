@@ -73,7 +73,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         Path(folder).mkdir(parents=True)
 
     @override
-    def _mkdir_remote_folder(self: Self, folder: str):
+    def _mkdir_remote_folder(self: Self, folder: str) -> None:
         self.fractal_ssh.mkdir(
             folder=folder,
             parents=True,

@@ -17,7 +17,7 @@ from fractal_server.utils import get_timestamp
 from .task import TaskV2
 
 
-def _check_origin_not_pixi(origin: str):
+def _check_origin_not_pixi(origin: str) -> None:
     """
     Raise `ValueError` if `origin=="pixi"`
     """

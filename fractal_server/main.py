@@ -145,7 +145,7 @@ def _endpoint_has_background_task(method: str, path: str) -> bool:
 
 
 class SlowResponseMiddleware:
-    def __init__(self, app: FastAPI, time_threshold: float):
+    def __init__(self, app: FastAPI, time_threshold: float) -> None:
         self.app = app
         self.time_threshold = time_threshold
 
@@ -188,7 +188,7 @@ class SlowResponseMiddleware:
 def data_exception_handler(
     request: Request,
     exc: HTTPExceptionWithData,
-):
+) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail, "data": exc.data},

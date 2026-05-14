@@ -11,7 +11,7 @@ SCRIPTS_SUBFOLDER = "scripts"
 logger = set_logger(__name__)
 
 
-def _check_pixi_frozen_option(replacements: set[tuple[str, str]]):
+def _check_pixi_frozen_option(replacements: set[tuple[str, str]]) -> None:
     try:
         replacement = next(
             rep for rep in replacements if rep[0] == "__FROZEN_OPTION__"

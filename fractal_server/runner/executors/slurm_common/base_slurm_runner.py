@@ -128,7 +128,7 @@ class BaseSlurmRunner(BaseRunner):
         user_cache_dir: str,
         slurm_account: str | None = None,
         fractal_job_id: int,
-    ):
+    ) -> None:
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
         self.root_dir_remote = root_dir_remote
@@ -162,10 +162,10 @@ class BaseSlurmRunner(BaseRunner):
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
         self.jobs = {}
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self: Self, exc_type, exc_val, exc_tb):
+    def __exit__(self: Self, exc_type, exc_val, exc_tb) -> bool:
         return False
 
     def _run_local_cmd(self: Self, cmd: str) -> str:
@@ -645,7 +645,7 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
         return []
 
-    def _check_no_active_jobs(self):
+    def _check_no_active_jobs(self) -> None:
         if self.jobs != {}:
             raise JobExecutionError(
                 "Unexpected branch: jobs must be empty before new submissions."

@@ -94,7 +94,7 @@ update_db_data_parser = subparsers.add_parser(
 )
 
 
-def save_openapi(dest="openapi.json"):
+def save_openapi(dest: str = "openapi.json") -> None:
     from fractal_server.main import start_application
 
     app = start_application()
@@ -104,7 +104,7 @@ def save_openapi(dest="openapi.json"):
         json.dump(openapi_schema, f)
 
 
-def set_db():
+def set_db() -> None:
     """
     Upgrade database schemas.
 
@@ -265,7 +265,7 @@ def init_db_data(
             print()
 
 
-def update_db_data():
+def update_db_data() -> None:
     """
     Apply data migrations.
     """
@@ -335,7 +335,7 @@ def update_db_data():
     current_update_db_data_module.fix_db()
 
 
-def run():
+def run() -> None:
     args = parser.parse_args(sys.argv[1:])
 
     if args.cmd == "openapi":

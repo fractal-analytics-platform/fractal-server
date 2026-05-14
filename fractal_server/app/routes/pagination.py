@@ -1,4 +1,5 @@
 from typing import Generic
+from typing import Self
 from typing import TypeVar
 
 from fastapi import HTTPException
@@ -19,7 +20,7 @@ class PaginationRequest(BaseModel):
     page_size: int | None = Field(ge=1)
 
     @model_validator(mode="after")
-    def valid_pagination_parameters(self):
+    def valid_pagination_parameters(self) -> Self:
         if self.page_size is None and self.page > 1:
             raise ValueError(
                 f"page_size is None but page={self.page} is greater than 1."

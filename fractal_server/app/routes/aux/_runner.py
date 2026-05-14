@@ -13,7 +13,7 @@ def _backend_supports_shutdown(backend: str) -> bool:
         return False
 
 
-def _check_shutdown_is_supported():
+def _check_shutdown_is_supported() -> None:
     """
     Raises:
         HTTPException(status_code=HTTP_422_UNPROCESSABLE_CONTENT):
