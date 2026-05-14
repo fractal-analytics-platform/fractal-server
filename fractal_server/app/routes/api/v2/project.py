@@ -45,6 +45,10 @@ async def get_list_project(
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_owner == is_owner)
         .where(LinkUserProjectV2.is_verified.is_(True))
+        .order_by(
+            ProjectV2.is_starred.desc(),
+            ProjectV2.timestamp_created.desc(),
+        )
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -185,3 +189,51 @@ async def delete_project(
     logger.debug("Everything  has been deleted correctly.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/project/{project_id}//star/",
+    status_code=status.HTTP_200_OK,
+)
+async def star_project(
+    project_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `ProjectV2.is_starred` to `True`
+    """
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    project.is_starred = True
+    db.add(project)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/project/{project_id}/unstar/",
+    status_code=status.HTTP_200_OK,
+)
+async def unstar_project(
+    project_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `ProjectV2.is_starred` to `False`
+    """
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    project.is_starred = False
+    db.add(project)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
