@@ -6,13 +6,13 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.14.5
     hooks:
       - id: ruff-check
         args: ["--fix"]
       - id: ruff-format
 -   repo: https://github.com/PyCQA/bandit
-    rev: '1.9.4'
+    rev: '1.9.1'
     hooks:
     - id: bandit
       args: ["--exclude", "tests/*", "benchmarks/*", "example/*"]
@@ -36,7 +36,7 @@ repos:
 
 
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
+    rev: v2.4.1
     hooks:
       - id: codespell
         args: ["--ignore-words", ".codespellignore"]
