@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_string_tools_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-14 07:50 +0000
+            created at 2026-05-14 11:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -237,7 +237,7 @@
     <p class="run run2"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">        <span class="nam">sftp_get_prefetch</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t154" href="#t154">154</a></span><span class="t">        <span class="nam">sftp_get_max_requests</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">64</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t">        <span class="nam">logger_name</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="nam">__name__</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t157" href="#t157">157</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_lock</span> <span class="op">=</span> <span class="nam">Lock</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_connection</span> <span class="op">=</span> <span class="nam">connection</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">default_lock_timeout</span> <span class="op">=</span> <span class="nam">default_timeout</span>&nbsp;</span><span class="r"></span></p>
@@ -738,7 +738,7 @@
     <p class="run run2"><span class="n"><a id="t654" href="#t654">654</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t655" href="#t655">655</a></span><span class="t">        <span class="nam">timeout</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">5.0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t656" href="#t656">656</a></span><span class="t">        <span class="nam">logger_name</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"fractal_server.FractalSSHList"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t657" href="#t657">657</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t657" href="#t657">657</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t658" href="#t658">658</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_lock</span> <span class="op">=</span> <span class="nam">Lock</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t659" href="#t659">659</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_data</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t660" href="#t660">660</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_timeout</span> <span class="op">=</span> <span class="nam">timeout</span>&nbsp;</span><span class="r"></span></p>
@@ -856,7 +856,7 @@
     <p class="run run2"><span class="n"><a id="t772" href="#t772">772</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t773" href="#t773">773</a></span><span class="t">            <span class="nam">fractal_ssh_obj</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t774" href="#t774">774</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t775" href="#t775">775</a></span><span class="t">    <span class="key">def</span> <span class="nam">close_all</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="op">*</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">5.0</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t775" href="#t775">775</a></span><span class="t">    <span class="key">def</span> <span class="nam">close_all</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="op">*</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">5.0</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t776" href="#t776">776</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t777" href="#t777">777</a></span><span class="t"><span class="str">        Close all `FractalSSH` objects in the collection.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t778" href="#t778">778</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -900,7 +900,7 @@
             <a class="nav" href="z_a3e5354dc8db4bd4_string_tools_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-14 07:50 +0000
+            created at 2026-05-14 11:44 +0000
         </p>
     </div>
 </footer>
