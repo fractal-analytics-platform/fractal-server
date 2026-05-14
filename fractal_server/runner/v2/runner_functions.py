@@ -136,7 +136,7 @@ def _process_init_task_output(
     )
 
 
-def _check_parallelization_list_size(my_list):
+def _check_parallelization_list_size(my_list) -> None:
     if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
         raise JobExecutionError(
             "Too many parallelization items.\n"

@@ -59,7 +59,7 @@ def fail_and_cleanup(
     exception: Exception,
     log_file_path: Path,
     db: DBSyncSession,
-):
+) -> None:
     logger = get_logger(logger_name)
     logger.warning(
         f"Task {task_group_activity.action} failed. "

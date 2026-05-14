@@ -115,7 +115,7 @@ class SlurmConfig(BaseModel):
         `self.prefix` are listed first.
         """
 
-        def _no_prefix(_line):
+        def _no_prefix(_line) -> int:
             if _line.startswith(self.prefix):
                 return 0
             else:
@@ -135,7 +135,7 @@ class SlurmConfig(BaseModel):
             script_lines:
         """
 
-        def _sorting_function(_line):
+        def _sorting_function(_line) -> int:
             if _line == self.shebang_line:
                 return 0
             elif _line.startswith(self.prefix):

@@ -17,7 +17,7 @@ class HTTPExceptionWithData(HTTPException):
         status_code: int,
         data: Any,
         detail: str | None = None,
-    ):
+    ) -> None:
         self.data = data
         super().__init__(
             status_code=status_code,

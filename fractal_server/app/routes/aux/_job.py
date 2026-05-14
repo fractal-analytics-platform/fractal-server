@@ -10,7 +10,7 @@ from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 logger = set_logger(__name__)
 
 
-def _write_shutdown_file(*, job: JobV2):
+def _write_shutdown_file(*, job: JobV2) -> None:
     """
     Write job's shutdown file.
 
@@ -26,7 +26,7 @@ def _write_shutdown_file(*, job: JobV2):
         f.write(f"Trigger executor shutdown for {job.id=}.")
 
 
-def _write_shutdown_file_or_422(*, job: JobV2):
+def _write_shutdown_file_or_422(*, job: JobV2) -> None:
     try:
         _write_shutdown_file(job=job)
     except Exception as e:

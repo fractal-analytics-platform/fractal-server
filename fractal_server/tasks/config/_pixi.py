@@ -129,7 +129,7 @@ class TasksPixiSettings(BaseModel):
     """
 
     @model_validator(mode="after")
-    def check_pixi_settings(self):
+    def check_pixi_settings(self) -> Self:
         if self.default_version not in self.versions:
             raise ValueError(
                 f"Default version '{self.default_version}' not in "

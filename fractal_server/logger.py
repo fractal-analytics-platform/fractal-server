@@ -142,7 +142,7 @@ def reset_logger_handlers(logger: logging.Logger) -> None:
     logger.handlers.clear()
 
 
-def config_uvicorn_loggers():
+def config_uvicorn_loggers() -> None:
     """
     Change the formatter for the uvicorn access/error loggers.
 
