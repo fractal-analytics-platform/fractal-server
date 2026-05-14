@@ -26,7 +26,7 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux._python_interpreter import (
     get_python_interpreter_or_422,
 )
-from fractal_server.app.routes.aux.pixi_version import check_pixi_version
+from fractal_server.app.routes.aux.pixi_version import get_pixi_version
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -252,7 +252,10 @@ async def reset_tasks_pixi(
         pip_or_pixi="pixi", task_group=task_group, resource=resource
     )
 
-    check_pixi_version(pixi_version=task_group.pixi_version, resource=resource)
+    get_pixi_version(
+        pixi_version=task_group.pixi_version,
+        resource=resource,
+    )
 
     logger.info(
         f"Running {task_group.origin} reset for {task_group.id=} "

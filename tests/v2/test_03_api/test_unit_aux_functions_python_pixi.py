@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from fractal_server.app.routes.aux._python_interpreter import (
     get_python_interpreter_or_422,
 )
-from fractal_server.app.routes.aux.pixi_version import check_pixi_version
+from fractal_server.app.routes.aux.pixi_version import get_pixi_version
 from fractal_server.tasks.config import TasksPixiSettings
 
 
@@ -20,12 +20,16 @@ def test_get_python_interpreter_or_422(
         get_python_interpreter_or_422(python_version="1.2", resource=resource)
 
 
-def test_check_pixi_version(local_resource_profile_objects):
-    actual_version = "0.54.1"
+def test_get_pixi_version(local_resource_profile_objects):
+    default_version = "0.54.1"
+    another_version = "10.11.12"
 
     pixi = TasksPixiSettings(
-        default_version=actual_version,
-        versions={actual_version: f"/something/{actual_version}"},
+        default_version=default_version,
+        versions={
+            default_version: f"/something/{default_version}",
+            another_version: f"/something/{another_version}",
+        },
     )
 
     resource, _ = local_resource_profile_objects
@@ -33,7 +37,7 @@ def test_check_pixi_version(local_resource_profile_objects):
         HTTPException,
         match="Pixi task collection is not available",
     ):
-        check_pixi_version(pixi_version="0.1.2", resource=resource)
+        get_pixi_version(pixi_version="0.1.2", resource=resource)
 
     resource.tasks_pixi_config = pixi.model_dump()
 
@@ -41,6 +45,14 @@ def test_check_pixi_version(local_resource_profile_objects):
         HTTPException,
         match="Pixi version '0.1.2' is not available",
     ):
-        check_pixi_version(pixi_version="0.1.2", resource=resource)
+        get_pixi_version(pixi_version="0.1.2", resource=resource)
 
-    check_pixi_version(pixi_version=actual_version, resource=resource)
+    assert (
+        get_pixi_version(pixi_version=another_version, resource=resource)
+        == another_version
+    )
+
+    assert (
+        get_pixi_version(pixi_version=None, resource=resource)
+        == default_version
+    )
