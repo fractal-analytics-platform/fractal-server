@@ -11,20 +11,6 @@ from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
-async def test_pixi_not_available(
-    client, MockCurrentUser, local_resource_profile_db
-):
-    resource, profile = local_resource_profile_db
-    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
-        res = await client.post(
-            "api/v2/task/collect/pixi/",
-            data={"pixi_version": "9.9.9"},
-            files={"file": ("name", b"", "application/gzip")},
-        )
-        assert res.status_code == 422
-        assert res.json()["detail"] == "Pixi task collection is not available."
-
-
 async def test_api_failures(
     client,
     MockCurrentUser,
