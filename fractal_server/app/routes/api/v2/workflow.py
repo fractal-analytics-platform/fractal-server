@@ -60,8 +60,15 @@ async def get_workflow_list(
     # has much better scaling than refreshing all elements of
     # `project.workflow_list` - ref
     # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
-    stm = select(WorkflowV2).where(WorkflowV2.project_id == project.id)
-    workflow_list = (await db.execute(stm)).scalars().all()
+    res = await db.execute(
+        select(WorkflowV2)
+        .where(WorkflowV2.project_id == project.id)
+        .order_by(
+            WorkflowV2.is_starred.desc(),
+            WorkflowV2.timestamp_created.desc(),
+        )
+    )
+    workflow_list = res.scalars().all()
     return workflow_list
 
 
@@ -332,3 +339,55 @@ async def get_workflow_type_filters(
         current_type_filters.update(wftask.task.output_types)
 
     return response_items
+
+
+@router.post(
+    "/project/{project_id}/workflow/{workflow_id}/star/",
+    status_code=status.HTTP_200_OK,
+)
+async def star_workflow(
+    project_id: int,
+    workflow_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `WorkflowV2.is_starred` to `True`
+    """
+    workflow = await _get_workflow_check_access(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    workflow.is_starred = True
+    db.add(workflow)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/project/{project_id}/workflow/{workflow_id}/unstar/",
+    status_code=status.HTTP_200_OK,
+)
+async def unstar_workflow(
+    project_id: int,
+    workflow_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `WorkflowV2.is_starred` to `False`
+    """
+    workflow = await _get_workflow_check_access(
+        project_id=project_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    workflow.is_starred = False
+    db.add(workflow)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
