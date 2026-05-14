@@ -192,7 +192,7 @@ async def delete_project(
 
 
 @router.post(
-    "/project/{project_id}//star/",
+    "/project/{project_id}/star/",
     status_code=status.HTTP_200_OK,
 )
 async def star_project(
