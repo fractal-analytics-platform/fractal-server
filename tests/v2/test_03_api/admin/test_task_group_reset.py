@@ -82,11 +82,15 @@ async def test_task_group_reset(
 
     if package_origin == "pypi":
         pip_or_pixi = "pip"
-        request = dict(
+        collect_request = dict(
             data=dict(
                 package="testing-tasks-mock",
                 python_version=current_py_version,
             )
+        )
+        reset_request = dict(
+            python_version=current_py_version,
+            pip_extras="",
         )
     elif package_origin == "wheel":
         pip_or_pixi = "pip"
@@ -96,7 +100,7 @@ async def test_task_group_reset(
             / "testing_tasks_mock-0.1.4-py3-none-any.whl"
         )
         with archive_path.open("rb") as f:
-            request = dict(
+            collect_request = dict(
                 files={
                     "file": (
                         archive_path.name,
@@ -105,10 +109,14 @@ async def test_task_group_reset(
                     )
                 }
             )
+        reset_request = dict(
+            python_version=current_py_version,
+            pip_extras="",
+        )
     else:
         pip_or_pixi = "pixi"
         with pixi_pkg_targz.open("rb") as f:
-            request = dict(
+            collect_request = dict(
                 files={
                     "file": (
                         pixi_pkg_targz.name,
@@ -121,10 +129,11 @@ async def test_task_group_reset(
         resource.tasks_pixi_config = pixi.model_dump()
         db.add(resource)
         await db.commit()
+        reset_request = {}
 
     async with MockCurrentUser(profile_id=profile.id):
         res = await client.post(
-            f"api/v2/task/collect/{pip_or_pixi}/", **request
+            f"api/v2/task/collect/{pip_or_pixi}/", **collect_request
         )
         assert res.status_code == 202
         taskgroupv2_id = res.json()["taskgroupv2_id"]
@@ -155,10 +164,7 @@ async def test_task_group_reset(
 
         res = await client.post(
             f"admin/v2/task-group/{taskgroupv2_id}/reset/{pip_or_pixi}/",
-            json=dict(
-                python_version=current_py_version,
-                pip_extras="",
-            ),
+            json=reset_request,
         )
         assert res.status_code == 202
         activity_id = res.json()["id"]
@@ -176,10 +182,7 @@ async def test_task_group_reset(
     async with MockCurrentUser(is_superuser=True):
         res = await client.post(
             f"admin/v2/task-group/{taskgroupv2_id}/reset/{pip_or_pixi}/",
-            json=dict(
-                python_version=current_py_version,
-                pip_extras="",
-            ),
+            json=reset_request,
         )
         assert res.status_code == 202
         assert Path(internal_path).is_dir()

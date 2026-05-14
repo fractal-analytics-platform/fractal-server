@@ -29,6 +29,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     integrity_error_to_422,
 )
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.aux.pixi_version import get_pixi_version_or_422
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -92,25 +93,10 @@ async def collect_task_pixi(
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
 
-    # Check if Pixi is available
-    if not resource.tasks_pixi_config:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Pixi task collection is not available.",
-        )
-    # Check if provided Pixi version is available. Use default if not provided
-    if pixi_version is None:
-        pixi_version = resource.tasks_pixi_config["default_version"]
-    else:
-        if pixi_version not in resource.tasks_pixi_config["versions"]:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Pixi version '{pixi_version}' is not available. "
-                    "Available versions: "
-                    f"{list(resource.tasks_pixi_config['versions'].keys())}"
-                ),
-            )
+    pixi_version = get_pixi_version_or_422(
+        resource=resource,
+        pixi_version=pixi_version,
+    )
 
     pkg_name, version = validate_pkgname_and_version(file.filename)
     tar_gz_content = await file.read()
