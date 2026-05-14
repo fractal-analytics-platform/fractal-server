@@ -9,6 +9,8 @@
 * Internal:
     * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
     * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
+* Testing:
+    * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
 
 # 2.22.10
 
