@@ -76,6 +76,7 @@ jobs:
     - name: Commit to benchmark-api branch
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       run: |
+        git fetch origin benchmark-api
         git switch benchmark-api
         git add benchmarks/bench.html benchmarks/bench.json
         git commit -m "Update bench.html & bench.json" --no-verify
