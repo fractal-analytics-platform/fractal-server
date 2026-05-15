@@ -11,6 +11,8 @@
     * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
 * Testing:
     * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
+    * Bump version of `zizmor-action` (\#3330).
+    * Replace `stefanzweifel/git-auto-commit-action` with `git` commands (\#3330).
 
 # 2.22.10
 
