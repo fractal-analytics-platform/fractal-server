@@ -2,6 +2,8 @@
 
 # 2.22.11 (unreleased)
 
+* API:
+    * Remove `GET /project/{project_id}/dataset/{dataset_id}/history/` (\#3331).
 * Task-group lifecycle:
     * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
     * Reject extras in `POST /admin/v2/task-group/{id}/reset/pixi/` request body (\#3324).
