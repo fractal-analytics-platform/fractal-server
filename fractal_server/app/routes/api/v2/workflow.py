@@ -65,7 +65,7 @@ async def get_workflow_list(
         .where(WorkflowV2.project_id == project.id)
         .order_by(
             WorkflowV2.is_starred.desc(),
-            WorkflowV2.timestamp_created.desc(),
+            WorkflowV2.name,
         )
     )
     workflow_list = res.scalars().all()
