@@ -11,7 +11,7 @@ from fractal_server.app.schemas.v2 import WorkflowUpdate
 
 
 async def test_schemas_workflow():
-    project = ProjectV2(id=1, name="project")
+    project = ProjectV2(id=1, name="project", is_starred=False)
 
     # Create
 
@@ -21,6 +21,7 @@ async def test_schemas_workflow():
         **workflow_create.model_dump(),
         id=1,
         project_id=project.id,
+        is_starred=False,
     )
 
     # Read
