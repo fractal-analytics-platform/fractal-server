@@ -73,8 +73,8 @@ jobs:
       with:
         message-path: benchmarks/bench_diff.md
 
-    # commit on benchmark-api removing bench_diff.html
-    - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    - name: Commit to benchmark-api branch
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       run: |
         git switch benchmark-api
         git add benchmarks/bench.html benchmarks/bench.json
