@@ -16,13 +16,11 @@ jobs:
 
     permissions:
       pull-requests: write  # For https://github.com/mshick/add-pr-comment
-      contents: write # For https://github.com/stefanzweifel/git-auto-commit-action
+      contents: write # For committing to benchmark-api branch
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       with:
-        # Needed for stefanzweifel/git-auto-commit-action, to push new commits to the repository
-
         persist-credentials: true  # Needed for committing on the benchmark-api branch
 
     - name: Start Postgres
@@ -75,7 +73,11 @@ jobs:
 
     - name: Commit to benchmark-api branch
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      # Note: `git stash pop` (rather than `git checkout stash -- .`)
+      # would lead to merge conflicts.
       run: |
+        git config user.email "benchmarks.yaml@example.com"
+        git config user.name "benchmarks.yaml GHA"
         git fetch origin benchmark-api
         git stash
         git switch benchmark-api
