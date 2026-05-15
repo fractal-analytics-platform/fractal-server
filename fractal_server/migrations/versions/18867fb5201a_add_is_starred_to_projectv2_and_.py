@@ -1,8 +1,8 @@
-"""add ProjectV2.is_starred and WorkflowV2.is_starred
+"""add is_starred to ProjectV2 and WorkflowV2
 
-Revision ID: f529d37a9210
+Revision ID: 18867fb5201a
 Revises: 3e3ccea2f3ec
-Create Date: 2026-05-14 12:48:34.747267
+Create Date: 2026-05-15 10:07:06.534234
 
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "f529d37a9210"
+revision = "18867fb5201a"
 down_revision = "3e3ccea2f3ec"
 branch_labels = None
 depends_on = None
