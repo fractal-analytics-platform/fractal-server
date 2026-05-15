@@ -22,7 +22,8 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       with:
         # Needed for stefanzweifel/git-auto-commit-action, to push new commits to the repository
-        persist-credentials: true
+
+        persist-credentials: true  # Needed for committing on the benchmark-api branch
 
     - name: Start Postgres
       run: |
@@ -72,15 +73,12 @@ jobs:
       with:
         message-path: benchmarks/bench_diff.md
 
-    # commit on benchmark-api removing bench_diff.html
-    - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+    - name: Commit to benchmark-api branch
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      with:
-        commit_message: Update bench.html & bench.json
-        branch: benchmark-api
-        commit_options: '--no-verify'
-        push_options: '--force'
-        skip_checkout: true
-        file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+      run: |
+        git switch benchmark-api
+        git add benchmarks/bench.html benchmarks/bench.json
+        git commit -m "Update bench.html & bench.json" --no-verify
+        git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
