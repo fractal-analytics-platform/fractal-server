@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
+from sqlmodel import BOOLEAN
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -15,6 +16,14 @@ class ProjectV2(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str
+
+    is_starred: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        ),
+    )
 
     resource_id: int = Field(foreign_key="resource.id", ondelete="RESTRICT")
     timestamp_created: datetime = Field(

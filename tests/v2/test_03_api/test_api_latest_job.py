@@ -179,15 +179,20 @@ async def test_get_latest_job_tasks_statuses(
         dataset_id=dataset.id,
         user_email="",
         dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history"})
+            dataset.model_dump_json(exclude={"images", "history", "is_starred"})
         ),
         workflow_dump=json.loads(
             workflow.model_dump_json(
-                exclude={"task_list", "description", "template_id"}
+                exclude={
+                    "task_list",
+                    "description",
+                    "template_id",
+                    "is_starred",
+                }
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id"})
+            project.model_dump_json(exclude={"resource_id", "is_starred"})
         ),
     )
     job_A = JobV2(

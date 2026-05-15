@@ -17,6 +17,7 @@ class ProjectCreate(BaseModel):
 class ProjectRead(BaseModel):
     id: int
     name: str
+    is_starred: bool
     timestamp_created: AwareDatetime
 
     @field_serializer("timestamp_created")

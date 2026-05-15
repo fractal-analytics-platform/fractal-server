@@ -426,18 +426,27 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDump(
-            **json.loads(project.model_dump_json(exclude={"resource_id"}))
+            **json.loads(
+                project.model_dump_json(exclude={"resource_id", "is_starred"})
+            )
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
                 wf.model_dump_json(
-                    exclude={"task_list", "description", "template_id"}
+                    exclude={
+                        "task_list",
+                        "description",
+                        "template_id",
+                        "is_starred",
+                    }
                 )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(
             **json.loads(
-                dataset1.model_dump_json(exclude={"history", "images"})
+                dataset1.model_dump_json(
+                    exclude={"history", "images", "is_starred"}
+                )
             )
         ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump
