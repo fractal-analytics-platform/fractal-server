@@ -45,22 +45,6 @@ class HistoryUnitRead(BaseModel):
     zarr_urls: list[str]
 
 
-class HistoryRunRead(BaseModel):
-    id: int
-    dataset_id: int
-    workflowtask_id: int | None = None
-    job_id: int
-    workflowtask_dump: dict[str, Any]
-    task_group_dump: dict[str, Any]
-    timestamp_started: AwareDatetime
-    status: HistoryUnitStatus
-    num_available_images: int
-
-    @field_serializer("timestamp_started")
-    def serialize_datetime(v: datetime) -> str:
-        return v.isoformat()
-
-
 class HistoryRunReadAggregated(BaseModel):
     id: int
     timestamp_started: AwareDatetime
