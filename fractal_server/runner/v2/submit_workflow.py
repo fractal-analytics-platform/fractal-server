@@ -226,21 +226,18 @@ def submit_workflow(
 
     try:
         process_workflow: ProcessWorkflowType
+        slurm_account = None
+        fractal_ssh = None
         match resource.type:
             case ResourceType.LOCAL:
                 process_workflow = local_process_workflow
-                backend_specific_kwargs = {}
             case ResourceType.SLURM_SUDO:
                 process_workflow = slurm_sudo_process_workflow
-                backend_specific_kwargs = dict(
-                    slurm_account=job.slurm_account,
-                )
+                slurm_account = job.slurm_account
             case ResourceType.SLURM_SSH:
                 process_workflow = slurm_ssh_process_workflow
-                backend_specific_kwargs = dict(
-                    fractal_ssh=fractal_ssh,
-                    slurm_account=job.slurm_account,
-                )
+                fractal_ssh = fractal_ssh
+                slurm_account = job.slurm_account
 
         process_workflow(
             workflow=workflow,
@@ -258,7 +255,8 @@ def submit_workflow(
             resource=resource,
             profile=profile,
             user_cache_dir=user_cache_dir,
-            **backend_specific_kwargs,
+            fractal_ssh=fractal_ssh,
+            slurm_account=slurm_account,
         )
 
         logger.info(
