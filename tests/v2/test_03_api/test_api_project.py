@@ -345,3 +345,59 @@ async def test_delete_project_ongoing_jobs(
         assert res.status_code == 204
         res = await client.delete(f"api/v2/project/{prj_submitted}/")
         assert res.status_code == 422
+
+
+async def test_starring_project(client, MockCurrentUser, project_factory, db):
+    async with MockCurrentUser() as user:
+        projectA = await project_factory(user, name="A")
+        assert projectA.is_starred is False
+        projectB = await project_factory(user, name="B")
+        assert projectB.is_starred is False
+        projectC = await project_factory(user, name="C")
+        assert projectC.is_starred is False
+        projectD = await project_factory(user, name="D")
+        assert projectD.is_starred is False
+
+        res = await client.get("api/v2/project/")
+        assert [project["id"] for project in res.json()] == [
+            # ordered by timestamp_created (latest first)
+            projectD.id,
+            projectC.id,
+            projectB.id,
+            projectA.id,
+        ]
+
+        # STAR
+        res = await client.post(f"api/v2/project/{projectC.id}/star/")
+        assert res.status_code == 200
+        await db.refresh(projectC)
+        assert projectC.is_starred is True
+
+        res = await client.post(f"api/v2/project/{projectA.id}/star/")
+        assert res.status_code == 200
+        await db.refresh(projectA)
+        assert projectA.is_starred is True
+
+        res = await client.get("api/v2/project/")
+        assert [project["id"] for project in res.json()] == [
+            # first starred, then others
+            # ordered by timestamp_created
+            projectC.id,
+            projectA.id,
+            projectD.id,
+            projectB.id,
+        ]
+
+        # UNSTAR
+        res = await client.post(f"api/v2/project/{projectC.id}/unstar/")
+        assert res.status_code == 200
+        await db.refresh(projectC)
+        assert projectC.is_starred is False
+
+        res = await client.get("api/v2/project/")
+        assert [project["id"] for project in res.json()] == [
+            projectA.id,
+            projectD.id,
+            projectC.id,
+            projectB.id,
+        ]
