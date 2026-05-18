@@ -54,6 +54,7 @@ class ProcessWorkflowType(Protocol):
         resource: Resource,
         profile: Profile,
         user_cache_dir: str,
+        worker_init: str | None,
     ) -> None: ...
 
 
