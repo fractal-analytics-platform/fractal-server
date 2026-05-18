@@ -3,7 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from itertools import chain
-from typing import Iterator
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi import Request
@@ -74,7 +74,7 @@ def check_settings(logger_name: str) -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> Iterator:
+async def lifespan(app: FastAPI) -> AsyncIterator:
     app.state.jobs = []
     logger_startup = set_logger("lifespan.startup")
     logger_startup.info(f"START (fractal-server {__VERSION__})")
