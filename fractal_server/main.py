@@ -3,6 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from itertools import chain
+from typing import Iterator
 
 from fastapi import FastAPI
 from fastapi import Request
@@ -73,7 +74,7 @@ def check_settings(logger_name: str) -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Iterator:
     app.state.jobs = []
     logger_startup = set_logger("lifespan.startup")
     logger_startup.info(f"START (fractal-server {__VERSION__})")
@@ -149,7 +150,9 @@ class SlowResponseMiddleware:
         self.app = app
         self.time_threshold = time_threshold
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    async def __call__(
+        self, scope: Scope, receive: Receive, send: Send
+    ) -> None:
         if (
             scope["type"] != "http"  # e.g. `scope["type"] == "lifespan"`
             or _endpoint_has_background_task(scope["method"], scope["path"])

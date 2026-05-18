@@ -336,7 +336,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     @override
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
-    ):
+    ) -> None:
         settings = Inject(get_settings)
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
