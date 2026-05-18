@@ -214,15 +214,20 @@ async def submit_job(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history"})
+            dataset.model_dump_json(exclude={"images", "history", "is_starred"})
         ),
         workflow_dump=json.loads(
             workflow.model_dump_json(
-                exclude={"task_list", "description", "template_id"}
+                exclude={
+                    "task_list",
+                    "description",
+                    "template_id",
+                    "is_starred",
+                }
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id"})
+            project.model_dump_json(exclude={"resource_id", "is_starred"})
         ),
         fractal_server_version=__VERSION__,
         **job_create.model_dump(),
