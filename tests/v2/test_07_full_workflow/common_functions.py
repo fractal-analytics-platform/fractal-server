@@ -221,15 +221,6 @@ async def full_workflow(
         ):
             assert expected_files < task_actual_files
 
-        # GET dataset history
-        url = f"api/v2/project/{project_id}/dataset/{dataset_id}/history/"
-        res = await client.get(url)
-        assert res.status_code == 200
-        assert len(res.json()) == 3
-        for item in res.json():
-            assert "workflowtask_dump" in item.keys()
-            assert "task_group_dump" in item.keys()
-
         # GET workflow status
         url = (
             f"api/v2/project/{project_id}/latest-job/"

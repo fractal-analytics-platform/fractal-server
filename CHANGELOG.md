@@ -2,6 +2,8 @@
 
 # 2.22.11 (unreleased)
 
+* API:
+    * Remove `GET /project/{project_id}/dataset/{dataset_id}/history/` (\#3331).
 * Task-group lifecycle:
     * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
     * Reject extras in `POST /admin/v2/task-group/{id}/reset/pixi/` request body (\#3324).
@@ -9,6 +11,10 @@
 * Internal:
     * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
     * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
+* Testing:
+    * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
+    * Bump version of `zizmor-action` (\#3330).
+    * Replace `stefanzweifel/git-auto-commit-action` with `git` commands (\#3330).
 
 # 2.22.10
 

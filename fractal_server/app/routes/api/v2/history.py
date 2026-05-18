@@ -21,7 +21,6 @@ from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
-from fractal_server.app.schemas.v2 import HistoryRunRead
 from fractal_server.app.schemas.v2 import HistoryRunReadAggregated
 from fractal_server.app.schemas.v2 import HistoryUnitRead
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
@@ -35,7 +34,6 @@ from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
 from fractal_server.logger import set_logger
 
-from ._aux_functions import _get_dataset_check_access
 from ._aux_functions_history import _verify_workflow_and_dataset_access
 from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
@@ -416,36 +414,3 @@ async def get_history_unit_log(
         job_status=job.status,
     )
     return JSONResponse(content=log)
-
-
-@router.get(
-    "/project/{project_id}/dataset/{dataset_id}/history/",
-    response_model=list[HistoryRunRead],
-)
-async def get_dataset_history(
-    project_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(get_api_guest),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[HistoryRun]:
-    """
-    Returns a list of all HistoryRuns associated to a given dataset, sorted by
-    timestamp.
-    """
-    # Access control
-    await _get_dataset_check_access(
-        project_id=project_id,
-        dataset_id=dataset_id,
-        user_id=user.id,
-        required_permissions=ProjectPermissions.READ,
-        db=db,
-    )
-
-    res = await db.execute(
-        select(HistoryRun)
-        .where(HistoryRun.dataset_id == dataset_id)
-        .order_by(HistoryRun.timestamp_started)
-    )
-    history_run_list = res.scalars().all()
-
-    return history_run_list
