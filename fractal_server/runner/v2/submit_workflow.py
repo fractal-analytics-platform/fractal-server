@@ -11,6 +11,7 @@ import traceback
 from pathlib import Path
 from typing import Protocol
 
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.db import DB
@@ -70,7 +71,7 @@ def fail_job(
     if emit_log:
         logger.error(log_msg)
     reset_logger_handlers(logger)
-    job = db.get(JobV2, job.id)  # refetch, in case it was updated
+    job = db.get_one(JobV2, job.id)  # refetch, in case it was updated
     job.status = JobStatusType.FAILED
     job.end_timestamp = get_timestamp()
     job.log = log_msg
@@ -128,37 +129,22 @@ def submit_workflow(
 
     with next(DB.get_sync_db()) as db_sync:
         try:
-            job: JobV2 | None = db_sync.get(JobV2, job_id)
-            dataset: DatasetV2 | None = db_sync.get(DatasetV2, dataset_id)
-            workflow: WorkflowV2 | None = db_sync.get(WorkflowV2, workflow_id)
-        except Exception as e:
-            logger.error(
-                f"Error connecting to the database. Original error: {str(e)}"
+            job = db_sync.get_one(JobV2, job_id)
+        except NoResultFound:
+            logger.error(f"JobV2 {job_id} not found.")
+            reset_logger_handlers(logger)
+            return
+
+        try:
+            dataset = db_sync.get_one(DatasetV2, dataset_id)
+            workflow = db_sync.get_one(WorkflowV2, workflow_id)
+        except NoResultFound:
+            log_msg = (
+                f"Cannot fetch dataset {dataset_id} "
+                f"and/or workflow {workflow_id} "
+                f"(as part of job {job_id})."
             )
-            reset_logger_handlers(logger)
-            return
-
-        if job is None:
-            logger.error(f"JobV2 {job_id} does not exist")
-            reset_logger_handlers(logger)
-            return
-        if dataset is None or workflow is None:
-            log_msg = ""
-            if dataset is None:
-                current_log_msg = (
-                    f"Cannot fetch dataset {dataset_id} from database "
-                    f"(as part of job {job_id})."
-                )
-                logger.error(current_log_msg)
-                log_msg += f"{current_log_msg}\n"
-            if workflow is None:
-                current_log_msg += (
-                    f"Cannot fetch workflow {workflow_id} from database "
-                    f"(as part of job {job_id})."
-                )
-                logger.error(current_log_msg)
-                log_msg += f"{current_log_msg}\n"
-
+            logger.error(log_msg)
             fail_job(
                 db=db_sync,
                 job=job,
@@ -283,7 +269,7 @@ def submit_workflow(
 
         # Update job DB entry
         with next(DB.get_sync_db()) as db_sync:
-            job = db_sync.get(JobV2, job_id)
+            job = db_sync.get_one(JobV2, job_id)
             job.status = JobStatusType.DONE
             job.end_timestamp = get_timestamp()
             with log_file_path.open("r") as f:
@@ -296,7 +282,7 @@ def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
         with next(DB.get_sync_db()) as db_sync:
-            job = db_sync.get(JobV2, job_id)
+            job = db_sync.get_one(JobV2, job_id)
             fail_job(
                 db=db_sync,
                 job=job,
@@ -313,7 +299,7 @@ def submit_workflow(
 
         current_traceback = traceback.format_exc()
         with next(DB.get_sync_db()) as db_sync:
-            job = db_sync.get(JobV2, job_id)
+            job = db_sync.get_one(JobV2, job_id)
             fail_job(
                 db=db_sync,
                 job=job,
