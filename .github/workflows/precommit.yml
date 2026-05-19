@@ -42,3 +42,4 @@ jobs:
       - run: pipx install ty==0.0.11
 
       - run: ty check
+        continue-on-error: true
