@@ -1,4 +1,4 @@
-name: precommit
+name: precommit and ty
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 permissions: {}
 
 jobs:
-  precommit:
+  precommit-and-ty:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -24,24 +24,8 @@ jobs:
 
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
 
-
-
-  ty:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: "3.12"
-          cache: "pip"
-
+      # Experimental running of `ty`
       - run: pipx install ty==0.0.11
-
       - run: pip install -e .
-
       - run: ty check
         continue-on-error: true
