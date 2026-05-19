@@ -1,5 +1,6 @@
 from typing import Any
 
+import pytest
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -188,3 +189,10 @@ def test_SlurmConfig():
     # With trailing slash
     preamble = cfg.to_sbatch_preamble(remote_export_dir="/cache/dir/")
     assert "export CELLPOSE_LOCAL_MODELS_PATH=/cache/dir/cellpose" in preamble
+
+    cfg.tasks_per_job = None
+    with pytest.raises(ValueError, match="=None"):
+        cfg.batch_size_not_none
+
+    cfg.tasks_per_job = 123
+    assert cfg.batch_size_not_none == cfg.tasks_per_job
