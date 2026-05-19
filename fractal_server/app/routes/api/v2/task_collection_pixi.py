@@ -120,7 +120,7 @@ async def collect_task_pixi(
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
 
-    task_group_attrs = dict(
+    task_group = TaskGroupV2(
         user_id=user.id,
         user_group_id=user_group_id,
         resource_id=resource_id,
@@ -133,15 +133,15 @@ async def collect_task_pixi(
 
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         user_resource_id=resource_id,
         db=db,
     )
     await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        user_group_id=task_group.user_group_id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         db=db,
     )
 
@@ -152,7 +152,6 @@ async def collect_task_pixi(
                 detail=f"{task_group_path} already exists.",
             )
 
-    task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
     async with integrity_error_to_422(db):
         await db.commit()
