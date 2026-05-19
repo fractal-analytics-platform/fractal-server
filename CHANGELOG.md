@@ -10,11 +10,12 @@
     * Fail fast if pixi version is not available, in `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3324).
 * Internal:
     * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
-    * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
+    * Improve type hinting, including `db.get -> db.get_one` replacements (\#3325).
 * Testing:
     * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
     * Bump version of `zizmor-action` (\#3330).
     * Replace `stefanzweifel/git-auto-commit-action` with `git` commands (\#3330).
+    * Run `ty` type checker in a non-failing mode (\#3325).
 
 # 2.22.10
 
