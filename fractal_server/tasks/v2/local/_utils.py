@@ -14,7 +14,7 @@ logger = set_logger(__name__)
 
 def _customize_and_run_template(
     template_filename: str,
-    replacements: list[tuple[str, str]],
+    replacements: set[tuple[str, str]],
     script_dir: str,
     logger_name: str,
     prefix: int,
