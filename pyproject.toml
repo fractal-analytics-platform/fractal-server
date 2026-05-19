@@ -144,7 +144,7 @@ ban-relative-imports = "parents"
 root = "./fractal_server"
 
 [tool.ty.terminal]
-output-format = "github"
+output-format = "concise"
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
