@@ -131,7 +131,7 @@ def reactivate_ssh(
                         local=pip_freeze_file_local,
                         remote=pip_freeze_file_remote,
                     )
-                    replacements.append(
+                    replacements.add(
                         ("__PIP_FREEZE_FILE__", pip_freeze_file_remote)
                     )
 
