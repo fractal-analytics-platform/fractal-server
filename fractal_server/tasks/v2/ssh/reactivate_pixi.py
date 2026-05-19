@@ -174,13 +174,13 @@ def reactivate_ssh_pixi(
                             f"{TaskGroupActivityAction.REACTIVATE}"
                         ),
                         logger_name=LOGGER_NAME,
-                        fractal_ssh=fractal_ssh,
                     )
 
                     # Run script 1 - extract tar.gz into `source_dir`
                     stdout = _customize_and_run_template(
                         template_filename="pixi_1_extract.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.debug(f"STDOUT: {stdout}")
@@ -216,11 +216,13 @@ def reactivate_ssh_pixi(
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     remote_script3_path = _customize_and_send_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.debug(
