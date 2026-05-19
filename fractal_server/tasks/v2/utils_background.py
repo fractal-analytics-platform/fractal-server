@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
-from typing import Literal
 from typing import TypeVar
 
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session as DBSyncSession
 
 from fractal_server.app.models.v2 import TaskGroupActivityV2
@@ -32,19 +32,16 @@ def get_activity_and_task_group(
     task_group_id: int,
     db: DBSyncSession,
     logger_name: str,
-) -> (
-    tuple[bool, TaskGroupV2, TaskGroupActivityV2]
-    | tuple[Literal[False], None, None]
-):
-    task_group = db.get(TaskGroupV2, task_group_id)
-    activity = db.get(TaskGroupActivityV2, task_group_activity_id)
-    if activity is None or task_group is None:
+) -> tuple[TaskGroupV2, TaskGroupActivityV2]:
+    try:
+        task_group = db.get_one(TaskGroupV2, task_group_id)
+        activity = db.get_one(TaskGroupActivityV2, task_group_activity_id)
+    except NoResultFound as e:
         logging.error(
             "Cannot find database rows with "
-            f"{task_group_id=} and {task_group_activity_id=}:\n"
-            f"{task_group=}\n{activity=}. Exit."
+            f"{task_group_id=} and/or {task_group_activity_id=}. Exit"
         )
-        return False, None, None
+        raise e
 
     # Log some info about task group
     logger = get_logger(logger_name=logger_name)
@@ -53,7 +50,7 @@ def get_activity_and_task_group(
     ):
         logger.debug(f"task_group.{key}: {value}")
 
-    return True, task_group, activity
+    return task_group, activity
 
 
 def fail_and_cleanup(

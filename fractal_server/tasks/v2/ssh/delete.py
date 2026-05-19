@@ -50,14 +50,12 @@ def delete_ssh(
         )
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
+            task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
                 db=db,
                 logger_name=LOGGER_NAME,
             )
-            if not db_objects_ok:
-                return
 
             with SingleUseFractalSSH(
                 ssh_config=SSHConfig(
