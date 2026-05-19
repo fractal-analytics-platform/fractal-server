@@ -131,7 +131,6 @@ def deactivate_ssh(
 
                         # Prepare arguments for `_customize_and_run_template`
                         common_args = dict(
-                            replacements=replacements,
                             script_dir_local=(
                                 Path(tmpdir) / SCRIPTS_SUBFOLDER
                             ).as_posix(),
@@ -147,6 +146,7 @@ def deactivate_ssh(
                         pip_freeze_stdout = _customize_and_run_template(
                             template_filename="3_pip_freeze.sh",
                             fractal_ssh=fractal_ssh,
+                            replacements=replacements,
                             **common_args,
                         )
 

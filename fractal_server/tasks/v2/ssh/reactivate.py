@@ -143,7 +143,6 @@ def reactivate_ssh(
 
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
-                        replacements=replacements,
                         script_dir_local=(
                             Path(tmpdir) / SCRIPTS_SUBFOLDER
                         ).as_posix(),
@@ -162,6 +161,7 @@ def reactivate_ssh(
                     _customize_and_run_template(
                         template_filename="1_create_venv.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     logger.info("end - create venv")
@@ -172,6 +172,7 @@ def reactivate_ssh(
                     _customize_and_run_template(
                         template_filename="5_pip_install_from_freeze.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     logger.info("end - install from pip freeze")

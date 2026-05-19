@@ -166,7 +166,6 @@ def collect_ssh(
 
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
-                        replacements=replacements,
                         script_dir_local=Path(
                             tmpdir, SCRIPTS_SUBFOLDER
                         ).as_posix(),
@@ -189,6 +188,7 @@ def collect_ssh(
                     stdout = _customize_and_run_template(
                         template_filename="1_create_venv.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -198,6 +198,7 @@ def collect_ssh(
                     stdout = _customize_and_run_template(
                         template_filename="2_pip_install.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -207,6 +208,7 @@ def collect_ssh(
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -216,6 +218,7 @@ def collect_ssh(
                     stdout = _customize_and_run_template(
                         template_filename="4_pip_show.sh",
                         fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
