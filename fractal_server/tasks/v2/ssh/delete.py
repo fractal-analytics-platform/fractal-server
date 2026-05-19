@@ -50,14 +50,12 @@ def delete_ssh(
         )
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
+            task_group, activity = get_activity_and_task_group(
                 task_group_activity_id=task_group_activity_id,
                 task_group_id=task_group_id,
                 db=db,
                 logger_name=LOGGER_NAME,
             )
-            if not db_objects_ok:
-                return
 
             with SingleUseFractalSSH(
                 ssh_config=SSHConfig(
@@ -93,10 +91,7 @@ def delete_ssh(
                             f"Removing remote {task_group.path=} "
                             f"(with {profile.tasks_remote_dir=})."
                         )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.path)
                         logger.debug(f"Remote {task_group.path=} removed.")
 
                     activity.status = TaskGroupActivityStatus.OK

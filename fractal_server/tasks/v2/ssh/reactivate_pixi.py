@@ -3,6 +3,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -59,13 +61,14 @@ def reactivate_ssh_pixi(
 
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -114,7 +117,7 @@ def reactivate_ssh_pixi(
                         pixi_home, "cache"
                     )
                     logger.info(f"Setting PIXI_CACHE_DIR to {pixi_cache_dir}")
-                    replacements = {
+                    replacements: set[tuple[str, str]] = {
                         ("__PIXI_HOME__", pixi_home),
                         ("__PIXI_CACHE_DIR__", pixi_cache_dir),
                         ("__PACKAGE_DIR__", task_group.path),
@@ -171,13 +174,13 @@ def reactivate_ssh_pixi(
                             f"{TaskGroupActivityAction.REACTIVATE}"
                         ),
                         logger_name=LOGGER_NAME,
-                        fractal_ssh=fractal_ssh,
                     )
 
                     # Run script 1 - extract tar.gz into `source_dir`
                     stdout = _customize_and_run_template(
                         template_filename="pixi_1_extract.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.debug(f"STDOUT: {stdout}")
@@ -213,11 +216,13 @@ def reactivate_ssh_pixi(
                     remote_script2_path = _customize_and_send_template(
                         template_filename="pixi_2_install.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     remote_script3_path = _customize_and_send_template(
                         template_filename="pixi_3_post_install.sh",
                         replacements=replacements,
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.debug(
@@ -265,10 +270,7 @@ def reactivate_ssh_pixi(
                     # Delete corrupted source_dir
                     try:
                         logger.info(f"Now delete folder {source_dir}")
-                        fractal_ssh.remove_folder(
-                            folder=source_dir,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=source_dir)
                         logger.info(f"Deleted folder {source_dir}")
                     except Exception as rm_e:
                         logger.error(

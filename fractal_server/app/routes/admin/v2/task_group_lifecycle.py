@@ -119,7 +119,7 @@ async def deactivate_task_group(
     db.add(task_group_activity)
     await db.commit()
 
-    user = await db.get(UserOAuth, task_group.user_id)
+    user = await db.get_one(UserOAuth, task_group.user_id)
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
 
@@ -230,7 +230,7 @@ async def reactivate_task_group(
     await db.commit()
 
     # Get validated resource and profile
-    user = await db.get(UserOAuth, task_group.user_id)
+    user = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
@@ -294,7 +294,7 @@ async def delete_task_group(
     await db.commit()
 
     # Get validated resource and profile
-    task_owner = await db.get(UserOAuth, task_group.user_id)
+    task_owner = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=task_owner, db=db)
 
     if resource.type == ResourceType.SLURM_SSH:

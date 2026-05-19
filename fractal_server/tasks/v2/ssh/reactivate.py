@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -58,13 +60,14 @@ def reactivate_ssh(
 
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -128,7 +131,7 @@ def reactivate_ssh(
                         local=pip_freeze_file_local,
                         remote=pip_freeze_file_remote,
                     )
-                    replacements.append(
+                    replacements.add(
                         ("__PIP_FREEZE_FILE__", pip_freeze_file_remote)
                     )
 
@@ -140,7 +143,6 @@ def reactivate_ssh(
 
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
-                        replacements=replacements,
                         script_dir_local=(
                             Path(tmpdir) / SCRIPTS_SUBFOLDER
                         ).as_posix(),
@@ -149,7 +151,6 @@ def reactivate_ssh(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityAction.REACTIVATE}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
 
@@ -159,6 +160,8 @@ def reactivate_ssh(
                     logger.info("start - create venv")
                     _customize_and_run_template(
                         template_filename="1_create_venv.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     logger.info("end - create venv")
@@ -168,6 +171,8 @@ def reactivate_ssh(
                     logger.info("start - install from pip freeze")
                     _customize_and_run_template(
                         template_filename="5_pip_install_from_freeze.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     logger.info("end - install from pip freeze")
@@ -185,10 +190,7 @@ def reactivate_ssh(
                     # Delete corrupted venv_path
                     try:
                         logger.info(f"Now delete folder {task_group.venv_path}")
-                        fractal_ssh.remove_folder(
-                            folder=task_group.venv_path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.venv_path)
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:
                         logger.error(

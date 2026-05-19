@@ -583,7 +583,7 @@ async def _create_workflow_export(
     """
     wf_task_list = []
     for wftask in workflow.task_list:
-        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        task_group = await db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
         wf_task_list.append(wftask.model_dump())
         wf_task_list[-1]["task"] = dict(
             pkg_name=task_group.pkg_name,

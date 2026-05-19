@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* SSH:
+    * Drop `safe_root` from `remove_folder` (\#3333).
+* Internal:
+    * Improve type hinting, including `db.get -> db.get_one` replacements (\#3333).
+* Testing:
+    * Run `ty` type checker in a non-failing mode (\#3333).
+
 # 2.22.11
 
 * API:

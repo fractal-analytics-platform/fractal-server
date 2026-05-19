@@ -84,8 +84,8 @@ def parse_script_pip_show_stdout(stdout: str) -> dict[str, str]:
 
 def get_collection_replacements(
     *, task_group: TaskGroupV2, python_bin: str, resource: Resource
-) -> list[tuple[str, str]]:
-    replacements = [
+) -> set[tuple[str, str]]:
+    replacements = {
         ("__PACKAGE_NAME__", task_group.pkg_name),
         ("__PACKAGE_ENV_DIR__", task_group.venv_path),
         ("__PYTHON__", python_bin),
@@ -99,7 +99,7 @@ def get_collection_replacements(
             "__PINNED_PACKAGE_LIST_POST__",
             task_group.pinned_package_versions_post_string,
         ),
-    ]
+    }
     logger.info(
         f"Cache-dir argument for `pip install`: {resource.pip_cache_dir_arg}"
     )

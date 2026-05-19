@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -73,13 +75,14 @@ def collect_ssh(
         )
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -163,7 +166,6 @@ def collect_ssh(
 
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
-                        replacements=replacements,
                         script_dir_local=Path(
                             tmpdir, SCRIPTS_SUBFOLDER
                         ).as_posix(),
@@ -172,7 +174,6 @@ def collect_ssh(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityAction.COLLECT}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
 
@@ -186,6 +187,8 @@ def collect_ssh(
                     # Run script 1
                     stdout = _customize_and_run_template(
                         template_filename="1_create_venv.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -194,6 +197,8 @@ def collect_ssh(
                     # Run script 2
                     stdout = _customize_and_run_template(
                         template_filename="2_pip_install.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -202,6 +207,8 @@ def collect_ssh(
                     # Run script 3
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -210,6 +217,8 @@ def collect_ssh(
                     # Run script 4
                     stdout = _customize_and_run_template(
                         template_filename="4_pip_show.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -290,10 +299,7 @@ def collect_ssh(
                         logger.info(
                             f"Now delete remote folder {task_group.path}"
                         )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.path)
                         logger.info(f"Deleted remoted folder {task_group.path}")
                     except Exception as e_rm:
                         logger.error(

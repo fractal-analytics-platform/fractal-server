@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -57,13 +59,14 @@ def deactivate_ssh(
         )
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -128,7 +131,6 @@ def deactivate_ssh(
 
                         # Prepare arguments for `_customize_and_run_template`
                         common_args = dict(
-                            replacements=replacements,
                             script_dir_local=(
                                 Path(tmpdir) / SCRIPTS_SUBFOLDER
                             ).as_posix(),
@@ -137,13 +139,14 @@ def deactivate_ssh(
                                 f"{int(time.time())}_"
                                 f"{TaskGroupActivityAction.DEACTIVATE}"
                             ),
-                            fractal_ssh=fractal_ssh,
                             logger_name=LOGGER_NAME,
                         )
 
                         # Run `pip freeze`
                         pip_freeze_stdout = _customize_and_run_template(
                             template_filename="3_pip_freeze.sh",
+                            fractal_ssh=fractal_ssh,
+                            replacements=replacements,
                             **common_args,
                         )
 
@@ -259,10 +262,7 @@ def deactivate_ssh(
 
                     # Proceed with deactivation
                     logger.info(f"Now removing {task_group.venv_path}.")
-                    fractal_ssh.remove_folder(
-                        folder=task_group.venv_path,
-                        safe_root=profile.tasks_remote_dir,
-                    )
+                    fractal_ssh.remove_folder(folder=task_group.venv_path)
                     logger.info(f"All good, {task_group.venv_path} removed.")
                     activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)

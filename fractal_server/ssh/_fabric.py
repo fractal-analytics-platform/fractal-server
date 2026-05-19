@@ -526,12 +526,7 @@ class FractalSSH:
             cmd = f"mkdir {folder}"
         self.run_command(cmd=cmd)
 
-    def remove_folder(
-        self,
-        *,
-        folder: str,
-        safe_root: str,
-    ) -> None:
+    def remove_folder(self, *, folder: str) -> None:
         """
         Removes a folder remotely via SSH.
 
@@ -539,24 +534,13 @@ class FractalSSH:
 
         Args:
             folder: Absolute path to a folder that should be removed.
-            safe_root: If `folder` is not a subfolder of the absolute
-                `safe_root` path, raise an error.
         """
         validate_cmd(folder)
-        validate_cmd(safe_root)
 
         if " " in folder:
             raise ValueError(f"folder='{folder}' includes whitespace.")
-        elif " " in safe_root:
-            raise ValueError(f"safe_root='{safe_root}' includes whitespace.")
         elif not Path(folder).is_absolute():
             raise ValueError(f"{folder=} is not an absolute path.")
-        elif not Path(safe_root).is_absolute():
-            raise ValueError(f"{safe_root=} is not an absolute path.")
-        elif not (
-            Path(folder).resolve().is_relative_to(Path(safe_root).resolve())
-        ):
-            raise ValueError(f"{folder=} is not a subfolder of {safe_root=}.")
         else:
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)

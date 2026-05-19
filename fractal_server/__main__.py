@@ -168,7 +168,11 @@ def init_db_data(
         )
         sys.exit(1)
 
-    if admin_email:
+    if (
+        admin_email is not None
+        and admin_password is not None
+        and admin_project_dir is not None
+    ):
         asyncio.run(
             _create_first_user(
                 email=admin_email,

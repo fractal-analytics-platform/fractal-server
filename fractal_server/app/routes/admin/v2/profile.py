@@ -73,7 +73,7 @@ async def delete_profile(
     profile_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     """
     Delete single `Profile`.
     """
