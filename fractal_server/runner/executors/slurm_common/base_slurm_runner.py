@@ -909,12 +909,14 @@ class BaseSlurmRunner(BaseRunner):
             # Divide arguments in batches of `tasks_per_job` tasks each
             tot_tasks = len(list_parameters)
             args_batches = []
-            batch_size = config.tasks_per_job
+            batch_size = config.batch_size_not_none
             for ind_chunk in range(0, tot_tasks, batch_size):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
+            if len(args_batches) != math.ceil(
+                tot_tasks / config.batch_size_not_none
+            ):
                 raise RuntimeError("Something wrong here while batching tasks")
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
