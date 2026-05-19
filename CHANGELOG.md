@@ -1,13 +1,16 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.11 (unreleased)
+# 2.22.11
 
 * API:
     * Remove `GET /project/{project_id}/dataset/{dataset_id}/history/` (\#3331).
+    * Introduce `/star/` and `/unstar/` endpoints for projects and workflows (\#3329).
 * Task-group lifecycle:
     * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
     * Reject extras in `POST /admin/v2/task-group/{id}/reset/pixi/` request body (\#3324).
     * Fail fast if pixi version is not available, in `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3324).
+* Database:
+    * Introduce `ProjectV2.is_starred` and `WorkflowV2.is_starred` (\#3329).
 * Internal:
     * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
     * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
