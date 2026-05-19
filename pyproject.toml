@@ -143,3 +143,9 @@ force-single-line = true
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
+
+[tool.ty.src]
+root = "./fractal_server"
+
+[tool.ty.terminal]
+output-format = "github"
