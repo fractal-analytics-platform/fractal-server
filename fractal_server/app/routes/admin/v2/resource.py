@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -61,7 +63,7 @@ def _check_type_match_or_422(new_resource: ResourceCreate) -> None:
 async def get_resource_list(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[Resource]:
+) -> Sequence[Resource]:
     """
     Query `Resource` table.
     """
@@ -156,7 +158,7 @@ async def delete_resource(
     resource_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> None:
+) -> Response:
     """
     Delete single `Resource`.
     """
@@ -185,7 +187,7 @@ async def get_resource_profiles(
     resource_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[Profile]:
+) -> Sequence[Profile]:
     """
     Query `Profile`s for single `Resource`.
     """

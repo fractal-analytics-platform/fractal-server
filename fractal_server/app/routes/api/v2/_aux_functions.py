@@ -464,7 +464,7 @@ async def _workflow_insert_task(
     flag_modified(db_workflow, "task_list")
     await db.flush()
 
-    wf_task = await db.get(
+    wf_task = await db.get_one(
         WorkflowTaskV2,
         wf_task.id,
         populate_existing=True,  # See issue 1087
