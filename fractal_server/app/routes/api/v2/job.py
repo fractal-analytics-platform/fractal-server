@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -44,7 +45,7 @@ async def get_user_jobs(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Returns all the jobs from projects linked to the current user
     """
@@ -75,7 +76,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -170,7 +171,7 @@ async def get_job_list(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Get job list for given project
     """

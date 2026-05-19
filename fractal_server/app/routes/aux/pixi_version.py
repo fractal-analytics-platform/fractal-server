@@ -8,7 +8,7 @@ def get_pixi_version_or_422(
     *,
     pixi_version: str | None,
     resource: Resource,
-) -> None:
+) -> str:
     """
     Get valid pixi version based on resource configuration.
 

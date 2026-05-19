@@ -1,5 +1,6 @@
 from copy import copy
 from typing import Any
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -45,7 +46,7 @@ async def get_workflow_list(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowV2]:
+) -> Sequence[WorkflowV2]:
     """
     Get workflow list for given project
     """
