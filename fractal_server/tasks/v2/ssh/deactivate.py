@@ -140,13 +140,13 @@ def deactivate_ssh(
                                 f"{int(time.time())}_"
                                 f"{TaskGroupActivityAction.DEACTIVATE}"
                             ),
-                            fractal_ssh=fractal_ssh,
                             logger_name=LOGGER_NAME,
                         )
 
                         # Run `pip freeze`
                         pip_freeze_stdout = _customize_and_run_template(
                             template_filename="3_pip_freeze.sh",
+                            fractal_ssh=fractal_ssh,
                             **common_args,
                         )
 

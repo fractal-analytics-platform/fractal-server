@@ -175,7 +175,6 @@ def collect_ssh(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityAction.COLLECT}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
 
@@ -189,6 +188,7 @@ def collect_ssh(
                     # Run script 1
                     stdout = _customize_and_run_template(
                         template_filename="1_create_venv.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -197,6 +197,7 @@ def collect_ssh(
                     # Run script 2
                     stdout = _customize_and_run_template(
                         template_filename="2_pip_install.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -205,6 +206,7 @@ def collect_ssh(
                     # Run script 3
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -213,6 +215,7 @@ def collect_ssh(
                     # Run script 4
                     stdout = _customize_and_run_template(
                         template_filename="4_pip_show.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
