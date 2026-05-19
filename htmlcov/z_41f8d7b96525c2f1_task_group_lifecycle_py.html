@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_41f8d7b96525c2f1_task_group_reset_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 10:02 +0000
+            created at 2026-05-19 15:49 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -203,7 +203,7 @@
     <p class="run"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">task_group_activity</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">    <span class="nam">user</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">    <span class="nam">user</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get_one</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">    <span class="com"># Get validated resource and profile</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">    <span class="nam">resource</span><span class="op">,</span> <span class="nam">profile</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">validate_user_profile</span><span class="op">(</span><span class="nam">user</span><span class="op">=</span><span class="nam">user</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -314,7 +314,7 @@
     <p class="run"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t">    <span class="com"># Get validated resource and profile</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">    <span class="nam">user</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">    <span class="nam">user</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get_one</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">    <span class="nam">resource</span><span class="op">,</span> <span class="nam">profile</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">validate_user_profile</span><span class="op">(</span><span class="nam">user</span><span class="op">=</span><span class="nam">user</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">    <span class="com"># Submit background task</span>&nbsp;</span><span class="r"></span></p>
@@ -378,7 +378,7 @@
     <p class="run"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">    <span class="com"># Get validated resource and profile</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">    <span class="nam">task_owner</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">    <span class="nam">task_owner</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get_one</span><span class="op">(</span><span class="nam">UserOAuth</span><span class="op">,</span> <span class="nam">task_group</span><span class="op">.</span><span class="nam">user_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">    <span class="nam">resource</span><span class="op">,</span> <span class="nam">profile</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">validate_user_profile</span><span class="op">(</span><span class="nam">user</span><span class="op">=</span><span class="nam">task_owner</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">    <span class="key">if</span> <span class="nam">resource</span><span class="op">.</span><span class="nam">type</span> <span class="op">==</span> <span class="nam">ResourceType</span><span class="op">.</span><span class="nam">SLURM_SSH</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -408,7 +408,7 @@
             <a class="nav" href="z_41f8d7b96525c2f1_task_group_reset_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 10:02 +0000
+            created at 2026-05-19 15:49 +0000
         </p>
     </div>
 </footer>

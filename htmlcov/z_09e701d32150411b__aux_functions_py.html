@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b__aux_functions_history_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 10:02 +0000
+            created at 2026-05-19 15:49 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -667,7 +667,7 @@
     <p class="pln"><span class="n"><a id="t583" href="#t583">583</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t584" href="#t584">584</a></span><span class="t">    <span class="nam">wf_task_list</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t585" href="#t585">585</a></span><span class="t">    <span class="key">for</span> <span class="nam">wftask</span> <span class="key">in</span> <span class="nam">workflow</span><span class="op">.</span><span class="nam">task_list</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t586" href="#t586">586</a></span><span class="t">        <span class="nam">task_group</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">TaskGroupV2</span><span class="op">,</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">task</span><span class="op">.</span><span class="nam">taskgroupv2_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t586" href="#t586">586</a></span><span class="t">        <span class="nam">task_group</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get_one</span><span class="op">(</span><span class="nam">TaskGroupV2</span><span class="op">,</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">task</span><span class="op">.</span><span class="nam">taskgroupv2_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t587" href="#t587">587</a></span><span class="t">        <span class="nam">wf_task_list</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t588" href="#t588">588</a></span><span class="t">        <span class="nam">wf_task_list</span><span class="op">[</span><span class="op">-</span><span class="num">1</span><span class="op">]</span><span class="op">[</span><span class="str">"task"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t589" href="#t589">589</a></span><span class="t">            <span class="nam">pkg_name</span><span class="op">=</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">pkg_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -688,7 +688,7 @@
             <a class="nav" href="z_09e701d32150411b__aux_functions_history_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 10:02 +0000
+            created at 2026-05-19 15:49 +0000
         </p>
     </div>
 </footer>
