@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.11 (unreleased)
+# 2.22.11
 
 * API:
     * Remove `GET /project/{project_id}/dataset/{dataset_id}/history/` (\#3331).
