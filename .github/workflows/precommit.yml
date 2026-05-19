@@ -31,5 +31,5 @@ jobs:
           version: "0.11.14"
           enable-cache: true
       - run: uv sync --frozen
-      - run: uv run ty check
+      - run: uv run ty check ./fractal_server
         continue-on-error: true
