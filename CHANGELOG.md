@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* SSH:
+    * Drop `safe_root` from `remove_folder` (\#3333).
 * Internal:
     * Improve type hinting, including `db.get -> db.get_one` replacements (\#3333).
 * Testing:

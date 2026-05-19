@@ -188,10 +188,7 @@ def reactivate_ssh(
                     # Delete corrupted venv_path
                     try:
                         logger.info(f"Now delete folder {task_group.venv_path}")
-                        fractal_ssh.remove_folder(
-                            folder=task_group.venv_path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.venv_path)
                         logger.info(f"Deleted folder {task_group.venv_path}")
                     except Exception as rm_e:
                         logger.error(

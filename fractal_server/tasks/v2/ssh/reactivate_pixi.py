@@ -117,7 +117,7 @@ def reactivate_ssh_pixi(
                         pixi_home, "cache"
                     )
                     logger.info(f"Setting PIXI_CACHE_DIR to {pixi_cache_dir}")
-                    replacements = {
+                    replacements: set[tuple[str, str]] = {
                         ("__PIXI_HOME__", pixi_home),
                         ("__PIXI_CACHE_DIR__", pixi_cache_dir),
                         ("__PACKAGE_DIR__", task_group.path),
@@ -270,10 +270,7 @@ def reactivate_ssh_pixi(
                     # Delete corrupted source_dir
                     try:
                         logger.info(f"Now delete folder {source_dir}")
-                        fractal_ssh.remove_folder(
-                            folder=source_dir,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=source_dir)
                         logger.info(f"Deleted folder {source_dir}")
                     except Exception as rm_e:
                         logger.error(

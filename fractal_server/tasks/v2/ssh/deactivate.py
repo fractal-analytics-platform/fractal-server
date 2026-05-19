@@ -262,10 +262,7 @@ def deactivate_ssh(
 
                     # Proceed with deactivation
                     logger.info(f"Now removing {task_group.venv_path}.")
-                    fractal_ssh.remove_folder(
-                        folder=task_group.venv_path,
-                        safe_root=profile.tasks_remote_dir,
-                    )
+                    fractal_ssh.remove_folder(folder=task_group.venv_path)
                     logger.info(f"All good, {task_group.venv_path} removed.")
                     activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)

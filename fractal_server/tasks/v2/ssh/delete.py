@@ -91,10 +91,7 @@ def delete_ssh(
                             f"Removing remote {task_group.path=} "
                             f"(with {profile.tasks_remote_dir=})."
                         )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.path)
                         logger.debug(f"Remote {task_group.path=} removed.")
 
                     activity.status = TaskGroupActivityStatus.OK

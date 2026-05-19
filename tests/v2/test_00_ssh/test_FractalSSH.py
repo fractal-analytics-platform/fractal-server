@@ -252,9 +252,7 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     print()
 
     # Remove folder
-    fractal_ssh.remove_folder(
-        folder=folder, safe_root=tmp777_path.parent.as_posix()
-    )
+    fractal_ssh.remove_folder(folder=folder)
 
     # Check that folder does not exist
     with pytest.raises(RuntimeError) as e:
@@ -263,10 +261,7 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
 
     # Check that removing a missing folder fails
     with pytest.raises(RuntimeError) as e:
-        fractal_ssh.remove_folder(
-            folder="/invalid/something",
-            safe_root="/invalid",
-        )
+        fractal_ssh.remove_folder(folder="/invalid/something")
     print(e.value)
 
 
@@ -288,7 +283,7 @@ def test_remove_folder_input_validation():
         ]
         for folder in invalid_folders:
             with pytest.raises(ValueError) as e:
-                fake_fractal_ssh.remove_folder(folder=folder, safe_root="/")
+                fake_fractal_ssh.remove_folder(folder=folder)
             print(e.value)
 
         # Folders which are just invalid
@@ -300,24 +295,13 @@ def test_remove_folder_input_validation():
             "$(pwd)",
             "`pwd`",
         ]
-        for safe_root in invalid_folders:
+        for folder in invalid_folders:
             with pytest.raises(ValueError) as e:
-                fake_fractal_ssh.remove_folder(
-                    folder="/tmp/something",
-                    safe_root=safe_root,
-                )
+                fake_fractal_ssh.remove_folder(folder=folder)
             print(e.value)
 
-        # Folders which are not relative to the accepted root
         with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(folder="/", safe_root="/tmp")
-        print(e.value)
-
-        with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(
-                folder="/actual_root/../something",
-                safe_root="/actual_root",
-            )
+            fake_fractal_ssh.remove_folder(folder="/actual_root/../something")
         print(e.value)
 
 

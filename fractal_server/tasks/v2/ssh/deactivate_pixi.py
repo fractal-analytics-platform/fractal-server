@@ -107,10 +107,7 @@ def deactivate_ssh_pixi(
 
                     # Proceed with deactivation
                     logger.info(f"Now removing {source_dir}.")
-                    fractal_ssh.remove_folder(
-                        folder=source_dir,
-                        safe_root=profile.tasks_remote_dir,
-                    )
+                    fractal_ssh.remove_folder(folder=source_dir)
                     logger.info(f"All good, {source_dir} removed.")
                     activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)

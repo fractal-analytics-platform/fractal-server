@@ -293,10 +293,7 @@ def collect_ssh(
                         logger.info(
                             f"Now delete remote folder {task_group.path}"
                         )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.path)
                         logger.info(f"Deleted remoted folder {task_group.path}")
                     except Exception as e_rm:
                         logger.error(
