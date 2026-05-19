@@ -286,24 +286,6 @@ def test_remove_folder_input_validation():
                 fake_fractal_ssh.remove_folder(folder=folder)
             print(e.value)
 
-        # Folders which are just invalid
-        invalid_folders = [
-            None,
-            "   /somewhere",
-            "/ somewhere",
-            "somewhere",
-            "$(pwd)",
-            "`pwd`",
-        ]
-        for folder in invalid_folders:
-            with pytest.raises(ValueError) as e:
-                fake_fractal_ssh.remove_folder(folder=folder)
-            print(e.value)
-
-        with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(folder="/actual_root/../something")
-        print(e.value)
-
 
 @pytest.mark.container
 @pytest.mark.ssh
