@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Internal:
+    * Improve type hinting, including `db.get -> db.get_one` replacements (\#3333).
+* Testing:
+    * Run `ty` type checker in a non-failing mode (\#3333).
+
 # 2.22.11
 
 * API:
@@ -14,12 +21,10 @@
 * Internal:
     * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
     * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
-    * Improve type hinting, including `db.get -> db.get_one` replacements (\#3333).
 * Testing:
     * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
     * Bump version of `zizmor-action` (\#3330).
     * Replace `stefanzweifel/git-auto-commit-action` with `git` commands (\#3330).
-    * Run `ty` type checker in a non-failing mode (\#3333).
 
 # 2.22.10
 
