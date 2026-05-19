@@ -27,7 +27,7 @@ def slurm_mem_to_MB(raw_mem: str | int) -> int:
     )
 
     # Handle integer argument
-    if type(raw_mem) is int:
+    if isinstance(raw_mem, int):
         return raw_mem
 
     # Handle string argument
