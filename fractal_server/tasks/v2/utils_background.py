@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Literal
 from typing import TypeVar
 
 from sqlalchemy.orm import Session as DBSyncSession
@@ -31,7 +32,10 @@ def get_activity_and_task_group(
     task_group_id: int,
     db: DBSyncSession,
     logger_name: str,
-) -> tuple[bool, TaskGroupV2, TaskGroupActivityV2]:
+) -> (
+    tuple[bool, TaskGroupV2, TaskGroupActivityV2]
+    | tuple[Literal[False], None, None]
+):
     task_group = db.get(TaskGroupV2, task_group_id)
     activity = db.get(TaskGroupActivityV2, task_group_activity_id)
     if activity is None or task_group is None:
@@ -102,15 +106,14 @@ def prepare_tasks_metadata(
         project_python_wrapper:
     """
 
-    if bool(project_python_wrapper is None) == bool(python_bin is None):
+    if python_bin is not None and project_python_wrapper is None:
+        actual_python = python_bin
+    elif python_bin is None and project_python_wrapper is not None:
+        actual_python = project_python_wrapper
+    else:
         raise UnreachableBranchError(
             f"Either {project_python_wrapper} or {python_bin} must be set."
         )
-
-    if python_bin is not None:
-        actual_python = python_bin
-    else:
-        actual_python = project_python_wrapper
 
     task_list = []
     for _task in package_manifest.task_list:
