@@ -116,10 +116,6 @@ omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
 [tool.coverage.report]
 omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
 
-[[tool.mypy.overrides]]
-module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
-ignore_missing_imports = true
-
 
 [tool.pytest_env]
 PYTHONASYNCIODEBUG=1
@@ -143,3 +139,10 @@ force-single-line = true
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
+
+[tool.ty.terminal]
+output-format = "concise"
+
+[[tool.mypy.overrides]]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
+ignore_missing_imports = true

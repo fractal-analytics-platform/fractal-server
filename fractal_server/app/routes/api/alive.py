@@ -6,7 +6,7 @@ router = APIRouter()
 
 
 @router.get("/alive/")
-async def alive():
+async def alive() -> dict:
     return dict(
         alive=True,
         version=fractal_server.__VERSION__,

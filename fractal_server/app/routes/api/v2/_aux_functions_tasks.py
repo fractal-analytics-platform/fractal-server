@@ -5,6 +5,7 @@ perform simple checks
 
 from contextlib import asynccontextmanager
 from typing import Any
+from typing import AsyncIterator
 
 from fastapi import HTTPException
 from fastapi import status
@@ -277,7 +278,7 @@ async def _verify_non_duplication_user_constraint(
     pkg_name: str,
     version: str | None,
     user_resource_id: int,
-):
+) -> None:
     stm = (
         select(TaskGroupV2)
         .where(TaskGroupV2.user_id == user_id)
@@ -306,7 +307,7 @@ async def _verify_non_duplication_group_constraint(
     user_group_id: int | None,
     pkg_name: str,
     version: str | None,
-):
+) -> None:
     if user_group_id is None:
         return
 
@@ -333,7 +334,7 @@ async def _verify_non_duplication_group_constraint(
 
 
 @asynccontextmanager
-async def integrity_error_to_422(db):
+async def integrity_error_to_422(db) -> AsyncIterator:
     """
     If an IntegrityError occurs inside the context, rolls back the current
     transaction and raises an HTTPException with status code 422.

@@ -161,7 +161,7 @@ async def _get_default_usergroup_id_or_none(db: AsyncSession) -> int | None:
 
 async def _verify_user_belongs_to_group(
     *, user_id: int, user_group_id: int, db: AsyncSession
-):
+) -> None:
     stm = (
         select(LinkUserGroup)
         .where(LinkUserGroup.user_id == user_id)

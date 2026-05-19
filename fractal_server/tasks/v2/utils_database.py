@@ -24,7 +24,7 @@ def create_db_tasks_and_update_task_group_sync(
         Updated `TaskGroupV2` object.
     """
     actual_task_list = [TaskV2(**task.model_dump()) for task in task_list]
-    task_group = db.get(TaskGroupV2, task_group_id)
+    task_group = db.get_one(TaskGroupV2, task_group_id)
     task_group.task_list = actual_task_list
     db.add(task_group)
     db.commit()
@@ -51,7 +51,7 @@ async def create_db_tasks_and_update_task_group_async(
         Updated `TaskGroupV2` object.
     """
     actual_task_list = [TaskV2(**task.model_dump()) for task in task_list]
-    task_group = await db.get(TaskGroupV2, task_group_id)
+    task_group = await db.get_one(TaskGroupV2, task_group_id)
     task_group.task_list = actual_task_list
     db.add(task_group)
     await db.commit()

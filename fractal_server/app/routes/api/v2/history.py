@@ -403,7 +403,7 @@ async def get_history_unit_log(
         workflowtask_id=workflowtask_id,
     )
 
-    job = await db.get(JobV2, history_run.job_id)
+    job = await db.get_one(JobV2, history_run.job_id)
 
     # Get log or placeholder text
     log = read_log_file(

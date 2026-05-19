@@ -89,7 +89,7 @@ class WorkflowTaskImport(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def update_legacy_filters(cls, values: dict):
+    def update_legacy_filters(cls, values: dict) -> dict:
         """
         Transform legacy filters (created with fractal-server<2.11.0)
         into type filters

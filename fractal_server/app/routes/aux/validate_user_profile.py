@@ -35,8 +35,8 @@ async def validate_user_profile(
     Note: this only returns non-db-bound objects.
     """
     await user_has_profile_or_422(user=user)
-    profile = await db.get(Profile, user.profile_id)
-    resource = await db.get(Resource, profile.resource_id)
+    profile = await db.get_one(Profile, user.profile_id)
+    resource = await db.get_one(Resource, profile.resource_id)
     try:
         cast_serialize_resource(
             resource.model_dump(exclude={"id", "timestamp_created"}),

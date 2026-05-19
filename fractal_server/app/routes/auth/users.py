@@ -103,8 +103,10 @@ async def patch_user(
             request=None,
         )
         validated_user = UserOAuth.model_validate(user.model_dump())
-        patched_user = await db.get(
-            UserOAuth, validated_user.id, populate_existing=True
+        patched_user = await db.get_one(
+            UserOAuth,
+            validated_user.id,
+            populate_existing=True,
         )
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(

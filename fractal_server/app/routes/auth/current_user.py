@@ -69,7 +69,7 @@ async def patch_current_user(
     user = await user_manager.update(update, current_user, safe=True)
     validated_user = UserOAuth.model_validate(user.model_dump())
 
-    patched_user = await db.get(
+    patched_user = await db.get_one(
         UserOAuth, validated_user.id, populate_existing=True
     )
     patched_user_with_groups = await _get_single_user_with_groups(

@@ -33,7 +33,7 @@ def run_single_task(
     base_command: str,
     parameters: dict[str, Any],
     task_files: TaskFiles,
-):
+) -> None:
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
         json.dump(parameters, f)

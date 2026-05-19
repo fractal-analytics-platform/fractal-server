@@ -135,10 +135,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert activity["timestamp_ended"] is not None
         assert activity["status"] == "failed"
         assert "already exists" in activity["log"]
-        fractal_ssh.remove_folder(
-            folder=task_group_path,
-            safe_root=profile.tasks_remote_dir,
-        )
+        fractal_ssh.remove_folder(folder=task_group_path)
 
         # 2 / Successful collection
         res = await client.post(
@@ -242,8 +239,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         debug(activity)
         assert activity["status"] == "failed"
         fractal_ssh.remove_folder(  # Remove fake folder
-            folder=fake_remote_dir,
-            safe_root=task_group.path,
+            folder=fake_remote_dir
         )
 
         # 7 / Successful reactivation

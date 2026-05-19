@@ -3,6 +3,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -74,13 +76,14 @@ def collect_local(
 
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             # Check that the (local) task_group path does exist
@@ -187,7 +190,7 @@ def collect_local(
                 for key, value in pkg_attrs.items():
                     logger.debug(f"Parsed from pip-show: {key}={value}")
                 # Check package_name match between pip show and task-group
-                task_group = db.get(TaskGroupV2, task_group_id)
+                task_group = db.get_one(TaskGroupV2, task_group_id)
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
                 compare_package_names(
