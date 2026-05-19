@@ -131,7 +131,7 @@ async def patch_task(
     )
     update = task_update.model_dump(exclude_unset=True)
 
-    task_group = await db.get(TaskGroupV2, db_task.taskgroupv2_id)
+    task_group = await db.get_one(TaskGroupV2, db_task.taskgroupv2_id)
     if task_group.origin != TaskGroupOriginEnum.OTHER:
         for argname in (
             "command_parallel",

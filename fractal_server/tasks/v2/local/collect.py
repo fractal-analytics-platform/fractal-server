@@ -187,7 +187,7 @@ def collect_local(
                 for key, value in pkg_attrs.items():
                     logger.debug(f"Parsed from pip-show: {key}={value}")
                 # Check package_name match between pip show and task-group
-                task_group = db.get(TaskGroupV2, task_group_id)
+                task_group = db.get_one(TaskGroupV2, task_group_id)
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_group = task_group.pkg_name
                 compare_package_names(

@@ -171,7 +171,7 @@ async def reset_tasks_pip(
     )
     _verify_task_group_non_active_or_422(task_group)
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
-    owner = await db.get(UserOAuth, task_group.user_id)
+    owner = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=owner, db=db)
     _verify_support(pip_or_pixi="pip", task_group=task_group, resource=resource)
 
@@ -246,7 +246,7 @@ async def reset_tasks_pixi(
     )
     _verify_task_group_non_active_or_422(task_group)
     await check_no_ongoing_activity(task_group_id=task_group_id, db=db)
-    owner = await db.get(UserOAuth, task_group.user_id)
+    owner = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=owner, db=db)
     _verify_support(
         pip_or_pixi="pixi", task_group=task_group, resource=resource
