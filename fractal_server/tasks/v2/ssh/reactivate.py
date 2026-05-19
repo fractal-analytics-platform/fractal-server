@@ -152,7 +152,6 @@ def reactivate_ssh(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityAction.REACTIVATE}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
 
@@ -162,6 +161,7 @@ def reactivate_ssh(
                     logger.info("start - create venv")
                     _customize_and_run_template(
                         template_filename="1_create_venv.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.info("end - create venv")
@@ -171,6 +171,7 @@ def reactivate_ssh(
                     logger.info("start - install from pip freeze")
                     _customize_and_run_template(
                         template_filename="5_pip_install_from_freeze.sh",
+                        fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.info("end - install from pip freeze")
