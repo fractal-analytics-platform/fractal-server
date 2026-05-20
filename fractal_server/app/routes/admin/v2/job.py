@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
+from pydantic import EmailStr
 from pydantic.types import AwareDatetime
 from sqlalchemy import func
 from sqlmodel import select
@@ -40,7 +41,8 @@ router = APIRouter()
 async def view_job(
     id: int | None = None,
     resource_id: int | None = None,
-    user_id: int | None = None,
+    project_owner_id: int | None = None,
+    user_email: EmailStr | None = None,
     project_id: int | None = None,
     dataset_id: int | None = None,
     workflow_id: int | None = None,
@@ -59,7 +61,8 @@ async def view_job(
 
     Args:
         id: If not `None`, select a given `applyworkflow.id`.
-        user_id:
+        project_owner_id:
+        user_email:
         project_id: If not `None`, select a given `applyworkflow.project_id`.
         dataset_id: If not `None`, select a given
             `applyworkflow.input_dataset_id`.
@@ -90,13 +93,13 @@ async def view_job(
         stm_count = stm_count.join(
             ProjectV2, ProjectV2.id == JobV2.project_id
         ).where(ProjectV2.resource_id == resource_id)
-    if user_id is not None:
+    if project_owner_id is not None:
         stm = (
             stm.join(
                 LinkUserProjectV2,
                 LinkUserProjectV2.project_id == JobV2.project_id,
             )
-            .where(LinkUserProjectV2.user_id == user_id)
+            .where(LinkUserProjectV2.user_id == project_owner_id)
             .where(LinkUserProjectV2.is_owner.is_(True))
         )
         stm_count = (
@@ -104,9 +107,12 @@ async def view_job(
                 LinkUserProjectV2,
                 LinkUserProjectV2.project_id == JobV2.project_id,
             )
-            .where(LinkUserProjectV2.user_id == user_id)
+            .where(LinkUserProjectV2.user_id == project_owner_id)
             .where(LinkUserProjectV2.is_owner.is_(True))
         )
+    if user_email is not None:
+        stm = stm.where(JobV2.user_email == user_email)
+        stm_count = stm_count.where(JobV2.user_email == user_email)
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
         stm_count = stm_count.where(JobV2.project_id == project_id)
