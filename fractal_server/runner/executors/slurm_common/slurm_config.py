@@ -230,11 +230,21 @@ class SlurmConfig(BaseModel):
         return lines
 
     @property
-    def batch_size_not_none(self: Self) -> int:
-        if self.tasks_per_job is None:
-            raise ValueError("batch_size_not_none=None")
-        else:
-            return self.tasks_per_job
+    def batch_size_or_zero(self: Self) -> int:
+        """
+        Equivalent to `JobRunnerConfigLocal.batch_size_or_zero`.
+
+        A `0` value is replaced with `tot_tasks` within
+        `enrich_task_files_multisubmit`.
+        """
+        return self.tasks_per_job or 0
+
+    @property
+    def batch_size_or_one(self: Self) -> int:
+        """
+        Safe to use e.g. in `range(0, tot, batch_size_or_one)`.
+        """
+        return self.tasks_per_job or 1
 
     @property
     def mem_per_cpu_MB(self: Self) -> int:
