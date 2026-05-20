@@ -279,18 +279,20 @@ async def collect_tasks_pip(
 
     # Database checks
 
+    task_group = TaskGroupV2(**task_group_attrs)
+
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         user_resource_id=resource_id,
         db=db,
     )
     await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        user_group_id=task_group.user_group_id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         db=db,
     )
 
@@ -305,7 +307,6 @@ async def collect_tasks_pip(
             )
 
     # Create TaskGroupV2 object
-    task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
     async with integrity_error_to_422(db):
         await db.commit()
