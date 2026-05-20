@@ -32,7 +32,7 @@ def process_workflow(
     user_id: int,
     resource: Resource,
     profile: Profile,
-    user_cache_dir: str | None = None,
+    user_cache_dir: str,
     fractal_ssh: FractalSSH | None = None,
     slurm_account: str | None = None,
     worker_init: str | None = None,
@@ -59,8 +59,7 @@ def process_workflow(
         resource: Computational resource for running this job.
         profile: Computational profile for running this job.
         user_cache_dir:
-            User-writeable folder (typically a subfolder of `project_dirs`).
-            Only relevant for `slurm_sudo` and `slurm_ssh` backends.
+            User-writeable folder to be exposed as `FRACTAL_CACHE_DIR`.
         fractal_ssh:
             `FractalSSH` object, only relevant for the `slurm_ssh` backend.
         slurm_account:
@@ -90,6 +89,7 @@ def process_workflow(
         resource=resource,
         profile=profile,
         fractal_job_id=job_id,
+        user_cache_dir=user_cache_dir,
     ) as runner:
         execute_tasks(
             wf_task_list=workflow.task_list[

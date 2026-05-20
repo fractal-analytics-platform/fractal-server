@@ -65,10 +65,15 @@ def worker(
         # Extract some useful paths
         metadiff_file_remote = input_data["metadiff_file_remote"]
         log_path = input_data["log_file_remote"]
+        user_cache_dir = input_data["user_cache_dir"]
 
         # Execute command
         full_command = input_data["full_command"]
-        call_command_wrapper(cmd=full_command, log_path=log_path)
+        call_command_wrapper(
+            cmd=full_command,
+            log_path=log_path,
+            user_cache_dir=user_cache_dir,
+        )
 
         try:
             with open(metadiff_file_remote) as f:
