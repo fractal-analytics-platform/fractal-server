@@ -143,13 +143,15 @@ async def test_view_job(
         assert len(res.json()["items"]) == 0
 
         # get jobs by user email
-        res = await client.get(f"{PREFIX}/job/?user_email=not-an-email")
+        res = await client.get(f"{PREFIX}/job/?job_user_email=not-an-email")
         assert res.status_code == 422
         assert "not a valid email" in str(res.json()["detail"])
-        res = await client.get(f"{PREFIX}/job/?user_email={user1_email}")
+        res = await client.get(f"{PREFIX}/job/?job_user_email={user1_email}")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
-        res = await client.get(f"{PREFIX}/job/?user_email={user1_old_email}")
+        res = await client.get(
+            f"{PREFIX}/job/?job_user_email={user1_old_email}"
+        )
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
 

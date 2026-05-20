@@ -42,7 +42,7 @@ async def view_job(
     id: int | None = None,
     resource_id: int | None = None,
     project_owner_id: int | None = None,
-    user_email: EmailStr | None = None,
+    job_user_email: EmailStr | None = None,
     project_id: int | None = None,
     dataset_id: int | None = None,
     workflow_id: int | None = None,
@@ -62,7 +62,7 @@ async def view_job(
     Args:
         id: If not `None`, select a given `applyworkflow.id`.
         project_owner_id:
-        user_email:
+        job_user_email:
         project_id: If not `None`, select a given `applyworkflow.project_id`.
         dataset_id: If not `None`, select a given
             `applyworkflow.input_dataset_id`.
@@ -110,9 +110,9 @@ async def view_job(
             .where(LinkUserProjectV2.user_id == project_owner_id)
             .where(LinkUserProjectV2.is_owner.is_(True))
         )
-    if user_email is not None:
-        stm = stm.where(JobV2.user_email == user_email)
-        stm_count = stm_count.where(JobV2.user_email == user_email)
+    if job_user_email is not None:
+        stm = stm.where(JobV2.user_email == job_user_email)
+        stm_count = stm_count.where(JobV2.user_email == job_user_email)
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
         stm_count = stm_count.where(JobV2.project_id == project_id)
