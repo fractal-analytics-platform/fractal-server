@@ -8,9 +8,20 @@ from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.base_slurm_runner import (  # noqa
     BaseSlurmRunner,
 )
+from fractal_server.runner.executors.slurm_common.base_slurm_runner import (
+    _verify_batch_sizes,
+)
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (  # noqa
     SlurmJob,
 )
+
+
+def test_verify_batch_sizes():
+    _verify_batch_sizes(tot_tasks=10, batch_size=1, num_batches=10)
+    _verify_batch_sizes(tot_tasks=10, batch_size=2, num_batches=5)
+    _verify_batch_sizes(tot_tasks=10, batch_size=3, num_batches=4)
+    with pytest.raises(RuntimeError):
+        _verify_batch_sizes(tot_tasks=10, batch_size=3, num_batches=5)
 
 
 class MockBaseSlurmRunner(BaseSlurmRunner):

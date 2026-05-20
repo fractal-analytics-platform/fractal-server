@@ -48,6 +48,19 @@ STDERR_IGNORE_PATTERNS = [
 ]
 
 
+def _verify_batch_sizes(
+    *,
+    num_batches: int,
+    tot_tasks: int,
+    batch_size: int,
+):
+    if num_batches != math.ceil(tot_tasks / batch_size):
+        raise RuntimeError(
+            "Something wrong here while batching tasks: "
+            f"{tot_tasks=}, {batch_size=}, {num_batches=}."
+        )
+
+
 def ignore_stderr_line(line: str) -> bool:
     """
     Whether to ignore a SLURM-job stderr line, based on
@@ -914,10 +927,11 @@ class BaseSlurmRunner(BaseRunner):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(
-                tot_tasks / config.batch_size_or_one
-            ):
-                raise RuntimeError("Something wrong here while batching tasks")
+            _verify_batch_sizes(
+                num_batches=len(args_batches),
+                tot_tasks=tot_tasks,
+                batch_size=config.batch_size_or_one,
+            )
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
             logger.debug("[multisubmit] Prepare `SlurmJob`s.")
