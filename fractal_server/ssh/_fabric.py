@@ -183,13 +183,9 @@ class FractalSSH:
         try:
             self.logger.error(message)
             self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
-            # Handle the specific case of `NoValidConnectionsError`s from
-            # paramiko, which store relevant information in the `errors`
-            # attribute
-            if hasattr(e, "errors"):
-                self.logger.error(f"{type(e)=}")
-                for err in e.errors:
-                    self.logger.error(f"{err}")
+            if isinstance(e, NoValidConnectionsError):
+                for ind, err in enumerate(e.errors):
+                    self.logger.error(f"NoValidConnectionsError[{ind}]: {err}")
         except Exception as exception:
             # Handle unexpected cases, e.g. (1) `e` has no `type`, or
             # (2) `errors` is not iterable.
