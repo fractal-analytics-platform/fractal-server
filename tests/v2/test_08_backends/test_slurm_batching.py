@@ -5,6 +5,9 @@ import pytest
 from fractal_server.runner.executors.slurm_common._batching import (
     SlurmHeuristicsError,
 )
+from fractal_server.runner.executors.slurm_common._batching import (
+    _verify_batch_sizes,
+)
 from fractal_server.runner.executors.slurm_common._batching import heuristics
 
 
@@ -73,3 +76,11 @@ def test_heuristics():
     )
     assert tasks_per_job == NUM_TASKS
     assert parallel_tasks_per_job == 1
+
+
+def test_verify_batch_sizes():
+    _verify_batch_sizes(tot_tasks=10, batch_size=1, num_batches=10)
+    _verify_batch_sizes(tot_tasks=10, batch_size=2, num_batches=5)
+    _verify_batch_sizes(tot_tasks=10, batch_size=3, num_batches=4)
+    with pytest.raises(RuntimeError):
+        _verify_batch_sizes(tot_tasks=10, batch_size=3, num_batches=5)

@@ -1,5 +1,4 @@
 import json
-import math
 import sys
 import time
 from pathlib import Path
@@ -35,6 +34,7 @@ from fractal_server.runner.v2.db_tools import (
     update_status_of_history_unit_no_commit,
 )
 
+from ._batching import _verify_batch_sizes
 from ._job_states import STATES_FINISHED
 from .slurm_config import SlurmConfig
 
@@ -46,19 +46,6 @@ STDERR_IGNORE_PATTERNS = [
     "srun: step created for stepid=",
     "srun: warning: can't run 1 processes on ",
 ]
-
-
-def _verify_batch_sizes(
-    *,
-    num_batches: int,
-    tot_tasks: int,
-    batch_size: int,
-):
-    if num_batches != math.ceil(tot_tasks / batch_size):
-        raise RuntimeError(
-            "Something wrong here while batching tasks: "
-            f"{tot_tasks=}, {batch_size=}, {num_batches=}."
-        )
 
 
 def ignore_stderr_line(line: str) -> bool:
