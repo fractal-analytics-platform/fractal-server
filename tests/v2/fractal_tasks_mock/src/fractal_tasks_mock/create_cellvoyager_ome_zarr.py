@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 from pydantic import validate_call
@@ -32,6 +33,7 @@ def create_cellvoyager_ome_zarr(
     logging.info(f"[create_cellvoyager_ome_zarr] {image_dir=}")
     logging.info(f"[create_cellvoyager_ome_zarr] {zarr_dir=}")
     logging.info(f"[create_cellvoyager_ome_zarr] {zarr_path=}")
+    logging.info(f"[generic_task] {os.getenv('FRACTAL_CACHE_DIR')=}")
 
     # Create (fake) OME-Zarr folder on disk
     Path(zarr_path).mkdir()

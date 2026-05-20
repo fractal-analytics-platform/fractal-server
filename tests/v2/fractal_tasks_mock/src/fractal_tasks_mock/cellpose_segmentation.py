@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 from pydantic import validate_call
@@ -21,6 +22,7 @@ def cellpose_segmentation(
     _check_zarr_url_is_absolute(zarr_url)
     logging.info("[cellpose_segmentation] START")
     logging.info(f"[cellpose_segmentation] {zarr_url=}")
+    logging.info(f"[generic_task] {os.getenv('FRACTAL_CACHE_DIR')=}")
 
     with (Path(zarr_url) / "data").open("a") as f:
         f.write("Cellpose segmentation\n")
