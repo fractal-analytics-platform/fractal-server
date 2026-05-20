@@ -9,6 +9,7 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import Session as DBSyncSession
@@ -52,7 +53,7 @@ class DB:
             future=True,
             pool_pre_ping=True,
         )
-        cls._async_session_maker = sessionmaker(
+        cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
             expire_on_commit=False,

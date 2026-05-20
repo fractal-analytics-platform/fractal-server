@@ -2,6 +2,8 @@
 Definition of `/auth/current-user/` endpoints
 """
 
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -85,7 +87,7 @@ async def patch_current_user(
 async def get_current_user_profile_info(
     current_user: UserOAuth = Depends(current_user_act),
     db: AsyncSession = Depends(get_async_db),
-) -> UserProfileInfo:
+) -> dict[str, Any]:
     stm = (
         select(Resource, Profile)
         .join(UserOAuth, Profile.id == UserOAuth.profile_id)

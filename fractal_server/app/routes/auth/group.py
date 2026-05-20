@@ -2,6 +2,9 @@
 Definition of `/auth/group/` routes
 """
 
+from typing import Any
+from typing import Sequence
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -39,7 +42,7 @@ async def get_list_user_groups(
     user_ids: bool = False,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> list[UserGroupRead]:
+) -> Sequence[UserGroupRead]:
     # Get all groups
     stm_all_groups = select(UserGroup).order_by(UserGroup.id)
     res = await db.execute(stm_all_groups)
@@ -87,7 +90,7 @@ async def create_single_group(
     group_create: UserGroupCreate,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> UserGroupRead:
+) -> dict[str, Any]:
     # Check that name is not already in use
     existing_name_str = select(UserGroup).where(
         UserGroup.name == group_create.name

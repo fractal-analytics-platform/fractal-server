@@ -1,5 +1,4 @@
 import json
-import math
 import sys
 import time
 from pathlib import Path
@@ -35,6 +34,7 @@ from fractal_server.runner.v2.db_tools import (
     update_status_of_history_unit_no_commit,
 )
 
+from ._batching import _verify_batch_sizes
 from ._job_states import STATES_FINISHED
 from .slurm_config import SlurmConfig
 
@@ -909,13 +909,16 @@ class BaseSlurmRunner(BaseRunner):
             # Divide arguments in batches of `tasks_per_job` tasks each
             tot_tasks = len(list_parameters)
             args_batches = []
-            batch_size = config.tasks_per_job
+            batch_size = config.batch_size_or_one
             for ind_chunk in range(0, tot_tasks, batch_size):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
-                raise RuntimeError("Something wrong here while batching tasks")
+            _verify_batch_sizes(
+                num_batches=len(args_batches),
+                tot_tasks=tot_tasks,
+                batch_size=config.batch_size_or_one,
+            )
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
             logger.debug("[multisubmit] Prepare `SlurmJob`s.")

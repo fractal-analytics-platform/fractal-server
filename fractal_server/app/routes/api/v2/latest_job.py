@@ -38,7 +38,7 @@ async def get_latest_job(
     dataset_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> JobV2:
+) -> JobWithTaskStatuses:
     workflow = await _get_workflow_check_access(
         project_id=project_id,
         workflow_id=workflow_id,

@@ -12,6 +12,8 @@ from sqlmodel import SQLModel
 
 from fractal_server.utils import get_timestamp
 
+from .project import ProjectV2
+
 
 class DatasetV2(SQLModel, table=True):
     """
@@ -24,7 +26,7 @@ class DatasetV2(SQLModel, table=True):
     name: str
 
     project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
-    project: "ProjectV2" = Relationship(  # noqa: F821
+    project: ProjectV2 = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
     is_starred: bool = Field(

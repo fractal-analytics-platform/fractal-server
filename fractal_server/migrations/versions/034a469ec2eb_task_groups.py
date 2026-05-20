@@ -10,7 +10,7 @@ from datetime import datetime
 from datetime import timezone
 
 import sqlalchemy as sa
-import sqlmodel
+import sqlmodel.sql.sqltypes
 from alembic import op
 
 # revision identifiers, used by Alembic.
