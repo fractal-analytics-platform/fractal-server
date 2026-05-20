@@ -242,6 +242,8 @@ async def create_task(
         origin=TaskGroupOriginEnum.OTHER,
         version=db_task.version,
         pkg_name=pkg_name,
+        pinned_package_versions_pre={},
+        pinned_package_versions_post={},
     )
     db.add(db_task_group)
     async with integrity_error_to_422(db):

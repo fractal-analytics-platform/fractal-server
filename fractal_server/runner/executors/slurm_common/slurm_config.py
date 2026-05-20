@@ -109,7 +109,7 @@ class SlurmConfig(BaseModel):
     target_num_jobs: int
     max_num_jobs: int
 
-    def _sorted_extra_lines(self) -> list[str]:
+    def _sorted_extra_lines(self: Self) -> list[str]:
         """
         Return a copy of `self.extra_lines`, where lines starting with
         `self.prefix` are listed first.
@@ -146,7 +146,7 @@ class SlurmConfig(BaseModel):
         return sorted(script_lines, key=_sorting_function)
 
     def to_sbatch_preamble(
-        self,
+        self: Self,
         remote_export_dir: str,
         use_mem_per_cpu: bool = False,
     ) -> list[str]:
@@ -230,9 +230,22 @@ class SlurmConfig(BaseModel):
         return lines
 
     @property
-    def batch_size(self) -> int:
-        return self.tasks_per_job
+    def batch_size_or_zero(self: Self) -> int:
+        """
+        Equivalent to `JobRunnerConfigLocal.batch_size_or_zero`.
+
+        A `0` value is replaced with `tot_tasks` within
+        `enrich_task_files_multisubmit`.
+        """
+        return self.tasks_per_job or 0
 
     @property
-    def mem_per_cpu_MB(self) -> int:
+    def batch_size_or_one(self: Self) -> int:
+        """
+        Safe to use e.g. in `range(0, tot, batch_size_or_one)`.
+        """
+        return self.tasks_per_job or 1
+
+    @property
+    def mem_per_cpu_MB(self: Self) -> int:
         return int(self.mem_per_task_MB / self.cpus_per_task)

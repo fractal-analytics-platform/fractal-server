@@ -29,7 +29,6 @@ async def raise_403_if_not_owner(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Current user is not the project owner.",
         )
-    return link
 
 
 async def get_link_or_404(

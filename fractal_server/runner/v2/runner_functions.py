@@ -308,7 +308,7 @@ def run_task_parallel(
     list_task_files = enrich_task_files_multisubmit(
         base_task_files=task_files,
         tot_tasks=len(images),
-        batch_size=runner_config.batch_size,
+        batch_size=runner_config.batch_size_or_zero,
     )
 
     history_units = [
@@ -530,7 +530,7 @@ def run_task_compound(
             task_name=wftask.task.name,
         ),
         tot_tasks=len(parallelization_list),
-        batch_size=runner_config_compute.batch_size,
+        batch_size=runner_config_compute.batch_size_or_zero,
     )
 
     list_function_kwargs = [

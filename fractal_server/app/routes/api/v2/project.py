@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -35,7 +37,7 @@ async def get_list_project(
     is_owner: bool = True,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectV2]:
+) -> Sequence[ProjectV2]:
     """
     Return list of projects user is member of
     """

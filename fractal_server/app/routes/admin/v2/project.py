@@ -45,7 +45,7 @@ async def view_projects(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[dict[str, Any]]:
+) -> dict[str, Any]:
     # Prepare statements
     stm = (
         select(ProjectV2, UserOAuth.email)

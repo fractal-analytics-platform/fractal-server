@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -108,7 +109,7 @@ async def read_dataset_list(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetV2]:
+) -> Sequence[DatasetV2]:
     """
     Get dataset list for given project
     """

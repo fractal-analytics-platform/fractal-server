@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -42,7 +40,7 @@ async def view_link_user_project(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[dict[str, Any]]:
+) -> PaginationResponse[LinkUserProjectRead]:
     stm = (
         select(
             LinkUserProjectV2,
@@ -111,7 +109,7 @@ async def verify_invitation_for_guest(
     project_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> None:
+) -> Response:
     """
     Verify the invitation to join a project for a guest user
 

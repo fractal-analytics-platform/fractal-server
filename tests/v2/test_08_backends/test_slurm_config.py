@@ -188,3 +188,9 @@ def test_SlurmConfig():
     # With trailing slash
     preamble = cfg.to_sbatch_preamble(remote_export_dir="/cache/dir/")
     assert "export CELLPOSE_LOCAL_MODELS_PATH=/cache/dir/cellpose" in preamble
+
+    cfg.tasks_per_job = None
+    assert cfg.batch_size_or_zero == 0
+
+    cfg.tasks_per_job = 123
+    assert cfg.batch_size_or_zero == cfg.tasks_per_job

@@ -7,6 +7,7 @@ Create Date: 2024-09-09 14:15:34.415926
 """
 
 import sqlalchemy as sa
+import sqlalchemy.exc
 from alembic import op
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
@@ -49,7 +50,7 @@ def upgrade() -> None:
         try:
             with op.batch_alter_table("workflowtaskv2") as batch_op:
                 batch_op.drop_index("idx_workflowtaskv2_task_legacy_id")
-        except sa.exc.OperationalError:
+        except sqlalchemy.exc.OperationalError:
             logger.warning(
                 "Could not drop index; "
                 "this is expected, when the database is empty."

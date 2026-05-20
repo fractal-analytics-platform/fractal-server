@@ -5,7 +5,8 @@
 * SSH:
     * Drop `safe_root` from `remove_folder` (\#3333).
 * Internal:
-    * Improve type hinting, including `db.get -> db.get_one` replacements (\#3333).
+    * Several minor fixes to improve typing (\#3333, \#3335).
+    * Drop all existing `data_migrations/old` scripts (\#3335).
 * Testing:
     * Run `ty` type checker in a non-failing mode (\#3333).
 
