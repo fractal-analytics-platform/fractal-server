@@ -5,16 +5,16 @@ from fractal_server.runner.v2.task_interface import TaskOutput
 
 
 def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
-    final_image_list_updates = itertools.chain.from_iterable(
+    image_list_updates_chain = itertools.chain.from_iterable(
         task_output.image_list_updates for task_output in task_outputs
     )
-    final_image_list_removals = itertools.chain.from_iterable(
+    image_list_removals_chain = itertools.chain.from_iterable(
         task_output.image_list_removals for task_output in task_outputs
     )
 
     # Note: the ordering of `image_list_removals` is not guaranteed
-    final_image_list_updates = deduplicate_list(final_image_list_updates)
-    final_image_list_removals = list(set(final_image_list_removals))
+    final_image_list_updates = deduplicate_list(image_list_updates_chain)
+    final_image_list_removals = list(set(image_list_removals_chain))
 
     final_output = TaskOutput(
         image_list_updates=final_image_list_updates,
