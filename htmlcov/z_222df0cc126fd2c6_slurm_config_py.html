@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for fractal_server/runner/executors/slurm_common/slurm_config.py: 91%</title>
+    <title>Coverage for fractal_server/runner/executors/slurm_common/slurm_config.py: 92%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>fractal_server&#8201;/&#8201;runner&#8201;/&#8201;executors&#8201;/&#8201;slurm_common&#8201;/&#8201;slurm_config.py</b>:
-            <span class="pc_cov">91%</span>
+            <span class="pc_cov">92%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">70 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">66<span class="text"> run</span></button>
+            <span class="text">73 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">69<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">4<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">4<span class="text"> partial</span></button>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_222df0cc126fd2c6_slurm_job_task_models_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 15:49 +0000
+            created at 2026-05-20 07:37 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -193,7 +193,7 @@
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="nam">target_num_jobs</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="nam">max_num_jobs</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">    <span class="key">def</span> <span class="nam">_sorted_extra_lines</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">    <span class="key">def</span> <span class="nam">_sorted_extra_lines</span><span class="op">(</span><span class="nam">self</span><span class="op">:</span> <span class="nam">Self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t"><span class="str">        Return a copy of `self.extra_lines`, where lines starting with</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t"><span class="str">        `self.prefix` are listed first.</span>&nbsp;</span><span class="r"></span></p>
@@ -230,7 +230,7 @@
     <p class="run"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">        <span class="key">return</span> <span class="nam">sorted</span><span class="op">(</span><span class="nam">script_lines</span><span class="op">,</span> <span class="nam">key</span><span class="op">=</span><span class="nam">_sorting_function</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">    <span class="key">def</span> <span class="nam">to_sbatch_preamble</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">        <span class="nam">self</span><span class="op">:</span> <span class="nam">Self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">        <span class="nam">remote_export_dir</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t">        <span class="nam">use_mem_per_cpu</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -314,12 +314,25 @@
     <p class="run"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">        <span class="key">return</span> <span class="nam">lines</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t">    <span class="op">@</span><span class="nam">property</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">    <span class="key">def</span> <span class="nam">batch_size</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">tasks_per_job</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">    <span class="op">@</span><span class="nam">property</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">    <span class="key">def</span> <span class="nam">mem_per_cpu_MB</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">        <span class="key">return</span> <span class="nam">int</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">mem_per_task_MB</span> <span class="op">/</span> <span class="nam">self</span><span class="op">.</span><span class="nam">cpus_per_task</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">    <span class="key">def</span> <span class="nam">batch_size_or_zero</span><span class="op">(</span><span class="nam">self</span><span class="op">:</span> <span class="nam">Self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t"><span class="str">        Equivalent to `JobRunnerConfigLocal.batch_size_or_zero`.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t"><span class="str">        A `0` value is replaced with `tot_tasks` within</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t"><span class="str">        `enrich_task_files_multisubmit`.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t239" href="#t239">239</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t240" href="#t240">240</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">tasks_per_job</span> <span class="key">or</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t241" href="#t241">241</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t242" href="#t242">242</a></span><span class="t">    <span class="op">@</span><span class="nam">property</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t243" href="#t243">243</a></span><span class="t">    <span class="key">def</span> <span class="nam">batch_size_or_one</span><span class="op">(</span><span class="nam">self</span><span class="op">:</span> <span class="nam">Self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t244" href="#t244">244</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t"><span class="str">        Safe to use e.g. in `range(0, tot, batch_size_or_one)`.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">tasks_per_job</span> <span class="key">or</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">    <span class="op">@</span><span class="nam">property</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">    <span class="key">def</span> <span class="nam">mem_per_cpu_MB</span><span class="op">(</span><span class="nam">self</span><span class="op">:</span> <span class="nam">Self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">int</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">        <span class="key">return</span> <span class="nam">int</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">mem_per_task_MB</span> <span class="op">/</span> <span class="nam">self</span><span class="op">.</span><span class="nam">cpus_per_task</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -329,7 +342,7 @@
             <a class="nav" href="z_222df0cc126fd2c6_slurm_job_task_models_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 15:49 +0000
+            created at 2026-05-20 07:37 +0000
         </p>
     </div>
 </footer>

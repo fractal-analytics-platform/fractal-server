@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_0086ed950171d29b___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 15:49 +0000
+            created at 2026-05-20 07:37 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -112,8 +112,8 @@
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="key">async</span> <span class="key">for</span> <span class="nam">session</span> <span class="key">in</span> <span class="nam">get_async_db</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">        <span class="com"># Write shutdown file for all jobs</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">jobs</span> <span class="op">=</span> <span class="op">(</span><span class="key">await</span> <span class="nam">session</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm_objects</span><span class="op">)</span><span class="op">)</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="key">for</span> <span class="nam">job</span> <span class="key">in</span> <span class="nam">jobs</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">job_objects</span> <span class="op">=</span> <span class="op">(</span><span class="key">await</span> <span class="nam">session</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm_objects</span><span class="op">)</span><span class="op">)</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="key">for</span> <span class="nam">job</span> <span class="key">in</span> <span class="nam">job_objects</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">            <span class="nam">_write_shutdown_file</span><span class="op">(</span><span class="nam">job</span><span class="op">=</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">        <span class="com"># Wait for completion of all job - with a timeout</span>&nbsp;</span><span class="r"></span></p>
@@ -136,8 +136,8 @@
     <p class="run run2"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">        <span class="com"># Mark jobs as failed and update their logs.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">        <span class="nam">jobs</span> <span class="op">=</span> <span class="op">(</span><span class="key">await</span> <span class="nam">session</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm_objects</span><span class="op">)</span><span class="op">)</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">        <span class="key">for</span> <span class="nam">job</span> <span class="key">in</span> <span class="nam">jobs</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">        <span class="nam">job_objects</span> <span class="op">=</span> <span class="op">(</span><span class="key">await</span> <span class="nam">session</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm_objects</span><span class="op">)</span><span class="op">)</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">        <span class="key">for</span> <span class="nam">job</span> <span class="key">in</span> <span class="nam">job_objects</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">            <span class="nam">job</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="str">"failed"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">            <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="op">(</span><span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="key">or</span> <span class="str">""</span><span class="op">)</span> <span class="op">+</span> <span class="str">"\nJob stopped due to app shutdown\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">            <span class="nam">session</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -153,7 +153,7 @@
             <a class="nav" href="z_0086ed950171d29b___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-19 15:49 +0000
+            created at 2026-05-20 07:37 +0000
         </p>
     </div>
 </footer>
