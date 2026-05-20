@@ -30,9 +30,11 @@ logger = set_logger(__name__)
 
 
 def run_single_task(
+    *,
     base_command: str,
     parameters: dict[str, Any],
     task_files: TaskFiles,
+    user_cache_dir: str,
 ) -> None:
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
@@ -48,6 +50,7 @@ def run_single_task(
     call_command_wrapper(
         cmd=full_command,
         log_path=task_files.log_file_local,
+        user_cache_dir=user_cache_dir,
     )
 
     try:

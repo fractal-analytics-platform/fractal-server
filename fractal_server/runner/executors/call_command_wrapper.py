@@ -19,13 +19,19 @@ def placeholder_if_too_long(stderr: str) -> str:
     return stderr
 
 
-def call_command_wrapper(*, cmd: str, log_path: str) -> None:
+def call_command_wrapper(
+    *,
+    cmd: str,
+    log_path: str,
+    user_cache_dir: str,
+) -> None:
     """
     Call a command and write its stdout and stderr to files
 
     Args:
         cmd:
         log_path:
+        user_cache_dir:
     """
     try:
         validate_cmd(cmd)

@@ -15,6 +15,7 @@ def test_call_command_wrapper(tmp_path):
         call_command_wrapper(
             cmd="echo; echo",
             log_path=(tmp_path / "log1").as_posix(),
+            user_cache_dir="/something-invalid",
         )
 
     # Non-executable command
@@ -25,6 +26,7 @@ def test_call_command_wrapper(tmp_path):
         call_command_wrapper(
             cmd="xxxx something",
             log_path=(tmp_path / "log2").as_posix(),
+            user_cache_dir="/something-invalid",
         )
 
     # Internal failure (cannot call `shlex.split`)
@@ -37,6 +39,7 @@ def test_call_command_wrapper(tmp_path):
         call_command_wrapper(
             cmd="false",
             log_path=(tmp_path / "log3").as_posix(),
+            user_cache_dir="/something-invalid",
         )
 
     # Command that actually fails with returncode!=0
@@ -48,4 +51,5 @@ def test_call_command_wrapper(tmp_path):
         call_command_wrapper(
             cmd="sleep --fake-arg",
             log_path=(tmp_path / "log4").as_posix(),
+            user_cache_dir="/something-invalid",
         )
