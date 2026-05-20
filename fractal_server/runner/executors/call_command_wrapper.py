@@ -54,6 +54,10 @@ def call_command_wrapper(
                 split_cmd,
                 stderr=fp_log,
                 stdout=fp_log,
+                env=dict(
+                    os.environ,
+                    FRACTAL_CACHE_DIR=user_cache_dir,
+                ),
             )
         except Exception as e:
             # This is likely unreachable
