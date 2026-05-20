@@ -82,3 +82,15 @@ def test_call_command_wrapper_FRACTAL_CACHE_DIR(tmp_path):
     )
     with open(logfile) as f:
         assert f"FRACTAL_CACHE_DIR={user_cache_dir}" in f.read()
+
+
+def test_call_command_wrapper_unreachable_branch(tmp_path):
+    with pytest.raises(
+        TypeError,
+        match="expected str, bytes or os.PathLike object, not list",
+    ):
+        call_command_wrapper(
+            cmd="ls",
+            log_path=(tmp_path / "log").as_posix(),
+            user_cache_dir=["/something"],
+        )
