@@ -488,12 +488,12 @@ async def clean_app_job_list(
         List of IDs for submitted jobs.
     """
     logger.info(f"[clean_app_job_list] START - {jobs_list=}.")
-    stmt = (
+    stm = (
         select(JobV2.id)
         .where(JobV2.id.in_(jobs_list))
         .where(JobV2.status == JobStatusType.SUBMITTED)
     )
-    res = await db.execute(stmt)
+    res = await db.execute(stm)
     submitted_job_ids = res.scalars().all()
     logger.info(f"[clean_app_job_list] END - {submitted_job_ids=}.")
     return submitted_job_ids
