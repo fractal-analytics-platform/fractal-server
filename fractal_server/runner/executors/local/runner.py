@@ -70,6 +70,7 @@ class LocalRunner(BaseRunner):
     executor: ThreadPoolExecutor
     root_dir_local: Path
     shared_config: JobRunnerConfigLocal
+    user_cache_dir: str
 
     def __init__(
         self,
@@ -77,6 +78,7 @@ class LocalRunner(BaseRunner):
         resource: Resource,
         profile: Profile,
         fractal_job_id: int,
+        user_cache_dir: str,
     ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
@@ -84,6 +86,7 @@ class LocalRunner(BaseRunner):
         logger.debug("Create LocalRunner")
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
         self.fractal_job_id = fractal_job_id
+        self.user_cache_dir = user_cache_dir
 
     def __enter__(self) -> Self:
         logger.debug("Enter LocalRunner")
