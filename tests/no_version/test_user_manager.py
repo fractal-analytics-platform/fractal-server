@@ -19,11 +19,6 @@ async def test_oauth_callback(
             recipients=["test@example.org"],
             smtp_server="localhost",
             port=1234,
-            encrypted_password=(
-                "gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuM"
-                "P5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg=="
-            ),
-            encryption_key="lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=",
             instance_name="fractal",
             use_starttls=False,
             use_login=True,
