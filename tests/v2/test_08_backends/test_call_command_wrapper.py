@@ -53,3 +53,32 @@ def test_call_command_wrapper(tmp_path):
             log_path=(tmp_path / "log4").as_posix(),
             user_cache_dir="/something-invalid",
         )
+
+
+def test_call_command_wrapper_FRACTAL_CACHE_DIR(tmp_path):
+    user_cache_dir = "/some/fractal/cache/dir"
+
+    # Example of how `-u` makes the subprocess fail for an undefined variable
+    script_path = (tmp_path / "script1.sh").as_posix()
+    logfile = (tmp_path / "log1").as_posix()
+    with open(script_path, "w") as f:
+        f.write('set -u; echo "$MISSING_VARIABLE;"')
+    with pytest.raises(TaskExecutionError, match="unbound variable"):
+        call_command_wrapper(
+            cmd=f"bash {script_path}",
+            log_path=logfile,
+            user_cache_dir=user_cache_dir,
+        )
+
+    # Successful execution and reference to `FRACTAL_CACHE_DIR`
+    script_path = (tmp_path / "script2.sh").as_posix()
+    logfile = (tmp_path / "log2").as_posix()
+    with open(script_path, "w") as f:
+        f.write('set -u; echo "FRACTAL_CACHE_DIR=$FRACTAL_CACHE_DIR;"')
+    call_command_wrapper(
+        cmd=f"bash {script_path}",
+        log_path=logfile,
+        user_cache_dir=user_cache_dir,
+    )
+    with open(logfile) as f:
+        assert f"FRACTAL_CACHE_DIR={user_cache_dir}" in f.read()
