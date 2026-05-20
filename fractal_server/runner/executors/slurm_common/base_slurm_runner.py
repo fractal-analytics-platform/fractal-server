@@ -80,6 +80,8 @@ class RemoteInputData(BaseModel):
     metadiff_file_remote: str
     log_file_remote: str
 
+    user_cache_dir: str
+
 
 def create_accounting_record_slurm(
     *,
@@ -343,6 +345,7 @@ class BaseSlurmRunner(BaseRunner):
                 fractal_server_version=__VERSION__,
                 metadiff_file_remote=task.task_files.metadiff_file_remote,
                 log_file_remote=task.task_files.log_file_remote,
+                user_cache_dir=self.user_cache_dir,
             )
 
             with open(task.input_file_local, "w") as f:

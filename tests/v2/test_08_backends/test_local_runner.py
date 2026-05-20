@@ -52,6 +52,7 @@ async def test_submit_success(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -112,6 +113,7 @@ async def test_submit_fail(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -168,6 +170,7 @@ async def test_submit_inner_failure(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -212,6 +215,7 @@ async def test_multisubmit_parallel(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -260,6 +264,7 @@ async def test_multisubmit_compound(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -314,6 +319,7 @@ async def test_multisubmit_in_chunks(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -366,6 +372,7 @@ async def test_multisubmit_parallel_fail(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -423,6 +430,7 @@ async def test_multisubmit_inner_failure(
         resource=res,
         profile=prof,
         fractal_job_id=99,
+        user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
