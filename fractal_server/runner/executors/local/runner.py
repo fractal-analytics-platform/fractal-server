@@ -147,6 +147,7 @@ class LocalRunner(BaseRunner):
                 base_command=base_command,
                 parameters=parameters,
                 task_files=task_files,
+                user_cache_dir=self.user_cache_dir,
             )
         except Exception as e:
             logger.error(
@@ -281,6 +282,7 @@ class LocalRunner(BaseRunner):
                         base_command=base_command,
                         parameters=list_parameters[positional_index],
                         task_files=list_task_files[positional_index],
+                        user_cache_dir=self.user_cache_dir,
                     )
                     active_futures[positional_index] = future
                 except Exception as e:
