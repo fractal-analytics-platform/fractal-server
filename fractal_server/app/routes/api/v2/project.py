@@ -131,7 +131,7 @@ async def update_project(
     )
 
     # Check that there is no project with the same user and name
-    if project_update.name is not None:
+    if project_update.name is not None and project_update.name != project.name:
         await _check_project_exists(
             project_name=project_update.name, user_id=user.id, db=db
         )
