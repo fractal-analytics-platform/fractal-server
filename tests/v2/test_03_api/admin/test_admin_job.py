@@ -39,6 +39,9 @@ async def test_view_job(
     async with MockCurrentUser(
         is_superuser=False, profile_id=local_resource_profile_db[1].id
     ) as user1:
+        user1_id = user1.id
+        user1_email = user1.email
+        user1_old_email = "old-user1@example.org"
         project = await project_factory(user1)
 
         workflow1 = await workflow_factory(project_id=project.id)
@@ -62,6 +65,7 @@ async def test_view_job(
             dataset_id=dataset.id,
             workflow_id=workflow1.id,
             start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
+            user_email=user1_email,
         )
 
         await job_factory(
@@ -74,11 +78,13 @@ async def test_view_job(
             workflow_id=workflow2.id,
             start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
             end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
+            user_email=user1_old_email,
         )
 
     async with MockCurrentUser(
         is_superuser=False, profile_id=slurm_sudo_resource_profile_db[1].id
     ) as user2:
+        user2_id = user2.id
         project2 = await project_factory(user2)
 
         workflow3 = await workflow_factory(project_id=project2.id)
@@ -125,16 +131,29 @@ async def test_view_job(
         assert res.json()["current_page"] == 2
         assert res.json()["items"][0]["log"] == "log-b"
 
-        # get jobs by user_id
-        res = await client.get(f"{PREFIX}/job/?user_id={user1.id}")
+        # get jobs by project_owner_id
+        res = await client.get(f"{PREFIX}/job/?project_owner_id={user1_id}")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 2
-        res = await client.get(f"{PREFIX}/job/?user_id={user2.id}")
+        res = await client.get(f"{PREFIX}/job/?project_owner_id={user2_id}")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 1
-        res = await client.get(f"{PREFIX}/job/?user_id={user1.id + user2.id}")
+        res = await client.get(f"{PREFIX}/job/?project_owner_id=99999")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 0
+
+        # get jobs by user email
+        res = await client.get(f"{PREFIX}/job/?job_user_email=not-an-email")
+        assert res.status_code == 422
+        assert "not a valid email" in str(res.json()["detail"])
+        res = await client.get(f"{PREFIX}/job/?job_user_email={user1_email}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        res = await client.get(
+            f"{PREFIX}/job/?job_user_email={user1_old_email}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
 
         # get jobs by id
         res = await client.get(f"{PREFIX}/job/?id={job1.id}")
