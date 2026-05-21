@@ -35,8 +35,7 @@ def monkey_slurm(monkeypatch, slurmlogin_container, slurm_alive):
     Monkeypatch Popen to execute overridden command in container
 
     If sbatch is not present on the host machine, check if there is a
-    containerised installation and redirect commands there. If no slurm
-    container is present, xfail.
+    containerised installation and redirect commands there.
     """
     import subprocess
 
