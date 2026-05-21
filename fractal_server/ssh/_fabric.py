@@ -187,10 +187,10 @@ class FractalSSH:
                 for ind, err in enumerate(e.errors):
                     self.logger.error(f"NoValidConnectionsError[{ind}]: {err}")
         except Exception as exception:
-            # Handle unexpected cases, e.g. (1) `e` has no `type`, or
-            # (2) `errors` is not iterable.
+            # Handle unexpected cases, e.g. when `e` has no `type` or `e.errors`
+            # is not iterable.
             self.logger.error(
-                "Unexpected Error while handling exception above: "
+                "Unexpected error while handling exception above: "
                 f"{str(exception)}"
             )
 
