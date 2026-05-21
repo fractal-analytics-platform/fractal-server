@@ -36,6 +36,13 @@ class PublicEmailSettings(BaseModel):
     use_starttls: bool
     use_login: bool
 
+    @property
+    def password_not_none(self: Self) -> SecretStr:
+        if self.password is None:
+            raise RuntimeError("password=None in password_not_none method.")
+        else:
+            return self.password
+
 
 class EmailSettings(BaseSettings):
     """

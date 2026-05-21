@@ -35,19 +35,7 @@ def test_acquire_lock():
         print(e)
 
 
-def test_fail_and_raise(tmp_path: Path, caplog):
-    """
-    Test Exception when `e.errors` is not an iterable.
-    """
-
-    class MyError(Exception):
-        errors = 0
-
-    class MockFractalSSH(FractalSSH):
-        @property
-        def _sftp_unsafe(self):
-            raise MyError()
-
+def test_log_and_raise(tmp_path: Path, caplog):
     LOGGER_NAME = "invalid_ssh"
     with Connection(
         host="localhost",
@@ -55,21 +43,37 @@ def test_fail_and_raise(tmp_path: Path, caplog):
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
     ) as connection:
-        mocked_fractal_ssh = MockFractalSSH(
+        mocked_fractal_ssh = FractalSSH(
             connection=connection, logger_name=LOGGER_NAME
         )
 
         logger = logging.getLogger(LOGGER_NAME)
         logger.propagate = True
 
-        with pytest.raises(MyError):
-            mocked_fractal_ssh.send_file(
-                local="/invalid/local",
-                remote="/invalid/remote",
+        caplog.clear
+        with pytest.raises(TypeError):
+            mocked_fractal_ssh.log_and_raise(e=TypeError(), message="test1")
+        assert "TypeError" in caplog.text
+
+        caplog.clear
+        novalidconnection_error = NoValidConnectionsError(
+            errors={("127.0.0.1", "22"): Exception()}
+        )
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=novalidconnection_error,
+                message="test2",
             )
-        log_text = caplog.text
-        assert "Unexpected" in log_text
-        assert "'int' object is not iterable" in log_text
+        assert "NoValidConnectionsError[0]: ('127.0.0.1', '22')" in caplog.text
+
+        caplog.clear
+        novalidconnection_error.errors = 1  #
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=novalidconnection_error,
+                message="test3",
+            )
+        assert "Unexpected error" in caplog.text
 
 
 @pytest.mark.container

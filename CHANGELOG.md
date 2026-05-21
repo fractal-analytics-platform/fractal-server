@@ -11,7 +11,7 @@
 * SSH:
     * Drop `safe_root` from `remove_folder` (\#3333).
 * Internal:
-    * Several minor fixes to improve typing (\#3333, \#3335).
+    * Several minor fixes to improve typing (\#3333, \#3335, \#3340).
     * Drop all existing `data_migrations/old` scripts (\#3335).
 * Testing:
     * Run `ty` type checker in a non-failing mode (\#3333).
