@@ -35,18 +35,9 @@ def test_acquire_lock():
         print(e)
 
 
-def test_fail_and_raise(tmp_path: Path, caplog):
-    """
-    Test Exception when `e.errors` is not an iterable.
-    """
-
+def test_log_and_raise(tmp_path: Path, caplog):
     class MyError(Exception):
-        errors = 0
-
-    class MockFractalSSH(FractalSSH):
-        @property
-        def _sftp_unsafe(self):
-            raise MyError()
+        pass
 
     LOGGER_NAME = "invalid_ssh"
     with Connection(
@@ -55,21 +46,27 @@ def test_fail_and_raise(tmp_path: Path, caplog):
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
     ) as connection:
-        mocked_fractal_ssh = MockFractalSSH(
+        mocked_fractal_ssh = FractalSSH(
             connection=connection, logger_name=LOGGER_NAME
         )
 
         logger = logging.getLogger(LOGGER_NAME)
         logger.propagate = True
 
+        caplog.clear
         with pytest.raises(MyError):
-            mocked_fractal_ssh.send_file(
-                local="/invalid/local",
-                remote="/invalid/remote",
+            mocked_fractal_ssh.log_and_raise(e=MyError(), message="test1")
+        assert "MyError" in caplog.text
+
+        caplog.clear
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=NoValidConnectionsError(
+                    errors={("127.0.0.1", "22"): Exception()}
+                ),
+                message="test2",
             )
-        log_text = caplog.text
-        assert "Unexpected" in log_text
-        assert "'int' object is not iterable" in log_text
+        assert "NoValidConnectionsError[0]: ('127.0.0.1', '22')" in caplog.text
 
 
 @pytest.mark.container
