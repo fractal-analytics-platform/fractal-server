@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.22.12
 
 * API:
     * Rename `user_id` into `project_owner_id` in `GET /admin/v2/job/` (\#3338).
