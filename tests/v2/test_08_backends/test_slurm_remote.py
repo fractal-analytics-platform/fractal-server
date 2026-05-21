@@ -3,6 +3,9 @@ import sys
 from pathlib import Path
 
 from fractal_server import __VERSION__
+from fractal_server.runner.executors.slurm_common.base_slurm_runner import (
+    RemoteInputData,
+)
 from fractal_server.runner.executors.slurm_common.remote import worker
 
 
@@ -10,6 +13,7 @@ def test_slurm_remote(tmp_path: Path):
     in_fname = (tmp_path / "in.json").as_posix()
     log_path = (tmp_path / "log.txt").as_posix()
     metadiff_path = (tmp_path / "metadiff.json").as_posix()
+    user_cache_dir = (tmp_path / "user_cache_dir").as_posix()
 
     RESULT = dict(this="nice")
     with open(metadiff_path, "w") as f:
@@ -17,13 +21,14 @@ def test_slurm_remote(tmp_path: Path):
 
     with open(in_fname, "w") as f:
         json.dump(
-            dict(
+            RemoteInputData(
                 python_version=tuple(sys.version_info[:3]),
                 fractal_server_version=__VERSION__,
                 metadiff_file_remote=metadiff_path,
                 log_file_remote=log_path,
                 full_command="echo --in-json xxx --out-json yyy",
-            ),
+                user_cache_dir=user_cache_dir,
+            ).model_dump(),
             f,
         )
 
@@ -50,13 +55,14 @@ def test_slurm_remote(tmp_path: Path):
     # CASE 3: fractal-server version mismatch
     with open(in_fname, "w") as f:
         json.dump(
-            dict(
+            RemoteInputData(
                 python_version=tuple(sys.version_info[:3]),
                 fractal_server_version="0.0.1",
                 metadiff_file_remote=metadiff_path,
                 log_file_remote=log_path,
                 full_command="echo --in-json xxx --out-json yyy",
-            ),
+                user_cache_dir=user_cache_dir,
+            ).model_dump(),
             f,
         )
     out_fname = (tmp_path / "subdir2/out_3.json").as_posix()
@@ -70,13 +76,14 @@ def test_slurm_remote(tmp_path: Path):
     # CASE 4: python version mismatch is not an error
     with open(in_fname, "w") as f:
         json.dump(
-            dict(
+            RemoteInputData(
                 python_version=(4, 0, 0),
                 fractal_server_version=__VERSION__,
                 metadiff_file_remote=metadiff_path,
                 log_file_remote=log_path,
                 full_command="echo --in-json xxx --out-json yyy",
-            ),
+                user_cache_dir=user_cache_dir,
+            ).model_dump(),
             f,
         )
     out_fname = (tmp_path / "subdir2/out_3.json").as_posix()

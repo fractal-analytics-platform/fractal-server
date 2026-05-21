@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 
 from pydantic import validate_call
@@ -26,6 +27,7 @@ def maximum_intensity_projection(
     shutil.copytree(zarr_url, new_zarr_url)
 
     logging.info("[maximum_intensity_projection] START")
+    logging.info(f"[generic_task] {os.getenv('FRACTAL_CACHE_DIR')=}")
     logging.info(f"[maximum_intensity_projection] {zarr_url=}")
     logging.info(f"[maximum_intensity_projection] {new_zarr_url=}")
     logging.info("[maximum_intensity_projection] END")

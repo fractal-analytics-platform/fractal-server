@@ -43,7 +43,7 @@ from ._aux_functions import _get_workflow_check_access
 from ._aux_functions import clean_app_job_list
 from ._aux_functions_tasks import _check_type_filters_compatibility
 
-FRACTAL_CACHE_DIR = ".fractal_cache"
+FRACTAL_CACHE_DIR = "fractal/.fractal_cache"
 router = APIRouter()
 logger = set_logger(__name__)
 

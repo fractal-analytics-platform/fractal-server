@@ -30,9 +30,11 @@ logger = set_logger(__name__)
 
 
 def run_single_task(
+    *,
     base_command: str,
     parameters: dict[str, Any],
     task_files: TaskFiles,
+    user_cache_dir: str,
 ) -> None:
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
@@ -48,6 +50,7 @@ def run_single_task(
     call_command_wrapper(
         cmd=full_command,
         log_path=task_files.log_file_local,
+        user_cache_dir=user_cache_dir,
     )
 
     try:
@@ -70,6 +73,7 @@ class LocalRunner(BaseRunner):
     executor: ThreadPoolExecutor
     root_dir_local: Path
     shared_config: JobRunnerConfigLocal
+    user_cache_dir: str
 
     def __init__(
         self,
@@ -77,6 +81,7 @@ class LocalRunner(BaseRunner):
         resource: Resource,
         profile: Profile,
         fractal_job_id: int,
+        user_cache_dir: str,
     ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
@@ -84,6 +89,7 @@ class LocalRunner(BaseRunner):
         logger.debug("Create LocalRunner")
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
         self.fractal_job_id = fractal_job_id
+        self.user_cache_dir = user_cache_dir
 
     def __enter__(self) -> Self:
         logger.debug("Enter LocalRunner")
@@ -141,6 +147,7 @@ class LocalRunner(BaseRunner):
                 base_command=base_command,
                 parameters=parameters,
                 task_files=task_files,
+                user_cache_dir=self.user_cache_dir,
             )
         except Exception as e:
             logger.error(
@@ -275,6 +282,7 @@ class LocalRunner(BaseRunner):
                         base_command=base_command,
                         parameters=list_parameters[positional_index],
                         task_files=list_task_files[positional_index],
+                        user_cache_dir=self.user_cache_dir,
                     )
                     active_futures[positional_index] = future
                 except Exception as e:
