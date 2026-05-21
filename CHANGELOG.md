@@ -2,6 +2,9 @@
 
 # Unreleased
 
+* API:
+    * Rename `user_id` into `project_owner_id` in `GET /admin/v2/job/` (\#3338).
+    * Add `job_user_email` query parameter in `GET /admin/v2/job/` (\##3338).
 * Runner:
     * Always set `FRACTAL_CACHE_DIR` environment variable in task execution (\#3337).
     * Update `FRACTAL_CACHE_DIR` from `.fractal_cache"` to `"fractal/.fractal_cache"` (\#3337).
