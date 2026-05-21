@@ -20,7 +20,6 @@ class ProjectDump(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: int
     name: str
-    description: str | None = None
     timestamp_created: str
 
 

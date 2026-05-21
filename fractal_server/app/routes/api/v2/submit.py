@@ -227,7 +227,13 @@ async def submit_job(
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id", "is_starred"})
+            project.model_dump_json(
+                exclude={
+                    "resource_id",
+                    "is_starred",
+                    "description",
+                }
+            )
         ),
         fractal_server_version=__VERSION__,
         **job_create.model_dump(),
