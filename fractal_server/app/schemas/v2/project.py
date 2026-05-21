@@ -12,11 +12,13 @@ class ProjectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: SafeNonEmptyStr
+    description: SafeNonEmptyStr | None = None
 
 
 class ProjectRead(BaseModel):
     id: int
     name: str
+    description: str | None
     is_starred: bool
     timestamp_created: AwareDatetime
 
@@ -33,3 +35,4 @@ class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: SafeNonEmptyStr = None
+    description: SafeNonEmptyStr | None = None

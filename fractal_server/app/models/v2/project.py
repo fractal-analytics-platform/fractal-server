@@ -24,6 +24,7 @@ class ProjectV2(SQLModel, table=True):
             nullable=False,
         ),
     )
+    description: str | None = None
 
     resource_id: int = Field(foreign_key="resource.id", ondelete="RESTRICT")
     timestamp_created: datetime = Field(
