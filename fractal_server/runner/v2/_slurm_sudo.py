@@ -32,6 +32,7 @@ from fractal_server.runner.set_start_and_last_task_index import (
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
 
+from ._worker_init import _get_worker_init_lines
 from .runner import execute_tasks
 
 
@@ -96,13 +97,10 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    if isinstance(worker_init, str):
-        worker_init = worker_init.split("\n")
-
     with SlurmSudoRunner(
         root_dir_local=workflow_dir_local,
         root_dir_remote=workflow_dir_remote,
-        common_script_lines=worker_init,
+        common_script_lines=_get_worker_init_lines(worker_init),
         resource=resource,
         profile=profile,
         user_cache_dir=user_cache_dir,

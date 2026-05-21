@@ -51,7 +51,7 @@ def send_fractal_email_or_log_failure(
             if email_settings.use_login:
                 server.login(
                     user=email_settings.sender,
-                    password=email_settings.password.get_secret_value(),
+                    password=email_settings.password_not_none.get_secret_value(),
                 )
             server.sendmail(
                 from_addr=email_settings.sender,
