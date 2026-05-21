@@ -36,9 +36,6 @@ def test_acquire_lock():
 
 
 def test_log_and_raise(tmp_path: Path, caplog):
-    class MyError(Exception):
-        pass
-
     LOGGER_NAME = "invalid_ssh"
     with Connection(
         host="localhost",
@@ -54,19 +51,29 @@ def test_log_and_raise(tmp_path: Path, caplog):
         logger.propagate = True
 
         caplog.clear
-        with pytest.raises(MyError):
-            mocked_fractal_ssh.log_and_raise(e=MyError(), message="test1")
-        assert "MyError" in caplog.text
+        with pytest.raises(TypeError):
+            mocked_fractal_ssh.log_and_raise(e=TypeError(), message="test1")
+        assert "TypeError" in caplog.text
 
         caplog.clear
+        novalidconnection_error = NoValidConnectionsError(
+            errors={("127.0.0.1", "22"): Exception()}
+        )
         with pytest.raises(NoValidConnectionsError):
             mocked_fractal_ssh.log_and_raise(
-                e=NoValidConnectionsError(
-                    errors={("127.0.0.1", "22"): Exception()}
-                ),
+                e=novalidconnection_error,
                 message="test2",
             )
         assert "NoValidConnectionsError[0]: ('127.0.0.1', '22')" in caplog.text
+
+        caplog.clear
+        novalidconnection_error.errors = 1  #
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=novalidconnection_error,
+                message="test3",
+            )
+        assert "Unexpected error" in caplog.text
 
 
 @pytest.mark.container
