@@ -1,4 +1,5 @@
 from devtools import debug
+from sqlmodel import delete
 from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
@@ -181,6 +182,7 @@ async def test_patch_project(
     client,
     MockCurrentUser,
     local_resource_profile_db,
+    db,
 ):
     """
     Test that the project can be patched correctly, with any possible
@@ -211,7 +213,7 @@ async def test_patch_project(
                 )
                 new_project = res.json()
                 debug(new_project)
-                debug("---")
+
                 assert res.status_code == 200
                 for key, value in new_project.items():
                     if key in payload.keys():
@@ -220,7 +222,10 @@ async def test_patch_project(
                         assert value == old_project[key]
 
                 # cleanup
-                await client.delete(f"{PREFIX}/project/{project_id}/")
+                await db.execute(
+                    delete(ProjectV2).where(ProjectV2.id == project_id)
+                )
+                await db.commit()
 
 
 async def test_delete_project(
