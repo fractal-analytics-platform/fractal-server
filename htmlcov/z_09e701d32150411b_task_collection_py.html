@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_task_collection_custom_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-22 10:02 +0000
+            created at 2026-05-22 13:08 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -386,10 +386,10 @@
     <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">    <span class="key">if</span> <span class="nam">resource</span><span class="op">.</span><span class="nam">type</span> <span class="op">!=</span> <span class="nam">ResourceType</span><span class="op">.</span><span class="nam">SLURM_SSH</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t304" href="#t304">304</a></span><span class="t">        <span class="com"># Verify that folder does not exist (for local collection)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t305" href="#t305">305</a></span><span class="t">        <span class="key">if</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">task_group_path</span><span class="op">)</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t305" href="#t305">305</a></span><span class="t">        <span class="key">if</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">path</span><span class="op">)</span><span class="op">.</span><span class="nam">exists</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t306" href="#t306">306</a></span><span class="t">            <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t307" href="#t307">307</a></span><span class="t">                <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t308" href="#t308">308</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="op">{</span><span class="nam">task_group_path</span><span class="op">}</span><span class="fst"> already exists.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t308" href="#t308">308</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="op">{</span><span class="nam">task_group</span><span class="op">.</span><span class="nam">path</span><span class="op">}</span><span class="fst"> already exists.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t309" href="#t309">309</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t310" href="#t310">310</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t311" href="#t311">311</a></span><span class="t">    <span class="com"># Create TaskGroupV2 object</span>&nbsp;</span><span class="r"></span></p>
@@ -446,7 +446,7 @@
             <a class="nav" href="z_09e701d32150411b_task_collection_custom_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-22 10:02 +0000
+            created at 2026-05-22 13:08 +0000
         </p>
     </div>
 </footer>
