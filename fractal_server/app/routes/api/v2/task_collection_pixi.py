@@ -44,6 +44,7 @@ from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.types import NonEmptyStr
+from fractal_server.urls import verify_url_is_relative_to
 
 router = APIRouter()
 
@@ -119,6 +120,7 @@ async def collect_task_pixi(
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
+    verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
 
     task_group = TaskGroupV2(
         user_id=user.id,

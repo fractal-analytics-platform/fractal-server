@@ -41,6 +41,7 @@ from fractal_server.tasks.v2.local.collect import collect_local
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
+from fractal_server.urls import verify_url_is_relative_to
 
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -265,6 +266,7 @@ async def collect_tasks_pip(
         / task_group_attrs["pkg_name"]
         / task_group_attrs["version"]
     ).as_posix()
+    verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
     task_group_attrs["path"] = task_group_path
     task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
 
