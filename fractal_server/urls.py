@@ -54,3 +54,11 @@ def url_is_relative_to(*, url: str, base: str) -> bool:
         base = base[5:]
 
     return PurePosixPath(url).is_relative_to(base)
+
+
+def verify_url_is_relative_to(*, url: str, base: str) -> None:
+    """
+    Fail if `url` is not relative to `base`.
+    """
+    if not url_is_relative_to(url=url, base=base):
+        raise ValueError(f"{url=} is not relative to {base=}")

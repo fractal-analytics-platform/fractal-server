@@ -3,6 +3,7 @@ import pytest
 from fractal_server.urls import normalize_url
 from fractal_server.urls import url_is_relative_to
 from fractal_server.urls import url_join
+from fractal_server.urls import verify_url_is_relative_to
 
 
 def test_url_join_local():
@@ -63,3 +64,9 @@ def test_normalize_url_invalid():
         normalize_url("http://example.com")
     with pytest.raises(ValueError, match="URLs must begin"):
         normalize_url("relative/path")
+
+
+def test_verify_url_is_relative_to():
+    verify_url_is_relative_to(url="/base/something", base="/base")
+    with pytest.raises(ValueError):
+        verify_url_is_relative_to(url="/another-base/something", base="/base")
