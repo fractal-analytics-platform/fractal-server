@@ -11,9 +11,19 @@ updates:
       default-days: 7
     exclude-paths:
       - "tests"
+    groups:
+      gha-updates:
+        applies-to: version-updates
+        patterns:
+          - '*'
   - package-ecosystem: github-actions
     directory: /.github/workflows
     schedule:
       interval: "quarterly"
     cooldown:
       default-days: 7
+    groups:
+      version-updates:
+        applies-to: version-updates
+        patterns:
+          - '*'
