@@ -1,10 +1,15 @@
+import logging
+import logging.config
 import os
+import sys
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from itertools import chain
+from pathlib import Path
 from typing import AsyncIterator
 
+import yaml
 from fastapi import FastAPI
 from fastapi import Request
 from starlette.responses import JSONResponse
@@ -17,6 +22,7 @@ from fractal_server import __VERSION__
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.exceptions import HTTPExceptionWithData
 
+from . import logger as _fractal_logger
 from .app.routes.aux._runner import _backend_supports_shutdown
 from .app.shutdown import cleanup_after_shutdown
 from .config import get_db_settings
@@ -27,6 +33,40 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+
+
+def _load_logging_config(config_env: str) -> None:
+    """
+    Load logging configuration from a YAML file path.
+
+    On success sets `fractal_server.logger._EXTERNAL_CONFIG_LOADED = True`.
+    On failure sets `fractal_server.logger._EXTERNAL_CONFIG_ERROR` to the
+    error message and prints a warning to stderr (because the application
+    logger is not yet available at this point).
+    """
+    if _fractal_logger._EXTERNAL_CONFIG_LOADED:
+        return
+
+    try:
+        logging_config_path = Path(config_env)
+        with logging_config_path.open("r") as f:
+            config = yaml.safe_load(f)
+        logging.config.dictConfig(config)
+        _fractal_logger._EXTERNAL_CONFIG_LOADED = True
+    except Exception as _e:
+        _fractal_logger._EXTERNAL_CONFIG_ERROR = str(_e)
+        print(
+            f"[fractal-server] WARNING: failed to load "
+            f"FRACTAL_LOGGING_CONFIG={config_env!r}: {_e}. "
+            f"Falling back to built-in logging.",
+            file=sys.stderr,
+        )
+
+
+# Load logging configuration from YAML file if FRACTAL_LOGGING_CONFIG is set
+_logging_config_env = os.environ.get("FRACTAL_LOGGING_CONFIG")
+if _logging_config_env:
+    _load_logging_config(_logging_config_env)
 
 
 def collect_routers(app: FastAPI) -> None:
