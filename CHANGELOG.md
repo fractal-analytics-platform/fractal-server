@@ -3,7 +3,7 @@
 # Unreleased
 
 * API:
-    * Improve validation of task-group paths (\#3342).
+    * Improve validation of task-group paths (\#3342, \#3344).
 
 # 2.22.12
 
