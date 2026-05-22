@@ -305,7 +305,7 @@ async def collect_tasks_pip(
         if Path(task_group.path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"{task_group_path} already exists.",
+                detail=f"{task_group.path} already exists.",
             )
 
     # Create TaskGroupV2 object
