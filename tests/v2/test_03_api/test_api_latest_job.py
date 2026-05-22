@@ -192,7 +192,13 @@ async def test_get_latest_job_tasks_statuses(
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id", "is_starred"})
+            project.model_dump_json(
+                exclude={
+                    "resource_id",
+                    "is_starred",
+                    "description",
+                }
+            )
         ),
     )
     job_A = JobV2(
