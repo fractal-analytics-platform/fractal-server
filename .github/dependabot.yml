@@ -9,6 +9,8 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    exclude-paths:
+      - "tests"
   - package-ecosystem: github-actions
     directory: /.github/workflows
     schedule:
