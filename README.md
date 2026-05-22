@@ -63,9 +63,9 @@
 | fractal\_server/app/routes/api/v2/sharing.py                                 |       90 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/submit.py                                  |      113 |        0 |       26 |        1 |     99% | 270-\>272 |
 | fractal\_server/app/routes/api/v2/task.py                                    |       95 |        0 |       24 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v2/task\_collection.py                        |      143 |        2 |       32 |        1 |     98% |237-\>247, 274-275 |
+| fractal\_server/app/routes/api/v2/task\_collection.py                        |      145 |        2 |       32 |        1 |     98% |238-\>248, 276-277 |
 | fractal\_server/app/routes/api/v2/task\_collection\_custom.py                |       72 |        0 |       18 |        1 |     99% |  68-\>105 |
-| fractal\_server/app/routes/api/v2/task\_collection\_pixi.py                  |       80 |        0 |       12 |        0 |    100% |           |
+| fractal\_server/app/routes/api/v2/task\_collection\_pixi.py                  |       82 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_group.py                             |      100 |        0 |       26 |        1 |     99% | 247-\>251 |
 | fractal\_server/app/routes/api/v2/task\_group\_lifecycle.py                  |      115 |        0 |       24 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/task\_version\_update.py                   |       89 |        1 |       16 |        1 |     98% |       209 |
@@ -212,10 +212,10 @@
 | fractal\_server/types/validators/\_common\_validators.py                     |       63 |        0 |       32 |        0 |    100% |           |
 | fractal\_server/types/validators/\_filter\_validators.py                     |       11 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/types/validators/\_workflow\_task\_arguments\_validators.py  |        7 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/urls.py                                                      |       29 |        0 |       12 |        0 |    100% |           |
+| fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11032** |  **165** | **1886** |   **81** | **98%** |           |
+| **TOTAL**                                                                    | **11039** |  **165** | **1888** |   **81** | **98%** |           |
 
 
 ## Setup coverage badge
