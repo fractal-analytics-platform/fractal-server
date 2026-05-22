@@ -206,7 +206,13 @@ async def job_factory(db: AsyncSession):
                 )
             ),
             project_dump=json.loads(
-                project.model_dump_json(exclude={"resource_id", "is_starred"})
+                project.model_dump_json(
+                    exclude={
+                        "resource_id",
+                        "is_starred",
+                        "description",
+                    }
+                )
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,

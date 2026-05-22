@@ -427,7 +427,13 @@ async def test_project_apply_workflow_subset(
         )
         expected_project_dump = ProjectDump(
             **json.loads(
-                project.model_dump_json(exclude={"resource_id", "is_starred"})
+                project.model_dump_json(
+                    exclude={
+                        "resource_id",
+                        "is_starred",
+                        "description",
+                    }
+                )
             )
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
