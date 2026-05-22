@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">12 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">12<span class="text"> run</span></button>
+            <span class="text">13 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">13<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_96c48d079f33e46c_resource_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-22 08:01 +0000
+            created at 2026-05-22 08:53 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -108,12 +108,13 @@
     <p class="run run2"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">            <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">        <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="nam">resource_id</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Field</span><span class="op">(</span><span class="nam">foreign_key</span><span class="op">=</span><span class="str">"resource.id"</span><span class="op">,</span> <span class="nam">ondelete</span><span class="op">=</span><span class="str">"RESTRICT"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">timestamp_created</span><span class="op">:</span> <span class="nam">datetime</span> <span class="op">=</span> <span class="nam">Field</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">        <span class="nam">default_factory</span><span class="op">=</span><span class="nam">get_timestamp</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">sa_column</span><span class="op">=</span><span class="nam">Column</span><span class="op">(</span><span class="nam">DateTime</span><span class="op">(</span><span class="nam">timezone</span><span class="op">=</span><span class="key">True</span><span class="op">)</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="nam">description</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">resource_id</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">Field</span><span class="op">(</span><span class="nam">foreign_key</span><span class="op">=</span><span class="str">"resource.id"</span><span class="op">,</span> <span class="nam">ondelete</span><span class="op">=</span><span class="str">"RESTRICT"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">timestamp_created</span><span class="op">:</span> <span class="nam">datetime</span> <span class="op">=</span> <span class="nam">Field</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">default_factory</span><span class="op">=</span><span class="nam">get_timestamp</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">sa_column</span><span class="op">=</span><span class="nam">Column</span><span class="op">(</span><span class="nam">DateTime</span><span class="op">(</span><span class="nam">timezone</span><span class="op">=</span><span class="key">True</span><span class="op">)</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -123,7 +124,7 @@
             <a class="nav" href="z_96c48d079f33e46c_resource_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
-            created at 2026-05-22 08:01 +0000
+            created at 2026-05-22 08:53 +0000
         </p>
     </div>
 </footer>
