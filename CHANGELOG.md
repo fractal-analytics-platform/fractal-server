@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Improve validation of task-group paths (\#3342).
+
 # 2.22.12
 
 * API:
