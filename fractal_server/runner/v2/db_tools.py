@@ -34,11 +34,14 @@ def update_status_of_history_unit_no_commit(
     history_unit_id: int,
     status: HistoryUnitStatus,
     db_sync: Session,
+    has_warnings: bool | None = None,
 ) -> None:
     unit = db_sync.get(HistoryUnit, history_unit_id)
     if unit is None:
         raise ValueError(f"HistoryUnit {history_unit_id} not found.")
     unit.status = status
+    if has_warnings is not None:
+        unit.has_warnings = has_warnings
     db_sync.merge(unit)
     db_sync.flush()
 
