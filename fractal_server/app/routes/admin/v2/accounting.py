@@ -29,10 +29,6 @@ class AccountingQuery(BaseModel):
 
 
 class AccountingQuerySLURM(AccountingQuery):
-    user_id: int | None = None
-    timestamp_min: AwareDatetime | None = None
-    timestamp_max: AwareDatetime | None = None
-    fractal_job_id: int | None = None
     resource_id: int | None = None
 
 
