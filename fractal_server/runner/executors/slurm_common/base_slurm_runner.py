@@ -9,12 +9,10 @@ from typing import Self
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlmodel import select
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
-from fractal_server.app.models.v2.history import HistoryRun
 from fractal_server.app.models.v2.history import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
@@ -518,6 +516,7 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
+        history_unit_id: int,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception | None, bool]:
         try:
@@ -526,17 +525,10 @@ class BaseSlurmRunner(BaseRunner):
             success = output[0]
 
             with next(get_sync_db()) as db:
-                res = db.execute(
-                    select(HistoryUnit.logfile)
-                    .join(
-                        HistoryRun, HistoryUnit.history_run_id == HistoryRun.id
-                    )
-                    .where(HistoryRun.workflowtask_id == task.workflow_task_id)
-                )
-                logfile = res.scalar_one()
+                history_unit = db.get_one(HistoryUnit, history_unit_id)
 
             grep = subprocess.run(  # nosec
-                ["grep", "-i", "WARNING", "-q", logfile]
+                ["grep", "-i", "WARNING", "-q", history_unit.logfile]
             )
             has_warnings = False
             if grep.returncode == 0:
@@ -576,7 +568,7 @@ class BaseSlurmRunner(BaseRunner):
                     f"for {task.index=}."
                 )
                 exception = SHUTDOWN_EXCEPTION
-            return (None, exception, has_warnings)
+            return (None, exception, False)
         finally:
             Path(task.input_file_local).unlink(missing_ok=True)
             Path(task.output_file_local).unlink(missing_ok=True)
@@ -811,6 +803,7 @@ class BaseSlurmRunner(BaseRunner):
                             self._postprocess_single_task(
                                 task=slurm_job.tasks[0],
                                 was_job_scancelled=was_job_scancelled,
+                                history_unit_id=history_unit_id,
                             )
                         )
 
@@ -1077,6 +1070,9 @@ class BaseSlurmRunner(BaseRunner):
                                 ) = self._postprocess_single_task(
                                     task=task,
                                     was_job_scancelled=was_job_scancelled,
+                                    history_unit_id=history_unit_ids[
+                                        task.index
+                                    ],
                                 )
                             except Exception as e:
                                 logger.error(
