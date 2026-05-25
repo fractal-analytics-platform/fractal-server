@@ -1,0 +1,34 @@
+[project]
+site_name = "Fractal Server"
+site_description = "Manage legacy code with comments."
+site_author = "Tommaso Comparin"
+site_url = "https://fractal-analytics-platform.github.io/fractal-server/"
+repo_url = "https://github.com/fractal-analytics-platform/fractal-server"
+repo_name = "fractal-analytics-platform/fractal-server"
+extra_css = ["extra.css"]
+
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+inventories = ["https://docs.python.org/3/objects.inv"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+backlinks = "tree"
+docstring_options = { "ignore_init_summary" = true }
+docstring_section_style = "list"
+extensions = ["griffe_typingdoc"]
+filters = "public"
+heading_level = 1
+inherited_members = true
+merge_init_into_class = true
+parameter_headings = true
+separate_signature = true
+show_root_heading = true
+show_root_full_path = false
+show_signature_annotations = true
+show_source = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+signature_crossrefs = true
+summary = true
+unwrap_annotated = true
