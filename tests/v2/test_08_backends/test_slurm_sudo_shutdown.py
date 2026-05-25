@@ -62,11 +62,11 @@ async def test_submit_shutdown(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -75,6 +75,7 @@ async def test_submit_shutdown(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
 
         def main_thread():
@@ -124,11 +125,11 @@ async def test_multisubmit_shutdown(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -137,6 +138,7 @@ async def test_multisubmit_shutdown(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
 
         def main_thread():
@@ -196,11 +198,11 @@ async def test_shutdown_before_submit(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -209,6 +211,7 @@ async def test_shutdown_before_submit(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         # Write shudown file
         runner.shutdown_file.touch()
@@ -251,11 +254,11 @@ async def test_shutdown_before_multisubmit(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -264,6 +267,7 @@ async def test_shutdown_before_multisubmit(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         # Write shutdown file right away
         runner.shutdown_file.touch()
