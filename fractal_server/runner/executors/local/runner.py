@@ -82,6 +82,7 @@ class LocalRunner(BaseRunner):
         profile: Profile,
         fractal_job_id: int,
         user_cache_dir: str,
+        resource_id: int,
     ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
@@ -89,6 +90,7 @@ class LocalRunner(BaseRunner):
         logger.debug("Create LocalRunner")
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
         self.fractal_job_id = fractal_job_id
+        self.resource_id = resource_id
         self.user_cache_dir = user_cache_dir
 
     def __enter__(self) -> Self:

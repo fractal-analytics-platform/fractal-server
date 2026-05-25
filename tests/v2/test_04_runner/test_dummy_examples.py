@@ -96,6 +96,7 @@ def local_runner(
         profile=profile,
         fractal_job_id=99,
         user_cache_dir=user_cache_dir,
+        resource_id=999,
     ) as r:
         yield r
 
