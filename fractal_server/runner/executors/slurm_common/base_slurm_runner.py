@@ -1064,6 +1064,7 @@ class BaseSlurmRunner(BaseRunner):
                     for task in slurm_job.tasks:
                         logger.debug(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
+                        has_warnings = None
                         if fetch_artifacts_exception is not None:
                             result = None
                             exception = fetch_artifacts_exception
