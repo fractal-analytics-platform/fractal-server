@@ -598,6 +598,7 @@ dev = [
     { name = "pyyaml" },
 ]
 docs = [
+    { name = "griffe-typingdoc" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "zensical" },
 ]
@@ -638,6 +639,7 @@ dev = [
     { name = "pyyaml", specifier = ">=6.0.0" },
 ]
 docs = [
+    { name = "griffe-typingdoc", specifier = ">=0.2" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.2" },
     { name = "zensical", specifier = ">=0.0.43" },
 ]
@@ -699,6 +701,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/37/eb/147387705bb89092645b012586e7273cb5ed3c90ef7eaf3a69173eaf0209/greenlet-3.5.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:3bfbd69cc349e43bf3a8ae1c85548ff0718efc887615c2db16c3833d7b0b072d", size = 1614469, upload-time = "2026-05-20T14:02:30.192Z" },
     { url = "https://files.pythonhosted.org/packages/a6/4e/37ee0da7732b7aa9896f17e15579a9df34b9fcb9dd494f0adfa749af6623/greenlet-3.5.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:4378720dd888136c27215a0214d32a4d37c3852765d45bc37aad0623423cfd78", size = 1675115, upload-time = "2026-05-20T13:14:40.972Z" },
     { url = "https://files.pythonhosted.org/packages/57/f3/97dfcf4a6eb5077f8a672234216fb5923eb89f2cab7081cb10b2cf75b605/greenlet-3.5.1-cp314-cp314t-win_amd64.whl", hash = "sha256:45718441607f9325d948db98cbc691276059316d0358c188c246da4e1d4d23d2", size = 245246, upload-time = "2026-05-20T13:12:22.646Z" },
+]
+
+[[package]]
+name = "griffe-typingdoc"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "griffelib" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ce/26/28182e0c8055842bf3da774dee1d5b789c0f236c078dcbdca1937b5214dc/griffe_typingdoc-0.3.1.tar.gz", hash = "sha256:2ff4703115cb7f8a65b9fdcdd1f3c3a15f813b6554621b52eaad094c4782ce96", size = 31218, upload-time = "2026-02-21T09:38:54.409Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/c4/cf543fbde49e1ae44830ef0840a4d6ee9f4e4f338138a7766d4e37cf6440/griffe_typingdoc-0.3.1-py3-none-any.whl", hash = "sha256:ecbd457ef6883126b8b6023abf12e08c58e1c152238a2f0e2afdd67a64b07021", size = 10092, upload-time = "2026-02-20T14:53:47.84Z" },
 ]
 
 [[package]]
