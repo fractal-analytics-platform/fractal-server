@@ -28,6 +28,14 @@ class AccountingQuery(BaseModel):
     fractal_job_id: int | None = None
 
 
+class AccountingQuerySLURM(AccountingQuery):
+    user_id: int | None = None
+    timestamp_min: AwareDatetime | None = None
+    timestamp_max: AwareDatetime | None = None
+    fractal_job_id: int | None = None
+    resource_id: int | None = None
+
+
 router = APIRouter()
 
 
@@ -66,7 +74,7 @@ async def query_accounting(
 
 @router.post("/slurm/")
 async def query_accounting_slurm(
-    query: AccountingQuery,
+    query: AccountingQuerySLURM,
     # dependencies
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
@@ -82,6 +90,8 @@ async def query_accounting_slurm(
         stm = stm.where(
             AccountingRecordSlurm.fractal_job_id == query.fractal_job_id
         )
+    if query.resource_id is not None:
+        stm = stm.where(AccountingRecordSlurm.resource_id == query.resource_id)
 
     res = await db.execute(stm)
     nested_slurm_job_ids = res.scalars().all()
