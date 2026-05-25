@@ -20,11 +20,11 @@ async def test_submit_exception(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     parameters = dict(zarr_urls=ZARR_URLS)
 
@@ -35,6 +35,7 @@ async def test_submit_exception(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         runner.jobs = {"0": "fake"}
 
@@ -68,7 +69,7 @@ async def test_multisubmit_exception_submission(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     """
@@ -76,7 +77,7 @@ async def test_multisubmit_exception_submission(
     """
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -85,6 +86,7 @@ async def test_multisubmit_exception_submission(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -125,14 +127,14 @@ async def test_multisubmit_exception_fetch_artifacts(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     def fake_fetch_artifacts(*args, **kwargs):
         raise RuntimeError("Error from fake_fetch_artifacts.")
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -141,6 +143,7 @@ async def test_multisubmit_exception_fetch_artifacts(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         runner._fetch_artifacts = fake_fetch_artifacts
 
@@ -181,14 +184,14 @@ async def test_multisubmit_exception_postprocess_single_task(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     def fake_postprocess_single_task(*args, **kwargs):
         raise RuntimeError("Error from fake_postprocess_single_task.")
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -197,6 +200,7 @@ async def test_multisubmit_exception_postprocess_single_task(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         runner._postprocess_single_task = fake_postprocess_single_task
 

@@ -18,7 +18,7 @@ async def test_submit_with_slurm_account_and_worker_init(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     """
@@ -28,7 +28,7 @@ async def test_submit_with_slurm_account_and_worker_init(
     SLURM_ACCOUNT = "something-random"
     COMMON_SCRIPT_LINES = ["export MYVAR1=VALUE1", "export MYVAR2=Value2"]
 
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -39,6 +39,7 @@ async def test_submit_with_slurm_account_and_worker_init(
         slurm_account=SLURM_ACCOUNT,
         common_script_lines=COMMON_SCRIPT_LINES,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",

@@ -15,11 +15,11 @@ async def test_executor_error(
     history_mock_for_submit,
     monkey_slurm,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     class SlurmSudoRunnerMod(SlurmSudoRunner):
         def _prepare_single_slurm_job(self, *args, **kwargs) -> str:
@@ -41,6 +41,7 @@ async def test_executor_error(
         profile=profile,
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         runner.submit(
             base_command="true",
