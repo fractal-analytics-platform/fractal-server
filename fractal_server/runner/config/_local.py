@@ -20,5 +20,5 @@ class JobRunnerConfigLocal(BaseModel):
     parallel_tasks_per_job: int | None = None
 
     @property
-    def batch_size(self) -> int:
+    def batch_size_or_zero(self) -> int:
         return self.parallel_tasks_per_job or 0

@@ -7,8 +7,11 @@ from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -25,7 +28,7 @@ class DB:
     """
 
     @classmethod
-    def engine_async(cls):
+    def engine_async(cls) -> AsyncEngine:
         try:
             return cls._engine_async
         except AttributeError:
@@ -33,7 +36,7 @@ class DB:
             return cls._engine_async
 
     @classmethod
-    def engine_sync(cls):
+    def engine_sync(cls) -> Engine:
         try:
             return cls._engine_sync
         except AttributeError:
@@ -41,7 +44,7 @@ class DB:
             return cls._engine_sync
 
     @classmethod
-    def set_async_db(cls):
+    def set_async_db(cls) -> None:
         db_settings = Inject(get_db_settings)
 
         cls._engine_async = create_async_engine(
@@ -50,14 +53,14 @@ class DB:
             future=True,
             pool_pre_ping=True,
         )
-        cls._async_session_maker = sessionmaker(
+        cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
             expire_on_commit=False,
         )
 
     @classmethod
-    def set_sync_db(cls):
+    def set_sync_db(cls) -> None:
         db_settings = Inject(get_db_settings)
 
         cls._engine_sync = create_engine(

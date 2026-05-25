@@ -126,7 +126,7 @@ def execute_tasks(
     for ind_wftask, wftask in enumerate(wf_task_list):
         task = wftask.task
         with next(get_sync_db()) as db:
-            task_group = db.get(TaskGroupV2, task.taskgroupv2_id)
+            task_group = db.get_one(TaskGroupV2, task.taskgroupv2_id)
         alias_string = f"'{wftask.alias}', " if wftask.alias else ""
         task_log_description = (
             f"{wftask.order}-th task ({alias_string}'{task.name}', "
@@ -178,7 +178,7 @@ def execute_tasks(
                 **wftask.model_dump(exclude={"task"}),
                 task=TaskDump(**wftask.task.model_dump()).model_dump(),
             )
-            task_group = db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+            task_group = db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
             task_group_dump = TaskGroupDump(
                 **task_group.model_dump()
             ).model_dump()
@@ -200,7 +200,7 @@ def execute_tasks(
 
             # Refresh `job.executor_error_log`, to avoid a spurious value left
             # over from a previous task
-            job_db = db.get(JobV2, job_id)
+            job_db = db.get_one(JobV2, job_id)
             job_db.executor_error_log = None
             db.merge(job_db)
             db.commit()
@@ -232,7 +232,7 @@ def execute_tasks(
 
         # Fail if the resource is not open for new submissions
         with next(get_sync_db()) as db:
-            resource = db.get(Resource, resource_id)
+            resource = db.get_one(Resource, resource_id)
             if resource.prevent_new_submissions:
                 error_msg = (
                     f"Cannot run '{task.name}', since the '{resource.name}' "
@@ -462,7 +462,7 @@ def execute_tasks(
 
         with next(get_sync_db()) as db:
             # Write current dataset images into the database.
-            db_dataset = db.get(DatasetV2, dataset.id)
+            db_dataset = db.get_one(DatasetV2, dataset.id)
             if ENRICH_IMAGES_WITH_STATUS:
                 db_dataset.images = _remove_status_from_attributes(tmp_images)
             else:
@@ -484,7 +484,7 @@ def execute_tasks(
             db.commit()
 
             # Store the SLURM error in the job database
-            job_db = db.get(JobV2, job_id)
+            job_db = db.get_one(JobV2, job_id)
             job_db.executor_error_log = runner.executor_error_log
             db.merge(job_db)
             db.commit()

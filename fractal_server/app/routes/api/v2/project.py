@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -35,7 +37,7 @@ async def get_list_project(
     is_owner: bool = True,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectV2]:
+) -> Sequence[ProjectV2]:
     """
     Return list of projects user is member of
     """
@@ -45,6 +47,10 @@ async def get_list_project(
         .where(LinkUserProjectV2.user_id == user.id)
         .where(LinkUserProjectV2.is_owner == is_owner)
         .where(LinkUserProjectV2.is_verified.is_(True))
+        .order_by(
+            ProjectV2.is_starred.desc(),
+            ProjectV2.timestamp_created.desc(),
+        )
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -125,7 +131,7 @@ async def update_project(
     )
 
     # Check that there is no project with the same user and name
-    if project_update.name is not None:
+    if project_update.name is not None and project_update.name != project.name:
         await _check_project_exists(
             project_name=project_update.name, user_id=user.id, db=db
         )
@@ -185,3 +191,51 @@ async def delete_project(
     logger.debug("Everything  has been deleted correctly.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/project/{project_id}/star/",
+    status_code=status.HTTP_200_OK,
+)
+async def star_project(
+    project_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `ProjectV2.is_starred` to `True`
+    """
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    project.is_starred = True
+    db.add(project)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/project/{project_id}/unstar/",
+    status_code=status.HTTP_200_OK,
+)
+async def unstar_project(
+    project_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `ProjectV2.is_starred` to `False`
+    """
+    project = await _get_project_check_access(
+        project_id=project_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    project.is_starred = False
+    db.add(project)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)

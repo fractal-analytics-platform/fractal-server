@@ -1,10 +1,10 @@
 import asyncio
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
@@ -45,7 +45,7 @@ async def get_user_jobs(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Returns all the jobs from projects linked to the current user
     """
@@ -76,7 +76,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -94,42 +94,6 @@ async def get_workflow_jobs(
     )
     job_list = res.scalars().all()
     return job_list
-
-
-@router.get(
-    "/project/{project_id}/latest-job/",
-    response_model=JobRead,
-)
-async def get_latest_job(
-    project_id: int,
-    workflow_id: int,
-    dataset_id: int,
-    user: UserOAuth = Depends(get_api_guest),
-    db: AsyncSession = Depends(get_async_db),
-) -> JobV2:
-    await _get_workflow_check_access(
-        project_id=project_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        required_permissions=ProjectPermissions.READ,
-        db=db,
-    )
-    stm = (
-        select(JobV2)
-        .where(JobV2.project_id == project_id)
-        .where(JobV2.workflow_id == workflow_id)
-        .where(JobV2.dataset_id == dataset_id)
-        .order_by(JobV2.start_timestamp.desc())
-        .limit(1)
-    )
-    res = await db.execute(stm)
-    latest_job = res.scalar_one_or_none()
-    if latest_job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job with {workflow_id=} and {dataset_id=} not found.",
-        )
-    return latest_job
 
 
 @router.get(
@@ -207,7 +171,7 @@ async def get_job_list(
     user: UserOAuth = Depends(get_api_guest),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[JobV2]:
+) -> Sequence[JobV2]:
     """
     Get job list for given project
     """

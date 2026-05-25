@@ -29,6 +29,7 @@ from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     integrity_error_to_422,
 )
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.aux.pixi_version import get_pixi_version_or_422
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -43,6 +44,7 @@ from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.types import NonEmptyStr
+from fractal_server.urls import verify_url_is_relative_to
 
 router = APIRouter()
 
@@ -92,25 +94,10 @@ async def collect_task_pixi(
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
 
-    # Check if Pixi is available
-    if not resource.tasks_pixi_config:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Pixi task collection is not available.",
-        )
-    # Check if provided Pixi version is available. Use default if not provided
-    if pixi_version is None:
-        pixi_version = resource.tasks_pixi_config["default_version"]
-    else:
-        if pixi_version not in resource.tasks_pixi_config["versions"]:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=(
-                    f"Pixi version '{pixi_version}' is not available. "
-                    "Available versions: "
-                    f"{list(resource.tasks_pixi_config['versions'].keys())}"
-                ),
-            )
+    pixi_version = get_pixi_version_or_422(
+        resource=resource,
+        pixi_version=pixi_version,
+    )
 
     pkg_name, version = validate_pkgname_and_version(file.filename)
     tar_gz_content = await file.read()
@@ -133,8 +120,9 @@ async def collect_task_pixi(
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
+    verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
 
-    task_group_attrs = dict(
+    task_group = TaskGroupV2(
         user_id=user.id,
         user_group_id=user_group_id,
         resource_id=resource_id,
@@ -147,26 +135,25 @@ async def collect_task_pixi(
 
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         user_resource_id=resource_id,
         db=db,
     )
     await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        user_group_id=task_group.user_group_id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         db=db,
     )
 
     if resource.type != ResourceType.SLURM_SSH:
-        if Path(task_group_path).exists():
+        if Path(task_group.path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"{task_group_path} already exists.",
+                detail=f"{task_group.path} already exists.",
             )
 
-    task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
     async with integrity_error_to_422(db):
         await db.commit()

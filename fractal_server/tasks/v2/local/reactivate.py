@@ -1,7 +1,8 @@
-import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from sqlalchemy.exc import NoResultFound
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
@@ -23,6 +24,7 @@ from fractal_server.tasks.v2.utils_templates import get_collection_replacements
 from fractal_server.utils import get_timestamp
 
 from ._utils import _customize_and_run_template
+from ._utils import rmtree_nofail
 
 
 def reactivate_local(
@@ -55,13 +57,14 @@ def reactivate_local(
 
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             # Check that the (local) task_group venv_path does not exist
@@ -94,7 +97,7 @@ def reactivate_local(
                 )
                 with open(f"{tmpdir}/pip_freeze.txt", "w") as f:
                     f.write(task_group.env_info)
-                replacements.append(
+                replacements.add(
                     ("__PIP_FREEZE_FILE__", f"{tmpdir}/pip_freeze.txt")
                 )
                 # Prepare common arguments for `_customize_and_run_template`
@@ -136,15 +139,10 @@ def reactivate_local(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted venv_path
-                try:
-                    logger.info(f"Now delete folder {task_group.venv_path}")
-                    shutil.rmtree(task_group.venv_path)
-                    logger.info(f"Deleted folder {task_group.venv_path}")
-                except Exception as rm_e:
-                    logger.error(
-                        f"Removing folder failed.\nOriginal error:\n{str(rm_e)}"
-                    )
+                rmtree_nofail(
+                    folder_path=task_group.venv_path,
+                    logger_name=LOGGER_NAME,
+                )
 
                 fail_and_cleanup(
                     task_group=task_group,

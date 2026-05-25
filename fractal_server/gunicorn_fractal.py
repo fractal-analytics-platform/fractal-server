@@ -27,7 +27,7 @@ class FractalWorker(UvicornWorker):
             "Set `custom_handle_abort` for SIGABRT"
         )
 
-    def custom_handle_abort(self, sig, frame):
+    def custom_handle_abort(self, sig, frame) -> None:
         """
         Custom version of `gunicorn.workers.base.Worker.handle_abort`,
         transforming SIGABRT into SIGTERM.

@@ -1,10 +1,8 @@
-# Importing fractal_tasks_mock is only to load __init__.py
 import logging
+import os
 import time
 
 from pydantic import validate_call
-
-import fractal_tasks_mock  # noqa
 
 
 @validate_call
@@ -28,6 +26,7 @@ def generic_task(
     logging.warning("[generic_task] START")
     logging.warning(f"[generic_task] {sleep_time=}")
     logging.warning(f"[generic_task] {raise_error=}")
+    logging.warning(f"[generic_task] {os.getenv('FRACTAL_CACHE_DIR')=}")
 
     logging.warning(f"[generic_task] Now sleep for {sleep_time} seconds")
     time.sleep(sleep_time)

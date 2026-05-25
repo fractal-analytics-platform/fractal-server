@@ -119,6 +119,7 @@ async def query_task_group(
 
 @router.get("/", response_model=PaginationResponse[TaskGroupReadSuperuser])
 async def query_task_group_list(
+    task_group_id: int | None = None,
     user_id: int | None = None,
     user_group_id: int | None = None,
     private: bool | None = None,
@@ -139,6 +140,9 @@ async def query_task_group_list(
     )
     stm_count = select(func.count(TaskGroupV2.id))
 
+    if task_group_id is not None:
+        stm = stm.where(TaskGroupV2.id == task_group_id)
+        stm_count = stm_count.where(TaskGroupV2.id == task_group_id)
     if user_group_id is not None and private is True:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

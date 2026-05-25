@@ -16,6 +16,7 @@ async def test_executor_error(
     monkey_slurm,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -39,6 +40,7 @@ async def test_executor_error(
         resource=resource,
         profile=profile,
         user_cache_dir=(tmp777_path / "cache").as_posix(),
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         runner.submit(
             base_command="true",

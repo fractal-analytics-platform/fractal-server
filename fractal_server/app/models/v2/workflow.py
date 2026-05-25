@@ -3,12 +3,14 @@ from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
+from sqlmodel import BOOLEAN
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from fractal_server.utils import get_timestamp
 
+from .project import ProjectV2
 from .workflowtask import WorkflowTaskV2
 
 
@@ -16,8 +18,15 @@ class WorkflowV2(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
-    project: "ProjectV2" = Relationship(  # noqa: F821
+    project: ProjectV2 = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin"),
+    )
+    is_starred: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        ),
     )
 
     task_list: list[WorkflowTaskV2] = Relationship(

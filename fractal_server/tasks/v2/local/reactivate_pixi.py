@@ -1,8 +1,9 @@
 import os
-import shutil
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from sqlalchemy.exc import NoResultFound
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
@@ -23,6 +24,7 @@ from fractal_server.utils import execute_command_sync
 from fractal_server.utils import get_timestamp
 
 from ._utils import edit_pyproject_toml_in_place_local
+from ._utils import rmtree_nofail
 
 
 def reactivate_local_pixi(
@@ -54,13 +56,14 @@ def reactivate_local_pixi(
         )
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             source_dir = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
@@ -189,15 +192,10 @@ def reactivate_local_pixi(
                 reset_logger_handlers(logger)
 
             except Exception as reactivate_e:
-                # Delete corrupted source_dir
-                try:
-                    logger.info(f"Now delete folder {source_dir}")
-                    shutil.rmtree(source_dir)
-                    logger.info(f"Deleted folder {source_dir}")
-                except Exception as rm_e:
-                    logger.error(
-                        f"Removing folder failed. Original error: {str(rm_e)}"
-                    )
+                rmtree_nofail(
+                    folder_path=source_dir,
+                    logger_name=LOGGER_NAME,
+                )
 
                 fail_and_cleanup(
                     task_group=task_group,

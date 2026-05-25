@@ -23,7 +23,7 @@ class FractalOpenID(OpenID):
     the `"email"` claim.
     """
 
-    def __init__(self, *, email_claim: str, **kwargs):
+    def __init__(self, *, email_claim: str, **kwargs) -> None:
         super().__init__(**kwargs)
         self.email_claim = email_claim
 

@@ -30,7 +30,6 @@ export PIXI_HOME="${PIXI_HOME}"
 export PIXI_CACHE_DIR="${PIXI_CACHE_DIR}"
 export RATTLER_AUTH_FILE="${PIXI_HOME}/credentials.json"
 
-
 TIME_START=$(date +%s)
 
 cd "${PACKAGE_DIR}"
@@ -50,6 +49,7 @@ write_log "Found PROJECT_PYTHON_BIN=${PROJECT_PYTHON_BIN}"
 cat <<EOF > "${PROJECT_PYTHON_WRAPPER}"
 #!/bin/bash
 source ${ACTIVATION_FILE}
+export PYTHONNOUSERSITE=1
 ${PROJECT_PYTHON_BIN} "\$@"
 EOF
 

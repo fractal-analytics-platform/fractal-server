@@ -17,6 +17,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 
 settings = Inject(get_settings)
 
@@ -118,9 +119,6 @@ async def test_deactivate_task_group_api(
         assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
         assert activity["timestamp_ended"] is None
-        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
-        assert activity["version"] == task_group_pypi.version
-        assert task_group_pypi.active is False
 
         # Check that background task failed
         res = await client.get(f"api/v2/task-group/activity/{activity_id}/")
@@ -129,6 +127,10 @@ async def test_deactivate_task_group_api(
             assert "Cannot establish SSH connection" in res.json()["log"]
         else:
             assert "does not exist" in res.json()["log"]
+
+        task_group_pypi = await db.get(TaskGroupV2, task_pypi.taskgroupv2_id)
+        assert activity["version"] == task_group_pypi.version
+        assert task_group_pypi.active is True
 
 
 @pytest.mark.parametrize(
@@ -298,6 +300,10 @@ async def _aux_test_lifecycle(
         assert (Path(task_group.path) / Path(archive_path).name).as_posix() == (
             Path(task_group_archive_path).as_posix()
         )
+        txt_file_path = Path(task_group.path) / TASK_GROUP_ID_FILENAME
+        assert txt_file_path.exists()
+        with txt_file_path.open("r") as f:
+            assert f.read() == str(task_group.id)
 
         # STEP 2: Deactivate task group
         res = await client.post(

@@ -19,6 +19,7 @@ async def test_check_fractal_server_versions_executable(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=slurm_sudo_resource_profile_objects[0],
         profile=slurm_sudo_resource_profile_objects[1],
+        fractal_job_id=99,
     ) as runner:
         # Successful check
         runner.check_fractal_server_versions()

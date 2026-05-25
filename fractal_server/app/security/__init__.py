@@ -81,7 +81,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         session: AsyncSession,
         user_model: type[UP],
         oauth_account_model: type[OAuthAccount] | None = None,
-    ):
+    ) -> None:
         self.session = session
         self.user_model = user_model
         self.oauth_account_model = oauth_account_model
@@ -179,7 +179,7 @@ password_helper = PasswordHelper(password_hash=password_hash)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
-    def __init__(self, user_db):
+    def __init__(self, user_db) -> None:
         """
         Override `__init__` of `BaseUserManager` to define custom
         `password_helper`.
@@ -336,7 +336,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
     @override
     async def on_after_register(
         self, user: UserOAuth, request: Request | None = None
-    ):
+    ) -> None:
         settings = Inject(get_settings)
         logger.info(
             f"New-user registration completed ({user.id=}, {user.email=})."
@@ -432,15 +432,16 @@ async def _create_first_user(
 
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
-                    kwargs = dict(
-                        email=email,
-                        password=password,
-                        project_dirs=[project_dir],
-                        profile_id=profile_id,
-                        is_superuser=is_superuser,
-                        is_verified=is_verified,
+                    user = await user_manager.create(
+                        UserCreate(
+                            email=email,
+                            password=password,
+                            project_dirs=[project_dir],
+                            profile_id=profile_id,
+                            is_superuser=is_superuser,
+                            is_verified=is_verified,
+                        )
                     )
-                    user = await user_manager.create(UserCreate(**kwargs))
                     function_logger.info(f"User '{user.email}' created")
     except UserAlreadyExists:
         function_logger.warning(f"User '{email}' already exists")
@@ -454,7 +455,7 @@ async def _create_first_user(
         close_logger(function_logger)
 
 
-def _create_first_group():
+def _create_first_group() -> None:
     """
     Create a `UserGroup` named `FRACTAL_DEFAULT_GROUP_NAME`, if this variable
     is set and if such a group does not already exist.

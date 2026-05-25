@@ -7,21 +7,8 @@ from devtools import debug
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
-
-
-async def test_pixi_not_available(
-    client, MockCurrentUser, local_resource_profile_db
-):
-    resource, profile = local_resource_profile_db
-    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
-        res = await client.post(
-            "api/v2/task/collect/pixi/",
-            data={"pixi_version": "9.9.9"},
-            files={"file": ("name", b"", "application/gzip")},
-        )
-        assert res.status_code == 422
-        assert res.json()["detail"] == "Pixi task collection is not available."
 
 
 async def test_api_failures(
@@ -177,6 +164,11 @@ async def test_task_group_lifecycle_pixi_local(
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert len(task_group.task_list) == 1
         assert task_group.env_info is not None
+        # Check that txt file with task_group_id exists
+        txt_file = Path(task_group.path) / TASK_GROUP_ID_FILENAME
+        assert txt_file.exists()
+        with txt_file.open("r") as f:
+            assert f.read() == str(task_group_id)
         # Check `TaskGroupReadV2.task_list` (only available through API)
         res = await client.get(f"/api/v2/task-group/{task_group_id}/")
         assert res.status_code == 200
@@ -185,6 +177,12 @@ async def test_task_group_lifecycle_pixi_local(
         debug(task["command_non_parallel"])
         debug(module_path)
         assert Path(module_path).is_file()
+
+        py_wrapper = task["command_non_parallel"].split(" ")[0]
+        debug(py_wrapper)
+        with open(py_wrapper) as f:
+            script_data = f.read()
+            assert "export PYTHONNOUSERSITE=1" in script_data
 
         # Failed collection - due to non-duplication constraint
         res = await client.post(

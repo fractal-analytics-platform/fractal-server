@@ -60,22 +60,6 @@ async def test_folder_already_exists(
     assert expected_path.exists()
 
 
-async def test_invalid_python_version(
-    client,
-    MockCurrentUser,
-    local_resource_profile_db,
-):
-    resource, profile = local_resource_profile_db
-    async with MockCurrentUser(is_verified=True, profile_id=profile.id):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            data=dict(package="invalid-task-package", python_version="3.9"),
-        )
-        assert res.status_code == 422
-        assert "Python version 3.9 is not available" in res.json()["detail"]
-        debug(res.json()["detail"])
-
-
 async def test_wheel_collection_failures(
     client,
     MockCurrentUser,

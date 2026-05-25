@@ -130,6 +130,8 @@ async def test_deactivate_ssh_fail(
         pkg_name=task_group.pkg_name,
         version=task_group.version,
     )
+    task_group.active = False
+    db.add(task_group)
     db.add(task_group_activity)
     await db.commit()
     await db.refresh(task_group_activity)
@@ -155,6 +157,9 @@ async def test_deactivate_ssh_fail(
         fractal_ssh=fractal_ssh,
         remote_folder=profile.tasks_remote_dir,
     )
+
+    task_group = await db.get(TaskGroupV2, task_group.id)
+    assert task_group.active is True
 
 
 @pytest.mark.container

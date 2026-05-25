@@ -10,6 +10,7 @@ from pydantic.types import AwareDatetime
 from pydantic.types import NonNegativeInt
 from pydantic.types import StrictStr
 
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2.dumps import DatasetDump
 from fractal_server.app.schemas.v2.dumps import ProjectDump
 from fractal_server.app.schemas.v2.dumps import WorkflowDump
@@ -77,7 +78,7 @@ class JobRead(BaseModel):
     dataset_dump: DatasetDump
     start_timestamp: AwareDatetime
     end_timestamp: AwareDatetime | None = None
-    status: str
+    status: JobStatusType
     log: str | None = None
     executor_error_log: str | None = None
     working_dir: str | None = None
@@ -104,3 +105,19 @@ class JobUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: JobStatusType
+
+
+class TaskStatusSimple(BaseModel):
+    status: HistoryUnitStatus
+
+
+class TaskStatusImages(BaseModel):
+    status: HistoryUnitStatus
+    num_submitted_images: int = 0
+    num_done_images: int = 0
+    num_failed_images: int = 0
+    num_available_images: int | None = 0
+
+
+class JobWithTaskStatuses(JobRead):
+    task_statuses: dict[int, TaskStatusSimple | TaskStatusImages | None]

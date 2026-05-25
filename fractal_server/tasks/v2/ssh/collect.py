@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -13,6 +15,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
@@ -72,13 +75,14 @@ def collect_ssh(
         )
         logger.info("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -126,7 +130,10 @@ def collect_ssh(
                     ).as_posix()
                     fractal_ssh.mkdir(folder=task_group.path, parents=True)
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
-
+                    fractal_ssh.write_remote_file(
+                        path=f"{task_group.path}/{TASK_GROUP_ID_FILENAME}",
+                        content=str(task_group_id),
+                    )
                     # Write wheel file locally and send it to remote path,
                     # and set task_group.archive_path
                     if wheel_file is not None:
@@ -159,7 +166,6 @@ def collect_ssh(
 
                     # Prepare common arguments for _customize_and_run_template
                     common_args = dict(
-                        replacements=replacements,
                         script_dir_local=Path(
                             tmpdir, SCRIPTS_SUBFOLDER
                         ).as_posix(),
@@ -168,7 +174,6 @@ def collect_ssh(
                             f"{int(time.time())}_"
                             f"{TaskGroupActivityAction.COLLECT}"
                         ),
-                        fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                     )
 
@@ -182,6 +187,8 @@ def collect_ssh(
                     # Run script 1
                     stdout = _customize_and_run_template(
                         template_filename="1_create_venv.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -190,6 +197,8 @@ def collect_ssh(
                     # Run script 2
                     stdout = _customize_and_run_template(
                         template_filename="2_pip_install.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -198,6 +207,8 @@ def collect_ssh(
                     # Run script 3
                     pip_freeze_stdout = _customize_and_run_template(
                         template_filename="3_pip_freeze.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -206,6 +217,8 @@ def collect_ssh(
                     # Run script 4
                     stdout = _customize_and_run_template(
                         template_filename="4_pip_show.sh",
+                        fractal_ssh=fractal_ssh,
+                        replacements=replacements,
                         **common_args,
                     )
                     activity.log = get_current_log(log_file_path)
@@ -286,10 +299,7 @@ def collect_ssh(
                         logger.info(
                             f"Now delete remote folder {task_group.path}"
                         )
-                        fractal_ssh.remove_folder(
-                            folder=task_group.path,
-                            safe_root=profile.tasks_remote_dir,
-                        )
+                        fractal_ssh.remove_folder(folder=task_group.path)
                         logger.info(f"Deleted remoted folder {task_group.path}")
                     except Exception as e_rm:
                         logger.error(

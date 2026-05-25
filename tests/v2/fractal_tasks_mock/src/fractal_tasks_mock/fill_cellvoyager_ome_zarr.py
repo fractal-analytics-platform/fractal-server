@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 from pydantic import validate_call
@@ -23,6 +24,7 @@ def fill_cellvoyager_ome_zarr(
 
     logging.info("[fill_cellvoyager_ome_zarr] START")
     logging.info(f"[fill_cellvoyager_ome_zarr] {zarr_url=}")
+    logging.info(f"[generic_task] {os.getenv('FRACTAL_CACHE_DIR')=}")
 
     raw_zarr_url = init_args.raw_zarr_url
 

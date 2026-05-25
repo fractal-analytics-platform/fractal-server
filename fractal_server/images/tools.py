@@ -1,12 +1,15 @@
 from copy import copy
 from typing import Any
-from typing import Literal
-from typing import Union
+from typing import TypedDict
 
 from fractal_server.logger import set_logger
 from fractal_server.types import AttributeFilters
 
-ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
+
+class ImageSearch(TypedDict):
+    image: dict[str, Any]
+    index: int
+
 
 logger = set_logger(__name__)
 

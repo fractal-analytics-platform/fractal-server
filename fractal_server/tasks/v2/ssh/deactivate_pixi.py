@@ -1,6 +1,8 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from sqlalchemy.exc import NoResultFound
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
@@ -50,13 +52,14 @@ def deactivate_ssh_pixi(
         )
         logger.debug("START")
         with next(get_sync_db()) as db:
-            db_objects_ok, task_group, activity = get_activity_and_task_group(
-                task_group_activity_id=task_group_activity_id,
-                task_group_id=task_group_id,
-                db=db,
-                logger_name=LOGGER_NAME,
-            )
-            if not db_objects_ok:
+            try:
+                task_group, activity = get_activity_and_task_group(
+                    task_group_activity_id=task_group_activity_id,
+                    task_group_id=task_group_id,
+                    db=db,
+                    logger_name=LOGGER_NAME,
+                )
+            except NoResultFound:
                 return
 
             with SingleUseFractalSSH(
@@ -104,10 +107,7 @@ def deactivate_ssh_pixi(
 
                     # Proceed with deactivation
                     logger.info(f"Now removing {source_dir}.")
-                    fractal_ssh.remove_folder(
-                        folder=source_dir,
-                        safe_root=profile.tasks_remote_dir,
-                    )
+                    fractal_ssh.remove_folder(folder=source_dir)
                     logger.info(f"All good, {source_dir} removed.")
                     activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)

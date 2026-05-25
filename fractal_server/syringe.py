@@ -56,7 +56,7 @@ class _Inject:
 
     _dependencies: dict[Any, Any] = {}
 
-    def __init__(self):
+    def __init__(self) -> None:
         global _instance_count
         if _instance_count == 1:
             raise RuntimeError("You must only instance this class once")

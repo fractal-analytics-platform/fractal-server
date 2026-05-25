@@ -3,6 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from itertools import chain
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi import Request
@@ -73,7 +74,7 @@ def check_settings(logger_name: str) -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator:
     app.state.jobs = []
     logger_startup = set_logger("lifespan.startup")
     logger_startup.info(f"START (fractal-server {__VERSION__})")
@@ -145,11 +146,13 @@ def _endpoint_has_background_task(method: str, path: str) -> bool:
 
 
 class SlowResponseMiddleware:
-    def __init__(self, app: FastAPI, time_threshold: float):
+    def __init__(self, app: FastAPI, time_threshold: float) -> None:
         self.app = app
         self.time_threshold = time_threshold
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    async def __call__(
+        self, scope: Scope, receive: Receive, send: Send
+    ) -> None:
         if (
             scope["type"] != "http"  # e.g. `scope["type"] == "lifespan"`
             or _endpoint_has_background_task(scope["method"], scope["path"])
@@ -188,7 +191,7 @@ class SlowResponseMiddleware:
 def data_exception_handler(
     request: Request,
     exc: HTTPExceptionWithData,
-):
+) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail, "data": exc.data},

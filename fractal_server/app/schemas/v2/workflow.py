@@ -28,6 +28,7 @@ class WorkflowRead(BaseModel):
     id: int
     name: str
     project_id: int
+    is_starred: bool
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: AwareDatetime

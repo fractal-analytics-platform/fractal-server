@@ -18,6 +18,37 @@ ZARR_URLS_AND_PARAMETER = [
 ]
 
 
+@pytest.fixture(scope="function")
+async def fractal_job_id_mock(
+    db,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    task_factory,
+    job_factory,
+    tmp_path,
+) -> int:
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
+            user_id=user.id, task_group_kwargs=dict(user_group_id=None)
+        )
+        await workflowtask_factory(workflow_id=workflow.id, task_id=task.id)
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="done",
+            last_task_index=0,
+        )
+        return job.id
+
+
 @pytest.fixture
 async def history_run_mock(
     db,
@@ -34,7 +65,9 @@ async def history_run_mock(
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(user_id=user.id)
+        task = await task_factory(
+            user_id=user.id, task_group_kwargs=dict(user_group_id=None)
+        )
         wftask = await workflowtask_factory(
             workflow_id=workflow.id, task_id=task.id
         )

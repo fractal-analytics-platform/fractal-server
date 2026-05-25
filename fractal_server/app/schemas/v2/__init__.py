@@ -3,6 +3,7 @@ from .dataset import DatasetCreate  # noqa F401
 from .dataset import DatasetExport  # noqa F401
 from .dataset import DatasetImport  # noqa F401
 from .dataset import DatasetRead  # noqa F401
+from .dataset import DatasetReadExpanded  # noqa F401
 from .dataset import DatasetUpdate  # noqa F401
 from .dumps import DatasetDump  # noqa F401
 from .dumps import ProjectDump  # noqa F401
@@ -10,7 +11,6 @@ from .dumps import TaskDump  # noqa F401
 from .dumps import TaskGroupDump  # noqa F401
 from .dumps import WorkflowDump  # noqa F401
 from .dumps import WorkflowTaskDump  # noqa F401
-from .history import HistoryRunRead  # noqa F401
 from .history import HistoryRunReadAggregated  # noqa F401
 from .history import HistoryUnitRead  # noqa F401
 from .history import HistoryUnitStatus  # noqa F401
@@ -44,7 +44,6 @@ from .resource import ResourceType  # noqa F401
 from .resource import ValidResourceLocal  # noqa F401
 from .resource import ValidResourceSlurmSSH  # noqa F401
 from .resource import ValidResourceSlurmSudo  # noqa F401
-from .status_legacy import WorkflowTaskStatusType  # noqa F401
 from .task import TaskCreate  # noqa F401
 from .task import TaskExport  # noqa F401
 from .task import TaskImport  # noqa F401

@@ -3,7 +3,7 @@ from packaging.version import parse
 import fractal_server
 
 
-def _check_current_version(expected_version: str):
+def _check_current_version(expected_version: str) -> None:
     # Check that this module matches with the current version
     module_version = parse(expected_version)
     current_version = parse(fractal_server.__VERSION__)

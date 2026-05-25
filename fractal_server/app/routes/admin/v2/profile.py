@@ -52,7 +52,7 @@ async def put_profile(
     profile_update: ProfileCreate,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> ProfileRead:
+) -> Profile:
     """
     Override single `Profile`.
     """
@@ -73,7 +73,7 @@ async def delete_profile(
     profile_id: int,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> Response:
     """
     Delete single `Profile`.
     """
@@ -85,7 +85,7 @@ async def delete_profile(
             UserOAuth.profile_id == profile.id
         )
     )
-    associated_users_count = res.scalar()
+    associated_users_count = res.scalar_one()
     if associated_users_count > 0:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

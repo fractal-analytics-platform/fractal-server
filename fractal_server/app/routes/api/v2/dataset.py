@@ -1,19 +1,30 @@
+from typing import Any
+from typing import Sequence
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import func
 from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2.project import ProjectV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.pagination import PaginationRequest
+from fractal_server.app.routes.pagination import PaginationResponse
+from fractal_server.app.routes.pagination import get_pagination_data
+from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2 import DatasetCreate
 from fractal_server.app.schemas.v2 import DatasetRead
+from fractal_server.app.schemas.v2 import DatasetReadExpanded
 from fractal_server.app.schemas.v2 import DatasetUpdate
 from fractal_server.app.schemas.v2.dataset import DatasetExport
 from fractal_server.app.schemas.v2.dataset import DatasetImport
@@ -98,7 +109,7 @@ async def read_dataset_list(
     project_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetV2]:
+) -> Sequence[DatasetV2]:
     """
     Get dataset list for given project
     """
@@ -109,7 +120,11 @@ async def read_dataset_list(
         required_permissions=ProjectPermissions.READ,
         db=db,
     )
-    stm = select(DatasetV2).where(DatasetV2.project_id == project.id)
+    stm = (
+        select(DatasetV2)
+        .where(DatasetV2.project_id == project.id)
+        .order_by(DatasetV2.is_starred.desc(), DatasetV2.name)
+    )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     return dataset_list
@@ -169,6 +184,60 @@ async def update_dataset(
     await db.commit()
     await db.refresh(db_dataset)
     return db_dataset
+
+
+@router.post(
+    "/project/{project_id}/dataset/{dataset_id}/star/",
+    status_code=status.HTTP_200_OK,
+)
+async def star_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `DatasetV2.is_starred` to `True`
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    dataset.is_starred = True
+    db.add(dataset)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/project/{project_id}/dataset/{dataset_id}/unstar/",
+    status_code=status.HTTP_200_OK,
+)
+async def unstar_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `DatasetV2.is_starred` to `False`
+    """
+    output = await _get_dataset_check_access(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        required_permissions=ProjectPermissions.WRITE,
+        db=db,
+    )
+    dataset = output["dataset"]
+    dataset.is_starred = False
+    db.add(dataset)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.delete(
@@ -285,3 +354,78 @@ async def import_dataset(
     await db.refresh(db_dataset)
 
     return db_dataset
+
+
+@router.get("/dataset/", response_model=PaginationResponse[DatasetReadExpanded])
+async def get_all_datasets(
+    project_name: str | None = None,
+    dataset_name: str | None = None,
+    only_owned: bool = False,
+    user: UserOAuth = Depends(get_api_guest),
+    db: AsyncSession = Depends(get_async_db),
+    pagination: PaginationRequest = Depends(get_pagination_params),
+) -> dict[str, Any]:
+    stm = (
+        select(
+            DatasetV2,
+            (
+                select(UserOAuth.email)
+                .join(
+                    LinkUserProjectV2,
+                    UserOAuth.id == LinkUserProjectV2.user_id,
+                )
+                .where(
+                    LinkUserProjectV2.project_id == DatasetV2.project_id,
+                    LinkUserProjectV2.is_owner.is_(True),
+                )
+                .scalar_subquery()
+                .correlate(DatasetV2)
+            ),
+            func.jsonb_array_length(DatasetV2.images),
+        )
+        .join(ProjectV2, DatasetV2.project_id == ProjectV2.id)
+        .join(LinkUserProjectV2, LinkUserProjectV2.project_id == ProjectV2.id)
+        .where(LinkUserProjectV2.user_id == user.id)
+        .order_by(
+            DatasetV2.is_starred.desc(), DatasetV2.timestamp_created.desc()
+        )
+    )
+    stm_count = (
+        select(func.count(DatasetV2.id))
+        .join(LinkUserProjectV2, LinkUserProjectV2.user_id == user.id)
+        .join(ProjectV2, ProjectV2.id == LinkUserProjectV2.project_id)
+        .where(DatasetV2.project_id == ProjectV2.id)
+    )
+
+    if project_name is not None:
+        stm = stm.where(ProjectV2.name.icontains(project_name))
+        stm_count = stm_count.where(ProjectV2.name.icontains(project_name))
+    if only_owned is True:
+        stm = stm.where(LinkUserProjectV2.is_owner.is_(True))
+        stm_count = stm_count.where(LinkUserProjectV2.is_owner.is_(True))
+    if dataset_name is not None:
+        stm = stm.where(DatasetV2.name.icontains(dataset_name))
+        stm_count = stm_count.where(DatasetV2.name.icontains(dataset_name))
+
+    stm, pagination_data = await get_pagination_data(
+        stm=stm,
+        stm_count=stm_count,
+        pagination=pagination,
+        db=db,
+    )
+
+    res = await db.execute(stm)
+    records = res.all()
+
+    return dict(
+        items=[
+            dict(
+                image_count=image_count,
+                owner_email=owner_email,
+                project=dataset.project.model_dump(),
+                **dataset.model_dump(),
+            )
+            for dataset, owner_email, image_count in records
+        ],
+        **pagination_data.model_dump(),
+    )

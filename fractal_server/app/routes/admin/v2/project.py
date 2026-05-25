@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from fastapi import APIRouter
@@ -33,6 +34,7 @@ from fractal_server.app.schemas.v2 import ProjectReadSuperuser
 from fractal_server.urls import url_is_relative_to
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginationResponse[ProjectReadSuperuser])
@@ -43,7 +45,7 @@ async def view_projects(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[dict[str, Any]]:
+) -> dict[str, Any]:
     # Prepare statements
     stm = (
         select(ProjectV2, UserOAuth.email)
@@ -115,6 +117,11 @@ async def transfer_project_ownership(
             detail="Cannot transfer ownership to a guest user.",
         )
 
+    logger.info(
+        f"Trying to transfer project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
+
     # Get old user and owner's link
     res = await db.execute(
         select(LinkUserProjectV2)
@@ -129,7 +136,7 @@ async def transfer_project_ownership(
                 f"User {user_id} is already the owner of project {project_id}."
             ),
         )
-    old_user = await db.get(UserOAuth, owner_link.user_id)
+    old_user = await db.get_one(UserOAuth, owner_link.user_id)
     await user_has_profile_or_422(user=old_user)
 
     # Check new user's project_name compatibility
@@ -138,10 +145,10 @@ async def transfer_project_ownership(
     )
 
     # Check new user's resource compatibility
-    profile_old = await db.get(Profile, old_user.profile_id)
-    profile_new = await db.get(Profile, new_user.profile_id)
-    resource_old = await db.get(Resource, profile_old.resource_id)
-    resource_new = await db.get(Resource, profile_new.resource_id)
+    profile_old = await db.get_one(Profile, old_user.profile_id)
+    profile_new = await db.get_one(Profile, new_user.profile_id)
+    resource_old = await db.get_one(Resource, profile_old.resource_id)
+    resource_new = await db.get_one(Resource, profile_new.resource_id)
     if resource_old.id != resource_new.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -184,5 +191,10 @@ async def transfer_project_ownership(
     # Patch
     setattr(owner_link, "user_id", user_id)
     await db.commit()
+
+    logger.info(
+        f"Successfully transferred project {project.id} ({project.name}) to "
+        f"{new_user.email}."
+    )
 
     return Response(status_code=status.HTTP_200_OK)

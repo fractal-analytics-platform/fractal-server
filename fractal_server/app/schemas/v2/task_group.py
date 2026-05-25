@@ -33,6 +33,7 @@ class TaskGroupActivityAction(StrEnum):
     DEACTIVATE = "deactivate"
     REACTIVATE = "reactivate"
     DELETE = "delete"
+    RESET = "reset"
 
 
 class TaskGroupCreate(BaseModel):

@@ -150,7 +150,7 @@ def run_script_on_remote_slurm(
     db: Session,
     activity: TaskGroupActivityV2,
     poll_interval: int,
-):
+) -> str:
     """
     Run a `pixi install` script as a SLURM job.
 

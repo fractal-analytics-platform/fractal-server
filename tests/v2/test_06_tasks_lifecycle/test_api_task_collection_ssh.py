@@ -149,10 +149,7 @@ async def test_task_collection_ssh_from_pypi(
         # Check that existing folder was _not_ removed
         fractal_ssh.run_command(cmd=f"ls {remote_folder}")
         # Cleanup: remove folder
-        fractal_ssh.remove_folder(
-            folder=remote_folder,
-            safe_root=profile.tasks_remote_dir,
-        )
+        fractal_ssh.remove_folder(folder=remote_folder)
 
     _reset_permissions(profile.tasks_remote_dir, fractal_ssh)
 

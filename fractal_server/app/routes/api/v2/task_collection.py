@@ -21,6 +21,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.aux._python_interpreter import (
+    get_python_interpreter_or_422,
+)
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
@@ -38,9 +41,7 @@ from fractal_server.tasks.v2.local.collect import collect_local
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
-from fractal_server.tasks.v2.utils_python_interpreter import (
-    get_python_interpreter,
-)
+from fractal_server.urls import verify_url_is_relative_to
 
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
 from ._aux_functions_tasks import _get_valid_user_group_id
@@ -190,18 +191,9 @@ async def collect_tasks_pip(
         ]
     else:
         task_group_attrs["python_version"] = task_collect.python_version
-    try:
-        get_python_interpreter(
+        get_python_interpreter_or_422(
             python_version=task_group_attrs["python_version"],
             resource=resource,
-        )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Python version {task_group_attrs['python_version']} "
-                "is not available on this Fractal instance."
-            ),
         )
 
     # Set pip_extras
@@ -274,6 +266,7 @@ async def collect_tasks_pip(
         / task_group_attrs["pkg_name"]
         / task_group_attrs["version"]
     ).as_posix()
+    verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
     task_group_attrs["path"] = task_group_path
     task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
 
@@ -288,18 +281,20 @@ async def collect_tasks_pip(
 
     # Database checks
 
+    task_group = TaskGroupV2(**task_group_attrs)
+
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(
         user_id=user.id,
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         user_resource_id=resource_id,
         db=db,
     )
     await _verify_non_duplication_group_constraint(
-        user_group_id=task_group_attrs["user_group_id"],
-        pkg_name=task_group_attrs["pkg_name"],
-        version=task_group_attrs["version"],
+        user_group_id=task_group.user_group_id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
         db=db,
     )
 
@@ -307,14 +302,13 @@ async def collect_tasks_pip(
 
     if resource.type != ResourceType.SLURM_SSH:
         # Verify that folder does not exist (for local collection)
-        if Path(task_group_path).exists():
+        if Path(task_group.path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"{task_group_path} already exists.",
+                detail=f"{task_group.path} already exists.",
             )
 
     # Create TaskGroupV2 object
-    task_group = TaskGroupV2(**task_group_attrs)
     db.add(task_group)
     async with integrity_error_to_422(db):
         await db.commit()

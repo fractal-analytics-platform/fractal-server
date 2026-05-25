@@ -222,3 +222,16 @@ def heuristics(
     tasks_per_job = math.ceil(tot_tasks / max_num_jobs)
     logger.debug("[heuristics] Return from branch 4")
     return (tasks_per_job, parallel_tasks_per_job)
+
+
+def _verify_batch_sizes(
+    *,
+    num_batches: int,
+    tot_tasks: int,
+    batch_size: int,
+):
+    if num_batches != math.ceil(tot_tasks / batch_size):
+        raise RuntimeError(
+            "Something wrong here while batching tasks: "
+            f"{tot_tasks=}, {batch_size=}, {num_batches=}."
+        )

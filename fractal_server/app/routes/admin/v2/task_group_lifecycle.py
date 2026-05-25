@@ -33,11 +33,15 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import deactivate_local
+from fractal_server.tasks.v2.local import deactivate_local_pixi
 from fractal_server.tasks.v2.local import delete_local
 from fractal_server.tasks.v2.local import reactivate_local
+from fractal_server.tasks.v2.local import reactivate_local_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import delete_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.utils import get_timestamp
 
 router = APIRouter()
@@ -115,16 +119,21 @@ async def deactivate_task_group(
     db.add(task_group_activity)
     await db.commit()
 
-    user = await db.get(UserOAuth, task_group.user_id)
+    user = await db.get_one(UserOAuth, task_group.user_id)
     # Get validated resource and profile
     resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
     if resource.type == ResourceType.SLURM_SSH:
-        deactivate_function = deactivate_ssh
+        if task_group.origin == TaskGroupOriginEnum.PIXI:
+            deactivate_function = deactivate_ssh_pixi
+        else:
+            deactivate_function = deactivate_ssh
     else:
-        deactivate_function = deactivate_local
-
+        if task_group.origin == TaskGroupOriginEnum.PIXI:
+            deactivate_function = deactivate_local_pixi
+        else:
+            deactivate_function = deactivate_local
     background_tasks.add_task(
         deactivate_function,
         task_group_id=task_group.id,
@@ -221,14 +230,20 @@ async def reactivate_task_group(
     await db.commit()
 
     # Get validated resource and profile
-    user = await db.get(UserOAuth, task_group.user_id)
+    user = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
     if resource.type == ResourceType.SLURM_SSH:
-        reactivate_function = reactivate_ssh
+        if task_group.origin == TaskGroupOriginEnum.PIXI:
+            reactivate_function = reactivate_ssh_pixi
+        else:
+            reactivate_function = reactivate_ssh
     else:
-        reactivate_function = reactivate_local
+        if task_group.origin == TaskGroupOriginEnum.PIXI:
+            reactivate_function = reactivate_local_pixi
+        else:
+            reactivate_function = reactivate_local
 
     background_tasks.add_task(
         reactivate_function,
@@ -279,7 +294,7 @@ async def delete_task_group(
     await db.commit()
 
     # Get validated resource and profile
-    task_owner = await db.get(UserOAuth, task_group.user_id)
+    task_owner = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=task_owner, db=db)
 
     if resource.type == ResourceType.SLURM_SSH:

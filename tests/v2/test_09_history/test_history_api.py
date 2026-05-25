@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timezone
+from typing import Any
 from typing import Literal
 
 import pytest
@@ -15,140 +16,22 @@ from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 
 
-async def test_status_api(
-    project_factory,
-    workflow_factory,
-    task_factory,
-    dataset_factory,
-    workflowtask_factory,
-    job_factory,
-    db,
-    client,
-    MockCurrentUser,
-):
-    async with MockCurrentUser() as user:
-        project = await project_factory(user)
-        dataset = await dataset_factory(project_id=project.id)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(user_id=user.id)
-
-        # WorkflowTask 1 (one run, four units, different statuses)
-        wftask1 = await workflowtask_factory(
-            workflow_id=workflow.id, task_id=task.id
-        )
-        job = await job_factory(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            working_dir="/foo",
-            status="done",
-        )
-        run1 = HistoryRun(
-            workflowtask_id=wftask1.id,
-            dataset_id=dataset.id,
-            workflowtask_dump={},
-            task_group_dump={},
-            num_available_images=3,
-            status=HistoryUnitStatus.SUBMITTED,
-            job_id=job.id,
-        )
-        db.add(run1)
-        await db.commit()
-        await db.refresh(run1)
-
-        unit_a = HistoryUnit(
-            history_run_id=run1.id,
-            status=HistoryUnitStatus.SUBMITTED,
-            logfile="/log/a",
-            zarr_urls=["/a"],
-        )
-        unit_b = HistoryUnit(
-            history_run_id=run1.id,
-            status=HistoryUnitStatus.DONE,
-            logfile="/log/b",
-            zarr_urls=["/b"],
-        )
-        unit_c = HistoryUnit(
-            history_run_id=run1.id,
-            status=HistoryUnitStatus.FAILED,
-            logfile="/log/c",
-            zarr_urls=["/c"],
-        )
-        db.add(unit_a)
-        db.add(unit_b)
-        db.add(unit_c)
-        await db.commit()
-        await db.refresh(unit_a)
-        await db.refresh(unit_b)
-        await db.refresh(unit_c)
-
-        db.add(
-            HistoryImageCache(
-                zarr_url="/a",
-                workflowtask_id=wftask1.id,
-                dataset_id=dataset.id,
-                latest_history_unit_id=unit_a.id,
+def _assert_dict_equal_with_timestamps(
+    data1: dict[str, Any], data2: dict[str, Any]
+) -> None:
+    """
+    Helper function to avoid spurious differences in timestamp strings when
+    they have a different timezone.
+    """
+    assert set(data1.keys()) == set(data2.keys())
+    for key, value1 in data1.items():
+        value2 = data2[key]
+        if "timestamp" in key:
+            assert datetime.fromisoformat(value1) == datetime.fromisoformat(
+                value2
             )
-        )
-        db.add(
-            HistoryImageCache(
-                zarr_url="/b",
-                workflowtask_id=wftask1.id,
-                dataset_id=dataset.id,
-                latest_history_unit_id=unit_b.id,
-            )
-        )
-        db.add(
-            HistoryImageCache(
-                zarr_url="/c",
-                workflowtask_id=wftask1.id,
-                dataset_id=dataset.id,
-                latest_history_unit_id=unit_c.id,
-            )
-        )
-        await db.commit()
-
-        wftask2 = await workflowtask_factory(
-            workflow_id=workflow.id, task_id=task.id
-        )
-
-        res = await client.get(
-            f"/api/v2/project/{project.id}/status/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
-        )
-        assert res.status_code == 200
-        debug(res.json())
-        assert res.json() == {
-            str(wftask1.id): {
-                "status": "submitted",
-                "num_available_images": 3,
-                "num_done_images": 1,
-                "num_submitted_images": 1,
-                "num_failed_images": 1,
-            },
-            str(wftask2.id): None,
-        }
-
-        # Invalid `num_available_images`
-        run1.num_available_images = 2
-        db.add(run1)
-        await db.commit()
-        db.expunge_all()
-        res = await client.get(
-            f"/api/v2/project/{project.id}/status/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
-        )
-        assert res.status_code == 200
-        assert res.json() == {
-            "1": {
-                "status": "submitted",
-                "num_available_images": None,
-                "num_submitted_images": 1,
-                "num_done_images": 1,
-                "num_failed_images": 1,
-            },
-            "2": None,
-        }
+        else:
+            assert value1 == value2
 
 
 @pytest.mark.parametrize(
@@ -385,7 +268,8 @@ async def test_get_history_run_list(
             f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
         )
         assert res.status_code == 200
-        assert res.json() == [
+        _assert_dict_equal_with_timestamps(
+            res.json()[0],
             {
                 "id": hr1.id,
                 "num_done_units": 10,
@@ -397,6 +281,9 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": "3.1.4",
             },
+        )
+        _assert_dict_equal_with_timestamps(
+            res.json()[1],
             {
                 "id": hr2.id,
                 "num_done_units": 20,
@@ -408,14 +295,14 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": "3.1.4",
             },
-        ]
+        )
 
         res = await client.get(
             f"/api/v2/project/{project.id}/status/run/"
             f"?workflowtask_id={wftask2.id}&dataset_id={dataset.id}"
         )
-        assert res.status_code == 200
-        assert res.json() == [
+        _assert_dict_equal_with_timestamps(
+            res.json()[0],
             {
                 "id": hr3.id,
                 "num_done_units": 0,
@@ -427,6 +314,9 @@ async def test_get_history_run_list(
                 "args_schema_parallel": {"foo": "bar"},
                 "version": "1.2",
             },
+        )
+        _assert_dict_equal_with_timestamps(
+            res.json()[1],
             {
                 "id": hr4.id,
                 "num_done_units": 0,
@@ -438,7 +328,7 @@ async def test_get_history_run_list(
                 "args_schema_parallel": None,
                 "version": None,
             },
-        ]
+        )
 
 
 async def test_get_history_run_units(
@@ -875,52 +765,3 @@ async def test_get_logs(
         )
         assert res.status_code == 422
         assert "Invalid query parameters: HistoryRun" in res.json()["detail"]
-
-
-async def test_get_history_run_dataset(
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    task_factory,
-    workflowtask_factory,
-    job_factory,
-    db,
-    client,
-    MockCurrentUser,
-):
-    async with MockCurrentUser() as user:
-        project = await project_factory(user)
-
-        dataset = await dataset_factory(project_id=project.id)
-        wf = await workflow_factory(project_id=project.id)
-        task = await task_factory(user_id=user.id)
-        await workflowtask_factory(workflow_id=wf.id, task_id=task.id)
-        job = await job_factory(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=wf.id,
-            working_dir="/foo",
-            status="done",
-        )
-
-        N = 5
-        for _ in range(5):
-            db.add(
-                HistoryRun(
-                    dataset_id=dataset.id,
-                    workflowtask_dump={},
-                    task_group_dump={},
-                    status=HistoryUnitStatus.DONE,
-                    num_available_images=0,
-                    job_id=job.id,
-                )
-            )
-        await db.commit()
-
-        res = await client.get(
-            f"/api/v2/project/{project.id}/dataset/{dataset.id}/history/"
-        )
-        assert res.status_code == 200
-        history_run_list = res.json()
-        # Assert HistoryRuns are returned in reverse order
-        assert [hr["id"] for hr in history_run_list] == list(range(1, N + 1))

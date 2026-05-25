@@ -5,7 +5,7 @@ description = "Shared tools for Fractal tasks"
 authors = [{name="Mock", email="mock@example.org"}]
 license = {text ="BSD-3-Clause"}
 requires-python = ">=3.11,<3.15"
-dependencies = ["fractal-task-tools ==0.4.0"]
+dependencies = ["fractal-task-tools ==0.5.0"]
 
 [build-system]
 requires = ["hatchling"]

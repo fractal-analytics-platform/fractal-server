@@ -153,7 +153,7 @@ class FractalSSH:
         sftp_get_prefetch: bool = False,
         sftp_get_max_requests: int = 64,
         logger_name: str = __name__,
-    ):
+    ) -> None:
         self._lock = Lock()
         self._connection = connection
         self.default_lock_timeout = default_timeout
@@ -183,18 +183,14 @@ class FractalSSH:
         try:
             self.logger.error(message)
             self.logger.error(f"Original Error {type(e)} : \n{str(e)}")
-            # Handle the specific case of `NoValidConnectionsError`s from
-            # paramiko, which store relevant information in the `errors`
-            # attribute
-            if hasattr(e, "errors"):
-                self.logger.error(f"{type(e)=}")
-                for err in e.errors:
-                    self.logger.error(f"{err}")
+            if isinstance(e, NoValidConnectionsError):
+                for ind, err in enumerate(e.errors):
+                    self.logger.error(f"NoValidConnectionsError[{ind}]: {err}")
         except Exception as exception:
-            # Handle unexpected cases, e.g. (1) `e` has no `type`, or
-            # (2) `errors` is not iterable.
+            # Handle unexpected cases, e.g. when `e` has no `type` or `e.errors`
+            # is not iterable.
             self.logger.error(
-                "Unexpected Error while handling exception above: "
+                "Unexpected error while handling exception above: "
                 f"{str(exception)}"
             )
 
@@ -526,12 +522,7 @@ class FractalSSH:
             cmd = f"mkdir {folder}"
         self.run_command(cmd=cmd)
 
-    def remove_folder(
-        self,
-        *,
-        folder: str,
-        safe_root: str,
-    ) -> None:
+    def remove_folder(self, *, folder: str) -> None:
         """
         Removes a folder remotely via SSH.
 
@@ -539,24 +530,13 @@ class FractalSSH:
 
         Args:
             folder: Absolute path to a folder that should be removed.
-            safe_root: If `folder` is not a subfolder of the absolute
-                `safe_root` path, raise an error.
         """
         validate_cmd(folder)
-        validate_cmd(safe_root)
 
         if " " in folder:
             raise ValueError(f"folder='{folder}' includes whitespace.")
-        elif " " in safe_root:
-            raise ValueError(f"safe_root='{safe_root}' includes whitespace.")
         elif not Path(folder).is_absolute():
             raise ValueError(f"{folder=} is not an absolute path.")
-        elif not Path(safe_root).is_absolute():
-            raise ValueError(f"{safe_root=} is not an absolute path.")
-        elif not (
-            Path(folder).resolve().is_relative_to(Path(safe_root).resolve())
-        ):
-            raise ValueError(f"{folder=} is not a subfolder of {safe_root=}.")
         else:
             cmd = f"rm -r {folder}"
             self.run_command(cmd=cmd)
@@ -654,7 +634,7 @@ class FractalSSHList:
         *,
         timeout: float = 5.0,
         logger_name: str = "fractal_server.FractalSSHList",
-    ):
+    ) -> None:
         self._lock = Lock()
         self._data = {}
         self._timeout = timeout
@@ -772,7 +752,7 @@ class FractalSSHList:
             )
             fractal_ssh_obj.close()
 
-    def close_all(self, *, timeout: float = 5.0):
+    def close_all(self, *, timeout: float = 5.0) -> None:
         """
         Close all `FractalSSH` objects in the collection.
 

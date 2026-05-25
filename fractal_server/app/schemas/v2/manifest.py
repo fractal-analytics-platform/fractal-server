@@ -1,4 +1,5 @@
 from typing import Literal
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -60,7 +61,7 @@ class TaskManifestV2(BaseModel):
     type: None | TaskType = None
 
     @model_validator(mode="after")
-    def validate_executable_args_meta(self):
+    def validate_executable_args_meta(self) -> Self:
         executable_non_parallel = self.executable_non_parallel
         executable_parallel = self.executable_parallel
         if (executable_non_parallel is None) and (executable_parallel is None):
@@ -137,7 +138,7 @@ class ManifestV2(BaseModel):
     authors: NonEmptyStr | None = None
 
     @model_validator(mode="after")
-    def _check_args_schemas_are_present(self):
+    def _check_args_schemas_are_present(self) -> Self:
         has_args_schemas = self.has_args_schemas
         task_list = self.task_list
         if has_args_schemas is True:
@@ -159,7 +160,7 @@ class ManifestV2(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _unique_task_names(self):
+    def _unique_task_names(self) -> Self:
         task_list = self.task_list
         task_list_names = [t.name for t in task_list]
         if len(set(task_list_names)) != len(task_list_names):

@@ -43,7 +43,7 @@ from ._aux_functions import _get_workflow_check_access
 from ._aux_functions import clean_app_job_list
 from ._aux_functions_tasks import _check_type_filters_compatibility
 
-FRACTAL_CACHE_DIR = ".fractal_cache"
+FRACTAL_CACHE_DIR = "fractal/.fractal_cache"
 router = APIRouter()
 logger = set_logger(__name__)
 
@@ -214,15 +214,26 @@ async def submit_job(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history"})
+            dataset.model_dump_json(exclude={"images", "history", "is_starred"})
         ),
         workflow_dump=json.loads(
             workflow.model_dump_json(
-                exclude={"task_list", "description", "template_id"}
+                exclude={
+                    "task_list",
+                    "description",
+                    "template_id",
+                    "is_starred",
+                }
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(exclude={"resource_id"})
+            project.model_dump_json(
+                exclude={
+                    "resource_id",
+                    "is_starred",
+                    "description",
+                }
+            )
         ),
         fractal_server_version=__VERSION__,
         **job_create.model_dump(),
@@ -244,18 +255,20 @@ async def submit_job(
     cache_dir = Path(user.project_dirs[0], FRACTAL_CACHE_DIR)
 
     # Define server-side and user-side job directories
+    yyyy_mm = job.start_timestamp.strftime(r"%Y-%m")
     timestamp_string = job.start_timestamp.strftime(r"%Y%m%d_%H%M%S")
-    working_dir = Path(resource.jobs_local_dir) / (
+    dir_name = (
         f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
         f"_{timestamp_string}"
     )
+    working_dir = Path(resource.jobs_local_dir, yyyy_mm, dir_name)
     match resource.type:
         case ResourceType.LOCAL:
             working_dir_user = working_dir
         case ResourceType.SLURM_SUDO:
-            working_dir_user = cache_dir / working_dir.name
+            working_dir_user = cache_dir / yyyy_mm / dir_name
         case ResourceType.SLURM_SSH:
-            working_dir_user = Path(profile.jobs_remote_dir, working_dir.name)
+            working_dir_user = Path(profile.jobs_remote_dir, yyyy_mm, dir_name)
     job.working_dir = working_dir.as_posix()
     job.working_dir_user = working_dir_user.as_posix()
     await db.merge(job)

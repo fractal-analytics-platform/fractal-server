@@ -88,11 +88,14 @@ def local_runner(
     local_resource_profile_objects,
 ):
     root_dir_local = tmp_path / "job"
+    user_cache_dir = (tmp_path / "fractal/.fractal_cache").as_posix()
     resource, profile = local_resource_profile_objects[:]
     with LocalRunner(
         root_dir_local=root_dir_local,
         resource=resource,
         profile=profile,
+        fractal_job_id=99,
+        user_cache_dir=user_cache_dir,
     ) as r:
         yield r
 

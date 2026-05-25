@@ -1,3 +1,4 @@
+from typing import Iterable
 from typing import TypeVar
 
 from fractal_server.images import SingleImage
@@ -9,7 +10,7 @@ T = TypeVar("T", SingleImage, SingleImageTaskOutput, InitArgsModel)
 
 
 def deduplicate_list(
-    this_list: list[T],
+    this_list: Iterable[T],
 ) -> list[T]:
     """
     Custom replacement for `set(this_list)`, when items are non-hashable.

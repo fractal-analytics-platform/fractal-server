@@ -11,6 +11,7 @@ from .dataset import router as dataset_router
 from .history import router as history_router
 from .images import router as images_routes
 from .job import router as job_router
+from .latest_job import router as latest_job_router
 from .pre_submission_checks import router as pre_submission_checks_router
 from .project import router as project_router
 from .sharing import router as sharing_router
@@ -32,6 +33,7 @@ router_api = APIRouter()
 router_api.include_router(dataset_router, tags=["Dataset"])
 router_api.include_router(pre_submission_checks_router, tags=["Job"])
 router_api.include_router(job_router, tags=["Job"])
+router_api.include_router(latest_job_router, tags=["Job"])
 router_api.include_router(images_routes, tags=["Images"])
 router_api.include_router(sharing_router, tags=["Project Sharing"])
 router_api.include_router(project_router, tags=["Project"])

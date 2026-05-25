@@ -35,19 +35,7 @@ def test_acquire_lock():
         print(e)
 
 
-def test_fail_and_raise(tmp_path: Path, caplog):
-    """
-    Test Exception when `e.errors` is not an iterable.
-    """
-
-    class MyError(Exception):
-        errors = 0
-
-    class MockFractalSSH(FractalSSH):
-        @property
-        def _sftp_unsafe(self):
-            raise MyError()
-
+def test_log_and_raise(tmp_path: Path, caplog):
     LOGGER_NAME = "invalid_ssh"
     with Connection(
         host="localhost",
@@ -55,21 +43,37 @@ def test_fail_and_raise(tmp_path: Path, caplog):
         forward_agent=False,
         connect_kwargs={"password": "invalid"},
     ) as connection:
-        mocked_fractal_ssh = MockFractalSSH(
+        mocked_fractal_ssh = FractalSSH(
             connection=connection, logger_name=LOGGER_NAME
         )
 
         logger = logging.getLogger(LOGGER_NAME)
         logger.propagate = True
 
-        with pytest.raises(MyError):
-            mocked_fractal_ssh.send_file(
-                local="/invalid/local",
-                remote="/invalid/remote",
+        caplog.clear
+        with pytest.raises(TypeError):
+            mocked_fractal_ssh.log_and_raise(e=TypeError(), message="test1")
+        assert "TypeError" in caplog.text
+
+        caplog.clear
+        novalidconnection_error = NoValidConnectionsError(
+            errors={("127.0.0.1", "22"): Exception()}
+        )
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=novalidconnection_error,
+                message="test2",
             )
-        log_text = caplog.text
-        assert "Unexpected" in log_text
-        assert "'int' object is not iterable" in log_text
+        assert "NoValidConnectionsError[0]: ('127.0.0.1', '22')" in caplog.text
+
+        caplog.clear
+        novalidconnection_error.errors = 1  #
+        with pytest.raises(NoValidConnectionsError):
+            mocked_fractal_ssh.log_and_raise(
+                e=novalidconnection_error,
+                message="test3",
+            )
+        assert "Unexpected error" in caplog.text
 
 
 @pytest.mark.container
@@ -252,9 +256,7 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
     print()
 
     # Remove folder
-    fractal_ssh.remove_folder(
-        folder=folder, safe_root=tmp777_path.parent.as_posix()
-    )
+    fractal_ssh.remove_folder(folder=folder)
 
     # Check that folder does not exist
     with pytest.raises(RuntimeError) as e:
@@ -263,10 +265,7 @@ def test_folder_utils(tmp777_path, fractal_ssh: FractalSSH):
 
     # Check that removing a missing folder fails
     with pytest.raises(RuntimeError) as e:
-        fractal_ssh.remove_folder(
-            folder="/invalid/something",
-            safe_root="/invalid",
-        )
+        fractal_ssh.remove_folder(folder="/invalid/something")
     print(e.value)
 
 
@@ -288,37 +287,8 @@ def test_remove_folder_input_validation():
         ]
         for folder in invalid_folders:
             with pytest.raises(ValueError) as e:
-                fake_fractal_ssh.remove_folder(folder=folder, safe_root="/")
+                fake_fractal_ssh.remove_folder(folder=folder)
             print(e.value)
-
-        # Folders which are just invalid
-        invalid_folders = [
-            None,
-            "   /somewhere",
-            "/ somewhere",
-            "somewhere",
-            "$(pwd)",
-            "`pwd`",
-        ]
-        for safe_root in invalid_folders:
-            with pytest.raises(ValueError) as e:
-                fake_fractal_ssh.remove_folder(
-                    folder="/tmp/something",
-                    safe_root=safe_root,
-                )
-            print(e.value)
-
-        # Folders which are not relative to the accepted root
-        with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(folder="/", safe_root="/tmp")
-        print(e.value)
-
-        with pytest.raises(ValueError) as e:
-            fake_fractal_ssh.remove_folder(
-                folder="/actual_root/../something",
-                safe_root="/actual_root",
-            )
-        print(e.value)
 
 
 @pytest.mark.container

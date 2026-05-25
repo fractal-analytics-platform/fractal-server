@@ -26,7 +26,7 @@ class TaskExecutionError(RuntimeError):
         workflow_task_id: int | None = None,
         workflow_task_order: int | None = None,
         task_name: str | None = None,
-    ):
+    ) -> None:
         super().__init__(*args)
         self.workflow_task_id = workflow_task_id
         self.workflow_task_order = workflow_task_order
@@ -52,7 +52,7 @@ class JobExecutionError(RuntimeError):
         self,
         *args,
         info: str | None = None,
-    ):
+    ) -> None:
         super().__init__(*args)
         self.info = info
 

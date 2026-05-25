@@ -16,13 +16,12 @@ jobs:
 
     permissions:
       pull-requests: write  # For https://github.com/mshick/add-pr-comment
-      contents: write # For https://github.com/stefanzweifel/git-auto-commit-action
+      contents: write # For committing to benchmark-api branch
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       with:
-        # Needed for stefanzweifel/git-auto-commit-action, to push new commits to the repository
-        persist-credentials: true
+        persist-credentials: true  # Needed for committing on the benchmark-api branch
 
     - name: Start Postgres
       run: |
@@ -34,9 +33,9 @@ jobs:
       with:
         python-version: "3.12"
 
-    - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+    - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
       with:
-        version: "0.9.24"
+        version: "0.11.14"
         enable-cache: true
 
     - run: uv sync --frozen --group dev
@@ -68,19 +67,23 @@ jobs:
       run: cat benchmarks/fractal-server.out
 
     - name: Add comment with preview
-      uses: mshick/add-pr-comment@ffd016c7e151d97d69d21a843022fd4cd5b96fe5
+      uses: mshick/add-pr-comment@8e4927817251f1ff60c001f04568532b38e0b4a0 # v3.11.0
       with:
         message-path: benchmarks/bench_diff.md
 
-    # commit on benchmark-api removing bench_diff.html
-    - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+    - name: Commit to benchmark-api branch
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      with:
-        commit_message: Update bench.html & bench.json
-        branch: benchmark-api
-        commit_options: '--no-verify'
-        push_options: '--force'
-        skip_checkout: true
-        file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+      # Note: `git stash pop` (rather than `git checkout stash -- .`)
+      # would lead to merge conflicts.
+      run: |
+        git config user.email "benchmarks.yaml@example.com"
+        git config user.name "benchmarks.yaml GHA"
+        git fetch origin benchmark-api
+        git stash
+        git switch benchmark-api
+        git checkout stash -- .
+        git add benchmarks/bench.html benchmarks/bench.json
+        git commit -m "Update bench.html & bench.json" --no-verify
+        git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,4 @@
 import json
-import math
 import sys
 import time
 from pathlib import Path
@@ -31,8 +30,11 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    update_status_of_history_unit_no_commit,
+)
 
+from ._batching import _verify_batch_sizes
 from ._job_states import STATES_FINISHED
 from .slurm_config import SlurmConfig
 
@@ -78,17 +80,21 @@ class RemoteInputData(BaseModel):
     metadiff_file_remote: str
     log_file_remote: str
 
+    user_cache_dir: str
+
 
 def create_accounting_record_slurm(
     *,
     user_id: int,
     slurm_job_ids: list[int],
+    fractal_job_id: int,
 ) -> None:
     with next(get_sync_db()) as db:
         db.add(
             AccountingRecordSlurm(
                 user_id=user_id,
                 slurm_job_ids=slurm_job_ids,
+                fractal_job_id=fractal_job_id,
             )
         )
         db.commit()
@@ -123,7 +129,8 @@ class BaseSlurmRunner(BaseRunner):
         common_script_lines: list[str] | None = None,
         user_cache_dir: str,
         slurm_account: str | None = None,
-    ):
+        fractal_job_id: int,
+    ) -> None:
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
         self.root_dir_remote = root_dir_remote
@@ -132,6 +139,7 @@ class BaseSlurmRunner(BaseRunner):
         self.user_cache_dir = user_cache_dir
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
+        self.fractal_job_id = fractal_job_id
 
         self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
@@ -156,11 +164,14 @@ class BaseSlurmRunner(BaseRunner):
         self.shutdown_file = self.root_dir_local / SHUTDOWN_FILENAME
         self.jobs = {}
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self: Self, exc_type, exc_val, exc_tb):
+    def __exit__(self: Self, exc_type, exc_val, exc_tb) -> bool:
         return False
+
+    def _run_local_cmd(self: Self, cmd: str) -> str:
+        raise NotImplementedError("Implement in child class.")
 
     def _run_remote_cmd(self: Self, cmd: str) -> str:
         raise NotImplementedError("Implement in child class.")
@@ -334,6 +345,7 @@ class BaseSlurmRunner(BaseRunner):
                 fractal_server_version=__VERSION__,
                 metadiff_file_remote=task.task_files.metadiff_file_remote,
                 log_file_remote=task.task_files.log_file_remote,
+                user_cache_dir=self.user_cache_dir,
             )
 
             with open(task.input_file_local, "w") as f:
@@ -636,7 +648,7 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug("[wait_and_check_shutdown] No shutdown file detected")
         return []
 
-    def _check_no_active_jobs(self):
+    def _check_no_active_jobs(self) -> None:
         if self.jobs != {}:
             raise JobExecutionError(
                 "Unexpected branch: jobs must be empty before new submissions."
@@ -685,11 +697,12 @@ class BaseSlurmRunner(BaseRunner):
 
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
-                    update_status_of_history_unit(
+                    update_status_of_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
                     )
+                    db.commit()
 
                 return None, SHUTDOWN_EXCEPTION
 
@@ -747,6 +760,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
             # Retrieval phase
@@ -777,7 +791,7 @@ class BaseSlurmRunner(BaseRunner):
                         )
 
                         if exception is not None:
-                            update_status_of_history_unit(
+                            update_status_of_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
@@ -787,11 +801,12 @@ class BaseSlurmRunner(BaseRunner):
                                 TaskType.COMPOUND,
                                 TaskType.CONVERTER_COMPOUND,
                             ]:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
+                        db.commit()
 
                 if len(self.jobs) > 0:
                     scancelled_job_ids = self.wait_and_check_shutdown()
@@ -804,11 +819,12 @@ class BaseSlurmRunner(BaseRunner):
                 f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
             self.scancel_jobs()
             return None, e
 
@@ -896,13 +912,16 @@ class BaseSlurmRunner(BaseRunner):
             # Divide arguments in batches of `tasks_per_job` tasks each
             tot_tasks = len(list_parameters)
             args_batches = []
-            batch_size = config.tasks_per_job
+            batch_size = config.batch_size_or_one
             for ind_chunk in range(0, tot_tasks, batch_size):
                 args_batches.append(
                     list_parameters[ind_chunk : ind_chunk + batch_size]  # noqa
                 )
-            if len(args_batches) != math.ceil(tot_tasks / config.tasks_per_job):
-                raise RuntimeError("Something wrong here while batching tasks")
+            _verify_batch_sizes(
+                num_batches=len(args_batches),
+                tot_tasks=tot_tasks,
+                batch_size=config.batch_size_or_one,
+            )
 
             # Part 1/3: Iterate over chunks, prepare SlurmJob objects
             logger.debug("[multisubmit] Prepare `SlurmJob`s.")
@@ -984,6 +1003,7 @@ class BaseSlurmRunner(BaseRunner):
             create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
+                fractal_job_id=self.fractal_job_id,
             )
 
         # Retrieval phase
@@ -1044,7 +1064,7 @@ class BaseSlurmRunner(BaseRunner):
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
@@ -1054,14 +1074,14 @@ class BaseSlurmRunner(BaseRunner):
                         else:
                             results[task.index] = result
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
                                 )
-
+                db.commit()
             if len(self.jobs) > 0:
                 scancelled_job_ids = self.wait_and_check_shutdown()
 
@@ -1073,27 +1093,31 @@ class BaseSlurmRunner(BaseRunner):
         Compare fractal-server versions of local/remote Python interpreters.
         """
 
-        # Skip check when the local and remote interpreters are the same
-        # (notably for some sudo-slurm deployments)
-        if self.python_worker_interpreter == sys.executable:
-            return
-
         # Fetch remote fractal-server version
         cmd = (
             f"{self.python_worker_interpreter} "
             "-m fractal_server.runner.versions"
         )
-        stdout = self._run_remote_cmd(cmd)
-        remote_version = json.loads(stdout.strip("\n"))["fractal_server"]
+        if self.slurm_runner_type == "ssh":
+            stdout = self._run_remote_cmd(cmd)
+        elif self.python_worker_interpreter == sys.executable:
+            # Skip if local and worker interpreters are the same
+            return
+        else:
+            # Run a local command (with the same user that runs fractal) for the
+            # worker interpreter. Note that this worker typically belongs (or it
+            # must be accessible) to the fractal-running user.
+            stdout = self._run_local_cmd(cmd)
+        worker_version = json.loads(stdout.strip("\n"))["fractal_server"]
 
         # Verify local/remote version match
-        if remote_version != __VERSION__:
+        if worker_version != __VERSION__:
             error_msg = (
                 "Fractal-server version mismatch.\n"
                 "Local interpreter: "
                 f"({sys.executable}): {__VERSION__}.\n"
                 "Remote interpreter: "
-                f"({self.python_worker_interpreter}): {remote_version}."
+                f"({self.python_worker_interpreter}): {worker_version}."
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)

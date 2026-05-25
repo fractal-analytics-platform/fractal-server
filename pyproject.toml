@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.22.4"
+version = "2.22.13"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -14,20 +14,21 @@ license-files = ["LICENSE"]
 
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "fastapi >= 0.135.0, <0.136.0",
+    "fastapi >= 0.136.0, <0.137.0",
     "sqlmodel == 0.0.38",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
-    "uvicorn >= 0.44.0, <0.45.0",
+    "uvicorn >= 0.46.0, <0.47.0",
     "uvicorn-worker == 0.4.0",
-    "pydantic >=2.12.0,<2.13.0",
-    "pydantic-settings ==2.12.0",
+    "pydantic >=2.13.0,<2.14.0",
+    "pydantic-settings ==2.14.0",
     "packaging >= 26.0.0, <27.0.0",
     "fabric >= 3.2.2, <3.3.0",
-    "gunicorn >=25,<26",
+    "paramiko >= 5.0.0, <5.1.0",
+    "gunicorn >=26,<27",
     "psycopg[binary] >= 3.1.0, <4.0.0",
-    "tomli_w >=1.2.0, <1.3.0 "
+    "tomli_w >=1.2.0, <1.3.0 ",
 ]
 
 [project.urls]
@@ -60,7 +61,7 @@ docs = [
     "zensical",
     "mkdocs==1.6.1",
     "mkdocstrings[python]>=1.0.2,<1.1.0",
-    "mkdocs-material==9.7.1",
+    "mkdocs-material==9.7.6",
     "mkdocs-gen-files==0.6.0",
     "mkdocs-literate-nav==0.6.2",
     "mkdocs-section-index==0.3.10",
@@ -91,7 +92,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth", "basic_auth"]
 
 [tool.bumpver]
-current_version = "2.22.4"
+current_version = "2.22.13"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -114,10 +115,6 @@ omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
 
 [tool.coverage.report]
 omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*", "*/.venv/*"]
-
-[[tool.mypy.overrides]]
-module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
-ignore_missing_imports = true
 
 
 [tool.pytest_env]
@@ -142,3 +139,10 @@ force-single-line = true
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
+
+[tool.ty.terminal]
+output-format = "concise"
+
+[[tool.mypy.overrides]]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
+ignore_missing_imports = true

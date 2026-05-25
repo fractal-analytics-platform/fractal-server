@@ -17,7 +17,7 @@ from fractal_server.utils import get_timestamp
 from .task import TaskV2
 
 
-def _check_origin_not_pixi(origin: str):
+def _check_origin_not_pixi(origin: str) -> None:
     """
     Raise `ValueError` if `origin=="pixi"`
     """
@@ -108,7 +108,11 @@ class TaskGroupV2(SQLModel, table=True):
         """
         _check_origin_not_pixi(self.origin)
 
-        extras = f"[{self.pip_extras}]" if self.pip_extras is not None else ""
+        extras = (
+            f"[{self.pip_extras}]"
+            if (self.pip_extras is not None and self.pip_extras != "")
+            else ""
+        )
 
         if self.archive_path is not None:
             return f"{self.archive_path}{extras}"

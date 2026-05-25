@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 from fractal_server.app.security.signup_email import (
     send_fractal_email_or_log_failure,
 )
@@ -12,11 +14,6 @@ async def test_send_fractal_email_or_log_failure(caplog, monkeypatch):
         recipients=["test@example.org"],
         smtp_server="localhost",
         port=1234,
-        encrypted_password=(
-            "gAAAAABnoQUGHMsDgLkpDtwUtrKtf9T1so44ahEXExGRceAnf097mVY1EbNuM"
-            "P5fjvkndvwCwBJM7lHoSgKQkZ4VbvO9t3PJZg=="
-        ),
-        encryption_key="lp3j2FVDkzLd0Rklnzg1pHuV9ClCuDE0aGeJfTNCaW4=",
         instance_name="fractal",
         use_starttls=False,
         use_login=True,
@@ -46,3 +43,22 @@ async def test_send_fractal_email_or_log_failure(caplog, monkeypatch):
     assert "Could not send self-registration email" in caplog.text
     # The error message depends on the OS. The following works on Mac and Linux
     assert "Connection refused" in caplog.text
+
+
+def test_password_not_none():
+    email_settings_public = PublicEmailSettings(
+        sender="fractal@fractal.fractal",
+        recipients=["test@example.org"],
+        smtp_server="localhost",
+        port=1234,
+        instance_name="fractal",
+        use_starttls=False,
+        use_login=True,
+        password="1234",
+    )
+
+    assert email_settings_public.password.get_secret_value() == "1234"
+
+    email_settings_public.password = None
+    with pytest.raises(RuntimeError):
+        email_settings_public.password_not_none

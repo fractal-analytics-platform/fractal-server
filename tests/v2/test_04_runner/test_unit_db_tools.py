@@ -8,7 +8,9 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    update_status_of_history_unit_no_commit,
+)
 
 
 @pytest.mark.parametrize("num_history_units", [10, 50])
@@ -75,11 +77,12 @@ async def test_update_status_of_history_unit(
         # Non-Bulk function
         start = time.perf_counter()
         for hr in hrs:
-            update_status_of_history_unit(
+            update_status_of_history_unit_no_commit(
                 history_unit_id=hr.id,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db_sync,
             )
+        db_sync.commit()
         stop = time.perf_counter()
         non_bulk_time = stop - start
 
@@ -110,3 +113,11 @@ async def test_update_status_of_history_unit(
             f"Non bulk time:    {non_bulk_time}\n"
             f"Bulk time:        {bulk_time}\n"
         )
+
+        # Test failure due to wrong primary key
+        with pytest.raises(ValueError, match="not found"):
+            update_status_of_history_unit_no_commit(
+                history_unit_id=1111111111,
+                status=HistoryUnitStatus.FAILED,
+                db_sync=db_sync,
+            )

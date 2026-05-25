@@ -464,7 +464,7 @@ async def _workflow_insert_task(
     flag_modified(db_workflow, "task_list")
     await db.flush()
 
-    wf_task = await db.get(
+    wf_task = await db.get_one(
         WorkflowTaskV2,
         wf_task.id,
         populate_existing=True,  # See issue 1087
@@ -488,12 +488,13 @@ async def clean_app_job_list(
         List of IDs for submitted jobs.
     """
     logger.info(f"[clean_app_job_list] START - {jobs_list=}.")
-    stmt = select(JobV2).where(JobV2.id.in_(jobs_list))
-    result = await db.execute(stmt)
-    db_jobs_list = result.scalars().all()
-    submitted_job_ids = [
-        job.id for job in db_jobs_list if job.status == JobStatusType.SUBMITTED
-    ]
+    stm = (
+        select(JobV2.id)
+        .where(JobV2.id.in_(jobs_list))
+        .where(JobV2.status == JobStatusType.SUBMITTED)
+    )
+    res = await db.execute(stm)
+    submitted_job_ids = res.scalars().all()
     logger.info(f"[clean_app_job_list] END - {submitted_job_ids=}.")
     return submitted_job_ids
 
@@ -583,7 +584,7 @@ async def _create_workflow_export(
     """
     wf_task_list = []
     for wftask in workflow.task_list:
-        task_group = await db.get(TaskGroupV2, wftask.task.taskgroupv2_id)
+        task_group = await db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
         wf_task_list.append(wftask.model_dump())
         wf_task_list[-1]["task"] = dict(
             pkg_name=task_group.pkg_name,

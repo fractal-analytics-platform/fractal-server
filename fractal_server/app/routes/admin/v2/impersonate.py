@@ -30,6 +30,6 @@ async def impersonate_user(
     token = await jwt_strategy.write_token(user)
 
     return JSONResponse(
-        content={"access_token": token, "token_type": "bearer"},
+        content={"access_token": token, "token_type": "bearer"},  # nosec
         status_code=200,
     )

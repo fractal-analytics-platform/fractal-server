@@ -1,5 +1,6 @@
 import itertools
 from typing import Any
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -59,7 +60,7 @@ async def get_task_group_activity_list(
     timestamp_started_min: AwareDatetime | None = None,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskGroupActivityV2]:
+) -> Sequence[TaskGroupActivityV2]:
     stm = select(TaskGroupActivityV2).where(
         TaskGroupActivityV2.user_id == user.id
     )
@@ -202,7 +203,7 @@ async def get_task_group(
     task_group_id: int,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupV2:
+) -> dict[str, Any]:
     """
     Get single TaskGroup
     """
@@ -223,7 +224,7 @@ async def patch_task_group(
     task_group_update: TaskGroupUpdate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskGroupV2:
+) -> dict[str, Any]:
     """
     Patch single TaskGroup
     """

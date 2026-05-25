@@ -11,7 +11,7 @@ from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 
 
-async def cleanup_after_shutdown(*, jobs: list[int], logger_name: str):
+async def cleanup_after_shutdown(*, jobs: list[int], logger_name: str) -> None:
     settings = Inject(get_settings)
     logger = get_logger(logger_name)
     logger.info("Cleanup function after shutdown")
@@ -28,8 +28,8 @@ async def cleanup_after_shutdown(*, jobs: list[int], logger_name: str):
 
     async for session in get_async_db():
         # Write shutdown file for all jobs
-        jobs = (await session.execute(stm_objects)).scalars().all()
-        for job in jobs:
+        job_objects = (await session.execute(stm_objects)).scalars().all()
+        for job in job_objects:
             _write_shutdown_file(job=job)
 
         # Wait for completion of all job - with a timeout
@@ -52,8 +52,8 @@ async def cleanup_after_shutdown(*, jobs: list[int], logger_name: str):
         )
 
         # Mark jobs as failed and update their logs.
-        jobs = (await session.execute(stm_objects)).scalars().all()
-        for job in jobs:
+        job_objects = (await session.execute(stm_objects)).scalars().all()
+        for job in job_objects:
             job.status = "failed"
             job.log = (job.log or "") + "\nJob stopped due to app shutdown\n"
             session.add(job)

@@ -1,0 +1,28 @@
+[project]
+name = "testing-tasks-mock"
+version = "0.1.4"
+description = "Fake tasks package"
+
+authors = [
+    {name="Name Surname", email="name.surname@example.org"},
+]
+license = {text ="BSD-3-Clause"}
+
+
+requires-python = ">=3.10"
+dependencies = ["fractal-task-tools==0.1.1"]
+
+[project.optional-dependencies]
+dev = ["build", "bumpver"]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["testing_tasks_mock"]
+
+# Always include the __FRACTAL_MANIFEST__.json file in the package
+[tool.setuptools.package-data]
+"*" = ["__FRACTAL_MANIFEST__.json"]

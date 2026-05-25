@@ -37,7 +37,7 @@ def validate_cmd(
     *,
     allow_char: str | None = None,
     attribute_name: str = "Command",
-):
+) -> None:
     """
     Assert that the provided `command` does not contain any of the forbidden
     characters for commands

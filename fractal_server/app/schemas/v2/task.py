@@ -1,5 +1,6 @@
 from enum import StrEnum
 from typing import Any
+from typing import Self
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -57,7 +58,7 @@ class TaskCreate(BaseModel):
     type: TaskType | None = None
 
     @model_validator(mode="after")
-    def validate_commands(self):
+    def validate_commands(self) -> Self:
         command_parallel = self.command_parallel
         command_non_parallel = self.command_non_parallel
         if (command_parallel is None) and (command_non_parallel is None):
@@ -73,7 +74,7 @@ class TaskCreate(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def set_task_type(self):
+    def set_task_type(self) -> Self:
         if self.type is None:
             logger.warning(
                 f"Task type is not set for task '{self.name}', "

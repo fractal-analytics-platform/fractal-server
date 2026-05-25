@@ -13,7 +13,7 @@ from fractal_server.urls import normalize_url
 
 
 async def test_schemas_dataset():
-    project = ProjectV2(id=1, name="project")
+    project = ProjectV2(id=1, name="project", is_starred=False)
 
     # Test zarr_dir=None is valid
     DatasetCreate(name="name", project_dir=None)
@@ -59,10 +59,10 @@ async def test_schemas_dataset():
         zarr_dir=os.path.join(
             dataset_create.project_dir, dataset_create.zarr_subfolder
         ),
+        is_starred=False,
     )
 
     # Read
-
     DatasetRead(**dataset.model_dump(), project=project.model_dump())
 
     # Update

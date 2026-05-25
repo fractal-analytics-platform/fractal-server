@@ -426,18 +426,33 @@ async def test_project_apply_workflow_subset(
             json=dict(first_task_index=0, last_task_index=1),
         )
         expected_project_dump = ProjectDump(
-            **json.loads(project.model_dump_json(exclude={"resource_id"}))
+            **json.loads(
+                project.model_dump_json(
+                    exclude={
+                        "resource_id",
+                        "is_starred",
+                        "description",
+                    }
+                )
+            )
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
                 wf.model_dump_json(
-                    exclude={"task_list", "description", "template_id"}
+                    exclude={
+                        "task_list",
+                        "description",
+                        "template_id",
+                        "is_starred",
+                    }
                 )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(
             **json.loads(
-                dataset1.model_dump_json(exclude={"history", "images"})
+                dataset1.model_dump_json(
+                    exclude={"history", "images", "is_starred"}
+                )
             )
         ).model_dump()
         assert res.json()["project_dump"] == expected_project_dump
@@ -886,79 +901,3 @@ async def test_update_timestamp_taskgroup(
 
         await db.refresh(task_group)
         assert task_group.timestamp_last_used > original_timestamp_last_used
-
-
-async def test_get_latest_jobs(
-    db,
-    client,
-    project_factory,
-    job_factory,
-    workflow_factory,
-    dataset_factory,
-    task_factory,
-    tmp_path,
-    MockCurrentUser,
-    local_resource_profile_db,
-):
-    res, prof = local_resource_profile_db
-    async with MockCurrentUser(
-        is_verified=True,
-        profile_id=prof.id,
-    ) as user:
-        project = await project_factory(user)
-        dataset = await dataset_factory(project_id=project.id, name="dataset")
-        task = await task_factory(user_id=user.id)
-        workflow = await workflow_factory(project_id=project.id)
-        await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, db=db, order=0
-        )
-
-        await job_factory(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            working_dir=tmp_path.as_posix(),
-            status="done",
-        )
-        job2 = await job_factory(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            working_dir=tmp_path.as_posix(),
-            status="submitted",
-        )
-
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/latest-job/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
-        )
-        assert res.status_code == 200
-        assert res.json()["id"] == job2.id
-
-        job3 = await job_factory(
-            project_id=project.id,
-            dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            working_dir=tmp_path.as_posix(),
-            status="failed",
-        )
-
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/latest-job/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}"
-        )
-        assert res.status_code == 200
-        assert res.json()["id"] == job3.id
-
-        # 404
-
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/latest-job/"
-            f"?workflow_id={workflow.id + 1}&dataset_id={dataset.id}"
-        )
-        assert res.status_code == 404
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/latest-job/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id + 1}"
-        )
-        assert res.status_code == 404

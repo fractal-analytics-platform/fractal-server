@@ -35,6 +35,7 @@ async def test_submit_success(
     task_type: str,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -50,6 +51,7 @@ async def test_submit_success(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -103,6 +105,7 @@ async def test_submit_fail(
     task_type: str,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -118,6 +121,7 @@ async def test_submit_fail(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -159,6 +163,7 @@ async def test_multisubmit_parallel(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -169,6 +174,7 @@ async def test_multisubmit_parallel(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -217,6 +223,7 @@ async def test_multisubmit_compound(
     history_mock_for_multisubmit,
     valid_user_id,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
     resource, profile = slurm_sudo_resource_profile_objects[:]
@@ -227,6 +234,7 @@ async def test_multisubmit_compound(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         list_task_files = [
             get_dummy_task_files(
@@ -286,6 +294,7 @@ async def test_multisubmit_parallel_partial_failure(
     valid_user_id,
     testdata_path,
     slurm_sudo_resource_profile_objects,
+    fractal_job_id_mock,
 ):
     raw_script_path = testdata_path / "script_for_selective_failure.py"
     script_path = tmp777_path / "script_for_selective_failure.py"
@@ -301,6 +310,7 @@ async def test_multisubmit_parallel_partial_failure(
         user_cache_dir=(tmp777_path / "cache").as_posix(),
         resource=resource,
         profile=profile,
+        fractal_job_id=fractal_job_id_mock,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command=f"python3 {script_path.as_posix()}",

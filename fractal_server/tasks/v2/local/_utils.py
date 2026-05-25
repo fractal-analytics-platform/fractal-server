@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from fractal_server.app.models import Resource
@@ -13,7 +14,7 @@ logger = set_logger(__name__)
 
 def _customize_and_run_template(
     template_filename: str,
-    replacements: list[tuple[str, str]],
+    replacements: set[tuple[str, str]],
     script_dir: str,
     logger_name: str,
     prefix: int,
@@ -101,3 +102,24 @@ def edit_pyproject_toml_in_place_local(
         f"Replaced local {pyproject_toml_path.as_posix()} "
         "with simplified version."
     )
+
+
+def rmtree_nofail(
+    *,
+    folder_path: str,
+    logger_name: str,
+) -> None:
+    """
+    Wrap a `shutil.rmtree` with try/except and logs.
+
+    Args:
+        folder_path: Folder to be deleted.
+        logger_name: Logger name.
+    """
+    logger = get_logger(logger_name)
+    try:
+        logger.info(f"Now delete folder {folder_path}")
+        shutil.rmtree(folder_path)
+        logger.info(f"Deleted folder {folder_path}")
+    except Exception as e:
+        logger.error(f"Removing folder failed.\nOriginal error:\n{str(e)}")

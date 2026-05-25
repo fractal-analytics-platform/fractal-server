@@ -1,9 +1,109 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.5 (unreleased)
+# 2.22.13
+
+* API:
+    * Improve validation of task-group paths (\#3342, \#3344).
+* Database:
+    * Introduce `ProjectV2.description` (\#3341).
+
+# 2.22.12
+
+* API:
+    * Rename `user_id` into `project_owner_id` in `GET /admin/v2/job/` (\#3338).
+    * Add `job_user_email` query parameter in `GET /admin/v2/job/` (\#3338).
+* Runner:
+    * Always set `FRACTAL_CACHE_DIR` environment variable in task execution (\#3337).
+    * Update `FRACTAL_CACHE_DIR` from `.fractal_cache"` to `"fractal/.fractal_cache"` (\#3337).
+* SSH:
+    * Drop `safe_root` from `remove_folder` (\#3333).
+* Internal:
+    * Several minor fixes to improve typing (\#3333, \#3335, \#3340).
+    * Drop all existing `data_migrations/old` scripts (\#3335).
+* Testing:
+    * Run `ty` type checker in a non-failing mode (\#3333).
+
+# 2.22.11
+
+* API:
+    * Remove `GET /project/{project_id}/dataset/{dataset_id}/history/` (\#3331).
+    * Introduce `/star/` and `/unstar/` endpoints for projects and workflows (\#3329).
+* Task-group lifecycle:
+    * Change default for `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3321).
+    * Reject extras in `POST /admin/v2/task-group/{id}/reset/pixi/` request body (\#3324).
+    * Fail fast if pixi version is not available, in `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3324).
+* Database:
+    * Introduce `ProjectV2.is_starred` and `WorkflowV2.is_starred` (\#3329).
+* Internal:
+    * Introduce `get_pixi_version_or_422` auxiliary function (\#3324).
+    * Run `pyrefly infer` for some basic type-hinting additions (\#3325).
+* Testing:
+    * Bump versions of `uv` and `setup-uv` in GitHub Actions (\#3328).
+    * Bump version of `zizmor-action` (\#3330).
+    * Replace `stefanzweifel/git-auto-commit-action` with `git` commands (\#3330).
+
+# 2.22.10
+
+* API:
+    * Introduce `/star/` and `/unstar/` endpoints for datasets (\#3311).
+* Task-group lifecycle:
+    * Introduce `POST /admin/v2/task-group/{id}/reset/pip/` (\#3314).
+    * Introduce `POST /admin/v2/task-group/{id}/reset/pixi/` (\#3314).
+    * Remove `/project/{project_id}/status/` and move its logic to `/project/{project_id}/latest-job/` (\#3317).
+* Database:
+    * Introduce `DatasetV2.is_starred` (\#3311).
+* Dependencies:
+    * Require `paramiko>5.0.0,<5.1.0` (\#3313).
+* Task-group lifecycle:
+    * Include `export PYTHONNOUSERSITE=1` in pixi-project Python wrapper (\#3315).
+    * Bump `mkdocs-material` to `v9.7.6` (\#3318).
+* Testing:
+    * Increase parallelization of GitHub CI (\#3316).
+
+# 2.22.9
+
+* API:
+    * Add `task_group_id` query parameter to `GET /admin/v2/task-group/` (\#3305).
+* Task-group lifecycle:
+    * Store the task group ID in a txt file inside `TaskGroup.path` folder (\#3308).
+    * Fix `task_group.active` property after deactivation failure (\#3310).
+* Runner:
+    * Run worker-version-checking command without `sudo`, on `slurm_sudo` deployments with a non-trivial `python_worker_interpreter` set (\#3304).
+* Dependencies:
+    * Bump `gunicorn` to v26 (\#3306).
+
+# 2.22.8
+
+* API:
+    * Add new `GET /api/v2/dataset/` endpoint (\#3294).
+* Dependencies:
+    * Bump `fastapi` to `0.136.x` (\#3302).
+    * Bump `uvicorn` to `0.46.x` (\#3302).
+    * Bump `pydantic` to `2.13.x` (\#3302).
+    * Bump `pydantic-settings` to `2.14.0` (\#3302).
+
+# 2.22.7
+
+* Task-group lifecycle:
+    * Fix bug in admin endpoints to activate/deactivate pixi task groups (\#3299).
+
+# 2.22.6
+
+* Runner:
+    * Reduce number of `db.commit` statements when updating `HistoryUnit` statuses (\#3290).
+    * Introduce additional `YYYY-MM` nesting of job folders and zipped folders (\#3296).
+* Tests:
+    * Bump `fractal-task-tools` to 0.5.0 in mock tasks (\#3274).
+
+# 2.22.5
 
 * API:
     * Use `distinct` rather than `unique` in `/current-user/allowed-viewer-paths/` database query (\#3284).
+    * Add logging to project-transfer endpoint (\#3286).
+    * Remove filename in `GET /admin/v2/users-csv/` (\#3287).
+    * Include `fractal_job_id` in request body for `POST /admin/v2/accounting/slurm/` (\#3288).
+* Database:
+    * Introduce `AccountingRecordSlurm.fractal_job_id` column (\#3288).
 
 # 2.22.4
 

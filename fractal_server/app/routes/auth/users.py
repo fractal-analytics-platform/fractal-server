@@ -2,6 +2,8 @@
 Definition of `/auth/users/` routes
 """
 
+from typing import Any
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -44,7 +46,7 @@ async def get_user(
     group_ids_names: bool = True,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> UserRead:
+) -> UserOAuth | UserRead:
     user = await _user_or_404(user_id, db)
     if group_ids_names:
         user_with_groups = await _get_single_user_with_groups(user, db)
@@ -59,7 +61,7 @@ async def patch_user(
     current_superuser: UserOAuth = Depends(current_superuser_act),
     user_manager: UserManager = Depends(get_user_manager),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> UserRead:
     """
     Custom version of the PATCH-user route from `fastapi-users`.
     """
@@ -103,8 +105,10 @@ async def patch_user(
             request=None,
         )
         validated_user = UserOAuth.model_validate(user.model_dump())
-        patched_user = await db.get(
-            UserOAuth, validated_user.id, populate_existing=True
+        patched_user = await db.get_one(
+            UserOAuth,
+            validated_user.id,
+            populate_existing=True,
         )
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(
@@ -133,7 +137,7 @@ async def list_users(
     profile_id: int | None = None,
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-):
+) -> list[dict[str, Any]]:
     """
     Return list of all users
     """
@@ -141,7 +145,7 @@ async def list_users(
     if profile_id is not None:
         stm = stm.where(UserOAuth.profile_id == profile_id)
     res = await db.execute(stm)
-    user_list = res.scalars().unique().all()
+    users = res.scalars().unique().all()
 
     # Get all user/group links
     stm_all_links = select(LinkUserGroup)
@@ -150,16 +154,18 @@ async def list_users(
 
     # TODO: possible optimizations for this construction are listed in
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
-    for ind, user in enumerate(user_list):
-        user_list[ind] = dict(
-            **user.model_dump(),
-            oauth_accounts=user.oauth_accounts,
+    users_dict = [
+        dict(
+            **user_obj.model_dump(),
+            oauth_accounts=user_obj.oauth_accounts,
             group_ids=[
-                link.group_id for link in links if link.user_id == user.id
+                link.group_id for link in links if link.user_id == user_obj.id
             ],
         )
+        for user_obj in users
+    ]
 
-    return user_list
+    return users_dict
 
 
 @router_users.post("/users/{user_id}/set-groups/", response_model=UserRead)

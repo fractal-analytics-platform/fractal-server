@@ -67,6 +67,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
         profile: Profile,
         user_cache_dir: str,
         slurm_account: str | None = None,
+        fractal_job_id: int,
     ) -> None:
         """
         Set parameters that are the same for different Fractal tasks and for
@@ -85,6 +86,7 @@ class SlurmSudoRunner(BaseSlurmRunner):
             poll_interval=resource.jobs_poll_interval,
             python_worker_interpreter=resource.jobs_slurm_python_worker,
             slurm_account=slurm_account,
+            fractal_job_id=fractal_job_id,
         )
 
     @override
@@ -167,6 +169,15 @@ class SlurmSudoRunner(BaseSlurmRunner):
                 finished_slurm_jobs,
             )
         logger.debug("[_fetch_artifacts] END.")
+
+    @override
+    def _run_local_cmd(self: Self, cmd: str) -> str:
+        res = _run_command_as_user(
+            cmd=cmd,
+            user=None,
+            check=True,
+        )
+        return res.stdout
 
     @override
     def _run_remote_cmd(self: Self, cmd: str) -> str:

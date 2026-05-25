@@ -13,6 +13,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
@@ -134,10 +135,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         assert activity["timestamp_ended"] is not None
         assert activity["status"] == "failed"
         assert "already exists" in activity["log"]
-        fractal_ssh.remove_folder(
-            folder=task_group_path,
-            safe_root=profile.tasks_remote_dir,
-        )
+        fractal_ssh.remove_folder(folder=task_group_path)
 
         # 2 / Successful collection
         res = await client.post(
@@ -165,6 +163,12 @@ async def test_task_group_lifecycle_pixi_ssh(
         task_group = await db.get(TaskGroupV2, task_group_id)
         assert len(task_group.task_list) == 1
         assert task_group.env_info is not None
+
+        # Check that txt file with task_group_id exists
+        txt_file = Path(task_group.path) / TASK_GROUP_ID_FILENAME
+        assert txt_file.exists()
+        with txt_file.open("r") as f:
+            assert f.read() == str(task_group.id)
 
         # Check that `__PIXI_CACHE_DIR__` has been replaced, within the
         # pixi-install script
@@ -235,8 +239,7 @@ async def test_task_group_lifecycle_pixi_ssh(
         debug(activity)
         assert activity["status"] == "failed"
         fractal_ssh.remove_folder(  # Remove fake folder
-            folder=fake_remote_dir,
-            safe_root=task_group.path,
+            folder=fake_remote_dir
         )
 
         # 7 / Successful reactivation

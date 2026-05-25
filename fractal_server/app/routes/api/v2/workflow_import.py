@@ -1,4 +1,6 @@
 from typing import Any
+from typing import Literal
+from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -64,7 +66,7 @@ async def _get_user_accessible_taskgroups_with_version(
     user_id: int,
     user_resource_id: int,
     db: AsyncSession,
-) -> list[TaskGroupV2]:
+) -> Sequence[TaskGroupV2]:
     """
     Retrieve list of task groups with non-null version that the user has access
     to.
@@ -101,7 +103,7 @@ async def _get_task_id_or_available_tasks(
     user_id: int,
     default_group_id: int | None,
     db: AsyncSession,
-) -> tuple[bool, int | list[AvailableTask]]:
+) -> tuple[Literal[True], int] | tuple[Literal[False], list[AvailableTask]]:
     """
     Find a task id based on `task_import`.
     If the task is not found, return the list of available versions.
@@ -273,9 +275,9 @@ async def _import_workflow(
                     "pkg_name": wf_task.task.pkg_name,
                     "version": wf_task.task.version,
                     "task_name": wf_task.task.name,
-                    "task_id": task_id_or_available_tasks,
+                    "task_id": success_and_outcome[1],
                 }
-                if success
+                if success_and_outcome[0] is True
                 else {
                     "outcome": "fail",
                     "pkg_name": wf_task.task.pkg_name,
@@ -283,10 +285,10 @@ async def _import_workflow(
                     "task_name": wf_task.task.name,
                     "available_tasks": [
                         available_task.model_dump()
-                        for available_task in task_id_or_available_tasks
+                        for available_task in success_and_outcome[1]
                     ],
                 }
-                for wf_task, (success, task_id_or_available_tasks) in zip(
+                for wf_task, success_and_outcome in zip(
                     workflow_import.task_list, list_results
                 )
             ],
@@ -350,7 +352,7 @@ async def import_workflow(
     workflow_import: WorkflowImport,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowReadWithWarnings:
+) -> dict[str, Any]:
     workflow = await _import_workflow(
         project_id=project_id,
         workflow_import=workflow_import,
@@ -371,7 +373,7 @@ async def import_workflow_from_template(
     workflow_import_from_template: WorkflowImportFromTemplate,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WorkflowV2:
+) -> dict[str, Any]:
     template = await _get_template_read_access(
         user_id=user.id,
         template_id=template_id,

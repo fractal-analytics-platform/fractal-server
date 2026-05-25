@@ -3,6 +3,7 @@ from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from typing import Self
 from typing import override
 
 from fractal_server.app.db import get_sync_db
@@ -21,16 +22,20 @@ from fractal_server.runner.executors.call_command_wrapper import (
 )
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import (
+    update_status_of_history_unit_no_commit,
+)
 
 logger = set_logger(__name__)
 
 
 def run_single_task(
+    *,
     base_command: str,
     parameters: dict[str, Any],
     task_files: TaskFiles,
-):
+    user_cache_dir: str,
+) -> None:
     # Write args.json file
     with open(task_files.args_file_local, "w") as f:
         json.dump(parameters, f)
@@ -45,6 +50,7 @@ def run_single_task(
     call_command_wrapper(
         cmd=full_command,
         log_path=task_files.log_file_local,
+        user_cache_dir=user_cache_dir,
     )
 
     try:
@@ -67,24 +73,29 @@ class LocalRunner(BaseRunner):
     executor: ThreadPoolExecutor
     root_dir_local: Path
     shared_config: JobRunnerConfigLocal
+    user_cache_dir: str
 
     def __init__(
         self,
         root_dir_local: Path,
         resource: Resource,
         profile: Profile,
-    ):
+        fractal_job_id: int,
+        user_cache_dir: str,
+    ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor()
         logger.debug("Create LocalRunner")
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
+        self.fractal_job_id = fractal_job_id
+        self.user_cache_dir = user_cache_dir
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         logger.debug("Enter LocalRunner")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool | None:
         logger.debug("Exit LocalRunner")
         self.executor.shutdown(
             wait=False,
@@ -136,6 +147,7 @@ class LocalRunner(BaseRunner):
                 base_command=base_command,
                 parameters=parameters,
                 task_files=task_files,
+                user_cache_dir=self.user_cache_dir,
             )
         except Exception as e:
             logger.error(
@@ -145,11 +157,12 @@ class LocalRunner(BaseRunner):
             result = None
             exception = TaskExecutionError(str(e))
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
                 return None, exception
 
         # RETRIEVAL PHASE
@@ -161,7 +174,7 @@ class LocalRunner(BaseRunner):
                     TaskType.COMPOUND,
                     TaskType.CONVERTER_COMPOUND,
                 ]:
-                    update_status_of_history_unit(
+                    update_status_of_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.DONE,
                         db_sync=db,
@@ -169,12 +182,14 @@ class LocalRunner(BaseRunner):
                 return result, None
             except Exception as e:
                 logger.debug("[submit] END with exception")
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
                 return None, TaskExecutionError(str(e))
+            finally:
+                db.commit()
 
     def multisubmit(
         self,
@@ -267,6 +282,7 @@ class LocalRunner(BaseRunner):
                         base_command=base_command,
                         parameters=list_parameters[positional_index],
                         task_files=list_task_files[positional_index],
+                        user_cache_dir=self.user_cache_dir,
                     )
                     active_futures[positional_index] = future
                 except Exception as e:
@@ -278,11 +294,12 @@ class LocalRunner(BaseRunner):
                     exceptions[positional_index] = TaskExecutionError(str(e))
                     if task_type == TaskType.PARALLEL:
                         with next(get_sync_db()) as db:
-                            update_status_of_history_unit(
+                            update_status_of_history_unit_no_commit(
                                 history_unit_id=current_history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
                             )
+                            db.commit()
             while active_futures:
                 finished_futures = [
                     index_and_future
@@ -303,7 +320,7 @@ class LocalRunner(BaseRunner):
                         try:
                             results[positional_index] = fut.result()
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
@@ -319,11 +336,12 @@ class LocalRunner(BaseRunner):
                                 str(e)
                             )
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit(
+                                update_status_of_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
                                 )
+                    db.commit()
 
         logger.debug(f"[multisubmit] END, {len(results)=}, {len(exceptions)=}")
 

@@ -560,3 +560,68 @@ async def test_workflow_type_filters_flow(
 
         debug(res.json())
         assert res.json() == expected_response
+
+
+async def test_starring_workflow(
+    client, MockCurrentUser, project_factory, workflow_factory, db
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        workflowD = await workflow_factory(project_id=project.id, name="D")
+        assert workflowD.is_starred is False
+        workflowC = await workflow_factory(project_id=project.id, name="C")
+        assert workflowC.is_starred is False
+        workflowB = await workflow_factory(project_id=project.id, name="B")
+        assert workflowB.is_starred is False
+        workflowA = await workflow_factory(project_id=project.id, name="A")
+        assert workflowA.is_starred is False
+
+        res = await client.get(f"api/v2/project/{project.id}/workflow/")
+        assert [wf["id"] for wf in res.json()] == [
+            # alphabetic order
+            workflowA.id,
+            workflowB.id,
+            workflowC.id,
+            workflowD.id,
+        ]
+
+        # STAR
+        res = await client.post(
+            f"api/v2/project/{project.id}/workflow/{workflowB.id}/star/"
+        )
+        assert res.status_code == 200
+        await db.refresh(workflowB)
+        assert workflowB.is_starred is True
+
+        res = await client.post(
+            f"api/v2/project/{project.id}/workflow/{workflowD.id}/star/"
+        )
+        assert res.status_code == 200
+        await db.refresh(workflowD)
+        assert workflowD.is_starred is True
+
+        res = await client.get(f"api/v2/project/{project.id}/workflow/")
+        assert [wf["id"] for wf in res.json()] == [
+            # first starred, then others
+            # alphabetic order
+            workflowB.id,
+            workflowD.id,
+            workflowA.id,
+            workflowC.id,
+        ]
+
+        # UNSTAR
+        res = await client.post(
+            f"api/v2/project/{project.id}/workflow/{workflowD.id}/unstar/"
+        )
+        assert res.status_code == 200
+        await db.refresh(workflowD)
+        assert workflowD.is_starred is False
+
+        res = await client.get(f"api/v2/project/{project.id}/workflow/")
+        assert [wf["id"] for wf in res.json()] == [
+            workflowB.id,
+            workflowA.id,
+            workflowC.id,
+            workflowD.id,
+        ]

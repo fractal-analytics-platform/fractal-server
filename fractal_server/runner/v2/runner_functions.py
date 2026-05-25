@@ -34,7 +34,7 @@ from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
 
-from .db_tools import update_status_of_history_unit
+from .db_tools import update_status_of_history_unit_no_commit
 from .deduplicate_list import deduplicate_list
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
@@ -136,7 +136,7 @@ def _process_init_task_output(
     )
 
 
-def _check_parallelization_list_size(my_list):
+def _check_parallelization_list_size(my_list) -> None:
     if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
         raise JobExecutionError(
             "Too many parallelization items.\n"
@@ -255,11 +255,12 @@ def run_task_non_parallel(
     # tasks it was already handled within submit
     if outcome[0].invalid_output:
         with next(get_sync_db()) as db:
-            update_status_of_history_unit(
+            update_status_of_history_unit_no_commit(
                 history_unit_id=history_unit_id,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
+            db.commit()
     return outcome, num_tasks
 
 
@@ -307,7 +308,7 @@ def run_task_parallel(
     list_task_files = enrich_task_files_multisubmit(
         base_task_files=task_files,
         tot_tasks=len(images),
-        batch_size=runner_config.batch_size,
+        batch_size=runner_config.batch_size_or_zero,
     )
 
     history_units = [
@@ -359,7 +360,7 @@ def run_task_parallel(
         user_id=user_id,
     )
 
-    outcome = {}
+    outcome: dict[int, SubmissionOutcome] = {}
     for ind in range(len(list_function_kwargs)):
         if ind not in results.keys() and ind not in exceptions.keys():
             error_msg = (
@@ -377,11 +378,12 @@ def run_task_parallel(
         # tasks it was already handled within multisubmit
         if outcome[ind].invalid_output:
             with next(get_sync_db()) as db:
-                update_status_of_history_unit(
+                update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_ids[ind],
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
                 )
+                db.commit()
     num_tasks = len(images)
     return outcome, num_tasks
 
@@ -498,11 +500,12 @@ def run_task_compound(
 
     if len(parallelization_list) == 0:
         with next(get_sync_db()) as db:
-            update_status_of_history_unit(
+            update_status_of_history_unit_no_commit(
                 history_unit_id=init_history_unit_id,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
+            db.commit()
         positional_index = 0
         init_outcome = {
             positional_index: _process_task_output(
@@ -527,7 +530,7 @@ def run_task_compound(
             task_name=wftask.task.name,
         ),
         tot_tasks=len(parallelization_list),
-        batch_size=runner_config_compute.batch_size,
+        batch_size=runner_config_compute.batch_size_or_zero,
     )
 
     list_function_kwargs = [

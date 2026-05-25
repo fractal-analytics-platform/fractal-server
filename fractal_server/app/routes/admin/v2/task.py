@@ -67,7 +67,7 @@ async def query_tasks(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[dict[str, Any]]:
+) -> dict[str, Any]:
     """
     Query `TaskV2` and get information about related workflows and projects.
     """
