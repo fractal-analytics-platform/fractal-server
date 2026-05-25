@@ -41,6 +41,7 @@ class HistoryUnitStatusWithUnset(StrEnum):
 class HistoryUnitRead(BaseModel):
     id: int
     logfile: str | None = None
+    has_warnings: bool
     status: HistoryUnitStatus
     zarr_urls: list[str]
 
