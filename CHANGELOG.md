@@ -1,17 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.22.13
 
 * API:
     * Improve validation of task-group paths (\#3342, \#3344).
+* Database:
+    * Introduce `ProjectV2.description` (\#3341).
 
 # 2.22.12
 
 * API:
     * Rename `user_id` into `project_owner_id` in `GET /admin/v2/job/` (\#3338).
     * Add `job_user_email` query parameter in `GET /admin/v2/job/` (\#3338).
-* Database:
-    * Introduce `ProjectV2.description` (\#3341).
 * Runner:
     * Always set `FRACTAL_CACHE_DIR` environment variable in task execution (\#3337).
     * Update `FRACTAL_CACHE_DIR` from `.fractal_cache"` to `"fractal/.fractal_cache"` (\#3337).
