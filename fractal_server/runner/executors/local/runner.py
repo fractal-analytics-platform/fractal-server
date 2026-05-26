@@ -38,9 +38,7 @@ def _has_warnings(history_unit_id: int, db: Session) -> bool:
     grep = subprocess.run(  # nosec
         ["grep", "-i", "WARNING", "-q", history_unit.logfile]
     )
-    if grep.returncode == 0:
-        return True
-    return False
+    return grep.returncode == 0
 
 
 def run_single_task(

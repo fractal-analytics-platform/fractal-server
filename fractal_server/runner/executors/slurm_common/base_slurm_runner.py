@@ -523,6 +523,33 @@ class BaseSlurmRunner(BaseRunner):
         history_unit_id: int,
         was_job_scancelled: bool = False,
     ) -> tuple[Any, Exception | None, bool]:
+        """
+        Postprocess the output of a single completed Slurm task.
+
+        Returns:
+            A tuple with the following elements:
+
+            - result:
+                The task result, if the task completed successfully, read
+                from the task output file.
+                If the task failed, or if postprocessing itself failed, this is
+                `None`.
+
+            - exception:
+                If the task failed in a controlled way, this is a
+                `TaskExecutionError` wrapping the traceback produced by the
+                task.
+                If postprocessing failed or if job was scancelled, this is a
+                `JobExecutionError`.
+                Otherwise this is `None`.
+
+            - has_warnings:
+                `True` if the task completed successfully or failed in a
+                controlled way and the associated HistoryUnit log file
+                contains at least one warning.
+                `False` if no warnings were found, or if postprocessing failed
+                before warnings could be checked.
+        """
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
@@ -534,9 +561,7 @@ class BaseSlurmRunner(BaseRunner):
             grep = subprocess.run(  # nosec
                 ["grep", "-i", "WARNING", "-q", history_unit.logfile]
             )
-            has_warnings = False
-            if grep.returncode == 0:
-                has_warnings = True
+            has_warnings = grep.returncode == 0
 
             if success:
                 # Task succeeded
