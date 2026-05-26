@@ -26,6 +26,7 @@ def local_runner(
         profile=profile,
         fractal_job_id=99,
         user_cache_dir=(tmp_path / "fractal/.fractal_cache").as_posix(),
+        resource_id=99,
     ) as r:
         yield r
 

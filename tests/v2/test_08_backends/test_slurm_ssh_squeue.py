@@ -28,6 +28,7 @@ async def test_run_squeue(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         # Start a long SLURM job
         stdout = fractal_ssh.run_command(

@@ -48,10 +48,10 @@ async def test_submit_success(
     history_mock_for_submit,
     task_type: str,
     valid_user_id,
-    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_objects[:]
+    res, prof = slurm_ssh_resource_profile_db[:]
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
@@ -68,6 +68,7 @@ async def test_submit_success(
         resource=res,
         profile=prof,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -123,10 +124,10 @@ async def test_submit_fail(
     history_mock_for_submit,
     task_type: str,
     valid_user_id,
-    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_objects[:]
+    res, prof = slurm_ssh_resource_profile_db[:]
 
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
 
@@ -143,6 +144,7 @@ async def test_submit_fail(
         resource=res,
         profile=prof,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -185,11 +187,11 @@ async def test_multisubmit_parallel(
     tmp777_path,
     fractal_ssh,
     history_mock_for_multisubmit,
-    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     valid_user_id,
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_objects[:]
+    res, prof = slurm_ssh_resource_profile_db[:]
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -201,6 +203,7 @@ async def test_multisubmit_parallel(
         resource=res,
         profile=prof,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -250,11 +253,11 @@ async def test_multisubmit_compound(
     tmp777_path,
     fractal_ssh,
     history_mock_for_multisubmit,
-    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     valid_user_id,
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_objects[:]
+    res, prof = slurm_ssh_resource_profile_db[:]
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
@@ -266,6 +269,7 @@ async def test_multisubmit_compound(
         resource=res,
         profile=prof,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
     ) as runner:
         list_task_files = [
             get_dummy_task_files(
@@ -325,7 +329,7 @@ async def test_multisubmit_compound(
 def test_send_many_job_inputs_failure(
     tmp777_path: Path,
     fractal_ssh,
-    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     fractal_job_id_mock,
 ):
     root_dir_local = tmp777_path / "server"
@@ -333,7 +337,7 @@ def test_send_many_job_inputs_failure(
     root_dir_remote = tmp777_path / "user"
     dummy_file = root_dir_local / "foo.txt"
     dummy_file.touch()
-    res, prof = slurm_ssh_resource_profile_objects[:]
+    res, prof = slurm_ssh_resource_profile_db[:]
 
     with SlurmSSHRunner(
         fractal_ssh=fractal_ssh,
@@ -343,6 +347,7 @@ def test_send_many_job_inputs_failure(
         resource=res,
         profile=prof,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
     ) as runner:
         # Set connection to None, so that all SSH-related `fractal_ssh`
         # methods will fail

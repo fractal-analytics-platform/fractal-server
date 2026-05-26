@@ -77,6 +77,7 @@ async def test_validate_slurm_jobs_workdirs(tmp_path: Path):
         user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        resource_id=999,
     ) as runner:
         runner.validate_slurm_jobs_workdirs(jobs_ok)
         with pytest.raises(ValueError, match="Non-unique"):
@@ -92,6 +93,7 @@ async def test_check_no_active_jobs(tmp_path: Path):
         user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        resource_id=999,
     ) as runner:
         # Success
         runner._check_no_active_jobs()
@@ -117,6 +119,7 @@ async def test_not_implemented_errors(tmp_path: Path):
         user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        resource_id=999,
     ) as runner:
         with pytest.raises(NotImplementedError):
             runner._run_local_cmd(cmd="ls")
@@ -181,6 +184,7 @@ Try 'ls --help' for more information.
         user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        resource_id=999,
     ) as runner:
         runner.run_squeue = patched_run_squeue
 
@@ -286,6 +290,7 @@ async def test_extract_slurm_error_and_set_executor_error_log(tmp_path: Path):
         user_cache_dir=(tmp_path / "cache").as_posix(),
         slurm_runner_type="sudo",
         python_worker_interpreter=sys.executable,
+        resource_id=999,
     ) as runner:
         # Test _extract_slurm_error for individual jobs
         error1 = runner._extract_slurm_error(job1)

@@ -1,5 +1,4 @@
 import pytest
-from devtools import debug
 
 from fractal_server.runner.executors.slurm_sudo.runner import SlurmSudoRunner
 
@@ -9,17 +8,17 @@ async def test_check_fractal_server_versions_executable(
     tmp777_path,
     monkey_slurm,
     monkeypatch,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
 ):
-    debug(slurm_sudo_resource_profile_objects)
-
+    resource, profile = slurm_sudo_resource_profile_db[:]
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
         root_dir_remote=tmp777_path / "user",
         user_cache_dir=(tmp777_path / "cache").as_posix(),
-        resource=slurm_sudo_resource_profile_objects[0],
-        profile=slurm_sudo_resource_profile_objects[1],
+        resource=resource,
+        profile=profile,
         fractal_job_id=99,
+        resource_id=resource.id,
     ) as runner:
         # Successful check
         runner.check_fractal_server_versions()

@@ -89,6 +89,7 @@ def process_workflow(
         resource=resource,
         profile=profile,
         fractal_job_id=job_id,
+        resource_id=resource.id,
         user_cache_dir=user_cache_dir,
     ) as runner:
         execute_tasks(
