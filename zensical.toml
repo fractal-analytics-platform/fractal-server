@@ -10,7 +10,7 @@ extra_css = ["extra.css"]
 
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
-inventories = ["https://docs.python.org/3/objects.inv"]
+inventories = ["https://docs.python.org/3/objects.inv", "https://docs.pydantic.dev/latest/objects.inv"]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 backlinks = "tree"
