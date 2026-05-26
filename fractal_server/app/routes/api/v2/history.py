@@ -100,8 +100,18 @@ async def get_history_run_list(
     if not runs:
         return []
 
-    # Add units count by status
     run_ids = [run.id for run in runs]
+    count_map = {
+        run_id: {
+            "num_done_units": 0,
+            "num_submitted_units": 0,
+            "num_failed_units": 0,
+            "num_units_with_warnings": 0,
+        }
+        for run_id in run_ids
+    }
+
+    # Add units count by status
     stm = (
         select(
             HistoryUnit.history_run_id,
@@ -114,16 +124,20 @@ async def get_history_run_list(
     res = await db.execute(stm)
     unit_counts = res.all()
 
-    count_map = {
-        run_id: {
-            "num_done_units": 0,
-            "num_submitted_units": 0,
-            "num_failed_units": 0,
-        }
-        for run_id in run_ids
-    }
     for run_id, unit_status, count in unit_counts:
         count_map[run_id][f"num_{unit_status}_units"] = count
+
+    stm = (
+        select(HistoryUnit.history_run_id, func.count(HistoryUnit.id))
+        .where(HistoryUnit.history_run_id.in_(run_ids))
+        .where(HistoryUnit.has_warnings.is_(True))
+        .group_by(HistoryUnit.history_run_id)
+    )
+    res = await db.execute(stm)
+    warning_counts = res.all()
+
+    for run_id, count in warning_counts:
+        count_map[run_id]["num_units_with_warnings"] = count
 
     res = await db.execute(
         select(
@@ -137,7 +151,6 @@ async def get_history_run_list(
             )
         )
     )
-
     task_args = {
         _id: {
             "version": version,
