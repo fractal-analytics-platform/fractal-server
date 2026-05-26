@@ -656,7 +656,7 @@ oauth = [
 
 [[package]]
 name = "fractal-server"
-version = "2.22.11"
+version = "2.22.13"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },

@@ -1,7 +1,7 @@
 """add HistoryUnit.has_warnings
 
 Revision ID: 635d07f1ab55
-Revises: c0448884a8e9
+Revises: 1ef3722b998f
 Create Date: 2026-05-25 10:05:31.756452
 
 """
@@ -11,7 +11,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "635d07f1ab55"
-down_revision = "c0448884a8e9"
+down_revision = "1ef3722b998f"
 branch_labels = None
 depends_on = None
 
