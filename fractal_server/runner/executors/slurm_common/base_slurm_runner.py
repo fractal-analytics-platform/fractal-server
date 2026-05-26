@@ -35,6 +35,7 @@ from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
 from fractal_server.runner.v2.db_tools import (
     update_status_of_history_unit_no_commit,
 )
+from fractal_server.types import JSONType
 
 from ._batching import _verify_batch_sizes
 from ._job_states import STATES_FINISHED
@@ -522,7 +523,7 @@ class BaseSlurmRunner(BaseRunner):
         task: SlurmTask,
         history_unit_id: int,
         was_job_scancelled: bool = False,
-    ) -> tuple[Any, Exception | None, bool]:
+    ) -> tuple[JSONType, Exception | None, bool]:
         """
         Postprocess the output of a single completed Slurm task.
 

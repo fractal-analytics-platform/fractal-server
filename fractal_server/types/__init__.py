@@ -1,5 +1,6 @@
 from typing import Annotated
 from typing import Any
+from typing import TypeAlias
 from typing import Union
 
 from pydantic import AfterValidator
@@ -209,4 +210,12 @@ ImageTypes = Annotated[
 ]
 """
 Image types.
+"""
+
+
+JSONType: TypeAlias = (
+    dict[str, "JSONType"] | list["JSONType"] | str | int | float | bool | None
+)
+"""
+Type of a JSON document.
 """
