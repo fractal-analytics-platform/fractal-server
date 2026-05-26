@@ -1,3 +1,4 @@
+import subprocess  # nosec
 from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -34,14 +35,17 @@ def update_status_of_history_unit_no_commit(
     history_unit_id: int,
     status: HistoryUnitStatus,
     db_sync: Session,
-    has_warnings: bool | None = None,
+    update_warnings: bool = False,
 ) -> None:
     unit = db_sync.get(HistoryUnit, history_unit_id)
     if unit is None:
         raise ValueError(f"HistoryUnit {history_unit_id} not found.")
     unit.status = status
-    if has_warnings is not None:
-        unit.has_warnings = has_warnings
+    if update_warnings:
+        grep = subprocess.run(  # nosec
+            ["grep", "-i", "WARNING", "-q", unit.logfile]
+        )
+        unit.has_warnings = grep.returncode == 0
     db_sync.merge(unit)
     db_sync.flush()
 

@@ -1,5 +1,4 @@
 import json
-import subprocess  # nosec
 import sys
 import time
 from pathlib import Path
@@ -13,7 +12,6 @@ from pydantic import ConfigDict
 from fractal_server import __VERSION__
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecordSlurm
-from fractal_server.app.models.v2.history import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
@@ -521,9 +519,8 @@ class BaseSlurmRunner(BaseRunner):
         self,
         *,
         task: SlurmTask,
-        history_unit_id: int,
         was_job_scancelled: bool = False,
-    ) -> tuple[JSONType, Exception | None, bool]:
+    ) -> tuple[JSONType, Exception | None]:
         """
         Postprocess the output of a single completed Slurm task.
 
@@ -543,31 +540,16 @@ class BaseSlurmRunner(BaseRunner):
                 If postprocessing failed or if job was scancelled, this is a
                 `JobExecutionError`.
                 Otherwise this is `None`.
-
-            - has_warnings:
-                `True` if the task completed successfully or failed in a
-                controlled way and the associated HistoryUnit log file
-                contains at least one warning.
-                `False` if no warnings were found, or if postprocessing failed
-                before warnings could be checked.
         """
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
             success = output[0]
 
-            with next(get_sync_db()) as db:
-                history_unit = db.get_one(HistoryUnit, history_unit_id)
-
-            grep = subprocess.run(  # nosec
-                ["grep", "-i", "WARNING", "-q", history_unit.logfile]
-            )
-            has_warnings = grep.returncode == 0
-
             if success:
                 # Task succeeded
                 result = output[1]
-                return (result, None, has_warnings)
+                return (result, None)
             else:
                 # Task failed in a controlled way, and produced an `output`
                 # object which is a dictionary with required keys
@@ -586,7 +568,7 @@ class BaseSlurmRunner(BaseRunner):
                     workflow_task_order=task.workflow_task_order,
                     task_name=task.task_name,
                 )
-                return (None, exception, has_warnings)
+                return (None, exception)
 
         except Exception as e:
             exception = JobExecutionError(f"ERROR, {str(e)}")
@@ -598,7 +580,7 @@ class BaseSlurmRunner(BaseRunner):
                     f"for {task.index=}."
                 )
                 exception = SHUTDOWN_EXCEPTION
-            return (None, exception, False)
+            return (None, exception)
         finally:
             Path(task.input_file_local).unlink(missing_ok=True)
             Path(task.output_file_local).unlink(missing_ok=True)
@@ -830,20 +812,17 @@ class BaseSlurmRunner(BaseRunner):
                         logger.debug(f"[submit] Now process {slurm_job_id=}")
                         slurm_job = self.jobs.pop(slurm_job_id)
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
-                        result, exception, has_warnings = (
-                            self._postprocess_single_task(
-                                task=slurm_job.tasks[0],
-                                was_job_scancelled=was_job_scancelled,
-                                history_unit_id=history_unit_id,
-                            )
+                        result, exception = self._postprocess_single_task(
+                            task=slurm_job.tasks[0],
+                            was_job_scancelled=was_job_scancelled,
                         )
 
                         if exception is not None:
                             update_status_of_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
-                                has_warnings=has_warnings,
                                 db_sync=db,
+                                update_warnings=True,
                             )
                         else:
                             if task_type not in [
@@ -853,8 +832,8 @@ class BaseSlurmRunner(BaseRunner):
                                 update_status_of_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
-                                    has_warnings=has_warnings,
                                     db_sync=db,
+                                    update_warnings=True,
                                 )
                         db.commit()
 
@@ -1089,7 +1068,6 @@ class BaseSlurmRunner(BaseRunner):
                     for task in slurm_job.tasks:
                         logger.debug(f"[multisubmit] Now process {task.index=}")
                         was_job_scancelled = slurm_job_id in scancelled_job_ids
-                        has_warnings = None
                         if fetch_artifacts_exception is not None:
                             result = None
                             exception = fetch_artifacts_exception
@@ -1098,13 +1076,9 @@ class BaseSlurmRunner(BaseRunner):
                                 (
                                     result,
                                     exception,
-                                    has_warnings,
                                 ) = self._postprocess_single_task(
                                     task=task,
                                     was_job_scancelled=was_job_scancelled,
-                                    history_unit_id=history_unit_ids[
-                                        task.index
-                                    ],
                                 )
                             except Exception as e:
                                 logger.error(
@@ -1125,8 +1099,8 @@ class BaseSlurmRunner(BaseRunner):
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.FAILED,
-                                    has_warnings=has_warnings,
                                     db_sync=db,
+                                    update_warnings=True,
                                 )
                         else:
                             results[task.index] = result
@@ -1136,8 +1110,8 @@ class BaseSlurmRunner(BaseRunner):
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.DONE,
-                                    has_warnings=has_warnings,
                                     db_sync=db,
+                                    update_warnings=True,
                                 )
                 db.commit()
             if len(self.jobs) > 0:
