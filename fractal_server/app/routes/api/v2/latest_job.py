@@ -168,7 +168,7 @@ async def get_latest_job(
         )
         res = await db.execute(stm)
         warnings_count = res.scalar()
-        setattr(statuses[wftask.id], "num_warnings_images", warnings_count)
+        setattr(statuses[wftask.id], "num_images_with_warnings", warnings_count)
 
     # Set `num_available_images=None` for cases where it would be
     # smaller than `num_total_images`
