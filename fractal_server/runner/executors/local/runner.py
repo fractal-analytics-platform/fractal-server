@@ -1,4 +1,5 @@
 import json
+import subprocess  # nosec
 from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -6,9 +7,12 @@ from typing import Any
 from typing import Self
 from typing import override
 
+from sqlalchemy.orm import Session
+
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.models.v2.history import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.logger import set_logger
@@ -27,6 +31,16 @@ from fractal_server.runner.v2.db_tools import (
 )
 
 logger = set_logger(__name__)
+
+
+def _has_warnings(history_unit_id: int, db: Session) -> bool:
+    history_unit = db.get_one(HistoryUnit, history_unit_id)
+    grep = subprocess.run(  # nosec
+        ["grep", "-i", "WARNING", "-q", history_unit.logfile]
+    )
+    if grep.returncode == 0:
+        return True
+    return False
 
 
 def run_single_task(
@@ -166,6 +180,7 @@ class LocalRunner(BaseRunner):
                 return None, exception
 
         # RETRIEVAL PHASE
+
         with next(get_sync_db()) as db:
             try:
                 result = future.result()
@@ -177,6 +192,7 @@ class LocalRunner(BaseRunner):
                     update_status_of_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.DONE,
+                        has_warnings=_has_warnings(history_unit_id, db),
                         db_sync=db,
                     )
                 return result, None
@@ -185,6 +201,7 @@ class LocalRunner(BaseRunner):
                 update_status_of_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
+                    has_warnings=_has_warnings(history_unit_id, db),
                     db_sync=db,
                 )
                 return None, TaskExecutionError(str(e))
@@ -323,6 +340,9 @@ class LocalRunner(BaseRunner):
                                 update_status_of_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.DONE,
+                                    has_warnings=_has_warnings(
+                                        current_history_unit_id, db
+                                    ),
                                     db_sync=db,
                                 )
 
@@ -339,6 +359,9 @@ class LocalRunner(BaseRunner):
                                 update_status_of_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.FAILED,
+                                    has_warnings=_has_warnings(
+                                        current_history_unit_id, db
+                                    ),
                                     db_sync=db,
                                 )
                     db.commit()
