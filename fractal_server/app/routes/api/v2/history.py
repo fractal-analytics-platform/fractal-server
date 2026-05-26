@@ -134,9 +134,9 @@ async def get_history_run_list(
         .group_by(HistoryUnit.history_run_id)
     )
     res = await db.execute(stm)
-    warning_counts = res.all()
+    warnings_count = res.all()
 
-    for run_id, count in warning_counts:
+    for run_id, count in warnings_count:
         count_map[run_id]["num_units_with_warnings"] = count
 
     res = await db.execute(
