@@ -116,6 +116,7 @@ class TaskStatusImages(BaseModel):
     num_submitted_images: int = 0
     num_done_images: int = 0
     num_failed_images: int = 0
+    num_warnings_images: int = 0
     num_available_images: int | None = 0
 
 

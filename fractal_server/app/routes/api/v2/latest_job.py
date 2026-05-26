@@ -156,6 +156,20 @@ async def get_latest_job(
                 statuses[wftask.id], f"num_{target_status}_images", num_images
             )
 
+        stm = (
+            select(func.count(HistoryImageCache.zarr_url))
+            .join(
+                HistoryUnit,
+                HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
+            )
+            .where(HistoryImageCache.dataset_id == dataset_id)
+            .where(HistoryImageCache.workflowtask_id == wftask.id)
+            .where(HistoryUnit.has_warnings.is_(True))
+        )
+        res = await db.execute(stm)
+        warnings_count = res.scalar()
+        setattr(statuses[wftask.id], "num_warnings_images", warnings_count)
+
     # Set `num_available_images=None` for cases where it would be
     # smaller than `num_total_images`
     statuses_update = {}
