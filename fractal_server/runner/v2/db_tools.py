@@ -22,9 +22,7 @@ def update_status_of_history_run(
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-    run = db_sync.get(HistoryRun, history_run_id)
-    if run is None:
-        raise ValueError(f"HistoryRun {history_run_id} not found.")
+    run = db_sync.get_one(HistoryRun, history_run_id)
     run.status = status
     db_sync.merge(run)
     db_sync.commit()
@@ -37,9 +35,7 @@ def update_status_of_history_unit_no_commit(
     db_sync: Session,
     update_warnings: bool = False,
 ) -> None:
-    unit = db_sync.get(HistoryUnit, history_unit_id)
-    if unit is None:
-        raise ValueError(f"HistoryUnit {history_unit_id} not found.")
+    unit = db_sync.get_one(HistoryUnit, history_unit_id)
     unit.status = status
     if update_warnings:
         grep = subprocess.run(  # nosec
