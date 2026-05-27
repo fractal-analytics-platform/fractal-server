@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Require `starlette>=1.0.1` (\#XXXX).
+
 # 2.22.14
 
 * Database:
