@@ -57,14 +57,14 @@ def _load_logging_config(config_env: str) -> None:
         _fractal_logger._EXTERNAL_CONFIG_ERROR = str(_e)
         print(
             f"[fractal-server] WARNING: failed to load "
-            f"FRACTAL_LOGGING_CONFIG={config_env!r}: {_e}. "
+            f"LOG_CONFIG_FILE={config_env!r}: {_e}. "
             f"Falling back to built-in logging.",
             file=sys.stderr,
         )
 
 
-# Load logging configuration from YAML file if FRACTAL_LOGGING_CONFIG is set
-_logging_config_env = os.environ.get("FRACTAL_LOGGING_CONFIG")
+# Load logging configuration from YAML file if LOG_CONFIG_FILE is set
+_logging_config_env = os.environ.get("LOG_CONFIG_FILE")
 if _logging_config_env:
     _load_logging_config(_logging_config_env)
 

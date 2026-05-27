@@ -3,7 +3,7 @@
 # Unreleased
 
 * Logging:
-    * Add `FRACTAL_LOGGING_CONFIG` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored.
+    * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored.
 
 # 2.23.7
 
