@@ -2,6 +2,7 @@ import time
 
 import pytest
 from devtools import debug
+from sqlalchemy.exc import NoResultFound
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
@@ -113,7 +114,9 @@ async def test_update_status_of_history_unit(
         )
 
         # Test failure due to wrong primary key
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(
+            NoResultFound, match="No row was found when one was required"
+        ):
             update_history_unit_no_commit(
                 history_unit_id=1111111111,
                 status=HistoryUnitStatus.FAILED,
