@@ -30,9 +30,7 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import (
-    update_status_of_history_unit_no_commit,
-)
+from fractal_server.runner.v2.db_tools import update_history_unit_no_commit
 from fractal_server.types import JSONType
 
 from ._batching import _verify_batch_sizes
@@ -723,7 +721,7 @@ class BaseSlurmRunner(BaseRunner):
 
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
-                    update_status_of_history_unit_no_commit(
+                    update_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
@@ -818,22 +816,20 @@ class BaseSlurmRunner(BaseRunner):
                         )
 
                         if exception is not None:
-                            update_status_of_history_unit_no_commit(
+                            update_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
-                                update_warnings=True,
                             )
                         else:
                             if task_type not in [
                                 TaskType.COMPOUND,
                                 TaskType.CONVERTER_COMPOUND,
                             ]:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
-                                    update_warnings=True,
                                 )
                         db.commit()
 
@@ -848,7 +844,7 @@ class BaseSlurmRunner(BaseRunner):
                 f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                update_status_of_history_unit_no_commit(
+                update_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
@@ -1094,24 +1090,22 @@ class BaseSlurmRunner(BaseRunner):
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
-                                    update_warnings=True,
                                 )
                         else:
                             results[task.index] = result
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
-                                    update_warnings=True,
                                 )
                 db.commit()
             if len(self.jobs) > 0:

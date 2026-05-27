@@ -28,20 +28,18 @@ def update_status_of_history_run(
     db_sync.commit()
 
 
-def update_status_of_history_unit_no_commit(
+def update_history_unit_no_commit(
     *,
     history_unit_id: int,
     status: HistoryUnitStatus,
     db_sync: Session,
-    update_warnings: bool = False,
 ) -> None:
     unit = db_sync.get_one(HistoryUnit, history_unit_id)
     unit.status = status
-    if update_warnings:
-        grep = subprocess.run(  # nosec
-            ["grep", "-i", "WARNING", "-q", unit.logfile]
-        )
-        unit.has_warnings = grep.returncode == 0
+    grep = subprocess.run(  # nosec
+        ["grep", "-i", "WARNING", "-q", unit.logfile]
+    )
+    unit.has_warnings = grep.returncode == 0
     db_sync.merge(unit)
     db_sync.flush()
 
