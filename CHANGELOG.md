@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.22.14 (unreleased)
+# 2.22.14
 
 * Database:
   * Add `AccountingRecordSlurm.resource_id` (\#3353).
