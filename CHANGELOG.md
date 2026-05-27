@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Database:
+    * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
+
 # 2.22.14
 
 * Database:
