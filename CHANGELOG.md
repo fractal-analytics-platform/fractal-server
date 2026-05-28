@@ -3,7 +3,7 @@
 # Unreleased
 
 * Dependencies:
-    * Require `starlette>=1.0.1` (\#XXXX).
+    * Require `starlette>=1.0.1` (\#3356)
 
 # 2.22.14
 
