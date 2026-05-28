@@ -29,6 +29,7 @@ from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.status_tools import enrich_images_unsorted_async
+from fractal_server.images.status_tools import enrich_images_with_warning_flag
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
@@ -293,14 +294,22 @@ async def get_history_images(
         attribute_filters=request_body.attribute_filters,
     )
 
+    # (5) Add `has_warnings`
+    final_images_with_warnings = await enrich_images_with_warning_flag(
+        dataset_id=dataset_id,
+        workflowtask_id=workflowtask_id,
+        images=final_images_with_status,
+        db=db,
+    )
+
     logger.debug(f"{prefix} {len(dataset.images)=}")
-    logger.debug(f"{prefix} {len(final_images_with_status)=}")
+    logger.debug(f"{prefix} {len(final_images_with_warnings)=}")
 
     # (5) Apply pagination logic
-    total_count = len(final_images_with_status)
+    total_count = len(final_images_with_warnings)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
-        final_images_with_status,
+        final_images_with_warnings,
         key=lambda image: image["zarr_url"],
     )
     paginated_images_list = sorted_images_list[

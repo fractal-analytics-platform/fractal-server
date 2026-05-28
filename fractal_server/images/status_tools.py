@@ -179,3 +179,13 @@ def enrich_images_unsorted_sync(
     )
 
     return output
+
+
+async def enrich_images_with_warning_flag(
+    *,
+    images: list[dict[str, Any]],
+    dataset_id: int,
+    workflowtask_id: int,
+    db: AsyncSession,
+) -> list[dict[str, Any]]:
+    return [{"has_warnings": True, **image} for image in images]

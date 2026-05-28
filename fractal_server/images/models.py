@@ -36,10 +36,12 @@ class SingleImageTaskOutput(SingleImageBase):
 
 class SingleImage(SingleImageBase):
     """
-    `SingleImageBase`, with scalar `attributes` values (`None` excluded).
+    `SingleImageBase`, with scalar `attributes` values (`None` excluded) and
+    `has_warnings` boolean flag.
     """
 
     attributes: ImageAttributes = Field(default_factory=dict)
+    has_warnings: bool
 
 
 class SingleImageUpdate(BaseModel):
