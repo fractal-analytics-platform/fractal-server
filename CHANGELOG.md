@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Database:
+    * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
 * Dependencies:
     * Require `starlette>=1.0.1` (\#3356)
 

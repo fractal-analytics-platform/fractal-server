@@ -49,4 +49,5 @@ class AccountingRecordSlurm(SQLModel, table=True):
         foreign_key="resource.id",
         nullable=True,
         default=None,
+        ondelete="SET NULL",
     )
