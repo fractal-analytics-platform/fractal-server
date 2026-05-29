@@ -27,6 +27,7 @@ def n_images(n: int) -> list[dict]:
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
+            has_warnings=False,
         ).model_dump()
         for i in range(n)
     ]
@@ -404,7 +405,8 @@ async def test_dataset_import(
     ZARR_SUBFOLDER = "something"
     IMAGES = [
         SingleImage(
-            zarr_url=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}/image1"
+            zarr_url=f"{PROJECT_DIR}/{ZARR_SUBFOLDER}/image1",
+            has_warnings=False,
         ).model_dump()
     ]
     EXPECTED_ATTRIBUTE_FILTERS = dict(key1=["value1"])

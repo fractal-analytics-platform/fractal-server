@@ -556,6 +556,7 @@ async def test_get_history_images(
                     "well": f"well-{i}",
                     "a_or_b": "a",
                 },
+                has_warnings=False,
             ).model_dump()
             for i in range(5)
         ]
@@ -567,6 +568,7 @@ async def test_get_history_images(
                     "well": f"well-{i}",
                     "a_or_b": "b",
                 },
+                has_warnings=False,
             ).model_dump()
             for i in range(5)
         ]

@@ -25,6 +25,7 @@ async def test_verify_image_types(
                 zarr_url=f"{ZARR_DIR}/{index}",
                 attributes={"well": well},
                 types=types,
+                has_warnings=False,
             ).model_dump()
         )
         index += 1
@@ -35,6 +36,7 @@ async def test_verify_image_types(
                 zarr_url=f"{ZARR_DIR}/{index}",
                 attributes={"well": well},
                 types=types,
+                has_warnings=False,
             ).model_dump()
         )
         index += 1
@@ -45,6 +47,7 @@ async def test_verify_image_types(
                 zarr_url=f"{ZARR_DIR}/{index}",
                 attributes={"well": well},
                 types=types,
+                has_warnings=False,
             ).model_dump()
         )
         index += 1
@@ -55,6 +58,7 @@ async def test_verify_image_types(
                 zarr_url=f"{ZARR_DIR}/{index}",
                 attributes={"well": well},
                 types={"bad_type_3": bad_type_3},
+                has_warnings=False,
             ).model_dump()
         )
         index += 1
@@ -173,12 +177,14 @@ async def test_check_non_processed_images(
                 SingleImage(
                     zarr_url=f"/zarr_dir/{i}",
                     types={"my_type": bool(i % 2)},
+                    has_warnings=False,
                 ).model_dump()
                 for i in range(n)
             ]
             + [
                 SingleImage(
                     zarr_url="/another/image.zarr",
+                    has_warnings=False,
                 ).model_dump()
             ],
         )

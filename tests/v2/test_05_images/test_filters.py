@@ -13,6 +13,7 @@ IMAGES = [
             plate="plate.zarr",
             well="A01",
         ),
+        has_warnings=False,
     ),
     SingleImage(
         zarr_url="/tmp/plate.zarr/A/02/0",
@@ -21,6 +22,7 @@ IMAGES = [
             plate="plate.zarr",
             well="A02",
         ),
+        has_warnings=False,
     ),
     SingleImage(
         zarr_url="/tmp/plate.zarr/A/01/0_corr",
@@ -32,6 +34,7 @@ IMAGES = [
             plate="plate.zarr",
             well="A01",
         ),
+        has_warnings=False,
     ),
     SingleImage(
         zarr_url="/tmp/plate.zarr/A/02/0_corr",
@@ -43,6 +46,7 @@ IMAGES = [
             plate="plate.zarr",
             well="A02",
         ),
+        has_warnings=False,
     ),
     SingleImage(
         zarr_url="/tmp/plate_2d.zarr/A/01/0_corr",
@@ -54,6 +58,7 @@ IMAGES = [
             plate="plate_2d.zarr",
             well="A01",
         ),
+        has_warnings=False,
     ),
     SingleImage(
         zarr_url="/tmp/plate_2d.zarr/A/02/0_corr",
@@ -65,6 +70,7 @@ IMAGES = [
             plate="plate_2d.zarr",
             well="A02",
         ),
+        has_warnings=False,
     ),
 ]
 IMAGES = [img.model_dump() for img in IMAGES]
@@ -83,14 +89,16 @@ def test_singleimage_attributes_validation():
 
     for item in invalid:
         with pytest.raises(ValidationError):
-            SingleImage(zarr_url="/xyz", attributes={"key": item})
+            SingleImage(
+                zarr_url="/xyz", attributes={"key": item}, has_warnings=False
+            )
 
     valid = ["string", -7, 3.14, True]
     for item in valid:
         assert (
-            SingleImage(zarr_url="/xyz", attributes={"key": item}).attributes[
-                "key"
-            ]
+            SingleImage(
+                zarr_url="/xyz", attributes={"key": item}, has_warnings=False
+            ).attributes["key"]
             == item
         )
 
