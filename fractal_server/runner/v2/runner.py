@@ -380,6 +380,7 @@ def execute_tasks(
                         new_image = dict(
                             zarr_url=image["zarr_url"],
                             origin=image["origin"],
+                            has_warnings=image["has_warnings"],
                         )
                     # Update attributes
                     new_attributes.update(image["attributes"])
@@ -421,6 +422,7 @@ def execute_tasks(
                     new_image = dict(
                         zarr_url=image["zarr_url"],
                         origin=image["origin"],
+                        has_warnings=image["has_warnings"],
                         attributes=new_attributes,
                         types=new_types,
                     )
