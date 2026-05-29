@@ -156,43 +156,36 @@ def test_SingleImage():
             "string": "abc",
             "bool": True,
         },
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"null": None},
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"list": ["l", "i", "s", "t"]},
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"dict": {"d": "i", "c": "t"}},
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"function": lambda x: x},
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"type": int},
-        has_warnings=False,
     )
     image_fail(
         model=SingleImage,
         zarr_url="/x",
         attributes={"repeated": 1, " repeated": 2},
-        has_warnings=False,
     )
 
 

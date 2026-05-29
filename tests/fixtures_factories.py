@@ -89,7 +89,6 @@ async def dataset_factory(db: AsyncSession, tmp_path):
             name="My Dataset",
             project_id=1,
             zarr_dir=f"{tmp_path}/zarr",
-            has_warnings=False,
         )
         args = dict(**defaults)
         args.update(kwargs)

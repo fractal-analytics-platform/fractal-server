@@ -30,7 +30,6 @@ def dummy_image_list(N):
             zarr_url=f"/tmp_{i}_small",
             attributes=dict(a1=(i % 2), a2="a2", a3="whoknows"),
             types=dict(t1=bool(i % 4)),
-            has_warnings=False,
         ).model_dump()
         for i in range(N)
     ]
@@ -77,7 +76,6 @@ def test_filter_image_list_few_filters(
                 zarr_url=f"/tmp_{ind_image}",
                 types=dict(a=True),
                 attributes=dict(b=1),
-                has_warnings=False,
             )
             for ind_time_slice in range(10)
             for ind_image in range(100)
@@ -87,7 +85,6 @@ def test_filter_image_list_few_filters(
                 zarr_url=f"/tmp_{ind_image}",
                 types=dict(a=True),
                 attributes=dict(b=1),
-                has_warnings=False,
             )
             for ind_image in range(1_000)
         ],
