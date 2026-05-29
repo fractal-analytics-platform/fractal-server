@@ -42,14 +42,6 @@ class SingleImage(SingleImageBase):
     attributes: ImageAttributes = Field(default_factory=dict)
 
 
-class SingleImageWithWarnings(SingleImage):
-    """
-    `SingleImage`, with `has_warnings` boolean flag.
-    """
-
-    has_warnings: bool
-
-
 class SingleImageUpdate(BaseModel):
     zarr_url: ZarrUrlStr
     attributes: ImageAttributes = None

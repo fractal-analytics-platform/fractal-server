@@ -238,6 +238,7 @@ async def get_history_images(
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
+    include_warnings: bool = False,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -294,13 +295,14 @@ async def get_history_images(
         attribute_filters=request_body.attribute_filters,
     )
 
-    # (5) Add `has_warnings`
-    final_images_with_warnings = await enrich_images_with_warning_flag(
-        dataset_id=dataset_id,
-        workflowtask_id=workflowtask_id,
-        images=final_images_with_status,
-        db=db,
-    )
+    if include_warnings:
+        # (5) Add `has_warnings`
+        final_images_with_warnings = await enrich_images_with_warning_flag(
+            dataset_id=dataset_id,
+            workflowtask_id=workflowtask_id,
+            images=final_images_with_status,
+            db=db,
+        )
 
     logger.debug(f"{prefix} {len(dataset.images)=}")
     logger.debug(f"{prefix} {len(final_images_with_warnings)=}")

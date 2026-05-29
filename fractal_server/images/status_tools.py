@@ -179,33 +179,3 @@ def enrich_images_unsorted_sync(
     )
 
     return output
-
-
-async def enrich_images_with_warning_flag(
-    *,
-    images: list[dict[str, Any]],
-    dataset_id: int,
-    workflowtask_id: int,
-    db: AsyncSession,
-) -> list[dict[str, Any]]:
-    stm = (
-        select(HistoryImageCache.zarr_url)
-        .where(
-            HistoryImageCache.zarr_url.in_(
-                [image["zarr_url"] for image in images]
-            )
-        )
-        .where(HistoryImageCache.dataset_id == dataset_id)
-        .where(HistoryImageCache.workflowtask_id == workflowtask_id)
-        .join(
-            HistoryUnit,
-            HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
-        )
-        .where(HistoryUnit.has_warnings.is_(True))
-    )
-    res = await db.execute(stm)
-    zarr_urls = res.scalars().all()
-    return [
-        {"has_warnings": (image["zarr_url"] in zarr_urls), **image}
-        for image in images
-    ]

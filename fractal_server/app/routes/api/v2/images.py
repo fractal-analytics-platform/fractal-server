@@ -22,7 +22,6 @@ from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
-from fractal_server.images import SingleImageWithWarnings
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -39,6 +38,14 @@ router = APIRouter()
 class ImagePage(PaginationResponse[SingleImage]):
     attributes: dict[str, list[ImageAttributeValue]]
     types: list[str]
+
+
+class SingleImageWithWarnings(SingleImage):
+    """
+    `SingleImage`, with `has_warnings` boolean flag.
+    """
+
+    has_warnings: bool | None = None
 
 
 class ImagePageWithWarnings(PaginationResponse[SingleImageWithWarnings]):
