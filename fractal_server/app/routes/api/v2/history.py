@@ -297,21 +297,23 @@ async def get_history_images(
 
     if include_warnings:
         # (5) Add `has_warnings`
-        final_images_with_warnings = await enrich_images_with_warning_flag(
+        final_images = await enrich_images_with_warning_flag(
             dataset_id=dataset_id,
             workflowtask_id=workflowtask_id,
             images=final_images_with_status,
             db=db,
         )
+    else:
+        final_images = final_images_with_status
 
     logger.debug(f"{prefix} {len(dataset.images)=}")
-    logger.debug(f"{prefix} {len(final_images_with_warnings)=}")
+    logger.debug(f"{prefix} {len(final_images)=}")
 
     # (5) Apply pagination logic
-    total_count = len(final_images_with_warnings)
+    total_count = len(final_images)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
-        final_images_with_warnings,
+        final_images,
         key=lambda image: image["zarr_url"],
     )
     paginated_images_list = sorted_images_list[
