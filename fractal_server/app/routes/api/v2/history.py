@@ -40,7 +40,7 @@ from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import get_wftask_check_access
 from ._aux_functions_history import read_log_file
-from .images import ImagePage
+from .images import ImagePageWithWarnings
 from .images import ImageQuery
 
 
@@ -231,7 +231,7 @@ async def get_history_run_units(
 
 @router.post(
     "/project/{project_id}/status/images/",
-    response_model=ImagePage,
+    response_model=ImagePageWithWarnings,
 )
 async def get_history_images(
     project_id: int,
