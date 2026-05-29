@@ -29,10 +29,10 @@ from fractal_server.app.schemas.v2 import ImageLogsRequest
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.status_tools import enrich_images_unsorted_async
-from fractal_server.images.status_tools import enrich_images_with_warning_flag
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
+from fractal_server.images.warnings_tools import enrich_images_with_warning_flag
 from fractal_server.logger import set_logger
 
 from ._aux_functions_history import _verify_workflow_and_dataset_access
