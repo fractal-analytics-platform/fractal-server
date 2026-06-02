@@ -82,6 +82,15 @@ def set_logger(
     `log_file_path` (if set); all these handlers have severity level set to
     `logging.DEBUG`.
 
+    Note on external logging config (`LOG_CONFIG_FILE`):
+    When an external config is loaded (`_EXTERNAL_CONFIG_LOADED` is `True`),
+    the `StreamHandler` setup is always skipped (the external config owns the
+    logging hierarchy). However, if `log_file_path` is provided, the
+    `FileHandler` is **still added** unconditionally. This is because certain
+    log files (e.g. ``workflow.log``, task-collection logs) are functional
+    artifacts that are read back into the database — they must always be
+    written regardless of how application logging is configured.
+
     Args:
         logger_name: The identifier of the logger.
         log_file_path: Path to the log file.
@@ -90,7 +99,7 @@ def set_logger(
     Returns:
         logger: The logger, as configured by the arguments.
     """
-    if _EXTERNAL_CONFIG_LOADED:
+    if _EXTERNAL_CONFIG_LOADED and log_file_path is None:
         return logging.getLogger(logger_name)
 
     logger = logging.getLogger(logger_name)
@@ -103,7 +112,7 @@ def set_logger(
         if isinstance(handler, logging.StreamHandler)
     ]
 
-    if not current_stream_handlers:
+    if not _EXTERNAL_CONFIG_LOADED and not current_stream_handlers:
         stream_handler = logging.StreamHandler()
         if default_logging_level is None:
             settings = Inject(get_settings)
@@ -147,6 +156,11 @@ def close_logger(logger: logging.Logger) -> None:
         logger: The actual logger
     """
     if _EXTERNAL_CONFIG_LOADED:
+        # Only close FileHandlers; StreamHandlers are managed by the external
+        # config and must not be touched.
+        for handle in list(logger.handlers):
+            if isinstance(handle, logging.FileHandler):
+                handle.close()
         return
     for handle in logger.handlers:
         handle.close()
@@ -160,6 +174,12 @@ def reset_logger_handlers(logger: logging.Logger) -> None:
         logger: The actual logger
     """
     if _EXTERNAL_CONFIG_LOADED:
+        # Only remove FileHandlers; StreamHandlers are managed by the external
+        # config and must not be touched.
+        for handle in list(logger.handlers):
+            if isinstance(handle, logging.FileHandler):
+                handle.close()
+                logger.handlers.remove(handle)
         return
     close_logger(logger)
     logger.handlers.clear()
