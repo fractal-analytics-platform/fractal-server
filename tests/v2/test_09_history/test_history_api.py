@@ -650,6 +650,17 @@ async def test_get_history_images(
         assert res["total_count"] == 10
         assert set(res["types"]) == {"x", "is_b"}
         assert set(res["attributes"]) == {"well", "a_or_b", IMAGE_STATUS_KEY}
+        assert all(item["has_warnings"] is None for item in res["items"])
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&include_warnings=true",
+            json={},
+        )
+        assert all(
+            item["has_warnings"] is not None for item in res.json()["items"]
+        )
 
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(

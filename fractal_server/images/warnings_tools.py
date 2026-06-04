@@ -6,7 +6,7 @@ from sqlmodel import select
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryUnit
 
-IMAGE_HAS_WARNINGS_KEY = "__wftask_dataset_image_has_warnings__"
+IMAGE_HAS_WARNINGS_KEY = "has_warnings"
 
 
 async def enrich_images_with_warning_flag(
