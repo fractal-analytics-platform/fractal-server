@@ -272,6 +272,13 @@ async def test_get_history_run_list(
             status="done",
         )
 
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/"
+            f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        assert res.json() == []
+
         hr1 = HistoryRun(
             dataset_id=dataset.id,
             workflowtask_id=wftask1.id,
