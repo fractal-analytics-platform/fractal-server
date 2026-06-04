@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
+from sqlmodel import select
 from sqlmodel import update
 
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -42,6 +43,36 @@ def update_history_unit_no_commit(
     unit.has_warnings = grep.returncode == 0
     db_sync.merge(unit)
     db_sync.flush()
+
+
+def bulk_update_has_warnings_history_unit(
+    *,
+    history_unit_ids: list[int],
+    db_sync: Session,
+) -> None:
+    ids_logfiles = db_sync.execute(
+        select(HistoryUnit.id, HistoryUnit.logfile).where(
+            HistoryUnit.id.in_(history_unit_ids)
+        )
+    ).all()
+    units_with_warnings = [
+        _id
+        for _id, logfile in ids_logfiles
+        if subprocess.run(  # nosec
+            ["grep", "-i", "WARNING", "-q", logfile]
+        ).returncode
+        == 0
+    ]
+    len_units_with_warnings = len(units_with_warnings)
+    for ind in range(0, len_units_with_warnings, _CHUNK_SIZE):
+        db_sync.execute(
+            update(HistoryUnit)
+            .where(
+                HistoryUnit.id.in_(units_with_warnings[ind : ind + _CHUNK_SIZE])
+            )
+            .values(has_warnings=True)
+        )
+    db_sync.commit()
 
 
 def bulk_update_status_of_history_unit(
