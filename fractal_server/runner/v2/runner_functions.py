@@ -607,20 +607,16 @@ def run_task_compound(
     with next(get_sync_db()) as db:
         all_history_unit_ids = history_unit_ids + [init_history_unit_id]
         # Update has_warnings
-        history_units = (
-            db.execute(
-                select(HistoryUnit).where(
-                    HistoryUnit.id.in_(all_history_unit_ids)
-                )
+        ids_logfiles = db.execute(
+            select(HistoryUnit.id, HistoryUnit.logfile).where(
+                HistoryUnit.id.in_(all_history_unit_ids)
             )
-            .scalars()
-            .all()
-        )
+        ).all()
         units_with_warnings = [
-            history_unit.id
-            for history_unit in history_units
+            _id
+            for _id, logfile in ids_logfiles
             if subprocess.run(  # nosec
-                ["grep", "-i", "WARNING", "-q", history_unit.logfile]
+                ["grep", "-i", "WARNING", "-q", logfile]
             ).returncode
             == 0
         ]
