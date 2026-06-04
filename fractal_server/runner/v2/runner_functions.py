@@ -1,3 +1,4 @@
+import subprocess  # nosec
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -5,6 +6,8 @@ from typing import Protocol
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import HistoryUnit
@@ -602,15 +605,41 @@ def run_task_compound(
     # to enforce the fact that either all units succeed or they all fail -
     # at a difference with the parallel-task case.
     with next(get_sync_db()) as db:
+        all_history_unit_ids = history_unit_ids + [init_history_unit_id]
+        # Update has_warnings
+        history_units = (
+            db.execute(
+                select(HistoryUnit).where(
+                    HistoryUnit.id.in_(all_history_unit_ids)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        units_with_warnings = [
+            history_unit.id
+            for history_unit in history_units
+            if subprocess.run(  # nosec
+                ["grep", "-i", "WARNING", "-q", history_unit.logfile]
+            ).returncode
+            == 0
+        ]
+        db.execute(
+            update(HistoryUnit)
+            .where(HistoryUnit.id.in_(units_with_warnings))
+            .values(has_warnings=True)
+        )
+        db.commit()
+        # update status
         if failure:
             bulk_update_status_of_history_unit(
-                history_unit_ids=history_unit_ids + [init_history_unit_id],
+                history_unit_ids=all_history_unit_ids,
                 status=HistoryUnitStatus.FAILED,
                 db_sync=db,
             )
         else:
             bulk_update_status_of_history_unit(
-                history_unit_ids=history_unit_ids + [init_history_unit_id],
+                history_unit_ids=all_history_unit_ids,
                 status=HistoryUnitStatus.DONE,
                 db_sync=db,
             )
