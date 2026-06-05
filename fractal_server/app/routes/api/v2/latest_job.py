@@ -10,14 +10,17 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import HistoryImageCache
 from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import HistoryUnit
+from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2.workflowtask import WorkflowTaskV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2.job import JobWithTaskStatuses
 from fractal_server.app.schemas.v2.job import TaskStatusImages
 from fractal_server.app.schemas.v2.job import TaskStatusSimple
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_dataset_check_access
@@ -156,19 +159,41 @@ async def get_latest_job(
                 statuses[wftask.id], f"num_{target_status}_images", num_images
             )
 
-        stm = (
-            select(func.count(HistoryImageCache.zarr_url))
-            .join(
-                HistoryUnit,
-                HistoryImageCache.latest_history_unit_id == HistoryUnit.id,
-            )
-            .where(HistoryImageCache.dataset_id == dataset_id)
-            .where(HistoryImageCache.workflowtask_id == wftask.id)
-            .where(HistoryUnit.has_warnings.is_(True))
+        res = await db.execute(
+            select(TaskV2.type)
+            .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+            .where(WorkflowTaskV2.id == wftask.id)
         )
+        task_type: TaskType = res.scalar_one()
+
+        match task_type:
+            case TaskType.COMPOUND | TaskType.CONVERTER_COMPOUND:
+                stm = (
+                    select(HistoryUnit)
+                    .where(HistoryUnit.has_warnings.is_(True))
+                    .join(
+                        HistoryRun, HistoryRun.id == HistoryUnit.history_run_id
+                    )
+                    .where(HistoryRun.dataset_id == dataset_id)
+                    .where(HistoryRun.workflowtask_id == wftask.id)
+                    .limit(1)
+                )
+            case _:
+                stm = (
+                    select(HistoryImageCache)
+                    .join(
+                        HistoryUnit,
+                        HistoryImageCache.latest_history_unit_id
+                        == HistoryUnit.id,
+                    )
+                    .where(HistoryImageCache.dataset_id == dataset_id)
+                    .where(HistoryImageCache.workflowtask_id == wftask.id)
+                    .where(HistoryUnit.has_warnings.is_(True))
+                    .limit(1)
+                )
         res = await db.execute(stm)
-        warnings_count = res.scalar()
-        setattr(statuses[wftask.id], "num_images_with_warnings", warnings_count)
+        has_warnings = res.one_or_none() is not None
+        setattr(statuses[wftask.id], "has_warnings", has_warnings)
 
     # Set `num_available_images=None` for cases where it would be
     # smaller than `num_total_images`

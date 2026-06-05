@@ -271,7 +271,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
-            "num_images_with_warnings": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[1]): {
             "status": "done",
@@ -279,7 +279,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
-            "num_images_with_warnings": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[2]): {
             "status": "submitted",
@@ -287,7 +287,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
-            "num_images_with_warnings": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[3]): {
             "status": "submitted",
@@ -295,7 +295,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
-            "num_images_with_warnings": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[4]): {"status": "submitted"},
         str(wftask_ids[5]): None,
@@ -414,7 +414,7 @@ async def test_get_latest_job_image_counters(
                 "num_done_images": 1,
                 "num_submitted_images": 1,
                 "num_failed_images": 1,
-                "num_images_with_warnings": 2,
+                "has_warnings": True,
             },
             str(wftask2.id): None,
         }
@@ -436,7 +436,7 @@ async def test_get_latest_job_image_counters(
                 "num_submitted_images": 1,
                 "num_done_images": 1,
                 "num_failed_images": 1,
-                "num_images_with_warnings": 2,
+                "has_warnings": True,
             },
             "2": None,
         }

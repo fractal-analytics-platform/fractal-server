@@ -117,7 +117,7 @@ class TaskStatusImages(BaseModel):
     num_done_images: int = 0
     num_failed_images: int = 0
     num_available_images: int | None = 0
-    num_images_with_warnings: int = 0
+    has_warnings: bool = False
 
 
 class JobWithTaskStatuses(JobRead):
