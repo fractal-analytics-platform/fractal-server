@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import String
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -48,7 +49,9 @@ class TaskV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
-    version: str | None = None
+    version: str = Field(
+        sa_column=Column(String, server_default="0", nullable=False)
+    )
     args_schema_non_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )

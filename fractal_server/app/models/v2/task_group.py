@@ -51,7 +51,9 @@ class TaskGroupV2(SQLModel, table=True):
 
     origin: str
     pkg_name: str
-    version: str | None = None
+    version: str = Field(
+        sa_column=Column(String, server_default="0", nullable=False)
+    )
     python_version: str | None = None
     pixi_version: str | None = None
     path: str | None = None
@@ -117,11 +119,6 @@ class TaskGroupV2(SQLModel, table=True):
         if self.archive_path is not None:
             return f"{self.archive_path}{extras}"
         else:
-            if self.version is None:
-                raise ValueError(
-                    "Cannot run `pip_install_string` with "
-                    f"{self.pkg_name=}, {self.archive_path=}, {self.version=}."
-                )
             return f"{self.pkg_name}{extras}=={self.version}"
 
     @property
