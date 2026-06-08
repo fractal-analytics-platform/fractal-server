@@ -6,7 +6,6 @@ Create Date: 2026-06-08 08:51:51.443547
 
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -18,35 +17,23 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
-        batch_op.alter_column(
-            "version",
-            existing_type=sa.VARCHAR(),
-            nullable=False,
-            server_default="0",
-        )
-
+        batch_op.alter_column("version", server_default="0")
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
-        batch_op.alter_column(
-            "version",
-            existing_type=sa.VARCHAR(),
-            nullable=False,
-            server_default="0",
-        )
+        batch_op.alter_column("version", server_default="0")
+
+    with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
+        batch_op.alter_column("version", nullable=False)
+    with op.batch_alter_table("taskv2", schema=None) as batch_op:
+        batch_op.alter_column("version", nullable=False)
 
 
 def downgrade() -> None:
+    with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
+        batch_op.alter_column("version", nullable=True)
     with op.batch_alter_table("taskv2", schema=None) as batch_op:
-        batch_op.alter_column(
-            "version",
-            existing_type=sa.VARCHAR(),
-            nullable=True,
-            server_default=None,
-        )
+        batch_op.alter_column("version", nullable=True)
 
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
-        batch_op.alter_column(
-            "version",
-            existing_type=sa.VARCHAR(),
-            nullable=True,
-            server_default=None,
-        )
+        batch_op.alter_column("version", server_default=None)
+    with op.batch_alter_table("taskv2", schema=None) as batch_op:
+        batch_op.alter_column("version", server_default=None)
