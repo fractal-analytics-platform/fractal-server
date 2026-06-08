@@ -130,9 +130,9 @@ async def test_import_export(
         first_task_no_source = await task_factory(
             user_id=user.id,
             name="cellpose_segmentation",
+            version="0",
             task_group_kwargs=dict(
                 pkg_name="fractal-tasks-core",
-                version="0",
                 active=False,
             ),
         )
@@ -174,9 +174,9 @@ async def test_import_export(
         await task_factory(
             user_id=user.id,
             name="cellpose_segmentation",
+            version="1",
             task_group_kwargs=dict(
                 user_id=user.id,
-                version=None,
                 user_group_id=new_group.id,
                 pkg_name="fractal-tasks-core",
             ),
@@ -207,7 +207,7 @@ async def test_import_flexibility(
 ):
     async with MockCurrentUser() as user:
         # Collect the tasks
-        for version in ["1.0.0", "0.1.0", None]:
+        for version in ["1.0.0", "0.1.0"]:
             await task_factory(
                 user_id=user.id,
                 name="task_name",
@@ -830,6 +830,7 @@ async def test_import_multiple_task_groups_same_version(
         async def fake_disambiguate_task_groups_2(*args, **kwargs):
             return TaskGroupRead(
                 id=99999,
+                version="0",
                 user_email="fake@example.org",
                 task_list=[],
                 origin="other",
