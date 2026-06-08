@@ -51,9 +51,7 @@ class TaskGroupV2(SQLModel, table=True):
 
     origin: str
     pkg_name: str
-    version: str = Field(
-        sa_column=Column(String, server_default="0", nullable=False)
-    )
+    version: str
     python_version: str | None = None
     pixi_version: str | None = None
     path: str | None = None
