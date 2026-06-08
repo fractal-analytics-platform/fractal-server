@@ -29,6 +29,7 @@ async def test_task_collection_custom(
             label="label",
             package_root=None,
             package_name=package_name,
+            version="1",
         )
 
         # Fail because no package is installed in sys.executable
@@ -69,6 +70,7 @@ async def test_task_collection_custom(
             manifest=manifest,
             python_interpreter=python_bin,
             label="label3",
+            version="1",
             package_root=package_root,
             package_name=None,
         )
@@ -136,6 +138,7 @@ async def test_task_collection_custom_fail_with_ssh(
                 manifest=ManifestV2(**manifest_dict),
                 python_interpreter="/may/not/exist",
                 label="label",
+                version="1",
                 package_root=None,
                 package_name="c",
             ).model_dump(),
