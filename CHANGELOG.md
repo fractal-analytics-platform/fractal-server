@@ -2,8 +2,11 @@
 
 # Unreleased
 
+* API:
+    * Make version a required parameter upon creation of tasks or task groups (\#3357).
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
+    * Make `version` a non-nullable column of task/task-group tables (\#3357).
 * Dependencies:
     * Require `starlette>=1.0.1` (\#3356)
 
