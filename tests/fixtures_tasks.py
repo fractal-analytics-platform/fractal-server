@@ -75,6 +75,7 @@ def fractal_tasks_mock_collection(
         package_manifest=manifest,
         python_bin=venv_python,
         package_root=package_root,
+        package_version="0",
     )
 
     return dict(
