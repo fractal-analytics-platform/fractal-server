@@ -22,6 +22,9 @@ def upgrade() -> None:
             "version",
             existing_type=sa.VARCHAR(),
             nullable=False,
+        )
+        batch_op.alter_column(
+            "version",
             server_default="0",
         )
 
@@ -30,6 +33,9 @@ def upgrade() -> None:
             "version",
             existing_type=sa.VARCHAR(),
             nullable=False,
+        )
+        batch_op.alter_column(
+            "version",
             server_default="0",
         )
 
