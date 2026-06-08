@@ -146,7 +146,9 @@ class TaskUpdate(BaseModel):
 
 class TaskImport(BaseModel):
     """
-    FIXME: Explain `version=None` meaning.
+    Importing a task with `version=None` always fails, and can be used by
+    the client to discover available versions of task groups with a given
+    `pkg_name` and with a task with name `name`.
     """
 
     model_config = ConfigDict(extra="forbid")
