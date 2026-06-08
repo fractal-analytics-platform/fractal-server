@@ -100,7 +100,7 @@ async def test_deactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
-        assert activity["version"] == "N/A"
+        assert activity["version"] == "something"
         assert activity["status"] == TaskGroupActivityStatus.OK
         assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
@@ -201,7 +201,7 @@ async def test_reactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
-        assert activity["version"] == "N/A"
+        assert activity["version"] == "something"
         assert activity["status"] == TaskGroupActivityStatus.OK
         assert activity["action"] == TaskGroupActivityAction.REACTIVATE
         assert activity["timestamp_started"] is not None

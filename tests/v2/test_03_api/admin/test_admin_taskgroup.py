@@ -416,7 +416,7 @@ async def test_admin_deactivate_task_group_api(
         assert res.status_code == 202
         activity = res.json()
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
-        assert activity["version"] == "N/A"
+        assert activity["version"] == "none"
         assert activity["status"] == TaskGroupActivityStatus.OK
         assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
