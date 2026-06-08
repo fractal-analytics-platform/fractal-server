@@ -126,6 +126,7 @@ async def test_post_task(
         # Successful task creations
         task = TaskCreate(
             name="task_name",
+            version="0",
             # Compound
             command_parallel="task_command_parallel",
             command_non_parallel="task_command_non_parallel",
@@ -144,7 +145,7 @@ async def test_post_task(
         assert res.json()["command_parallel"] == task.command_parallel
         assert res.json()["meta_non_parallel"] == {}
         assert res.json()["meta_parallel"] == {}
-        assert res.json()["version"] is None
+        assert res.json()["version"] == "0"
         assert res.json()["args_schema_non_parallel"] is None
         assert res.json()["args_schema_parallel"] is None
         assert res.json()["args_schema_version"] is None
@@ -160,6 +161,7 @@ async def test_post_task(
         task = TaskCreate(
             name="task_name",
             command_parallel="task_command_parallel",
+            version="0",
         )
         res = await client.post(
             f"{PREFIX}/", json=task.model_dump(exclude_unset=True)
@@ -169,6 +171,7 @@ async def test_post_task(
 
         task = TaskCreate(
             name="task_name2",
+            version="0",
             # Parallel
             command_parallel="task_command_parallel",
         )
@@ -179,6 +182,7 @@ async def test_post_task(
         assert res.json()["type"] == "parallel"
         task = TaskCreate(
             name="task_name3",
+            version="0",
             # Non Parallel
             command_non_parallel="task_command_non_parallel",
         )
@@ -198,6 +202,7 @@ async def test_post_task(
         f"{PREFIX}/",
         json=dict(
             name="name",
+            version="0",
             command_parallel="cmd",
             args_schema_non_parallel={"a": "b"},
         ),
@@ -208,6 +213,7 @@ async def test_post_task(
         f"{PREFIX}/",
         json=dict(
             name="name",
+            version="0",
             command_parallel="cmd",
             meta_non_parallel={"a": "b"},
         ),
@@ -219,6 +225,7 @@ async def test_post_task(
         f"{PREFIX}/",
         json=dict(
             name="name",
+            version="0",
             command_non_parallel="cmd",
             args_schema_parallel={"a": "b"},
         ),
@@ -229,6 +236,7 @@ async def test_post_task(
         f"{PREFIX}/",
         json=dict(
             name="name",
+            version="0",
             command_non_parallel="cmd",
             meta_parallel={"a": "b"},
         ),
@@ -254,7 +262,7 @@ async def test_post_task_user_group_id(
     await db.commit()
     await db.refresh(team1_group)
 
-    args = dict(command_non_parallel="cmd", type="non_parallel")
+    args = dict(version="0", command_non_parallel="cmd", type="non_parallel")
 
     async with MockCurrentUser(profile_id=profile.id):
         # No query parameter
@@ -311,7 +319,10 @@ async def test_patch_task_auth(
     async with MockCurrentUser(profile_id=profile.id) as user_A:
         user_A_id = user_A.id
         payload_obj = TaskCreate(
-            name="a", category="my-cat", command_parallel="c"
+            name="a",
+            category="my-cat",
+            command_parallel="c",
+            version="0",
         )
         res = await client.post(
             f"{PREFIX}/", json=payload_obj.model_dump(exclude_unset=True)

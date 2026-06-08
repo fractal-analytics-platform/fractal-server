@@ -124,6 +124,7 @@ async def test_TaskCollectCustom(testdata_path):
         label="b",
         package_root="  /somewhere  ",
         package_name=None,
+        version="0",
     )
     # Check that trailing whitespace characters were removed
     assert collection.python_interpreter == "/some/python"

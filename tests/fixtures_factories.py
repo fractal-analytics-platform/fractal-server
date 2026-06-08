@@ -287,7 +287,7 @@ async def task_factory(db: AsyncSession):
             "converter_non_parallel",
         ] = "compound",
         name: str | None = None,
-        version: str | None = None,
+        version: str = "0",
         **kwargs,
     ) -> TaskV2:
         args = dict(
