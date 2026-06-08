@@ -17,13 +17,13 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table("taskgroupv2") as batch_op:
-        batch_op.alter_column("version", server_default="0")
+        batch_op.alter_column("version", default="0")
     with op.batch_alter_table("taskv2") as batch_op:
-        batch_op.alter_column("version", server_default="0")
+        batch_op.alter_column("version", default="0")
 
 
 def downgrade() -> None:
     with op.batch_alter_table("taskgroupv2") as batch_op:
-        batch_op.alter_column("version", server_default=None)
+        batch_op.alter_column("version", default=None)
     with op.batch_alter_table("taskv2") as batch_op:
-        batch_op.alter_column("version", server_default=None)
+        batch_op.alter_column("version", default=None)
