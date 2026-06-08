@@ -113,7 +113,7 @@ async def test_TaskCollectCustom(testdata_path):
             label="name",
             package_root=None,
             package_name=None,
-            version=None,
+            version="none",
         )
     assert "One and only one must be set" in str(e.value)
 
