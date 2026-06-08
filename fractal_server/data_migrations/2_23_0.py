@@ -1,12 +1,14 @@
 import logging
 
 from packaging.version import parse
-from sqlalchemy import select
+from sqlalchemy import update
 
 import fractal_server
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
+
+__VERSION_DEFAULT__ = "0"
 
 
 def fix_db():
@@ -26,17 +28,16 @@ def fix_db():
         )
 
     with next(get_sync_db()) as db:
-        res = db.execute(select(TaskV2).where(TaskV2.version.is_(None)))
-        for task in res.scalars().all():
-            task.version = "0"
-            db.add(task)
-
-        res = db.execute(
-            select(TaskGroupV2).where(TaskGroupV2.version.is_(None))
+        db.execute(
+            update(TaskV2)
+            .where(TaskV2.version.is_(None))
+            .values(version=__VERSION_DEFAULT__)
         )
-        for taskgroup in res.scalars().all():
-            taskgroup.version = "0"
-            db.add(taskgroup)
+        db.execute(
+            update(TaskGroupV2)
+            .where(TaskGroupV2.version.is_(None))
+            .values(version=__VERSION_DEFAULT__)
+        )
         db.commit()
 
     logger.warning("END of execution of fix_db function")
