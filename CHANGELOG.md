@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.23.0 (unreleased)
 
 * API:
     * Make version a required parameter upon creation of tasks or task groups (\#3357).
