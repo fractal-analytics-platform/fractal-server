@@ -76,7 +76,7 @@ class TaskGroupRead(BaseModel):
 
     origin: TaskGroupOriginEnum
     pkg_name: str
-    version: str | None = None
+    version: str
     python_version: str | None = None
     pixi_version: str | None = None
     path: str | None = None

@@ -276,7 +276,7 @@ async def _verify_non_duplication_user_constraint(
     db: AsyncSession,
     user_id: int,
     pkg_name: str,
-    version: str | None,
+    version: str,
     user_resource_id: int,
 ) -> None:
     stm = (
@@ -306,7 +306,7 @@ async def _verify_non_duplication_group_constraint(
     db: AsyncSession,
     user_group_id: int | None,
     pkg_name: str,
-    version: str | None,
+    version: str,
 ) -> None:
     if user_group_id is None:
         return

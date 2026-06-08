@@ -24,6 +24,11 @@ class ProjectDump(BaseModel):
 
 
 class TaskDump(BaseModel):
+    """
+    We keep `version: str | None` to support task dumps created in previous
+    versions (where version was nullable).
+    """
+
     id: int
     name: str
     type: TaskType
@@ -76,6 +81,11 @@ class DatasetDump(BaseModel):
 
 
 class TaskGroupDump(BaseModel):
+    """
+    We keep `version: str | None` to support task dumps created in previous
+    versions (where version was nullable).
+    """
+
     id: int
     origin: TaskGroupOriginEnum
     pkg_name: str
