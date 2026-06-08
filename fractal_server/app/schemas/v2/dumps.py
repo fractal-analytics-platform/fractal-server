@@ -25,8 +25,8 @@ class ProjectDump(BaseModel):
 
 class TaskDump(BaseModel):
     """
-    We keep `version: str | None` to support task dumps created in previous
-    versions (where version was nullable).
+    We keep `version: str | None` to support task dumps created with
+    fractal-server 2.22.* (where `version` was nullable).
     """
 
     id: int
@@ -82,8 +82,8 @@ class DatasetDump(BaseModel):
 
 class TaskGroupDump(BaseModel):
     """
-    We keep `version: str | None` to support task dumps created in previous
-    versions (where version was nullable).
+    We keep `version: str | None` to support task dumps created with
+    fractal-server 2.22.* (where `version` was nullable).
     """
 
     id: int
