@@ -4,6 +4,9 @@
 
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
+    * Add `HistoryUnit.has_warnings` (\#3351).
+* Schemas:
+    * Add `SingleImageWithWarnings` and `HistoryRunReadAggregated.num_units_with_warnings` (\#3351).
 * Dependencies:
     * Require `starlette>=1.0.1` (\#3356)
 
@@ -215,7 +218,7 @@ This fixes a minor bug introduced in 2.22.3.
     * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
-    * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
+    * Handle `TypeError` inside images `aggregate_attributes` method (\#322e3, \#3226).
     * Transform log-reading error log from error to warning in `read_log_file` (\#3236).
 * Database:
     * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).
