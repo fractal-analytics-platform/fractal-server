@@ -46,6 +46,11 @@ class HistoryUnitRead(BaseModel):
 
 
 class HistoryRunReadAggregated(BaseModel):
+    """
+    Note: version can be `None`, because `HistoryRun.task_id` is a nullable
+    foreign key.
+    """
+
     id: int
     timestamp_started: AwareDatetime
     workflowtask_dump: dict[str, Any]
@@ -54,7 +59,7 @@ class HistoryRunReadAggregated(BaseModel):
     num_failed_units: int
     args_schema_parallel: dict[str, Any] | None = None
     args_schema_non_parallel: dict[str, Any] | None = None
-    version: str
+    version: str | None = None
 
     @field_serializer("timestamp_started")
     def serialize_datetime(v: datetime) -> str:
