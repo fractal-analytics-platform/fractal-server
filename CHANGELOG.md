@@ -1,7 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.23.0
 
+
+> NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
+
+* Data migration:
+    * Replace `version=null` with `version="0"` for all tasks and task groups (\#3358).
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
 * Dependencies:
