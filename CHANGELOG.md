@@ -7,8 +7,12 @@
 * Database:
     * Make `version` a non-nullable column of task/task-group tables (\#3357).
 
-# 2.23.0 (unreleased)
+# 2.23.0
 
+> NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
+
+* Data migration:
+    * Replace `version=null` with `version="0"` for all tasks and task groups (\#3358).
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
 * Dependencies:
