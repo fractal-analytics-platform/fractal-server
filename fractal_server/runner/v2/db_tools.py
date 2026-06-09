@@ -1,5 +1,6 @@
 import shutil
 import subprocess  # nosec
+from functools import cache
 from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -16,6 +17,11 @@ from fractal_server.logger import set_logger
 _CHUNK_SIZE = 2_000
 
 logger = set_logger(__name__)
+
+
+@cache
+def _get_grep_path() -> str:
+    return shutil.which("grep")
 
 
 def update_status_of_history_run(
@@ -38,10 +44,10 @@ def update_history_unit_no_commit(
 ) -> None:
     unit = db_sync.get_one(HistoryUnit, history_unit_id)
     unit.status = status
-    grep = subprocess.run(  # nosec
-        ["grep", "-i", "WARNING", "-q", unit.logfile]
+    res = subprocess.run(  # nosec
+        [_get_grep_path(), "-i", "WARNING", "-q", unit.logfile]
     )
-    unit.has_warnings = grep.returncode == 0
+    unit.has_warnings = res.returncode == 0
     db_sync.merge(unit)
     db_sync.flush()
 
@@ -56,7 +62,7 @@ def bulk_update_has_warnings_history_unit(
             HistoryUnit.id.in_(history_unit_ids)
         )
     ).all()
-    grep_path = shutil.which("grep")
+    grep_path = _get_grep_path()
     units_with_warnings = [
         _id
         for _id, logfile in ids_logfiles
