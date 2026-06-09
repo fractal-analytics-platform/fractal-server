@@ -144,7 +144,15 @@ async def test_bulk_update_has_warnings_history_unit(
 ):
     warning_logfile = tmp_path / "warnings.log"
     with warning_logfile.open("w") as f:
-        f.write("This has WaRnInGs!")
+        for ind in range(10):
+            f.write(f"Some logs {ind}\n")
+        f.write("This has WaRnInGs!\n")
+        for ind in range(10):
+            f.write(f"Some more logs {ind}\n")
+    no_warning_logfile = tmp_path / "no_warnings.log"
+    with no_warning_logfile.open("w") as f:
+        for ind in range(10):
+            f.write(f"Some logs {ind}\n")
 
     async with MockCurrentUser() as user:
         task = await task_factory(user.id)
@@ -182,9 +190,13 @@ async def test_bulk_update_has_warnings_history_unit(
                     history_run_id=hr.id,
                     status=HistoryUnitStatus.DONE,
                     has_warnings=False,
-                    logfile=warning_logfile.as_posix(),
+                    logfile=(
+                        warning_logfile.as_posix()
+                        if unit_index % 2 == 0
+                        else no_warning_logfile.as_posix()
+                    ),
                 )
-                for _ in range(num_history_units)
+                for unit_index in range(num_history_units)
             ]
         )
         db_sync.commit()
@@ -203,8 +215,13 @@ async def test_bulk_update_has_warnings_history_unit(
 
         res = db_sync.execute(select(HistoryUnit))
         history_units = res.scalars().all()
-        assert all(
-            history_unit.has_warnings is True for history_unit in history_units
+        assert (
+            sum(
+                1
+                for history_unit in history_units
+                if history_unit.has_warnings is True
+            )
+            == len(history_units) // 2
         )
 
         # Benchmark
