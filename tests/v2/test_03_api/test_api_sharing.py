@@ -483,6 +483,7 @@ async def test_project_sharing_task_group_access(
                 name="Non Private Task",
                 command_non_parallel="cmd",
                 type="non_parallel",
+                version="0",
             ),
         )
         assert res.status_code == 201
@@ -497,6 +498,7 @@ async def test_project_sharing_task_group_access(
                 name="Private Task",
                 command_non_parallel="cmd",
                 type="non_parallel",
+                version="0",
             ),
         )
         assert res.status_code == 201
@@ -547,6 +549,7 @@ async def test_project_sharing_task_group_access(
                 name="Private Task",
                 command_non_parallel="cmd",
                 type="non_parallel",
+                version="0",
             ),
         )
         assert res.status_code == 201

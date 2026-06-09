@@ -195,6 +195,7 @@ async def test_user_group_crud(
         origin="pypi",
         pkg_name="fractal-tasks-core",
         resource_id=local_resource_profile_db[0].id,
+        version="0",
     )
     db.add(task_group)
     await db.commit()

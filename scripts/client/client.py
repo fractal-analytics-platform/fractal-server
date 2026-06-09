@@ -212,6 +212,7 @@ class FractalClient:
             name="Echo Task",
             command_non_parallel="echo",
             command_parallel="echo",
+            version="0",
         )
         res = self.make_request(
             endpoint="api/v2/task/",
@@ -223,8 +224,7 @@ class FractalClient:
 
     def add_failing_task(self):
         task = TaskCreate(
-            name="Ls Task",
-            command_non_parallel="ls",
+            name="Ls Task", command_non_parallel="ls", version="0"
         )
         res = self.make_request(
             endpoint="api/v2/task/",

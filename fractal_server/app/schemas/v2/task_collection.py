@@ -106,7 +106,7 @@ class TaskCollectCustom(BaseModel):
         package_name: Name of the package, as used for `import <package_name>`;
             this is then used to extract the package directory (`package_root`)
             via `pip show <package_name>`.
-        version: Optional version of tasks to be collected.
+        version: Version of tasks to be collected.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -115,7 +115,7 @@ class TaskCollectCustom(BaseModel):
     label: NonEmptyStr
     package_root: AbsolutePathStr | None = None
     package_name: NonEmptyStr | None = None
-    version: NonEmptyStr | None = None
+    version: NonEmptyStr
 
     @field_validator("package_name", mode="after")
     @classmethod

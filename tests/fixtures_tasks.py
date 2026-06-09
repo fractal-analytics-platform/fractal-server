@@ -75,6 +75,7 @@ def fractal_tasks_mock_collection(
         package_manifest=manifest,
         python_bin=venv_python,
         package_root=package_root,
+        package_version="0",
     )
 
     return dict(
@@ -105,6 +106,7 @@ def fractal_tasks_mock_db(
         user_id=first_user.id,
         resource_id=resource_id,
         user_group_id=default_user_group.id,
+        version="0",
     )
     task_group = TaskGroupV2(**task_group_obj.model_dump())
     db_sync.add(task_group)

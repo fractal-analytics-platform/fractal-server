@@ -92,7 +92,7 @@ async def deactivate_task_group(
             status=TaskGroupActivityStatus.OK,
             action=TaskGroupActivityAction.DEACTIVATE,
             pkg_name=task_group.pkg_name,
-            version=(task_group.version or "N/A"),
+            version=task_group.version,
             log=(
                 f"Task group has {task_group.origin=}, set "
                 "task_group.active to False and exit."
@@ -197,7 +197,7 @@ async def reactivate_task_group(
             status=TaskGroupActivityStatus.OK,
             action=TaskGroupActivityAction.REACTIVATE,
             pkg_name=task_group.pkg_name,
-            version=(task_group.version or "N/A"),
+            version=task_group.version,
             log=(
                 f"Task group has {task_group.origin=}, set "
                 "task_group.active to True and exit."
@@ -291,7 +291,7 @@ async def delete_task_group(
         status=TaskGroupActivityStatus.PENDING,
         action=TaskGroupActivityAction.DELETE,
         pkg_name=task_group.pkg_name,
-        version=(task_group.version or "N/A"),
+        version=task_group.version,
         timestamp_started=get_timestamp(),
         fractal_server_version=__VERSION__,
     )
