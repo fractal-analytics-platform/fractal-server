@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import BOOLEAN
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -69,4 +70,11 @@ class TaskV2(SQLModel, table=True):
     authors: str | None = None
     tags: list[str] = Field(
         sa_column=Column(JSONB, server_default="[]", nullable=False)
+    )
+    is_core: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        ),
     )
