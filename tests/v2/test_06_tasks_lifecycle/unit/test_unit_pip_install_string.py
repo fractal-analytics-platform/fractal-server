@@ -13,10 +13,6 @@ def test_pip_install_string():
         pkg_name="pkg", version="1.2.3", pip_extras="extra1,extra2"
     )
     assert tg.pip_install_string == "pkg[extra1,extra2]==1.2.3"
-    with pytest.raises(ValueError):
-        # Fail because version=None
-        tg = TaskGroupV2(pkg_name="pkg")
-        tg.pip_install_string
 
     # Wheel path is set
     tg = TaskGroupV2(archive_path="/tmp/x.whl", pkg_name="pkg", version="1.2.3")

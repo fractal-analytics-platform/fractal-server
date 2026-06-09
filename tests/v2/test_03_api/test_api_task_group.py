@@ -94,7 +94,7 @@ async def test_get_task_group_list(
             user_id=user2.id,
             task_group_kwargs=dict(
                 pkg_name="bbb",
-                version=None,
+                version="aaa-non-parsable",
             ),
         )
         await task_factory(
@@ -129,7 +129,7 @@ async def test_get_task_group_list(
             "1.0.0",
             "xxx",
             "abc",
-            None,
+            "aaa-non-parsable",
         ]
         for key in ["args_schema_non_parallel", "args_schema_parallel"]:
             assert task_groups_aaa[0]["task_list"][0][key] is not None

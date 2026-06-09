@@ -12,7 +12,7 @@ async def add_taskgroup(
     user_id: int,
     resource_id: int,
     pkg_name: str,
-    version: str | None = None,
+    version: str,
     path: str | None = None,
     user_group_id: int | None = None,
 ):
@@ -95,7 +95,7 @@ async def test_taskgroup_unique_contraints(
                 path=None,
                 user_group_id=None,
                 pkg_name="pkg_fancy_name",
-                version=None,
+                version="something",
                 user_id=u_id,
                 resource_id=slurm_resource.id,
                 db=db,

@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.1 (unreleased)
+
+* API:
+    * Make version a required parameter upon creation of tasks or task groups (\#3357).
+* Database:
+    * Make `version` a non-nullable column of task/task-group tables (\#3357).
+
 # 2.23.0
 
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).

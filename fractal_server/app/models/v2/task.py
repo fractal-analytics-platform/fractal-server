@@ -48,7 +48,7 @@ class TaskV2(SQLModel, table=True):
         sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
-    version: str | None = None
+    version: str
     args_schema_non_parallel: dict[str, Any] | None = Field(
         sa_column=Column(JSON), default=None
     )
