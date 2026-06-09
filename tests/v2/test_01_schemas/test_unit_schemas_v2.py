@@ -31,7 +31,7 @@ def test_extra_on_create_models():
         ProjectCreate(name="name", foo="bar")
 
     # Task
-    TaskCreate(name="name", command_parallel="cmd")
+    TaskCreate(name="name", command_parallel="cmd", version="0")
     with pytest.raises(ValidationError):
         TaskCreate(name="name", command_parallel="cmd", foo="bar")
 
@@ -50,6 +50,7 @@ def test_dictionary_keys_validation():
     args = dict(
         name="name",
         command_non_parallel="cmd",
+        version="0",
     )
     with pytest.raises(ValidationError):
         TaskCreate(**args, input_types={"": True})
@@ -66,7 +67,7 @@ def test_dictionary_keys_validation():
     with pytest.raises(
         ValidationError, match="Task must have at least one valid command"
     ):
-        TaskCreate(name="name")
+        TaskCreate(name="name", version="0")
 
 
 def test_task_collect_pip():

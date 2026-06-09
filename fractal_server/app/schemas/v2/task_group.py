@@ -44,7 +44,7 @@ class TaskGroupCreate(BaseModel):
     active: bool = True
     origin: TaskGroupOriginEnum
     pkg_name: str
-    version: str | None = None
+    version: str
     python_version: NonEmptyStr = None
     pixi_version: NonEmptyStr = None
     path: AbsolutePathStr = None
@@ -76,7 +76,7 @@ class TaskGroupRead(BaseModel):
 
     origin: TaskGroupOriginEnum
     pkg_name: str
-    version: str | None = None
+    version: str
     python_version: str | None = None
     pixi_version: str | None = None
     path: str | None = None

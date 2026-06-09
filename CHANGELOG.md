@@ -1,7 +1,22 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.23.1
 
+> NOTE: This is a follow-up to 2.23.0. The recommended upgrade path is to
+> upgrade to 2.23.0, run the data-migration script, and then immediately
+> upgrade to 2.23.1 or higher.
+
+* API:
+    * Make version a required parameter upon creation of tasks or task groups (\#3357).
+* Database:
+    * Make `version` a non-nullable column of task/task-group tables (\#3357).
+
+# 2.23.0
+
+> NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
+
+* Data migration:
+    * Replace `version=null` with `version="0"` for all tasks and task groups (\#3358).
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
     * Add `HistoryUnit.has_warnings` (\#3351).

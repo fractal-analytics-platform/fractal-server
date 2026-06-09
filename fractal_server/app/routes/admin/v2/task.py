@@ -33,7 +33,7 @@ class TaskMinimal(BaseModel):
     taskgroupv2_id: int
     command_non_parallel: str | None = None
     command_parallel: str | None = None
-    version: str | None = None
+    version: str
 
 
 class ProjectUser(BaseModel):

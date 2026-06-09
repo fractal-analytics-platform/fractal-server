@@ -151,6 +151,7 @@ async def test_get_latest_job_tasks_statuses(
         command_non_parallel="echo",
         args_schema_non_parallel={},
         meta_non_parallel={},
+        version="0",
     )
     task_group = TaskGroupV2(
         user_id=user_id,
@@ -158,6 +159,7 @@ async def test_get_latest_job_tasks_statuses(
         origin="other",
         pkg_name="echoes",
         active=True,
+        version="0",
         resource_id=resource.id,
     )
     db.add(task_group)

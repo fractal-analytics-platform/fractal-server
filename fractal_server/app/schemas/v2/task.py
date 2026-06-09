@@ -40,7 +40,7 @@ class TaskCreate(BaseModel):
 
     meta_non_parallel: DictStrAny | None = None
     meta_parallel: DictStrAny | None = None
-    version: NonEmptyStr = None
+    version: NonEmptyStr
     args_schema_non_parallel: DictStrAny | None = None
     args_schema_parallel: DictStrAny | None = None
     args_schema_version: NonEmptyStr = None
@@ -95,7 +95,7 @@ class TaskRead(BaseModel):
     id: int
     name: str
     type: TaskType
-    version: str | None = None
+    version: str
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None
@@ -124,7 +124,7 @@ class TaskReadSlim(BaseModel):
     modality: str | None = None
     authors: str | None = None
     tags: list[str]
-    version: str | None = None
+    version: str
     input_types: dict[str, bool]
     docs_info: str | None = None
     docs_link: str | None = None
@@ -145,6 +145,12 @@ class TaskUpdate(BaseModel):
 
 
 class TaskImport(BaseModel):
+    """
+    Importing a task with `version=None` always fails, and can be used by
+    the client to discover available versions of task groups with a given
+    `pkg_name` and with a task with name `name`.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     pkg_name: NonEmptyStr
@@ -154,5 +160,5 @@ class TaskImport(BaseModel):
 
 class TaskExport(BaseModel):
     pkg_name: NonEmptyStr
-    version: NonEmptyStr | None = None
+    version: NonEmptyStr
     name: NonEmptyStr

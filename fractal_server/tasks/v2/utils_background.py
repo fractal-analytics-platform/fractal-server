@@ -90,7 +90,7 @@ def prepare_tasks_metadata(
     package_root: Path,
     python_bin: Path | None = None,
     project_python_wrapper: Path | None = None,
-    package_version: str | None = None,
+    package_version: str,
 ) -> list[TaskCreate]:
     """
     Based on the package manifest and additional info, prepare the task list.
@@ -116,8 +116,7 @@ def prepare_tasks_metadata(
     for _task in package_manifest.task_list:
         # Set non-command attributes
         task_attributes = {}
-        if package_version is not None:
-            task_attributes["version"] = package_version
+        task_attributes["version"] = package_version
         if package_manifest.has_args_schemas:
             task_attributes["args_schema_version"] = (
                 package_manifest.args_schema_version

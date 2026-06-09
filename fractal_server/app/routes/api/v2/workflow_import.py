@@ -106,7 +106,9 @@ async def _get_task_id_or_available_tasks(
 ) -> tuple[Literal[True], int] | tuple[Literal[False], list[AvailableTask]]:
     """
     Find a task id based on `task_import`.
-    If the task is not found, return the list of available versions.
+
+    If the task is not found (or if `version=None`), return `success=False` and
+    the list of available versions.
 
     Args:
         task_import: Info on task to be imported.
@@ -143,20 +145,24 @@ async def _get_task_id_or_available_tasks(
         )
         return (False, [])
 
-    if task_import.version is not None:
+    if task_import.version is None:
+        # If version=None, we do not filter by version. We rather keep the list
+        # of all available versions, which are then returned to the client for
+        # further actions.
+        final_matching_task_groups = matching_task_groups
+    else:
+        # If version is set, we use it for filtering
         final_matching_task_groups = list(
             filter(
                 lambda tg: tg.version == task_import.version,
                 matching_task_groups,
             )
         )
-    else:
-        final_matching_task_groups = matching_task_groups
 
     if task_import.version is None or len(final_matching_task_groups) < 1:
         logger.debug(
-            "[_get_task_id_or_available_tasks] "
-            "No task group left after filtering by version."
+            "[_get_task_id_or_available_tasks] No task group left after "
+            f"filtering by version={task_import.version=}, (or version=None)."
         )
         return (
             False,

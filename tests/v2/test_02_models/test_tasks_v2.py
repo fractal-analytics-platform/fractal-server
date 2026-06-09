@@ -29,16 +29,19 @@ async def test_task_group(db, local_resource_profile_db):
         name="task1",
         type="parallel",
         command_parallel="cmd",
+        version="0",
     )
     task2 = TaskV2(
         name="task2",
         type="parallel",
         command_parallel="cmd",
+        version="0",
     )
     task3 = TaskV2(
         name="task3",
         type="parallel",
         command_parallel="cmd",
+        version="0",
     )
 
     task_group = TaskGroupV2(
@@ -48,6 +51,7 @@ async def test_task_group(db, local_resource_profile_db):
         task_list=[task1, task2, task3],
         origin="wheel-file",
         pkg_name="package-name",
+        version="0",
     )
     db.add(task_group)
     await db.commit()
@@ -124,6 +128,7 @@ async def test_collection_state(db, local_resource_profile_db):
         origin="wheel-file",
         pkg_name="package-name",
         resource_id=resource.id,
+        version="1.0.0",
     )
     db.add(task_group)
     await db.commit()

@@ -20,9 +20,14 @@ async def test_check_no_related_workflowtask(
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser(profile_id=profile.id) as user:
-        task1 = TaskV2(name="task1", type="parallel", command_parallel="cmd")
+        task1 = TaskV2(
+            name="task1", type="parallel", command_parallel="cmd", version="0"
+        )
         task2 = TaskV2(
-            name="task2", type="non_parallel", command_non_parallel="cmd"
+            name="task2",
+            type="non_parallel",
+            command_non_parallel="cmd",
+            version="0",
         )
         task_group = TaskGroupV2(
             user_id=user.id,
@@ -30,6 +35,7 @@ async def test_check_no_related_workflowtask(
             pkg_name="pkg",
             task_list=[task1, task2],
             resource_id=resource.id,
+            version="0",
         )
         db.add(task_group)
         await db.commit()

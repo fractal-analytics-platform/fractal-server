@@ -47,6 +47,11 @@ class HistoryUnitRead(BaseModel):
 
 
 class HistoryRunReadAggregated(BaseModel):
+    """
+    Note: version can be `None`, because `HistoryRun.task_id` is a nullable
+    foreign key.
+    """
+
     id: int
     timestamp_started: AwareDatetime
     workflowtask_dump: dict[str, Any]
