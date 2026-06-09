@@ -2,7 +2,6 @@
 
 # 2.23.0
 
-
 > NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
 
 * Data migration:
