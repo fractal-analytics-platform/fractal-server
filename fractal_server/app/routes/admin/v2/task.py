@@ -2,11 +2,16 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Response
+from fastapi import status
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
+from sqlalchemy.exc import NoResultFound
 from sqlmodel import func
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -161,3 +166,65 @@ async def query_tasks(
         current_page=response.current_page,
         items=task_info_list,
     )
+
+
+@router.post(
+    "/{task_id}/make-core/",
+    status_code=status.HTTP_200_OK,
+)
+async def make_task_core(
+    task_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `TaskV2.is_core` to `True`
+    """
+
+    try:
+        task = await db.get_one(TaskV2, task_id)
+    except NoResultFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found",
+        )
+    task_group = await db.get_one(TaskGroupV2, task.taskgroupv2_id)
+
+    res = await db.execute(
+        select(TaskV2.id)
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskGroupV2.pkg_name == task_group.pkg_name)
+        .where(TaskGroupV2.version == task_group.version)
+        .where(TaskGroupV2.resource_id == task_group.resource_id)
+        .where(TaskV2.name == task.name)
+        .where(TaskV2.is_core.is_(True))
+    )
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="TBD",
+        )
+
+    task.is_core = True
+    db.add(task)
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/{task_id}/make-not-core/",
+    status_code=status.HTTP_200_OK,
+)
+async def make_task_not_core(
+    task_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Set `TaskV2.is_core` to `False`
+    """
+    await db.execute(
+        update(TaskV2).where(TaskV2.id == task_id).values(is_core=False)
+    )
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)
