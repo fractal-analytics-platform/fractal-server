@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.2 (unreleased)
+
+* Database:
+    * Add `HistoryUnit.has_warnings` (\#3351).
+* Schemas:
+    * Add `SingleImageWithWarnings` and `HistoryRunReadAggregated.num_units_with_warnings` (\#3351).
+
 # 2.23.1
 
 > NOTE: This is a follow-up to 2.23.0. The recommended upgrade path is to
@@ -19,9 +26,6 @@
     * Replace `version=null` with `version="0"` for all tasks and task groups (\#3358).
 * Database:
     * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
-    * Add `HistoryUnit.has_warnings` (\#3351).
-* Schemas:
-    * Add `SingleImageWithWarnings` and `HistoryRunReadAggregated.num_units_with_warnings` (\#3351).
 * Dependencies:
     * Require `starlette>=1.0.1` (\#3356)
 
