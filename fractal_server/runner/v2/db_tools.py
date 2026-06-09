@@ -74,7 +74,7 @@ def bulk_update_has_warnings_history_unit(
             )
             .values(has_warnings=True)
         )
-    db_sync.commit()
+        db_sync.commit()
 
 
 def bulk_update_status_of_history_unit(
