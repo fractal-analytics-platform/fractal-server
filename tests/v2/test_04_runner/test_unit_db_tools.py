@@ -1,3 +1,4 @@
+import math
 import time
 
 import pytest
@@ -127,12 +128,9 @@ async def test_update_status_of_history_unit(
             )
 
 
-@pytest.mark.parametrize("num_history_units", [10, 50])
 async def test_bulk_update_has_warnings_history_unit(
-    num_history_units: int,
     # Fixtures
     db_sync,
-    db,
     dataset_factory,
     project_factory,
     task_factory,
@@ -142,6 +140,8 @@ async def test_bulk_update_has_warnings_history_unit(
     MockCurrentUser,
     tmp_path,
 ):
+    num_history_units = 51
+
     warning_logfile = tmp_path / "warnings.log"
     with warning_logfile.open("w") as f:
         for ind in range(10):
@@ -215,14 +215,11 @@ async def test_bulk_update_has_warnings_history_unit(
 
         res = db_sync.execute(select(HistoryUnit))
         history_units = res.scalars().all()
-        assert (
-            sum(
-                1
-                for history_unit in history_units
-                if history_unit.has_warnings is True
-            )
-            == len(history_units) // 2
-        )
+        assert sum(
+            1
+            for history_unit in history_units
+            if history_unit.has_warnings is True
+        ) == math.ceil(len(history_units) / 2.0)
 
         # Benchmark
 
