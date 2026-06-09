@@ -1,6 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.1 (unreleased)
+# 2.23.1
+
+> NOTE: This is a follow-up to 2.23.0. The recommended upgrade path is to
+> upgrade to 2.23.0, run the data-migration script, and then immediately
+> upgrade to 2.23.1 or higher.
 
 * API:
     * Make version a required parameter upon creation of tasks or task groups (\#3357).
