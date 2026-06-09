@@ -721,6 +721,77 @@ async def test_compound_task_with_compute_failure(
     assert "raise_error=True" in exc_info.value.assemble_error()
 
 
+async def test_parallel_task_with_compute_failure(
+    db,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    workflowtask_factory,
+    job_factory,
+    tmp_path: Path,
+    local_runner: LocalRunner,
+    fractal_tasks_mock_db,
+    local_resource_profile_db,
+):
+    resource, _ = local_resource_profile_db
+    # Preliminary setup
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    task_id = fractal_tasks_mock_db["generic_task_parallel"].id
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        project = await project_factory(user)
+    workflow = await workflow_factory(project_id=project.id)
+    wftask = await workflowtask_factory(
+        workflow_id=workflow.id,
+        task_id=task_id,
+        order=0,
+        args_parallel={"foo": "bar"},  # make it fail
+    )
+
+    # Run and fail
+    dataset = await dataset_factory(
+        project_id=project.id,
+        zarr_dir=zarr_dir,
+        images=[
+            dict(
+                zarr_url=Path(zarr_dir, "my_image").as_posix(),
+                attributes={},
+                types={},
+            )
+        ],
+    )
+    job = await job_factory(
+        project_id=project.id,
+        dataset_id=dataset.id,
+        workflow_id=workflow.id,
+        working_dir="/foo",
+        status="done",
+    )
+
+    with pytest.raises(JobExecutionError) as exc_info:
+        execute_tasks_mod(
+            wf_task_list=[wftask],
+            dataset=dataset,
+            workflow_dir_local=tmp_path / "job0",
+            user_id=user_id,
+            job_id=job.id,
+            resource_id=resource.id,
+            runner=local_runner,
+        )
+    assert "Unexpected keyword argument" in exc_info.value.assemble_error()
+    res = await db.execute(
+        select(HistoryUnit)
+        .join(HistoryRun, HistoryUnit.history_run_id == HistoryRun.id)
+        .where(HistoryRun.dataset_id == dataset.id)
+        .where(HistoryRun.workflowtask_id == wftask.id)
+        .where(HistoryRun.task_id == task_id)
+        .where(HistoryRun.job_id == job.id)
+    )
+    unit = res.scalar_one()
+    assert unit.status == HistoryUnitStatus.FAILED
+
+
 async def test_dummy_invalid_output_non_parallel(
     db,
     MockCurrentUser,

@@ -157,6 +157,85 @@ async def test_cascade_delete(
         raise ValueError(f"Invalid {object_to_delete=}")
 
 
+async def test_get_num_history_unit_warnings(
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    workflowtask_factory,
+    job_factory,
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        timestamp = datetime.now(tz=timezone.utc)
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        wftask = await workflowtask_factory(
+            workflow_id=workflow.id, task_id=task.id
+        )
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
+        hr_args = dict(
+            dataset_id=dataset.id,
+            workflowtask_id=wftask.id,
+            workflowtask_dump={},
+            task_group_dump={},
+            status=HistoryUnitStatus.DONE,
+            num_available_images=2000,
+            timestamp_started=timestamp,
+            job_id=job.id,
+            task_id=None,
+        )
+        hr1 = HistoryRun(**hr_args)
+        hr2 = HistoryRun(**hr_args)
+        hr3 = HistoryRun(**hr_args)
+        db.add_all([hr1, hr2, hr3])
+        await db.commit()
+        for hr in [hr1, hr2, hr3]:
+            await db.refresh(hr)
+
+        args = {"status": HistoryUnitStatus.DONE, "logfile": "/fake/log"}
+        db.add_all(
+            [
+                # hr1
+                HistoryUnit(history_run_id=hr1.id, has_warnings=True, **args),
+                HistoryUnit(history_run_id=hr1.id, has_warnings=False, **args),
+                HistoryUnit(history_run_id=hr1.id, has_warnings=True, **args),
+                HistoryUnit(history_run_id=hr1.id, has_warnings=True, **args),
+                # hr2
+                HistoryUnit(history_run_id=hr2.id, has_warnings=False, **args),
+                HistoryUnit(history_run_id=hr2.id, has_warnings=False, **args),
+                # hr3
+                HistoryUnit(history_run_id=hr3.id, has_warnings=False, **args),
+                HistoryUnit(history_run_id=hr3.id, has_warnings=False, **args),
+                HistoryUnit(history_run_id=hr3.id, has_warnings=True, **args),
+                HistoryUnit(history_run_id=hr3.id, has_warnings=True, **args),
+                HistoryUnit(history_run_id=hr3.id, has_warnings=False, **args),
+            ]
+        )
+        await db.commit()
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+        )
+        assert res.json()[0]["id"] == hr1.id
+        assert res.json()[0]["num_units_with_warnings"] == 3
+        assert res.json()[1]["id"] == hr2.id
+        assert res.json()[1]["num_units_with_warnings"] == 0
+        assert res.json()[2]["id"] == hr3.id
+        assert res.json()[2]["num_units_with_warnings"] == 2
+
+
 async def test_get_history_run_list(
     project_factory,
     workflow_factory,
@@ -192,6 +271,13 @@ async def test_get_history_run_list(
             working_dir="/foo",
             status="done",
         )
+
+        res = await client.get(
+            f"/api/v2/project/{project.id}/status/run/"
+            f"?workflowtask_id={wftask1.id}&dataset_id={dataset.id}"
+        )
+        assert res.status_code == 200
+        assert res.json() == []
 
         hr1 = HistoryRun(
             dataset_id=dataset.id,
@@ -275,6 +361,7 @@ async def test_get_history_run_list(
                 "num_done_units": 10,
                 "num_submitted_units": 11,
                 "num_failed_units": 12,
+                "num_units_with_warnings": 0,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
@@ -289,6 +376,7 @@ async def test_get_history_run_list(
                 "num_done_units": 20,
                 "num_submitted_units": 21,
                 "num_failed_units": 22,
+                "num_units_with_warnings": 0,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
@@ -308,6 +396,7 @@ async def test_get_history_run_list(
                 "num_done_units": 0,
                 "num_submitted_units": 0,
                 "num_failed_units": 0,
+                "num_units_with_warnings": 0,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
@@ -322,6 +411,7 @@ async def test_get_history_run_list(
                 "num_done_units": 0,
                 "num_submitted_units": 0,
                 "num_failed_units": 0,
+                "num_units_with_warnings": 0,
                 "timestamp_started": timestamp.isoformat(),
                 "workflowtask_dump": {},
                 "args_schema_non_parallel": None,
@@ -560,6 +650,17 @@ async def test_get_history_images(
         assert res["total_count"] == 10
         assert set(res["types"]) == {"x", "is_b"}
         assert set(res["attributes"]) == {"well", "a_or_b", IMAGE_STATUS_KEY}
+        assert all(item["has_warnings"] is None for item in res["items"])
+
+        res = await client.post(
+            f"/api/v2/project/{project.id}/status/images/"
+            f"?workflowtask_id={wftask.id}&dataset_id={dataset.id}"
+            "&include_warnings=true",
+            json={},
+        )
+        assert all(
+            item["has_warnings"] is not None for item in res.json()["items"]
+        )
 
         # CASE 2: status=unset filter, no type/attribute filters
         res = await client.post(

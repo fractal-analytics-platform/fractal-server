@@ -1,7 +1,11 @@
+import shutil
+import subprocess  # nosec
+from functools import cache
 from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
+from sqlmodel import select
 from sqlmodel import update
 
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -15,32 +19,68 @@ _CHUNK_SIZE = 2_000
 logger = set_logger(__name__)
 
 
+@cache
+def _get_grep_path() -> str:
+    return shutil.which("grep")
+
+
 def update_status_of_history_run(
     *,
     history_run_id: int,
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-    run = db_sync.get(HistoryRun, history_run_id)
-    if run is None:
-        raise ValueError(f"HistoryRun {history_run_id} not found.")
+    run = db_sync.get_one(HistoryRun, history_run_id)
     run.status = status
     db_sync.merge(run)
     db_sync.commit()
 
 
-def update_status_of_history_unit_no_commit(
+def update_history_unit_no_commit(
     *,
     history_unit_id: int,
     status: HistoryUnitStatus,
     db_sync: Session,
 ) -> None:
-    unit = db_sync.get(HistoryUnit, history_unit_id)
-    if unit is None:
-        raise ValueError(f"HistoryUnit {history_unit_id} not found.")
+    unit = db_sync.get_one(HistoryUnit, history_unit_id)
     unit.status = status
+    res = subprocess.run(  # nosec
+        [_get_grep_path(), "-i", "WARNING", "-q", unit.logfile]
+    )
+    unit.has_warnings = res.returncode == 0
     db_sync.merge(unit)
     db_sync.flush()
+
+
+def bulk_update_has_warnings_history_unit(
+    *,
+    history_unit_ids: list[int],
+    db_sync: Session,
+) -> None:
+    ids_logfiles = db_sync.execute(
+        select(HistoryUnit.id, HistoryUnit.logfile).where(
+            HistoryUnit.id.in_(history_unit_ids)
+        )
+    ).all()
+    grep_path = _get_grep_path()
+    units_with_warnings = [
+        _id
+        for _id, logfile in ids_logfiles
+        if subprocess.run(  # nosec
+            [grep_path, "-i", "WARNING", "-q", logfile],
+        ).returncode
+        == 0
+    ]
+    len_units_with_warnings = len(units_with_warnings)
+    for ind in range(0, len_units_with_warnings, _CHUNK_SIZE):
+        db_sync.execute(
+            update(HistoryUnit)
+            .where(
+                HistoryUnit.id.in_(units_with_warnings[ind : ind + _CHUNK_SIZE])
+            )
+            .values(has_warnings=True)
+        )
+        db_sync.commit()
 
 
 def bulk_update_status_of_history_unit(

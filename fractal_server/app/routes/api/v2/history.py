@@ -32,6 +32,7 @@ from fractal_server.images.status_tools import enrich_images_unsorted_async
 from fractal_server.images.tools import aggregate_attributes
 from fractal_server.images.tools import aggregate_types
 from fractal_server.images.tools import filter_image_list
+from fractal_server.images.warnings_tools import enrich_images_with_warning_flag
 from fractal_server.logger import set_logger
 
 from ._aux_functions_history import _verify_workflow_and_dataset_access
@@ -39,7 +40,7 @@ from ._aux_functions_history import get_history_run_or_404
 from ._aux_functions_history import get_history_unit_or_404
 from ._aux_functions_history import get_wftask_check_access
 from ._aux_functions_history import read_log_file
-from .images import ImagePage
+from .images import ImagePageWithWarnings
 from .images import ImageQuery
 
 
@@ -100,8 +101,18 @@ async def get_history_run_list(
     if not runs:
         return []
 
-    # Add units count by status
     run_ids = [run.id for run in runs]
+    count_map = {
+        run_id: {
+            "num_done_units": 0,
+            "num_submitted_units": 0,
+            "num_failed_units": 0,
+            "num_units_with_warnings": 0,
+        }
+        for run_id in run_ids
+    }
+
+    # Add units count by status
     stm = (
         select(
             HistoryUnit.history_run_id,
@@ -114,16 +125,20 @@ async def get_history_run_list(
     res = await db.execute(stm)
     unit_counts = res.all()
 
-    count_map = {
-        run_id: {
-            "num_done_units": 0,
-            "num_submitted_units": 0,
-            "num_failed_units": 0,
-        }
-        for run_id in run_ids
-    }
     for run_id, unit_status, count in unit_counts:
         count_map[run_id][f"num_{unit_status}_units"] = count
+
+    stm = (
+        select(HistoryUnit.history_run_id, func.count(HistoryUnit.id))
+        .where(HistoryUnit.history_run_id.in_(run_ids))
+        .where(HistoryUnit.has_warnings.is_(True))
+        .group_by(HistoryUnit.history_run_id)
+    )
+    res = await db.execute(stm)
+    warnings_count = res.all()
+
+    for run_id, count in warnings_count:
+        count_map[run_id]["num_units_with_warnings"] = count
 
     res = await db.execute(
         select(
@@ -137,7 +152,6 @@ async def get_history_run_list(
             )
         )
     )
-
     task_args = {
         _id: {
             "version": version,
@@ -217,13 +231,14 @@ async def get_history_run_units(
 
 @router.post(
     "/project/{project_id}/status/images/",
-    response_model=ImagePage,
+    response_model=ImagePageWithWarnings,
 )
 async def get_history_images(
     project_id: int,
     dataset_id: int,
     workflowtask_id: int,
     request_body: ImageQuery,
+    include_warnings: bool = False,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -280,14 +295,25 @@ async def get_history_images(
         attribute_filters=request_body.attribute_filters,
     )
 
+    if include_warnings:
+        # (5) Add `has_warnings`
+        final_images = await enrich_images_with_warning_flag(
+            dataset_id=dataset_id,
+            workflowtask_id=workflowtask_id,
+            images=final_images_with_status,
+            db=db,
+        )
+    else:
+        final_images = final_images_with_status
+
     logger.debug(f"{prefix} {len(dataset.images)=}")
-    logger.debug(f"{prefix} {len(final_images_with_status)=}")
+    logger.debug(f"{prefix} {len(final_images)=}")
 
     # (5) Apply pagination logic
-    total_count = len(final_images_with_status)
+    total_count = len(final_images)
     page_size = pagination.page_size or total_count
     sorted_images_list = sorted(
-        final_images_with_status,
+        final_images,
         key=lambda image: image["zarr_url"],
     )
     paginated_images_list = sorted_images_list[
