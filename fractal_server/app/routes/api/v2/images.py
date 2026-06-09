@@ -40,6 +40,19 @@ class ImagePage(PaginationResponse[SingleImage]):
     types: list[str]
 
 
+class SingleImageWithWarnings(SingleImage):
+    """
+    `SingleImage`, with `has_warnings` boolean flag.
+    """
+
+    has_warnings: bool | None = None
+
+
+class ImagePageWithWarnings(PaginationResponse[SingleImageWithWarnings]):
+    attributes: dict[str, list[ImageAttributeValue]]
+    types: list[str]
+
+
 class ImageQuery(BaseModel):
     """
     Query for a list of images.

@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.2 (unreleased)
+
+* Database:
+    * Add `HistoryUnit.has_warnings` (\#3351).
+* Schemas:
+    * Add `SingleImageWithWarnings` and `HistoryRunReadAggregated.num_units_with_warnings` (\#3351).
+
 # 2.23.1
 
 > NOTE: This is a follow-up to 2.23.0. The recommended upgrade path is to
@@ -230,7 +237,7 @@ This fixes a minor bug introduced in 2.22.3.
     * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
-    * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
+    * Handle `TypeError` inside images `aggregate_attributes` method (\#322e3, \#3226).
     * Transform log-reading error log from error to warning in `read_log_file` (\#3236).
 * Database:
     * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).

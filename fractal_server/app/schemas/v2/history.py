@@ -41,6 +41,7 @@ class HistoryUnitStatusWithUnset(StrEnum):
 class HistoryUnitRead(BaseModel):
     id: int
     logfile: str | None = None
+    has_warnings: bool
     status: HistoryUnitStatus
     zarr_urls: list[str]
 
@@ -57,6 +58,7 @@ class HistoryRunReadAggregated(BaseModel):
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
+    num_units_with_warnings: int
     args_schema_parallel: dict[str, Any] | None = None
     args_schema_non_parallel: dict[str, Any] | None = None
     version: str | None = None

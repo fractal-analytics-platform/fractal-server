@@ -7,6 +7,7 @@ from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import DateTime
+from sqlmodel import BOOLEAN
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -61,6 +62,13 @@ class HistoryUnit(SQLModel, table=True):
     )
 
     logfile: str
+    has_warnings: bool = Field(
+        sa_column=Column(
+            BOOLEAN,
+            server_default="false",
+            nullable=False,
+        ),
+    )
     status: str
     zarr_urls: list[str] = Field(
         sa_column=Column(ARRAY(String)),

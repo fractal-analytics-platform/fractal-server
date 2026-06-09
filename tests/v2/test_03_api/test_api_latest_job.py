@@ -273,6 +273,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[1]): {
             "status": "done",
@@ -280,6 +281,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[2]): {
             "status": "submitted",
@@ -287,6 +289,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[3]): {
             "status": "submitted",
@@ -294,6 +297,7 @@ async def test_get_latest_job_tasks_statuses(
             "num_submitted_images": 0,
             "num_done_images": 0,
             "num_failed_images": 0,
+            "has_warnings": False,
         },
         str(wftask_ids[4]): {"status": "submitted"},
         str(wftask_ids[5]): None,
@@ -352,12 +356,14 @@ async def test_get_latest_job_image_counters(
             status=HistoryUnitStatus.DONE,
             logfile="/log/b",
             zarr_urls=["/b"],
+            has_warnings=True,
         )
         unit_c = HistoryUnit(
             history_run_id=run1.id,
             status=HistoryUnitStatus.FAILED,
             logfile="/log/c",
             zarr_urls=["/c"],
+            has_warnings=True,
         )
         db.add(unit_a)
         db.add(unit_b)
@@ -410,6 +416,7 @@ async def test_get_latest_job_image_counters(
                 "num_done_images": 1,
                 "num_submitted_images": 1,
                 "num_failed_images": 1,
+                "has_warnings": True,
             },
             str(wftask2.id): None,
         }
@@ -431,6 +438,7 @@ async def test_get_latest_job_image_counters(
                 "num_submitted_images": 1,
                 "num_done_images": 1,
                 "num_failed_images": 1,
+                "has_warnings": True,
             },
             "2": None,
         }
