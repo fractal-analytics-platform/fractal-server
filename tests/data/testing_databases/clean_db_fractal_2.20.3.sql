@@ -2,15 +2,14 @@
 -- PostgreSQL database dump
 --
 
-\restrict dczUOOee5dtGuBNbu9oqGlpqnObx3jdTyJZlqrVAbwtRqsJ9Kn0NV1FzlgFC8mx
+\restrict L5DhMpvOo049R0mrWS073yswnLfbhEeDSEhyOcK4YoojBGihkBg36jCHaFswwdj
 
--- Dumped from database version 18.4 (Ubuntu 18.4-1.pgdg22.04+1)
--- Dumped by pg_dump version 18.4 (Ubuntu 18.4-1.pgdg22.04+1)
+-- Dumped from database version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -18,15 +17,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
---
-
--- *not* creating schema, since initdb creates it
-
-
-ALTER SCHEMA public OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -77,9 +67,7 @@ CREATE TABLE public.accountingrecordslurm (
     id integer NOT NULL,
     user_id integer NOT NULL,
     "timestamp" timestamp with time zone NOT NULL,
-    slurm_job_ids integer[],
-    fractal_job_id integer,
-    resource_id integer
+    slurm_job_ids integer[]
 );
 
 
@@ -128,8 +116,7 @@ CREATE TABLE public.datasetv2 (
     project_id integer NOT NULL,
     timestamp_created timestamp with time zone NOT NULL,
     zarr_dir character varying NOT NULL,
-    images jsonb DEFAULT '[]'::json NOT NULL,
-    is_starred boolean DEFAULT false NOT NULL
+    images jsonb DEFAULT '[]'::json NOT NULL
 );
 
 
@@ -387,8 +374,7 @@ CREATE TABLE public.profile (
     username character varying,
     ssh_key_path character varying,
     jobs_remote_dir character varying,
-    tasks_remote_dir character varying,
-    pixi_cache_dir character varying
+    tasks_remote_dir character varying
 );
 
 
@@ -424,9 +410,7 @@ CREATE TABLE public.projectv2 (
     id integer NOT NULL,
     name character varying NOT NULL,
     timestamp_created timestamp with time zone NOT NULL,
-    resource_id integer NOT NULL,
-    is_starred boolean DEFAULT false NOT NULL,
-    description character varying
+    resource_id integer NOT NULL
 );
 
 
@@ -820,8 +804,7 @@ CREATE TABLE public.workflowv2 (
     project_id integer NOT NULL,
     timestamp_created timestamp with time zone NOT NULL,
     description character varying,
-    template_id integer,
-    is_starred boolean DEFAULT false NOT NULL
+    template_id integer
 );
 
 
@@ -987,7 +970,7 @@ COPY public.accountingrecord (id, user_id, "timestamp", num_tasks, num_new_image
 -- Data for Name: accountingrecordslurm; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids, fractal_job_id, resource_id) FROM stdin;
+COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids) FROM stdin;
 \.
 
 
@@ -996,7 +979,7 @@ COPY public.accountingrecordslurm (id, user_id, "timestamp", slurm_job_ids, frac
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-92ec661b7f76
+7226c20dc233
 \.
 
 
@@ -1004,8 +987,8 @@ COPY public.alembic_version (version_num) FROM stdin;
 -- Data for Name: datasetv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.datasetv2 (id, name, project_id, timestamp_created, zarr_dir, images, is_starred) FROM stdin;
-1	MyDataset	1	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}]	f
+COPY public.datasetv2 (id, name, project_id, timestamp_created, zarr_dir, images) FROM stdin;
+1	MyDataset	1	2024-04-24 12:54:44.017086+02	/invalid/zarr	[{"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000000", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000000", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000001", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000001", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000002", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000002", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000003", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000003", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000004", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000004", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000005", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000005", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000006", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000006", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000007", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000007", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000008", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000008", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}, {"types": {"is_3D": true}, "origin": "/invalid/zarr/very/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/origin-000009", "zarr_url": "/invalid/zarr/very/very/long/path/to/mimic/real/path/to/the/zarr/dir/000009", "attributes": {"well": "A99", "plate": "my-beautiful-plate.zarr"}}]
 \.
 
 
@@ -1076,8 +1059,8 @@ COPY public.oauthaccount (id, user_id, oauth_name, access_token, expires_at, ref
 -- Data for Name: profile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.profile (id, resource_id, resource_type, name, username, ssh_key_path, jobs_remote_dir, tasks_remote_dir, pixi_cache_dir) FROM stdin;
-1	1	local	Profile None	\N	\N	\N	\N	\N
+COPY public.profile (id, resource_id, resource_type, name, username, ssh_key_path, jobs_remote_dir, tasks_remote_dir) FROM stdin;
+1	1	local	Profile None	\N	\N	\N	\N
 \.
 
 
@@ -1085,9 +1068,9 @@ COPY public.profile (id, resource_id, resource_type, name, username, ssh_key_pat
 -- Data for Name: projectv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.projectv2 (id, name, timestamp_created, resource_id, is_starred, description) FROM stdin;
-1	MyProject_uv	2024-04-24 12:54:43.995984+02	1	f	\N
-2	admin_project	2026-03-27 09:34:42.201998+01	1	f	\N
+COPY public.projectv2 (id, name, timestamp_created, resource_id) FROM stdin;
+1	MyProject_uv	2024-04-24 12:54:43.995984+02	1
+2	admin_project	2026-03-27 09:34:42.201998+01	1
 \.
 
 
@@ -1114,8 +1097,8 @@ COPY public.taskgroupactivityv2 (id, user_id, taskgroupv2_id, timestamp_started,
 --
 
 COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, python_version, path, venv_path, archive_path, pip_extras, pinned_package_versions_post, active, timestamp_created, env_info, timestamp_last_used, pixi_version, pinned_package_versions_pre, resource_id) FROM stdin;
+1	1	1	other	admin:echo-task	\N	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	2024-10-29 09:05:04.891366+01	\N	{}	1
 2	1	1	other	admin:ls-task	1.0.0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.91603+01	\N	2024-10-29 09:05:04.91603+01	\N	{}	1
-1	1	1	other	admin:echo-task	0	\N	\N	\N	\N	\N	{}	t	2024-10-29 09:05:04.891366+01	\N	2024-10-29 09:05:04.891366+01	\N	{}	1
 \.
 
 
@@ -1124,8 +1107,8 @@ COPY public.taskgroupv2 (id, user_id, user_group_id, origin, pkg_name, version, 
 --
 
 COPY public.taskv2 (id, name, type, command_non_parallel, command_parallel, meta_non_parallel, meta_parallel, version, args_schema_non_parallel, args_schema_parallel, args_schema_version, docs_info, docs_link, input_types, output_types, taskgroupv2_id, category, modality, authors, tags) FROM stdin;
-1	Echo Task	compound	echo	echo	{}	{}	0	null	null	\N	\N	\N	{}	{}	1	\N	\N	\N	[]
-2	Ls Task	non_parallel	ls	\N	{}	{}	0	null	null	\N	\N	\N	{}	{}	2	\N	\N	\N	[]
+1	Echo Task	compound	echo	echo	{}	{}	\N	null	null	\N	\N	\N	{}	{}	1	\N	\N	\N	[]
+2	Ls Task	non_parallel	ls	\N	{}	{}	\N	null	null	\N	\N	\N	{}	{}	2	\N	\N	\N	[]
 \.
 
 
@@ -1176,10 +1159,10 @@ COPY public.workflowtemplate (id, user_id, name, version, fractal_server_version
 -- Data for Name: workflowv2; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.workflowv2 (id, name, project_id, timestamp_created, description, template_id, is_starred) FROM stdin;
-1	MyWorkflow	1	2024-04-24 12:54:44.034782+02	\N	\N	f
-2	MyNewWorkflow	1	2026-03-27 09:33:04.186562+01	\N	\N	f
-3	MyNewWorkflow	2	2026-03-27 09:34:48.944925+01	\N	1	f
+COPY public.workflowv2 (id, name, project_id, timestamp_created, description, template_id) FROM stdin;
+1	MyWorkflow	1	2024-04-24 12:54:44.034782+02	\N	\N
+2	MyNewWorkflow	1	2026-03-27 09:33:04.186562+01	\N	\N
+3	MyNewWorkflow	2	2026-03-27 09:34:48.944925+01	\N	1
 \.
 
 
@@ -1616,22 +1599,6 @@ ALTER TABLE ONLY public.accountingrecord
 
 
 --
--- Name: accountingrecordslurm fk_accountingrecordslurm_fractal_job_id_jobv2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.accountingrecordslurm
-    ADD CONSTRAINT fk_accountingrecordslurm_fractal_job_id_jobv2 FOREIGN KEY (fractal_job_id) REFERENCES public.jobv2(id);
-
-
---
--- Name: accountingrecordslurm fk_accountingrecordslurm_resource_id_resource; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.accountingrecordslurm
-    ADD CONSTRAINT fk_accountingrecordslurm_resource_id_resource FOREIGN KEY (resource_id) REFERENCES public.resource(id) ON DELETE SET NULL;
-
-
---
 -- Name: accountingrecordslurm fk_accountingrecordslurm_user_id_user_oauth; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1896,15 +1863,7 @@ ALTER TABLE ONLY public.oauthaccount
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dczUOOee5dtGuBNbu9oqGlpqnObx3jdTyJZlqrVAbwtRqsJ9Kn0NV1FzlgFC8mx
+\unrestrict L5DhMpvOo049R0mrWS073yswnLfbhEeDSEhyOcK4YoojBGihkBg36jCHaFswwdj
