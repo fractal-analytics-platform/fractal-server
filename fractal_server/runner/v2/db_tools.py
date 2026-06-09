@@ -1,3 +1,4 @@
+import shutil
 import subprocess  # nosec
 from typing import Any
 
@@ -55,11 +56,12 @@ def bulk_update_has_warnings_history_unit(
             HistoryUnit.id.in_(history_unit_ids)
         )
     ).all()
+    grep_path = shutil.which("grep")
     units_with_warnings = [
         _id
         for _id, logfile in ids_logfiles
         if subprocess.run(  # nosec
-            ["grep", "-i", "WARNING", "-q", logfile]
+            [grep_path, "-i", "WARNING", "-q", logfile],
         ).returncode
         == 0
     ]
