@@ -41,17 +41,24 @@ class HistoryUnitStatusWithUnset(StrEnum):
 class HistoryUnitRead(BaseModel):
     id: int
     logfile: str | None = None
+    has_warnings: bool
     status: HistoryUnitStatus
     zarr_urls: list[str]
 
 
 class HistoryRunReadAggregated(BaseModel):
+    """
+    Note: version can be `None`, because `HistoryRun.task_id` is a nullable
+    foreign key.
+    """
+
     id: int
     timestamp_started: AwareDatetime
     workflowtask_dump: dict[str, Any]
     num_submitted_units: int
     num_done_units: int
     num_failed_units: int
+    num_units_with_warnings: int
     args_schema_parallel: dict[str, Any] | None = None
     args_schema_non_parallel: dict[str, Any] | None = None
     version: str | None = None

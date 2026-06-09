@@ -30,9 +30,8 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import (
-    update_status_of_history_unit_no_commit,
-)
+from fractal_server.runner.v2.db_tools import update_history_unit_no_commit
+from fractal_server.types import JSONType
 
 from ._batching import _verify_batch_sizes
 from ._job_states import STATES_FINISHED
@@ -88,6 +87,7 @@ def create_accounting_record_slurm(
     user_id: int,
     slurm_job_ids: list[int],
     fractal_job_id: int,
+    resource_id: int,
 ) -> None:
     with next(get_sync_db()) as db:
         db.add(
@@ -95,6 +95,7 @@ def create_accounting_record_slurm(
                 user_id=user_id,
                 slurm_job_ids=slurm_job_ids,
                 fractal_job_id=fractal_job_id,
+                resource_id=resource_id,
             )
         )
         db.commit()
@@ -130,6 +131,7 @@ class BaseSlurmRunner(BaseRunner):
         user_cache_dir: str,
         slurm_account: str | None = None,
         fractal_job_id: int,
+        resource_id: int,
     ) -> None:
         self.slurm_runner_type = slurm_runner_type
         self.root_dir_local = root_dir_local
@@ -140,6 +142,7 @@ class BaseSlurmRunner(BaseRunner):
         self.python_worker_interpreter = python_worker_interpreter
         self.slurm_account = slurm_account
         self.fractal_job_id = fractal_job_id
+        self.resource_id = resource_id
 
         self.poll_interval = poll_interval
         self.poll_interval_internal = self.poll_interval / 10.0
@@ -515,11 +518,32 @@ class BaseSlurmRunner(BaseRunner):
         *,
         task: SlurmTask,
         was_job_scancelled: bool = False,
-    ) -> tuple[Any, Exception | None]:
+    ) -> tuple[JSONType, Exception | None]:
+        """
+        Postprocess the output of a single completed Slurm task.
+
+        Returns:
+            A tuple with the following elements:
+
+            - result:
+                The task result, if the task completed successfully, read
+                from the task output file.
+                If the task failed, or if postprocessing itself failed, this is
+                `None`.
+
+            - exception:
+                If the task failed in a controlled way, this is a
+                `TaskExecutionError` wrapping the traceback produced by the
+                task.
+                If postprocessing failed or if job was scancelled, this is a
+                `JobExecutionError`.
+                Otherwise this is `None`.
+        """
         try:
             with open(task.output_file_local) as f:
                 output = json.load(f)
             success = output[0]
+
             if success:
                 # Task succeeded
                 result = output[1]
@@ -697,7 +721,7 @@ class BaseSlurmRunner(BaseRunner):
 
             if self.is_shutdown():
                 with next(get_sync_db()) as db:
-                    update_status_of_history_unit_no_commit(
+                    update_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.FAILED,
                         db_sync=db,
@@ -761,6 +785,7 @@ class BaseSlurmRunner(BaseRunner):
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
                 fractal_job_id=self.fractal_job_id,
+                resource_id=self.resource_id,
             )
 
             # Retrieval phase
@@ -791,7 +816,7 @@ class BaseSlurmRunner(BaseRunner):
                         )
 
                         if exception is not None:
-                            update_status_of_history_unit_no_commit(
+                            update_history_unit_no_commit(
                                 history_unit_id=history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
@@ -801,7 +826,7 @@ class BaseSlurmRunner(BaseRunner):
                                 TaskType.COMPOUND,
                                 TaskType.CONVERTER_COMPOUND,
                             ]:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
@@ -819,7 +844,7 @@ class BaseSlurmRunner(BaseRunner):
                 f"[submit] Unexpected exception. Original error: {str(e)}"
             )
             with next(get_sync_db()) as db:
-                update_status_of_history_unit_no_commit(
+                update_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
@@ -1004,6 +1029,7 @@ class BaseSlurmRunner(BaseRunner):
                 user_id=user_id,
                 slurm_job_ids=self.job_ids_int,
                 fractal_job_id=self.fractal_job_id,
+                resource_id=self.resource_id,
             )
 
         # Retrieval phase
@@ -1064,7 +1090,7 @@ class BaseSlurmRunner(BaseRunner):
                         if exception is not None:
                             exceptions[task.index] = exception
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],
@@ -1074,7 +1100,7 @@ class BaseSlurmRunner(BaseRunner):
                         else:
                             results[task.index] = result
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=history_unit_ids[
                                         task.index
                                     ],

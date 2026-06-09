@@ -1,5 +1,39 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.2
+
+* Database:
+    * Add `HistoryUnit.has_warnings` (\#3351).
+* Schemas:
+    * Add `SingleImageWithWarnings` and `HistoryRunReadAggregated.num_units_with_warnings` (\#3351).
+
+# 2.23.1
+
+> NOTE: This is a follow-up to 2.23.0. The recommended upgrade path is to
+> upgrade to 2.23.0, run the data-migration script, and then immediately
+> upgrade to 2.23.1 or higher.
+
+* API:
+    * Make version a required parameter upon creation of tasks or task groups (\#3357).
+* Database:
+    * Make `version` a non-nullable column of task/task-group tables (\#3357).
+
+# 2.23.0
+
+> NOTE: This version requires running a data-migration script (`fractalctl update-db-data`).
+
+* Data migration:
+    * Replace `version=null` with `version="0"` for all tasks and task groups (\#3358).
+* Database:
+    * Add `ondelete="SET NULL"` for `AccountingRecordSlurm.resource_id` (\#3355).
+* Dependencies:
+    * Require `starlette>=1.0.1` (\#3356)
+
+# 2.22.14
+
+* Database:
+  * Add `AccountingRecordSlurm.resource_id` (\#3353).
+
 # 2.22.13
 
 * API:
@@ -203,7 +237,7 @@ This fixes a minor bug introduced in 2.22.3.
     * Introduce `POST /project/{project_id}/workflow/import-from-template/` endpoint (\#3191, \#3231).
     * Introduce flexible version matching in workflow-import endpoint (\#3154).
     * Handle internal error with `_write_shutdown_file` in `/job/{job_id}/stop/` endpoints (\#3214).
-    * Handle `TypeError` inside images `aggregate_attributes` method (\#3223, \#3226).
+    * Handle `TypeError` inside images `aggregate_attributes` method (\#322e3, \#3226).
     * Transform log-reading error log from error to warning in `read_log_file` (\#3236).
 * Database:
     * Introduce new `workflow_template` table and `WorkflowV2.template_id` (\#3191).

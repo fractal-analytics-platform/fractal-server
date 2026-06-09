@@ -34,11 +34,11 @@ async def test_submit_success(
     monkey_slurm,
     task_type: str,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     if task_type.startswith("converter_"):
         parameters = {}
@@ -52,6 +52,7 @@ async def test_submit_success(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         result, exception = runner.submit(
             base_command="true",
@@ -104,11 +105,11 @@ async def test_submit_fail(
     history_mock_for_submit,
     task_type: str,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_id, wftask_id = history_mock_for_submit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     if not task_type.startswith("converter_"):
         parameters = dict(zarr_urls=ZARR_URLS)
@@ -122,6 +123,7 @@ async def test_submit_fail(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         result, exception = runner.submit(
             base_command="false",
@@ -162,11 +164,11 @@ async def test_multisubmit_parallel(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -175,6 +177,7 @@ async def test_multisubmit_parallel(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command="true",
@@ -222,11 +225,11 @@ async def test_multisubmit_compound(
     monkey_slurm,
     history_mock_for_multisubmit,
     valid_user_id,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -235,6 +238,7 @@ async def test_multisubmit_compound(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         list_task_files = [
             get_dummy_task_files(
@@ -293,7 +297,7 @@ async def test_multisubmit_parallel_partial_failure(
     history_mock_for_multisubmit,
     valid_user_id,
     testdata_path,
-    slurm_sudo_resource_profile_objects,
+    slurm_sudo_resource_profile_db,
     fractal_job_id_mock,
 ):
     raw_script_path = testdata_path / "script_for_selective_failure.py"
@@ -302,7 +306,7 @@ async def test_multisubmit_parallel_partial_failure(
     shutil.copy(raw_script_path, script_path)
 
     history_run_id, history_unit_ids, wftask_id = history_mock_for_multisubmit
-    resource, profile = slurm_sudo_resource_profile_objects[:]
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     with SlurmSudoRunner(
         root_dir_local=tmp777_path / "server",
@@ -311,6 +315,7 @@ async def test_multisubmit_parallel_partial_failure(
         resource=resource,
         profile=profile,
         fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
     ) as runner:
         results, exceptions = runner.multisubmit(
             base_command=f"python3 {script_path.as_posix()}",

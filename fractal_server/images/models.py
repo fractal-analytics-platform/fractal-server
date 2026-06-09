@@ -36,7 +36,7 @@ class SingleImageTaskOutput(SingleImageBase):
 
 class SingleImage(SingleImageBase):
     """
-    `SingleImageBase`, with scalar `attributes` values (`None` excluded).
+    `SingleImageBase`, with scalar `attributes` values (`None` excluded)
     """
 
     attributes: ImageAttributes = Field(default_factory=dict)

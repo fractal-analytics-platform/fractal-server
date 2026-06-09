@@ -380,7 +380,7 @@ async def test_admin_deactivate_task_group_api(
         )
         task_other = await task_factory(
             user_id=user.id,
-            version=None,
+            version="none",
             name="task",
         )
         task_pypi = await task_factory(
@@ -416,7 +416,7 @@ async def test_admin_deactivate_task_group_api(
         assert res.status_code == 202
         activity = res.json()
         task_group_other = await db.get(TaskGroupV2, task_other.taskgroupv2_id)
-        assert activity["version"] == "N/A"
+        assert activity["version"] == "none"
         assert activity["status"] == TaskGroupActivityStatus.OK
         assert activity["action"] == TaskGroupActivityAction.DEACTIVATE
         assert activity["timestamp_started"] is not None
@@ -508,7 +508,7 @@ async def test_admin_reactivate_task_group_api(
 
         task_other = await task_factory(
             user_id=user.id,
-            version=None,
+            version="000",
             name="task",
             task_group_kwargs=dict(active=False),
         )
@@ -550,7 +550,7 @@ async def test_admin_reactivate_task_group_api(
         )
         activity = res.json()
         assert res.status_code == 202
-        assert activity["version"] == "N/A"
+        assert activity["version"] == "000"
         assert activity["status"] == TaskGroupActivityStatus.OK
         assert activity["action"] == TaskGroupActivityAction.REACTIVATE
         assert activity["timestamp_started"] is not None

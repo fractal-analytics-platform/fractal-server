@@ -190,6 +190,7 @@ async def test_resource_api(
             origin="other",
             pkg_name="pkg",
             resource_id=resource_id,
+            version="0",
         )
         db.add(task_group)
         await db.commit()

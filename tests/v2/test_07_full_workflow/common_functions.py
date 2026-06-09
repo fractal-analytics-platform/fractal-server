@@ -236,6 +236,7 @@ async def full_workflow(
                 "num_submitted_images": 0,
                 "num_done_images": 0,
                 "num_failed_images": 0,
+                "has_warnings": False,
             },
             # MIP compound task
             "2": {
@@ -244,6 +245,7 @@ async def full_workflow(
                 "num_submitted_images": 0,
                 "num_done_images": 4,
                 "num_failed_images": 0,
+                "has_warnings": False,
             },
             # Generic parallel task
             "3": {
@@ -252,6 +254,7 @@ async def full_workflow(
                 "num_submitted_images": 0,
                 "num_done_images": 4,
                 "num_failed_images": 0,
+                "has_warnings": False,
             },
         }
 
@@ -579,6 +582,7 @@ async def failing_workflow_UnknownError(
                 "num_submitted_images": 0,
                 "num_done_images": 0,
                 "num_failed_images": 0,
+                "has_warnings": False,
             },
         }
 
@@ -785,6 +789,7 @@ async def failing_workflow_post_task_execution(
                 "num_submitted_images": 0,
                 "num_done_images": 0,
                 "num_failed_images": 2,
+                "has_warnings": False,
             },
         }
 

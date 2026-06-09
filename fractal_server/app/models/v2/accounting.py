@@ -45,3 +45,9 @@ class AccountingRecordSlurm(SQLModel, table=True):
         nullable=True,
         default=None,
     )
+    resource_id: int = Field(
+        foreign_key="resource.id",
+        nullable=True,
+        default=None,
+        ondelete="SET NULL",
+    )

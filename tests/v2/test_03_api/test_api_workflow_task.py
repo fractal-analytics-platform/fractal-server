@@ -27,6 +27,7 @@ async def post_task(
 ):
     task = dict(
         name=f"task{label}",
+        version="0",
         command_non_parallel="cmd",
         command_parallel="cmd",
     )

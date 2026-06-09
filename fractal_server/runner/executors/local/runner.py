@@ -22,9 +22,7 @@ from fractal_server.runner.executors.call_command_wrapper import (
 )
 from fractal_server.runner.task_files import TaskFiles
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
-from fractal_server.runner.v2.db_tools import (
-    update_status_of_history_unit_no_commit,
-)
+from fractal_server.runner.v2.db_tools import update_history_unit_no_commit
 
 logger = set_logger(__name__)
 
@@ -82,6 +80,7 @@ class LocalRunner(BaseRunner):
         profile: Profile,
         fractal_job_id: int,
         user_cache_dir: str,
+        resource_id: int,
     ) -> None:
         self.root_dir_local = root_dir_local
         self.root_dir_local.mkdir(parents=True, exist_ok=True)
@@ -89,6 +88,7 @@ class LocalRunner(BaseRunner):
         logger.debug("Create LocalRunner")
         self.shared_config = JobRunnerConfigLocal(**resource.jobs_runner_config)
         self.fractal_job_id = fractal_job_id
+        self.resource_id = resource_id
         self.user_cache_dir = user_cache_dir
 
     def __enter__(self) -> Self:
@@ -157,7 +157,7 @@ class LocalRunner(BaseRunner):
             result = None
             exception = TaskExecutionError(str(e))
             with next(get_sync_db()) as db:
-                update_status_of_history_unit_no_commit(
+                update_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
@@ -166,6 +166,7 @@ class LocalRunner(BaseRunner):
                 return None, exception
 
         # RETRIEVAL PHASE
+
         with next(get_sync_db()) as db:
             try:
                 result = future.result()
@@ -174,7 +175,7 @@ class LocalRunner(BaseRunner):
                     TaskType.COMPOUND,
                     TaskType.CONVERTER_COMPOUND,
                 ]:
-                    update_status_of_history_unit_no_commit(
+                    update_history_unit_no_commit(
                         history_unit_id=history_unit_id,
                         status=HistoryUnitStatus.DONE,
                         db_sync=db,
@@ -182,7 +183,7 @@ class LocalRunner(BaseRunner):
                 return result, None
             except Exception as e:
                 logger.debug("[submit] END with exception")
-                update_status_of_history_unit_no_commit(
+                update_history_unit_no_commit(
                     history_unit_id=history_unit_id,
                     status=HistoryUnitStatus.FAILED,
                     db_sync=db,
@@ -294,7 +295,7 @@ class LocalRunner(BaseRunner):
                     exceptions[positional_index] = TaskExecutionError(str(e))
                     if task_type == TaskType.PARALLEL:
                         with next(get_sync_db()) as db:
-                            update_status_of_history_unit_no_commit(
+                            update_history_unit_no_commit(
                                 history_unit_id=current_history_unit_id,
                                 status=HistoryUnitStatus.FAILED,
                                 db_sync=db,
@@ -320,7 +321,7 @@ class LocalRunner(BaseRunner):
                         try:
                             results[positional_index] = fut.result()
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.DONE,
                                     db_sync=db,
@@ -336,7 +337,7 @@ class LocalRunner(BaseRunner):
                                 str(e)
                             )
                             if task_type == TaskType.PARALLEL:
-                                update_status_of_history_unit_no_commit(
+                                update_history_unit_no_commit(
                                     history_unit_id=current_history_unit_id,
                                     status=HistoryUnitStatus.FAILED,
                                     db_sync=db,
