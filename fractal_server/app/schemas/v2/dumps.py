@@ -82,7 +82,7 @@ class DatasetDump(BaseModel):
 
 class TaskGroupDump(BaseModel):
     """
-    We keep `version: str | None` to support task dumps created with
+    We keep `version: str | None` to support task-group dumps created with
     fractal-server 2.22.* (where `version` was nullable).
     """
 
