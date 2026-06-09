@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.2 (unreleased)
+# 2.23.2
 
 * Database:
     * Add `HistoryUnit.has_warnings` (\#3351).
