@@ -21,6 +21,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_task_core_constraint,
+)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
@@ -180,7 +183,6 @@ async def make_task_core(
     """
     Set `TaskV2.is_core` to `True`
     """
-
     try:
         task = await db.get_one(TaskV2, task_id)
     except NoResultFound:
@@ -190,21 +192,9 @@ async def make_task_core(
         )
     task_group = await db.get_one(TaskGroupV2, task.taskgroupv2_id)
 
-    res = await db.execute(
-        select(TaskV2.id)
-        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        .where(TaskGroupV2.pkg_name == task_group.pkg_name)
-        .where(TaskGroupV2.version == task_group.version)
-        .where(TaskGroupV2.resource_id == task_group.resource_id)
-        .where(TaskV2.name == task.name)
-        .where(TaskV2.is_core.is_(True))
+    await _verify_non_duplication_task_core_constraint(
+        task=task, task_group=task_group, db=db
     )
-    duplicate_task_id = res.scalar_one_or_none()
-    if duplicate_task_id and duplicate_task_id != task_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="TBD",
-        )
 
     task.is_core = True
     db.add(task)

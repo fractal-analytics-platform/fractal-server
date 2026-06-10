@@ -391,3 +391,26 @@ def _check_type_filters_compatibility(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Incompatible type filters.\nOriginal error: {str(e)}",
         )
+
+
+async def _verify_non_duplication_task_core_constraint(
+    *,
+    task: TaskV2,
+    task_group: TaskGroupV2,
+    db: AsyncSession,
+) -> None:
+    res = await db.execute(
+        select(TaskV2.id)
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskGroupV2.pkg_name == task_group.pkg_name)
+        .where(TaskGroupV2.version == task_group.version)
+        .where(TaskGroupV2.resource_id == task_group.resource_id)
+        .where(TaskV2.name == task.name)
+        .where(TaskV2.is_core.is_(True))
+    )
+    duplicate_task_id = res.scalar_one_or_none()
+    if duplicate_task_id and duplicate_task_id != task.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="TBD",
+        )
