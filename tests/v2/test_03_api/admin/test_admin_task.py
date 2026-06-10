@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
 from fractal_server.app.models.v2.resource import Resource
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.models.v2.task_group import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -208,37 +210,63 @@ async def test_task_core(
     local_resource_profile_db,
 ):
     resource, _ = local_resource_profile_db
+    async with MockCurrentUser() as user:
+        user_id = user.id
+        res = await client.post(f"{PREFIX}/task/123/make-core/")
+        assert res.status_code == 401
+        res = await client.post(f"{PREFIX}/task/123/make-not-core/")
+        assert res.status_code == 401
 
-    async with MockCurrentUser(is_superuser=True) as user1:
-        _ = await task_factory(
-            user_id=user1.id,
-            name="task1",
-            task_group_kwargs=dict(
-                pkg_name="foo",
-                version="1",
-                resource_id=resource.id,
-            ),
-        )
-        _ = await task_factory(
-            user_id=user1.id,
-            name="task2",
-            task_group_kwargs=dict(
-                pkg_name="bar",
-                version="1",
-                resource_id=resource.id,
-            ),
-        )
+    task_a = TaskV2(name="a", version="1", type="x")
+    task_a_copy = TaskV2(name="a", version="1", type="x")
+    task_b = TaskV2(name="b", version="1", type="x")
+    tg = TaskGroupV2(
+        user_id=user_id,
+        resource_id=resource.id,
+        origin="unknown",
+        pkg_name="foo",
+        version="1",
+        task_list=[task_a, task_a_copy, task_b],
+    )
+    db.add(tg)
+    await db.commit()
 
-    async with MockCurrentUser(is_superuser=True) as user2:
-        _ = await task_factory(
-            user_id=user2.id,
-            name="task1",
-            task_group_kwargs=dict(
-                pkg_name="foo",
-                version="1",
-                resource_id=resource.id,
-            ),
-        )
+    await db.refresh(task_a)
+    await db.refresh(task_a_copy)
+    await db.refresh(task_b)
+    assert task_a.is_core is False
+    assert task_a_copy.is_core is False
+    assert task_b.is_core is False
 
-    async with MockCurrentUser(is_superuser=True) as super_user:
-        print(super_user)
+    async with MockCurrentUser(is_superuser=True):
+        # Make TaskA core -> OK
+        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-core/")
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is True
+        # Make TaskA core again -> OK
+        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-core/")
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is True
+        # Make TaskB core -> OK
+        res = await client.post(f"{PREFIX}/task/{task_b.id}/make-core/")
+        assert res.status_code == 200
+        await db.refresh(task_b)
+        assert task_b.is_core is True
+        # Make TaskA-copy core -> 422
+        res = await client.post(f"{PREFIX}/task/{task_a_copy.id}/make-core/")
+        assert res.status_code == 422
+        assert res.json()["detail"] == "TBD"
+        await db.refresh(task_a_copy)
+        assert task_a_copy.is_core is False
+        # Make TaskA not core -> OK
+        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-not-core/")
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is False
+        # Make TaskA-copy core -> OK
+        res = await client.post(f"{PREFIX}/task/{task_a_copy.id}/make-core/")
+        assert res.status_code == 200
+        await db.refresh(task_a_copy)
+        assert task_a_copy.is_core is True

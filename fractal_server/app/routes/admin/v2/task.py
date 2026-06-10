@@ -199,7 +199,8 @@ async def make_task_core(
         .where(TaskV2.name == task.name)
         .where(TaskV2.is_core.is_(True))
     )
-    if res.scalars().all():
+    duplicate_task_id = res.scalar_one_or_none()
+    if duplicate_task_id and duplicate_task_id != task_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="TBD",
