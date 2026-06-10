@@ -270,3 +270,8 @@ async def test_task_core(
         assert res.status_code == 200
         await db.refresh(task_a_copy)
         assert task_a_copy.is_core is True
+        # 404
+        res = await client.post(f"{PREFIX}/task/123/make-core/")
+        assert res.status_code == 404
+        res = await client.post(f"{PREFIX}/task/123/make-not-core/")
+        assert res.status_code == 404

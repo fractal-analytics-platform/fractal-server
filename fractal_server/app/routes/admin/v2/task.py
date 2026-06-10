@@ -2,13 +2,11 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from sqlalchemy.exc import NoResultFound
 from sqlmodel import func
 from sqlmodel import select
 from sqlmodel import update
@@ -21,6 +19,9 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_task_or_404,
+)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_task_core_constraint,
 )
@@ -183,13 +184,7 @@ async def make_task_core(
     """
     Set `TaskV2.is_core` to `True`
     """
-    try:
-        task = await db.get_one(TaskV2, task_id)
-    except NoResultFound:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {task_id} not found",
-        )
+    task = await _get_task_or_404(task_id=task_id, db=db)
     task_group = await db.get_one(TaskGroupV2, task.taskgroupv2_id)
 
     await _verify_non_duplication_task_core_constraint(
@@ -214,6 +209,7 @@ async def make_task_not_core(
     """
     Set `TaskV2.is_core` to `False`
     """
+    await _get_task_or_404(task_id=task_id, db=db)
     await db.execute(
         update(TaskV2).where(TaskV2.id == task_id).values(is_core=False)
     )
