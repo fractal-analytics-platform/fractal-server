@@ -1,4 +1,6 @@
+import pytest
 from devtools import debug
+from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -109,6 +111,38 @@ async def test_task_group(db, local_resource_profile_db):
     assert task_group is None
     assert task1 is None
     assert task3 is None
+
+    # Test unique constraint
+
+    with pytest.raises(
+        IntegrityError,
+        match="ix_taskv2_one_task_name_per_task_group",
+    ):
+        db.add(
+            TaskGroupV2(
+                user_id=user.id,
+                resource_id=resource.id,
+                active=True,
+                task_list=[
+                    TaskV2(
+                        name="my wonderful task",
+                        type="parallel",
+                        command_parallel="cmd",
+                        version="0",
+                    ),
+                    TaskV2(
+                        name="my wonderful task",
+                        type="parallel",
+                        command_parallel="cmd",
+                        version="0",
+                    ),
+                ],
+                origin="wheel-file",
+                pkg_name="package-name",
+                version="0",
+            )
+        )
+        await db.commit()
 
 
 async def test_collection_state(db, local_resource_profile_db):
