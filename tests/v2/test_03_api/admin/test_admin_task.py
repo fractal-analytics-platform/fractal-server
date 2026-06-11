@@ -211,26 +211,38 @@ async def test_task_core(
     db,
 ):
     resource, _ = local_resource_profile_db
-    async with MockCurrentUser() as user:
-        user_id = user.id
+    async with MockCurrentUser() as user1:
+        user1_id = user1.id
         res = await client.post(f"{PREFIX}/task/123/make-core/")
         assert res.status_code == 401
         res = await client.post(f"{PREFIX}/task/123/make-not-core/")
         assert res.status_code == 401
 
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
     task_a = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
     task_a_copy = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
-    task_b = TaskV2(name="b", version="1", type=TaskType.PARALLEL)
-    tg = TaskGroupV2(
-        user_id=user_id,
+    task_b = TaskV2(name="c", version="1", type=TaskType.PARALLEL)
+    tg1 = TaskGroupV2(
+        user_id=user1_id,
         resource_id=resource.id,
         origin="unknown",
         pkg_name="foo",
         version="1",
-        task_list=[task_a, task_a_copy, task_b],
+        task_list=[task_a, task_b],
         user_group_id=default_user_group.id,
     )
-    db.add(tg)
+    tg2 = TaskGroupV2(
+        user_id=user2_id,
+        resource_id=resource.id,
+        origin="unknown",
+        pkg_name="foo",
+        version="1",
+        task_list=[task_a_copy],
+        user_group_id=default_user_group.id,
+    )
+    db.add_all([tg1, tg2])
     await db.commit()
 
     await db.refresh(task_a)
@@ -284,10 +296,10 @@ async def test_task_core(
 
         res = await client.get("api/v2/task/?only_core=true")
         assert len(res.json()) == 2
-        assert [t["id"] for t in res.json()] == [task_a_copy.id, task_b.id]
+        assert [t["id"] for t in res.json()] == [task_b.id, task_a_copy.id]
         assert all(t["is_core"] is True for t in res.json())
 
         res = await client.get("api/v2/task/?only_core=true&slim=true")
         assert len(res.json()) == 2
-        assert [t["id"] for t in res.json()] == [task_a_copy.id, task_b.id]
+        assert [t["id"] for t in res.json()] == [task_b.id, task_a_copy.id]
         assert all(t["is_core"] is True for t in res.json())

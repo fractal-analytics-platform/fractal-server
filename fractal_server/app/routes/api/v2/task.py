@@ -42,6 +42,7 @@ logger = set_logger(__name__)
 _SLIM_TASK_FIELDS = {
     "id",
     "name",
+    "is_core",
     "input_types",
     "category",
     "modality",
