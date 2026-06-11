@@ -1,7 +1,7 @@
 """add TaskV2.is_core
 
 Revision ID: daecd41f37da
-Revises: 635d07f1ab55
+Revises: 66f492f489c3
 Create Date: 2026-06-09 15:33:27.850656
 
 """
@@ -11,7 +11,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "daecd41f37da"
-down_revision = "635d07f1ab55"
+down_revision = "66f492f489c3"
 branch_labels = None
 depends_on = None
 
