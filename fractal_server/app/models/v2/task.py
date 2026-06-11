@@ -77,7 +77,8 @@ class TaskV2(SQLModel, table=True):
             BOOLEAN,
             server_default="false",
             nullable=False,
-
+        )
+    )
     __table_args__ = (
         Index(
             "ix_taskv2_one_task_name_per_task_group",
