@@ -6,6 +6,7 @@ from fractal_server.app.models.v2.task_group import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.v2.task import TaskType
 
 PREFIX = "/admin/v2"
 
@@ -203,11 +204,11 @@ async def test_task_query(
 
 
 async def test_task_core(
-    db,
-    client,
-    MockCurrentUser,
-    task_factory,
     local_resource_profile_db,
+    default_user_group,
+    MockCurrentUser,
+    client,
+    db,
 ):
     resource, _ = local_resource_profile_db
     async with MockCurrentUser() as user:
@@ -217,9 +218,9 @@ async def test_task_core(
         res = await client.post(f"{PREFIX}/task/123/make-not-core/")
         assert res.status_code == 401
 
-    task_a = TaskV2(name="a", version="1", type="x")
-    task_a_copy = TaskV2(name="a", version="1", type="x")
-    task_b = TaskV2(name="b", version="1", type="x")
+    task_a = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
+    task_a_copy = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
+    task_b = TaskV2(name="b", version="1", type=TaskType.PARALLEL)
     tg = TaskGroupV2(
         user_id=user_id,
         resource_id=resource.id,
@@ -227,6 +228,7 @@ async def test_task_core(
         pkg_name="foo",
         version="1",
         task_list=[task_a, task_a_copy, task_b],
+        user_group_id=default_user_group.id,
     )
     db.add(tg)
     await db.commit()
@@ -275,3 +277,17 @@ async def test_task_core(
         assert res.status_code == 404
         res = await client.post(f"{PREFIX}/task/123/make-not-core/")
         assert res.status_code == 404
+
+    async with MockCurrentUser():
+        res = await client.get("api/v2/task/")
+        assert len(res.json()) == 3
+
+        res = await client.get("api/v2/task/?only_core=true")
+        assert len(res.json()) == 2
+        assert [t["id"] for t in res.json()] == [task_a_copy.id, task_b.id]
+        assert all(t["is_core"] is True for t in res.json())
+
+        res = await client.get("api/v2/task/?only_core=true&slim=true")
+        assert len(res.json()) == 2
+        assert [t["id"] for t in res.json()] == [task_a_copy.id, task_b.id]
+        assert all("is_core" not in t for t in res.json())

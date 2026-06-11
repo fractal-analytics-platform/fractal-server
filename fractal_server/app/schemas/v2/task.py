@@ -96,6 +96,7 @@ class TaskRead(BaseModel):
     name: str
     type: TaskType
     version: str
+    is_core: bool
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None
