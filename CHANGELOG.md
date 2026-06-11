@@ -11,6 +11,8 @@
 
 * Database:
     * Make task `(name, taskgroupv2_id)` unique (\#3362).
+* Dependencies:
+    * Require dev dependency `jinja2` 3.1.6 (\#3365).
 
 # 2.23.2
 
