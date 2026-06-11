@@ -177,47 +177,63 @@ async def query_tasks(
 
 
 @router.post(
-    "/{task_id}/make-core/",
+    "/make-core/",
     status_code=status.HTTP_200_OK,
 )
 async def make_task_core(
-    task_id: int,
+    task_ids: list[int],
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    """
-    Set `TaskV2.is_core` to `True`
-    """
-    task = await _get_task_or_404(task_id=task_id, db=db)
-    task_group = await db.get_one(TaskGroupV2, task.taskgroupv2_id)
+    tasks = [
+        await _get_task_or_404(task_id=task_id, db=db) for task_id in task_ids
+    ]
+    current_status = [task.is_core for task in tasks]
+    task_groups = [
+        await db.get_one(TaskGroupV2, task.taskgroupv2_id) for task in tasks
+    ]
 
-    await _verify_non_duplication_task_core_constraint(
-        task=task, task_group=task_group, db=db
-    )
+    for task, task_group in zip(tasks, task_groups):
+        await _verify_non_duplication_task_core_constraint(
+            task=task, task_group=task_group, db=db
+        )
+        task.is_core = True
 
-    task.is_core = True
-    db.add(task)
+    db.add_all(tasks)
     await db.commit()
+
+    try:
+        for task, task_group in zip(tasks, task_groups):
+            await _verify_non_duplication_task_core_constraint(
+                task=task, task_group=task_group, db=db
+            )
+            task.is_core = True
+    except Exception as e:
+        for task, is_core in zip(tasks, current_status):
+            task.is_core = is_core
+        db.add_all(tasks)
+        await db.commit()
+        raise e
 
     return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post(
-    "/{task_id}/make-not-core/",
+    "/make-not-core/",
     status_code=status.HTTP_200_OK,
 )
 async def make_task_not_core(
-    task_id: int,
+    task_ids: list[int],
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    """
-    Set `TaskV2.is_core` to `False`
-    """
-    task = await _get_task_or_404(task_id=task_id, db=db)
+    tasks = [
+        await _get_task_or_404(task_id=task_id, db=db) for task_id in task_ids
+    ]
 
-    task.is_core = False
-    db.add(task)
+    for task in tasks:
+        task.is_core = False
+    db.add_all(tasks)
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
