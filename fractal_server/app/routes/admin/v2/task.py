@@ -9,7 +9,6 @@ from pydantic import EmailStr
 from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
-from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -194,6 +193,7 @@ async def make_task_core(
     task.is_core = True
     db.add(task)
     await db.commit()
+
     return Response(status_code=status.HTTP_200_OK)
 
 
@@ -209,9 +209,10 @@ async def make_task_not_core(
     """
     Set `TaskV2.is_core` to `False`
     """
-    await _get_task_or_404(task_id=task_id, db=db)
-    await db.execute(
-        update(TaskV2).where(TaskV2.id == task_id).values(is_core=False)
-    )
+    task = await _get_task_or_404(task_id=task_id, db=db)
+
+    task.is_core = False
+    db.add(task)
     await db.commit()
+
     return Response(status_code=status.HTTP_200_OK)
