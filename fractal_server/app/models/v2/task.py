@@ -4,6 +4,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
+from sqlmodel import Index
 from sqlmodel import SQLModel
 
 
@@ -69,4 +70,13 @@ class TaskV2(SQLModel, table=True):
     authors: str | None = None
     tags: list[str] = Field(
         sa_column=Column(JSONB, server_default="[]", nullable=False)
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_taskv2_one_task_name_per_task_group",
+            "name",
+            "taskgroupv2_id",
+            unique=True,
+        ),
     )
