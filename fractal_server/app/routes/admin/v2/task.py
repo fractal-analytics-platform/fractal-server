@@ -38,6 +38,7 @@ class TaskMinimal(BaseModel):
     id: int
     name: str
     type: str
+    is_core: bool
     taskgroupv2_id: int
     command_non_parallel: str | None = None
     command_parallel: str | None = None
@@ -72,6 +73,7 @@ async def query_tasks(
     modality: str | None = None,
     author: str | None = None,
     resource_id: int | None = None,
+    only_core: bool = False,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
@@ -114,6 +116,9 @@ async def query_tasks(
         stm_count = stm_count.join(
             TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
         ).where(TaskGroupV2.resource_id == resource_id)
+    if only_core is True:
+        stm = stm.where(TaskV2.is_core)
+        stm_count = stm_count.where(TaskV2.is_core)
 
     response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
