@@ -213,9 +213,9 @@ async def test_task_core(
     resource, _ = local_resource_profile_db
     async with MockCurrentUser() as user1:
         user1_id = user1.id
-        res = await client.post(f"{PREFIX}/task/123/make-core/")
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123])
         assert res.status_code == 401
-        res = await client.post(f"{PREFIX}/task/123/make-not-core/")
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123])
         assert res.status_code == 401
 
     async with MockCurrentUser() as user2:
@@ -254,40 +254,72 @@ async def test_task_core(
 
     async with MockCurrentUser(is_superuser=True):
         # Make TaskA core -> OK
-        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-core/")
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id],
+        )
         assert res.status_code == 200
         await db.refresh(task_a)
         assert task_a.is_core is True
         # Make TaskA core again -> OK
-        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-core/")
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id],
+        )
         assert res.status_code == 200
         await db.refresh(task_a)
         assert task_a.is_core is True
         # Make TaskB core -> OK
-        res = await client.post(f"{PREFIX}/task/{task_b.id}/make-core/")
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_b.id],
+        )
         assert res.status_code == 200
         await db.refresh(task_b)
         assert task_b.is_core is True
         # Make TaskA-copy core -> 422
-        res = await client.post(f"{PREFIX}/task/{task_a_copy.id}/make-core/")
+        res = await client.post(
+            f"{PREFIX}/task/make-core/", json=[task_a_copy.id]
+        )
         assert res.status_code == 422
         assert res.json()["detail"] == "TBD"
         await db.refresh(task_a_copy)
         assert task_a_copy.is_core is False
         # Make TaskA not core -> OK
-        res = await client.post(f"{PREFIX}/task/{task_a.id}/make-not-core/")
+        res = await client.post(
+            f"{PREFIX}/task/make-not-core/", json=[task_a.id]
+        )
         assert res.status_code == 200
         await db.refresh(task_a)
         assert task_a.is_core is False
-        # Make TaskA-copy core -> OK
-        res = await client.post(f"{PREFIX}/task/{task_a_copy.id}/make-core/")
-        assert res.status_code == 200
+        # Make TaskA, TaskA-copy and TaskB core -> 422
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id, task_b.id, task_a_copy.id],
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "TBD"
+        await db.refresh(task_a)
         await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_a_copy.is_core is False
+        assert task_b.is_core is True
+        # Make TaskA-copy and TaskB core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-core/", json=[task_b.id, task_a_copy.id]
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
         assert task_a_copy.is_core is True
+        assert task_b.is_core is True
         # 404
-        res = await client.post(f"{PREFIX}/task/123/make-core/")
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123])
         assert res.status_code == 404
-        res = await client.post(f"{PREFIX}/task/123/make-not-core/")
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123])
         assert res.status_code == 404
 
     async with MockCurrentUser():
@@ -303,3 +335,17 @@ async def test_task_core(
         assert len(res.json()) == 2
         assert [t["id"] for t in res.json()] == [task_b.id, task_a_copy.id]
         assert all(t["is_core"] is True for t in res.json())
+
+    async with MockCurrentUser(is_superuser=True):
+        # Make TaskA, TaskA-copy and TaskB not core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-not-core/",
+            json=[task_a.id, task_b.id, task_a_copy.id],
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_a_copy.is_core is False
+        assert task_b.is_core is False
