@@ -1,5 +1,17 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.3 (unreleased)
+
+> NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
+> the following SQL query is useful to identify task groups with invalid data
+> (that is, two tasks with the same name within a single task group).
+> ```
+> select name, taskgroupv2_id, count(*) from taskv2 group by name, taskgroupv2_id having count(*) > 1;
+> ```
+
+* Database:
+    * Make task `(name, taskgroupv2_id)` unique (\#3362).
+
 # 2.23.2
 
 * Database:
