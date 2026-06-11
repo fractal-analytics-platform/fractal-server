@@ -290,4 +290,4 @@ async def test_task_core(
         res = await client.get("api/v2/task/?only_core=true&slim=true")
         assert len(res.json()) == 2
         assert [t["id"] for t in res.json()] == [task_a_copy.id, task_b.id]
-        assert all("is_core" not in t for t in res.json())
+        assert all(t["is_core"] is True for t in res.json())
