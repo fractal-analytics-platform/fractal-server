@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.3 (unreleased)
+# 2.23.3
 
 > NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
 > the following SQL query is useful to identify task groups with invalid data
