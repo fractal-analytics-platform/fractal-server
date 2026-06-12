@@ -11,6 +11,8 @@
 
 * Database:
     * Make task `(name, taskgroupv2_id)` unique (\#3362).
+* Testing:
+    * Update precommit/ty GitHub Action (\#3364).
 * Dependencies:
     * Require dev dependency `jinja2` 3.1.6 (\#3365).
 
