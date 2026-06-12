@@ -321,6 +321,16 @@ async def test_task_core(
         assert res.status_code == 404
         res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123])
         assert res.status_code == 404
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123, 1, 123])
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Value error, List has repetitions"
+        )
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123, -1])
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Input should be greater than or equal to 0"
+        )
 
     async with MockCurrentUser():
         res = await client.get("api/v2/task/")
