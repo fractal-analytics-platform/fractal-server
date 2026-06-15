@@ -332,20 +332,6 @@ async def test_task_core(
             "Input should be greater than or equal to 0"
         )
 
-    async with MockCurrentUser():
-        res = await client.get("api/v2/task/")
-        assert len(res.json()) == 3
-
-        res = await client.get("api/v2/task/?only_core=true")
-        assert len(res.json()) == 2
-        assert [t["id"] for t in res.json()] == [task_b.id, task_a_copy.id]
-        assert all(t["is_core"] is True for t in res.json())
-
-        res = await client.get("api/v2/task/?only_core=true&slim=true")
-        assert len(res.json()) == 2
-        assert [t["id"] for t in res.json()] == [task_b.id, task_a_copy.id]
-        assert all(t["is_core"] is True for t in res.json())
-
     async with MockCurrentUser(is_superuser=True):
         # Make TaskA, TaskA-copy and TaskB not core -> OK
         res = await client.post(

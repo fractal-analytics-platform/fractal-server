@@ -60,7 +60,6 @@ async def get_list_task(
     category: str | None = None,
     modality: str | None = None,
     author: str | None = None,
-    only_core: bool = False,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2] | list[dict[str, Any]]:
@@ -91,8 +90,6 @@ async def get_list_task(
         stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
-    if only_core:
-        stm = stm.where(TaskV2.is_core.is_(True))
 
     stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
