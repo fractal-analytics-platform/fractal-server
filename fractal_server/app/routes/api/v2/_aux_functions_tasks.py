@@ -408,6 +408,7 @@ async def _verify_non_duplication_task_core_constraint(
         .where(TaskGroupV2.pkg_name == task_group.pkg_name)
         .where(TaskGroupV2.version == task_group.version)
         .where(TaskGroupV2.resource_id == task_group.resource_id)
+        .limit(1)
     )
     duplicate_task_id = res.scalar_one_or_none()
     if duplicate_task_id:
