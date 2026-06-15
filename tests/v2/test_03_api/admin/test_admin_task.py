@@ -282,7 +282,7 @@ async def test_task_core(
             f"{PREFIX}/task/make-core/", json=[task_a_copy.id]
         )
         assert res.status_code == 422
-        assert res.json()["detail"] == "TBD"
+        assert "There already exists a core task with" in res.json()["detail"]
         await db.refresh(task_a_copy)
         assert task_a_copy.is_core is False
         # Make TaskA not core -> OK
@@ -298,7 +298,7 @@ async def test_task_core(
             json=[task_a.id, task_b.id, task_a_copy.id],
         )
         assert res.status_code == 422
-        assert res.json()["detail"] == "TBD"
+        assert "There already exists a core task with" in res.json()["detail"]
         await db.refresh(task_a)
         await db.refresh(task_a_copy)
         await db.refresh(task_b)
