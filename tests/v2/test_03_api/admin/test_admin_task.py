@@ -298,7 +298,7 @@ async def test_task_core(
             json=[task_a.id, task_b.id, task_a_copy.id],
         )
         assert res.status_code == 422
-        assert "There already exists a core task with" in res.json()["detail"]
+        assert "TBD: duplication in payload" in res.json()["detail"]
         await db.refresh(task_a)
         await db.refresh(task_a_copy)
         await db.refresh(task_b)

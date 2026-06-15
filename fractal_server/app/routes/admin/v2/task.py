@@ -2,6 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
@@ -189,7 +190,6 @@ async def make_task_core(
     tasks = [
         await _get_task_or_404(task_id=task_id, db=db) for task_id in task_ids
     ]
-    current_status = [task.is_core for task in tasks]
     task_groups = [
         await db.get_one(TaskGroupV2, task.taskgroupv2_id) for task in tasks
     ]
@@ -198,23 +198,25 @@ async def make_task_core(
         await _verify_non_duplication_task_core_constraint(
             task=task, task_group=task_group, db=db
         )
-        task.is_core = True
 
+    payload_tuples = [
+        (
+            task.name,
+            task_group.pkg_name,
+            task_group.version,
+            task_group.resource_id,
+        )
+        for task, task_group in zip(tasks, task_groups)
+    ]
+    if len(set(payload_tuples)) != len(payload_tuples):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="TBD: duplication in payload",
+        )
+    for task in tasks:
+        task.is_core = True
     db.add_all(tasks)
     await db.commit()
-
-    try:
-        for task, task_group in zip(tasks, task_groups):
-            await _verify_non_duplication_task_core_constraint(
-                task=task, task_group=task_group, db=db
-            )
-            task.is_core = True
-    except Exception as e:
-        for task, is_core in zip(tasks, current_status):
-            task.is_core = is_core
-        db.add_all(tasks)
-        await db.commit()
-        raise e
 
     return Response(status_code=status.HTTP_200_OK)
 
