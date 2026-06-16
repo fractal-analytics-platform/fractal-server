@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Add `uv audit` GitHub Action (\#3368).
+
 # 2.23.3
 
 > NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
