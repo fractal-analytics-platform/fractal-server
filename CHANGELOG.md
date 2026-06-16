@@ -11,6 +11,7 @@
 
 * Database:
     * Make task `(name, taskgroupv2_id)` unique (\#3362).
+    * Add `TaskV2.is_core` (\#3360).
 
 # 2.23.2
 
