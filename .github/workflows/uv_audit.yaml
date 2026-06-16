@@ -18,6 +18,6 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: false
-      - run: uv audit --no-group dev --no-group docs
+      - run: uv audit --no-group dev --no-group docs --verbose
       - run: uv audit
         continue-on-error: true
