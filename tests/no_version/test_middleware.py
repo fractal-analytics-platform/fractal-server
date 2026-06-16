@@ -6,7 +6,7 @@ import time
 from asgi_lifespan import LifespanManager
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
+from fastapi.routing import _iter_routes_with_context
 from httpx import ASGITransport
 from httpx import AsyncClient
 
@@ -85,22 +85,24 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     ```
     """
     background_task_routes = set()
-    for route in app.routes:
-        if isinstance(route, APIRoute):
-            method = list(route.methods)[0]
-            path = route.path
-            has_background_task = False
-            signature = inspect.signature(route.endpoint)
-            for _, param in signature.parameters.items():
-                if param.annotation == BackgroundTasks:
-                    background_task_routes.add((method, path))
-                    has_background_task = True
-                    break
 
-            assert (
-                _endpoint_has_background_task(method=method, path=path)
-                == has_background_task
-            )
+    # NOTE: We use `_iter_routes_with_context` because of a breaking change in
+    # fastapi 0.137.0, see https://github.com/fastapi/fastapi/discussions/15782
+    for route, ctx in _iter_routes_with_context(app.routes):
+        method = list(route.methods)[0]
+        path = route.path if ctx is None else ctx.path  # Due to fastapi 0.137
+        has_background_task = False
+        signature = inspect.signature(route.endpoint)
+        for _, param in signature.parameters.items():
+            if param.annotation == BackgroundTasks:
+                background_task_routes.add((method, path))
+                has_background_task = True
+                break
+
+        assert (
+            _endpoint_has_background_task(method=method, path=path)
+            is has_background_task
+        )
     assert background_task_routes == {
         ("POST", "/api/v2/project/{project_id}/job/submit/"),
         ("POST", "/api/v2/task/collect/pip/"),
