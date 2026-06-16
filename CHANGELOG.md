@@ -4,6 +4,7 @@
 
 * Dependencies:
     * Require `starlette>=1.3.1` (\#3368).
+    * Require `fastapi>=0.137.0` (\#3369).
 * Testing:
     * Add `uv audit` GitHub Action (\#3368).
 
