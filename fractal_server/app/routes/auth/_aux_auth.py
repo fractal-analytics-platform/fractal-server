@@ -298,7 +298,7 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
 
 def _remove_token_login_in_place(_router: APIRouter) -> None:
     """
-    Remove `/auth/token/login/`
+    Remove `/login` endpoint from router routes.
 
     NOTE: As of fastapi 0.137.0, this can only be used for actual `APIRouter`
     objects, and not for "included" routers. See https://fastapi.tiangolo.com/release-notes/#fixes.
@@ -308,7 +308,7 @@ def _remove_token_login_in_place(_router: APIRouter) -> None:
         _router.routes = [
             route
             for route in original_routes
-            if not route.path.startswith("/token/login")
+            if not route.path.startswith("/login")
         ]
     except AttributeError as e:
         raise ValueError(
