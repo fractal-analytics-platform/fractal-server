@@ -1,6 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.3 (unreleased)
+# Unreleased
+
+* Database:
+    * Add `TaskV2.is_core` (\#3360).
+* Dependencies:
+    * Require `starlette>=1.3.1` (\#3368).
+* Testing:
+    * Add `uv audit` GitHub Action (\#3368).
+
+# 2.23.3
 
 > NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
 > the following SQL query is useful to identify task groups with invalid data
@@ -11,7 +20,10 @@
 
 * Database:
     * Make task `(name, taskgroupv2_id)` unique (\#3362).
-    * Add `TaskV2.is_core` (\#3360).
+* Testing:
+    * Update precommit/ty GitHub Action (\#3364).
+* Dependencies:
+    * Require dev dependency `jinja2` 3.1.6 (\#3365).
 
 # 2.23.2
 
