@@ -40,6 +40,7 @@ async def test_task_query(
             category="Conversion",
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
+            is_core=True,
         )
         task3 = await task_factory(
             user_id=user.id, index=3, modality="EM", version="3"
@@ -184,6 +185,13 @@ async def test_task_query(
         assert len(res.json()["items"]) == 1
         res = await client.get(f"{PREFIX}/task/?author=,")
         assert len(res.json()["items"]) == 2
+
+        # Query only core
+        res = await client.get(f"{PREFIX}/task/?only_core=xxx")
+        assert res.status_code == 422
+        res = await client.get(f"{PREFIX}/task/?only_core=true")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
 
         # --------------------------
         # Relationships after deleting the Project
