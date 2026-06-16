@@ -1,5 +1,6 @@
 import pytest
 from devtools import debug
+from fastapi import APIRouter
 from fastapi import HTTPException
 from sqlmodel import select
 
@@ -7,12 +8,18 @@ from fractal_server.app.models import DatasetV2
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth._aux_auth import (
+    _add_trailing_slash_in_place,
+)
 from fractal_server.app.routes.auth._aux_auth import _check_project_dirs_update
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
 )
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_usergroup_with_user_ids,
+)
+from fractal_server.app.routes.auth._aux_auth import (
+    _remove_token_login_in_place,
 )
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
@@ -264,3 +271,50 @@ async def test_check_project_dirs_update_trailing_slash(
             db=db,
         )
     assert "You tried updating the user project_dirs" in str(e)
+
+
+def test_add_trailing_slash_in_place():
+    router = APIRouter()
+
+    @router.get("/path")
+    def endpoint():
+        return "ok"
+
+    assert router.routes[0].path == "/path"
+
+    _add_trailing_slash_in_place(router)
+    assert router.routes[0].path == "/path/"
+
+    another_router = APIRouter()
+    another_router.include_router(router)
+
+    with pytest.raises(
+        ValueError,
+        match="fastapi.routing._IncludedRouter",
+    ):
+        _add_trailing_slash_in_place(another_router)
+
+
+def test_remove_token_login_in_place():
+    router = APIRouter()
+
+    @router.get("/token/something")
+    def endpoint1():
+        return "ok"
+
+    @router.get("/token/login")
+    def endpoint2():
+        return "ok"
+
+    assert len(router.routes) == 2
+    _remove_token_login_in_place(router)
+    assert len(router.routes) == 1
+
+    another_router = APIRouter()
+    another_router.include_router(router)
+
+    with pytest.raises(
+        ValueError,
+        match="fastapi.routing._IncludedRouter",
+    ):
+        _remove_token_login_in_place(another_router)

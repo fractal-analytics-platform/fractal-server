@@ -1,3 +1,4 @@
+from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -273,3 +274,44 @@ async def _check_project_dirs_update(
                     "their dataset zarr directories."
                 ),
             )
+
+
+def _add_trailing_slash_in_place(_router: APIRouter) -> None:
+    """
+    Add trailing slash to all paths in `_router.routes`, in-place.
+
+    NOTE: As of fastapi 0.137.0, this can only be used for actual `APIRouter`
+    objects, and not for "included" routers. See https://fastapi.tiangolo.com/release-notes/#fixes.
+    """
+
+    for route in _router.routes:
+        try:
+            current_path = route.path
+            if not current_path.endswith("/"):
+                route.path = f"{current_path}/"
+        except AttributeError as e:
+            raise ValueError(
+                f"Route of type {type(route)} cannot be used in "
+                "_add_trailing_slash_in_place."
+            ) from e
+
+
+def _remove_token_login_in_place(_router: APIRouter) -> None:
+    """
+    Remove `/auth/token/login/`
+
+    NOTE: As of fastapi 0.137.0, this can only be used for actual `APIRouter`
+    objects, and not for "included" routers. See https://fastapi.tiangolo.com/release-notes/#fixes.
+    """
+    original_routes = _router.routes[:]
+    try:
+        _router.routes = [
+            route
+            for route in original_routes
+            if not route.path.startswith("/token/login")
+        ]
+    except AttributeError as e:
+        raise ValueError(
+            f"Routes of type {[type(_route) for _route in _router.routes]} "
+            "cannot be used in _remove_token_login_in_place."
+        ) from e

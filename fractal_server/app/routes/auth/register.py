@@ -10,16 +10,12 @@ from fractal_server.app.schemas.user import UserRead
 
 from . import current_superuser_act
 from . import fastapi_users
+from ._aux_auth import _add_trailing_slash_in_place
 
 router_register = APIRouter()
 
+_register_router = fastapi_users.get_register_router(UserRead, UserCreate)
+_add_trailing_slash_in_place(_register_router)
 router_register.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    dependencies=[Depends(current_superuser_act)],
+    _register_router, dependencies=[Depends(current_superuser_act)]
 )
-
-
-# Add trailing slash to all routes' paths
-for route in router_register.routes:
-    if not route.path.endswith("/"):
-        route.path = f"{route.path}/"

@@ -9,8 +9,8 @@ from fractal_server.syringe import Inject
 
 from . import fastapi_users
 from . import token_backend
-
-router_login = APIRouter()
+from ._aux_auth import _add_trailing_slash_in_place
+from ._aux_auth import _remove_token_login_in_place
 
 
 def get_login_router() -> APIRouter:
@@ -19,22 +19,10 @@ def get_login_router() -> APIRouter:
     """
     settings = Inject(get_settings)
     router_login = APIRouter()
-    router_login.include_router(
-        fastapi_users.get_auth_router(token_backend),
-        prefix="/token",
-    )
+    _router_login = fastapi_users.get_auth_router(token_backend)
+    _add_trailing_slash_in_place(_router_login)
     if settings.FRACTAL_DISABLE_BASIC_AUTH == "true":
-        # Remove `/auth/token/login/`
-        original_routes = router_login.routes[:]
-        router_login.routes = [
-            route
-            for route in original_routes
-            if not route.path.startswith("/token/login")
-        ]
-
-    # Add trailing slash to all routes paths
-    for route in router_login.routes:
-        if not route.path.endswith("/"):
-            route.path = f"{route.path}/"
+        _remove_token_login_in_place(_router_login)
+    router_login.include_router(_router_login, prefix="/token")
 
     return router_login
