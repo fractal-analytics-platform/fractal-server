@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Require `starlette>=1.3.1` (\#3368).
+* Testing:
+    * Add `uv audit` GitHub Action (\#3368).
+
 # 2.23.3
 
 > NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
