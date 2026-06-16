@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Dependencies:
+    * Require `starlette>=1.3.1` (\#3368).
 * Testing:
     * Add `uv audit` GitHub Action (\#3368).
 
