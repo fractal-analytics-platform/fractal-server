@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -56,9 +55,6 @@ _SLIM_TASK_FIELDS = {
 @router.get("/", response_model=list[TaskRead] | list[TaskReadSlim])
 async def get_list_task(
     slim: bool = False,
-    category: str | None = None,
-    modality: str | None = None,
-    author: str | None = None,
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2] | list[dict[str, Any]]:
@@ -83,12 +79,6 @@ async def get_list_task(
             )
         )
     )
-    if category is not None:
-        stm = stm.where(func.lower(TaskV2.category) == category.lower())
-    if modality is not None:
-        stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
-    if author is not None:
-        stm = stm.where(TaskV2.authors.icontains(author))
 
     stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
