@@ -3,7 +3,7 @@ name: uv audit
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 06 * * 2"
+    - cron: "0 06 * * 3"
 
 permissions: {}
 
