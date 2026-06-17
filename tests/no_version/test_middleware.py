@@ -86,11 +86,13 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     """
     background_task_routes = set()
 
-    # NOTE: We use `_iter_routes_with_context` because of a breaking change in
-    # fastapi 0.137.0, see https://github.com/fastapi/fastapi/discussions/15782
-    for route, ctx in _iter_routes_with_context(app.routes):
+    # NOTE: As of fastapi 0.137.0, the `routes` may be a list of
+    # `_IncludedRouter` objects (instead of `BaseRoute`), which do not have a
+    # `path` attribute. See https://fastapi.tiangolo.com/release-notes/#01370-2026-06-14#fixes.
+    # This is why we use the private `_iter_routes_with_context` function.
+    for route, context in _iter_routes_with_context(app.routes):
         method = list(route.methods)[0]
-        path = route.path if ctx is None else ctx.path  # Due to fastapi 0.137
+        path = route.path if context is None else context.path
         has_background_task = False
         signature = inspect.signature(route.endpoint)
         for _, param in signature.parameters.items():
