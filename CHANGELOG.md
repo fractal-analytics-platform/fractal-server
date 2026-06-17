@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.5 (unreleased)
+
+* API:
+    * Adapt to fastapi 0.137 breaking changes (\#3369).
+* Dependencies:
+    * Require `fastapi>=0.137.0` (\#3369).
+
 # 2.23.4
 
 * API:
@@ -8,7 +15,6 @@
     * Add `TaskV2.is_core` (\#3360).
 * Dependencies:
     * Require `starlette>=1.3.1` (\#3368).
-    * Require `fastapi>=0.137.0` (\#3369).
 * Testing:
     * Add `uv audit` GitHub Action (\#3368).
 
