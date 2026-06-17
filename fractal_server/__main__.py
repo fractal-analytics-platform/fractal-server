@@ -93,6 +93,18 @@ update_db_data_parser = subparsers.add_parser(
     description="Apply data-migration script to an existing database.",
 )
 
+# fractalctl review-recent-activities
+review_recent_activities_parser = subparsers.add_parser(
+    "review-recent-activities",
+    description="Review recent activities",
+)
+review_recent_activities_parser.add_argument(
+    "--minutes",
+    type=int,
+    help="TBD",
+    default=20,
+)
+
 
 def save_openapi(dest: str = "openapi.json") -> None:
     from fractal_server.main import start_application
@@ -339,6 +351,10 @@ def update_db_data() -> None:
     current_update_db_data_module.fix_db()
 
 
+def review_recent_activities(*, minutes: int) -> None:
+    print(minutes)
+
+
 def run() -> None:
     args = parser.parse_args(sys.argv[1:])
 
@@ -363,6 +379,8 @@ def run() -> None:
             port=args.port,
             reload=args.reload,
         )
+    elif args.cmd == "review-recent-activities":
+        review_recent_activities(minutes=args.minutes)
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")
 
