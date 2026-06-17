@@ -96,6 +96,7 @@ class TaskRead(BaseModel):
     name: str
     type: TaskType
     version: str
+    is_core: bool
 
     command_non_parallel: str | None = None
     command_parallel: str | None = None
@@ -120,11 +121,13 @@ class TaskRead(BaseModel):
 class TaskReadSlim(BaseModel):
     id: int
     name: str
+    version: str
+    is_core: bool
+
     category: str | None = None
     modality: str | None = None
     authors: str | None = None
     tags: list[str]
-    version: str
     input_types: dict[str, bool]
     docs_info: str | None = None
     docs_link: str | None = None
