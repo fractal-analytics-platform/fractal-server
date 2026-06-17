@@ -7,6 +7,8 @@ from pathlib import Path
 import uvicorn
 from pydantic import ValidationError
 
+from fractal_server.utils import get_timestamp
+
 parser = ap.ArgumentParser(description="fractal-server commands")
 
 subparsers = parser.add_subparsers(title="Commands", dest="cmd", required=True)
@@ -352,7 +354,55 @@ def update_db_data() -> None:
 
 
 def review_recent_activities(*, minutes: int) -> None:
-    print(minutes)
+    import datetime
+
+    from sqlmodel import select
+
+    from fractal_server.app.db import get_sync_db
+    from fractal_server.app.models import JobV2
+    from fractal_server.app.models import TaskGroupActivityV2
+    from fractal_server.app.models import UserOAuth
+    from fractal_server.app.schemas.v2.job import JobStatusType
+    from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+
+    with next(get_sync_db()) as db:
+        # Query ongoing jobs
+        jobs = (
+            db.execute(
+                select(JobV2).where(JobV2.status == JobStatusType.SUBMITTED)
+            )
+            .scalars()
+            .all()
+        )
+        # Query TaskGroupActivities
+        threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
+        activities = db.execute(
+            select(TaskGroupActivityV2, UserOAuth.email)
+            .join(UserOAuth, TaskGroupActivityV2.user_id == UserOAuth.id)
+            .where(
+                TaskGroupActivityV2.status == TaskGroupActivityStatus.ONGOING
+            )
+            .where(TaskGroupActivityV2.timestamp_started >= threshold)
+        ).all()
+
+    print("## Summary\n------")
+    if jobs or activities:
+        if jobs:
+            print("## Recent jobs")
+            for job in jobs:
+                print(
+                    f"{job.id} by {job.user_email}, "
+                    f"started at {job.start_timestamp}.\n"
+                )
+        if activities:
+            print("## Recent activities")
+            for activity, user_email in activities:
+                print(
+                    f"{activity.id} by {user_email}, "
+                    f"started at {activity.timestamp_started}.\n"
+                )
+    else:
+        print("No recent fractal-server activity.")
 
 
 def run() -> None:
