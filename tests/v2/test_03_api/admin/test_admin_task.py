@@ -1,3 +1,5 @@
+import asyncio
+
 from sqlalchemy import select
 
 from fractal_server.app.models.v2.resource import Resource
@@ -355,3 +357,46 @@ async def test_task_core(
         assert task_a.is_core is False
         assert task_a_copy.is_core is False
         assert task_b.is_core is False
+
+
+async def test_race_condition_for_core_tasks(
+    local_resource_profile_db,
+    MockCurrentUser,
+    client,
+    db,
+    default_user_group,
+):
+    resource, _ = local_resource_profile_db
+    async with MockCurrentUser(is_superuser=True) as user:
+        common_args_task = dict(name="a", version="1", type=TaskType.PARALLEL)
+        task_a = TaskV2(**common_args_task)
+        task_b = TaskV2(**common_args_task)
+
+        common_args_task_group = dict(
+            user_id=user.id,
+            resource_id=resource.id,
+            origin="unknown",
+            pkg_name="foo",
+            version="1",
+            user_group_id=default_user_group.id,
+        )
+        tg1 = TaskGroupV2(task_list=[task_a], **common_args_task_group)
+        tg2 = TaskGroupV2(task_list=[task_b], **common_args_task_group)
+        db.add_all([tg1, tg2])
+        await db.commit()
+
+        await db.refresh(task_a)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_b.is_core is False
+
+        res1, res2 = await asyncio.gather(
+            client.post(f"{PREFIX}/task/make-core/", json=[task_a.id]),
+            client.post(f"{PREFIX}/task/make-core/", json=[task_b.id]),
+        )
+
+        assert (res1.status_code, res2.status_code) in [(200, 422), (422, 200)]
+
+        await db.refresh(task_a)
+        await db.refresh(task_b)
+        assert task_a.is_core != task_b.is_core

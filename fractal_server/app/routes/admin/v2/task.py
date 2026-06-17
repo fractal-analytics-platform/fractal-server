@@ -201,11 +201,15 @@ async def make_task_core(
             detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
         )
 
-    # Non-duplication check constraint
-    for task, task_group in tasks_and_groups:
-        await _verify_non_duplication_task_core_constraint(
-            task=task, task_group=task_group, db=db
-        )
+    # ---
+    await db.execute(
+        select(TaskV2)
+        .where(TaskV2.name.in_([t.name for t, _ in tasks_and_groups]))
+        .where(TaskV2.version.in_([t.version for t, _ in tasks_and_groups]))
+        .where(TaskV2.is_core.is_(False))
+        .with_for_update()
+    )
+
     payload_tuples = [
         (
             task.name,
@@ -223,6 +227,12 @@ async def make_task_core(
                 "(with the same task name and task-group properties). "
                 "Hint: include fewer tasks in the request body and retry."
             ),
+        )
+
+    # Non-duplication check constraint
+    for task, task_group in tasks_and_groups:
+        await _verify_non_duplication_task_core_constraint(
+            task=task, task_group=task_group, db=db
         )
 
     # Update
