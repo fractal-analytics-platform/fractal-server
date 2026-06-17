@@ -296,7 +296,7 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
             ) from e
 
 
-def _remove_token_login_in_place(_router: APIRouter) -> None:
+def _remove_login_route_in_place(_router: APIRouter) -> None:
     """
     Remove `/login` endpoint from router routes.
 

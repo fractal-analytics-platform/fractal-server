@@ -19,7 +19,7 @@ from fractal_server.app.routes.auth._aux_auth import (
     _get_single_usergroup_with_user_ids,
 )
 from fractal_server.app.routes.auth._aux_auth import (
-    _remove_token_login_in_place,
+    _remove_login_route_in_place,
 )
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
@@ -295,19 +295,19 @@ def test_add_trailing_slash_in_place():
         _add_trailing_slash_in_place(another_router)
 
 
-def test_remove_token_login_in_place():
+def test_remove_login_route_in_place():
     router = APIRouter()
 
-    @router.get("/token/something")
+    @router.get("/something")
     def endpoint1():
         return "ok"
 
-    @router.get("/token/login")
+    @router.get("/login")
     def endpoint2():
         return "ok"
 
     assert len(router.routes) == 2
-    _remove_token_login_in_place(router)
+    _remove_login_route_in_place(router)
     assert len(router.routes) == 1
 
     another_router = APIRouter()
@@ -317,4 +317,4 @@ def test_remove_token_login_in_place():
         ValueError,
         match="fastapi.routing._IncludedRouter",
     ):
-        _remove_token_login_in_place(another_router)
+        _remove_login_route_in_place(another_router)
