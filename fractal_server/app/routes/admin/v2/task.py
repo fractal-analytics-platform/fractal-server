@@ -201,7 +201,11 @@ async def make_task_core(
             detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
         )
 
-    # ---
+    # Acquire a lock on all rows that could result into conflicting core tasks,
+    # to avoid a race condition where two "make-core" endpoints are called at
+    # the same time. See
+    # https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE
+    # and https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS
     await db.execute(
         select(TaskV2)
         .where(TaskV2.name.in_([t.name for t, _ in tasks_and_groups]))
