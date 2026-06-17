@@ -400,3 +400,15 @@ async def test_race_condition_for_core_tasks(
         await db.refresh(task_a)
         await db.refresh(task_b)
         assert task_a.is_core != task_b.is_core
+
+        # Check that the lock has been released
+        core_task_id = task_a.id if task_a.is_core else task_b.id
+        non_core_task_id = task_b.id if task_b.is_core else task_a.id
+        res1 = await client.post(
+            f"{PREFIX}/task/make-not-core/", json=[core_task_id]
+        )
+        res2 = await client.post(
+            f"{PREFIX}/task/make-core/", json=[non_core_task_id]
+        )
+        assert res1.status_code == 200
+        assert res2.status_code == 200
