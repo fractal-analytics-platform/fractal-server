@@ -10,6 +10,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -19,9 +20,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _get_task_or_404,
-)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _verify_non_duplication_task_core_constraint,
 )
@@ -187,18 +185,26 @@ async def make_task_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    tasks = [
-        await _get_task_or_404(task_id=task_id, db=db) for task_id in task_ids
-    ]
-    task_groups = [
-        await db.get_one(TaskGroupV2, task.taskgroupv2_id) for task in tasks
-    ]
+    res = await db.execute(
+        select(TaskV2, TaskGroupV2)
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .where(TaskV2.id.in_(task_ids))
+    )
+    tasks_and_groups = res.all()
+    if len(tasks_and_groups) != len(task_ids):
+        missing_ids = sorted(
+            list(set(task_ids) - set([tg[0].id for tg in tasks_and_groups]))
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
+        )
 
-    for task, task_group in zip(tasks, task_groups):
+    # Non-duplication check constraint
+    for task, task_group in tasks_and_groups:
         await _verify_non_duplication_task_core_constraint(
             task=task, task_group=task_group, db=db
         )
-
     payload_tuples = [
         (
             task.name,
@@ -206,16 +212,22 @@ async def make_task_core(
             task_group.version,
             task_group.resource_id,
         )
-        for task, task_group in zip(tasks, task_groups)
+        for task, task_group in tasks_and_groups
     ]
     if len(set(payload_tuples)) != len(payload_tuples):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="TBD: duplication in payload",
+            detail=(
+                "This request would generate conflicting core tasks "
+                "(with the same task name and task-group properties). "
+                "Hint: include fewer tasks in the request body and retry."
+            ),
         )
-    for task in tasks:
-        task.is_core = True
-    db.add_all(tasks)
+
+    # Update
+    await db.execute(
+        update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=True)
+    )
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
@@ -230,13 +242,19 @@ async def make_task_not_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    tasks = [
-        await _get_task_or_404(task_id=task_id, db=db) for task_id in task_ids
-    ]
+    res = await db.execute(select(TaskV2).where(TaskV2.id.in_(task_ids)))
+    tasks = res.scalars().all()
+    if len(tasks) != len(task_ids):
+        missing_ids = sorted(list(set(task_ids) - set([t.id for t in tasks])))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
+        )
 
-    for task in tasks:
-        task.is_core = False
-    db.add_all(tasks)
+    # Update
+    await db.execute(
+        update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=False)
+    )
     await db.commit()
 
     return Response(status_code=status.HTTP_200_OK)
