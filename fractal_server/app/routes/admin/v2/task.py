@@ -20,9 +20,6 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2._aux_functions_tasks import (
-    _verify_non_duplication_task_core_constraint,
-)
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
@@ -30,6 +27,10 @@ from fractal_server.app.routes.pagination import get_paginated_response
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.types import ListUniqueNonNegativeInt
+
+from ._aux_functions_core_tasks import (
+    _verify_non_duplication_task_core_constraint,
+)
 
 router = APIRouter()
 
