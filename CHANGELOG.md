@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Database:
+    * Add `TaskV2.is_core` (\#3360).
 * Dependencies:
     * Require `starlette>=1.3.1` (\#3368).
 * Testing:
