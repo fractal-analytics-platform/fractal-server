@@ -280,10 +280,11 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
     """
     Add trailing slash to all paths in `_router.routes`, in-place.
 
-    NOTE: As of fastapi 0.137.0, this can only be used for actual `APIRouter`
-    objects, and not for "included" routers. See https://fastapi.tiangolo.com/release-notes/#fixes.
+    NOTE: As of fastapi 0.137.0, the `routes` may be a list of `_IncludedRouter`
+    objects (instead of `BaseRoute`), which do not have a `path` attribute. See
+    https://fastapi.tiangolo.com/release-notes/#01370-2026-06-14#fixes.
+    That is why we have to catch and handle the corresponding `AttributeError`.
     """
-
     for route in _router.routes:
         try:
             current_path = route.path
@@ -298,10 +299,12 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
 
 def _remove_login_route_in_place(_router: APIRouter) -> None:
     """
-    Remove `/login` endpoint from router routes.
+    Remove `/login` endpoint from the routes of a given router, in-place.
 
-    NOTE: As of fastapi 0.137.0, this can only be used for actual `APIRouter`
-    objects, and not for "included" routers. See https://fastapi.tiangolo.com/release-notes/#fixes.
+    NOTE: As of fastapi 0.137.0, the `routes` may be a list of `_IncludedRouter`
+    objects (instead of `BaseRoute`), which do not have a `path` attribute. See
+    https://fastapi.tiangolo.com/release-notes/#01370-2026-06-14#fixes.
+    That is why we have to catch and handle the corresponding `AttributeError`.
     """
     original_routes = _router.routes[:]
     try:
