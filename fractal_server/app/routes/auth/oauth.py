@@ -93,7 +93,7 @@ def get_oauth_router() -> APIRouter | None:
         client = _create_client_oidc(oauth_settings)
 
     router_oauth.include_router(
-        _router_oauth=fastapi_users.get_oauth_router(
+        fastapi_users.get_oauth_router(
             client,
             cookie_backend,
             settings.JWT_SECRET_KEY,
