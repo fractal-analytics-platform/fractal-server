@@ -2,6 +2,8 @@
 
 # 2.23.5 (unreleased)
 
+* App:
+    * Add new command `fractalctl recent` (\#3372).
 * API:
     * Remove `GET /api/v2/task/` (\#3374).
     * Adapt to fastapi 0.137 breaking changes (\#3369).
