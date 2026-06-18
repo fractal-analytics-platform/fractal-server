@@ -358,6 +358,7 @@ def recent_activities(*, minutes: int) -> None:
 
     from sqlalchemy.sql.operators import is_not
     from sqlmodel import and_
+    from sqlmodel import case
     from sqlmodel import or_
     from sqlmodel import select
 
@@ -387,7 +388,15 @@ def recent_activities(*, minutes: int) -> None:
                         ),
                     )
                 )
-                .order_by(JobV2.status, JobV2.start_timestamp)
+                .order_by(
+                    case(
+                        (JobV2.status == JobStatusType.SUBMITTED, 0),
+                        (JobV2.status == JobStatusType.DONE, 1),
+                        (JobV2.status == JobStatusType.FAILED, 2),
+                        else_=3,
+                    ),
+                    JobV2.start_timestamp,
+                )
             )
             .scalars()
             .all()
@@ -407,7 +416,29 @@ def recent_activities(*, minutes: int) -> None:
                 )
             )
             .order_by(
-                TaskGroupActivityV2.status,
+                case(
+                    (
+                        TaskGroupActivityV2.status
+                        == TaskGroupActivityStatus.ONGOING,
+                        0,
+                    ),
+                    (
+                        TaskGroupActivityV2.status
+                        == TaskGroupActivityStatus.PENDING,
+                        1,
+                    ),
+                    (
+                        TaskGroupActivityV2.status
+                        == TaskGroupActivityStatus.OK,
+                        2,
+                    ),
+                    (
+                        TaskGroupActivityV2.status
+                        == TaskGroupActivityStatus.FAILED,
+                        3,
+                    ),
+                    else_=4,
+                ),
                 TaskGroupActivityV2.timestamp_started,
             )
         ).all()
@@ -431,7 +462,7 @@ def recent_activities(*, minutes: int) -> None:
             print("## Recent Jobs")
             for job in jobs:
                 print(
-                    f"{job.id} by {job.user_email}, "
+                    f"ID={job.id} by {job.user_email}, "
                     f"current status: {job.status}, "
                     "start/end time: "
                     f"{format_timestamp(job.start_timestamp)}/"
@@ -441,7 +472,8 @@ def recent_activities(*, minutes: int) -> None:
             print("## Recent Task-Group activities")
             for activity, user_email in activities:
                 print(
-                    f"{activity.id} by {user_email}, "
+                    f"ID={activity.id} by {user_email}, "
+                    f"{activity.action}, "
                     f"{activity.pkg_name} {activity.version}, "
                     f"current status: {activity.status}, "
                     "start/end time: "
