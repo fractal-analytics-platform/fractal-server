@@ -15,6 +15,7 @@ from fractal_server.syringe import Inject
 
 from . import cookie_backend
 from . import fastapi_users
+from ._aux_auth import _add_trailing_slash_in_place
 
 
 class FractalOpenID(OpenID):
@@ -102,10 +103,5 @@ def get_oauth_router() -> APIRouter | None:
         ),
         prefix=f"/{client_name}",
     )
-
-    # Add trailing slash to all routes' paths
-    for route in router_oauth.routes:
-        if not route.path.endswith("/"):
-            route.path = f"{route.path}/"
-
+    _add_trailing_slash_in_place(router_oauth)
     return router_oauth
