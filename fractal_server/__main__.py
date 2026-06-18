@@ -96,11 +96,11 @@ update_db_data_parser = subparsers.add_parser(
 )
 
 # fractalctl recent
-recent_activities_parser = subparsers.add_parser(
+recent_parser = subparsers.add_parser(
     "recent",
     description="Review recent jobs and task-group activities.",
 )
-recent_activities_parser.add_argument(
+recent_parser.add_argument(
     "--minutes",
     type=int,
     help="Look-back period in minutes (default: 20).",
