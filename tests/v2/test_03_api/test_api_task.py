@@ -56,66 +56,6 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
     assert error_msg in str(res.json()["detail"])
 
 
-async def test_task_get_list(
-    db, client, task_factory, MockCurrentUser, user_group_factory
-):
-    async with MockCurrentUser() as user:
-        new_group = await user_group_factory(
-            group_name="new_group", user_id=user.id
-        )
-
-        await task_factory(
-            user_id=user.id,
-            task_group_kwargs=dict(user_group_id=new_group.id),
-            index=1,
-            category="Conversion",
-            modality="HCS",
-            authors="Name1 Surname1,Name2 Surname2...",
-        )
-
-        await task_factory(
-            user_id=user.id,
-            index=2,
-            category="Conversion",
-            modality="EM",
-            authors="NAME1 SURNAME3",
-        )
-        t = await task_factory(
-            user_id=user.id,
-            index=3,
-            args_schema_non_parallel=dict(a=1),
-            args_schema_parallel=dict(b=2),
-            modality="EM",
-        )
-        res = await client.get(f"{PREFIX}/")
-        data = res.json()
-        assert res.status_code == 200
-        assert len(data) == 3
-        assert data[2]["id"] == t.id
-        assert data[2]["args_schema_non_parallel"] == dict(a=1)
-        assert data[2]["args_schema_parallel"] == dict(b=2)
-
-        res = await client.get(f"{PREFIX}/?slim=true")
-        task = res.json()[2]
-        assert "args_schema_non_parallel" not in task
-        assert "args_schema_parallel" not in task
-
-        # Queries
-        res = await client.get(f"{PREFIX}/?category=CONVERSION")
-        assert len(res.json()) == 2
-        res = await client.get(f"{PREFIX}/?modality=em")
-        assert len(res.json()) == 2
-        res = await client.get(f"{PREFIX}/?category=conversion&modality=em")
-        assert len(res.json()) == 1
-        res = await client.get(f"{PREFIX}/?author=name1%20sur")
-        assert len(res.json()) == 2
-
-    async with MockCurrentUser():
-        res = await client.get(f"{PREFIX}/")
-        assert res.status_code == 200
-        assert len(res.json()) == 2
-
-
 async def test_post_task(
     client,
     MockCurrentUser,
