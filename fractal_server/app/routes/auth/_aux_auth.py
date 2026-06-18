@@ -281,7 +281,7 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
     """
     Add trailing slash to all paths in `_router.routes`, in-place.
 
-    NOTE: Usage of routes/context is required as of fastapi v0.137.
+    NOTE: Usage of contexts is needed as of fastapi v0.137.
     """
     for context in iter_route_contexts(_router.routes):
         path = context.original_route.path
