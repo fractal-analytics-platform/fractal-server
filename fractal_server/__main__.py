@@ -408,8 +408,11 @@ def review_recent_activities(*, minutes: int) -> None:
                 TaskGroupActivityV2.timestamp_started,
             )
         ).all()
-
+    # Print summary
+    SEPARATOR = "-" * 50
+    print(SEPARATOR)
     print("## Summary")
+    print(SEPARATOR)
     if jobs or activities:
         if jobs:
             print("## Recent jobs")
@@ -420,6 +423,7 @@ def review_recent_activities(*, minutes: int) -> None:
                     "start/end timestamp: "
                     f"{job.start_timestamp}/{job.end_timestamp or '-'}.\n"
                 )
+            print(SEPARATOR)
         if activities:
             print("## Recent activities")
             for activity, user_email in activities:
@@ -433,6 +437,7 @@ def review_recent_activities(*, minutes: int) -> None:
                 )
     else:
         print("No recent fractal-server activity.")
+    print(SEPARATOR)
 
 
 def run() -> None:
