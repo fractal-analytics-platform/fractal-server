@@ -449,7 +449,8 @@ def recent_activities(*, minutes: int) -> None:
     # Print
     print("## Summary")
     if any(job.status == JobStatusType.SUBMITTED for job in jobs) or any(
-        activity.status == TaskGroupActivityStatus.ONGOING
+        activity.status
+        in [TaskGroupActivityStatus.ONGOING, TaskGroupActivityStatus.PENDING]
         for activity, _ in activities
     ):
         print("There are ongoing fractal-server activities.")
