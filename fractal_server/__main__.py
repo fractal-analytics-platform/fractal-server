@@ -415,17 +415,16 @@ def review_recent_activities(*, minutes: int) -> None:
     print("## Summary")
     if any(job.status == JobStatusType.SUBMITTED for job in jobs) or any(
         activity.status == TaskGroupActivityStatus.ONGOING
-        for activity in activities
+        for activity, _ in activities
     ):
-        print(
-            f"Ongoing fractal-server activities in the last {minutes} minutes"
-        )
+        print("There are ongoing fractal-server activities.")
     elif jobs or activities:
-        print(f"Recent fractal-server activities in the last {minutes} minutes")
-    else:
         print(
-            f"No recent fractal-server activity in the last {minutes} minutes"
+            "There were fractal-server activities during the last "
+            f"{minutes} minutes"
         )
+    else:
+        print(f"No fractal-server activity during the last {minutes} minutes")
     print()
     if jobs or activities:
         if jobs:
