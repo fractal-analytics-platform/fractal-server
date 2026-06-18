@@ -1,7 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.23.4
 
+* API:
+    * Update admin/user task endpoints to handle new `is_core` property (\#3360).
+* Database:
+    * Add `TaskV2.is_core` (\#3360).
 * Dependencies:
     * Require `starlette>=1.3.1` (\#3368).
 * Testing:
