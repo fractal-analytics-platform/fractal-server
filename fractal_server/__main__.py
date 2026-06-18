@@ -453,14 +453,20 @@ def recent_activities(*, minutes: int) -> None:
         in [TaskGroupActivityStatus.ONGOING, TaskGroupActivityStatus.PENDING]
         for activity, _ in activities
     ):
-        print("There are ongoing fractal-server activities.")
+        print(
+            "There are ongoing fractal-server jobs and/or task-group "
+            "activities."
+        )
     elif jobs or activities:
         print(
-            "There were fractal-server activities during the last "
-            f"{minutes} minutes"
+            "There were fractal-server jobs and/or task-group activities "
+            f"during the last {minutes} minutes."
         )
     else:
-        print(f"No fractal-server activity during the last {minutes} minutes")
+        print(
+            "No fractal-server job or task-group activity during the last "
+            f"{minutes} minutes."
+        )
     print()
     if jobs or activities:
         if jobs:
