@@ -1,12 +1,20 @@
 import pytest
+from asgi_lifespan import LifespanManager
 from devtools import debug
+from fastapi import APIRouter
+from fastapi import FastAPI
 from fastapi import HTTPException
+from httpx import ASGITransport
+from httpx import AsyncClient
 from sqlmodel import select
 
 from fractal_server.app.models import DatasetV2
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import ProjectV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.routes.auth._aux_auth import (
+    _add_trailing_slash_in_place,
+)
 from fractal_server.app.routes.auth._aux_auth import _check_project_dirs_update
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_user_with_groups,
@@ -264,3 +272,49 @@ async def test_check_project_dirs_update_trailing_slash(
             db=db,
         )
     assert "You tried updating the user project_dirs" in str(e)
+
+
+async def test_add_trailing_slash_in_place():
+    def _get_simple_router() -> APIRouter:
+        _router = APIRouter(redirect_slashes=False)
+
+        @_router.get("/path")
+        def _endpoint():
+            return "ok"
+
+        assert _router.routes[0].path == "/path"
+        return _router
+
+    router1 = _get_simple_router()
+    router2 = _get_simple_router()
+
+    _add_trailing_slash_in_place(router1)
+
+    assert router1.routes[0].path == "/path/"  # Trailing slash
+    assert router2.routes[0].path == "/path"  # No trailing slash
+
+    top_router = APIRouter()
+    top_router.include_router(router1, prefix="/prefix1")
+    top_router.include_router(router2, prefix="/prefix2")
+    _add_trailing_slash_in_place(top_router)
+
+    my_app = FastAPI()
+    my_app.include_router(top_router, prefix="/app")
+
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=my_app)
+        ) as client,
+        LifespanManager(my_app),
+    ):
+        # "Redirect" responses (due to `redirect_slashes=True`):
+        res = await client.get("/app/prefix1/path")
+        assert res.status_code == 307
+        res = await client.get("/app/prefix2/path")
+        assert res.status_code == 307
+
+        # Successful responses:
+        res = await client.get("/app/prefix1/path/")
+        assert res.status_code == 200
+        res = await client.get("/app/prefix2/path/")
+        assert res.status_code == 200

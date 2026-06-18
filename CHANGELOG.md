@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.5 (unreleased)
+
+* API:
+    * Adapt to fastapi 0.137 breaking changes (\#3369).
+* Dependencies:
+    * Require `fastapi>=0.137.2` (\#3369).
+
 # 2.23.4
 
 * API:
