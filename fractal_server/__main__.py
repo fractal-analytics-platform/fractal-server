@@ -374,7 +374,8 @@ def review_recent_activities(*, minutes: int) -> None:
         # Query ongoing jobs
         jobs = (
             db.execute(
-                select(JobV2).where(
+                select(JobV2)
+                .where(
                     or_(
                         JobV2.status == JobStatusType.SUBMITTED,
                         and_(
@@ -383,6 +384,7 @@ def review_recent_activities(*, minutes: int) -> None:
                         ),
                     )
                 )
+                .order_by(JobV2.status, JobV2.start_timestamp)
             )
             .scalars()
             .all()
@@ -400,6 +402,10 @@ def review_recent_activities(*, minutes: int) -> None:
                         TaskGroupActivityV2.timestamp_ended >= time_threshold,
                     ),
                 )
+            )
+            .order_by(
+                TaskGroupActivityV2.status,
+                TaskGroupActivityV2.timestamp_started,
             )
         ).all()
 
