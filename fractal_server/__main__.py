@@ -409,21 +409,27 @@ def review_recent_activities(*, minutes: int) -> None:
             )
         ).all()
 
-    print("## Summary\n------")
+    print("## Summary")
     if jobs or activities:
         if jobs:
             print("## Recent jobs")
             for job in jobs:
                 print(
                     f"{job.id} by {job.user_email}, "
-                    f"started at {job.start_timestamp}.\n"
+                    f"current status: {job.status}, "
+                    "start/end timestamp: "
+                    f"{job.start_timestamp}/{job.end_timestamp or '-'}.\n"
                 )
         if activities:
             print("## Recent activities")
             for activity, user_email in activities:
                 print(
                     f"{activity.id} by {user_email}, "
-                    f"started at {activity.timestamp_started}.\n"
+                    f"{activity.pkg_name} {activity.version}, "
+                    f"current status: {activity.status}, "
+                    "start/end timestamp: "
+                    f"{activity.timestamp_started}/"
+                    f"{activity.timestamp_ended or '-'}.\n"
                 )
     else:
         print("No recent fractal-server activity.")
