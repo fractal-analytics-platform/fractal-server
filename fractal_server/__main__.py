@@ -459,16 +459,19 @@ def recent_activities(*, minutes: int) -> None:
             "There are ongoing fractal-server jobs and/or task-group "
             "activities."
         )
+        retcode = 2
     elif jobs or activities:
         print(
             "There were fractal-server jobs and/or task-group activities "
             f"during the last {minutes} minutes."
         )
+        retcode = 1
     else:
         print(
             "No fractal-server job or task-group activity during the last "
             f"{minutes} minutes."
         )
+        retcode = 0
     print()
     if jobs or activities:
         if jobs:
@@ -493,6 +496,7 @@ def recent_activities(*, minutes: int) -> None:
                     f"{format_timestamp(activity.timestamp_started)}/"
                     f"{format_timestamp(activity.timestamp_ended)}."
                 )
+    sys.exit(retcode)
 
 
 def run() -> None:
