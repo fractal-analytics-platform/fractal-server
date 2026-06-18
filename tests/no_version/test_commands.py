@@ -76,11 +76,11 @@ async def test_recent_activities(
     tmp_path,
     MockCurrentUser,
     db,
+    capsys,
 ):
-    recent_activities(minutes=35)  # for coverage
-
+    MINUTES = 35
     now = get_timestamp()
-    past = now - timedelta(minutes=30)
+    past = now - timedelta(minutes=MINUTES - 5)
 
     async with MockCurrentUser() as user:
         project = await project_factory(user)
@@ -104,13 +104,45 @@ async def test_recent_activities(
             start_timestamp=past,
             end_timestamp=past,
         )
-        recent_activities(minutes=35)  # for coverage
+
+        recent_activities(minutes=2)
+        output = capsys.readouterr().out
+        assert (
+            "No fractal-server job or task-group activity during the last "
+            "2 minutes."
+        ) in output
+        assert "## Recent Jobs" not in output
+        assert "## Recent Task-Group activities" not in output
+
+        recent_activities(minutes=MINUTES)
+        output = capsys.readouterr().out
+        assert (
+            "There were fractal-server jobs and/or task-group activities "
+            f"during the last {MINUTES} minutes."
+        ) in output
+        assert "## Recent Jobs" in output
+        assert "## Recent Task-Group activities" not in output
+        output_splitted = output.split("\n")
+        assert f"ID={job1.id}" in output_splitted[4]
+
         job2 = await job_factory(
             **job_args,
             status=JobStatusType.SUBMITTED,
             start_timestamp=now,
         )
-        recent_activities(minutes=35)  # for coverage
+
+        recent_activities(minutes=MINUTES)
+        output = capsys.readouterr().out
+        assert (
+            "There are ongoing fractal-server jobs and/or task-group "
+            "activities."
+        ) in output
+        assert "## Recent Jobs" in output
+        assert "## Recent Task-Group activities" not in output
+        output_splitted = output.split("\n")
+        assert f"ID={job2.id}" in output_splitted[4]
+        assert f"ID={job1.id}" in output_splitted[5]
+
         activity_args = dict(
             user_id=user.id,
             taskgroupv2_id=task.taskgroupv2_id,
@@ -147,20 +179,31 @@ async def test_recent_activities(
         encoding="utf-8",
         capture_output=True,
     ).stdout.split("\n")
-    assert len(res) == 9
-    assert f"ID={job2.id}" in res[4]
-    assert f"ID={act_1.id}" in res[6]
-    assert f"ID={act_2.id}" in res[7]
 
-    cmd = "fractalctl recent --minutes 35"
-    res = subprocess.run(
-        shlex.split(cmd),
-        encoding="utf-8",
-        capture_output=True,
-    ).stdout.split("\n")
-    assert len(res) == 11
-    assert f"ID={job2.id}" in res[4]
-    assert f"ID={job1.id}" in res[5]
-    assert f"ID={act_1.id}" in res[7]
-    assert f"ID={act_2.id}" in res[8]
-    assert f"ID={act_4.id}" in res[9]
+    assert len(res) == 9
+
+    recent_activities(minutes=20)
+    output = capsys.readouterr().out
+    assert (
+        "There are ongoing fractal-server jobs and/or task-group activities."
+    ) in output
+    assert "## Recent Jobs" in output
+    assert "## Recent Task-Group activities" in output
+    output_splitted = output.split("\n")
+    assert f"ID={job2.id}" in output_splitted[4]
+    assert f"ID={act_1.id}" in output_splitted[6]
+    assert f"ID={act_2.id}" in output_splitted[7]
+
+    recent_activities(minutes=MINUTES)
+    output = capsys.readouterr().out
+    assert (
+        "There are ongoing fractal-server jobs and/or task-group activities."
+    ) in output
+    assert "## Recent Jobs" in output
+    assert "## Recent Task-Group activities" in output
+    output_splitted = output.split("\n")
+    assert f"ID={job2.id}" in output_splitted[4]
+    assert f"ID={job1.id}" in output_splitted[5]
+    assert f"ID={act_1.id}" in output_splitted[7]
+    assert f"ID={act_2.id}" in output_splitted[8]
+    assert f"ID={act_4.id}" in output_splitted[9]
