@@ -5,7 +5,7 @@
 * API:
     * Adapt to fastapi 0.137 breaking changes (\#3369).
 * Dependencies:
-    * Require `fastapi>=0.137.0` (\#3369).
+    * Require `fastapi>=0.137.2` (\#3369).
 
 # 2.23.4
 
