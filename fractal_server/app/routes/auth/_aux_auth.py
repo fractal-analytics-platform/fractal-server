@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.routing import iter_route_contexts
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import asc
 from sqlmodel import or_
@@ -285,16 +286,10 @@ def _add_trailing_slash_in_place(_router: APIRouter) -> None:
     https://fastapi.tiangolo.com/release-notes/#01370-2026-06-14#fixes.
     That is why we have to catch and handle the corresponding `AttributeError`.
     """
-    for route in _router.routes:
-        try:
-            current_path = route.path
-            if not current_path.endswith("/"):
-                route.path = f"{current_path}/"
-        except AttributeError as e:
-            raise ValueError(
-                f"Route of type {type(route)} cannot be used in "
-                "_add_trailing_slash_in_place."
-            ) from e
+    for context in iter_route_contexts(_router.routes):
+        path = context.original_route.path
+        if not path.endswith("/"):
+            context.original_route.path = f"{path}/"
 
 
 def _remove_login_route_in_place(_router: APIRouter) -> None:

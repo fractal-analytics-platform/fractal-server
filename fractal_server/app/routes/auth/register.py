@@ -14,8 +14,8 @@ from ._aux_auth import _add_trailing_slash_in_place
 
 router_register = APIRouter()
 
-_register_router = fastapi_users.get_register_router(UserRead, UserCreate)
-_add_trailing_slash_in_place(_register_router)
 router_register.include_router(
-    _register_router, dependencies=[Depends(current_superuser_act)]
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    dependencies=[Depends(current_superuser_act)],
 )
+_add_trailing_slash_in_place(router_register)

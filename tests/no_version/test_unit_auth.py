@@ -1,7 +1,11 @@
 import pytest
+from asgi_lifespan import LifespanManager
 from devtools import debug
 from fastapi import APIRouter
+from fastapi import FastAPI
 from fastapi import HTTPException
+from httpx import ASGITransport
+from httpx import AsyncClient
 from sqlmodel import select
 
 from fractal_server.app.models import DatasetV2
@@ -273,26 +277,47 @@ async def test_check_project_dirs_update_trailing_slash(
     assert "You tried updating the user project_dirs" in str(e)
 
 
-def test_add_trailing_slash_in_place():
-    router = APIRouter()
+async def test_add_trailing_slash_in_place():
+    def _get_simple_router() -> APIRouter:
+        _router = APIRouter(redirect_slashes=False)
 
-    @router.get("/path")
-    def endpoint():
-        return "ok"
+        @_router.get("/path")
+        def _endpoint():
+            return "ok"
 
-    assert router.routes[0].path == "/path"
+        assert _router.routes[0].path == "/path"
+        return _router
 
-    _add_trailing_slash_in_place(router)
-    assert router.routes[0].path == "/path/"
+    router1 = _get_simple_router()
+    router2 = _get_simple_router()
 
-    another_router = APIRouter()
-    another_router.include_router(router)
+    _add_trailing_slash_in_place(router1)
+    assert router1.routes[0].path == "/path/"
 
-    with pytest.raises(
-        ValueError,
-        match="fastapi.routing._IncludedRouter",
+    top_router = APIRouter()
+    top_router.include_router(router1, prefix="/prefix1")
+    top_router.include_router(router2, prefix="/prefix2")
+    _add_trailing_slash_in_place(top_router)
+
+    my_app = FastAPI()
+    my_app.include_router(top_router, prefix="/app")
+
+    async with (
+        AsyncClient(
+            base_url="http://test", transport=ASGITransport(app=my_app)
+        ) as client,
+        LifespanManager(my_app),
     ):
-        _add_trailing_slash_in_place(another_router)
+        # "Redirect" responses (due to `redirect_slashes=True`):
+        res = await client.get("/app/prefix1/path")
+        assert res.status_code == 307
+        res = await client.get("/app/prefix2/path")
+        assert res.status_code == 307
+        # Successful responses:
+        res = await client.get("/app/prefix1/path/")
+        assert res.status_code == 200
+        res = await client.get("/app/prefix2/path/")
+        assert res.status_code == 200
 
 
 def test_remove_login_route_in_place():

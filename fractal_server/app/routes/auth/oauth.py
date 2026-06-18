@@ -92,14 +92,16 @@ def get_oauth_router() -> APIRouter | None:
     else:
         client = _create_client_oidc(oauth_settings)
 
-    _router_oauth = fastapi_users.get_oauth_router(
-        client,
-        cookie_backend,
-        settings.JWT_SECRET_KEY,
-        is_verified_by_default=False,
-        associate_by_email=True,
-        redirect_url=oauth_settings.OAUTH_REDIRECT_URL,
+    router_oauth.include_router(
+        _router_oauth=fastapi_users.get_oauth_router(
+            client,
+            cookie_backend,
+            settings.JWT_SECRET_KEY,
+            is_verified_by_default=False,
+            associate_by_email=True,
+            redirect_url=oauth_settings.OAUTH_REDIRECT_URL,
+        ),
+        prefix=f"/{client_name}",
     )
-    _add_trailing_slash_in_place(_router_oauth)
-    router_oauth.include_router(_router_oauth, prefix=f"/{client_name}")
+    _add_trailing_slash_in_place(router_oauth)
     return router_oauth
