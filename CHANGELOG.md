@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.6 (unreleased)
+
+* App:
+    * Fix ordering in `fractalctl recent` results (\#3376).
+
 # 2.23.5
 
 * App:
