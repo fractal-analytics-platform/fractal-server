@@ -77,7 +77,7 @@ async def test_recent_activities(
     MockCurrentUser,
     db,
 ):
-    recent_activities(minutes=35)
+    recent_activities(minutes=35)  # for coverage
 
     now = get_timestamp()
     past = now - timedelta(minutes=30)
@@ -104,13 +104,13 @@ async def test_recent_activities(
             start_timestamp=past,
             end_timestamp=past,
         )
-        recent_activities(minutes=35)
+        recent_activities(minutes=35)  # for coverage
         job2 = await job_factory(
             **job_args,
             status=JobStatusType.SUBMITTED,
             start_timestamp=now,
         )
-        recent_activities(minutes=35)
+        recent_activities(minutes=35)  # for coverage
         activity_args = dict(
             user_id=user.id,
             taskgroupv2_id=task.taskgroupv2_id,
@@ -141,7 +141,7 @@ async def test_recent_activities(
         for act in [act_1, act_2, act_3, act_4]:
             await db.refresh(act)
 
-    cmd = "uv run fractalctl recent"
+    cmd = "fractalctl recent"
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",
@@ -152,7 +152,7 @@ async def test_recent_activities(
     assert f"ID={act_1.id}" in res[6]
     assert f"ID={act_2.id}" in res[7]
 
-    cmd = "uv run fractalctl recent --minutes 35"
+    cmd = "fractalctl recent --minutes 35"
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",
