@@ -8,10 +8,12 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
+from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2.job import JobStatusType
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 from fractal_server.utils import get_timestamp
 
 commands = [
@@ -85,7 +87,7 @@ async def test_recent_activities(
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db, order=0
         )
-        args = dict(
+        job_args = dict(
             working_dir=f"{tmp_path.as_posix()}/x",
             working_dir_user=f"{tmp_path.as_posix()}/y",
             project_id=project.id,
@@ -94,31 +96,66 @@ async def test_recent_activities(
             user_email=user.email,
         )
         job1 = await job_factory(
-            **args,
+            **job_args,
             status=JobStatusType.SUBMITTED,
             start_timestamp=now,
         )
         job2 = await job_factory(
-            **args,
+            **job_args,
             status=JobStatusType.FAILED,
             start_timestamp=past,
             end_timestamp=past,
         )
+        activity_args = dict(
+            user_id=user.id,
+            taskgroupv2_id=task.taskgroupv2_id,
+            pkg_name="a",
+            version="b",
+            action="c",
+        )
+        act_1 = TaskGroupActivityV2(
+            **activity_args,
+            status=TaskGroupActivityStatus.ONGOING,
+        )
+        act_2 = TaskGroupActivityV2(
+            **activity_args,
+            status=TaskGroupActivityStatus.PENDING,
+        )
+        act_3 = TaskGroupActivityV2(
+            **activity_args,
+            status=TaskGroupActivityStatus.OK,
+        )
+        act_4 = TaskGroupActivityV2(
+            **activity_args,
+            status=TaskGroupActivityStatus.OK,
+            timestamp_started=past,
+            timestamp_ended=past,
+        )
+        db.add_all([act_1, act_2, act_3, act_4])
+        await db.commit()
+        for act in [act_1, act_2, act_3, act_4]:
+            await db.refresh(act)
 
     cmd = "uv run fractalctl recent"
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",
         capture_output=True,
-    )
-    assert f"ID={job1.id}" in res.stdout
-    assert f"ID={job2.id}" not in res.stdout
+    ).stdout.split("\n")
+    assert len(res) == 9
+    assert f"ID={job1.id}" in res[4]
+    assert f"ID={act_1.id}" in res[6]
+    assert f"ID={act_2.id}" in res[7]
 
     cmd = "uv run fractalctl recent --minutes 35"
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",
         capture_output=True,
-    )
-    assert f"ID={job1.id}" in res.stdout
-    assert f"ID={job2.id}" in res.stdout
+    ).stdout.split("\n")
+    assert len(res) == 11
+    assert f"ID={job1.id}" in res[4]
+    assert f"ID={job2.id}" in res[5]
+    assert f"ID={act_1.id}" in res[7]
+    assert f"ID={act_2.id}" in res[8]
+    assert f"ID={act_4.id}" in res[9]
