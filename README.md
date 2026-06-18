@@ -5,7 +5,7 @@
 | Name                                                                         |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |----------------------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | fractal\_server/\_\_init\_\_.py                                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/\_\_main\_\_.py                                              |      152 |       55 |       34 |        1 |     61% |98-104, 114-130, 277-339, 343-367, 371 |
+| fractal\_server/\_\_main\_\_.py                                              |      196 |       57 |       52 |        2 |     69% |112-118, 128-144, 291-353, 474-\>485, 501-527, 531 |
 | fractal\_server/app/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/db/\_\_init\_\_.py                                       |       59 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/\_\_init\_\_.py                                   |        4 |        0 |        0 |        0 |    100% |           |
@@ -217,7 +217,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11124** |  **162** | **1886** |   **75** | **98%** |           |
+| **TOTAL**                                                                    | **11168** |  **164** | **1904** |   **76** | **98%** |           |
 
 
 ## Setup coverage badge
