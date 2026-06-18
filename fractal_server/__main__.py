@@ -368,6 +368,9 @@ def review_recent_activities(*, minutes: int) -> None:
     from fractal_server.app.schemas.v2.job import JobStatusType
     from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 
+    def format_timestamp(timestamp: datetime.datetime) -> str:
+        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
     time_threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
 
     with next(get_sync_db()) as db:
@@ -409,10 +412,8 @@ def review_recent_activities(*, minutes: int) -> None:
             )
         ).all()
     # Print summary
-    SEPARATOR = "-" * 50
-    print(SEPARATOR)
     print("## Summary")
-    print(SEPARATOR)
+    print()
     if jobs or activities:
         if jobs:
             print("## Recent jobs")
@@ -421,9 +422,10 @@ def review_recent_activities(*, minutes: int) -> None:
                     f"{job.id} by {job.user_email}, "
                     f"current status: {job.status}, "
                     "start/end timestamp: "
-                    f"{job.start_timestamp}/{job.end_timestamp or '-'}.\n"
+                    f"{format_timestamp(job.start_timestamp)}/"
+                    f"{format_timestamp(job.end_timestamp) or '-'}."
                 )
-            print(SEPARATOR)
+            print()
         if activities:
             print("## Recent activities")
             for activity, user_email in activities:
@@ -432,12 +434,12 @@ def review_recent_activities(*, minutes: int) -> None:
                     f"{activity.pkg_name} {activity.version}, "
                     f"current status: {activity.status}, "
                     "start/end timestamp: "
-                    f"{activity.timestamp_started}/"
-                    f"{activity.timestamp_ended or '-'}.\n"
+                    f"{format_timestamp(activity.timestamp_started)}/"
+                    f"{format_timestamp(activity.timestamp_ended) or '-'}."
                 )
     else:
         print("No recent fractal-server activity.")
-    print(SEPARATOR)
+    print()
 
 
 def run() -> None:
