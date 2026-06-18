@@ -38,7 +38,6 @@ ENDPOINTS = [
     dict(verb="GET", path="/api/v2/project/$project_id$/dataset/"),
     dict(verb="GET", path="/api/v2/job/"),
     dict(verb="GET", path="/api/v2/project/"),
-    dict(verb="GET", path="/api/v2/task/"),
     dict(verb="GET", path="/api/v2/task-group/"),
     dict(verb="GET", path="/api/v2/project/$project_id$/workflow/"),
     dict(

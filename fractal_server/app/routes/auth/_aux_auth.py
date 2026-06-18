@@ -1,5 +1,7 @@
+from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.routing import iter_route_contexts
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import asc
 from sqlmodel import or_
@@ -273,3 +275,15 @@ async def _check_project_dirs_update(
                     "their dataset zarr directories."
                 ),
             )
+
+
+def _add_trailing_slash_in_place(_router: APIRouter) -> None:
+    """
+    Add trailing slash to all paths in `_router.routes`, in-place.
+
+    NOTE: Usage of contexts is needed as of fastapi v0.137.
+    """
+    for context in iter_route_contexts(_router.routes):
+        path = context.original_route.path
+        if not path.endswith("/"):
+            context.original_route.path = f"{path}/"
