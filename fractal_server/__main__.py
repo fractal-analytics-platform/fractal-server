@@ -407,8 +407,12 @@ def recent_activities(*, minutes: int) -> None:
             .join(UserOAuth, TaskGroupActivityV2.user_id == UserOAuth.id)
             .where(
                 or_(
-                    TaskGroupActivityV2.status
-                    == TaskGroupActivityStatus.ONGOING,
+                    TaskGroupActivityV2.status.in_(
+                        [
+                            TaskGroupActivityStatus.ONGOING,
+                            TaskGroupActivityStatus.PENDING,
+                        ]
+                    ),
                     and_(
                         is_not(TaskGroupActivityV2.timestamp_ended, None),
                         TaskGroupActivityV2.timestamp_ended >= time_threshold,
