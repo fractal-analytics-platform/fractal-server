@@ -8,6 +8,7 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
+from fractal_server.__main__ import recent_activities
 from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -76,6 +77,8 @@ async def test_recent_activities(
     MockCurrentUser,
     db,
 ):
+    recent_activities(minutes=35)
+
     now = get_timestamp()
     past = now - timedelta(minutes=30)
 
@@ -97,15 +100,17 @@ async def test_recent_activities(
         )
         job1 = await job_factory(
             **job_args,
-            status=JobStatusType.SUBMITTED,
-            start_timestamp=now,
-        )
-        job2 = await job_factory(
-            **job_args,
             status=JobStatusType.FAILED,
             start_timestamp=past,
             end_timestamp=past,
         )
+        recent_activities(minutes=35)
+        job2 = await job_factory(
+            **job_args,
+            status=JobStatusType.SUBMITTED,
+            start_timestamp=now,
+        )
+        recent_activities(minutes=35)
         activity_args = dict(
             user_id=user.id,
             taskgroupv2_id=task.taskgroupv2_id,
@@ -143,7 +148,7 @@ async def test_recent_activities(
         capture_output=True,
     ).stdout.split("\n")
     assert len(res) == 9
-    assert f"ID={job1.id}" in res[4]
+    assert f"ID={job2.id}" in res[4]
     assert f"ID={act_1.id}" in res[6]
     assert f"ID={act_2.id}" in res[7]
 
@@ -154,8 +159,8 @@ async def test_recent_activities(
         capture_output=True,
     ).stdout.split("\n")
     assert len(res) == 11
-    assert f"ID={job1.id}" in res[4]
-    assert f"ID={job2.id}" in res[5]
+    assert f"ID={job2.id}" in res[4]
+    assert f"ID={job1.id}" in res[5]
     assert f"ID={act_1.id}" in res[7]
     assert f"ID={act_2.id}" in res[8]
     assert f"ID={act_4.id}" in res[9]
