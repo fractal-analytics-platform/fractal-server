@@ -18,11 +18,11 @@ def get_token_login_router() -> APIRouter:
     Get the `APIRouter` for `/auth/token/login/` and `/auth/token/logout/`
     """
     settings = Inject(get_settings)
-    router_token_login = APIRouter()
-    _router_token_login = fastapi_users.get_auth_router(token_backend)
-    _add_trailing_slash_in_place(_router_token_login)
-    if settings.FRACTAL_DISABLE_BASIC_AUTH == "true":
-        _remove_login_route_in_place(_router_token_login)
-    router_token_login.include_router(_router_token_login, prefix="/token")
 
+    router_token_login = fastapi_users.get_auth_router(token_backend)
+    if settings.FRACTAL_DISABLE_BASIC_AUTH == "true":
+        _remove_login_route_in_place(router_token_login)
+    router_token_login.include_router(router_token_login, prefix="/token")
+
+    _add_trailing_slash_in_place(router_token_login)
     return router_token_login
