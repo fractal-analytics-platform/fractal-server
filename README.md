@@ -75,12 +75,12 @@
 | fractal\_server/app/routes/api/v2/workflow\_template.py                      |      120 |        0 |       22 |        1 |     99% | 341-\>347 |
 | fractal\_server/app/routes/api/v2/workflowtask.py                            |       85 |        1 |       32 |        1 |     98% |       217 |
 | fractal\_server/app/routes/auth/\_\_init\_\_.py                              |       34 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/\_aux\_auth.py                               |       75 |        0 |       16 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/\_aux\_auth.py                               |       82 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/current\_user.py                             |       46 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/group.py                                     |       87 |        0 |       14 |        0 |    100% |           |
-| fractal\_server/app/routes/auth/login.py                                     |       17 |        0 |        6 |        1 |     96% |   37-\>36 |
-| fractal\_server/app/routes/auth/oauth.py                                     |       53 |        0 |       10 |        1 |     98% | 108-\>107 |
-| fractal\_server/app/routes/auth/register.py                                  |       11 |        0 |        4 |        1 |     93% |   24-\>23 |
+| fractal\_server/app/routes/auth/login.py                                     |       16 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/oauth.py                                     |       52 |        0 |        6 |        0 |    100% |           |
+| fractal\_server/app/routes/auth/register.py                                  |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/router.py                                    |       18 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/users.py                                     |       98 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/app/routes/auth/viewer\_paths.py                             |       18 |        0 |        2 |        0 |    100% |           |
@@ -217,7 +217,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11143** |  **162** | **1902** |   **78** | **98%** |           |
+| **TOTAL**                                                                    | **11147** |  **162** | **1894** |   **75** | **98%** |           |
 
 
 ## Setup coverage badge
