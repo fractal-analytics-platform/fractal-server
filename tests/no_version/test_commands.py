@@ -120,8 +120,8 @@ async def test_recent_activities(
             "There were fractal-server jobs and/or task-group activities "
             f"during the last {MINUTES} minutes."
         ) in output
-        assert "## Recent Jobs" in output
-        assert "## Recent Task-Group activities" not in output
+        assert "## Recent jobs" in output
+        assert "## Recent task-group activities" not in output
         output_splitted = output.split("\n")
         assert f"ID={job1.id}" in output_splitted[4]
 
@@ -137,8 +137,8 @@ async def test_recent_activities(
             "There are ongoing fractal-server jobs and/or task-group "
             "activities."
         ) in output
-        assert "## Recent Jobs" in output
-        assert "## Recent Task-Group activities" not in output
+        assert "## Recent jobs" in output
+        assert "## Recent task-group activities" not in output
         output_splitted = output.split("\n")
         assert f"ID={job2.id}" in output_splitted[4]
         assert f"ID={job1.id}" in output_splitted[5]
@@ -180,30 +180,30 @@ async def test_recent_activities(
         capture_output=True,
     ).stdout.split("\n")
 
-    assert len(res) == 9
+    assert len(res) == 11
 
     recent_activities(minutes=20)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."
     ) in output
-    assert "## Recent Jobs" in output
-    assert "## Recent Task-Group activities" in output
+    assert "## Recent jobs" in output
+    assert "## Recent task-group activities" in output
     output_splitted = output.split("\n")
     assert f"ID={job2.id}" in output_splitted[4]
-    assert f"ID={act_1.id}" in output_splitted[6]
-    assert f"ID={act_2.id}" in output_splitted[7]
+    assert f"ID={act_1.id}" in output_splitted[7]
+    assert f"ID={act_2.id}" in output_splitted[8]
 
     recent_activities(minutes=MINUTES)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."
     ) in output
-    assert "## Recent Jobs" in output
-    assert "## Recent Task-Group activities" in output
+    assert "## Recent jobs" in output
+    assert "## Recent task-group activities" in output
     output_splitted = output.split("\n")
     assert f"ID={job2.id}" in output_splitted[4]
     assert f"ID={job1.id}" in output_splitted[5]
-    assert f"ID={act_1.id}" in output_splitted[7]
-    assert f"ID={act_2.id}" in output_splitted[8]
-    assert f"ID={act_4.id}" in output_splitted[9]
+    assert f"ID={act_1.id}" in output_splitted[8]
+    assert f"ID={act_2.id}" in output_splitted[9]
+    assert f"ID={act_4.id}" in output_splitted[10]
