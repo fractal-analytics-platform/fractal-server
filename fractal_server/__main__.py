@@ -372,12 +372,12 @@ def recent_activities(*, minutes: int) -> None:
     def format_timestamp(timestamp: datetime.datetime | None) -> str:
         if timestamp is None:
             return "-"
-        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        return timestamp.strftime(r"%Y-%m-%d %H:%M:%S")
 
     time_threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
 
     with next(get_sync_db()) as db:
-        # Query ongoing jobs
+        # Query jobs
         jobs = (
             db.execute(
                 select(JobV2)
@@ -403,7 +403,7 @@ def recent_activities(*, minutes: int) -> None:
             .scalars()
             .all()
         )
-        # Query TaskGroupActivities
+        # Query task-group activities
         activities = db.execute(
             select(TaskGroupActivityV2, UserOAuth.email)
             .join(UserOAuth, TaskGroupActivityV2.user_id == UserOAuth.id)
@@ -472,7 +472,7 @@ def recent_activities(*, minutes: int) -> None:
     print()
     if jobs or activities:
         if jobs:
-            print("## Recent Jobs")
+            print("## Recent jobs")
             for job in jobs:
                 print(
                     f"ID={job.id} by {job.user_email}, "
@@ -481,8 +481,9 @@ def recent_activities(*, minutes: int) -> None:
                     f"{format_timestamp(job.start_timestamp)}/"
                     f"{format_timestamp(job.end_timestamp)}."
                 )
+            print()
         if activities:
-            print("## Recent Task-Group activities")
+            print("## Recent task-group activities")
             for activity, user_email in activities:
                 print(
                     f"ID={activity.id} by {user_email}, "
@@ -493,6 +494,7 @@ def recent_activities(*, minutes: int) -> None:
                     f"{format_timestamp(activity.timestamp_started)}/"
                     f"{format_timestamp(activity.timestamp_ended)}."
                 )
+            print()
 
 
 def run() -> None:
