@@ -289,7 +289,9 @@ async def test_add_trailing_slash_in_place():
     router2 = _get_simple_router()
 
     _add_trailing_slash_in_place(router1)
-    assert router1.routes[0].path == "/path/"
+
+    assert router1.routes[0].path == "/path/"  # Trailing slash
+    assert router2.routes[0].path == "/path"  # No trailing slash
 
     top_router = APIRouter()
     top_router.include_router(router1, prefix="/prefix1")
@@ -310,6 +312,7 @@ async def test_add_trailing_slash_in_place():
         assert res.status_code == 307
         res = await client.get("/app/prefix2/path")
         assert res.status_code == 307
+
         # Successful responses:
         res = await client.get("/app/prefix1/path/")
         assert res.status_code == 200
