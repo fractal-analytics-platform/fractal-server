@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.5 (unreleased)
+# 2.23.5
 
 * App:
     * Add new command `fractalctl recent` (\#3372).
