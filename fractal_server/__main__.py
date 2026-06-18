@@ -369,7 +369,9 @@ def recent_activities(*, minutes: int) -> None:
     from fractal_server.app.schemas.v2.job import JobStatusType
     from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 
-    def format_timestamp(timestamp: datetime.datetime) -> str:
+    def format_timestamp(timestamp: datetime.datetime | None) -> str:
+        if timestamp is None:
+            return "-"
         return timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
     time_threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
@@ -477,7 +479,7 @@ def recent_activities(*, minutes: int) -> None:
                     f"current status: {job.status}, "
                     "start/end time: "
                     f"{format_timestamp(job.start_timestamp)}/"
-                    f"{format_timestamp(job.end_timestamp) or '-'}."
+                    f"{format_timestamp(job.end_timestamp)}."
                 )
         if activities:
             print("## Recent Task-Group activities")
@@ -489,7 +491,7 @@ def recent_activities(*, minutes: int) -> None:
                     f"current status: {activity.status}, "
                     "start/end time: "
                     f"{format_timestamp(activity.timestamp_started)}/"
-                    f"{format_timestamp(activity.timestamp_ended) or '-'}."
+                    f"{format_timestamp(activity.timestamp_ended)}."
                 )
 
 
