@@ -22,9 +22,6 @@ from fractal_server.app.routes.auth._aux_auth import (
 from fractal_server.app.routes.auth._aux_auth import (
     _get_single_usergroup_with_user_ids,
 )
-from fractal_server.app.routes.auth._aux_auth import (
-    _remove_login_route_in_place,
-)
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.routes.auth._aux_auth import (
     _verify_user_belongs_to_group,
@@ -318,28 +315,3 @@ async def test_add_trailing_slash_in_place():
         assert res.status_code == 200
         res = await client.get("/app/prefix2/path/")
         assert res.status_code == 200
-
-
-def test_remove_login_route_in_place():
-    router = APIRouter()
-
-    @router.get("/something")
-    def endpoint1():
-        return "ok"
-
-    @router.get("/login")
-    def endpoint2():
-        return "ok"
-
-    assert len(router.routes) == 2
-    _remove_login_route_in_place(router)
-    assert len(router.routes) == 1
-
-    another_router = APIRouter()
-    another_router.include_router(router)
-
-    with pytest.raises(
-        ValueError,
-        match="fastapi.routing._IncludedRouter",
-    ):
-        _remove_login_route_in_place(another_router)
