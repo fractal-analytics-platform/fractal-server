@@ -356,6 +356,9 @@ def update_db_data() -> None:
 def review_recent_activities(*, minutes: int) -> None:
     import datetime
 
+    from sqlalchemy.sql.operators import is_not
+    from sqlmodel import and_
+    from sqlmodel import or_
     from sqlmodel import select
 
     from fractal_server.app.db import get_sync_db
@@ -365,24 +368,39 @@ def review_recent_activities(*, minutes: int) -> None:
     from fractal_server.app.schemas.v2.job import JobStatusType
     from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 
+    time_threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
+
     with next(get_sync_db()) as db:
         # Query ongoing jobs
         jobs = (
             db.execute(
-                select(JobV2).where(JobV2.status == JobStatusType.SUBMITTED)
+                select(JobV2).where(
+                    or_(
+                        JobV2.status == JobStatusType.SUBMITTED,
+                        and_(
+                            is_not(JobV2.end_timestamp, None),
+                            JobV2.end_timestamp >= time_threshold,
+                        ),
+                    )
+                )
             )
             .scalars()
             .all()
         )
         # Query TaskGroupActivities
-        threshold = get_timestamp() - datetime.timedelta(minutes=minutes)
         activities = db.execute(
             select(TaskGroupActivityV2, UserOAuth.email)
             .join(UserOAuth, TaskGroupActivityV2.user_id == UserOAuth.id)
             .where(
-                TaskGroupActivityV2.status == TaskGroupActivityStatus.ONGOING
+                or_(
+                    TaskGroupActivityV2.status
+                    == TaskGroupActivityStatus.ONGOING,
+                    and_(
+                        is_not(TaskGroupActivityV2.timestamp_ended, None),
+                        TaskGroupActivityV2.timestamp_ended >= time_threshold,
+                    ),
+                )
             )
-            .where(TaskGroupActivityV2.timestamp_started >= threshold)
         ).all()
 
     print("## Summary\n------")
