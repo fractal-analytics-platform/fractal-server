@@ -118,21 +118,6 @@ class TaskRead(BaseModel):
     tags: list[str]
 
 
-SLIM_TASK_FIELDS = {
-    "id",
-    "name",
-    "is_core",
-    "input_types",
-    "category",
-    "modality",
-    "authors",
-    "tags",
-    "version",
-    "docs_info",
-    "docs_link",
-}
-
-
 class TaskReadSlim(BaseModel):
     id: int
     name: str
@@ -146,6 +131,9 @@ class TaskReadSlim(BaseModel):
     input_types: dict[str, bool]
     docs_info: str | None = None
     docs_link: str | None = None
+
+
+SLIM_TASK_FIELDS = set(TaskReadSlim.model_fields().keys())
 
 
 class TaskUpdate(BaseModel):
