@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.23.6
+
+* API:
+    * Reintroduce `GET /api/v2/task/` (\#3377), reverting a change from 2.23.5.
+
 # 2.23.5
 
 * App:
