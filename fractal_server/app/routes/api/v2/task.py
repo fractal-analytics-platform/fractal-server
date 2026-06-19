@@ -1,4 +1,5 @@
 from copy import deepcopy  # noqa
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -11,6 +12,7 @@ from sqlmodel import select
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
+from fractal_server.app.schemas.v2.task import TaskReadSlim
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_full_access, integrity_error_to_422
 from ._aux_functions_tasks import _get_task_read_access
@@ -51,15 +53,17 @@ _SLIM_TASK_FIELDS = {
 }
 
 
-@router.get("/", response_model=list[TaskRead])
+@router.get("/", response_model=list[TaskReadSlim])
 async def get_task_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskV2]:
+) -> list[dict[str, Any]]:
     """
     Get list of available tasks
     """
+
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+
     stm = (
         select(TaskV2)
         .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
@@ -76,8 +80,13 @@ async def get_task_list(
         )
         .order_by(TaskV2.id)
     )
+
     res = await db.execute(stm)
-    task_list = list(res.scalars().all())
+    task_list = [
+        task.model_dump(include=_SLIM_TASK_FIELDS)
+        for task in res.scalars().all()
+    ]
+
     return task_list
 
 
