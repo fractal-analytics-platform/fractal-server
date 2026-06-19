@@ -130,6 +130,12 @@ async def test_recent_activities(
             status=JobStatusType.SUBMITTED,
             start_timestamp=now,
         )
+        job3 = await job_factory(
+            **job_args,
+            status=JobStatusType.FAILED,
+            start_timestamp=now,
+            end_timestamp=now,
+        )
 
         recent_activities(minutes=MINUTES)
         output = capsys.readouterr().out
@@ -141,7 +147,8 @@ async def test_recent_activities(
         assert "## Recent task-group activities" not in output
         output_splitted = output.split("\n")
         assert f"ID={job2.id}" in output_splitted[4]
-        assert f"ID={job1.id}" in output_splitted[5]
+        assert f"ID={job3.id}" in output_splitted[5]
+        assert f"ID={job1.id}" in output_splitted[6]
 
         activity_args = dict(
             user_id=user.id,
@@ -168,9 +175,15 @@ async def test_recent_activities(
             timestamp_started=past,
             timestamp_ended=past,
         )
-        db.add_all([act_1, act_2, act_3, act_4])
+        act_5 = TaskGroupActivityV2(
+            **activity_args,
+            status=TaskGroupActivityStatus.OK,
+            timestamp_started=now,
+            timestamp_ended=now,
+        )
+        db.add_all([act_1, act_2, act_3, act_4, act_5])
         await db.commit()
-        for act in [act_1, act_2, act_3, act_4]:
+        for act in [act_1, act_2, act_3, act_4, act_5]:
             await db.refresh(act)
 
     cmd = "fractalctl recent"
@@ -180,7 +193,7 @@ async def test_recent_activities(
         capture_output=True,
     ).stdout.split("\n")
 
-    assert len(res) == 11
+    assert len(res) == 13
 
     recent_activities(minutes=20)
     output = capsys.readouterr().out
@@ -191,8 +204,9 @@ async def test_recent_activities(
     assert "## Recent task-group activities" in output
     output_splitted = output.split("\n")
     assert f"ID={job2.id}" in output_splitted[4]
-    assert f"ID={act_1.id}" in output_splitted[7]
-    assert f"ID={act_2.id}" in output_splitted[8]
+    assert f"ID={job3.id}" in output_splitted[5]
+    assert f"ID={act_1.id}" in output_splitted[8]
+    assert f"ID={act_2.id}" in output_splitted[9]
 
     recent_activities(minutes=MINUTES)
     output = capsys.readouterr().out
@@ -203,7 +217,9 @@ async def test_recent_activities(
     assert "## Recent task-group activities" in output
     output_splitted = output.split("\n")
     assert f"ID={job2.id}" in output_splitted[4]
-    assert f"ID={job1.id}" in output_splitted[5]
-    assert f"ID={act_1.id}" in output_splitted[8]
-    assert f"ID={act_2.id}" in output_splitted[9]
-    assert f"ID={act_4.id}" in output_splitted[10]
+    assert f"ID={job3.id}" in output_splitted[5]
+    assert f"ID={job1.id}" in output_splitted[6]
+    assert f"ID={act_1.id}" in output_splitted[9]
+    assert f"ID={act_2.id}" in output_splitted[10]
+    assert f"ID={act_5.id}" in output_splitted[11]
+    assert f"ID={act_4.id}" in output_splitted[12]
