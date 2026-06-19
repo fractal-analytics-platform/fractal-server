@@ -31,6 +31,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskGroupReadSlim
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
+from fractal_server.app.schemas.v2.task import SLIM_TASK_FIELDS
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_user_resource_id
@@ -40,7 +41,6 @@ from ._aux_functions_tasks import _verify_non_duplication_group_constraint
 from ._aux_task_group_disambiguation import add_user_email_to_task_group
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from ._aux_task_group_disambiguation import serialize_task_group_with_email
-from .task import _SLIM_TASK_FIELDS
 
 router = APIRouter()
 
@@ -187,7 +187,7 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
-                    included_task_fields=(_SLIM_TASK_FIELDS if slim else None),
+                    included_task_fields=(SLIM_TASK_FIELDS if slim else None),
                 )
                 for task_group in task_group_list
             ],
