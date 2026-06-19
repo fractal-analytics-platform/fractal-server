@@ -56,6 +56,40 @@ async def test_fail_wheel_file_and_version(client, testdata_path):
     assert error_msg in str(res.json()["detail"])
 
 
+async def test_task_get_list(
+    db, client, task_factory, MockCurrentUser, user_group_factory
+):
+    async with MockCurrentUser() as user:
+        new_group = await user_group_factory(
+            group_name="new_group", user_id=user.id
+        )
+
+        await task_factory(
+            user_id=user.id,
+            task_group_kwargs=dict(user_group_id=new_group.id),
+            index=1,
+            category="Conversion",
+            modality="HCS",
+            authors="Name1 Surname1,Name2 Surname2...",
+        )
+        t = await task_factory(
+            user_id=user.id,
+            index=3,
+            args_schema_non_parallel=dict(a=1),
+            args_schema_parallel=dict(b=2),
+            modality="EM",
+        )
+        res = await client.get(f"{PREFIX}/")
+        data = res.json()
+        assert res.status_code == 200
+        assert len(data) == 2
+        task = data[1]
+        assert task["id"] == t.id
+
+        assert "args_schema_non_parallel" not in task
+        assert "args_schema_parallel" not in task
+
+
 async def test_post_task(
     client,
     MockCurrentUser,
