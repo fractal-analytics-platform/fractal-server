@@ -38,20 +38,6 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
-_SLIM_TASK_FIELDS = {
-    "id",
-    "name",
-    "is_core",
-    "input_types",
-    "category",
-    "modality",
-    "authors",
-    "tags",
-    "version",
-    "docs_info",
-    "docs_link",
-}
-
 
 @router.get("/", response_model=list[TaskReadSlim])
 async def get_task_list(
@@ -82,10 +68,7 @@ async def get_task_list(
     )
 
     res = await db.execute(stm)
-    task_list = [
-        task.model_dump(include=_SLIM_TASK_FIELDS)
-        for task in res.scalars().all()
-    ]
+    task_list = list(res.scalars().all())
 
     return task_list
 

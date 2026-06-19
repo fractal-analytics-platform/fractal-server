@@ -118,6 +118,21 @@ class TaskRead(BaseModel):
     tags: list[str]
 
 
+SLIM_TASK_FIELDS = {
+    "id",
+    "name",
+    "is_core",
+    "input_types",
+    "category",
+    "modality",
+    "authors",
+    "tags",
+    "version",
+    "docs_info",
+    "docs_link",
+}
+
+
 class TaskReadSlim(BaseModel):
     id: int
     name: str
