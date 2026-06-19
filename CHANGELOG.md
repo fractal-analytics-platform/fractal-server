@@ -1,9 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.6
+# 2.23.6 (unreleased)
 
 * API:
     * Reintroduce `GET /api/v2/task/` (\#3377), reverting a change from 2.23.5.
+* App:
+    * Fix ordering in `fractalctl recent` results (\#3376).
 
 # 2.23.5
 

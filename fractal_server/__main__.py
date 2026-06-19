@@ -397,7 +397,7 @@ def recent_activities(*, minutes: int) -> None:
                         (JobV2.status == JobStatusType.FAILED, 2),
                         else_=3,
                     ),
-                    JobV2.start_timestamp,
+                    JobV2.start_timestamp.desc(),
                 )
             )
             .scalars()
@@ -445,7 +445,7 @@ def recent_activities(*, minutes: int) -> None:
                     ),
                     else_=4,
                 ),
-                TaskGroupActivityV2.timestamp_started,
+                TaskGroupActivityV2.timestamp_started.desc(),
             )
         ).all()
     # Print
