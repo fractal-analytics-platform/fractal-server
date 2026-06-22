@@ -147,14 +147,14 @@ async def query_tasks(
         if private is not None:
             match private:
                 case True:
-                    stm = stm.where(TaskGroupV2.user_group_id.is_not(None))
-                    stm_count = stm_count.where(
-                        TaskGroupV2.user_group_id.is_not(None)
-                    )
-                case False:
                     stm = stm.where(TaskGroupV2.user_group_id.is_(None))
                     stm_count = stm_count.where(
                         TaskGroupV2.user_group_id.is_(None)
+                    )
+                case False:
+                    stm = stm.where(TaskGroupV2.user_group_id.is_not(None))
+                    stm_count = stm_count.where(
+                        TaskGroupV2.user_group_id.is_not(None)
                     )
         if active is not None:
             stm = stm.where(TaskGroupV2.active.is_(active))
