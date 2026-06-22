@@ -43,9 +43,15 @@ async def test_task_query(
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
             is_core=True,
+            task_group_kwargs=dict(active=False),
         )
         task3 = await task_factory(
-            user_id=user.id, index=3, modality="EM", version="3"
+            user_id=user.id,
+            index=3,
+            modality="EM",
+            version="3",
+            name="BAR",
+            task_group_kwargs=dict(user_group_id=None),
         )
 
         # task1 to workflow 1 and 2
@@ -198,6 +204,43 @@ async def test_task_query(
         assert len(res.json()["items"]) == 2
         assert res.json()["items"][0]["task"]["id"] == task1.id
         assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query by owner ID
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 3
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id + 1}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 0
+
+        #  Query by TaskGroup pkg_name
+        res = await client.get(f"{PREFIX}/task/?task_group_name=A")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?private=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?private=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task2.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?active=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?active=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
 
         # --------------------------
         # Relationships after deleting the Project
