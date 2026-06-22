@@ -20,6 +20,7 @@ async def test_task_query(
     project_factory,
     workflow_factory,
     task_factory,
+    default_user_group,
 ):
     async with MockCurrentUser(is_superuser=True) as user:
         project = await project_factory(user)
@@ -73,6 +74,13 @@ async def test_task_query(
         assert res.status_code == 200
         assert res.json()["total_count"] == 3
 
+        default_name = default_user_group.name
+        assert [t["task"]["user_group"] for t in res.json()["items"]] == [
+            default_name,
+            default_name,
+            None,
+        ]
+
         # Query Tasks with given type
         res = await client.get(
             f"{PREFIX}/task/?task_type=converter_non_parallel"
@@ -103,9 +111,7 @@ async def test_task_query(
 
         res = await client.get(f"{PREFIX}/task/?id={task1.id}")
         assert len(res.json()["items"]) == 1
-        assert (
-            res.json()["items"][0]["task"].items() <= task1.model_dump().items()
-        )
+        assert res.json()["items"][0]["task"]["id"] == task1.id
         assert len(res.json()["items"][0]["relationships"]) == 2
         _common_args = dict(
             project_id=project.id,
@@ -253,9 +259,6 @@ async def test_task_query(
         for t in [task1, task2, task3]:
             res = await client.get(f"{PREFIX}/task/?id={t.id}")
             assert len(res.json()["items"]) == 1
-            assert (
-                res.json()["items"][0]["task"].items() <= t.model_dump().items()
-            )
             assert res.json()["items"][0]["task"]["id"] == t.id
             assert len(res.json()["items"][0]["relationships"]) == 0
 

@@ -17,13 +17,14 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.pagination import PaginationRequest
 from fractal_server.app.routes.pagination import PaginationResponse
-from fractal_server.app.routes.pagination import get_paginated_response
+from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.types import ListUniqueNonNegativeInt
@@ -44,6 +45,10 @@ class TaskMinimal(BaseModel):
     command_non_parallel: str | None = None
     command_parallel: str | None = None
     version: str
+    pkg_name: str
+    active: bool
+    owner: EmailStr
+    user_group: str | None = None
 
 
 class ProjectUser(BaseModel):
@@ -87,8 +92,22 @@ async def query_tasks(
     Query `TaskV2` and get information about related workflows and projects.
     """
     # Prepare statements
-    stm = select(TaskV2).order_by(TaskV2.id)
-    stm_count = select(func.count(TaskV2.id))
+    stm = (
+        select(
+            TaskV2,
+            TaskGroupV2.pkg_name,
+            TaskGroupV2.active,
+            UserOAuth.email,
+            UserGroup.name,
+        )
+        .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
+        .outerjoin(UserGroup, UserGroup.id == TaskGroupV2.user_group_id)
+        .order_by(TaskV2.id)
+    )
+    stm_count = select(func.count(TaskV2.id)).join(
+        TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+    )
     if id is not None:
         stm = stm.where(TaskV2.id == id)
         stm_count = stm_count.where(TaskV2.id == id)
@@ -117,55 +136,43 @@ async def query_tasks(
     if core is not None:
         stm = stm.where(TaskV2.is_core.is_(core))
         stm_count = stm_count.where(TaskV2.is_core.is_(core))
-
-    # TaskGroupV2 related query parameters
-    if any(
-        query_parameter is not None
-        for query_parameter in (
-            resource_id,
-            owner_id,
-            task_group_name,
-            private,
-            active,
+    if resource_id is not None:
+        stm = stm.where(TaskGroupV2.resource_id == resource_id)
+        stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
+    if owner_id is not None:
+        stm = stm.where(TaskGroupV2.user_id == owner_id)
+        stm_count = stm_count.where(TaskGroupV2.user_id == owner_id)
+    if task_group_name is not None:
+        stm = stm.where(TaskGroupV2.pkg_name.icontains(task_group_name))
+        stm_count = stm_count.where(
+            TaskGroupV2.pkg_name.icontains(task_group_name)
         )
-    ):
-        stm = stm.join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
-        stm_count = stm_count.join(
-            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
-        )
-        if resource_id is not None:
-            stm = stm.where(TaskGroupV2.resource_id == resource_id)
-            stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
-        if owner_id is not None:
-            stm = stm.where(TaskGroupV2.user_id == owner_id)
-            stm_count = stm_count.where(TaskGroupV2.user_id == owner_id)
-        if task_group_name is not None:
-            stm = stm.where(TaskGroupV2.pkg_name.icontains(task_group_name))
-            stm_count = stm_count.where(
-                TaskGroupV2.pkg_name.icontains(task_group_name)
-            )
-        if private is not None:
-            match private:
-                case True:
-                    stm = stm.where(TaskGroupV2.user_group_id.is_(None))
-                    stm_count = stm_count.where(
-                        TaskGroupV2.user_group_id.is_(None)
-                    )
-                case False:
-                    stm = stm.where(TaskGroupV2.user_group_id.is_not(None))
-                    stm_count = stm_count.where(
-                        TaskGroupV2.user_group_id.is_not(None)
-                    )
-        if active is not None:
-            stm = stm.where(TaskGroupV2.active.is_(active))
-            stm_count = stm_count.where(TaskGroupV2.active.is_(active))
+    if private is not None:
+        match private:
+            case True:
+                stm = stm.where(TaskGroupV2.user_group_id.is_(None))
+                stm_count = stm_count.where(TaskGroupV2.user_group_id.is_(None))
+            case False:
+                stm = stm.where(TaskGroupV2.user_group_id.is_not(None))
+                stm_count = stm_count.where(
+                    TaskGroupV2.user_group_id.is_not(None)
+                )
+    if active is not None:
+        stm = stm.where(TaskGroupV2.active.is_(active))
+        stm_count = stm_count.where(TaskGroupV2.active.is_(active))
 
-    response = await get_paginated_response(
-        stm=stm, stm_count=stm_count, pagination=pagination, db=db
+    stm, pagination_data = await get_pagination_data(
+        stm=stm,
+        stm_count=stm_count,
+        pagination=pagination,
+        db=db,
     )
 
+    res = await db.execute(stm)
+    records = res.all()
+
     task_info_list = []
-    for task in response.items:
+    for task, pkg_name, task_active, email, group_name in records:
         stm = (
             select(WorkflowV2)
             .join(
@@ -195,7 +202,13 @@ async def query_tasks(
 
         task_info_list.append(
             dict(
-                task=task.model_dump(),
+                task=dict(
+                    **task.model_dump(),
+                    pkg_name=pkg_name,
+                    active=task_active,
+                    owner=email,
+                    user_group=group_name,
+                ),
                 relationships=[
                     dict(
                         workflow_id=workflow.id,
@@ -209,10 +222,8 @@ async def query_tasks(
             )
         )
     return dict(
-        total_count=response.total_count,
-        page_size=response.page_size,
-        current_page=response.current_page,
         items=task_info_list,
+        **pagination_data.model_dump(),
     )
 
 
