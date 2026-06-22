@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.7
+# 2.23.7 (unreleased)
 
 * API:
     * Increase the query parameters for the admin task endpoint (\#3378).
