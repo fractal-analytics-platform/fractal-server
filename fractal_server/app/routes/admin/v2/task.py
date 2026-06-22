@@ -80,7 +80,7 @@ async def query_tasks(
     author: str | None = None,
     resource_id: int | None = None,
     owner_id: int | None = None,
-    task_group_name: str | None = None,
+    task_group: str | None = None,
     core: bool | None = None,
     private: bool | None = None,
     active: bool | None = None,
@@ -142,11 +142,9 @@ async def query_tasks(
     if owner_id is not None:
         stm = stm.where(TaskGroupV2.user_id == owner_id)
         stm_count = stm_count.where(TaskGroupV2.user_id == owner_id)
-    if task_group_name is not None:
-        stm = stm.where(TaskGroupV2.pkg_name.icontains(task_group_name))
-        stm_count = stm_count.where(
-            TaskGroupV2.pkg_name.icontains(task_group_name)
-        )
+    if task_group is not None:
+        stm = stm.where(TaskGroupV2.pkg_name.icontains(task_group))
+        stm_count = stm_count.where(TaskGroupV2.pkg_name.icontains(task_group))
     if private is not None:
         match private:
             case True:
@@ -172,7 +170,7 @@ async def query_tasks(
     records = res.all()
 
     task_info_list = []
-    for task, pkg_name, task_active, email, group_name in records:
+    for task, pkg_name, task_active, email, user_group in records:
         stm = (
             select(WorkflowV2)
             .join(
@@ -207,7 +205,7 @@ async def query_tasks(
                     pkg_name=pkg_name,
                     active=task_active,
                     owner=email,
-                    user_group=group_name,
+                    user_group=user_group,
                 ),
                 relationships=[
                     dict(

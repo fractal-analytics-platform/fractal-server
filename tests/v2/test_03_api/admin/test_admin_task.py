@@ -220,7 +220,7 @@ async def test_task_query(
         assert len(res.json()["items"]) == 0
 
         #  Query by TaskGroup pkg_name
-        res = await client.get(f"{PREFIX}/task/?task_group_name=A")
+        res = await client.get(f"{PREFIX}/task/?task_group=A")
         assert res.status_code == 200
         assert len(res.json()["items"]) == 2
         assert res.json()["items"][0]["task"]["id"] == task2.id
