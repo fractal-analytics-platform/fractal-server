@@ -74,9 +74,9 @@ async def query_tasks(
     modality: str | None = None,
     author: str | None = None,
     resource_id: int | None = None,
-    only_core: bool = False,
     owner_id: int | None = None,
     task_group_name: str | None = None,
+    core: bool | None = None,
     private: bool | None = None,
     active: bool | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
@@ -114,9 +114,9 @@ async def query_tasks(
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
         stm_count = stm_count.where(TaskV2.authors.icontains(author))
-    if only_core is True:
-        stm = stm.where(TaskV2.is_core)
-        stm_count = stm_count.where(TaskV2.is_core)
+    if core is not None:
+        stm = stm.where(TaskV2.is_core.is_(core))
+        stm_count = stm_count.where(TaskV2.is_core.is_(core))
 
     # TaskGroupV2 related query parameters
     if any(
