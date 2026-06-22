@@ -158,7 +158,7 @@ async def query_tasks(
                     )
         if active is not None:
             stm = stm.where(TaskGroupV2.active.is_(active))
-            stm_count = stm_count.where(TaskGroupV2.user_group_id.is_(active))
+            stm_count = stm_count.where(TaskGroupV2.active.is_(active))
 
     response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
