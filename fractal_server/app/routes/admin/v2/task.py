@@ -75,8 +75,12 @@ async def query_tasks(
     author: str | None = None,
     resource_id: int | None = None,
     only_core: bool = False,
+    owner_id: int | None = None,
+    task_group_name: str | None = None,
+    private: bool | None = None,
+    active: bool | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
-    user: UserOAuth = Depends(current_superuser_act),
+    superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
     """
@@ -110,16 +114,51 @@ async def query_tasks(
     if author is not None:
         stm = stm.where(TaskV2.authors.icontains(author))
         stm_count = stm_count.where(TaskV2.authors.icontains(author))
-    if resource_id is not None:
-        stm = stm.join(
-            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
-        ).where(TaskGroupV2.resource_id == resource_id)
-        stm_count = stm_count.join(
-            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
-        ).where(TaskGroupV2.resource_id == resource_id)
     if only_core is True:
         stm = stm.where(TaskV2.is_core)
         stm_count = stm_count.where(TaskV2.is_core)
+
+    # TaskGroupV2 related query parameters
+    if any(
+        query_parameter is not None
+        for query_parameter in (
+            resource_id,
+            owner_id,
+            task_group_name,
+            private,
+            active,
+        )
+    ):
+        stm = stm.join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
+        stm_count = stm_count.join(
+            TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id
+        )
+        if resource_id is not None:
+            stm = stm.where(TaskGroupV2.resource_id == resource_id)
+            stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
+        if owner_id is not None:
+            stm = stm.where(TaskGroupV2.user_id == owner_id)
+            stm_count = stm_count.where(TaskGroupV2.user_id == owner_id)
+        if task_group_name is not None:
+            stm = stm.where(TaskGroupV2.pkg_name.icontains(task_group_name))
+            stm_count = stm_count.where(
+                TaskGroupV2.pkg_name.icontains(task_group_name)
+            )
+        if private is not None:
+            match private:
+                case True:
+                    stm = stm.where(TaskGroupV2.user_group_id.is_not(None))
+                    stm_count = stm_count.where(
+                        TaskGroupV2.user_group_id.is_not(None)
+                    )
+                case False:
+                    stm = stm.where(TaskGroupV2.user_group_id.is_(None))
+                    stm_count = stm_count.where(
+                        TaskGroupV2.user_group_id.is_(None)
+                    )
+        if active is not None:
+            stm = stm.where(TaskGroupV2.active.is_(active))
+            stm_count = stm_count.where(TaskGroupV2.user_group_id.is_(active))
 
     response = await get_paginated_response(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
