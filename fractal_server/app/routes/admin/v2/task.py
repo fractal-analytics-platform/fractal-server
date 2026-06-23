@@ -170,7 +170,7 @@ async def query_tasks(
     records = res.all()
 
     task_info_list = []
-    for task, pkg_name, task_active, email, user_group in records:
+    for task, pkg_name, _active, owner, user_group in records:
         stm = (
             select(WorkflowV2)
             .join(
@@ -203,8 +203,8 @@ async def query_tasks(
                 task=dict(
                     **task.model_dump(),
                     pkg_name=pkg_name,
-                    active=task_active,
-                    owner=email,
+                    active=_active,
+                    owner=owner,
                     user_group=user_group,
                 ),
                 relationships=[
