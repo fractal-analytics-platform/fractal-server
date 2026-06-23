@@ -20,6 +20,7 @@ async def test_task_query(
     project_factory,
     workflow_factory,
     task_factory,
+    default_user_group,
 ):
     async with MockCurrentUser(is_superuser=True) as user:
         project = await project_factory(user)
@@ -43,9 +44,15 @@ async def test_task_query(
             modality="EM",
             authors="Name1 Surname3,Name3 Surname2...",
             is_core=True,
+            task_group_kwargs=dict(active=False),
         )
         task3 = await task_factory(
-            user_id=user.id, index=3, modality="EM", version="3"
+            user_id=user.id,
+            index=3,
+            modality="EM",
+            version="3",
+            name="BAR",
+            task_group_kwargs=dict(user_group_id=None),
         )
 
         # task1 to workflow 1 and 2
@@ -66,6 +73,13 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 200
         assert res.json()["total_count"] == 3
+
+        default_name = default_user_group.name
+        assert [t["task"]["user_group"] for t in res.json()["items"]] == [
+            default_name,
+            default_name,
+            None,
+        ]
 
         # Query Tasks with given type
         res = await client.get(
@@ -97,9 +111,7 @@ async def test_task_query(
 
         res = await client.get(f"{PREFIX}/task/?id={task1.id}")
         assert len(res.json()["items"]) == 1
-        assert (
-            res.json()["items"][0]["task"].items() <= task1.model_dump().items()
-        )
+        assert res.json()["items"][0]["task"]["id"] == task1.id
         assert len(res.json()["items"][0]["relationships"]) == 2
         _common_args = dict(
             project_id=project.id,
@@ -189,9 +201,50 @@ async def test_task_query(
         assert len(res.json()["items"]) == 2
 
         # Query only core
-        res = await client.get(f"{PREFIX}/task/?only_core=xxx")
+        res = await client.get(f"{PREFIX}/task/?core=xxx")
         assert res.status_code == 422
-        res = await client.get(f"{PREFIX}/task/?only_core=true")
+        res = await client.get(f"{PREFIX}/task/?core=true")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        res = await client.get(f"{PREFIX}/task/?core=false")
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query by owner ID
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 3
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id + 1}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 0
+
+        #  Query by TaskGroup pkg_name
+        res = await client.get(f"{PREFIX}/task/?task_group=A")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?private=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?private=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task2.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?active=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?active=false")
+        assert res.status_code == 200
         assert len(res.json()["items"]) == 1
         assert res.json()["items"][0]["task"]["id"] == task2.id
 
@@ -206,9 +259,6 @@ async def test_task_query(
         for t in [task1, task2, task3]:
             res = await client.get(f"{PREFIX}/task/?id={t.id}")
             assert len(res.json()["items"]) == 1
-            assert (
-                res.json()["items"][0]["task"].items() <= t.model_dump().items()
-            )
             assert res.json()["items"][0]["task"]["id"] == t.id
             assert len(res.json()["items"][0]["relationships"]) == 0
 
