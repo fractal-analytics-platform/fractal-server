@@ -1,9 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.23.7 (unreleased)
+# 2.23.7
 
 * API:
-    * Increase the query parameters for the admin task endpoint (\#3378).
+    * Update admin-task-list endpoint with more query parameters and more response properties (\#3378).
+* Testing:
+    * Remove redundant `setup-python` step from GitHub Actions (\#3379).
+
 
 # 2.23.6
 
