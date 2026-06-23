@@ -38,7 +38,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -82,7 +82,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -126,7 +126,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -183,7 +183,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -240,7 +240,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -317,7 +317,7 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
