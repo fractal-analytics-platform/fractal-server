@@ -61,15 +61,11 @@ jobs:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen
 
@@ -118,14 +114,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: 3.12
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: "3.12"
 
       - run: uv sync --frozen
 

@@ -21,6 +21,8 @@ jobs:
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: "3.12"
+
       - run: uv sync --frozen
 
       # Pre-commit

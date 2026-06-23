@@ -4,6 +4,9 @@
 
 * API:
     * Update admin-task-list endpoint with more query parameters and more response properties (\#3378).
+* Testing:
+    * Remove redundant `setup-python` step from GitHub Actions (\#3379).
+
 
 # 2.23.6
 
