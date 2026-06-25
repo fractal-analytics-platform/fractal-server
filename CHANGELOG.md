@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Bump `pydantic-settings` to 2.14.2 (\#3380).
+
 # 2.23.7
 
 * API:
