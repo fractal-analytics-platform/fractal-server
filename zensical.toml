@@ -10,7 +10,7 @@ extra_css = ["extra.css"]
 nav = [
     { "Home" = "index.md" },
 {"Install/deploy" = "install_and_deploy.md"},
-{"Configuration": "configuration.md"},
+{"Configuration" = "configuration.md"},
     { "Changelog" = "changelog.md" },
   { "API reference" = "reference/api.md" },
     { "Contributing" = "development.md" },
