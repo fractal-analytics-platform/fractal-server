@@ -1,7 +1,5 @@
 [project]
 site_name = "Fractal Server"
-site_description = "Manage legacy code with comments."
-site_author = "Tommaso Comparin"
 site_url = "https://fractal-analytics-platform.github.io/fractal-server/"
 repo_url = "https://github.com/fractal-analytics-platform/fractal-server"
 repo_name = "fractal-analytics-platform/fractal-server"
@@ -9,12 +7,27 @@ extra_css = ["extra.css"]
 
 nav = [
     { "Home" = "index.md" },
-{"Install/deploy" = "install_and_deploy.md"},
-{"Configuration" = "configuration.md"},
+    { "Install/deploy" = "install_and_deploy.md" },
+    { "Configuration" = "configuration.md" },
     { "Changelog" = "changelog.md" },
-  { "API reference" = "reference/api.md" },
     { "Contributing" = "development.md" },
+    { "Integrations" = [
+        "internals/integrations/index.md",
+        "internals/integrations/runners.md",
+        "internals/integrations/tasks.md",
+    ]
+    },
+    { "Database" = "internals/database.md" },
+    { "Logging" = "internals/logging.md" },
+    { "Version upgrades" = [
+        "internals/version_upgrades/index.md",
+        "internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md",
+        "internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md",
+    ]
+    },
 ]
+# Missing: CLI reference
+# Missing: Code reference
 
 [project.theme]
 language = "en"
@@ -60,12 +73,20 @@ toggle.icon = "material/weather-night"
 toggle.name = "Switch to system preference"
 
 
+[project.plugins.search]
+
 [project.plugins.section-index]
+
+[project.plugins.autorefs]
+resolve_closest=true
 
 
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
-inventories = ["https://docs.python.org/3/objects.inv", "https://docs.pydantic.dev/latest/objects.inv"]
+inventories = [
+    "https://docs.python.org/3/objects.inv",
+    "https://docs.pydantic.dev/latest/objects.inv",
+]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 backlinks = "tree"
