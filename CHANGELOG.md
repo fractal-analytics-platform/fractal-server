@@ -1,5 +1,62 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Bump `pydantic-settings` to 2.14.2 (\#3380).
+
+# 2.23.7
+
+* API:
+    * Update admin-task-list endpoint with more query parameters and more response properties (\#3378).
+* Testing:
+    * Remove redundant `setup-python` step from GitHub Actions (\#3379).
+
+
+# 2.23.6
+
+* API:
+    * Reintroduce `GET /api/v2/task/` (\#3377), reverting a change from 2.23.5.
+* App:
+    * Fix ordering in `fractalctl recent` results (\#3376).
+
+# 2.23.5
+
+* App:
+    * Add new command `fractalctl recent` (\#3372).
+* API:
+    * Remove `GET /api/v2/task/` (\#3374).
+    * Adapt to fastapi 0.137 breaking changes (\#3369).
+* Dependencies:
+    * Require `fastapi>=0.137.2` (\#3369).
+
+# 2.23.4
+
+* API:
+    * Update admin/user task endpoints to handle new `is_core` property (\#3360).
+* Database:
+    * Add `TaskV2.is_core` (\#3360).
+* Dependencies:
+    * Require `starlette>=1.3.1` (\#3368).
+* Testing:
+    * Add `uv audit` GitHub Action (\#3368).
+
+# 2.23.3
+
+> NOTE: If `fractalctl set-db` (that is, the database schema migration) fails,
+> the following SQL query is useful to identify task groups with invalid data
+> (that is, two tasks with the same name within a single task group).
+> ```
+> select name, taskgroupv2_id, count(*) from taskv2 group by name, taskgroupv2_id having count(*) > 1;
+> ```
+
+* Database:
+    * Make task `(name, taskgroupv2_id)` unique (\#3362).
+* Testing:
+    * Update precommit/ty GitHub Action (\#3364).
+* Dependencies:
+    * Require dev dependency `jinja2` 3.1.6 (\#3365).
+
 # 2.23.2
 
 * Database:

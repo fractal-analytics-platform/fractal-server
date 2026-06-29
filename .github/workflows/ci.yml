@@ -34,15 +34,11 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -82,15 +78,11 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -130,15 +122,11 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -191,15 +179,11 @@ jobs:
         if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -252,15 +236,11 @@ jobs:
         if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit != 'true'
         run: docker pull ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 && mkdir -p ci/cache/docker/ubuntu24-slurm-multipy && docker image save ghcr.io/fractal-analytics-platform/ubuntu24-slurm-multipy:0.1 --output ./ci/cache/docker/ubuntu24-slurm-multipy/ubuntu24-slurm-multipy.tar
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -333,15 +313,11 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - run: uv sync --frozen --group dev
 
@@ -395,15 +371,11 @@ jobs:
           # https://github.com/py-cov-action/python-coverage-comment-action/issues/610
           persist-credentials: true
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-        with:
-          python-version: "3.12"
-
-
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           version: "0.11.14"
           enable-cache: true
+          python-version: "3.12"
 
       - run: uv sync --frozen --only-group dev
 

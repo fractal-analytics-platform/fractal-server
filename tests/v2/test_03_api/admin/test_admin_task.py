@@ -1,0 +1,464 @@
+import asyncio
+
+from sqlalchemy import select
+
+from fractal_server.app.models.v2.resource import Resource
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.models.v2.task_group import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
+from fractal_server.app.schemas.v2.task import TaskType
+
+PREFIX = "/admin/v2"
+
+
+async def test_task_query(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    default_user_group,
+):
+    async with MockCurrentUser(is_superuser=True) as user:
+        project = await project_factory(user)
+
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
+
+        task1 = await task_factory(
+            user_id=user.id,
+            name="Foo",
+            version="0",
+            category="Conversion",
+            modality="HCS",
+            authors="Name1 Surname1,Name2 Surname2...",
+        )
+        task2 = await task_factory(
+            user_id=user.id,
+            name="abcdef",
+            version="0",
+            category="Conversion",
+            modality="EM",
+            authors="Name1 Surname3,Name3 Surname2...",
+            is_core=True,
+            task_group_kwargs=dict(active=False),
+        )
+        task3 = await task_factory(
+            user_id=user.id,
+            index=3,
+            modality="EM",
+            version="3",
+            name="BAR",
+            task_group_kwargs=dict(user_group_id=None),
+        )
+
+        # task1 to workflow 1 and 2
+        await _workflow_insert_task(
+            workflow_id=workflow1.id, task_id=task1.id, db=db, order=0
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task1.id, db=db, order=1
+        )
+        # task2 to workflow2
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task2.id, db=db, order=2
+        )
+        # task3 is orphan
+        await db.commit()
+
+        # Query all Tasks
+        res = await client.get(f"{PREFIX}/task/")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 3
+
+        default_name = default_user_group.name
+        assert [t["task"]["user_group"] for t in res.json()["items"]] == [
+            default_name,
+            default_name,
+            None,
+        ]
+
+        # Query Tasks with given type
+        res = await client.get(
+            f"{PREFIX}/task/?task_type=converter_non_parallel"
+        )
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 0
+
+        # Query Tasks with given type
+        res = await client.get(f"{PREFIX}/task/?task_type=compound")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 3
+
+        # Query first page of all Tasks
+        res = await client.get(f"{PREFIX}/task/?page_size=1&page=1")
+        assert res.status_code == 200
+        assert res.json()["total_count"] == 3
+        assert len(res.json()["items"]) == 1
+
+        # Query all tasks, with naive `resource_id` query parameter
+        # (assuming a single resource exists in the db)
+        res = await db.execute(select(Resource.id))
+        resource_id = res.scalars().first()
+        res = await client.get(f"{PREFIX}/task/?{resource_id=}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 3
+
+        # Query by ID
+
+        res = await client.get(f"{PREFIX}/task/?id={task1.id}")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert len(res.json()["items"][0]["relationships"]) == 2
+        _common_args = dict(
+            project_id=project.id,
+            project_name=project.name,
+            project_users=[dict(id=user.id, email=user.email)],
+        )
+        assert res.json()["items"][0]["relationships"][0] == dict(
+            workflow_id=workflow1.id,
+            workflow_name=workflow1.name,
+            **_common_args,
+        )
+        assert res.json()["items"][0]["relationships"][1] == dict(
+            workflow_id=workflow2.id,
+            workflow_name=workflow2.name,
+            **_common_args,
+        )
+
+        res = await client.get(f"{PREFIX}/task/?id={task2.id}")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        assert len(res.json()["items"][0]["relationships"]) == 1
+
+        res = await client.get(f"{PREFIX}/task/?id={task3.id}")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task3.id
+        assert len(res.json()["items"][0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?id=1000")
+        assert len(res.json()["items"]) == 0
+
+        # Query by VERSION
+
+        res = await client.get(f"{PREFIX}/task/?version=0")  # task 1 + 2
+        assert len(res.json()["items"]) == 2
+
+        res = await client.get(f"{PREFIX}/task/?version=3")  # task 3
+        assert len(res.json()["items"]) == 1
+
+        res = await client.get(f"{PREFIX}/task/?version=1.2")
+        assert len(res.json()["items"]) == 0
+
+        # Query by NAME
+
+        res = await client.get(f"{PREFIX}/task/?name={task1.name}")
+        assert len(res.json()["items"]) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name={task2.name}")
+        assert len(res.json()["items"]) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name={task3.name}")
+        assert len(res.json()["items"]) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name=nonamelikethis")
+        assert len(res.json()["items"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?name=f")  # task 1 + 2
+        assert len(res.json()["items"]) == 2
+
+        res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
+        assert len(res.json()["items"]) == 2
+
+        # Query by CATEGORY
+
+        res = await client.get(f"{PREFIX}/task/?category=Conversion")
+        assert len(res.json()["items"]) == 2
+        res = await client.get(f"{PREFIX}/task/?category=conversion")
+        assert len(res.json()["items"]) == 2
+        res = await client.get(f"{PREFIX}/task/?category=conversio")
+        assert len(res.json()["items"]) == 0
+
+        # Query by MODALITY
+
+        res = await client.get(f"{PREFIX}/task/?modality=HCS")
+        assert len(res.json()["items"]) == 1
+        res = await client.get(f"{PREFIX}/task/?modality=em")
+        assert len(res.json()["items"]) == 2
+        res = await client.get(f"{PREFIX}/task/?modality=foo")
+        assert len(res.json()["items"]) == 0
+
+        # Query by AUTHOR
+
+        res = await client.get(f"{PREFIX}/task/?author=name1")
+        assert len(res.json()["items"]) == 2
+        res = await client.get(f"{PREFIX}/task/?author=surname1")
+        assert len(res.json()["items"]) == 1
+        res = await client.get(f"{PREFIX}/task/?author=,")
+        assert len(res.json()["items"]) == 2
+
+        # Query only core
+        res = await client.get(f"{PREFIX}/task/?core=xxx")
+        assert res.status_code == 422
+        res = await client.get(f"{PREFIX}/task/?core=true")
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        res = await client.get(f"{PREFIX}/task/?core=false")
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query by owner ID
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 3
+        res = await client.get(f"{PREFIX}/task/?owner_id={user.id + 1}")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 0
+
+        #  Query by TaskGroup pkg_name
+        res = await client.get(f"{PREFIX}/task/?task_group=A")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?private=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?private=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task2.id
+
+        # Query private
+        res = await client.get(f"{PREFIX}/task/?active=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["task"]["id"] == task1.id
+        assert res.json()["items"][1]["task"]["id"] == task3.id
+        res = await client.get(f"{PREFIX}/task/?active=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["task"]["id"] == task2.id
+
+        # --------------------------
+        # Relationships after deleting the Project
+
+        res = await client.delete(f"api/v2/project/{project.id}/")
+        assert res.status_code == 204
+
+        # Query by ID
+
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?id={t.id}")
+            assert len(res.json()["items"]) == 1
+            assert res.json()["items"][0]["task"]["id"] == t.id
+            assert len(res.json()["items"][0]["relationships"]) == 0
+
+
+async def test_task_core(
+    local_resource_profile_db,
+    default_user_group,
+    MockCurrentUser,
+    client,
+    db,
+):
+    resource, _ = local_resource_profile_db
+    async with MockCurrentUser() as user1:
+        user1_id = user1.id
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123])
+        assert res.status_code == 401
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123])
+        assert res.status_code == 401
+
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
+    task_a = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
+    task_a_copy = TaskV2(name="a", version="1", type=TaskType.PARALLEL)
+    task_b = TaskV2(name="c", version="1", type=TaskType.PARALLEL)
+    tg1 = TaskGroupV2(
+        user_id=user1_id,
+        resource_id=resource.id,
+        origin="unknown",
+        pkg_name="foo",
+        version="1",
+        task_list=[task_a, task_b],
+        user_group_id=default_user_group.id,
+    )
+    tg2 = TaskGroupV2(
+        user_id=user2_id,
+        resource_id=resource.id,
+        origin="unknown",
+        pkg_name="foo",
+        version="1",
+        task_list=[task_a_copy],
+        user_group_id=default_user_group.id,
+    )
+    db.add_all([tg1, tg2])
+    await db.commit()
+
+    await db.refresh(task_a)
+    await db.refresh(task_a_copy)
+    await db.refresh(task_b)
+    assert task_a.is_core is False
+    assert task_a_copy.is_core is False
+    assert task_b.is_core is False
+
+    async with MockCurrentUser(is_superuser=True):
+        # Make TaskA core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id],
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is True
+        # Make TaskA core again -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id],
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is True
+        # Make TaskB core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_b.id],
+        )
+        assert res.status_code == 200
+        await db.refresh(task_b)
+        assert task_b.is_core is True
+        # Make TaskA-copy core -> 422
+        res = await client.post(
+            f"{PREFIX}/task/make-core/", json=[task_a_copy.id]
+        )
+        assert res.status_code == 422
+        assert "There already exists a core task with" in res.json()["detail"]
+        await db.refresh(task_a_copy)
+        assert task_a_copy.is_core is False
+        # Make TaskA not core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-not-core/", json=[task_a.id]
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        assert task_a.is_core is False
+        # Make TaskA, TaskA-copy and TaskB core -> 422
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[task_a.id, task_b.id, task_a_copy.id],
+        )
+        assert res.status_code == 422
+        assert (
+            "Hint: include fewer tasks in the request body and retry."
+        ) in res.json()["detail"]
+        await db.refresh(task_a)
+        await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_a_copy.is_core is False
+        assert task_b.is_core is True
+        # Make TaskA-copy and TaskB core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-core/", json=[task_b.id, task_a_copy.id]
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_a_copy.is_core is True
+        assert task_b.is_core is True
+        # 404
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123])
+        assert res.status_code == 404
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123])
+        assert res.status_code == 404
+        res = await client.post(f"{PREFIX}/task/make-core/", json=[123, 1, 123])
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Value error, List has repetitions"
+        )
+        res = await client.post(f"{PREFIX}/task/make-not-core/", json=[123, -1])
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Input should be greater than or equal to 0"
+        )
+
+    async with MockCurrentUser(is_superuser=True):
+        # Make TaskA, TaskA-copy and TaskB not core -> OK
+        res = await client.post(
+            f"{PREFIX}/task/make-not-core/",
+            json=[task_a.id, task_b.id, task_a_copy.id],
+        )
+        assert res.status_code == 200
+        await db.refresh(task_a)
+        await db.refresh(task_a_copy)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_a_copy.is_core is False
+        assert task_b.is_core is False
+
+
+async def test_race_condition_for_core_tasks(
+    local_resource_profile_db,
+    MockCurrentUser,
+    client,
+    db,
+    default_user_group,
+):
+    resource, _ = local_resource_profile_db
+    async with MockCurrentUser(is_superuser=True) as user:
+        common_args_task = dict(name="a", version="1", type=TaskType.PARALLEL)
+        task_a = TaskV2(**common_args_task)
+        task_b = TaskV2(**common_args_task)
+
+        common_args_task_group = dict(
+            user_id=user.id,
+            resource_id=resource.id,
+            origin="unknown",
+            pkg_name="foo",
+            version="1",
+            user_group_id=default_user_group.id,
+        )
+        tg1 = TaskGroupV2(task_list=[task_a], **common_args_task_group)
+        tg2 = TaskGroupV2(task_list=[task_b], **common_args_task_group)
+        db.add_all([tg1, tg2])
+        await db.commit()
+
+        await db.refresh(task_a)
+        await db.refresh(task_b)
+        assert task_a.is_core is False
+        assert task_b.is_core is False
+
+        res1, res2 = await asyncio.gather(
+            client.post(f"{PREFIX}/task/make-core/", json=[task_a.id]),
+            client.post(f"{PREFIX}/task/make-core/", json=[task_b.id]),
+        )
+
+        assert (res1.status_code, res2.status_code) in [(200, 422), (422, 200)]
+
+        await db.refresh(task_a)
+        await db.refresh(task_b)
+        assert task_a.is_core != task_b.is_core
+
+        # Check that the lock has been released
+        core_task_id = task_a.id if task_a.is_core else task_b.id
+        non_core_task_id = task_b.id if task_b.is_core else task_a.id
+        res1 = await client.post(
+            f"{PREFIX}/task/make-not-core/", json=[core_task_id]
+        )
+        res2 = await client.post(
+            f"{PREFIX}/task/make-core/", json=[non_core_task_id]
+        )
+        assert res1.status_code == 200
+        assert res2.status_code == 200

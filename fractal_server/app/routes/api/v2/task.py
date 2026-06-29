@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import func
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -39,29 +38,12 @@ router = APIRouter()
 
 logger = set_logger(__name__)
 
-_SLIM_TASK_FIELDS = {
-    "id",
-    "name",
-    "input_types",
-    "category",
-    "modality",
-    "authors",
-    "tags",
-    "version",
-    "docs_info",
-    "docs_link",
-}
 
-
-@router.get("/", response_model=list[TaskRead] | list[TaskReadSlim])
-async def get_list_task(
-    slim: bool = False,
-    category: str | None = None,
-    modality: str | None = None,
-    author: str | None = None,
+@router.get("/", response_model=list[TaskReadSlim])
+async def get_task_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskV2] | list[dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Get list of available tasks
     """
@@ -82,21 +64,11 @@ async def get_list_task(
                 ),
             )
         )
+        .order_by(TaskV2.id)
     )
-    if category is not None:
-        stm = stm.where(func.lower(TaskV2.category) == category.lower())
-    if modality is not None:
-        stm = stm.where(func.lower(TaskV2.modality) == modality.lower())
-    if author is not None:
-        stm = stm.where(TaskV2.authors.icontains(author))
 
-    stm = stm.order_by(TaskV2.id)
     res = await db.execute(stm)
     task_list = list(res.scalars().all())
-    if slim:
-        return [
-            task.model_dump(include=_SLIM_TASK_FIELDS) for task in task_list
-        ]
 
     return task_list
 

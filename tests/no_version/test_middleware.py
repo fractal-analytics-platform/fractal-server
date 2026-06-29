@@ -6,7 +6,7 @@ import time
 from asgi_lifespan import LifespanManager
 from fastapi import BackgroundTasks
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
+from fastapi.routing import iter_route_contexts
 from httpx import ASGITransport
 from httpx import AsyncClient
 
@@ -85,22 +85,23 @@ async def test_endpoint_has_background_task(app: FastAPI, register_routers):
     ```
     """
     background_task_routes = set()
-    for route in app.routes:
-        if isinstance(route, APIRoute):
-            method = list(route.methods)[0]
-            path = route.path
-            has_background_task = False
-            signature = inspect.signature(route.endpoint)
-            for _, param in signature.parameters.items():
-                if param.annotation == BackgroundTasks:
-                    background_task_routes.add((method, path))
-                    has_background_task = True
-                    break
 
-            assert (
-                _endpoint_has_background_task(method=method, path=path)
-                == has_background_task
-            )
+    # NOTE: Usage of routes/context is required as of fastapi v0.137.
+    for context in iter_route_contexts(app.routes):
+        method = list(context.route.methods)[0]
+        path = context.path
+        has_background_task = False
+        signature = inspect.signature(context.route.endpoint)
+        for _, param in signature.parameters.items():
+            if param.annotation == BackgroundTasks:
+                background_task_routes.add((method, path))
+                has_background_task = True
+                break
+
+        assert (
+            _endpoint_has_background_task(method=method, path=path)
+            is has_background_task
+        )
     assert background_task_routes == {
         ("POST", "/api/v2/project/{project_id}/job/submit/"),
         ("POST", "/api/v2/task/collect/pip/"),
