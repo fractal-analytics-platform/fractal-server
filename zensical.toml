@@ -4,6 +4,14 @@ site_url = "https://fractal-analytics-platform.github.io/fractal-server/"
 repo_url = "https://github.com/fractal-analytics-platform/fractal-server"
 repo_name = "fractal-analytics-platform/fractal-server"
 extra_css = ["extra.css"]
+copyright = """
+© Copyright 2022
+Friedrich Miescher Institute for Biomedical Research and
+University of Zurich
+(see <u><a href="https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE">
+LICENSE
+</a></u>).
+"""
 
 nav = [
     { "Home" = "index.md" },
