@@ -58,7 +58,7 @@ features = [
     "toc.follow",
     "toc.integrate",
 ]
-
+logo = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png"
 [[project.theme.palette]]
 media = "(prefers-color-scheme)"
 toggle.icon = "material/brightness-auto"
