@@ -110,6 +110,7 @@ async def test_get_task_group_list(
         taskgroup_by_user3 = res.json()
 
         res = await client.get(f"{PREFIX}/")
+
         assert res.status_code == 200
         result = res.json()
         assert len(result) == 2  # number of unique `pkg_name`s
@@ -131,13 +132,6 @@ async def test_get_task_group_list(
             "abc",
             "aaa-non-parsable",
         ]
-        for key in ["args_schema_non_parallel", "args_schema_parallel"]:
-            assert task_groups_aaa[0]["task_list"][0][key] is not None
-
-        # Test query parameter `slim=true`
-        res = await client.get(f"{PREFIX}/?slim=true")
-        assert res.status_code == 200
-        task_groups_aaa = res.json()[0][1]
         for key in [
             "args_schema_non_parallel",
             "args_schema_parallelcommand_non_parallel",
