@@ -12,8 +12,12 @@ updates:
     exclude-paths:
       - "tests"
     groups:
-      gha-updates:
+      version-updates:
         applies-to: version-updates
+        patterns:
+          - '*'
+      security-updates:
+        applies-to: security-updates
         patterns:
           - '*'
   - package-ecosystem: github-actions
@@ -25,5 +29,9 @@ updates:
     groups:
       version-updates:
         applies-to: version-updates
+        patterns:
+          - '*'
+      security-updates:
+        applies-to: security-updates
         patterns:
           - '*'
