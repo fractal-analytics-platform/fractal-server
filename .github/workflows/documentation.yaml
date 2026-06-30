@@ -32,6 +32,11 @@ jobs:
           python-version: "3.12"
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
+      - run: uv run --frozen python docs/scripts/generate_swagger_ui.py
+        env:
+          OPENAPI_URL: "https://fractal-analytics-platform.github.io/fractal-server/openapi/openapi.json"
+      - run: uv run --frozen python docs/scripts/generate_cli_ref.py
+
       - run: uv run --frozen mkdocs build --config-file mkdocs.yml --site-dir site --clean
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

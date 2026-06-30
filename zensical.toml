@@ -19,6 +19,8 @@ nav = [
     { "Configuration" = "configuration.md" },
     { "Changelog" = "changelog.md" },
     { "Contributing" = "development.md" },
+    { "CLI" = "cli_reference.md" },
+    { "API" = "openapi.md" },
     { "Integrations" = [
         "internals/integrations/index.md",
         "internals/integrations/runners.md",

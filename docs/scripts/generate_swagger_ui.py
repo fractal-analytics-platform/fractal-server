@@ -1,13 +1,15 @@
+import os
 from pathlib import Path
 from textwrap import dedent
 
 from fastapi.openapi.docs import get_swagger_ui_html
 
-# FIXME: Add something for local deployments, pointing somewhere else or nowhere
-OPENAPI_URL = "https://fractal-analytics-platform.github.io/fractal-server/openapi/openapi.json"
+openapi_url = os.getenv(
+    "OPENAPI_URL", "http://127.0.0.1:8000/fractal-server/openapi.json"
+)
 
 html_response = get_swagger_ui_html(
-    openapi_url=OPENAPI_URL,
+    openapi_url=openapi_url,
     title="Fractal-server API",
 )
 body = html_response.body.decode()
