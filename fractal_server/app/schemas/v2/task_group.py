@@ -95,7 +95,11 @@ class TaskGroupRead(BaseModel):
         return v.isoformat()
 
 
-class TaskGroupReadSlim(TaskGroupRead):
+class TaskGroupReadUser(TaskGroupRead):
+    in_use: bool
+
+
+class TaskGroupReadSlim(TaskGroupReadUser):
     task_list: list[TaskReadSlim]
 
 
