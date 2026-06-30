@@ -5,7 +5,7 @@ from pathlib import Path
 BASE_CMD = "fractalctl"
 
 
-os.environ["JWT_SECRET_KEY"] = "fake-jwt-secret-key"  # nosec: B1047
+os.environ["JWT_SECRET_KEY"] = "fake-jwt-secret-key"  # nosec
 os.environ["POSTGRES_DB"] = "fake-postgres-db"
 
 
