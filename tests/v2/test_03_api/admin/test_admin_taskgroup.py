@@ -7,6 +7,7 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2.task import TaskV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -742,3 +743,54 @@ async def test_admin_delete_task_group_api_ssh(
         assert activity["id"] == activity_id
         assert activity["action"] == TaskGroupActivityAction.DELETE
         assert activity["status"] == TaskGroupActivityStatus.OK
+
+
+async def test_task_group_core_endpoints(
+    db, client, MockCurrentUser, local_resource_profile_db
+):
+    resource, _ = local_resource_profile_db
+    async with MockCurrentUser() as user:
+        user_id = user.id
+
+    task1 = TaskV2(name="a1", type="b1", version="c1")
+    task2 = TaskV2(name="a2", type="b2", version="c2")
+    task_group = TaskGroupV2(
+        user_id=user_id,
+        resource_id=resource.id,
+        origin="x",
+        pkg_name="y",
+        version="z",
+        task_list=[task1, task2],
+    )
+    db.add(task_group)
+    await db.commit()
+    await db.refresh(task1)
+    await db.refresh(task2)
+    await db.refresh(task_group)
+
+    assert task1.is_core is False
+    assert task2.is_core is False
+
+    async with MockCurrentUser(is_superuser=True):
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group.id}/make-core/"
+        )
+        assert res.status_code == 200
+
+        await db.refresh(task1)
+        await db.refresh(task2)
+        assert task1.is_core is True
+        assert task2.is_core is True
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group.id}/make-not-core/"
+        )
+        assert res.status_code == 200
+
+        await db.refresh(task1)
+        await db.refresh(task2)
+        assert task1.is_core is False
+        assert task2.is_core is False
+
+        res = await client.post(f"{PREFIX}/task-group/123456789/make-not-core/")
+        assert res.status_code == 200
