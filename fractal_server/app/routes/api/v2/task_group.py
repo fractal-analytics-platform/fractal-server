@@ -33,8 +33,6 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskGroupReadSlim
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
-from fractal_server.app.schemas.v2.task import SLIM_TASK_FIELDS
-from fractal_server.app.schemas.v2.task_group import TaskGroupReadUser
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_user_resource_id
@@ -117,15 +115,13 @@ async def get_task_group_activity(
 
 @router.get(
     "/",
-    response_model=list[tuple[str, list[TaskGroupReadUser]]]
-    | list[tuple[str, list[TaskGroupReadSlim]]],
+    response_model=list[tuple[str, list[TaskGroupReadSlim]]],
 )
 async def get_task_group_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
-    slim: bool = False,
 ) -> list[tuple[str, list[dict[str, Any]]]]:
     """
     Get all accessible TaskGroups
@@ -198,7 +194,6 @@ async def get_task_group_list(
                 serialize_task_group_with_email(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
-                    included_task_fields=(SLIM_TASK_FIELDS if slim else None),
                 )
                 | dict(in_use=(task_group.id in in_use_task_group_ids))
                 for task_group in task_group_list
