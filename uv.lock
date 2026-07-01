@@ -639,7 +639,7 @@ dev = [
 ]
 docs = [
     { name = "griffe-pydantic" },
-    { name = "mkdocstrings-python", specifier = ">=2.0.3" },
+    { name = "mkdocstrings-python", specifier = ">=2.0.4,<2.1.0" },
     { name = "zensical", specifier = ">=0.0.43" },
 ]
 

@@ -5,12 +5,8 @@ repo_url = "https://github.com/fractal-analytics-platform/fractal-server"
 repo_name = "fractal-analytics-platform/fractal-server"
 extra_css = ["extra.css"]
 copyright = """
-© Copyright 2022
-Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-(see <u><a href="https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE">
-LICENSE
-</a></u>).
+Copyright 2026 (C) BioVisionCenter (University of Zurich) - see
+<u><a href="https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE">LICENSE</a></u>.
 """
 
 nav = [
@@ -19,6 +15,7 @@ nav = [
     { "Configuration" = "configuration.md" },
     { "Changelog" = "changelog.md" },
     { "Contributing" = "development.md" },
+    { "Code ref" = "code_reference/" },
     { "CLI" = "cli_reference.md" },
     { "API" = "openapi.md" },
     { "Integrations" = [
@@ -36,11 +33,15 @@ nav = [
     ]
     },
 ]
-# Missing: CLI reference
-# Missing: Code reference
 
 [project.theme]
+variant = "classic"
 language = "en"
+logo = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png"
+favicon = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_favicon.png"
+custom_dir = "docs/overrides"
+navigation = {"expand" = true}
+
 features = [
     "announce.dismiss",
     "content.code.annotate",
@@ -60,18 +61,14 @@ features = [
     "toc.follow",
     "toc.integrate",
 ]
-logo = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png"
-[[project.theme.palette]]
-media = "(prefers-color-scheme)"
-toggle.icon = "material/brightness-auto"
-toggle.name = "Switch to light mode"
+
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
 scheme = "default"
 primary = "teal"
 accent = "green"
-toggle.icon = "material/weather-sunny"
+toggle.icon = "material/weather-night"
 toggle.name = "Switch to dark mode"
 
 [[project.theme.palette]]
@@ -79,16 +76,15 @@ media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "teal"
 accent = "gren"
-toggle.icon = "material/weather-night"
-toggle.name = "Switch to system preference"
-
+toggle.icon = "material/weather-sunny"
+toggle.name = "Switch to light mode"
 
 [project.plugins.search]
 
-[project.plugins.section-index]
-
 [project.plugins.autorefs]
 resolve_closest=true
+
+[project.plugins.section-index]
 
 
 [project.plugins.mkdocstrings.handlers.python]
@@ -99,24 +95,25 @@ inventories = [
 ]
 
 [project.plugins.mkdocstrings.handlers.python.options]
+
+paths = ["fractal_server"]
+filters = []
+
+group_by_category = true
+show_category_heading = true
+summary = true
+
 backlinks = "tree"
 docstring_style = "google"
 docstring_section_style = "spacy"
-# filters = []
-# merge_init_into_class = true
-# parameter_headings = true
-# separate_signature = true
-# show_root_heading = true
-allow_inspection = true
-show_root_full_path = false
-show_signature_annotations = false
 show_source = true
+
+parameter_headings = true
+allow_inspection = true
 show_symbol_type_heading = true
-show_symbol_type_toc = true
+show_symbol_type_toc = false
 signature_crossrefs = true
-summary = true
 unwrap_annotated = true
 show_attribute_values = true
 inherited_members = true
 extensions= ["griffe_pydantic"]
-paths=["fractal_server"]
