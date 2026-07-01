@@ -107,7 +107,7 @@ Note that also tests marked as `basic_auth` rely on the Dex service being active
 
 ### Update database schema
 
-Whenever the database schemas in [`app/models`](./reference/app/models/index.md) are modified, you should create a migration script. To check whether this is needed, run
+Whenever the database schemas in [`app/models`](./code_reference/app/models/index.md) are modified, you should create a migration script. To check whether this is needed, run
 ```
 uv run --frozen alembic check
 ```

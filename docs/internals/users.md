@@ -13,7 +13,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## First user
 
 To manage `fractal-server` you need to create a first user with superuser privileges.
-This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../install_and_deploy.md/#initialize-database-data) or at a later stage.
+This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-init-db-data) command together with the`--admin-email`/`--admin-pwd`/`--admin-project-dir` flags, either during the [startup phase](../install_and_deploy.md#initialize-database-data) or at a later stage.
 
 The most common use cases for `fractal-server` are:
 
@@ -80,7 +80,7 @@ $ curl \
 
 Fractal Server also allows a different authentication procedure, not based on the knowledge of a user's password but on external `OAuth2` authentication clients.
 
-Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/reference/httpx_oauth.clients/) can be readily included).
+Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/code_reference/httpx_oauth.clients/) can be readily included).
 
 #### Configuration
 
@@ -170,7 +170,7 @@ After that, the callback endpoint performs some extra operations, which are not 
 - It checks that `state` is still valid;
 - If the user has never authenticated with `OAuth2` before:
     - it adds to the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table; at subsequent logins that entry will just be updated.
-    - it sends a notification of the login to the addresses indicated in [`FRACTAL_EMAIL_RECIPIENTS`](../configuration.md/#fractal_server.config._email.EmailSettings).
+    - it sends a notification of the login to the addresses indicated in [`FRACTAL_EMAIL_RECIPIENTS`](../configuration.md#fractal_server.config._email.EmailSettings).
 - It prepares a JWT token for the user and serves it in the Response Cookie.
 
 #### Full example

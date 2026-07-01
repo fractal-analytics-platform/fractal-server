@@ -93,13 +93,13 @@ class TasksPixiSettings(BaseModel):
     PIXI_CONCURRENT_SOLVES: int = 4
     """
     Value of
-    [`--concurrent-solves`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-solves)
+    [`--concurrent-solves`](https://pixi.sh/latest/code_reference/cli/pixi/install/#arg---concurrent-solves)
     for `pixi install`.
     """
     PIXI_CONCURRENT_DOWNLOADS: int = 4
     """
     Value of
-    [`--concurrent-downloads`](https://pixi.sh/latest/reference/cli/pixi/install/#arg---concurrent-downloads)
+    [`--concurrent-downloads`](https://pixi.sh/latest/code_reference/cli/pixi/install/#arg---concurrent-downloads)
     for `pixi install`.
     """
     TOKIO_WORKER_THREADS: int = 2

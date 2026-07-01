@@ -44,7 +44,7 @@ def walk_and_build(subpkg_path: Path):
     index_docs_path = subpkg_docs_path / "index.md"
 
     with index_docs_path.open("w") as f:
-        title = ".".join([PKG_NAME, relative_string_dots])
+        title = (".".join([PKG_NAME, relative_string_dots])).strip(".")
         f.write(f"# `{title}`\n\n")
 
         identifier = f"{PKG_NAME}.{relative_string_dots}".strip(".")
@@ -55,8 +55,9 @@ def walk_and_build(subpkg_path: Path):
             f.write("## Subpackages\n\n")
             for subpkg in subpkgs:
                 relative_subpkg_path = subpkg.name
+                f.write(f"### {relative_subpkg_path}\n\n")
                 f.write(
-                    f"- [{relative_subpkg_path}](./{relative_subpkg_path})\n"
+                    f"- [{relative_subpkg_path}](./{relative_subpkg_path})\n\n"
                 )
                 walk_and_build(subpkg)
             f.write("\n")
