@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 from sqlmodel import update
@@ -42,7 +43,7 @@ async def _make_task_core_bulk(
     *,
     task_ids: ListUniqueNonNegativeInt,
     db: AsyncSession,
-) -> None:
+) -> Response:
     res = await db.execute(
         select(TaskV2, TaskGroupV2)
         .join(TaskGroupV2, TaskGroupV2.id == TaskV2.taskgroupv2_id)
@@ -102,12 +103,17 @@ async def _make_task_core_bulk(
     )
     await db.commit()
 
+    return Response(
+        content=f"{len(task_ids)} tasks have been made core.",
+        status_code=status.HTTP_200_OK,
+    )
+
 
 async def _make_task_not_core_bulk(
     *,
     task_ids: ListUniqueNonNegativeInt,
     db: AsyncSession,
-) -> None:
+) -> Response:
     res = await db.execute(select(TaskV2).where(TaskV2.id.in_(task_ids)))
     tasks = res.scalars().all()
     if len(tasks) != len(task_ids):
@@ -122,3 +128,8 @@ async def _make_task_not_core_bulk(
         update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=False)
     )
     await db.commit()
+
+    return Response(
+        content=f"{len(task_ids)} tasks have been made not core.",
+        status_code=status.HTTP_200_OK,
+    )

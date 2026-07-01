@@ -231,8 +231,8 @@ async def make_task_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    await _make_task_core_bulk(task_ids=task_ids, db=db)
-    return Response(status_code=status.HTTP_200_OK)
+    res = await _make_task_core_bulk(task_ids=task_ids, db=db)
+    return res
 
 
 @router.post(
@@ -244,5 +244,5 @@ async def make_task_not_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
-    return Response(status_code=status.HTTP_200_OK)
+    res = await _make_task_not_core_bulk(task_ids=task_ids, db=db)
+    return res

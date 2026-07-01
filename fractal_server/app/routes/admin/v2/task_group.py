@@ -266,8 +266,8 @@ async def make_task_group_core(
         select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
     )
     task_ids = res.scalars().all()
-    await _make_task_core_bulk(task_ids=task_ids, db=db)
-    return Response(status_code=status.HTTP_200_OK)
+    res = await _make_task_core_bulk(task_ids=task_ids, db=db)
+    return res
 
 
 @router.post("/{task_group_id}/make-not-core/", status_code=status.HTTP_200_OK)
@@ -283,5 +283,5 @@ async def make_task_group_not_core(
         select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
     )
     task_ids = res.scalars().all()
-    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
-    return Response(status_code=status.HTTP_200_OK)
+    res = await _make_task_not_core_bulk(task_ids=task_ids, db=db)
+    return res
