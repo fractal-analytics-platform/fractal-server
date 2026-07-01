@@ -173,11 +173,7 @@ def serialize_task_group_with_email(
     task_group: TaskGroupV2,
     user_email: str,
 ) -> dict[str, Any]:
-    return dict(
-        user_email=user_email,
-        task_list=[task.model_dump() for task in task_group.task_list],
-        **task_group.model_dump(),
-    )
+    return dict(user_email=user_email, **task_group.model_dump())
 
 
 async def add_user_email_to_task_group(
