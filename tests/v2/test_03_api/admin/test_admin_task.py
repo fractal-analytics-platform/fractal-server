@@ -313,6 +313,12 @@ async def test_task_core(
     assert task_b.is_core is False
 
     async with MockCurrentUser(is_superuser=True):
+        # Test empty list
+        res = await client.post(
+            f"{PREFIX}/task/make-core/",
+            json=[],
+        )
+        assert res.status_code == 200
         # Make TaskA core -> OK
         res = await client.post(
             f"{PREFIX}/task/make-core/",
