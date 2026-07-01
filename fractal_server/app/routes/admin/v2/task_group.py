@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
@@ -15,6 +16,13 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
+    _make_task_core_bulk,
+)
+from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
+    _make_task_not_core_bulk,
+)
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     serialize_task_group_with_email,
 )
@@ -243,3 +251,37 @@ async def patch_task_group(
     return serialize_task_group_with_email(
         task_group=task_group, user_email=user_email
     )
+
+
+@router.post("/{task_group_id}/make-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make core all the tasks of this task group
+    """
+    res = await db.execute(
+        select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
+    )
+    task_ids = res.scalars().all()
+    await _make_task_core_bulk(task_ids=task_ids, db=db)
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post("/{task_group_id}/make-not-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_not_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make not-core all the tasks of this task group
+    """
+    res = await db.execute(
+        select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
+    )
+    task_ids = res.scalars().all()
+    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
+    return Response(status_code=status.HTTP_200_OK)
