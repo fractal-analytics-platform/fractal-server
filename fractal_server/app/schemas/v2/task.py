@@ -133,9 +133,6 @@ class TaskReadSlim(BaseModel):
     docs_link: str | None = None
 
 
-SLIM_TASK_FIELDS = set(TaskReadSlim.model_fields.keys())
-
-
 class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
