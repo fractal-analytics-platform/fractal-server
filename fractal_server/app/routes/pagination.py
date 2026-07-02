@@ -45,7 +45,7 @@ class PaginationData(BaseModel):
     """
     Metadata describing the state of a paginated query.
 
-    Args:
+    Attributes:
         current_page:
         page_size:
         total_count:
