@@ -87,9 +87,6 @@ resolve_closest=true
 [project.plugins.section-index]
 
 
-[project.markdown_extensions.toc]
-toc_depth = 8
-
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
 inventories = [
