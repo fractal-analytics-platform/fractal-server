@@ -178,17 +178,16 @@ def serialize_task_group(
     Serialize a TaskGroupV2 (including its tasks) into a dict.
     Optionally include `user_email` and `in_use` if provided.
     """
-    kwargs: dict[str, Any] = {}
-    if user_email is not None:
-        kwargs["user_email"] = user_email
-    if in_use is not None:
-        kwargs["in_use"] = in_use
-
-    return dict(
+    serialized_task_group = dict(
         task_list=[task.model_dump() for task in task_group.task_list],
         **task_group.model_dump(),
-        **kwargs,
     )
+    if user_email is not None:
+        serialized_task_group["user_email"] = user_email
+    if in_use is not None:
+        serialized_task_group["in_use"] = in_use
+
+    return serialized_task_group
 
 
 async def add_user_email_to_task_group(
