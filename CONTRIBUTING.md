@@ -155,8 +155,7 @@ Documentation for `fractal-server` is hosted at https://fractal-analytics-platfo
 
 Docstrings should be formatted as in the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
 
-For building the documentation we use [mkdocs](https://www.mkdocs.org) and the [Material theme](https://squidfunk.github.io/mkdocs-material).
-
+For building the documentation we use [zensical](https://zensical.org/docs/get-started/).
 To build the documentation and serve it at http://127.0.0.1:8000:
 ```bash
 # Export some required environment variables
@@ -164,5 +163,5 @@ export POSTGRES_DB=mock_fractal
 export JWT_SECRET_KEY=mock_fractal
 
 # Build and serve the documentation
-uv run --frozen mkdocs serve --config-file mkdocs.yml
+uv run --frozen zensical serve
 ```
