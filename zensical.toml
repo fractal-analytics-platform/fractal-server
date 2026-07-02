@@ -33,9 +33,9 @@ nav = [
     { "Changelog" = "changelog.md" },
     { "Contributing" = "development.md" },
     { "Reference" = [
+        { "API" = "openapi.md" },
         { "Code" = "code_reference/" },
         { "CLI" = "cli_reference.md" },
-        { "API" = "openapi.md" },
     ]},
 ]
 
