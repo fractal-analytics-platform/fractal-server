@@ -21,8 +21,8 @@ The runner configuration is defined in the `jobs_runner_config` property of a co
 
 The three runner implementations (for the local, SLURM/sudo and SLURM/SSH cases) are constructed based on the following class hierarchy:
 
-* [`BaseRunner`](../../reference/runner/executors/base_runner.md/#fractal_server.runner.executors.base_runner.BaseRunner) is the base class for all runners, which notably includes the `submit` and `multisubmit` methods (to be overridden in child classes).
-    * [`LocalRunner`](../../reference/runner/executors/local/runner.md/#fractal_server.runner.executors.local.runner.LocalRunner) is the runner implementation for a `local` computational resource.
-    * [`BaseSlurmRunner`](../../reference/runner/executors/slurm_common/base_slurm_runner.md/#fractal_server.runner.executors.slurm_common.base_slurm_runner.BaseSlurmRunner) inherits from `BaseRunner` and adds the common part of SLURM runners:
-        * [`SlurmSudoRunner`](../../reference/runner/executors/slurm_sudo/runner.md/#fractal_server.runner.executors.slurm_sudo.runner.SlurmSudoRunner) is the runner implementation for a `slurm_sudo` resource.
-        * [`SlurmSSHRunner`](../../reference/runner/executors/slurm_ssh/runner.md/#fractal_server.runner.executors.slurm_ssh.runner.SlurmSSHRunner) is the runner implementation for a `slurm_ssh` resource.
+* [`BaseRunner`](../../code_reference/runner/executors/base_runner.md#fractal_server.runner.executors.base_runner.BaseRunner) is the base class for all runners, which notably includes the `submit` and `multisubmit` methods (to be overridden in child classes).
+    * [`LocalRunner`](../../code_reference/runner/executors/local/runner.md#fractal_server.runner.executors.local.runner.LocalRunner) is the runner implementation for a `local` computational resource.
+    * [`BaseSlurmRunner`](../../code_reference/runner/executors/slurm_common/base_slurm_runner.md#fractal_server.runner.executors.slurm_common.base_slurm_runner.BaseSlurmRunner) inherits from `BaseRunner` and adds the common part of SLURM runners:
+        * [`SlurmSudoRunner`](../../code_reference/runner/executors/slurm_sudo/runner.md#fractal_server.runner.executors.slurm_sudo.runner.SlurmSudoRunner) is the runner implementation for a `slurm_sudo` resource.
+        * [`SlurmSSHRunner`](../../code_reference/runner/executors/slurm_ssh/runner.md#fractal_server.runner.executors.slurm_ssh.runner.SlurmSSHRunner) is the runner implementation for a `slurm_ssh` resource.
