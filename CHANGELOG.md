@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* API:
+    * Remove `slim` query parameter from `GET /api/v2/task-group/` (\#3385).
 * Dependencies:
     * Bump `pydantic-settings` to 2.14.2 (\#3380).
 
