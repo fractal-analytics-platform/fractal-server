@@ -231,8 +231,11 @@ async def make_task_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    res = await _make_task_core_bulk(task_ids=task_ids, db=db)
-    return res
+    await _make_task_core_bulk(task_ids=task_ids, db=db)
+    return Response(
+        content=f"{len(task_ids)} tasks have been made core.",
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @router.post(
@@ -244,5 +247,8 @@ async def make_task_not_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    res = await _make_task_not_core_bulk(task_ids=task_ids, db=db)
-    return res
+    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
+    return Response(
+        content=f"{len(task_ids)} tasks have been made not-core.",
+        status_code=status.HTTP_200_OK,
+    )
