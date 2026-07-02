@@ -163,7 +163,6 @@ async def get_task_group_list(
         .join(TaskV2, TaskV2.taskgroupv2_id == TaskGroupV2.id)
         .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
         .where(TaskGroupV2.id.in_(list(task_group_id_email_map.keys())))
-        .distinct()
     )
     in_use_task_group_ids = set(res_in_use.scalars().all())
 
