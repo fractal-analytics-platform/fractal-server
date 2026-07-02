@@ -55,8 +55,6 @@ features = [
     "content.tooltips",
     "navigation.footer",
     "navigation.indexes",
-    "navigation.instant",
-    "navigation.instant.prefetch",
     "navigation.path",
     "navigation.sections",
     "navigation.tabs",
