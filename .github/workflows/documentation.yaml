@@ -34,7 +34,7 @@ jobs:
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
       - run: uv run --frozen python docs/scripts/generate_swagger_ui.py
         env:
-          OPENAPI_URL: "https://fractal-analytics-platform.github.io/fractal-server/openapi/openapi.json"
+          OPENAPI_URL: "https://fractal-analytics-platform.github.io/fractal-server/openapi.json"
       - run: uv run --frozen python docs/scripts/generate_cli_ref.py
       - run: uv run --frozen python docs/scripts/generate_code_ref.py
       - run: uv run --frozen zensical build --clean --strict
