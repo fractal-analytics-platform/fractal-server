@@ -11,27 +11,32 @@ Copyright 2026 (C) BioVisionCenter (University of Zurich) - see
 
 nav = [
     { "Home" = "index.md" },
-    { "Install/deploy" = "install_and_deploy.md" },
-    { "Configuration" = "configuration.md" },
+    { "Usage" = [
+        { "Install/deploy" = "install_and_deploy.md" },
+        { "Configuration" = "configuration.md" },
+        { "Integrations" = [
+            "internals/integrations/index.md",
+            "internals/integrations/runners.md",
+            "internals/integrations/tasks.md",
+        ]
+        },
+        { "Database" = "internals/database.md" },
+        { "Logging" = "internals/logging.md" },
+        { "Version upgrades" = [
+            "internals/version_upgrades/index.md",
+            "internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md",
+            "internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md",
+        ]
+        },
+    ]
+    },
     { "Changelog" = "changelog.md" },
     { "Contributing" = "development.md" },
-    { "Code ref" = "code_reference/" },
-    { "CLI" = "cli_reference.md" },
-    { "API" = "openapi.md" },
-    { "Integrations" = [
-        "internals/integrations/index.md",
-        "internals/integrations/runners.md",
-        "internals/integrations/tasks.md",
-    ]
-    },
-    { "Database" = "internals/database.md" },
-    { "Logging" = "internals/logging.md" },
-    { "Version upgrades" = [
-        "internals/version_upgrades/index.md",
-        "internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md",
-        "internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md",
-    ]
-    },
+    { "Reference" = [
+        { "Code" = "code_reference/" },
+        { "CLI" = "cli_reference.md" },
+        { "API" = "openapi.md" },
+    ]},
 ]
 
 [project.theme]
