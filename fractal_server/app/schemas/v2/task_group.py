@@ -96,6 +96,7 @@ class TaskGroupRead(BaseModel):
 
 
 class TaskGroupReadSlim(TaskGroupRead):
+    in_use: bool
     task_list: list[TaskReadSlim]
 
 
