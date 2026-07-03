@@ -13,7 +13,6 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
-from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -33,6 +32,7 @@ from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.v2.db_tools import update_status_of_history_run
 from fractal_server.types import AttributeFilters
 
+from .db_tools import update_executor_error_log_safe
 from .merge_outputs import merge_outputs
 from .runner_functions import GetRunnerConfigType
 from .runner_functions import SubmissionOutcome
@@ -200,10 +200,9 @@ def execute_tasks(
 
             # Refresh `job.executor_error_log`, to avoid a spurious value left
             # over from a previous task
-            job_db = db.get_one(JobV2, job_id)
-            job_db.executor_error_log = None
-            db.merge(job_db)
-            db.commit()
+            update_executor_error_log_safe(
+                job_id=job_id, executor_error_log=None, db=db
+            )
             db.expunge_all()
 
         # Fail when running a non-converter task on an empty image list
@@ -484,10 +483,11 @@ def execute_tasks(
             db.commit()
 
             # Store the SLURM error in the job database
-            job_db = db.get_one(JobV2, job_id)
-            job_db.executor_error_log = runner.executor_error_log
-            db.merge(job_db)
-            db.commit()
+            update_executor_error_log_safe(
+                job_id=job_id,
+                executor_error_log=runner.executor_error_log,
+                db=db,
+            )
 
             # Create accounting record
             record = AccountingRecord(
