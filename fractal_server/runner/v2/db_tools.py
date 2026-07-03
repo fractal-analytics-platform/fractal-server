@@ -4,6 +4,7 @@ from functools import cache
 from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import DataError
 from sqlalchemy.orm import Session
 from sqlmodel import select
 from sqlmodel import update
@@ -172,7 +173,7 @@ def update_executor_error_log_safe(
     try:
         db.merge(job_db)
         db.commit()
-    except Exception as exc:
+    except DataError as exc:
         logger.warning(
             f"Cannot update `executor_error_log` for job {job_id}, due to {exc}"
         )
