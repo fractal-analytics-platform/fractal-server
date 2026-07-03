@@ -24,7 +24,7 @@ from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
     _make_task_not_core_bulk,
 )
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
-    serialize_task_group_with_email,
+    serialize_task_group,
 )
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
@@ -120,9 +120,7 @@ async def query_task_group(
             detail=f"TaskGroup {task_group_id} not found",
         )
     task_group, user_email = task_group_and_email
-    return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
-    )
+    return serialize_task_group(task_group=task_group, user_email=user_email)
 
 
 @router.get("/", response_model=PaginationResponse[TaskGroupReadSuperuser])
@@ -209,9 +207,7 @@ async def query_task_group_list(
 
     res = await db.execute(stm)
     task_groups_list = [
-        serialize_task_group_with_email(
-            task_group=task_group, user_email=user_email
-        )
+        serialize_task_group(task_group=task_group, user_email=user_email)
         for task_group, user_email in res.all()
     ]
 
@@ -248,9 +244,7 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
-    )
+    return serialize_task_group(task_group=task_group, user_email=user_email)
 
 
 @router.post("/{task_group_id}/make-core/", status_code=status.HTTP_200_OK)
