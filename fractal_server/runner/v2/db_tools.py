@@ -4,6 +4,7 @@ from functools import cache
 from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import DataError
 from sqlalchemy.orm import Session
 from sqlmodel import select
 from sqlmodel import update
@@ -11,6 +12,7 @@ from sqlmodel import update
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.logger import set_logger
 
@@ -155,3 +157,24 @@ def bulk_upsert_image_cache_fast(
         )
         db.execute(stmt)
         db.commit()
+
+
+def update_executor_error_log_safe(
+    *,
+    job_id: int,
+    executor_error_log: str | None,
+    db: Session,
+) -> None:
+    """
+    Update `JobV2.executor_error_log` with a `DataError` fallback.
+    """
+    job_db = db.get_one(JobV2, job_id)
+    job_db.executor_error_log = executor_error_log
+    try:
+        db.merge(job_db)
+        db.commit()
+    except DataError as exc:
+        logger.warning(
+            f"Cannot update `executor_error_log` for job {job_id}, due to {exc}"
+        )
+        db.rollback()

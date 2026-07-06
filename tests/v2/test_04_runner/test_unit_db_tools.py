@@ -8,11 +8,16 @@ from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.v2.db_tools import (
     bulk_update_has_warnings_history_unit,
 )
 from fractal_server.runner.v2.db_tools import bulk_update_status_of_history_unit
+from fractal_server.runner.v2.db_tools import update_executor_error_log_safe
 from fractal_server.runner.v2.db_tools import update_history_unit_no_commit
 
 
@@ -227,3 +232,57 @@ async def test_bulk_update_has_warnings_history_unit(
             f"History Units:    {num_history_units}\n"
             f"Bulk time:        {bulk_time}\n"
         )
+
+
+async def test_update_executor_error_log_safe(
+    db,
+    db_sync,
+    dataset_factory,
+    project_factory,
+    workflow_factory,
+    job_factory,
+    task_factory,
+    MockCurrentUser,
+):
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id,
+            task_id=task.id,
+            db=db,
+            order=0,
+        )
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+            first_task_index=0,
+            last_task_index=0,
+        )
+        job_id = job.id
+
+    VALUE = "some error message"
+    update_executor_error_log_safe(
+        job_id=job_id,
+        executor_error_log=VALUE,
+        db=db_sync,
+    )
+    job = db_sync.get(JobV2, job_id)
+    assert job.executor_error_log == VALUE
+
+    update_executor_error_log_safe(
+        job_id=job_id, executor_error_log="\x00", db=db_sync
+    )
+    job = db_sync.get(JobV2, job_id)
+    assert job.executor_error_log == VALUE
+
+    update_executor_error_log_safe(
+        job_id=job_id, executor_error_log=None, db=db_sync
+    )
+    job = db_sync.get(JobV2, job_id)
+    assert job.executor_error_log is None
