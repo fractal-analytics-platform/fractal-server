@@ -21,9 +21,6 @@ from fractal_server.app.models.v2.task import TaskV2
 from fractal_server.app.routes.admin.v2._aux_functions import (
     _get_task_group_or_404,
 )
-from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
-    _make_task_core_bulk,
-)
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     serialize_task_group,
 )
@@ -257,15 +254,16 @@ async def make_task_group_core(
     """
     Make core all the tasks of this task group
     """
-    res = await db.execute(
-        select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
+    await _get_task_group_or_404(task_group_id=task_group_id, db=db)
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=True)
     )
-    task_ids = res.scalars().all()
-    await _make_task_core_bulk(task_ids=task_ids, db=db)
-    return Response(
-        content=f"{len(task_ids)} tasks have been made core.",
-        status_code=status.HTTP_200_OK,
-    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post("/{task_group_id}/make-not-core/", status_code=status.HTTP_200_OK)
