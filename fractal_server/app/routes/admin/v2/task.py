@@ -2,6 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
@@ -9,6 +10,7 @@ from pydantic import EmailStr
 from pydantic import Field
 from sqlmodel import func
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -28,7 +30,6 @@ from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.types import ListUniqueNonNegativeInt
 
 from ._aux_functions_core_tasks import _make_task_core_bulk
-from ._aux_functions_core_tasks import _make_task_not_core_bulk
 
 router = APIRouter()
 
@@ -247,8 +248,18 @@ async def make_task_not_core(
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
-    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
-    return Response(
-        content=f"{len(task_ids)} tasks have been made not-core.",
-        status_code=status.HTTP_200_OK,
+    res = await db.execute(select(TaskV2).where(TaskV2.id.in_(task_ids)))
+    tasks = res.scalars().all()
+    if len(tasks) != len(task_ids):
+        missing_ids = sorted(list(set(task_ids) - set([t.id for t in tasks])))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
+        )
+
+    # Update
+    await db.execute(
+        update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=False)
     )
+    await db.commit()
+    return Response(status_code=status.HTTP_200_OK)

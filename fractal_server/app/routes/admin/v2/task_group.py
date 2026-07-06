@@ -10,6 +10,7 @@ from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import func
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -17,11 +18,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2.task import TaskV2
-from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
-    _make_task_core_bulk,
+from fractal_server.app.routes.admin.v2._aux_functions import (
+    _get_task_group_or_404,
 )
 from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
-    _make_task_not_core_bulk,
+    _make_task_core_bulk,
 )
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     serialize_task_group,
@@ -276,12 +277,13 @@ async def make_task_group_not_core(
     """
     Make not-core all the tasks of this task group
     """
-    res = await db.execute(
-        select(TaskV2.id).where(TaskV2.taskgroupv2_id == task_group_id)
+    await _get_task_group_or_404(taskgroup_id=task_group_id, db=db)
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=False)
     )
-    task_ids = res.scalars().all()
-    await _make_task_not_core_bulk(task_ids=task_ids, db=db)
-    return Response(
-        content=f"{len(task_ids)} tasks have been made not-core.",
-        status_code=status.HTTP_200_OK,
-    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)

@@ -103,26 +103,3 @@ async def _make_task_core_bulk(
     await db.commit()
 
     return
-
-
-async def _make_task_not_core_bulk(
-    *,
-    task_ids: ListUniqueNonNegativeInt,
-    db: AsyncSession,
-) -> None:
-    res = await db.execute(select(TaskV2).where(TaskV2.id.in_(task_ids)))
-    tasks = res.scalars().all()
-    if len(tasks) != len(task_ids):
-        missing_ids = sorted(list(set(task_ids) - set([t.id for t in tasks])))
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Not all tasks were found (Missing IDs: {missing_ids}).",
-        )
-
-    # Update
-    await db.execute(
-        update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=False)
-    )
-    await db.commit()
-
-    return
