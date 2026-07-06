@@ -275,7 +275,7 @@ async def make_task_group_not_core(
     """
     Make not-core all the tasks of this task group
     """
-    await _get_task_group_or_404(taskgroup_id=task_group_id, db=db)
+    await _get_task_group_or_404(task_group_id=task_group_id, db=db)
 
     await db.execute(
         update(TaskV2)

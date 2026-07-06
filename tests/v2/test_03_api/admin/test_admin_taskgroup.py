@@ -792,5 +792,8 @@ async def test_task_group_core_endpoints(
         assert task1.is_core is False
         assert task2.is_core is False
 
+        # 404
+        res = await client.post(f"{PREFIX}/task-group/123456789/make-core/")
+        assert res.status_code == 404
         res = await client.post(f"{PREFIX}/task-group/123456789/make-not-core/")
-        assert res.status_code == 200
+        assert res.status_code == 404
