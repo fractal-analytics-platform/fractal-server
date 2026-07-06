@@ -170,8 +170,8 @@ def update_executor_error_log_safe(
     """
     job_db = db.get_one(JobV2, job_id)
     job_db.executor_error_log = executor_error_log
+    db.merge(job_db)
     try:
-        db.merge(job_db)
         db.commit()
     except DataError as exc:
         logger.warning(
