@@ -30,7 +30,8 @@ async def _verify_non_duplication_task_core_constraint(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "There already exists a core task with "
-                f"pkg_name={task_group.pkg_name}, version={task_group.version} "
-                f"and name='{task.name}' (task ID: {duplicate_task_id})."
+                f"pkg_name='{task_group.pkg_name}', "
+                f"version='{task_group.version}' and name='{task.name}' "
+                f"(task ID: {duplicate_task_id})."
             ),
         )

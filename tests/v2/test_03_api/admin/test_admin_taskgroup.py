@@ -752,8 +752,12 @@ async def test_task_group_core_endpoints(
     async with MockCurrentUser() as user:
         user_id = user.id
 
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
     task1 = TaskV2(name="a1", type="b1", version="c1")
     task2 = TaskV2(name="a2", type="b2", version="c2")
+    task3 = TaskV2(name="a1", type="b1", version="c1")
     task_group = TaskGroupV2(
         user_id=user_id,
         resource_id=resource.id,
@@ -762,11 +766,21 @@ async def test_task_group_core_endpoints(
         version="z",
         task_list=[task1, task2],
     )
-    db.add(task_group)
+    task_group_2 = TaskGroupV2(
+        user_id=user2_id,
+        resource_id=resource.id,
+        origin="x",
+        pkg_name="y",
+        version="z",
+        task_list=[task3],
+    )
+    db.add_all([task_group, task_group_2])
     await db.commit()
     await db.refresh(task1)
     await db.refresh(task2)
+    await db.refresh(task3)
     await db.refresh(task_group)
+    await db.refresh(task_group_2)
 
     assert task1.is_core is False
     assert task2.is_core is False
@@ -781,6 +795,17 @@ async def test_task_group_core_endpoints(
         await db.refresh(task2)
         assert task1.is_core is True
         assert task2.is_core is True
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group_2.id}/make-core/"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "There already exists a core task with "
+            f"pkg_name='{task_group_2.pkg_name}', "
+            f"version='{task_group_2.version}' and name='{task3.name}' "
+            f"(task ID: {task1.id})."
+        )
 
         res = await client.post(
             f"{PREFIX}/task-group/{task_group.id}/make-not-core/"
