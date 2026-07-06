@@ -318,7 +318,19 @@ async def test_task_core(
             f"{PREFIX}/task/make-core/",
             json=[],
         )
-        assert res.status_code == 200
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Value should have at least 1 item after validation, not 0"
+        )
+        res = await client.post(
+            f"{PREFIX}/task/make-not-core/",
+            json=[],
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"][0]["msg"] == (
+            "Value should have at least 1 item after validation, not 0"
+        )
+
         # Make TaskA core -> OK
         res = await client.post(
             f"{PREFIX}/task/make-core/",

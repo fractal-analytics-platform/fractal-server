@@ -27,7 +27,7 @@ from fractal_server.app.routes.pagination import PaginationResponse
 from fractal_server.app.routes.pagination import get_pagination_data
 from fractal_server.app.routes.pagination import get_pagination_params
 from fractal_server.app.schemas.v2.task import TaskType
-from fractal_server.types import ListUniqueNonNegativeInt
+from fractal_server.types import NonEmptyListUniqueNonNegativeInt
 
 from ._aux_functions_core_tasks import (
     _verify_non_duplication_task_core_constraint,
@@ -230,7 +230,7 @@ async def query_tasks(
     status_code=status.HTTP_200_OK,
 )
 async def make_task_core(
-    task_ids: ListUniqueNonNegativeInt,
+    task_ids: NonEmptyListUniqueNonNegativeInt,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -303,7 +303,7 @@ async def make_task_core(
     status_code=status.HTTP_200_OK,
 )
 async def make_task_not_core(
-    task_ids: ListUniqueNonNegativeInt,
+    task_ids: NonEmptyListUniqueNonNegativeInt,
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:

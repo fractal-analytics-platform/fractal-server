@@ -4,6 +4,7 @@ from typing import TypeAlias
 from typing import Union
 
 from pydantic import AfterValidator
+from pydantic import Field
 from pydantic.types import NonNegativeInt
 from pydantic.types import StringConstraints
 
@@ -143,6 +144,14 @@ ListUniqueNonNegativeInt = Annotated[
 ]
 """
 List of unique non-negative-integer items.
+"""
+
+NonEmptyListUniqueNonNegativeInt = Annotated[
+    ListUniqueNonNegativeInt,
+    Field(min_length=1),
+]
+"""
+Non-empty list of unique non-negative-integer items.
 """
 
 
