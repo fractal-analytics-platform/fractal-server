@@ -21,6 +21,9 @@ from fractal_server.app.models.v2.task import TaskV2
 from fractal_server.app.routes.admin.v2._aux_functions import (
     _get_task_group_or_404,
 )
+from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
+    _verify_non_duplication_task_core_constraint,
+)
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     serialize_task_group,
 )
@@ -254,7 +257,19 @@ async def make_task_group_core(
     """
     Make core all the tasks of this task group
     """
-    await _get_task_group_or_404(task_group_id=task_group_id, db=db)
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+    res = await db.execute(
+        select(TaskV2).where(TaskV2.taskgroupv2_id == task_group_id)
+    )
+    task_list = res.scalars().all()
+
+    # Non-duplication check constraint
+    for task in task_list:
+        await _verify_non_duplication_task_core_constraint(
+            task=task, task_group=task_group, db=db
+        )
 
     await db.execute(
         update(TaskV2)
