@@ -5,6 +5,7 @@ from sqlmodel import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
+from fractal_server.app.models.v2.task_group import TaskGroupV2
 
 
 async def _get_resource_or_404(
@@ -53,3 +54,17 @@ async def _check_resource_name(*, name: str, db: AsyncSession) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Resource with name '{name}' already exists.",
         )
+
+
+async def _get_task_group_or_404(
+    *,
+    task_group_id: int,
+    db: AsyncSession,
+) -> TaskGroupV2:
+    task_group = await db.get(TaskGroupV2, task_group_id)
+    if task_group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TaskGroupV2 {task_group_id} not found",
+        )
+    return task_group

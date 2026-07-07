@@ -3,18 +3,27 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import func
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.routes.admin.v2._aux_functions import (
+    _get_task_group_or_404,
+)
+from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
+    _verify_non_duplication_task_core_constraint,
+)
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
     serialize_task_group,
 )
@@ -237,3 +246,71 @@ async def patch_task_group(
     await db.commit()
     await db.refresh(task_group)
     return serialize_task_group(task_group=task_group, user_email=user_email)
+
+
+@router.post("/{task_group_id}/make-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make core all the tasks of this task group
+    """
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+
+    res = await db.execute(
+        select(TaskV2).where(TaskV2.taskgroupv2_id == task_group_id)
+    )
+    task_list = res.scalars().all()
+
+    # Acquire a lock on all rows that could result into conflicting core tasks,
+    # to avoid a race condition where two "make-core" endpoints are called at
+    # the same time. See
+    # https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE
+    # and https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS
+    await db.execute(
+        select(TaskV2)
+        .where(TaskV2.name.in_([t.name for t in task_list]))
+        .where(TaskV2.version.in_([t.version for t in task_list]))
+        .where(TaskV2.is_core.is_(False))
+        .with_for_update()
+    )
+
+    # Non-duplication check constraint
+    for task in task_list:
+        await _verify_non_duplication_task_core_constraint(
+            task=task, task_group=task_group, db=db
+        )
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=True)
+    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post("/{task_group_id}/make-not-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_not_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make not-core all the tasks of this task group
+    """
+    await _get_task_group_or_404(task_group_id=task_group_id, db=db)
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=False)
+    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
