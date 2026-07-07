@@ -8,10 +8,12 @@
     * Introduce `/make-core/` and `/make-not-core/` admin endpoints for single task-group (\#3387).
 * Runner:
     * Safely handle null characters in SLURM stderr files (\#3391).
-* Dependencies:
-    * Bump `pydantic-settings` to 2.14.2 (\#3380).
 * Documentation:
     * Switch from `mkdocs` to `zensical` (\#3388).
+* Dependencies:
+    * Bump `pydantic-settings` to 2.14.2 (\#3380).
+    * Bump `uvicorn`, `psycopg`, `pytest-asyncio`, `zensical` (\#3392).
+    * Drop `pytest-subprocess` (\#3392).
 
 # 2.23.7
 
