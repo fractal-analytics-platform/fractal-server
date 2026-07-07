@@ -14,6 +14,7 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.dumps import DatasetDump
 from fractal_server.app.schemas.v2.dumps import ProjectDump
 from fractal_server.app.schemas.v2.dumps import WorkflowDump
+from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
@@ -845,8 +846,8 @@ async def test_stop_job(
         else:
             assert res.status_code == 422
 
-        # Test error with `_write_shutdown_file`
         if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+            # Test error with `_write_shutdown_file`
             not_existing_working_dir = tmp_path / "foo"
             ds2 = await dataset_factory(project_id=project.id)
             job2 = await job_factory(
@@ -861,6 +862,24 @@ async def test_stop_job(
             assert res.status_code == 422
             assert res.json()["detail"] == (
                 f"Could not shutdown Job {job2.id}, please try again."
+            )
+            # Test error with `_raise_422_if_status_not_submitted`
+            ds3 = await dataset_factory(project_id=project.id)
+            job3 = await job_factory(
+                working_dir=not_existing_working_dir.as_posix(),
+                project_id=project.id,
+                dataset_id=ds3.id,
+                workflow_id=wf.id,
+                status=JobStatusType.FAILED,
+            )
+            res = await client.get(
+                f"{PREFIX}/project/{project.id}/job/{job3.id}/stop/"
+            )
+            assert res.status_code == 422
+            debug(res.json())
+            assert res.json()["detail"] == (
+                "Cannot stop job: expected status 'submitted', but current "
+                "status is 'failed'."
             )
 
 
