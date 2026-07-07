@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.24.0 (unreleased)
+# 2.24.0
 
 * API:
     * Remove `slim` query parameter from `GET /api/v2/task-group/` (\#3385).
