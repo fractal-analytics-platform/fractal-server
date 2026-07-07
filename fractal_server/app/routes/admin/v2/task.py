@@ -292,10 +292,7 @@ async def make_task_core(
         update(TaskV2).where(TaskV2.id.in_(task_ids)).values(is_core=True)
     )
     await db.commit()
-    return Response(
-        content=f"{len(task_ids)} tasks have been made core.",
-        status_code=status.HTTP_200_OK,
-    )
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post(
