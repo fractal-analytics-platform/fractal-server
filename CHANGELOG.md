@@ -2,6 +2,8 @@
 
 # 2.24.1 (unreleased)
 
+* Runner:
+    * Avoid printing `stderr` of `subprocess.run` (\#3396).
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
 

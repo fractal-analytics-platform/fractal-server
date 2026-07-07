@@ -47,7 +47,8 @@ def update_history_unit_no_commit(
     unit = db_sync.get_one(HistoryUnit, history_unit_id)
     unit.status = status
     res = subprocess.run(  # nosec
-        [_get_grep_path(), "-i", "WARNING", "-q", unit.logfile]
+        [_get_grep_path(), "-i", "WARNING", "-q", unit.logfile],
+        stderr=subprocess.DEVNULL,
     )
     unit.has_warnings = res.returncode == 0
     db_sync.merge(unit)
@@ -70,6 +71,7 @@ def bulk_update_has_warnings_history_unit(
         for _id, logfile in ids_logfiles
         if subprocess.run(  # nosec
             [grep_path, "-i", "WARNING", "-q", logfile],
+            stderr=subprocess.DEVNULL,
         ).returncode
         == 0
     ]
