@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from fastapi import status
 
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 
@@ -37,4 +38,15 @@ def _write_shutdown_file_or_422(*, job: JobV2) -> None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Could not shutdown Job {job.id}, please try again.",
+        )
+
+
+def _raise_422_if_status_not_submitted(*, job: JobV2) -> None:
+    if job.status != JobStatusType.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Cannot stop job: expected status 'submitted', but current "
+                f"status is '{job.status}'."
+            ),
         )

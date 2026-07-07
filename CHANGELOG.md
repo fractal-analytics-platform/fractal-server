@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.24.1 (unreleased)
+
+* API:
+    * Check if job's status is "submitted" before stopping it (\#3395).
+
 # 2.24.0
 
 * API:
