@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Internal:
+    * Minor typing-related updates (\#3397).
+
 # 2.24.0
 
 * API:
