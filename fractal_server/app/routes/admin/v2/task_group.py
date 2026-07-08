@@ -18,6 +18,7 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.models.v2.workflowtask import WorkflowTaskV2
 from fractal_server.app.routes.admin.v2._aux_functions import (
     _get_task_group_or_404,
 )
@@ -109,8 +110,15 @@ async def query_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .exists()
+    )
+
     res = await db.execute(
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
@@ -120,8 +128,13 @@ async def query_task_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroup {task_group_id} not found",
         )
-    task_group, user_email = task_group_and_email
-    return serialize_task_group(task_group=task_group, user_email=user_email)
+    task_group, user_email, in_use = task_group_and_email
+
+    return serialize_task_group(
+        task_group=task_group,
+        user_email=user_email,
+        in_use=in_use,
+    )
 
 
 @router.get("/", response_model=PaginationResponse[TaskGroupReadSuperuser])
@@ -136,12 +149,20 @@ async def query_task_group_list(
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
     resource_id: int | None = None,
+    # in_use: bool | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+        .exists()
+    )
+
     stm = (
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .order_by(TaskGroupV2.id)
     )
@@ -208,8 +229,12 @@ async def query_task_group_list(
 
     res = await db.execute(stm)
     task_groups_list = [
-        serialize_task_group(task_group=task_group, user_email=user_email)
-        for task_group, user_email in res.all()
+        serialize_task_group(
+            task_group=task_group,
+            user_email=user_email,
+            in_use=in_use,
+        )
+        for task_group, user_email, in_use in res.all()
     ]
 
     return dict(items=task_groups_list, **pagination_data.model_dump())
@@ -222,8 +247,15 @@ async def patch_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .exists()
+    )
+
     res = await db.execute(
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
@@ -233,7 +265,7 @@ async def patch_task_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroupV2 {task_group_id} not found",
         )
-    task_group, user_email = task_group_and_email
+    task_group, user_email, in_use = task_group_and_email
 
     for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
@@ -245,7 +277,11 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return serialize_task_group(task_group=task_group, user_email=user_email)
+    return serialize_task_group(
+        task_group=task_group,
+        user_email=user_email,
+        in_use=in_use,
+    )
 
 
 @router.post("/{task_group_id}/make-core/", status_code=status.HTTP_200_OK)

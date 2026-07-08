@@ -222,7 +222,18 @@ async def get_task_group(
     task_group_with_email = await add_user_email_to_task_group(
         task_group=task_group, db=db
     )
-    return task_group_with_email
+
+    res = await db.execute(
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+    )
+    in_use = res.scalars().all() != []
+
+    return {
+        "in_use": in_use,
+        **task_group_with_email,
+    }
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupRead)
