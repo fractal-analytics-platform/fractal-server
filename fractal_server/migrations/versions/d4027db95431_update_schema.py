@@ -17,10 +17,7 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table(table_name="historyunit") as batch_op:
-        batch_op.alter_column(
-            column_name="has_warnings",
-            server_default=None,
-        )
+        batch_op.alter_column(column_name="has_warnings", server_default=None)
 
 
 def downgrade() -> None:
