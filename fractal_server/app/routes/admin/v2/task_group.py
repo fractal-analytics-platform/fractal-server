@@ -9,6 +9,7 @@ from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import func
+from sqlmodel import not_
 from sqlmodel import select
 from sqlmodel import update
 
@@ -149,7 +150,7 @@ async def query_task_group_list(
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
     resource_id: int | None = None,
-    # in_use: bool | None = None,
+    in_use: bool | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
@@ -222,6 +223,13 @@ async def query_task_group_list(
     if resource_id is not None:
         stm = stm.where(TaskGroupV2.resource_id == resource_id)
         stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
+    if in_use is not None:
+        if in_use is True:
+            stm = stm.where(in_use_stm)
+            stm_count = stm_count.where(in_use_stm)
+        else:
+            stm = stm.where(not_(in_use_stm))
+            stm_count = stm_count.where(not_(in_use_stm))
 
     stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
@@ -232,9 +240,9 @@ async def query_task_group_list(
         serialize_task_group(
             task_group=task_group,
             user_email=user_email,
-            in_use=in_use,
+            in_use=being_used,
         )
-        for task_group, user_email, in_use in res.all()
+        for task_group, user_email, being_used in res.all()
     ]
 
     return dict(items=task_groups_list, **pagination_data.model_dump())
