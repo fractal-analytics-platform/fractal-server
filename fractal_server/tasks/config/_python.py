@@ -1,4 +1,3 @@
-from typing import Literal
 from typing import Self
 
 from pydantic import BaseModel
@@ -6,6 +5,7 @@ from pydantic import model_validator
 
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
+from fractal_server.types import PythonVersion
 
 
 class TasksPythonSettings(BaseModel):
@@ -33,17 +33,7 @@ class TasksPythonSettings(BaseModel):
     """
 
     default_version: NonEmptyStr
-    versions: dict[
-        Literal[
-            "3.9",
-            "3.10",
-            "3.11",
-            "3.12",
-            "3.13",
-            "3.14",
-        ],
-        AbsolutePathStr,
-    ]
+    versions: dict[PythonVersion, AbsolutePathStr]
 
     pip_cache_dir: AbsolutePathStr | None = None
 
