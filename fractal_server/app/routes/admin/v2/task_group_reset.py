@@ -41,6 +41,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.local.reset import reset_local
 from fractal_server.tasks.v2.local.reset_pixi import reset_local_pixi
 from fractal_server.types import NonEmptyStr
+from fractal_server.types import PythonVersion
 
 router = APIRouter()
 
@@ -109,7 +110,7 @@ class TaskGroupOverridesPip(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     pip_extras: str | None = None
-    python_version: NonEmptyStr | None = None
+    python_version: PythonVersion | None = None
     pinned_package_versions_pre: Json[dict[NonEmptyStr, NonEmptyStr]] = Field(
         default_factory=dict
     )
