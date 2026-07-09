@@ -221,14 +221,12 @@ async def get_task_group(
     user_email = await get_task_group_owner_email(task_group=task_group, db=db)
 
     res = await db.execute(
-        select(
-            select(TaskV2.id)
-            .where(TaskV2.taskgroupv2_id == task_group_id)
-            .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
-            .exists()
-        )
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .limit(1)
     )
-    in_use = res.scalar_one()
+    in_use = res.scalar_one_or_none() is not None
 
     return serialize_task_group(
         task_group=task_group, user_email=user_email, in_use=in_use
@@ -273,14 +271,12 @@ async def patch_task_group(
 
     user_email = await get_task_group_owner_email(task_group=task_group, db=db)
     res = await db.execute(
-        select(
-            select(TaskV2.id)
-            .where(TaskV2.taskgroupv2_id == task_group_id)
-            .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
-            .exists()
-        )
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .limit(1)
     )
-    in_use = res.scalar_one()
+    in_use = res.scalar_one_or_none() is not None
 
     return serialize_task_group(
         task_group=task_group, user_email=user_email, in_use=in_use
