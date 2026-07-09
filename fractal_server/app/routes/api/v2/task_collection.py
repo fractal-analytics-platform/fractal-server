@@ -41,6 +41,7 @@ from fractal_server.tasks.v2.local.collect import collect_local
 from fractal_server.tasks.v2.ssh import collect_ssh
 from fractal_server.tasks.v2.utils_package_names import _parse_wheel_filename
 from fractal_server.tasks.v2.utils_package_names import normalize_package_name
+from fractal_server.types import PythonVersion
 from fractal_server.urls import verify_url_is_relative_to
 
 from ._aux_functions_task_lifecycle import get_package_version_from_pypi
@@ -105,7 +106,7 @@ def parse_request_data(
     package: str | None = Form(None),
     package_version: str | None = Form(None),
     package_extras: str | None = Form(None),
-    python_version: str | None = Form(None),
+    python_version: PythonVersion | None = Form(None),
     pinned_package_versions_pre: str | None = Form(None),
     pinned_package_versions_post: str | None = Form(None),
     file: UploadFile | None = File(None),
