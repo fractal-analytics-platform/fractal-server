@@ -223,10 +223,12 @@ async def get_task_group(
     user_email = await get_task_group_owner_email(task_group=task_group, db=db)
 
     res = await db.execute(
-        select(TaskV2.id)
-        .where(TaskV2.taskgroupv2_id == task_group_id)
-        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
-        .exists()
+        select(
+            select(TaskV2.id)
+            .where(TaskV2.taskgroupv2_id == task_group_id)
+            .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+            .exists()
+        )
     )
     in_use = res.scalar_one()
 
@@ -273,10 +275,12 @@ async def patch_task_group(
 
     user_email = await get_task_group_owner_email(task_group=task_group, db=db)
     res = await db.execute(
-        select(TaskV2.id)
-        .where(TaskV2.taskgroupv2_id == task_group_id)
-        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
-        .exists()
+        select(
+            select(TaskV2.id)
+            .where(TaskV2.taskgroupv2_id == task_group_id)
+            .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+            .exists()
+        )
     )
     in_use = res.scalar_one()
 
