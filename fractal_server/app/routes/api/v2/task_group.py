@@ -160,11 +160,9 @@ async def get_task_group_list(
     rows = res.all()
 
     task_groups = [task_group for task_group, _, _ in rows]
-    task_group_id_email_map = {
-        task_group.id: user_email for task_group, user_email, _ in rows
-    }
-    task_group_id_in_use_map = {
-        task_group.id: in_use for task_group, _, in_use in rows
+    task_group_email_and_use_map = {
+        task_group.id: (user_email, in_use)
+        for task_group, user_email, in_use in rows
     }
 
     default_group_id = await _get_default_usergroup_id_or_none(db)
@@ -194,8 +192,8 @@ async def get_task_group_list(
             [
                 serialize_task_group(
                     task_group=task_group,
-                    user_email=task_group_id_email_map[task_group.id],
-                    in_use=task_group_id_in_use_map[task_group.id],
+                    user_email=task_group_email_and_use_map[task_group.id][0],
+                    in_use=task_group_email_and_use_map[task_group.id][1],
                 )
                 for task_group in task_group_list
             ],
