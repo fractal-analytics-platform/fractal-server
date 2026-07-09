@@ -5,11 +5,12 @@ from fractal_server.app.models import Resource
 from fractal_server.tasks.v2.utils_python_interpreter import (
     get_python_interpreter,
 )
+from fractal_server.types import PythonVersion
 
 
 def get_python_interpreter_or_422(
     *,
-    python_version: str,
+    python_version: PythonVersion,
     resource: Resource,
 ) -> str:
     """

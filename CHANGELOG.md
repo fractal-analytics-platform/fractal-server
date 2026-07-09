@@ -9,6 +9,8 @@
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
     * Allow filtering by `in_use` on admin's TaskGroup endpoint (\#3399).
+* Internal:
+    * Minor typing-related updates (\#3397).
 
 # 2.24.0
 

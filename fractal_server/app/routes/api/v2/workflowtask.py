@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Annotated
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -38,7 +39,7 @@ async def create_workflowtasks(
     project_id: int,
     workflow_id: int,
     wftasks: list[WorkflowTaskCreate],
-    order: int | None = Query(default=None, ge=0),
+    order: Annotated[int | None, Query(ge=0)] = None,
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowTaskV2]:

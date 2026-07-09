@@ -1,5 +1,6 @@
 from typing import Annotated
 from typing import Any
+from typing import Literal
 from typing import TypeAlias
 from typing import Union
 
@@ -227,4 +228,17 @@ JSONType: TypeAlias = (
 )
 """
 Type of a JSON document.
+"""
+
+
+PythonVersion = Literal[
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+]
+"""
+Python versions for task collection.
 """

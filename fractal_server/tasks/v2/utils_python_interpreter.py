@@ -1,8 +1,9 @@
 from fractal_server.app.models import Resource
+from fractal_server.types import PythonVersion
 
 
 def get_python_interpreter(
-    python_version: str,
+    python_version: PythonVersion,
     resource: Resource,
 ) -> str:
     """
