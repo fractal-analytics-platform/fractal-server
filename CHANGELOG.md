@@ -4,8 +4,11 @@
 
 * Runner:
     * Avoid printing `stderr` of `subprocess.run` (\#3396).
+* Schemas:
+    * Add `in_use` to `TaskGroupRead` (\#3399).
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
+    * Allow filtering by `in_use` on admin's TaskGroup endpoint (\#3399).
 
 # 2.24.0
 
