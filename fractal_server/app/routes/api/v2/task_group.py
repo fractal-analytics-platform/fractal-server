@@ -39,7 +39,7 @@ from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_task_group_disambiguation import add_user_email_to_task_group
+from ._aux_task_group_disambiguation import get_task_group_owner_email
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
 from ._aux_task_group_disambiguation import serialize_task_group
 
@@ -139,8 +139,15 @@ async def get_task_group_list(
         )
 
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+        .exists()
+    )
+
     stm = (
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.resource_id == user_resource_id)
         .where(condition)
@@ -150,21 +157,15 @@ async def get_task_group_list(
         stm = stm.where(TaskGroupV2.active)
 
     res = await db.execute(stm)
-    task_groups_and_email = res.all()
+    rows = res.all()
 
-    task_groups = [item[0] for item in task_groups_and_email]
+    task_groups = [task_group for task_group, _, _ in rows]
     task_group_id_email_map = {
-        task_group.id: user_email
-        for task_group, user_email in task_groups_and_email
+        task_group.id: user_email for task_group, user_email, _ in rows
     }
-
-    res_in_use = await db.execute(
-        select(TaskGroupV2.id)
-        .join(TaskV2, TaskV2.taskgroupv2_id == TaskGroupV2.id)
-        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
-        .where(TaskGroupV2.id.in_(list(task_group_id_email_map.keys())))
-    )
-    in_use_task_group_ids = set(res_in_use.scalars().all())
+    task_group_id_in_use_map = {
+        task_group.id: in_use for task_group, _, in_use in rows
+    }
 
     default_group_id = await _get_default_usergroup_id_or_none(db)
     grouped_result = [
@@ -194,7 +195,7 @@ async def get_task_group_list(
                 serialize_task_group(
                     task_group=task_group,
                     user_email=task_group_id_email_map[task_group.id],
-                    in_use=(task_group.id in in_use_task_group_ids),
+                    in_use=task_group_id_in_use_map[task_group.id],
                 )
                 for task_group in task_group_list
             ],
@@ -219,21 +220,19 @@ async def get_task_group(
         user_id=user.id,
         db=db,
     )
-    task_group_with_email = await add_user_email_to_task_group(
-        task_group=task_group, db=db
-    )
+    user_email = await get_task_group_owner_email(task_group=task_group, db=db)
 
     res = await db.execute(
         select(TaskV2.id)
         .where(TaskV2.taskgroupv2_id == task_group_id)
         .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .exists()
     )
-    in_use = res.scalars().all() != []
+    in_use = res.scalar_one()
 
-    return {
-        "in_use": in_use,
-        **task_group_with_email,
-    }
+    return serialize_task_group(
+        task_group=task_group, user_email=user_email, in_use=in_use
+    )
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupRead)
@@ -271,7 +270,16 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    task_group_with_email = await add_user_email_to_task_group(
-        task_group=task_group, db=db
+
+    user_email = await get_task_group_owner_email(task_group=task_group, db=db)
+    res = await db.execute(
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .exists()
     )
-    return task_group_with_email
+    in_use = res.scalar_one()
+
+    return serialize_task_group(
+        task_group=task_group, user_email=user_email, in_use=in_use
+    )
