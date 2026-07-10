@@ -1,17 +1,16 @@
+import os
 import sys
+from importlib import import_module
+
+from packaging.version import parse
+
+import fractal_server
 
 
 def update_db_data() -> None:
     """
     Apply data migrations.
     """
-
-    import os
-    from importlib import import_module
-
-    from packaging.version import parse
-
-    import fractal_server
 
     def _slugify_version(raw_version: str) -> str:
         v = parse(raw_version)
