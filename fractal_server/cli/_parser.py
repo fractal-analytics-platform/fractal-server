@@ -2,7 +2,7 @@ import argparse as ap
 import sys
 
 
-def parse_args() -> ap.Namespace:
+def get_parser() -> ap.ArgumentParser:
     parser = ap.ArgumentParser(description="fractal-server commands")
 
     subparsers = parser.add_subparsers(
@@ -105,5 +105,10 @@ def parse_args() -> ap.Namespace:
         help="Look-back period in minutes (default: 20).",
         default=20,
     )
+    return parser
+
+
+def parse_args() -> ap.Namespace:
+    parser = get_parser()
     args: ap.Namespace = parser.parse_args(sys.argv[1:])
     return args
