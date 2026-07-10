@@ -167,24 +167,28 @@ async def _get_task_id_or_available_tasks(
         )
         return (
             False,
-            [
-                AvailableTask(
-                    version=tg.version,
-                    older_than_target=(
-                        _version_sort_key(tg.version)
-                        < _version_sort_key(task_import.version)
-                    ),
-                    active=tg.active,
-                    is_core=(
-                        next(
-                            t.is_core
-                            for t in tg.task_list
-                            if t.name == task_import.name
-                        )
-                    ),
-                )
-                for tg in matching_task_groups
-            ],
+            sorted(
+                [
+                    AvailableTask(
+                        version=tg.version,
+                        older_than_target=(
+                            _version_sort_key(tg.version)
+                            < _version_sort_key(task_import.version)
+                        ),
+                        active=tg.active,
+                        is_core=(
+                            next(
+                                t.is_core
+                                for t in tg.task_list
+                                if t.name == task_import.name
+                            )
+                        ),
+                    )
+                    for tg in matching_task_groups
+                ],
+                key=lambda at: at.version,
+                reverse=True,
+            ),
         )
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
