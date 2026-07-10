@@ -87,6 +87,7 @@ async def _get_user_accessible_taskgroups_with_version(
         )
         .where(TaskGroupV2.resource_id == user_resource_id)
         .where(is_not(TaskGroupV2.version, None))
+        .order_by(TaskGroupV2.version.desc())
     )
     res = await db.execute(stm)
     accessible_task_groups = res.scalars().all()
@@ -167,31 +168,27 @@ async def _get_task_id_or_available_tasks(
         )
         return (
             False,
-            sorted(
-                [
-                    AvailableTask(
-                        version=tg.version,
-                        older_than_target=(
-                            _version_sort_key(tg.version)
-                            < _version_sort_key(task_import.version)
-                        ),
-                        active=tg.active,
-                        is_core=(
-                            # The fact that a `StopIterationError` cannot be
-                            # raised is guaranteed by the way we have
-                            # constructed `matching_task_groups`
-                            next(
-                                t.is_core
-                                for t in tg.task_list
-                                if t.name == task_import.name
-                            )
-                        ),
-                    )
-                    for tg in matching_task_groups
-                ],
-                key=lambda at: at.version,
-                reverse=True,
-            ),
+            [
+                AvailableTask(
+                    version=tg.version,
+                    older_than_target=(
+                        _version_sort_key(tg.version)
+                        < _version_sort_key(task_import.version)
+                    ),
+                    active=tg.active,
+                    is_core=(
+                        # The fact that a `StopIterationError` cannot be
+                        # raised is guaranteed by the way we have
+                        # constructed `matching_task_groups`
+                        next(
+                            t.is_core
+                            for t in tg.task_list
+                            if t.name == task_import.name
+                        )
+                    ),
+                )
+                for tg in matching_task_groups
+            ],
         )
     elif len(final_matching_task_groups) == 1:
         final_task_group = final_matching_task_groups[0]
