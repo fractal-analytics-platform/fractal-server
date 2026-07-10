@@ -6,6 +6,7 @@
     * Avoid printing `stderr` of `subprocess.run` (\#3396).
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
+    * Include `is_core` in import-flexibility response (\#3401).
 * Internal:
     * Minor typing-related updates (\#3397).
 
