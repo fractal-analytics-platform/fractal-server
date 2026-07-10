@@ -59,6 +59,7 @@ class AvailableTask(BaseModel):
     version: str
     older_than_target: bool
     active: bool
+    is_core: bool
 
 
 async def _get_user_accessible_taskgroups_with_version(
@@ -174,6 +175,13 @@ async def _get_task_id_or_available_tasks(
                         < _version_sort_key(task_import.version)
                     ),
                     active=tg.active,
+                    is_core=(
+                        next(
+                            t.is_core
+                            for t in tg.task_list
+                            if t.name == task_import.name
+                        )
+                    ),
                 )
                 for tg in matching_task_groups
             ],
