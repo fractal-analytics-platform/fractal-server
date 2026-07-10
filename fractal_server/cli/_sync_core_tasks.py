@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Self
 
 from pydantic import RootModel
 
@@ -23,23 +22,12 @@ class CoreTaskList(RootModel):
     List of tuples like `(pkg_name, version, task_name)`.
     """
 
-    def __iter__(self):
-        return iter(self.root)
 
-    def union(self: Self, other: Self) -> Self:
-        self.root = self.root.union(other.root)
-        return self
-
-    def difference(self: Self, other: Self) -> Self:
-        self.root = self.root.difference(other.root)
-        return self
-
-
-def _read_file_or_empty_list(path: Path | None) -> CoreTaskList:
+def _read_file_or_empty_list(path: Path | None) -> set[tuple[str, str, str]]:
     if path is None or not path.exists():
-        return CoreTaskList()
+        return set()
     else:
-        return CoreTaskList.model_validate_json(path.read_text())
+        return CoreTaskList.model_validate_json(path.read_text()).root
 
 
 def _get_final_list(
@@ -53,7 +41,7 @@ def _get_final_list(
     ignore_list = _read_file_or_empty_list(ignore_list_path)
 
     final_list = (main_list.union(custom_list)).difference(ignore_list)
-    return final_list.root
+    return final_list
 
 
 def sync_core_tasks(
