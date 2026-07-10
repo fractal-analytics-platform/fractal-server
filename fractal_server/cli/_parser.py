@@ -105,6 +105,13 @@ def get_parser() -> ap.ArgumentParser:
         help="Look-back period in minutes (default: 20).",
         default=20,
     )
+
+    # fractalctl sync-core-tasks
+    sync_core_tasks_parser = subparsers.add_parser(  # noqa: F841
+        "sync-core-tasks",
+        description="Synchronize core tasks.",
+    )
+
     return parser
 
 
