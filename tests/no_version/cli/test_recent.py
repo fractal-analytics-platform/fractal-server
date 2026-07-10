@@ -1,12 +1,6 @@
-import os
 import shlex
-import signal
 import subprocess
-import time
 from datetime import timedelta
-
-import pytest
-from devtools import debug
 
 from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -14,48 +8,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
-from fractal_server.cli.__main__ import recent
-from fractal_server.cli.__main__ import save_openapi
-from fractal_server.cli._parser import get_parser
+from fractal_server.cli._recent import recent
 from fractal_server.utils import get_timestamp
-
-commands = [
-    "fractalctl start --reload --host 0.0.0.0 --port 8000",
-    (
-        "gunicorn fractal_server.main:app "
-        "--workers 1 "
-        "--bind 0.0.0.0:8000 "
-        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
-        "--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger "
-    ),
-]
-
-
-@pytest.mark.parametrize("cmd", commands)
-def test_startup_commands(cmd, db_create_tables):
-    debug(cmd)
-    p = subprocess.Popen(
-        shlex.split(f"uv run --frozen {cmd}"),
-        start_new_session=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    debug(p)
-    with pytest.raises(subprocess.TimeoutExpired) as e:
-        p.wait(timeout=1.5)
-        out, err = p.communicate()
-        debug(p.returncode)
-        debug(out)
-        debug(err)
-        assert p.returncode == 0
-
-    debug("Now call killpg")
-    debug(p)
-    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-    # Wait a bit, so that the killpg ends before pytest ends
-    time.sleep(0.3)
-    debug(e.value)
 
 
 async def test_recent(
@@ -214,17 +168,3 @@ async def test_recent(
     assert f"ID={act_2.id}" in output_splitted[10]
     assert f"ID={act_5.id}" in output_splitted[11]
     assert f"ID={act_4.id}" in output_splitted[12]
-
-
-def test_save_openapi(tmp_path):
-    dest = tmp_path / "openapi.json"
-    save_openapi(dest=dest.as_posix())
-    assert dest.exists()
-
-
-def test_parser(db, capsys):
-    parser = get_parser()
-    with pytest.raises(SystemExit):
-        parser.parse_args(args=["invalid-command"])
-    args = parser.parse_args(args=["recent"])
-    assert args.cmd == "recent"
