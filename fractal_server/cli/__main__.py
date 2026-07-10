@@ -1,4 +1,5 @@
 import sys
+from argparse import Namespace
 
 from ._init_db_data import init_db_data
 from ._openapi import save_openapi
@@ -10,7 +11,7 @@ from ._update_db_data import update_db_data
 
 
 def run() -> None:
-    args = parse_args()
+    args: Namespace = parse_args()
     match args.cmd:
         case "openapi":
             save_openapi(dest=args.openapi_file)
