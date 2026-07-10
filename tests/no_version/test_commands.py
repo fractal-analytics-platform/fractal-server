@@ -7,7 +7,6 @@ from datetime import timedelta
 
 import pytest
 from devtools import debug
-from fractal_server.__main__ import recent_activities
 
 from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -15,6 +14,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+from fractal_server.cli.__main__ import recent
 from fractal_server.utils import get_timestamp
 
 commands = [
@@ -56,7 +56,7 @@ def test_startup_commands(cmd, db_create_tables):
     debug(e.value)
 
 
-async def test_recent_activities(
+async def test_recent(
     project_factory,
     dataset_factory,
     workflow_factory,
@@ -94,7 +94,7 @@ async def test_recent_activities(
             end_timestamp=past,
         )
 
-        recent_activities(minutes=2)
+        recent(minutes=2)
         output = capsys.readouterr().out
         assert (
             "No fractal-server job or task-group activity during the last "
@@ -103,7 +103,7 @@ async def test_recent_activities(
         assert "## Recent Jobs" not in output
         assert "## Recent Task-Group activities" not in output
 
-        recent_activities(minutes=MINUTES)
+        recent(minutes=MINUTES)
         output = capsys.readouterr().out
         assert (
             "There were fractal-server jobs and/or task-group activities "
@@ -126,7 +126,7 @@ async def test_recent_activities(
             end_timestamp=now,
         )
 
-        recent_activities(minutes=MINUTES)
+        recent(minutes=MINUTES)
         output = capsys.readouterr().out
         assert (
             "There are ongoing fractal-server jobs and/or task-group "
@@ -184,7 +184,7 @@ async def test_recent_activities(
 
     assert len(res) == 13
 
-    recent_activities(minutes=20)
+    recent(minutes=20)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."
@@ -197,7 +197,7 @@ async def test_recent_activities(
     assert f"ID={act_1.id}" in output_splitted[8]
     assert f"ID={act_2.id}" in output_splitted[9]
 
-    recent_activities(minutes=MINUTES)
+    recent(minutes=MINUTES)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."
