@@ -207,19 +207,21 @@ async def test_import_flexibility(
 ):
     async with MockCurrentUser() as user:
         # Collect the tasks
-        await task_factory(
+        args = dict(
             user_id=user.id,
             name="task_name",
-            version="1.0.0",
             task_group_kwargs=dict(pkg_name="package_name"),
+        )
+        await task_factory(**args, version="0.0.1")
+        task1 = await task_factory(**args, version="1.0.0", is_core=True)
+        await task_factory(
+            version="0.0.2",
             is_core=True,
-        )
-        await task_factory(
             user_id=user.id,
             name="task_name",
-            version="0.1.0",
-            task_group_kwargs=dict(pkg_name="package_name"),
+            task_group_kwargs=dict(pkg_name="package_name", active=False),
         )
+        await task_factory(**args, version="0.2.14")
 
         prj = await project_factory(user)
         res = await client.post(
@@ -278,7 +280,7 @@ async def test_import_flexibility(
                     "pkg_name": "package_name",
                     "version": "1.0.0",
                     "task_name": "task_name",
-                    "task_id": 1,
+                    "task_id": task1.id,
                 },
                 # Wrong name
                 {
@@ -310,7 +312,19 @@ async def test_import_flexibility(
                             "is_core": True,
                         },
                         {
-                            "version": "0.1.0",
+                            "version": "0.2.14",
+                            "active": True,
+                            "older_than_target": True,
+                            "is_core": False,
+                        },
+                        {
+                            "version": "0.0.2",
+                            "active": False,
+                            "older_than_target": True,
+                            "is_core": True,
+                        },
+                        {
+                            "version": "0.0.1",
                             "active": True,
                             "older_than_target": True,
                             "is_core": False,
@@ -331,7 +345,19 @@ async def test_import_flexibility(
                             "is_core": True,
                         },
                         {
-                            "version": "0.1.0",
+                            "version": "0.2.14",
+                            "active": True,
+                            "older_than_target": False,
+                            "is_core": False,
+                        },
+                        {
+                            "version": "0.0.2",
+                            "active": False,
+                            "older_than_target": False,
+                            "is_core": True,
+                        },
+                        {
+                            "version": "0.0.1",
                             "active": True,
                             "older_than_target": False,
                             "is_core": False,
