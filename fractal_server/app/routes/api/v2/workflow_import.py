@@ -189,7 +189,7 @@ async def _get_task_id_or_available_tasks(
                     )
                     for tg in matching_task_groups
                 ],
-                key=lambda at: at.version,
+                key=lambda at: _version_sort_key(at.version),
                 reverse=True,
             ),
         )
