@@ -343,7 +343,11 @@ async def test_import_flexibility(
 
 
 async def test_unit_get_task_id_or_available_tasks(
-    db, local_resource_profile_db, MockCurrentUser, user_group_factory
+    db,
+    local_resource_profile_db,
+    MockCurrentUser,
+    user_group_factory,
+    default_user_group,
 ):
     resource, profile = local_resource_profile_db
     async with MockCurrentUser() as user:
@@ -356,10 +360,9 @@ async def test_unit_get_task_id_or_available_tasks(
     group1 = await user_group_factory("group1", user_id, db=db)
     group2 = await user_group_factory("group2", user_id, db=db)
 
-    task1 = TaskV2(id=1, name="task", type="parallel", version="1.0.0")
-    task2 = TaskV2(id=2, name="task", type="parallel", version="2.0.0")
+    task1 = TaskV2(name="task", type="parallel", version="1.0.0")
+    task2 = TaskV2(name="task", type="parallel", version="2.0.0")
     task3 = TaskV2(
-        id=3,
         name="task",
         type="parallel",
         version="99.99.99",
@@ -367,7 +370,6 @@ async def test_unit_get_task_id_or_available_tasks(
     tasks = [task1, task2, task3]
 
     task_group1 = TaskGroupV2(
-        id=1,
         task_list=[task1],
         user_id=user_id,
         user_group_id=group1.id,
@@ -377,7 +379,6 @@ async def test_unit_get_task_id_or_available_tasks(
         origin="pypi",
     )
     task_group2 = TaskGroupV2(
-        id=2,
         task_list=[task2],
         user_id=user_id,
         user_group_id=group2.id,
@@ -387,7 +388,6 @@ async def test_unit_get_task_id_or_available_tasks(
         origin="pypi",
     )
     task_group3 = TaskGroupV2(
-        id=3,
         task_list=[task3],
         user_id=user_id,
         user_group_id=group2.id,
@@ -406,9 +406,9 @@ async def test_unit_get_task_id_or_available_tasks(
     # Test with matching version
     task_id = await _get_task_id_or_available_tasks(
         task_import=TaskImport(name="task", pkg_name="pkg", version="1.0.0"),
-        user_id=1,
+        user_id=user_id,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     )
     assert task_id == (True, task1.id)
@@ -422,7 +422,7 @@ async def test_unit_get_task_id_or_available_tasks(
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     )
     res == [
@@ -443,7 +443,7 @@ async def test_unit_get_task_id_or_available_tasks(
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     ) == (False, [])
 
@@ -455,7 +455,7 @@ async def test_unit_get_task_id_or_available_tasks(
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     ) == (False, [])
 
