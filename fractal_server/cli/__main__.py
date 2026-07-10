@@ -9,7 +9,8 @@ from ._start import start
 from ._update_db_data import update_db_data
 
 
-def run(args) -> None:
+def run() -> None:
+    args = parse_args()
     if args.cmd == "openapi":
         save_openapi(dest=args.openapi_file)
     elif args.cmd == "set-db":
@@ -34,8 +35,3 @@ def run(args) -> None:
         recent(minutes=args.minutes)
     else:
         sys.exit(f"Error: invalid command '{args.cmd}'.")
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    run(args)
