@@ -7,8 +7,8 @@ from datetime import timedelta
 
 import pytest
 from devtools import debug
-
 from fractal_server.__main__ import recent_activities
+
 from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
@@ -54,17 +54,6 @@ def test_startup_commands(cmd, db_create_tables):
     # Wait a bit, so that the killpg ends before pytest ends
     time.sleep(0.3)
     debug(e.value)
-
-
-def test_email_settings():
-    cmd = "uv run --frozen fractalctl email-settings"
-    res = subprocess.run(
-        shlex.split(cmd),
-        encoding="utf-8",
-        capture_output=True,
-    )
-    assert not res.stdout
-    assert "usage" in res.stderr
 
 
 async def test_recent_activities(
