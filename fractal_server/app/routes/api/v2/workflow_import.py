@@ -177,6 +177,9 @@ async def _get_task_id_or_available_tasks(
                         ),
                         active=tg.active,
                         is_core=(
+                            # The fact that a `StopIterationError` cannot be
+                            # raised is guaranteed by the way we have
+                            # constructed `matching_task_groups`
                             next(
                                 t.is_core
                                 for t in tg.task_list
