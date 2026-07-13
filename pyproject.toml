@@ -39,7 +39,7 @@ documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
 
 [project.scripts]
-fractalctl = "fractal_server.__main__:run"
+fractalctl = "fractal_server.cli.__main__:run"
 
 [dependency-groups]
 dev = [
