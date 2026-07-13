@@ -3,8 +3,10 @@ import sys
 from pathlib import Path
 
 from pydantic import RootModel
+from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy import update
+from sqlalchemy.orm import Session
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import Resource
@@ -52,6 +54,15 @@ def _get_final_set(
     return final_set
 
 
+def _count_core_tasks(db_sync: Session) -> int:
+    """
+    Count core tasks.
+    """
+    count_stm = select(func.count(TaskV2.id)).where(TaskV2.is_core.is_(True))
+    res = db_sync.execute(count_stm)
+    return res.scalar_one()
+
+
 def sync_core_tasks(
     *,
     resources_and_groups: Path,
@@ -71,6 +82,9 @@ def sync_core_tasks(
         removals=removals,
     )
     with next(get_sync_db()) as db:
+        count_pre = _count_core_tasks(db)
+        print(f"Initial count of core tasks: {count_pre}")
+
         try:
             # Mark all tasks as not core
             stm = (
@@ -117,3 +131,6 @@ def sync_core_tasks(
                 email_settings=email_settings.public,
             )
             sys.exit(msg)
+        finally:
+            count_post = _count_core_tasks(db)
+            print(f"Final count of core tasks: {count_post}")
