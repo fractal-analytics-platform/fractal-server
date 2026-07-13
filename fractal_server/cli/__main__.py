@@ -40,8 +40,8 @@ def run() -> None:
             sync_core_tasks(
                 resources_and_groups=args.resources_and_groups,
                 base=args.base,
-                additions=args.additions,
-                removals=args.removals,
+                add=args.additions,
+                remove=args.removals,
             )
         case _:
             sys.exit(f"Error: invalid command '{args.cmd}'.")

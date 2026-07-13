@@ -44,13 +44,13 @@ def _read_set_from_file(path: Path | None) -> set[_ThreeStringsTuple]:
 def _get_final_set(
     *,
     base: Path | None = None,
-    additions: Path | None = None,
-    removals: Path | None = None,
+    add: Path | None = None,
+    remove: Path | None = None,
 ) -> set[_ThreeStringsTuple]:
     base_set = _read_set_from_file(base)
-    additions_set = _read_set_from_file(additions)
-    removals_set = _read_set_from_file(removals)
-    final_set = (base_set.union(additions_set)).difference(removals_set)
+    add_set = _read_set_from_file(add)
+    remove_set = _read_set_from_file(remove)
+    final_set = (base_set.union(add_set)).difference(remove_set)
     return final_set
 
 
@@ -67,8 +67,8 @@ def sync_core_tasks(
     *,
     resources_and_groups: Path,
     base: Path | None = None,
-    additions: Path | None = None,
-    removals: Path | None = None,
+    add: Path | None = None,
+    remove: Path | None = None,
 ):
     """
     FIXME
@@ -78,8 +78,8 @@ def sync_core_tasks(
     )
     final_set = _get_final_set(
         base=base,
-        additions=additions,
-        removals=removals,
+        add=add,
+        remove=remove,
     )
     with next(get_sync_db()) as db:
         count_pre = _count_core_tasks(db)

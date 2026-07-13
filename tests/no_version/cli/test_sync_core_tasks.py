@@ -56,8 +56,8 @@ def test_get_final_set(tmp_path: Path):
 
     final_list = _get_final_set(
         base=path_base,
-        additions=path_add,
-        removals=path_remove,
+        add=path_add,
+        remove=path_remove,
     )
     print(final_list)
     assert final_list == {
@@ -219,8 +219,8 @@ def test_fractalctl_sync_core_tasks_run(monkeypatch):
             cmd="sync-core-tasks",
             resources_and_groups="fake",
             base=None,
-            additions=None,
-            removals=None,
+            add=None,
+            remove=None,
         )
 
     import fractal_server.cli.__main__

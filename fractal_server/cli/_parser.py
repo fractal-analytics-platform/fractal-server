@@ -135,7 +135,7 @@ def get_parser() -> ap.ArgumentParser:
         ),
     )
     sync_core_tasks_parser.add_argument(
-        "--additions",
+        "--add",
         type=Path,
         required=False,
         help=(
@@ -146,7 +146,7 @@ def get_parser() -> ap.ArgumentParser:
         ),
     )
     sync_core_tasks_parser.add_argument(
-        "--removals",
+        "--remove",
         type=Path,
         required=False,
         help=(
