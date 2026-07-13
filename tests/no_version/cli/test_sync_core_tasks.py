@@ -150,7 +150,6 @@ async def test_sync_core_tasks(
     assert _count_core_tasks(db_sync) == 1
 
     # (3) Core tasks on three resources (but missing on the third one)
-    path_resources_usergroups = tmp_path / "resources-usergroups.json"
     path_resources_usergroups.write_text(
         json.dumps(
             [
@@ -167,6 +166,37 @@ async def test_sync_core_tasks(
         resources_and_groups=path_resources_usergroups, base=path_base
     )
     assert _count_core_tasks(db_sync) == 2
+
+    # (4) Failure and roll-back
+    bad_path_resources_usergroups = tmp_path / "bad-resources-usergroups.json"
+    bad_path_resources_usergroups.write_text(
+        json.dumps(
+            [
+                {"resource_id": resource1.id, "user_group_id": user_group1_id},
+                {"resource_id": resource2.id},
+            ]
+        )
+    )
+    path_base.write_text(
+        json.dumps(
+            [
+                ["pkg-a", "1.0.0", "my task"],
+                ["pkg-b", "1.0.0", "my task"],
+                ["pkg-b", "2.0.0", "my task"],
+            ]
+        )
+    )
+    with pytest.raises(SystemExit):
+        sync_core_tasks(
+            resources_and_groups=bad_path_resources_usergroups, base=path_base
+        )
+    assert _count_core_tasks(db_sync) == 2
+
+    # (5) Successful version of the failed run
+    sync_core_tasks(
+        resources_and_groups=path_resources_usergroups, base=path_base
+    )
+    assert _count_core_tasks(db_sync) == 6
 
 
 def test_cli_command(db_create_tables, tmp_path):
