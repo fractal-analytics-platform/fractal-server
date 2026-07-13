@@ -1,4 +1,6 @@
 import json
+import shlex
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -165,3 +167,15 @@ async def test_sync_core_tasks(
         resources_and_groups=path_resources_usergroups, base=path_base
     )
     assert _count_core_tasks(db_sync) == 2
+
+
+def test_cli_command(db_create_tables, tmp_path):
+    cmd = "fractalctl sync-core-tasks"
+
+    res = subprocess.run(
+        shlex.split(cmd),
+        capture_output=True,
+        encoding="utf-8",
+    )
+    assert res.returncode != 0
+    assert "the following arguments are required" in res.stderr
