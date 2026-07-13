@@ -3,10 +3,8 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import func
-from sqlalchemy import select
 
-from fractal_server.app.models import TaskV2
+from fractal_server.cli._sync_core_tasks import _count_core_tasks
 from fractal_server.cli._sync_core_tasks import _get_final_set
 from fractal_server.cli._sync_core_tasks import sync_core_tasks
 
@@ -69,15 +67,8 @@ def test_get_final_set(tmp_path: Path):
     }
 
 
-async def _get_number_core_tasks(db) -> int:
-    res = await db.execute(
-        select(func.count(TaskV2.id)).where(TaskV2.is_core.is_(True))
-    )
-    return res.scalar()
-
-
 async def test_sync_core_tasks(
-    db,
+    db_sync,
     tmp_path,
     local_resource_profile_db,
     slurm_ssh_resource_profile_fake_db,
@@ -124,20 +115,53 @@ async def test_sync_core_tasks(
                     name="my task",
                     is_core=True,
                 )
+                print(f"{user_id=}, {user_group_id=}, {resource_id=}")
 
-    path1 = tmp_path / "resources-usergroups.json"
-    path1.write_text(
+    path_resources_usergroups = tmp_path / "resources-usergroups.json"
+    path_resources_usergroups.write_text(
         json.dumps(
-            [
-                {
-                    "resource_id": resource1.id,
-                    "user_group_id": user_group1_id,
-                }
-            ]
+            [{"resource_id": resource1.id, "user_group_id": user_group1_id}]
         )
     )
 
-    assert (await _get_number_core_tasks(db)) > 0
-    sync_core_tasks(resources_and_groups=path1)
+    assert _count_core_tasks(db_sync) > 0
 
-    assert (await _get_number_core_tasks(db)) == 0
+    # (1) no core tasks selection
+    sync_core_tasks(resources_and_groups=path_resources_usergroups)
+    assert _count_core_tasks(db_sync) == 0
+
+    # (2) Core tasks on a single resource
+    path_base = tmp_path / "base.json"
+    path_base.write_text(
+        json.dumps(
+            [
+                ["pkg-a", "1.0.0", "my task"],
+                ["pkg-a", "1.0.0", "my task"],  # duplicate
+                ["pkg-missing", "1.0.0", "my task"],  # missing task group
+                ["pgk-a", "1.0.0", "my missing task"],  # missing task
+            ]
+        )
+    )
+    sync_core_tasks(
+        resources_and_groups=path_resources_usergroups, base=path_base
+    )
+    assert _count_core_tasks(db_sync) == 1
+
+    # (3) Core tasks on three resources (but missing on the third one)
+    path_resources_usergroups = tmp_path / "resources-usergroups.json"
+    path_resources_usergroups.write_text(
+        json.dumps(
+            [
+                {"resource_id": resource1.id, "user_group_id": user_group1_id},
+                {"resource_id": resource2.id, "user_group_id": user_group1_id},
+                {
+                    "resource_id": resource2.id,
+                    "user_group_id": user_group3_id,
+                },  # missing
+            ]
+        )
+    )
+    sync_core_tasks(
+        resources_and_groups=path_resources_usergroups, base=path_base
+    )
+    assert _count_core_tasks(db_sync) == 2
