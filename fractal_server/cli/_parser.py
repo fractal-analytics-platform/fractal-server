@@ -130,7 +130,7 @@ def get_parser() -> ap.ArgumentParser:
         help=(
             "Path to a JSON file with an array of items like "
             '`["my-package-name", "1.2.3", "My task name"]` which should be'
-            " made core. This file is typically pre-fetched from a centralized"
+            " made core. This file is often pre-fetched from a remote"
             " source."
         ),
     )
@@ -141,8 +141,8 @@ def get_parser() -> ap.ArgumentParser:
         help=(
             "Path to a JSON file with an array of items like "
             '`["my-package-name", "1.2.3", "My task name"]` which should be'
-            " made core. This file is typically an instance-specific set of "
-            " additions on top of the `--base` one."
+            " made core. This is often an instance-specific set of additions "
+            "on top of the `--base` one."
         ),
     )
     sync_core_tasks_parser.add_argument(
@@ -152,8 +152,8 @@ def get_parser() -> ap.ArgumentParser:
         help=(
             "Path to a JSON file with an array of items like "
             '`["my-package-name", "1.2.3", "My task name"]` which should be'
-            " made **not** core. This file is typically an instance-specific "
-            "set of removals from the `--base` one."
+            " made **not** core. This is often an instance-specific set of "
+            "removals from the `--base` one."
         ),
     )
 
