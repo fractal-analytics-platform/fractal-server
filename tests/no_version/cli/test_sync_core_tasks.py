@@ -199,7 +199,7 @@ async def test_sync_core_tasks(
     assert _count_core_tasks(db_sync) == 6
 
 
-def test_cli_command(db_create_tables, tmp_path):
+def test_fractalctl_sync_core_tasks_cli():
     cmd = "fractalctl sync-core-tasks"
 
     res = subprocess.run(
@@ -209,3 +209,28 @@ def test_cli_command(db_create_tables, tmp_path):
     )
     assert res.returncode != 0
     assert "the following arguments are required" in res.stderr
+
+
+def test_fractalctl_sync_core_tasks_run(monkeypatch):
+    import argparse as ap
+
+    def parse_args_mock() -> ap.Namespace:
+        return ap.Namespace(
+            cmd="sync-core-tasks",
+            resources_and_groups="fake",
+            base="fake",
+            additions="fake",
+            removals="fake",
+        )
+
+    import fractal_server.cli.__main__
+    from fractal_server.cli.__main__ import run
+
+    monkeypatch.setattr(
+        fractal_server.cli.__main__,
+        "parse_args",
+        parse_args_mock,
+    )
+
+    with pytest.raises(AttributeError):
+        run()
