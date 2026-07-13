@@ -218,9 +218,9 @@ def test_fractalctl_sync_core_tasks_run(monkeypatch):
         return ap.Namespace(
             cmd="sync-core-tasks",
             resources_and_groups="fake",
-            base="fake",
-            additions="fake",
-            removals="fake",
+            base=None,
+            additions=None,
+            removals=None,
         )
 
     import fractal_server.cli.__main__
