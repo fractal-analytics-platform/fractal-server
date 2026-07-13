@@ -5,10 +5,10 @@ import pytest
 from sqlalchemy import func
 from sqlalchemy import select
 
-from fractal_server.__main__ import init_db_data
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
+from fractal_server.cli.__main__ import init_db_data
 
 
 def test_init_db_data_default(db_sync):
