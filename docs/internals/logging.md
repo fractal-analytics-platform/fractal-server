@@ -6,7 +6,7 @@ logging levels are defined
 [here](https://docs.python.org/3/library/logging.html#logging-levels).
 
 Two different approaches to logging configuration are described below. For a more detailed view on `fractal-server` logging, see the [logger module
-documentation](../code_reference/logger.md).
+documentation](../code_reference/logger/).
 
 ## External config file
 
@@ -34,7 +34,7 @@ logs for Uvicorn.
 
 ## Built-in logger (default)
 
-The [logger module](../code_reference/logger.md) exposes the
+The [logger module](../code_reference/logger/) exposes the
 functions to set/get/close a logger, and it defines where the records are sent to
 (e.g. the `fractal-server` console or a specific file). The logging levels of
 a logger created with
