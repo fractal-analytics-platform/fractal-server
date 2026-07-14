@@ -18,10 +18,12 @@ from fractal_server.send_mail import send_fractal_email_or_log_failure
 from fractal_server.syringe import Inject
 from fractal_server.types import NonEmptyStr
 
-_ThreeStringsTuple = tuple[
-    NonEmptyStr,
-    NonEmptyStr,
-    NonEmptyStr,
+_SetThreeStringsTuple = set[
+    tuple[
+        NonEmptyStr,
+        NonEmptyStr,
+        NonEmptyStr,
+    ]
 ]
 
 
@@ -30,10 +32,10 @@ class _CoreInfoSet(RootModel):
     Set of `(pkg_name, version, task_name)` tuples.
     """
 
-    root: set[_ThreeStringsTuple]
+    root: _SetThreeStringsTuple
 
 
-def _read_set_from_file(path: Path | None) -> set[_ThreeStringsTuple]:
+def _read_set_from_file(path: Path | None) -> _SetThreeStringsTuple:
     """
     Read a file (if any) and parse into a set of core-task info items.
     """
@@ -46,7 +48,7 @@ def _get_final_set(
     base: Path | None = None,
     add: Path | None = None,
     remove: Path | None = None,
-) -> set[_ThreeStringsTuple]:
+) -> _SetThreeStringsTuple:
     base_set = _read_set_from_file(base)
     add_set = _read_set_from_file(add)
     remove_set = _read_set_from_file(remove)
