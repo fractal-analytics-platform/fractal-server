@@ -10,7 +10,7 @@ documentation](../code_reference/logger.md).
 
 ## External config file
 
-Set the `LOG_CONFIG_FILE` environment variable to the path of a YAML
+Set the `FRACTAL_LOG_CONFIG_FILE` environment variable to the path of a YAML
 file containing a standard Python
 [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig)
 configuration. When this variable is set, it is the only one determining

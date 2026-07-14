@@ -22,12 +22,12 @@ from .syringe import Inject
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
 
-# Set to True by main.py when a LOG_CONFIG_FILE file is loaded.
+# Set to True by main.py when a FRACTAL_LOG_CONFIG_FILE file is loaded.
 # When True, all functions that mutate logging state become no-ops so that
 # the external dictConfig is the sole authority over the logging hierarchy.
 _EXTERNAL_CONFIG_LOADED: bool = False
 
-# Set to the error message by main.py when LOG_CONFIG_FILE loading
+# Set to the error message by main.py when FRACTAL_LOG_CONFIG_FILE loading
 # fails. set_logger() will emit a warning on its first call so the failure
 # is visible in the application logs.
 _EXTERNAL_CONFIG_ERROR: str | None = None
@@ -82,7 +82,7 @@ def set_logger(
     `log_file_path` (if set); all these handlers have severity level set to
     `logging.DEBUG`.
 
-    Note on external logging config (`LOG_CONFIG_FILE`):
+    Note on external logging config (`FRACTAL_LOG_CONFIG_FILE`):
     When an external config is loaded (`_EXTERNAL_CONFIG_LOADED` is `True`),
     the `StreamHandler` setup is always skipped (the external config owns the
     logging hierarchy). However, if `log_file_path` is provided, the
@@ -125,7 +125,7 @@ def set_logger(
         # the logger was not yet available at the time of the failure.
         if _EXTERNAL_CONFIG_ERROR is not None:
             logger.warning(
-                f"LOG_CONFIG_FILE was set but failed to load "
+                f"FRACTAL_LOG_CONFIG_FILE was set but failed to load "
                 f"({_EXTERNAL_CONFIG_ERROR}). Falling back to built-in logging."
             )
 
