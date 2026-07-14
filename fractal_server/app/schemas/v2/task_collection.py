@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_validator
@@ -10,6 +8,7 @@ from fractal_server.string_tools import validate_cmd
 from fractal_server.types import AbsolutePathStr
 from fractal_server.types import DictStrStr
 from fractal_server.types import NonEmptyStr
+from fractal_server.types import PythonVersion
 
 
 class FractalUploadedFile(BaseModel):
@@ -51,17 +50,7 @@ class TaskCollectPip(BaseModel):
     package: NonEmptyStr | None = None
     package_version: NonEmptyStr | None = None
     package_extras: NonEmptyStr | None = None
-    python_version: (
-        Literal[
-            "3.9",
-            "3.10",
-            "3.11",
-            "3.12",
-            "3.13",
-            "3.14",
-        ]
-        | None
-    ) = None
+    python_version: PythonVersion | None = None
     pinned_package_versions_pre: DictStrStr | None = None
     pinned_package_versions_post: DictStrStr | None = None
 

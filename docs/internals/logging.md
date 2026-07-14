@@ -5,7 +5,7 @@ Logging in `fractal-server` is based on the standard
 logging levels are defined
 [here](https://docs.python.org/3/library/logging.html#logging-levels). For a
 more detailed view on `fractal-server` logging, see the [logger module
-documentation](../reference/logger.md).
+documentation](../code_reference/logger.md).
 
 ## External config file (recommended)
 
@@ -33,15 +33,15 @@ logs for Uvicorn.
 
 ## Built-in logger (default)
 
-The [logger module](../reference/logger.md) exposes the
+The [logger module](../code_reference/logger.md) exposes the
 functions to set/get/close a logger, and it defines where the records are sent to
 (e.g. the `fractal-server` console or a specific file). The logging levels of
 a logger created with
-[`set_logger`](../reference/logger.md/#fractal_server.logger.set_logger)
+[`set_logger`](../code_reference/logger.md#fractal_server.logger.set_logger)
 are defined as follows:
 
 * The minimum logging level for logs to appear in the console is set by
-  [`FRACTAL_LOGGING_LEVEL`](../configuration.md/#fractal_server.config._main.Settings);
+  [`FRACTAL_LOGGING_LEVEL`](../configuration.md#fractal_server.config._main.Settings);
 * The `FileHandler` logger handlers are always set at the `DEBUG` level, that
   is, they write all log records.
 

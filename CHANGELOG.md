@@ -1,9 +1,33 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.24.1 (unreleased)
 
+
+* Runner:
+    * Avoid printing `stderr` of `subprocess.run` (\#3396).
+* API:
+    * Check if job's status is "submitted" before stopping it (\#3395).
 * Logging:
-    * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored.
+    * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored (\#3343).
+* Internal:
+    * Minor typing-related updates (\#3397).
+    * Refactor CLI from single module to subpackage (\#3403).
+
+# 2.24.0
+
+* API:
+    * Remove `slim` query parameter from `GET /api/v2/task-group/` (\#3385).
+    * Expose information about task-group usage to users (\#3383).
+    * Introduce `/make-core/` and `/make-not-core/` admin endpoints for single task-group (\#3387).
+* Runner:
+    * Safely handle null characters in SLURM stderr files (\#3391).
+* Documentation:
+    * Switch from `mkdocs` to `zensical` (\#3388).
+* Dependencies:
+    * Bump `pydantic-settings` to 2.14.2 (\#3380).
+    * Bump `uvicorn`, `psycopg`, `pytest-asyncio`, `zensical` (\#3392).
+    * Drop `pytest-subprocess` (\#3392).
+>>>>>>> main
 
 # 2.23.7
 

@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.23.7"
+version = "2.24.0"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -19,15 +19,15 @@ dependencies = [
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
-    "uvicorn >= 0.46.0, <0.47.0",
+    "uvicorn >= 0.50.0, <0.51.0",
     "uvicorn-worker == 0.4.0",
     "pydantic >=2.13.0,<2.14.0",
-    "pydantic-settings ==2.14.0",
+    "pydantic-settings ==2.14.2",
     "packaging >= 26.0.0, <27.0.0",
     "fabric >= 3.2.2, <3.3.0",
     "paramiko >= 5.0.0, <5.1.0",
     "gunicorn >=26,<27",
-    "psycopg[binary] >= 3.1.0, <4.0.0",
+    "psycopg[binary] >= 3.3.0, <4.0.0",
     "tomli_w >=1.2.0, <1.3.0 ",
     "starlette >= 1.3.1",
 ]
@@ -39,7 +39,7 @@ documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 changelog = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
 
 [project.scripts]
-fractalctl = "fractal_server.__main__:run"
+fractalctl = "fractal_server.cli.__main__:run"
 
 [dependency-groups]
 dev = [
@@ -48,27 +48,20 @@ dev = [
     "pytest-env >=1.1.5,<1.2.0",
     "httpx >=0.28.0,<0.29.0",
     "devtools ==0.12",
-    "pytest-asyncio >= 1.3.0,<1.4.0",
+    "pytest-asyncio >= 1.4.0,<1.5.0",
     "bumpver >=2024.0",
     "coverage>=7.12.0,<7.13.0",
     "pytest-docker >=3.2.0,<3.3.0",
-    "pytest-subprocess >=1.5.0,<1.6.0",
     "a2wsgi >=1.10.0,<1.11.0",
     "jinja2 >=3.1.6,<3.1.7",
     "pyyaml>=6.0.0"
 ]
 
 docs = [
-    "mkdocs==1.6.1",
-    "mkdocstrings[python]>=1.0.2,<1.1.0",
-    "mkdocs-material==9.7.6",
-    "mkdocs-gen-files==0.6.0",
-    "mkdocs-literate-nav==0.6.2",
-    "mkdocs-section-index==0.3.10",
-    "mkdocs-include-markdown-plugin==7.2.1",
-    "mkdocs-render-swagger-plugin==0.1.2",
-    "pyyaml>=6.0.0",
-    ]
+    "zensical==0.0.47",
+    "mkdocstrings-python>=2.0.4,<2.1.0",
+    "griffe_pydantic >=1.3.1,<1.4.0",
+]
 
 
 [build-system]
@@ -93,7 +86,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth", "basic_auth"]
 
 [tool.bumpver]
-current_version = "2.23.7"
+current_version = "2.24.0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

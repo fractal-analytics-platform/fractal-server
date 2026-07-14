@@ -1,0 +1,121 @@
+[project]
+site_name = "Fractal Server"
+site_url = "https://fractal-analytics-platform.github.io/fractal-server/"
+repo_url = "https://github.com/fractal-analytics-platform/fractal-server"
+repo_name = "fractal-analytics-platform/fractal-server"
+extra_css = ["extra.css"]
+copyright = """
+Copyright 2026 (C) BioVisionCenter (University of Zurich) - see
+<u><a href="https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE">LICENSE</a></u>.
+"""
+
+nav = [
+    { "Home" = "index.md" },
+    { "Usage" = [
+        { "Install/deploy" = "install_and_deploy.md" },
+        { "Configuration" = "configuration.md" },
+        { "Integrations" = [
+            "internals/integrations/index.md",
+            "internals/integrations/runners.md",
+            "internals/integrations/tasks.md",
+        ]
+        },
+        { "Database" = "internals/database.md" },
+        { "Logging" = "internals/logging.md" },
+        { "Version upgrades" = [
+            "internals/version_upgrades/index.md",
+            "internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md",
+            "internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md",
+        ]
+        },
+    ]
+    },
+    { "Changelog" = "changelog.md" },
+    { "Contributing" = "development.md" },
+    { "Reference" = [
+        { "API" = "openapi.md" },
+        { "Code" = "code_reference/" },
+        { "CLI" = "cli_reference.md" },
+    ]},
+]
+
+[project.theme]
+variant = "classic"
+language = "en"
+logo = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_logo.png"
+favicon = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-logos/refs/heads/main/common/fractal_favicon.png"
+custom_dir = "docs/overrides"
+navigation = {"expand" = true}
+
+features = [
+    "announce.dismiss",
+    "content.code.annotate",
+    "content.code.copy",
+    "content.tabs.link",
+    "content.tooltips",
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "search.highlight",
+    "toc.follow",
+    "toc.integrate",
+]
+
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "teal"
+accent = "green"
+toggle.icon = "material/weather-night"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "teal"
+accent = "gren"
+toggle.icon = "material/weather-sunny"
+toggle.name = "Switch to light mode"
+
+[project.plugins.search]
+
+[project.plugins.autorefs]
+resolve_closest=true
+
+[project.plugins.section-index]
+
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+inventories = [
+    "https://docs.python.org/3/objects.inv",
+    "https://docs.pydantic.dev/latest/objects.inv",
+]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+
+paths = ["fractal_server"]
+filters = []
+
+group_by_category = true
+show_category_heading = true
+summary = true
+
+backlinks = "tree"
+docstring_style = "google"
+docstring_section_style = "spacy"
+show_source = true
+
+parameter_headings = true
+allow_inspection = true
+show_symbol_type_heading = true
+show_symbol_type_toc = false
+signature_crossrefs = true
+unwrap_annotated = true
+show_attribute_values = true
+inherited_members = true
+extensions= ["griffe_pydantic"]

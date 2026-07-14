@@ -4,9 +4,9 @@ This page describes how `fractal-server` runs a sequence of Fractal tasks and pr
 
 > NOTE: The process of defining a single full specification for this interface is still ongoing.
 
-The description below is based on concepts and definitions which are part of `fractal-server`. For the specific case of the **Fractal image list**, a more detailed description is available at https://fractal-analytics-platform.github.io/image_list. For clarifications about other terms or definitions, the starting point is the [`execute_tasks` function in the `runner.py` Python module](../../../reference/runner/v2/runner/#fractal_server.runner.v2.runner.execute_tasks).
+The description below is based on concepts and definitions which are part of `fractal-server`. For the specific case of the **Fractal image list**, a more detailed description is available at https://fractal-analytics-platform.github.io/image_list. For clarifications about other terms or definitions, the starting point is the [`execute_tasks` function in the `runner.py` Python module](../../../code_reference/runner/v2/runner/#fractal_server.runner.v2.runner.execute_tasks).
 
-Within `fractal-server`, a Fractal task is associated to a [`TaskV2` object](../../../reference/app/models/v2/task#fractal_server.app.models.v2.task.TaskV2), which has either one or both _non-parallel_ and _parallel_ components (where "both" corresponds to compound tasks).
+Within `fractal-server`, a Fractal task is associated to a [`TaskV2` object](../../../code_reference/app/models/v2/task#fractal_server.app.models.v2.task.TaskV2), which has either one or both _non-parallel_ and _parallel_ components (where "both" corresponds to compound tasks).
 The `command_non_parallel` and `command_parallel` attributes, when set, represent a command-line executables which are used to run the task. As an example, if `command_non_parallel = "/path/to/python /path/to/my_task.py`, then the command that is executed will look like
 ```bash
 /path/to/python /path/to/my_task.py --args-json /path/to/args.json --out-json /path/to/out.json
@@ -16,7 +16,7 @@ For Fractal tasks that are developed in Python, the `fractal-task-tools` exposes
 The main entrypoint for task execution in `fractal-server` is the `execute_tasks` function, which executes a list of tasks (that is, part of a Fractal workflow). Its input arguments include:
 
 * a Fractal dataset (which also contains an [image list](https://fractal-analytics-platform.github.io/image_list)),
-* a list of workflow tasks (each one associated to a [`TaskV2` object](../../../reference/app/models/v2/task#fractal_server.app.models.v2.task.TaskV2)),
+* a list of workflow tasks (each one associated to a [`TaskV2` object](../../../code_reference/app/models/v2/task#fractal_server.app.models.v2.task.TaskV2)),
 * filters based on image types or attributes, set by the user upon job submission.
 
 In the following parts of this page we provide a high-level description of the `execute_tasks` flow. Some aspects which are not covered here are:
@@ -74,13 +74,13 @@ elif task.type in [TaskType.COMPOUND, TaskType.CONVERTER_COMPOUND]:
         # ...
     )
 ```
-where each value of `outcomes_dict` is a `SubmissionOutcome` object and may have a `task_output` attribute which is a [`TaskOutput` object](../../../reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
+where each value of `outcomes_dict` is a `SubmissionOutcome` object and may have a `task_output` attribute which is a [`TaskOutput` object](../../../code_reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
 
 The inner working of e.g. the `run_task_non_parallel` function is not described here, and it is implemented in a specific [job runner](../integrations/runners.md).
 
 ## Post-task-execution phase
 
-* Metadata outputs from all units are merged into a single [`TaskOutput` object](../../../reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
+* Metadata outputs from all units are merged into a single [`TaskOutput` object](../../../code_reference/runner/v2/task_interface/#fractal_server.runner.v2.task_interface.TaskOutput).
 * If there are no images to be created or updated, all input images in `filtered_images` are flagged as "to be updated", so that they will be updated e.g. with the new types set by the task.
 * For each image that should be created or updated, the image `attributes`, `types` and `origin` properties are updated as appropriate.
 * All images marked as "to be removed" are removed from the image list.

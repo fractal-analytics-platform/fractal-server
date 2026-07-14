@@ -168,22 +168,26 @@ async def remove_duplicate_task_groups(
     return new_task_groups
 
 
-def serialize_task_group_with_email(
+def serialize_task_group(
     *,
     task_group: TaskGroupV2,
-    user_email: str,
-    included_task_fields: set[str] | None = None,
+    user_email: str | None = None,
+    in_use: bool | None = None,
 ) -> dict[str, Any]:
-    return dict(
-        user_email=user_email,
-        task_list=[
-            task.model_dump(
-                include=included_task_fields,
-            )
-            for task in task_group.task_list
-        ],
+    """
+    Serialize a TaskGroupV2 (including its tasks) into a dict.
+    Optionally include `user_email` and `in_use` if provided.
+    """
+    serialized_task_group = dict(
+        task_list=[task.model_dump() for task in task_group.task_list],
         **task_group.model_dump(),
     )
+    if user_email is not None:
+        serialized_task_group["user_email"] = user_email
+    if in_use is not None:
+        serialized_task_group["in_use"] = in_use
+
+    return serialized_task_group
 
 
 async def add_user_email_to_task_group(
@@ -201,7 +205,7 @@ async def add_user_email_to_task_group(
         .where(TaskGroupV2.id == task_group.id)
     )
     user_email = res.scalar_one()
-    return serialize_task_group_with_email(
+    return serialize_task_group(
         task_group=task_group,
         user_email=user_email,
     )
