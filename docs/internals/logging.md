@@ -38,7 +38,7 @@ The [logger module](../code_reference/logger/) exposes the
 functions to set/get/close a logger, and it defines where the records are sent to
 (e.g. the `fractal-server` console or a specific file). The logging levels of
 a logger created with
-[`set_logger`](../code_reference/logger.md#fractal_server.logger.set_logger)
+[`set_logger`](../code_reference/logger#fractal_server.logger.set_logger)
 are defined as follows:
 
 * The minimum logging level for logs to appear in the console is set by
