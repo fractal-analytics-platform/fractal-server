@@ -77,7 +77,7 @@ def set_logger(
     `logging.DEBUG`.
 
     Note on external logging config (`FRACTAL_LOG_CONFIG_FILE`):
-    When an external config is loaded (`_EXTERNAL_CONFIG_LOADED` is `True`),
+    When an external config is loaded (`_CONFIG_LOADED` is `True`),
     the `StreamHandler` setup is always skipped (the external config owns the
     logging hierarchy). However, if `log_file_path` is provided, the
     `FileHandler` is **still added** unconditionally. This is because certain
@@ -215,8 +215,8 @@ def _load_logging_config(config_env: str) -> None:
     """
     Load logging configuration from a YAML file path.
 
-    On success sets `_EXTERNAL_CONFIG_LOADED = True`. On failure sets
-    `_EXTERNAL_CONFIG_ERROR` to the error message and prints a warning
+    On success sets `_CONFIG_LOADED = True`. On failure sets
+    `_CONFIG_ERROR` to the error message and prints a warning
     to stderr (because the application logger is not yet available at this
     point).
     """

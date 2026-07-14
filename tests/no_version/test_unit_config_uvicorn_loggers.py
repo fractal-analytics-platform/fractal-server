@@ -14,7 +14,7 @@ def test_config_uvicorn_loggers():
 
 def test_config_uvicorn_loggers_is_noop_when_external_config_loaded():
     """
-    When _EXTERNAL_CONFIG_LOADED is True, config_uvicorn_loggers() must not
+    When _CONFIG_LOADED is True, config_uvicorn_loggers() must not
     overwrite the formatter already set on the uvicorn.access handler.
     """
     original_flag = _logger_module._CONFIG_LOADED
