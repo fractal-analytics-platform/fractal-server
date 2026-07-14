@@ -2,7 +2,6 @@
 
 # 2.24.1 (unreleased)
 
-
 * Runner:
     * Avoid printing `stderr` of `subprocess.run` (\#3396).
 * API:
@@ -27,7 +26,7 @@
     * Bump `pydantic-settings` to 2.14.2 (\#3380).
     * Bump `uvicorn`, `psycopg`, `pytest-asyncio`, `zensical` (\#3392).
     * Drop `pytest-subprocess` (\#3392).
->>>>>>> main
+
 
 # 2.23.7
 
