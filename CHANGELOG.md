@@ -9,8 +9,11 @@
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
     * Allow filtering by `in_use` on admin's TaskGroup endpoint (\#3399).
+* CLI:
+    * Introduce `fractalctl sync-core-tasks` command (\#3404).
 * Internal:
     * Minor typing-related updates (\#3397).
+    * Refactor CLI from single module to subpackage (\#3403).
 
 # 2.24.0
 
