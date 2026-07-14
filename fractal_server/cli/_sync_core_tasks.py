@@ -73,7 +73,8 @@ def sync_core_tasks(
     remove: Path | None = None,
 ):
     """
-    FIXME
+    Update the set of tasks marked as core in the database, based on on-disk
+    configuration files.
     """
     resources_and_groups: list[dict[str, int]] = json.loads(
         resources_and_groups.read_text()
