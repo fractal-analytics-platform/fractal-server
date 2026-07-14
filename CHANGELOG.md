@@ -8,6 +8,8 @@
     * Check if job's status is "submitted" before stopping it (\#3395).
 * Logging:
     * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored (\#3343).
+* CLI:
+    * Introduce `fractalctl sync-core-tasks` command (\#3404).
 * Internal:
     * Minor typing-related updates (\#3397).
     * Refactor CLI from single module to subpackage (\#3403).
