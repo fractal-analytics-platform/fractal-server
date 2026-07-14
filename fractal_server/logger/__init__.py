@@ -15,6 +15,7 @@ This module provides logging utilities
 
 import logging
 import logging.config
+import sys
 from pathlib import Path
 
 import yaml
@@ -231,8 +232,9 @@ def _load_logging_config(config_env: str) -> None:
         _state._CONFIG_LOADED = True
     except Exception as _e:
         _state._CONFIG_ERROR = str(_e)
-        logging.error(
+        print(
             f"[fractal-server] WARNING: failed to load "
-            f"FRACTAL_LOG_CONFIG_FILE={config_env!r}: {_e}. "
+            f"LOG_CONFIG_FILE={config_env!r}: {_e}. "
             f"Falling back to built-in logging.",
+            file=sys.stderr,
         )
