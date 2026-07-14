@@ -28,7 +28,9 @@ class Settings(BaseSettings):
             Only logs of with this level (or higher) will appear in the console
             logs.
         LOG_CONFIG_FILE:
-            FIXME
+            Path of a YAML file containing a Python `logging.config.dictConfig`.
+            When set, this is the only source determining fractal-server logging
+            configuration.
         FRACTAL_API_MAX_JOB_LIST_LENGTH:
             Number of ids that can be stored in the `jobs` attribute of
             `app.state`.
