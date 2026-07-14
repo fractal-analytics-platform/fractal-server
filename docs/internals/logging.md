@@ -3,22 +3,23 @@
 Logging in `fractal-server` is based on the standard
 [`logging`](https://docs.python.org/3/library/logging.html) library, and its
 logging levels are defined
-[here](https://docs.python.org/3/library/logging.html#logging-levels). For a
-more detailed view on `fractal-server` logging, see the [logger module
+[here](https://docs.python.org/3/library/logging.html#logging-levels).
+
+Two different approaches to logging configuration are described below. For a more detailed view on `fractal-server` logging, see the [logger module
 documentation](../code_reference/logger.md).
 
-## External config file (recommended)
+## External config file
 
 Set the `LOG_CONFIG_FILE` environment variable to the path of a YAML
 file containing a standard Python
 [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig)
-configuration. When this variable is set, it is used **exclusively** for
+configuration. When this variable is set, it is the only one determining
 application-level logging: the `FRACTAL_LOGGING_LEVEL` setting and
 programmatic stream-handler setup (`config_uvicorn_loggers()`, and
 `set_logger()` calls without a `log_file_path`) become no-ops, and the YAML
 file is the sole authority over the logging hierarchy.
 
-**Exception — job log files:** calls to `set_logger()` that include a
+**Exception - job log files:** calls to `set_logger()` that include a
 `log_file_path` argument always create the corresponding `FileHandler`, even
 when an external config is loaded. This is because certain log files
 (e.g. `workflow.log` and task-collection logs) are functional artifacts that
