@@ -1,0 +1,8 @@
+filters: []
+name: root
+level: 30
+parent:
+propagate: true
+handlers: []
+disabled: false
+_cache: {}
