@@ -7,6 +7,7 @@ from ._parser import parse_args
 from ._recent import recent
 from ._set_db import set_db
 from ._start import start
+from ._sync_core_tasks import sync_core_tasks
 from ._update_db_data import update_db_data
 
 
@@ -35,5 +36,12 @@ def run() -> None:
             )
         case "recent":
             recent(minutes=args.minutes)
+        case "sync-core-tasks":
+            sync_core_tasks(
+                resources_and_groups=args.resources_and_groups,
+                base=args.base,
+                add=args.additions,
+                remove=args.removals,
+            )
         case _:
             sys.exit(f"Error: invalid command '{args.cmd}'.")

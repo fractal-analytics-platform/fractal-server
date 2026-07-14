@@ -1,5 +1,6 @@
 import argparse as ap
 import sys
+from pathlib import Path
 
 
 def get_parser() -> ap.ArgumentParser:
@@ -105,6 +106,57 @@ def get_parser() -> ap.ArgumentParser:
         help="Look-back period in minutes (default: 20).",
         default=20,
     )
+
+    # fractalctl sync-core-tasks
+    sync_core_tasks_parser = subparsers.add_parser(  # noqa: F841
+        "sync-core-tasks",
+        description="Synchronize core tasks.",
+    )
+    sync_core_tasks_parser.add_argument(
+        "--resources-and-groups",
+        type=Path,
+        required=True,
+        help=(
+            "Path to a JSON file with an array of "
+            '`{"resource_id": .., "user_group_id": ...}` objects. '
+            "For each resource, only tasks associated to the corresponding user"
+            " group can be marked as core."
+        ),
+    )
+    sync_core_tasks_parser.add_argument(
+        "--base",
+        type=Path,
+        required=False,
+        help=(
+            "Path to a JSON file with an array of items like "
+            '`["my-package-name", "1.2.3", "My task name"]` which should be'
+            " made core. This file is often pre-fetched from a remote"
+            " source."
+        ),
+    )
+    sync_core_tasks_parser.add_argument(
+        "--add",
+        type=Path,
+        required=False,
+        help=(
+            "Path to a JSON file with an array of items like "
+            '`["my-package-name", "1.2.3", "My task name"]` which should be'
+            " made core. This is often an instance-specific set of additions "
+            "on top of the `--base` one."
+        ),
+    )
+    sync_core_tasks_parser.add_argument(
+        "--remove",
+        type=Path,
+        required=False,
+        help=(
+            "Path to a JSON file with an array of items like "
+            '`["my-package-name", "1.2.3", "My task name"]` which should be'
+            " made **not** core. This is often an instance-specific set of "
+            "removals from the `--base` one."
+        ),
+    )
+
     return parser
 
 

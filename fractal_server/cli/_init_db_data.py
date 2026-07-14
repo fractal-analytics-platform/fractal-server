@@ -38,7 +38,7 @@ def init_db_data(
         == (admin_project_dir is None)
     ):
         print(
-            "You must provide either or or none of `--admin-email`, "
+            "You must provide either both or none of `--admin-email`, "
             "`--admin-pwd` and `--admin-project-dir`. Exit."
         )
         sys.exit(1)

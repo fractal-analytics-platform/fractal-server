@@ -6,6 +6,8 @@
     * Avoid printing `stderr` of `subprocess.run` (\#3396).
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
+* CLI:
+    * Introduce `fractalctl sync-core-tasks` command (\#3404).
 * Internal:
     * Minor typing-related updates (\#3397).
     * Refactor CLI from single module to subpackage (\#3403).

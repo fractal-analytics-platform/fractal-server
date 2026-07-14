@@ -2,10 +2,8 @@ import logging
 
 import pytest
 
-from fractal_server.app.security.signup_email import (
-    send_fractal_email_or_log_failure,
-)
 from fractal_server.config._email import PublicEmailSettings
+from fractal_server.send_mail import send_fractal_email_or_log_failure
 
 
 async def test_send_fractal_email_or_log_failure(caplog, monkeypatch):
@@ -20,12 +18,10 @@ async def test_send_fractal_email_or_log_failure(caplog, monkeypatch):
     )
 
     # Mock the logger, so that `propagate=True`
-    import fractal_server.app.security.signup_email
+    import fractal_server.send_mail
 
     _logger = logging.getLogger("some-logger")
-    monkeypatch.setattr(
-        fractal_server.app.security.signup_email, "logger", _logger
-    )
+    monkeypatch.setattr(fractal_server.send_mail, "logger", _logger)
 
     caplog.clear()
     send_fractal_email_or_log_failure(
