@@ -27,7 +27,7 @@ class Settings(BaseSettings):
             Logging-level threshold for logging
             Only logs of with this level (or higher) will appear in the console
             logs.
-        FRACTAL_LOG_CONFIG_FILE:
+        LOG_CONFIG_FILE:
             FIXME
         FRACTAL_API_MAX_JOB_LIST_LENGTH:
             Number of ids that can be stored in the `jobs` attribute of
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
         "local"
     )
     FRACTAL_LOGGING_LEVEL: int = logging.INFO
-    FRACTAL_LOG_CONFIG_FILE: str | None = None
+    LOG_CONFIG_FILE: str | None = None
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
     FRACTAL_HELP_URL: HttpUrl | None = None

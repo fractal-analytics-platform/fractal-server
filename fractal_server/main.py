@@ -214,8 +214,8 @@ def start_application() -> FastAPI:
     settings = Inject(get_settings)
 
     # Load logging configuration from YAML
-    if settings.FRACTAL_LOG_CONFIG_FILE is not None:
-        _load_logging_config(settings.FRACTAL_LOG_CONFIG_FILE)
+    if settings.LOG_CONFIG_FILE is not None:
+        _load_logging_config(settings.LOG_CONFIG_FILE)
 
     app.add_middleware(
         SlowResponseMiddleware,

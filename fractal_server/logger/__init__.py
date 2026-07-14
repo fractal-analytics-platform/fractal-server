@@ -77,7 +77,7 @@ def set_logger(
     `log_file_path` (if set); all these handlers have severity level set to
     `logging.DEBUG`.
 
-    Note on external logging config (`FRACTAL_LOG_CONFIG_FILE`):
+    Note on external logging config (`LOG_CONFIG_FILE`):
     When an external config is loaded (`_CONFIG_LOADED` is `True`),
     the `StreamHandler` setup is always skipped (the external config owns the
     logging hierarchy). However, if `log_file_path` is provided, the
@@ -120,7 +120,7 @@ def set_logger(
         # the logger was not yet available at the time of the failure.
         if _state._CONFIG_ERROR is not None:
             logger.warning(
-                f"FRACTAL_LOG_CONFIG_FILE was set but failed to load "
+                f"LOG_CONFIG_FILE was set but failed to load "
                 f"({_state._CONFIG_ERROR}). Falling back to built-in logging."
             )
 
