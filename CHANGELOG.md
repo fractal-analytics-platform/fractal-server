@@ -7,8 +7,11 @@
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
     * Include `is_core` in import-flexibility response (\#3401).
+* CLI:
+    * Introduce `fractalctl sync-core-tasks` command (\#3404).
 * Internal:
     * Minor typing-related updates (\#3397).
+    * Refactor CLI from single module to subpackage (\#3403).
 
 # 2.24.0
 
