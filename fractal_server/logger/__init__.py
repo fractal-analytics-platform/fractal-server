@@ -15,7 +15,6 @@ This module provides logging utilities
 
 import logging
 import logging.config
-import sys
 from pathlib import Path
 
 import yaml
@@ -116,14 +115,6 @@ def set_logger(
         stream_handler.setFormatter(LOG_FORMATTER)
         logger.addHandler(stream_handler)
 
-        # Emit once, on first setup: we could not log this earlier because
-        # the logger was not yet available at the time of the failure.
-        if _state._CONFIG_ERROR is not None:
-            logger.warning(
-                f"LOG_CONFIG_FILE was set but failed to load "
-                f"({_state._CONFIG_ERROR}). Falling back to built-in logging."
-            )
-
     if log_file_path is not None:
         file_handler = logging.FileHandler(log_file_path, mode="a")
         file_handler.setLevel(logging.DEBUG)
@@ -216,10 +207,7 @@ def _load_logging_config(config_env: str) -> None:
     """
     Load logging configuration from a YAML file path.
 
-    On success sets `_CONFIG_LOADED = True`. On failure sets
-    `_CONFIG_ERROR` to the error message and prints a warning
-    to stderr (because the application logger is not yet available at this
-    point).
+    On success sets `_CONFIG_LOADED = True`.
     """
     if _state._CONFIG_LOADED:
         return
@@ -231,10 +219,8 @@ def _load_logging_config(config_env: str) -> None:
         logging.config.dictConfig(config)
         _state._CONFIG_LOADED = True
     except Exception as _e:
-        _state._CONFIG_ERROR = str(_e)
-        print(
+        logging.error(
             f"[fractal-server] WARNING: failed to load "
             f"LOG_CONFIG_FILE={config_env!r}: {_e}. "
             f"Falling back to built-in logging.",
-            file=sys.stderr,
         )

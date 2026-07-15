@@ -10,14 +10,12 @@ from fractal_server.logger import set_logger
 from fractal_server.main import _load_logging_config
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 def _reset_logger_flags():
     """Restore module-level flags after every test in this file."""
     original_loaded = _logger_module._CONFIG_LOADED
-    original_error = _logger_module._CONFIG_ERROR
     yield
     _logger_module._CONFIG_LOADED = original_loaded
-    _logger_module._CONFIG_ERROR = original_error
 
 
 def test_set_logger_is_noop_when_external_config_loaded():
@@ -38,31 +36,6 @@ def test_set_logger_is_noop_when_external_config_loaded():
         assert result is pre_logger
         assert result.propagate is True
         assert result.handlers == handlers_before
-    finally:
-        logging.getLogger(logger_name).handlers.clear()
-
-
-def test_set_logger_warns_when_external_config_error():
-    """When _CONFIG_ERROR is set, set_logger() emits a WARNING on
-    first handler attachment."""
-    logger_name = "_test_external_error_warning"
-
-    _logger_module._CONFIG_LOADED = False
-    _logger_module._CONFIG_ERROR = "simulated config error"
-
-    records = []
-
-    class _ListHandler(logging.Handler):
-        def emit(self, record):
-            records.append(record)
-
-    logging.getLogger(logger_name).addHandler(_ListHandler())
-    try:
-        set_logger(logger_name)
-
-        warning_records = [r for r in records if r.levelno == logging.WARNING]
-        assert len(warning_records) >= 1
-        assert "simulated config error" in warning_records[0].getMessage()
     finally:
         logging.getLogger(logger_name).handlers.clear()
 
@@ -109,12 +82,10 @@ def test_load_logging_config_success(tmp_path):
     config_file.write_text(yaml.dump(config))
 
     _logger_module._CONFIG_LOADED = False
-    _logger_module._CONFIG_ERROR = None
 
     _load_logging_config(str(config_file))
 
     assert _logger_module._CONFIG_LOADED is True
-    assert _logger_module._CONFIG_ERROR is None
 
 
 def test_load_logging_config_is_noop_when_already_loaded(tmp_path):
@@ -124,55 +95,44 @@ def test_load_logging_config_is_noop_when_already_loaded(tmp_path):
     config_file.write_text("this is not valid yaml: [")
 
     _logger_module._CONFIG_LOADED = True
-    _logger_module._CONFIG_ERROR = None
 
     _load_logging_config(str(config_file))
 
     assert _logger_module._CONFIG_LOADED is True
-    assert _logger_module._CONFIG_ERROR is None
 
 
-def test_load_logging_config_file_not_found(capsys):
-    """On a missing file, _CONFIG_ERROR is set and stderr
+def test_load_logging_config_file_not_found(caplog):
+    """On a missing file, a log is printed.
     carries a warning."""
     _logger_module._CONFIG_LOADED = False
-    _logger_module._CONFIG_ERROR = None
-
     _load_logging_config("/nonexistent/path/logging.yaml")
-
     assert _logger_module._CONFIG_LOADED is False
-    assert _logger_module._CONFIG_ERROR is not None
-    assert "[fractal-server] WARNING" in capsys.readouterr().err
+    assert "[fractal-server] WARNING" in caplog.text
 
 
-def test_load_logging_config_invalid_yaml(tmp_path, capsys):
-    """On invalid YAML syntax, _CONFIG_ERROR is set and stderr
-    carries a warning."""
+def test_load_logging_config_invalid_yaml(tmp_path, caplog):
+    """On invalid YAML syntax, logs carry a warning."""
     config_file = tmp_path / "logging.yaml"
     config_file.write_text("key: [\n  unclosed bracket\n")
 
     _logger_module._CONFIG_LOADED = False
-    _logger_module._CONFIG_ERROR = None
 
     _load_logging_config(str(config_file))
 
     assert _logger_module._CONFIG_LOADED is False
-    assert _logger_module._CONFIG_ERROR is not None
-    assert "[fractal-server] WARNING" in capsys.readouterr().err
+    assert "[fractal-server] WARNING" in caplog.text
 
 
-def test_load_logging_config_invalid_dictconfig(tmp_path, capsys):
+def test_load_logging_config_invalid_dictconfig(tmp_path, caplog):
     """On valid YAML but a dictConfig missing the required 'version' key,
-    _CONFIG_ERROR is set and stderr carries a warning."""
+    logs carry a warning."""
     config = {"formatters": {"simple": {"format": "%(message)s"}}}
     config_file = tmp_path / "logging.yaml"
     config_file.write_text(yaml.dump(config))
 
     _logger_module._CONFIG_LOADED = False
-    _logger_module._CONFIG_ERROR = None
 
     _load_logging_config(str(config_file))
 
     assert _logger_module._CONFIG_LOADED is False
-    assert _logger_module._CONFIG_ERROR is not None
-    assert "[fractal-server] WARNING" in capsys.readouterr().err
+    assert "[fractal-server] WARNING" in caplog.text
