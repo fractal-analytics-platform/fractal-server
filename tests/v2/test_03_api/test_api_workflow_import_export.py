@@ -838,6 +838,7 @@ async def test_import_multiple_task_groups_same_version(
                 active=False,
                 timestamp_created=get_timestamp(),
                 timestamp_last_used=get_timestamp(),
+                in_use=False,
             )
 
         monkeypatch.setattr(

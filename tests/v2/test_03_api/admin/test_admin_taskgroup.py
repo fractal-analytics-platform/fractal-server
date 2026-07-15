@@ -35,7 +35,6 @@ async def test_task_group_admin(
         )
         res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
         task_group_1 = res.json()
-
         assert "resource_id" not in task_group_1
 
         task2 = await task_factory(
@@ -53,6 +52,14 @@ async def test_task_group_admin(
         assert "resource_id" not in task_group_2
         assert "user_id" not in task_group_2
         assert "user_email" in task_group_2
+        assert task_group_2["in_use"] is False
+
+        project = await project_factory(user1)
+        workflow = await workflow_factory(project_id=project.id)
+        await workflowtask_factory(workflow_id=workflow.id, task_id=task2.id)
+
+        res = await client.get(f"/api/v2/task-group/{task2.taskgroupv2_id}/")
+        assert res.json()["in_use"] is True
 
     async with MockCurrentUser() as user2:
         task3 = await task_factory(user_id=user2.id, name="bbbbbbbb")
@@ -182,6 +189,17 @@ async def test_task_group_admin(
             f"{PREFIX}/task-group/?user_group_id=1&private=true"
         )
         assert res.status_code == 422
+
+        # Filter using `in_use`
+        res = await client.get(f"{PREFIX}/task-group/?in_use=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["id"] == task_group_2["id"]
+        res = await client.get(f"{PREFIX}/task-group/?in_use=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["id"] == task_group_1["id"]
+        assert res.json()["items"][1]["id"] == task_group_3["id"]
 
         # PATCH /{id}/
         res = await client.patch(

@@ -98,6 +98,7 @@ with next(get_sync_db()) as db:
             **task_group.model_dump(),
             task_list=task_list,
             user_email="fractal@example.org",
+            in_use=False,
         )
         print(f"TaskGroup {task_group.id} validated")
 
