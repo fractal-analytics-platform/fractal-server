@@ -9,6 +9,8 @@
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
     * Allow filtering by `in_use` on admin's TaskGroup endpoint (\#3399).
+* Logging:
+    * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored (\#3343).
 * CLI:
     * Introduce `fractalctl sync-core-tasks` command (\#3404).
 * Internal:
@@ -29,6 +31,7 @@
     * Bump `pydantic-settings` to 2.14.2 (\#3380).
     * Bump `uvicorn`, `psycopg`, `pytest-asyncio`, `zensical` (\#3392).
     * Drop `pytest-subprocess` (\#3392).
+
 
 # 2.23.7
 
