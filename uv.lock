@@ -575,6 +575,7 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pyyaml" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "sqlmodel" },
     { name = "starlette" },
@@ -596,7 +597,6 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-docker" },
     { name = "pytest-env" },
-    { name = "pyyaml" },
 ]
 docs = [
     { name = "griffe-pydantic" },
@@ -616,6 +616,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.0,<4.0.0" },
     { name = "pydantic", specifier = ">=2.13.0,<2.14.0" },
     { name = "pydantic-settings", specifier = "==2.14.2" },
+    { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.23,<2.1" },
     { name = "sqlmodel", specifier = "==0.0.38" },
     { name = "starlette", specifier = ">=1.3.1" },
@@ -637,7 +638,6 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=1.4.0,<1.5.0" },
     { name = "pytest-docker", specifier = ">=3.2.0,<3.3.0" },
     { name = "pytest-env", specifier = ">=1.1.5,<1.2.0" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
 ]
 docs = [
     { name = "griffe-pydantic", specifier = ">=1.3.1,<1.4.0" },
