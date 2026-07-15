@@ -190,14 +190,13 @@ def serialize_task_group(
     return serialized_task_group
 
 
-async def add_user_email_to_task_group(
+async def get_task_group_owner_email(
     *,
     task_group: TaskGroupV2,
     db: AsyncSession,
-) -> dict[str, Any]:
+) -> str:
     """
-    Enrich a TaskGroupV2 instance with the associated user's email and
-    return it as a serialized dictionary.
+    Find and return the user's email associated to a TaskGroupV2 instance.
     """
     res = await db.execute(
         select(UserOAuth.email)
@@ -205,7 +204,4 @@ async def add_user_email_to_task_group(
         .where(TaskGroupV2.id == task_group.id)
     )
     user_email = res.scalar_one()
-    return serialize_task_group(
-        task_group=task_group,
-        user_email=user_email,
-    )
+    return user_email
