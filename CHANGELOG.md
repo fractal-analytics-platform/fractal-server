@@ -8,6 +8,7 @@
     * Add `in_use` to `TaskGroupRead` (\#3399).
 * API:
     * Check if job's status is "submitted" before stopping it (\#3395).
+    * Include `is_core` in import-flexibility response (\#3401).
     * Allow filtering by `in_use` on admin's TaskGroup endpoint (\#3399).
 * Logging:
     * Add `LOG_CONFIG_FILE` environment variable to load an external YAML `logging.config.dictConfig` configuration file; when set, it is used exclusively and all other logging parameters are ignored (\#3343, \#3409).

@@ -207,13 +207,21 @@ async def test_import_flexibility(
 ):
     async with MockCurrentUser() as user:
         # Collect the tasks
-        for version in ["1.0.0", "0.1.0"]:
-            await task_factory(
-                user_id=user.id,
-                name="task_name",
-                version=version,
-                task_group_kwargs=dict(pkg_name="package_name"),
-            )
+        args = dict(
+            user_id=user.id,
+            name="task_name",
+            task_group_kwargs=dict(pkg_name="package_name"),
+        )
+        await task_factory(**args, version="0.0.1")
+        task1 = await task_factory(**args, version="1.0.0", is_core=True)
+        await task_factory(
+            version="0.0.2",
+            is_core=True,
+            user_id=user.id,
+            name="task_name",
+            task_group_kwargs=dict(pkg_name="package_name", active=False),
+        )
+        await task_factory(**args, version="0.2.14")
 
         prj = await project_factory(user)
         res = await client.post(
@@ -272,7 +280,7 @@ async def test_import_flexibility(
                     "pkg_name": "package_name",
                     "version": "1.0.0",
                     "task_name": "task_name",
-                    "task_id": 1,
+                    "task_id": task1.id,
                 },
                 # Wrong name
                 {
@@ -301,11 +309,25 @@ async def test_import_flexibility(
                             "version": "1.0.0",
                             "active": True,
                             "older_than_target": True,
+                            "is_core": True,
                         },
                         {
-                            "version": "0.1.0",
+                            "version": "0.2.14",
                             "active": True,
                             "older_than_target": True,
+                            "is_core": False,
+                        },
+                        {
+                            "version": "0.0.2",
+                            "active": False,
+                            "older_than_target": True,
+                            "is_core": True,
+                        },
+                        {
+                            "version": "0.0.1",
+                            "active": True,
+                            "older_than_target": True,
+                            "is_core": False,
                         },
                     ],
                 },
@@ -320,11 +342,25 @@ async def test_import_flexibility(
                             "version": "1.0.0",
                             "active": True,
                             "older_than_target": False,
+                            "is_core": True,
                         },
                         {
-                            "version": "0.1.0",
+                            "version": "0.2.14",
                             "active": True,
                             "older_than_target": False,
+                            "is_core": False,
+                        },
+                        {
+                            "version": "0.0.2",
+                            "active": False,
+                            "older_than_target": False,
+                            "is_core": True,
+                        },
+                        {
+                            "version": "0.0.1",
+                            "active": True,
+                            "older_than_target": False,
+                            "is_core": False,
                         },
                     ],
                 },
@@ -332,48 +368,73 @@ async def test_import_flexibility(
         }
 
 
-async def test_unit_get_task_id_or_available_tasks():
+async def test_unit_get_task_id_or_available_tasks(
+    db,
+    local_resource_profile_db,
+    MockCurrentUser,
+    user_group_factory,
+    default_user_group,
+):
+    resource, profile = local_resource_profile_db
+    async with MockCurrentUser() as user:
+        user_id = user.id
+
     from fractal_server.app.routes.api.v2.workflow_import import (
         _get_task_id_or_available_tasks,
     )
 
-    task1 = TaskV2(id=1, name="task")
-    task2 = TaskV2(id=2, name="task")
-    task3 = TaskV2(id=3, name="task")
+    group1 = await user_group_factory("group1", user_id, db=db)
+    group2 = await user_group_factory("group2", user_id, db=db)
+
+    task1 = TaskV2(name="task", type="parallel", version="1.0.0")
+    task2 = TaskV2(name="task", type="parallel", version="2.0.0")
+    task3 = TaskV2(
+        name="task",
+        type="parallel",
+        version="99.99.99",
+    )
     tasks = [task1, task2, task3]
 
     task_group1 = TaskGroupV2(
-        id=1,
         task_list=[task1],
-        user_id=1,
-        user_group_id=1,
+        user_id=user_id,
+        user_group_id=group1.id,
         pkg_name="pkg",
         version="1.0.0",
+        resource_id=resource.id,
+        origin="pypi",
     )
     task_group2 = TaskGroupV2(
-        id=2,
         task_list=[task2],
-        user_id=1,
-        user_group_id=2,
+        user_id=user_id,
+        user_group_id=group2.id,
         pkg_name="pkg",
         version="2.0.0",
+        resource_id=resource.id,
+        origin="pypi",
     )
     task_group3 = TaskGroupV2(
-        id=3,
         task_list=[task3],
-        user_id=1,
-        user_group_id=2,
+        user_id=user_id,
+        user_group_id=group2.id,
         pkg_name="pkg",
         version="99.99.99",
+        resource_id=resource.id,
+        origin="pypi",
     )
     task_groups = [task_group1, task_group2, task_group3]
+
+    db.add_all(task_groups)
+    await db.commit()
+    for item in [task1, task2, task3, task_group1, task_group2, task_group3]:
+        await db.refresh(item)
 
     # Test with matching version
     task_id = await _get_task_id_or_available_tasks(
         task_import=TaskImport(name="task", pkg_name="pkg", version="1.0.0"),
-        user_id=1,
+        user_id=user_id,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     )
     assert task_id == (True, task1.id)
@@ -387,7 +448,7 @@ async def test_unit_get_task_id_or_available_tasks():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     )
     res == [
@@ -408,7 +469,7 @@ async def test_unit_get_task_id_or_available_tasks():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     ) == (False, [])
 
@@ -420,7 +481,7 @@ async def test_unit_get_task_id_or_available_tasks():
         ),
         user_id=1,
         task_groups_list=task_groups,
-        default_group_id=1,
+        default_group_id=default_user_group.id,
         db=None,
     ) == (False, [])
 
