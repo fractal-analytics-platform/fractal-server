@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.24.1 (unreleased)
+# 2.24.1
 
 * Runner:
     * Avoid printing `stderr` of `subprocess.run` (\#3396).
