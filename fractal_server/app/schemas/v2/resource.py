@@ -184,7 +184,7 @@ class ValidResourceSlurmSSH(ValidResourceBase):
 
     type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
-    port_internal: int = SSH_DEFAULT_PORT
+    port_internal: int | None = SSH_DEFAULT_PORT
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
 
