@@ -1,4 +1,4 @@
-"""Add resource.port
+"""Add resource._port
 
 Revision ID: 56bd7c442772
 Revises: d4027db95431
@@ -18,9 +18,9 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table("resource", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("port", sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column("_port", sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
     with op.batch_alter_table("resource", schema=None) as batch_op:
-        batch_op.drop_column("port")
+        batch_op.drop_column("_port")

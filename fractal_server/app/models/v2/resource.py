@@ -10,6 +10,7 @@ from sqlmodel import CheckConstraint
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
+from fractal_server.ssh._fabric import SSH_DEFAULT_PORT
 from fractal_server.utils import get_timestamp
 
 
@@ -150,3 +151,16 @@ class Resource(SQLModel, table=True):
             name="jobs_slurm_python_worker_set",
         ),
     )
+
+    @property
+    def port_or_default(self: Self) -> int:
+        """
+        Return a valid port integer.
+
+        The reason for re-including the default port here is PR #3415 does not
+        include a data migration, and therefore existing `Resource` rows may
+        still have `port=null`. Note that setting a `server_default` would not
+        be an option either, because resources of the `slurm_sudo` type should
+        still have `port=null`.
+        """
+        return self.port or SSH_DEFAULT_PORT

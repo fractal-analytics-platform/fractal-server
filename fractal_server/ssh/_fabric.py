@@ -23,6 +23,7 @@ from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
 SSH_MONITORING_LOGGER_NAME = "ssh-log"
+SSH_DEFAULT_PORT = 22
 
 
 class FractalSSHTimeoutError(RuntimeError):
@@ -45,7 +46,7 @@ class SSHConfig(BaseModel):
     host: str
     user: str
     key_path: str
-    port: int = 22
+    port: int = SSH_DEFAULT_PORT
 
 
 def retry_if_socket_error(func):
@@ -664,7 +665,7 @@ class FractalSSHList:
         host: str,
         user: str,
         key_path: str,
-        port: int = 22,
+        port: int = SSH_DEFAULT_PORT,
     ) -> FractalSSH:
         """
         Get the `FractalSSH` for the current credentials, or create one.
