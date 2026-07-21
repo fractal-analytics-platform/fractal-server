@@ -158,10 +158,15 @@ async def submit_job(
 
     # User appropriate FractalSSH object
     if resource.type == ResourceType.SLURM_SSH:
+        # NOTE: The reason for re-including the port=22 default here is that
+        # PR 3415 does not include a data migration, and therefore existing
+        # Resource entries will have `port=null`. Setting a `server_default`
+        # would not work either, because `slurm_sudo` resources should still
+        # have `port=null`.
         ssh_config = dict(
             user=profile.username,
             host=resource.host,
-            port=(resource.port or 22),  # FIXME
+            port=(resource.port or 22),
             key_path=profile.ssh_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
