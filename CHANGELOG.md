@@ -3,7 +3,7 @@
 # 2.24.2 (unreleased)
 
 * SSH:
-    * Introduce configurable value for the SSH port (\#3415).
+    * Introduce configurable value (`Resource.port_internal`) and default (`SSH_DEFAULT_PORT`) for the SSH-connection port (\#3415).
 * Testing:
     * Add `network: host` to build options in docker compose (\#3412).
 
