@@ -18,9 +18,11 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table("resource", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("_port", sa.Integer(), nullable=True))
+        batch_op.add_column(
+            sa.Column("internal_port", sa.Integer(), nullable=True)
+        )
 
 
 def downgrade() -> None:
     with op.batch_alter_table("resource", schema=None) as batch_op:
-        batch_op.drop_column("_port")
+        batch_op.drop_column("internal_port")

@@ -45,7 +45,7 @@ class Resource(SQLModel, table=True):
     Address for ssh connections, when `type="slurm_ssh"`.
     """
 
-    _port: int | None = None
+    internal_port: int | None = None
     """
     Port for ssh connections, when `type="slurm_ssh"`.
     """
@@ -163,4 +163,4 @@ class Resource(SQLModel, table=True):
         be an option either, because resources of the `slurm_sudo` type should
         still have `port=null`.
         """
-        return self._port or SSH_DEFAULT_PORT
+        return self.internal_port or SSH_DEFAULT_PORT
