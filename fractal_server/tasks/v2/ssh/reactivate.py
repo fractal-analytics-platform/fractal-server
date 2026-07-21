@@ -73,6 +73,7 @@ def reactivate_ssh(
             with SingleUseFractalSSH(
                 ssh_config=SSHConfig(
                     host=resource.host,
+                    port=resource.port,
                     user=profile.username,
                     key_path=profile.ssh_key_path,
                 ),

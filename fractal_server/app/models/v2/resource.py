@@ -44,6 +44,11 @@ class Resource(SQLModel, table=True):
     Address for ssh connections, when `type="slurm_ssh"`.
     """
 
+    port: int | None = None
+    """
+    Port for ssh connections, when `type="slurm_ssh"`.
+    """
+
     prevent_new_submissions: bool = Field(
         sa_column=Column(
             BOOLEAN,
