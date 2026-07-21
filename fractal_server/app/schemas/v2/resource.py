@@ -177,7 +177,7 @@ class ValidResourceSlurmSSH(ValidResourceBase):
         host:
             Hostname or IP address of remote SLURM cluster.
         port:
-            Port for SSH connection to remote SLURM cluster.
+            Port for SSH connection to remote SLURM cluster (22 if unset).
     """
 
     type: Literal[ResourceType.SLURM_SSH]
