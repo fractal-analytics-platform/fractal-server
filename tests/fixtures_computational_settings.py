@@ -150,7 +150,7 @@ def slurm_ssh_resource_profile_objects(
         name="SLURM cluster A",
         type=ResourceType.SLURM_SSH,
         host=slurmlogin_ip,
-        port=SSH_DEFAULT_PORT,
+        port_internal=SSH_DEFAULT_PORT,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         jobs_slurm_python_worker=(
@@ -202,7 +202,7 @@ def slurm_ssh_resource_profile_fake_objects(
         name="SLURM cluster A",
         type=ResourceType.SLURM_SSH,
         host="localhost",
-        port=SSH_DEFAULT_PORT,
+        port_internal=SSH_DEFAULT_PORT,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         jobs_slurm_python_worker=(
