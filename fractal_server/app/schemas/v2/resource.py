@@ -177,14 +177,14 @@ class ValidResourceSlurmSSH(ValidResourceBase):
             Python worker to be used in SLURM jobs.
         host:
             Hostname or IP address of remote SLURM cluster.
-        port:
+        _port:
             Port for SSH connection to remote SLURM cluster (or a default,
             if unset).
     """
 
     type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
-    port: int = SSH_DEFAULT_PORT
+    _port: int = SSH_DEFAULT_PORT
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
 
