@@ -47,7 +47,10 @@ class Resource(SQLModel, table=True):
 
     internal_port: int | None = None
     """
-    Port for ssh connections, when `type="slurm_ssh"`.
+    Port for ssh connections, relevant when `type="slurm_ssh"`.
+
+    Note that if this is `None` then `SSH_DEFAULT_PORT` will be used
+    (see `port_or_default` property below).
     """
 
     prevent_new_submissions: bool = Field(
