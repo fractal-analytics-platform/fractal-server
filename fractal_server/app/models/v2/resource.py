@@ -157,8 +157,8 @@ class Resource(SQLModel, table=True):
         """
         Return a valid port integer.
 
-        The reason for re-including the default port here is PR #3415 does not
-        include a data migration, and therefore existing `Resource` rows may
+        The reason for re-including the default port here is that PR #3415 does
+        not include a data migration, and therefore existing `Resource` rows may
         still have `port=null`. Note that setting a `server_default` would not
         be an option either, because resources of the `slurm_sudo` type should
         still have `port=null`.
