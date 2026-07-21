@@ -47,10 +47,12 @@ class Resource(SQLModel, table=True):
 
     port_internal: int | None = None
     """
-    Port for ssh connections, relevant when `type="slurm_ssh"`.
+    Port for ssh connections.
 
     This is an internal attribute, not to be consumed directly (because it could
-     be null). You should rather use the `Resource.port_or_default` property.
+    be null, even for resources of type `slurm_ssh`). Consumers should always
+    access the `Resource.port_or_default` property, which is either identical to
+    `port_internal` or to a default.
     """
 
     prevent_new_submissions: bool = Field(
