@@ -1,7 +1,9 @@
 import pytest
+from sqlalchemy.orm import Session
 
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
+from tests.fixtures_computational_settings import _add_resource_profile_to_db
 
 PREFIX = "/api/v2"
 
@@ -51,18 +53,29 @@ async def test_run_squeue_ssh_success(
 
 @pytest.mark.ssh
 @pytest.mark.container
-async def test_run_squeue_ssh_connection_error(
-    client, slurm_ssh_resource_profile_db, MockCurrentUser
+async def test_run_squeue_error(
+    client,
+    fractal_ssh: FractalSSH,
+    slurm_ssh_resource_profile_db,
+    MockCurrentUser,
+    db_sync: Session,
 ):
-    _, profile = slurm_ssh_resource_profile_db[:]
+    resource, profile = slurm_ssh_resource_profile_db[:]
+    resource.host = "invalid.example.org"
+
+    _add_resource_profile_to_db(
+        res=resource,
+        prof=profile,
+        db_sync=db_sync,
+    )
 
     async with MockCurrentUser(
         is_verified=True,
         profile_id=profile.id,
     ) as _:
         res = await client.get(f"{PREFIX}/job/squeue/")
-        assert res.status_code == 503
-        assert res.json()["detail"] == "Cannot establish SSH connection."
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Error executing squeue command."
 
 
 @pytest.mark.container

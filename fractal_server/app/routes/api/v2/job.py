@@ -34,9 +34,8 @@ from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
-from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.syringe import Inject
@@ -56,6 +55,8 @@ async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
 
 
 router = APIRouter()
+
+logger = set_logger(__name__)
 
 
 @router.get("/job/", response_model=list[JobRead])
@@ -254,8 +255,6 @@ async def get_squeue(
     user: UserOAuth = Depends(get_api_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    logger = get_logger()
-
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
     if backend not in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
@@ -281,46 +280,24 @@ async def get_squeue(
         f'"%.18i %.9P %.20j %.14u %.14a %.11T %.12M %.6D %R"'
     )
 
-    if backend == ResourceType.SLURM_SSH:
-        with SingleUseFractalSSH(
-            ssh_config=SSHConfig(
-                host=resource.host,
-                user=profile.username,
-                key_path=profile.ssh_key_path,
-            ),
-            logger_name=logger.name,
-        ) as fractal_ssh:
-            ssh_ok = True
-            try:
-                fractal_ssh.check_connection()
-            except Exception as e:
-                ssh_ok = False
-                logger.error(
-                    f"Cannot establish SSH connection. Original error: {str(e)}"
-                )
-
-            if not ssh_ok:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Cannot establish SSH connection.",
-                )
-
-            try:
+    try:
+        if resource.type == ResourceType.SLURM_SSH:
+            with SingleUseFractalSSH(
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
+                logger_name=logger.name,
+            ) as fractal_ssh:
                 out = fractal_ssh.run_command(cmd=command)
                 return PlainTextResponse(content=out)
-            except FractalSSHCommandError as e:
-                logger.error(f"squeue command failed. Original error: {str(e)}")
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail="squeue command failed.",
-                )
-    else:
-        try:
+        else:
             out = execute_command_sync(command=command)
             return PlainTextResponse(content=out)
-        except Exception as e:
-            logger.error(f"squeue command failed. Original error: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="squeue command failed.",
-            )
+    except Exception as e:
+        logger.error(f"Cannot execute squeue command. Original error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Error executing squeue command.",
+        )
