@@ -17,6 +17,11 @@ from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 
 
+@pytest.fixture(scope="session")
+def ssh_port() -> int:
+    return 22
+
+
 @pytest.fixture(scope=containers_scope)
 def docker_cleanup() -> str:
     """
@@ -222,6 +227,7 @@ def fractal_ssh_list(
     slurmlogin_ip,
     ssh_alive,
     ssh_keys,
+    ssh_port: int,
 ) -> Generator[FractalSSHList, Any, None]:
     """
     Return a `FractalSSHList` object which already contains a valid
@@ -230,6 +236,7 @@ def fractal_ssh_list(
     collection = FractalSSHList()
     fractal_ssh_obj: FractalSSH = collection.get(
         host=slurmlogin_ip,
+        port=ssh_port,
         user="fractal",
         key_path=ssh_keys["private"],
     )
@@ -250,9 +257,11 @@ def ssh_config_dict(
     slurmlogin_ip: str,
     ssh_keys: dict[str, str],
     ssh_username: str,
+    ssh_port: int,
 ) -> dict[str, str | dict[str, str]]:
     return dict(
         host=slurmlogin_ip,
+        port=ssh_port,
         user=ssh_username,
         key_path=ssh_keys["private"],
     )

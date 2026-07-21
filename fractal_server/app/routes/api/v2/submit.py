@@ -161,6 +161,7 @@ async def submit_job(
         ssh_config = dict(
             user=profile.username,
             host=resource.host,
+            port=(resource.port or 22),  # FIXME
             key_path=profile.ssh_key_path,
         )
         fractal_ssh_list = request.app.state.fractal_ssh_list
