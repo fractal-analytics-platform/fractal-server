@@ -14,6 +14,7 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.ssh._fabric import SSH_DEFAULT_PORT
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
@@ -177,12 +178,13 @@ class ValidResourceSlurmSSH(ValidResourceBase):
         host:
             Hostname or IP address of remote SLURM cluster.
         port:
-            Port for SSH connection to remote SLURM cluster (22 if unset).
+            Port for SSH connection to remote SLURM cluster (or a default,
+            if unset).
     """
 
     type: Literal[ResourceType.SLURM_SSH]
     host: NonEmptyStr
-    port: int = 22
+    port: int = SSH_DEFAULT_PORT
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
 
