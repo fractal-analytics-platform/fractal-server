@@ -2,6 +2,8 @@
 
 # 2.24.2 (unreleased)
 
+* SSH:
+    * Introduce configurable value for the SSH port (\#3415).
 * Testing:
     * Add `network: host` to build options in docker compose (\#3412).
 
