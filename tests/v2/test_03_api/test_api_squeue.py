@@ -36,7 +36,9 @@ async def test_run_squeue_ssh_success(
     fractal_ssh: FractalSSH,
     slurm_ssh_resource_profile_db,
     MockCurrentUser,
+    override_settings_factory,
 ):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     fractal_ssh.default_lock_timeout = 1.0
     resource, profile = slurm_ssh_resource_profile_db[:]
 
@@ -59,7 +61,9 @@ async def test_run_squeue_error(
     slurm_ssh_resource_profile_db,
     MockCurrentUser,
     db_sync: Session,
+    override_settings_factory,
 ):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
     resource, profile = slurm_ssh_resource_profile_db[:]
     resource.host = "invalid.example.org"
 
