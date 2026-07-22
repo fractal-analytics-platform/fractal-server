@@ -62,7 +62,7 @@ async def add_history_image_cache(
 
     hu = HistoryUnit(
         status=status,
-        zarr_url=zarr_urls,
+        zarr_urls=zarr_urls,
         history_run_id=hr.id,
         logfile="/fake/logs",
     )

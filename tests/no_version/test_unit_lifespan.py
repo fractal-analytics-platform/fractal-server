@@ -57,7 +57,7 @@ async def test_app_with_lifespan(
         # verify shutdown
         assert len(app.state.jobs) == 0
 
-        task = await task_factory(user_id=user.id, name="task", command="echo")
+        task = await task_factory(user_id=user.id, name="task")
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         dataset1 = await dataset_factory(project_id=project.id, name="ds-1")
