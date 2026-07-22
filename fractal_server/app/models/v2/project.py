@@ -18,7 +18,7 @@ class ProjectV2(Base):
     __tablename__ = "projectv2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str]
 
     is_starred: Mapped[bool] = mapped_column(
         BOOLEAN,

@@ -98,7 +98,7 @@ class UserOAuth(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column()
+    hashed_password: Mapped[str]
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)

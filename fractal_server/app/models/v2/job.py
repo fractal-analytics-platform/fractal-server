@@ -46,8 +46,8 @@ class JobV2(Base):
     worker_init: Mapped[str | None] = mapped_column(default=lambda: None)
     working_dir: Mapped[str | None] = mapped_column(default=lambda: None)
     working_dir_user: Mapped[str | None] = mapped_column(default=lambda: None)
-    first_task_index: Mapped[int] = mapped_column()
-    last_task_index: Mapped[int] = mapped_column()
+    first_task_index: Mapped[int]
+    last_task_index: Mapped[int]
 
     start_timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp

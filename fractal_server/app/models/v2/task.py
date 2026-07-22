@@ -41,9 +41,9 @@ class TaskV2(Base):
     __tablename__ = "taskv2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str]
 
-    type: Mapped[str] = mapped_column()
+    type: Mapped[str]
     command_non_parallel: Mapped[str | None] = mapped_column(
         default=lambda: None
     )
@@ -56,7 +56,7 @@ class TaskV2(Base):
         JSON, server_default="{}", default={}, nullable=False
     )
 
-    version: Mapped[str] = mapped_column()
+    version: Mapped[str]
     args_schema_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, default=lambda: None
     )

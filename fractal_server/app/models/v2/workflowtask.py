@@ -39,7 +39,7 @@ class WorkflowTaskV2(Base):
     )
 
     # Task
-    task_type: Mapped[str] = mapped_column()
+    task_type: Mapped[str]
     task_id: Mapped[int] = mapped_column(ForeignKey("taskv2.id"))
     task: Mapped["TaskV2"] = relationship(lazy="selectin")
 

@@ -22,7 +22,7 @@ class Resource(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    type: Mapped[str] = mapped_column()
+    type: Mapped[str]
     """
     One of `local`, `slurm_sudo` or `slurm_ssh` - matching with
     `settings.FRACTAL_RUNNER_BACKEND`.
@@ -55,7 +55,7 @@ class Resource(Base):
     ongoing jobs as soon as the current task is complete.
     """
 
-    jobs_local_dir: Mapped[str] = mapped_column()
+    jobs_local_dir: Mapped[str]
     """
     Base local folder for job subfolders (containing artifacts and logs).
     """
@@ -76,14 +76,14 @@ class Resource(Base):
     `fractal-server` worker from within the SLURM jobs.
     """
 
-    jobs_poll_interval: Mapped[int] = mapped_column()
+    jobs_poll_interval: Mapped[int]
     """
     On SLURM resources: the interval to wait before new `squeue` calls.
     On local resources: ignored.
     """
 
     # task_settings
-    tasks_local_dir: Mapped[str] = mapped_column()
+    tasks_local_dir: Mapped[str]
     """
     Base local folder for task-package subfolders.
     """

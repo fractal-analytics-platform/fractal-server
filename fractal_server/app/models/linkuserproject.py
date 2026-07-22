@@ -22,9 +22,9 @@ class LinkUserProjectV2(Base):
         ForeignKey("user_oauth.id"), primary_key=True
     )
 
-    is_owner: Mapped[bool] = mapped_column()
-    is_verified: Mapped[bool] = mapped_column()
-    permissions: Mapped[str] = mapped_column()
+    is_owner: Mapped[bool]
+    is_verified: Mapped[bool]
+    permissions: Mapped[str]
 
     __table_args__ = (
         Index(

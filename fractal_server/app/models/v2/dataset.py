@@ -23,7 +23,7 @@ class DatasetV2(Base):
     __tablename__ = "datasetv2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str]
 
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projectv2.id", ondelete="CASCADE")
@@ -39,7 +39,7 @@ class DatasetV2(Base):
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
 
-    zarr_dir: Mapped[str] = mapped_column()
+    zarr_dir: Mapped[str]
     images: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, server_default="[]", nullable=False
     )

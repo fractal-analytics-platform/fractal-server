@@ -52,9 +52,9 @@ class TaskGroupV2(Base):
         ForeignKey("resource.id", ondelete="RESTRICT")
     )
 
-    origin: Mapped[str] = mapped_column()
-    pkg_name: Mapped[str] = mapped_column()
-    version: Mapped[str] = mapped_column()
+    origin: Mapped[str]
+    pkg_name: Mapped[str]
+    version: Mapped[str]
     python_version: Mapped[str | None] = mapped_column(default=lambda: None)
     pixi_version: Mapped[str | None] = mapped_column(default=lambda: None)
     path: Mapped[str | None] = mapped_column(default=lambda: None)
@@ -151,10 +151,10 @@ class TaskGroupActivityV2(Base):
     timestamp_started: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    pkg_name: Mapped[str] = mapped_column()
-    version: Mapped[str] = mapped_column()
-    status: Mapped[str] = mapped_column()
-    action: Mapped[str] = mapped_column()
+    pkg_name: Mapped[str]
+    version: Mapped[str]
+    status: Mapped[str]
+    action: Mapped[str]
     log: Mapped[str | None] = mapped_column(default=lambda: None)
     timestamp_ended: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), default=lambda: None

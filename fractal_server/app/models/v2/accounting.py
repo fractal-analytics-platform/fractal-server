@@ -25,8 +25,8 @@ class AccountingRecord(Base):
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    num_tasks: Mapped[int] = mapped_column()
-    num_new_images: Mapped[int] = mapped_column()
+    num_tasks: Mapped[int]
+    num_new_images: Mapped[int]
 
 
 class AccountingRecordSlurm(Base):

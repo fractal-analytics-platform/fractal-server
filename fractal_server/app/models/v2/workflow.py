@@ -19,7 +19,7 @@ class WorkflowV2(Base):
     __tablename__ = "workflowv2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str]
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projectv2.id", ondelete="CASCADE")
     )

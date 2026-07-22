@@ -36,10 +36,10 @@ class WorkflowTemplate(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False
     )
-    name: Mapped[str] = mapped_column()
-    version: Mapped[int] = mapped_column()
+    name: Mapped[str]
+    version: Mapped[int]
 
-    fractal_server_version: Mapped[str] = mapped_column()
+    fractal_server_version: Mapped[str]
     timestamp_created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )

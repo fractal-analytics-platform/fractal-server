@@ -43,8 +43,8 @@ class HistoryRun(Base):
     timestamp_started: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    status: Mapped[str] = mapped_column()
-    num_available_images: Mapped[int] = mapped_column()
+    status: Mapped[str]
+    num_available_images: Mapped[int]
 
 
 class HistoryUnit(Base):
@@ -60,9 +60,9 @@ class HistoryUnit(Base):
         index=True,
     )
 
-    logfile: Mapped[str] = mapped_column()
+    logfile: Mapped[str]
     has_warnings: Mapped[bool] = mapped_column(default=False)
-    status: Mapped[str] = mapped_column()
+    status: Mapped[str]
     zarr_urls: Mapped[list[str]] = mapped_column(
         ARRAY(String),
         nullable=True,

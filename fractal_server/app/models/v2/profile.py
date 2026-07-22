@@ -18,7 +18,7 @@ class Profile(Base):
         ForeignKey("resource.id", ondelete="RESTRICT")
     )
 
-    resource_type: Mapped[str] = mapped_column()
+    resource_type: Mapped[str]
     """
     Type of resource (either `local`, `slurm_sudo` or `slurm_ssh`).
     """
