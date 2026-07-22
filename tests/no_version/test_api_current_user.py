@@ -116,7 +116,7 @@ async def test_patch_current_user(client, MockCurrentUser):
         assert res.status_code == 422
         assert (
             res.json()["detail"][0]["msg"]
-            == "Value error, String contains forbidden characters."
+            == r"String should match pattern '^[a-zA-Z0-9_\-\.]+$'"
         )
 
     async with MockCurrentUser(is_guest=True):
