@@ -7,8 +7,9 @@ Create Date: 2024-09-24 12:01:13.393326
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
+
+from fractal_server.migrations.sqltypes import AutoString
 
 # revision identifiers, used by Alembic.
 revision = "9c5ae74c9b98"
@@ -28,29 +29,17 @@ def upgrade() -> None:
         sa.Column(
             "slurm_accounts", sa.JSON(), server_default="[]", nullable=False
         ),
-        sa.Column(
-            "ssh_host", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "ssh_username", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("ssh_host", AutoString(), nullable=True),
+        sa.Column("ssh_username", AutoString(), nullable=True),
         sa.Column(
             "ssh_private_key_path",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=True,
         ),
-        sa.Column(
-            "ssh_tasks_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "ssh_jobs_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "slurm_user", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "cache_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("ssh_tasks_dir", AutoString(), nullable=True),
+        sa.Column("ssh_jobs_dir", AutoString(), nullable=True),
+        sa.Column("slurm_user", AutoString(), nullable=True),
+        sa.Column("cache_dir", AutoString(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     with op.batch_alter_table("user_oauth", schema=None) as batch_op:

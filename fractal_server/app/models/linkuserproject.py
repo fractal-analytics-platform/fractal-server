@@ -1,23 +1,30 @@
-from sqlmodel import CheckConstraint
-from sqlmodel import Field
-from sqlmodel import Index
-from sqlmodel import SQLModel
-from sqlmodel import column
+from sqlalchemy import CheckConstraint
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import column
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+
+from fractal_server.app.models.base import Base
 
 
-class LinkUserProjectV2(SQLModel, table=True):
+class LinkUserProjectV2(Base):
     """
     Crossing table between User and ProjectV2
     """
 
-    project_id: int = Field(
-        foreign_key="projectv2.id", primary_key=True, ondelete="CASCADE"
-    )
-    user_id: int = Field(foreign_key="user_oauth.id", primary_key=True)
+    __tablename__ = "linkuserprojectv2"
 
-    is_owner: bool
-    is_verified: bool
-    permissions: str
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projectv2.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id"), primary_key=True
+    )
+
+    is_owner: Mapped[bool] = mapped_column()
+    is_verified: Mapped[bool] = mapped_column()
+    permissions: Mapped[str] = mapped_column()
 
     __table_args__ = (
         Index(

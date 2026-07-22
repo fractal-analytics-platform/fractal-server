@@ -7,8 +7,8 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import Field
+from sqlalchemy import delete
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import delete
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db

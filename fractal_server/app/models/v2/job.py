@@ -1,76 +1,69 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import ConfigDict
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import String
-from sqlmodel import Field
-from sqlmodel import Index
-from sqlmodel import SQLModel
-from sqlmodel import text
 
+from fractal_server.app.models.base import Base
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.utils import get_timestamp
 
 
-class JobV2(SQLModel, table=True):
+class JobV2(Base):
     """
     Job table.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    __tablename__ = "jobv2"
 
-    id: int | None = Field(default=None, primary_key=True)
-    project_id: int | None = Field(
-        foreign_key="projectv2.id", default=None, ondelete="SET NULL"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int | None] = mapped_column(
+        ForeignKey("projectv2.id", ondelete="SET NULL"), default=lambda: None
     )
-    workflow_id: int | None = Field(
-        foreign_key="workflowv2.id", default=None, ondelete="SET NULL"
+    workflow_id: Mapped[int | None] = mapped_column(
+        ForeignKey("workflowv2.id", ondelete="SET NULL"), default=lambda: None
     )
-    dataset_id: int | None = Field(
-        foreign_key="datasetv2.id", default=None, ondelete="SET NULL"
-    )
-
-    user_email: str = Field(nullable=False)
-    slurm_account: str | None = None
-
-    dataset_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False)
-    )
-    workflow_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False)
-    )
-    project_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False)
-    )
-    fractal_server_version: str = Field(
-        sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
+    dataset_id: Mapped[int | None] = mapped_column(
+        ForeignKey("datasetv2.id", ondelete="SET NULL"), default=lambda: None
     )
 
-    worker_init: str | None = None
-    working_dir: str | None = None
-    working_dir_user: str | None = None
-    first_task_index: int
-    last_task_index: int
+    user_email: Mapped[str] = mapped_column(nullable=False)
+    slurm_account: Mapped[str | None] = mapped_column(default=lambda: None)
 
-    start_timestamp: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    dataset_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    workflow_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    project_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    fractal_server_version: Mapped[str] = mapped_column(
+        String, server_default="pre-2.19.0", nullable=False
     )
-    end_timestamp: datetime | None = Field(
-        default=None, sa_column=Column(DateTime(timezone=True))
-    )
-    status: str = JobStatusType.SUBMITTED
-    log: str | None = None
-    executor_error_log: str | None = None
 
-    attribute_filters: dict[str, list[int | float | str | bool]] = Field(
-        sa_column=Column(JSONB, nullable=False, server_default="{}")
+    worker_init: Mapped[str | None] = mapped_column(default=lambda: None)
+    working_dir: Mapped[str | None] = mapped_column(default=lambda: None)
+    working_dir_user: Mapped[str | None] = mapped_column(default=lambda: None)
+    first_task_index: Mapped[int] = mapped_column()
+    last_task_index: Mapped[int] = mapped_column()
+
+    start_timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    type_filters: dict[str, bool] = Field(
-        sa_column=Column(JSONB, nullable=False, server_default="{}")
+    end_timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: None
+    )
+    status: Mapped[str] = mapped_column(default=JobStatusType.SUBMITTED)
+    log: Mapped[str | None] = mapped_column(default=lambda: None)
+    executor_error_log: Mapped[str | None] = mapped_column(default=lambda: None)
+
+    attribute_filters: Mapped[dict[str, list[int | float | str | bool]]] = (
+        mapped_column(JSONB, nullable=False, server_default="{}")
+    )
+    type_filters: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
     )
 
     __table_args__ = (

@@ -9,8 +9,8 @@ from typing import AsyncIterator
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup

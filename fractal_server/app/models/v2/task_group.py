@@ -1,16 +1,17 @@
 from datetime import datetime
 from datetime import timezone
 
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import String
-from sqlmodel import Field
-from sqlmodel import Index
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
-from sqlmodel import text
 
+from fractal_server.app.models.base import Base
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.utils import get_timestamp
 
@@ -35,61 +36,56 @@ def _create_dependency_string(pinned_versions: dict[str, str]) -> str:
     return output
 
 
-class TaskGroupV2(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    task_list: list[TaskV2] = Relationship(
-        sa_relationship_kwargs=dict(
-            lazy="selectin", cascade="all, delete-orphan"
-        ),
+class TaskGroupV2(Base):
+    __tablename__ = "taskgroupv2"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_list: Mapped[list["TaskV2"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
     )
 
-    user_id: int = Field(foreign_key="user_oauth.id")
-    user_group_id: int | None = Field(
-        foreign_key="usergroup.id", default=None, ondelete="SET NULL"
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
+    user_group_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usergroup.id", ondelete="SET NULL"), default=lambda: None
     )
-    resource_id: int = Field(foreign_key="resource.id", ondelete="RESTRICT")
+    resource_id: Mapped[int] = mapped_column(
+        ForeignKey("resource.id", ondelete="RESTRICT")
+    )
 
-    origin: str
-    pkg_name: str
-    version: str
-    python_version: str | None = None
-    pixi_version: str | None = None
-    path: str | None = None
-    archive_path: str | None = None
-    pip_extras: str | None = None
-    pinned_package_versions_pre: dict[str, str] = Field(
-        sa_column=Column(
-            JSONB,
-            server_default="{}",
-            default={},
-            nullable=True,
-        ),
+    origin: Mapped[str] = mapped_column()
+    pkg_name: Mapped[str] = mapped_column()
+    version: Mapped[str] = mapped_column()
+    python_version: Mapped[str | None] = mapped_column(default=lambda: None)
+    pixi_version: Mapped[str | None] = mapped_column(default=lambda: None)
+    path: Mapped[str | None] = mapped_column(default=lambda: None)
+    archive_path: Mapped[str | None] = mapped_column(default=lambda: None)
+    pip_extras: Mapped[str | None] = mapped_column(default=lambda: None)
+    pinned_package_versions_pre: Mapped[dict[str, str]] = mapped_column(
+        JSONB,
+        server_default="{}",
+        default={},
+        nullable=True,
     )
-    pinned_package_versions_post: dict[str, str] = Field(
-        sa_column=Column(
-            JSONB,
-            server_default="{}",
-            default={},
-            nullable=True,
-        ),
+    pinned_package_versions_post: Mapped[dict[str, str]] = mapped_column(
+        JSONB,
+        server_default="{}",
+        default={},
+        nullable=True,
     )
-    env_info: str | None = None
-    venv_path: str | None = None
+    env_info: Mapped[str | None] = mapped_column(default=lambda: None)
+    venv_path: Mapped[str | None] = mapped_column(default=lambda: None)
 
-    active: bool = True
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    active: Mapped[bool] = mapped_column(default=True)
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    timestamp_last_used: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(
-            DateTime(timezone=True),
-            nullable=False,
-            server_default=(
-                datetime(2024, 11, 20, tzinfo=timezone.utc).isoformat()
-            ),
+    timestamp_last_used: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=(
+            datetime(2024, 11, 20, tzinfo=timezone.utc).isoformat()
         ),
+        default=get_timestamp,
     )
 
     __table_args__ = (
@@ -144,27 +140,27 @@ class TaskGroupV2(SQLModel, table=True):
         return output
 
 
-class TaskGroupActivityV2(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id")
-    taskgroupv2_id: int | None = Field(
-        default=None, foreign_key="taskgroupv2.id", ondelete="SET NULL"
+class TaskGroupActivityV2(Base):
+    __tablename__ = "taskgroupactivityv2"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
+    taskgroupv2_id: Mapped[int | None] = mapped_column(
+        ForeignKey("taskgroupv2.id", ondelete="SET NULL"), default=lambda: None
     )
-    timestamp_started: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    timestamp_started: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    pkg_name: str
-    version: str
-    status: str
-    action: str
-    log: str | None = None
-    timestamp_ended: datetime | None = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True)),
+    pkg_name: Mapped[str] = mapped_column()
+    version: Mapped[str] = mapped_column()
+    status: Mapped[str] = mapped_column()
+    action: Mapped[str] = mapped_column()
+    log: Mapped[str | None] = mapped_column(default=lambda: None)
+    timestamp_ended: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=lambda: None
     )
-    fractal_server_version: str = Field(
-        sa_column=Column(String, server_default="pre-2.19.0", nullable=False)
+    fractal_server_version: Mapped[str] = mapped_column(
+        String, server_default="pre-2.19.0", nullable=False
     )
 
     __table_args__ = (

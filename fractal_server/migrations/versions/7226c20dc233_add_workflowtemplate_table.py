@@ -7,9 +7,10 @@ Create Date: 2026-03-04 17:50:01.995778
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from fractal_server.migrations.sqltypes import AutoString
 
 # revision identifiers, used by Alembic.
 revision = "7226c20dc233"
@@ -24,11 +25,11 @@ def upgrade() -> None:
         "workflowtemplate",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", AutoString(), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column(
             "fractal_server_version",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=False,
         ),
         sa.Column(
@@ -38,9 +39,7 @@ def upgrade() -> None:
             "timestamp_last_used", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", AutoString(), nullable=True),
         sa.Column(
             "data", postgresql.JSON(astext_type=sa.Text()), nullable=False
         ),

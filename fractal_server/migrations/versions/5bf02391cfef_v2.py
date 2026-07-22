@@ -7,8 +7,9 @@ Create Date: 2024-04-18 10:35:19.067833
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
+
+from fractal_server.migrations.sqltypes import AutoString
 
 # revision identifiers, used by Alembic.
 revision = "5bf02391cfef"
@@ -29,7 +30,7 @@ def upgrade() -> None:
     op.create_table(
         "projectv2",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", AutoString(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
@@ -38,40 +39,36 @@ def upgrade() -> None:
     op.create_table(
         "taskv2",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", AutoString(), nullable=False),
+        sa.Column("type", AutoString(), nullable=False),
         sa.Column(
             "command_non_parallel",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=True,
         ),
         sa.Column(
             "command_parallel",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=True,
         ),
-        sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("source", AutoString(), nullable=False),
         sa.Column(
             "meta_non_parallel", sa.JSON(), server_default="{}", nullable=False
         ),
         sa.Column(
             "meta_parallel", sa.JSON(), server_default="{}", nullable=False
         ),
-        sa.Column("owner", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("owner", AutoString(), nullable=True),
+        sa.Column("version", AutoString(), nullable=True),
         sa.Column("args_schema_non_parallel", sa.JSON(), nullable=True),
         sa.Column("args_schema_parallel", sa.JSON(), nullable=True),
         sa.Column(
             "args_schema_version",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=True,
         ),
-        sa.Column(
-            "docs_info", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("docs_info", AutoString(), nullable=True),
+        sa.Column("docs_link", AutoString(), nullable=True),
         sa.Column("input_types", sa.JSON(), nullable=True),
         sa.Column("output_types", sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
@@ -80,15 +77,13 @@ def upgrade() -> None:
     op.create_table(
         "datasetv2",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", AutoString(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("history", sa.JSON(), server_default="[]", nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column(
-            "zarr_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("zarr_dir", AutoString(), nullable=False),
         sa.Column("images", sa.JSON(), server_default="[]", nullable=False),
         sa.Column(
             "filters",
@@ -119,7 +114,7 @@ def upgrade() -> None:
     op.create_table(
         "workflowv2",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", AutoString(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
@@ -136,24 +131,16 @@ def upgrade() -> None:
         sa.Column("project_id", sa.Integer(), nullable=True),
         sa.Column("workflow_id", sa.Integer(), nullable=True),
         sa.Column("dataset_id", sa.Integer(), nullable=True),
-        sa.Column(
-            "user_email", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "slurm_account", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("user_email", AutoString(), nullable=False),
+        sa.Column("slurm_account", AutoString(), nullable=True),
         sa.Column("dataset_dump", sa.JSON(), nullable=False),
         sa.Column("workflow_dump", sa.JSON(), nullable=False),
         sa.Column("project_dump", sa.JSON(), nullable=False),
-        sa.Column(
-            "worker_init", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "working_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("worker_init", AutoString(), nullable=True),
+        sa.Column("working_dir", AutoString(), nullable=True),
         sa.Column(
             "working_dir_user",
-            sqlmodel.sql.sqltypes.AutoString(),
+            AutoString(),
             nullable=True,
         ),
         sa.Column("first_task_index", sa.Integer(), nullable=False),
@@ -162,8 +149,8 @@ def upgrade() -> None:
             "start_timestamp", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("log", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("status", AutoString(), nullable=False),
+        sa.Column("log", AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["dataset_id"],
             ["datasetv2.id"],
@@ -194,9 +181,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("is_legacy_task", sa.Boolean(), nullable=False),
-        sa.Column(
-            "task_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("task_type", AutoString(), nullable=False),
         sa.Column("task_id", sa.Integer(), nullable=True),
         sa.Column("task_legacy_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(

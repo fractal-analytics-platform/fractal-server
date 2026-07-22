@@ -7,9 +7,10 @@ Create Date: 2024-11-20 15:01:52.659832
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from fractal_server.migrations.sqltypes import AutoString
 
 # revision identifiers, used by Alembic.
 revision = "d256a7379ab8"
@@ -28,15 +29,11 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column(
-            "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("action", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("log", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("pkg_name", AutoString(), nullable=False),
+        sa.Column("version", AutoString(), nullable=False),
+        sa.Column("status", AutoString(), nullable=False),
+        sa.Column("action", AutoString(), nullable=False),
+        sa.Column("log", AutoString(), nullable=True),
         sa.Column("timestamp_ended", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["taskgroupv2_id"],
@@ -53,9 +50,7 @@ def upgrade() -> None:
     op.drop_table("collectionstatev2")
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
         batch_op.add_column(
-            sa.Column(
-                "pip_freeze", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-            )
+            sa.Column("pip_freeze", AutoString(), nullable=True)
         )
         batch_op.add_column(
             sa.Column("venv_size_in_kB", sa.Integer(), nullable=True)

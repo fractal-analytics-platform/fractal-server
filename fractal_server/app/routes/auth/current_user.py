@@ -8,8 +8,8 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
@@ -69,11 +69,8 @@ async def patch_current_user(
     # their own password
 
     user = await user_manager.update(update, current_user, safe=True)
-    validated_user = UserOAuth.model_validate(user.model_dump())
 
-    patched_user = await db.get_one(
-        UserOAuth, validated_user.id, populate_existing=True
-    )
+    patched_user = await db.get_one(UserOAuth, user.id, populate_existing=True)
     patched_user_with_groups = await _get_single_user_with_groups(
         patched_user, db
     )

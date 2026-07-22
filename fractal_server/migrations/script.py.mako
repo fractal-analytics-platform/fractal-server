@@ -7,8 +7,6 @@ Create Date: ${create_date}
 """
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel
-import sqlmodel.sql.sqltypes
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

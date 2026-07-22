@@ -1,53 +1,56 @@
 from datetime import datetime
 
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
-from sqlmodel import Field
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class AccountingRecord(SQLModel, table=True):
+class AccountingRecord(Base):
     """
     AccountingRecord table.
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    timestamp: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    __tablename__ = "accountingrecord"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id"), nullable=False
     )
-    num_tasks: int
-    num_new_images: int
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
+    )
+    num_tasks: Mapped[int] = mapped_column()
+    num_new_images: Mapped[int] = mapped_column()
 
 
-class AccountingRecordSlurm(SQLModel, table=True):
+class AccountingRecordSlurm(Base):
     """
     AccountingRecordSlurm table.
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    timestamp: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    __tablename__ = "accountingrecordslurm"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id"), nullable=False
     )
-    slurm_job_ids: list[int] = Field(
-        default_factory=list,
-        sa_column=Column(ARRAY(Integer)),
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    fractal_job_id: int = Field(
-        foreign_key="jobv2.id",
+    slurm_job_ids: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer), nullable=True, default=list
+    )
+    fractal_job_id: Mapped[int | None] = mapped_column(
+        ForeignKey("jobv2.id"), nullable=True, default=lambda: None
+    )
+    resource_id: Mapped[int | None] = mapped_column(
+        ForeignKey("resource.id", ondelete="SET NULL"),
         nullable=True,
-        default=None,
-    )
-    resource_id: int = Field(
-        foreign_key="resource.id",
-        nullable=True,
-        default=None,
-        ondelete="SET NULL",
+        default=lambda: None,
     )

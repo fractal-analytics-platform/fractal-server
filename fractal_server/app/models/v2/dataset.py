@@ -1,50 +1,47 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import ConfigDict
-from sqlalchemy import Column
+from sqlalchemy import BOOLEAN
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import DateTime
-from sqlmodel import BOOLEAN
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 from .project import ProjectV2
 
 
-class DatasetV2(SQLModel, table=True):
+class DatasetV2(Base):
     """
     Dataset table.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    __tablename__ = "datasetv2"
 
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column()
 
-    project_id: int = Field(foreign_key="projectv2.id", ondelete="CASCADE")
-    project: ProjectV2 = Relationship(
-        sa_relationship_kwargs=dict(lazy="selectin"),
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projectv2.id", ondelete="CASCADE")
     )
-    is_starred: bool = Field(
-        sa_column=Column(
-            BOOLEAN,
-            server_default="false",
-            nullable=False,
-        ),
+    project: Mapped["ProjectV2"] = relationship(lazy="selectin")
+    is_starred: Mapped[bool] = mapped_column(
+        BOOLEAN,
+        server_default="false",
+        nullable=False,
     )
 
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
 
-    zarr_dir: str
-    images: list[dict[str, Any]] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
+    zarr_dir: Mapped[str] = mapped_column()
+    images: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default="[]", nullable=False
     )
 
     @property
