@@ -104,14 +104,15 @@ async def test_run_squeue_sudo_success(
         assert expected in res_normalized
 
 
+@pytest.mark.container
 async def test_run_squeue_invalid_scope(
     client,
-    slurm_ssh_resource_profile_db,
+    slurm_sudo_resource_profile_db,
     MockCurrentUser,
     override_settings_factory,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
-    resource, profile = slurm_ssh_resource_profile_db[:]
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SUDO)
+    resource, profile = slurm_sudo_resource_profile_db[:]
 
     async with MockCurrentUser(
         is_verified=True,
