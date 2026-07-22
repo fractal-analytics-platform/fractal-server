@@ -77,7 +77,7 @@ async def test_run_squeue_error(
         is_verified=True,
         profile_id=profile.id,
     ) as _:
-        res = await client.get(f"{PREFIX}/job/squeue/")
+        res = await client.get(f"{PREFIX}/job/squeue/?scope=accounts")
         assert res.status_code == 422
         assert res.json()["detail"] == "Error executing squeue command."
 
@@ -97,8 +97,29 @@ async def test_run_squeue_sudo_success(
         is_verified=True,
         profile_id=profile.id,
     ) as _:
-        res = await client.get(f"{PREFIX}/job/squeue/")
+        res = await client.get(f"{PREFIX}/job/squeue/?scope=user")
         assert res.status_code == 200
         res_normalized = " ".join(res.text.split())
         expected = "JOBID PARTITION NAME USER ACCOUNT STATE TIME NODES"
         assert expected in res_normalized
+
+
+async def test_run_squeue_invalid_scope(
+    client,
+    slurm_ssh_resource_profile_db,
+    MockCurrentUser,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=ResourceType.SLURM_SSH)
+    resource, profile = slurm_ssh_resource_profile_db[:]
+
+    async with MockCurrentUser(
+        is_verified=True,
+        profile_id=profile.id,
+    ) as _:
+        res = await client.get(f"{PREFIX}/job/squeue/?scope=foo")
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "Input should be 'all', 'user' or 'accounts'"
+        )
