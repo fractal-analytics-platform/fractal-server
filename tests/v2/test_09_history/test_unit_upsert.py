@@ -3,8 +3,8 @@ from typing import Any
 
 import pytest
 from devtools import debug
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun

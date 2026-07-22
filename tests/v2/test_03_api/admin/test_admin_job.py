@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 import pytest
 from devtools import debug
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit

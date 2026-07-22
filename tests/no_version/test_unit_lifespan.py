@@ -2,7 +2,7 @@ import logging
 import os
 
 from fastapi import FastAPI
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.security import UserOAuth

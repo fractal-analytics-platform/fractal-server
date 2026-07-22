@@ -1,6 +1,6 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
