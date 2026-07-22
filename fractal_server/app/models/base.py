@@ -12,33 +12,6 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
     type_annotation_map = {str: AutoString}
 
-    def __init__(self, **kwargs: Any) -> None:
-        """
-        Table classes used to be `SQLModel`s (hence also `pydantic.BaseModel`s):
-        constructing one with an unknown keyword argument was silently ignored
-        (pydantic's default `extra="ignore"` behavior), and any column with a
-        Python-side default (e.g. `default_factory=...`) was eagerly applied
-        at construction time (pydantic always applies field defaults), rather
-        than only at flush time as plain SQLAlchemy does. This constructor
-        replicates both behaviors, so ORM instances built in-memory (e.g. in
-        tests, or before a DB round-trip) behave the same as before.
-        """
-        valid_keys = {attr.key for attr in self.__mapper__.attrs}
-        filtered = {k: v for k, v in kwargs.items() if k in valid_keys}
-        for key, value in filtered.items():
-            setattr(self, key, value)
-        for col_attr in self.__mapper__.column_attrs:
-            key = col_attr.key
-            if key in filtered:
-                continue
-            default = col_attr.columns[0].default
-            if default is None:
-                continue
-            elif default.is_scalar:
-                setattr(self, key, default.arg)
-            elif default.is_callable:
-                setattr(self, key, default.arg(None))
-
     def model_dump(
         self,
         *,
