@@ -76,6 +76,7 @@ async def test_run_squeue_error(
     async with MockCurrentUser(
         is_verified=True,
         profile_id=profile.id,
+        slurm_accounts=["foo"],
     ) as _:
         res = await client.get(f"{PREFIX}/job/squeue/?scope=accounts")
         assert res.status_code == 422
