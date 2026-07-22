@@ -1,10 +1,5 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.24.2 (unreleased)
-
-* Testing:
-    * Add `network: host` to build options in docker compose (\#3412).
-
 # 2.24.1
 
 * Runner:
