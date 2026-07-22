@@ -5,6 +5,7 @@ services:
     build:
       context: ./slurm
       dockerfile: Dockerfile
+      network: host
       args:
         - PYTHON_PATH=/.venv3.13/bin/python3.13
     hostname: slurm

@@ -45,7 +45,7 @@ class PaginationData(BaseModel):
     """
     Metadata describing the state of a paginated query.
 
-    Args:
+    Attributes:
         current_page:
         page_size:
         total_count:
@@ -61,12 +61,11 @@ class PaginationResponse(PaginationData, Generic[T]):
     Paginated response container including both pagination metadata and result
     items.
 
-    Args:
+    Attributes:
         current_page:
         page_size:
         total_count:
         items:
-
     """
 
     items: list[T]

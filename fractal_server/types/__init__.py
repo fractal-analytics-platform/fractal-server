@@ -1,9 +1,11 @@
 from typing import Annotated
 from typing import Any
+from typing import Literal
 from typing import TypeAlias
 from typing import Union
 
 from pydantic import AfterValidator
+from pydantic import Field
 from pydantic.types import NonNegativeInt
 from pydantic.types import StringConstraints
 
@@ -145,6 +147,14 @@ ListUniqueNonNegativeInt = Annotated[
 List of unique non-negative-integer items.
 """
 
+NonEmptyListUniqueNonNegativeInt = Annotated[
+    ListUniqueNonNegativeInt,
+    Field(min_length=1),
+]
+"""
+Non-empty list of unique non-negative-integer items.
+"""
+
 
 ListUniqueProjectDir = Annotated[
     list[AbsolutePathStr | S3PathStr],
@@ -218,4 +228,17 @@ JSONType: TypeAlias = (
 )
 """
 Type of a JSON document.
+"""
+
+
+PythonVersion = Literal[
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+]
+"""
+Python versions for task collection.
 """

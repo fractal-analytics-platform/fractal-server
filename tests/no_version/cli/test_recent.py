@@ -1,73 +1,18 @@
-import os
 import shlex
-import signal
 import subprocess
-import time
 from datetime import timedelta
 
-import pytest
-from devtools import debug
-
-from fractal_server.__main__ import recent_activities
 from fractal_server.app.models.v2.task_group import TaskGroupActivityV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+from fractal_server.cli._recent import recent
 from fractal_server.utils import get_timestamp
 
-commands = [
-    "fractalctl start --reload --host 0.0.0.0 --port 8000",
-    (
-        "gunicorn fractal_server.main:app "
-        "--workers 1 "
-        "--bind 0.0.0.0:8000 "
-        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
-        "--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger "
-    ),
-]
 
-
-@pytest.mark.parametrize("cmd", commands)
-def test_startup_commands(cmd, db_create_tables):
-    debug(cmd)
-    p = subprocess.Popen(
-        shlex.split(f"uv run --frozen {cmd}"),
-        start_new_session=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-    debug(p)
-    with pytest.raises(subprocess.TimeoutExpired) as e:
-        p.wait(timeout=1.5)
-        out, err = p.communicate()
-        debug(p.returncode)
-        debug(out)
-        debug(err)
-        assert p.returncode == 0
-
-    debug("Now call killpg")
-    debug(p)
-    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-    # Wait a bit, so that the killpg ends before pytest ends
-    time.sleep(0.3)
-    debug(e.value)
-
-
-def test_email_settings():
-    cmd = "uv run --frozen fractalctl email-settings"
-    res = subprocess.run(
-        shlex.split(cmd),
-        encoding="utf-8",
-        capture_output=True,
-    )
-    assert not res.stdout
-    assert "usage" in res.stderr
-
-
-async def test_recent_activities(
+async def test_recent(
     project_factory,
     dataset_factory,
     workflow_factory,
@@ -105,7 +50,7 @@ async def test_recent_activities(
             end_timestamp=past,
         )
 
-        recent_activities(minutes=2)
+        recent(minutes=2)
         output = capsys.readouterr().out
         assert (
             "No fractal-server job or task-group activity during the last "
@@ -114,7 +59,7 @@ async def test_recent_activities(
         assert "## Recent Jobs" not in output
         assert "## Recent Task-Group activities" not in output
 
-        recent_activities(minutes=MINUTES)
+        recent(minutes=MINUTES)
         output = capsys.readouterr().out
         assert (
             "There were fractal-server jobs and/or task-group activities "
@@ -137,7 +82,7 @@ async def test_recent_activities(
             end_timestamp=now,
         )
 
-        recent_activities(minutes=MINUTES)
+        recent(minutes=MINUTES)
         output = capsys.readouterr().out
         assert (
             "There are ongoing fractal-server jobs and/or task-group "
@@ -195,7 +140,7 @@ async def test_recent_activities(
 
     assert len(res) == 13
 
-    recent_activities(minutes=20)
+    recent(minutes=20)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."
@@ -208,7 +153,7 @@ async def test_recent_activities(
     assert f"ID={act_1.id}" in output_splitted[8]
     assert f"ID={act_2.id}" in output_splitted[9]
 
-    recent_activities(minutes=MINUTES)
+    recent(minutes=MINUTES)
     output = capsys.readouterr().out
     assert (
         "There are ongoing fractal-server jobs and/or task-group activities."

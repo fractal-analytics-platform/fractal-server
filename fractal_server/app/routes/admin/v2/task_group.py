@@ -3,20 +3,31 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from pydantic.types import AwareDatetime
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
 from sqlmodel import func
+from sqlmodel import not_
 from sqlmodel import select
+from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.models.v2.workflowtask import WorkflowTaskV2
+from fractal_server.app.routes.admin.v2._aux_functions import (
+    _get_task_group_or_404,
+)
+from fractal_server.app.routes.admin.v2._aux_functions_core_tasks import (
+    _verify_non_duplication_task_core_constraint,
+)
 from fractal_server.app.routes.api.v2._aux_task_group_disambiguation import (
-    serialize_task_group_with_email,
+    serialize_task_group,
 )
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.auth._aux_auth import (
@@ -100,8 +111,15 @@ async def query_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .exists()
+    )
+
     res = await db.execute(
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
@@ -111,9 +129,12 @@ async def query_task_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroup {task_group_id} not found",
         )
-    task_group, user_email = task_group_and_email
-    return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
+    task_group, user_email, in_use = task_group_and_email
+
+    return serialize_task_group(
+        task_group=task_group,
+        user_email=user_email,
+        in_use=in_use,
     )
 
 
@@ -129,12 +150,20 @@ async def query_task_group_list(
     timestamp_last_used_min: AwareDatetime | None = None,
     timestamp_last_used_max: AwareDatetime | None = None,
     resource_id: int | None = None,
+    in_use: bool | None = None,
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+        .exists()
+    )
+
     stm = (
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .order_by(TaskGroupV2.id)
     )
@@ -194,6 +223,13 @@ async def query_task_group_list(
     if resource_id is not None:
         stm = stm.where(TaskGroupV2.resource_id == resource_id)
         stm_count = stm_count.where(TaskGroupV2.resource_id == resource_id)
+    if in_use is not None:
+        if in_use is True:
+            stm = stm.where(in_use_stm)
+            stm_count = stm_count.where(in_use_stm)
+        else:
+            stm = stm.where(not_(in_use_stm))
+            stm_count = stm_count.where(not_(in_use_stm))
 
     stm, pagination_data = await get_pagination_data(
         stm=stm, stm_count=stm_count, pagination=pagination, db=db
@@ -201,10 +237,12 @@ async def query_task_group_list(
 
     res = await db.execute(stm)
     task_groups_list = [
-        serialize_task_group_with_email(
-            task_group=task_group, user_email=user_email
+        serialize_task_group(
+            task_group=task_group,
+            user_email=user_email,
+            in_use=being_used,
         )
-        for task_group, user_email in res.all()
+        for task_group, user_email, being_used in res.all()
     ]
 
     return dict(items=task_groups_list, **pagination_data.model_dump())
@@ -217,8 +255,15 @@ async def patch_task_group(
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
 ) -> dict[str, Any]:
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .exists()
+    )
+
     res = await db.execute(
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.id == task_group_id)
     )
@@ -228,7 +273,7 @@ async def patch_task_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TaskGroupV2 {task_group_id} not found",
         )
-    task_group, user_email = task_group_and_email
+    task_group, user_email, in_use = task_group_and_email
 
     for key, value in task_group_update.model_dump(exclude_unset=True).items():
         if (key == "user_group_id") and (value is not None):
@@ -240,6 +285,76 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    return serialize_task_group_with_email(
-        task_group=task_group, user_email=user_email
+    return serialize_task_group(
+        task_group=task_group,
+        user_email=user_email,
+        in_use=in_use,
     )
+
+
+@router.post("/{task_group_id}/make-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make core all the tasks of this task group
+    """
+    task_group = await _get_task_group_or_404(
+        task_group_id=task_group_id, db=db
+    )
+
+    res = await db.execute(
+        select(TaskV2).where(TaskV2.taskgroupv2_id == task_group_id)
+    )
+    task_list = res.scalars().all()
+
+    # Acquire a lock on all rows that could result into conflicting core tasks,
+    # to avoid a race condition where two "make-core" endpoints are called at
+    # the same time. See
+    # https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE
+    # and https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS
+    await db.execute(
+        select(TaskV2)
+        .where(TaskV2.name.in_([t.name for t in task_list]))
+        .where(TaskV2.version.in_([t.version for t in task_list]))
+        .where(TaskV2.is_core.is_(False))
+        .with_for_update()
+    )
+
+    # Non-duplication check constraint
+    for task in task_list:
+        await _verify_non_duplication_task_core_constraint(
+            task=task, task_group=task_group, db=db
+        )
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=True)
+    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router.post("/{task_group_id}/make-not-core/", status_code=status.HTTP_200_OK)
+async def make_task_group_not_core(
+    task_group_id: int,
+    superuser: UserOAuth = Depends(current_superuser_act),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """
+    Make not-core all the tasks of this task group
+    """
+    await _get_task_group_or_404(task_group_id=task_group_id, db=db)
+
+    await db.execute(
+        update(TaskV2)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .values(is_core=False)
+    )
+    await db.commit()
+
+    return Response(status_code=status.HTTP_200_OK)

@@ -7,6 +7,7 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2.task import TaskV2
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
@@ -34,7 +35,6 @@ async def test_task_group_admin(
         )
         res = await client.get(f"/api/v2/task-group/{task1.taskgroupv2_id}/")
         task_group_1 = res.json()
-
         assert "resource_id" not in task_group_1
 
         task2 = await task_factory(
@@ -52,6 +52,14 @@ async def test_task_group_admin(
         assert "resource_id" not in task_group_2
         assert "user_id" not in task_group_2
         assert "user_email" in task_group_2
+        assert task_group_2["in_use"] is False
+
+        project = await project_factory(user1)
+        workflow = await workflow_factory(project_id=project.id)
+        await workflowtask_factory(workflow_id=workflow.id, task_id=task2.id)
+
+        res = await client.get(f"/api/v2/task-group/{task2.taskgroupv2_id}/")
+        assert res.json()["in_use"] is True
 
     async with MockCurrentUser() as user2:
         task3 = await task_factory(user_id=user2.id, name="bbbbbbbb")
@@ -181,6 +189,17 @@ async def test_task_group_admin(
             f"{PREFIX}/task-group/?user_group_id=1&private=true"
         )
         assert res.status_code == 422
+
+        # Filter using `in_use`
+        res = await client.get(f"{PREFIX}/task-group/?in_use=true")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 1
+        assert res.json()["items"][0]["id"] == task_group_2["id"]
+        res = await client.get(f"{PREFIX}/task-group/?in_use=false")
+        assert res.status_code == 200
+        assert len(res.json()["items"]) == 2
+        assert res.json()["items"][0]["id"] == task_group_1["id"]
+        assert res.json()["items"][1]["id"] == task_group_3["id"]
 
         # PATCH /{id}/
         res = await client.patch(
@@ -742,3 +761,82 @@ async def test_admin_delete_task_group_api_ssh(
         assert activity["id"] == activity_id
         assert activity["action"] == TaskGroupActivityAction.DELETE
         assert activity["status"] == TaskGroupActivityStatus.OK
+
+
+async def test_task_group_core_endpoints(
+    db, client, MockCurrentUser, local_resource_profile_db
+):
+    resource, _ = local_resource_profile_db
+    async with MockCurrentUser() as user:
+        user_id = user.id
+
+    async with MockCurrentUser() as user2:
+        user2_id = user2.id
+
+    task1 = TaskV2(name="a1", type="b1", version="c1")
+    task2 = TaskV2(name="a2", type="b2", version="c2")
+    task3 = TaskV2(name="a1", type="b1", version="c1")
+    task_group = TaskGroupV2(
+        user_id=user_id,
+        resource_id=resource.id,
+        origin="x",
+        pkg_name="y",
+        version="z",
+        task_list=[task1, task2],
+    )
+    task_group_2 = TaskGroupV2(
+        user_id=user2_id,
+        resource_id=resource.id,
+        origin="x",
+        pkg_name="y",
+        version="z",
+        task_list=[task3],
+    )
+    db.add_all([task_group, task_group_2])
+    await db.commit()
+    await db.refresh(task1)
+    await db.refresh(task2)
+    await db.refresh(task3)
+    await db.refresh(task_group)
+    await db.refresh(task_group_2)
+
+    assert task1.is_core is False
+    assert task2.is_core is False
+
+    async with MockCurrentUser(is_superuser=True):
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group.id}/make-core/"
+        )
+        assert res.status_code == 200
+
+        await db.refresh(task1)
+        await db.refresh(task2)
+        assert task1.is_core is True
+        assert task2.is_core is True
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group_2.id}/make-core/"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "There already exists a core task with "
+            f"pkg_name='{task_group_2.pkg_name}', "
+            f"version='{task_group_2.version}' and name='{task3.name}' "
+            f"(task ID: {task1.id})."
+        )
+
+        res = await client.post(
+            f"{PREFIX}/task-group/{task_group.id}/make-not-core/"
+        )
+        assert res.status_code == 200
+
+        await db.refresh(task1)
+        await db.refresh(task2)
+        assert task1.is_core is False
+        assert task2.is_core is False
+
+        # 404
+        res = await client.post(f"{PREFIX}/task-group/123456789/make-core/")
+        assert res.status_code == 404
+        res = await client.post(f"{PREFIX}/task-group/123456789/make-not-core/")
+        assert res.status_code == 404

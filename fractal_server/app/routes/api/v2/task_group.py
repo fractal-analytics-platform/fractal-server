@@ -16,6 +16,8 @@ from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
+from fractal_server.app.models.v2.task import TaskV2
+from fractal_server.app.models.v2.workflowtask import WorkflowTaskV2
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.auth._aux_auth import (
@@ -31,16 +33,15 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupRead
 from fractal_server.app.schemas.v2 import TaskGroupReadSlim
 from fractal_server.app.schemas.v2 import TaskGroupUpdate
-from fractal_server.app.schemas.v2.task import SLIM_TASK_FIELDS
 from fractal_server.logger import set_logger
 
 from ._aux_functions import _get_user_resource_id
 from ._aux_functions_tasks import _get_task_group_full_access
 from ._aux_functions_tasks import _get_task_group_read_access
 from ._aux_functions_tasks import _verify_non_duplication_group_constraint
-from ._aux_task_group_disambiguation import add_user_email_to_task_group
+from ._aux_task_group_disambiguation import get_task_group_owner_email
 from ._aux_task_group_disambiguation import remove_duplicate_task_groups
-from ._aux_task_group_disambiguation import serialize_task_group_with_email
+from ._aux_task_group_disambiguation import serialize_task_group
 
 router = APIRouter()
 
@@ -114,15 +115,13 @@ async def get_task_group_activity(
 
 @router.get(
     "/",
-    response_model=list[tuple[str, list[TaskGroupRead]]]
-    | list[tuple[str, list[TaskGroupReadSlim]]],
+    response_model=list[tuple[str, list[TaskGroupReadSlim]]],
 )
 async def get_task_group_list(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     only_active: bool = False,
     only_owner: bool = False,
-    slim: bool = False,
 ) -> list[tuple[str, list[dict[str, Any]]]]:
     """
     Get all accessible TaskGroups
@@ -140,8 +139,15 @@ async def get_task_group_list(
         )
 
     user_resource_id = await _get_user_resource_id(user_id=user.id, db=db)
+    in_use_stm = (
+        select(TaskV2.id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == TaskGroupV2.id)
+        .exists()
+    )
+
     stm = (
-        select(TaskGroupV2, UserOAuth.email)
+        select(TaskGroupV2, UserOAuth.email, in_use_stm)
         .join(UserOAuth, UserOAuth.id == TaskGroupV2.user_id)
         .where(TaskGroupV2.resource_id == user_resource_id)
         .where(condition)
@@ -151,12 +157,12 @@ async def get_task_group_list(
         stm = stm.where(TaskGroupV2.active)
 
     res = await db.execute(stm)
-    task_groups_and_email = res.all()
+    rows = res.all()
 
-    task_groups = [item[0] for item in task_groups_and_email]
-    task_group_id_email_map = {
-        task_group.id: user_email
-        for task_group, user_email in task_groups_and_email
+    task_groups = [task_group for task_group, _, _ in rows]
+    task_group_email_and_use_map = {
+        task_group.id: (user_email, in_use)
+        for task_group, user_email, in_use in rows
     }
 
     default_group_id = await _get_default_usergroup_id_or_none(db)
@@ -180,14 +186,14 @@ async def get_task_group_list(
             task_groups, key=lambda tg: tg.pkg_name
         )
     ]
-    grouped_result_with_emails = [
+    grouped_result_with_emails_and_use = [
         (
             pkg_name,
             [
-                serialize_task_group_with_email(
+                serialize_task_group(
                     task_group=task_group,
-                    user_email=task_group_id_email_map[task_group.id],
-                    included_task_fields=(SLIM_TASK_FIELDS if slim else None),
+                    user_email=task_group_email_and_use_map[task_group.id][0],
+                    in_use=task_group_email_and_use_map[task_group.id][1],
                 )
                 for task_group in task_group_list
             ],
@@ -195,7 +201,7 @@ async def get_task_group_list(
         for pkg_name, task_group_list in grouped_result
     ]
 
-    return grouped_result_with_emails
+    return grouped_result_with_emails_and_use
 
 
 @router.get("/{task_group_id}/", response_model=TaskGroupRead)
@@ -212,10 +218,19 @@ async def get_task_group(
         user_id=user.id,
         db=db,
     )
-    task_group_with_email = await add_user_email_to_task_group(
-        task_group=task_group, db=db
+    user_email = await get_task_group_owner_email(task_group=task_group, db=db)
+
+    res = await db.execute(
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .limit(1)
     )
-    return task_group_with_email
+    in_use = res.scalar_one_or_none() is not None
+
+    return serialize_task_group(
+        task_group=task_group, user_email=user_email, in_use=in_use
+    )
 
 
 @router.patch("/{task_group_id}/", response_model=TaskGroupRead)
@@ -253,7 +268,16 @@ async def patch_task_group(
     db.add(task_group)
     await db.commit()
     await db.refresh(task_group)
-    task_group_with_email = await add_user_email_to_task_group(
-        task_group=task_group, db=db
+
+    user_email = await get_task_group_owner_email(task_group=task_group, db=db)
+    res = await db.execute(
+        select(TaskV2.id)
+        .where(TaskV2.taskgroupv2_id == task_group_id)
+        .join(WorkflowTaskV2, WorkflowTaskV2.task_id == TaskV2.id)
+        .limit(1)
     )
-    return task_group_with_email
+    in_use = res.scalar_one_or_none() is not None
+
+    return serialize_task_group(
+        task_group=task_group, user_email=user_email, in_use=in_use
+    )

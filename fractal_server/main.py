@@ -22,6 +22,8 @@ from .app.shutdown import cleanup_after_shutdown
 from .config import get_db_settings
 from .config import get_email_settings
 from .config import get_settings
+from .logger import _load_logging_config
+from .logger import close_logger
 from .logger import config_uvicorn_loggers
 from .logger import get_logger
 from .logger import reset_logger_handlers
@@ -71,6 +73,7 @@ def check_settings(logger_name: str) -> None:
         if any(s in key.upper() for s in ["PASSWORD", "SECRET", "KEY"]):
             value = "*****"
         logger.debug(f"  {key}: {value}")
+    close_logger(logger)
 
 
 @asynccontextmanager
@@ -140,7 +143,7 @@ def _endpoint_has_background_task(method: str, path: str) -> bool:
     has_background_task = (method == "POST") and (
         "/job/submit/" in path
         or "/task/collect/pi" in path  # "/pip" and "/pixi"
-        or "/task-group/" in path
+        or ("/task-group/" in path and "core" not in path)
     )
     return has_background_task
 
@@ -209,6 +212,11 @@ def start_application() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
     settings = Inject(get_settings)
+
+    # Load logging configuration from YAML
+    if settings.LOG_CONFIG_FILE is not None:
+        _load_logging_config(settings.LOG_CONFIG_FILE)
+
     app.add_middleware(
         SlowResponseMiddleware,
         time_threshold=settings.FRACTAL_LONG_REQUEST_TIME,
