@@ -5,12 +5,10 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
-from fractal_server.migrations.sqltypes import AutoString
 
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
-    type_annotation_map = {str: AutoString}
 
     def model_dump(
         self,

@@ -10,8 +10,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "7226c20dc233"
 down_revision = "6d679918c883"
@@ -25,11 +23,11 @@ def upgrade() -> None:
         "workflowtemplate",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("name", AutoString(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column(
             "fractal_server_version",
-            AutoString(),
+            sa.String(),
             nullable=False,
         ),
         sa.Column(
@@ -39,7 +37,7 @@ def upgrade() -> None:
             "timestamp_last_used", sa.DateTime(timezone=True), nullable=False
         ),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column("description", AutoString(), nullable=True),
+        sa.Column("description", sa.String(), nullable=True),
         sa.Column(
             "data", postgresql.JSON(astext_type=sa.Text()), nullable=False
         ),

@@ -10,8 +10,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "d256a7379ab8"
 down_revision = "19eca0dd47a9"
@@ -29,11 +27,11 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("pkg_name", AutoString(), nullable=False),
-        sa.Column("version", AutoString(), nullable=False),
-        sa.Column("status", AutoString(), nullable=False),
-        sa.Column("action", AutoString(), nullable=False),
-        sa.Column("log", AutoString(), nullable=True),
+        sa.Column("pkg_name", sa.String(), nullable=False),
+        sa.Column("version", sa.String(), nullable=False),
+        sa.Column("status", sa.String(), nullable=False),
+        sa.Column("action", sa.String(), nullable=False),
+        sa.Column("log", sa.String(), nullable=True),
         sa.Column("timestamp_ended", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["taskgroupv2_id"],
@@ -49,9 +47,7 @@ def upgrade() -> None:
     )
     op.drop_table("collectionstatev2")
     with op.batch_alter_table("taskgroupv2", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("pip_freeze", AutoString(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("pip_freeze", sa.String(), nullable=True))
         batch_op.add_column(
             sa.Column("venv_size_in_kB", sa.Integer(), nullable=True)
         )

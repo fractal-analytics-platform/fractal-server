@@ -9,8 +9,6 @@ Create Date: 2024-09-09 13:17:51.008231
 import sqlalchemy as sa
 from alembic import op
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "091b01f51f88"
 down_revision = "5bf02391cfef"
@@ -23,7 +21,7 @@ def upgrade() -> None:
     op.create_table(
         "usergroup",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", AutoString(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),

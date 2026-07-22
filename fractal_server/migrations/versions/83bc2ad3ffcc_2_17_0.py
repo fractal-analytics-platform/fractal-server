@@ -10,8 +10,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "83bc2ad3ffcc"
 down_revision = "981d588fe248"
@@ -24,15 +22,15 @@ def upgrade() -> None:
     op.create_table(
         "resource",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("type", AutoString(), nullable=False),
-        sa.Column("name", AutoString(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("host", AutoString(), nullable=True),
+        sa.Column("host", sa.String(), nullable=True),
         sa.Column(
             "jobs_local_dir",
-            AutoString(),
+            sa.String(),
             nullable=False,
         ),
         sa.Column(
@@ -43,13 +41,13 @@ def upgrade() -> None:
         ),
         sa.Column(
             "jobs_slurm_python_worker",
-            AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.Column("jobs_poll_interval", sa.Integer(), nullable=False),
         sa.Column(
             "tasks_local_dir",
-            AutoString(),
+            sa.String(),
             nullable=False,
         ),
         sa.Column(
@@ -79,18 +77,18 @@ def upgrade() -> None:
         "profile",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("resource_id", sa.Integer(), nullable=False),
-        sa.Column("resource_type", AutoString(), nullable=False),
-        sa.Column("name", AutoString(), nullable=False),
-        sa.Column("username", AutoString(), nullable=True),
-        sa.Column("ssh_key_path", AutoString(), nullable=True),
+        sa.Column("resource_type", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("username", sa.String(), nullable=True),
+        sa.Column("ssh_key_path", sa.String(), nullable=True),
         sa.Column(
             "jobs_remote_dir",
-            AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.Column(
             "tasks_remote_dir",
-            AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(

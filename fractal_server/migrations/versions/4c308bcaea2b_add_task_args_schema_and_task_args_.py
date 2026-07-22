@@ -9,8 +9,6 @@ Create Date: 2023-05-29 17:09:02.492639
 import sqlalchemy as sa
 from alembic import op
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "4c308bcaea2b"
 down_revision = "50a13d6138fd"
@@ -25,7 +23,7 @@ def upgrade() -> None:
         "task",
         sa.Column(
             "args_schema_version",
-            AutoString(),
+            sa.String(),
             nullable=True,
         ),
     )

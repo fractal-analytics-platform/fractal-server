@@ -10,8 +10,6 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "fbce16ff4e47"
 down_revision = "af1ef1c83c9b"
@@ -39,7 +37,7 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("status", AutoString(), nullable=False),
+        sa.Column("status", sa.String(), nullable=False),
         sa.Column("num_available_images", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["dataset_id"],
@@ -59,8 +57,8 @@ def upgrade() -> None:
         "historyunit",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("history_run_id", sa.Integer(), nullable=False),
-        sa.Column("logfile", AutoString(), nullable=True),
-        sa.Column("status", AutoString(), nullable=False),
+        sa.Column("logfile", sa.String(), nullable=True),
+        sa.Column("status", sa.String(), nullable=False),
         sa.Column("zarr_urls", postgresql.ARRAY(sa.String()), nullable=True),
         sa.ForeignKeyConstraint(
             ["history_run_id"],
@@ -72,7 +70,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "historyimagecache",
-        sa.Column("zarr_url", AutoString(), nullable=False),
+        sa.Column("zarr_url", sa.String(), nullable=False),
         sa.Column("dataset_id", sa.Integer(), nullable=False),
         sa.Column("workflowtask_id", sa.Integer(), nullable=False),
         sa.Column("latest_history_unit_id", sa.Integer(), nullable=False),

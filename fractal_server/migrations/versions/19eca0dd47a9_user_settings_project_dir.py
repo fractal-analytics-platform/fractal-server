@@ -9,8 +9,6 @@ Create Date: 2024-10-30 14:34:28.219355
 import sqlalchemy as sa
 from alembic import op
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "19eca0dd47a9"
 down_revision = "8e8f227a3e36"
@@ -24,7 +22,7 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "project_dir",
-                AutoString(),
+                sa.String(),
                 nullable=True,
             )
         )

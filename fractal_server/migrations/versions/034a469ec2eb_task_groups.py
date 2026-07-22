@@ -12,8 +12,6 @@ from datetime import timezone
 import sqlalchemy as sa
 from alembic import op
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "034a469ec2eb"
 down_revision = "da2cb2ac4255"
@@ -27,14 +25,14 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column("origin", AutoString(), nullable=False),
-        sa.Column("pkg_name", AutoString(), nullable=False),
-        sa.Column("version", AutoString(), nullable=True),
-        sa.Column("python_version", AutoString(), nullable=True),
-        sa.Column("path", AutoString(), nullable=True),
-        sa.Column("venv_path", AutoString(), nullable=True),
-        sa.Column("wheel_path", AutoString(), nullable=True),
-        sa.Column("pip_extras", AutoString(), nullable=True),
+        sa.Column("origin", sa.String(), nullable=False),
+        sa.Column("pkg_name", sa.String(), nullable=False),
+        sa.Column("version", sa.String(), nullable=True),
+        sa.Column("python_version", sa.String(), nullable=True),
+        sa.Column("path", sa.String(), nullable=True),
+        sa.Column("venv_path", sa.String(), nullable=True),
+        sa.Column("wheel_path", sa.String(), nullable=True),
+        sa.Column("pip_extras", sa.String(), nullable=True),
         sa.Column(
             "pinned_package_versions",
             sa.JSON(),
@@ -82,9 +80,9 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column("taskgroupv2_id", sa.Integer(), nullable=True)
         )
-        batch_op.add_column(sa.Column("category", AutoString(), nullable=True))
-        batch_op.add_column(sa.Column("modality", AutoString(), nullable=True))
-        batch_op.add_column(sa.Column("authors", AutoString(), nullable=True))
+        batch_op.add_column(sa.Column("category", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("modality", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("authors", sa.String(), nullable=True))
         batch_op.add_column(
             sa.Column("tags", sa.JSON(), server_default="[]", nullable=False)
         )

@@ -9,8 +9,6 @@ Create Date: 2025-05-29 16:31:17.565973
 import sqlalchemy as sa
 from alembic import op
 
-from fractal_server.migrations.sqltypes import AutoString
-
 # revision identifiers, used by Alembic.
 revision = "b1e7f7a1ff71"
 down_revision = "791ce783d3d8"
@@ -23,7 +21,7 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "pixi_version",
-                AutoString(),
+                sa.String(),
                 nullable=True,
             )
         )
