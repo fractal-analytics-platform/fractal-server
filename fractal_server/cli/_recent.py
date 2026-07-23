@@ -1,10 +1,10 @@
 import datetime
 
+from sqlalchemy import and_
+from sqlalchemy import case
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.sql.operators import is_not
-from sqlmodel import and_
-from sqlmodel import case
-from sqlmodel import or_
-from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import JobV2

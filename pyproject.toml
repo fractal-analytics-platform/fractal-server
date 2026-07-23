@@ -15,7 +15,6 @@ license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.15"
 dependencies = [
     "fastapi >= 0.137.2, <0.138.0",
-    "sqlmodel == 0.0.38",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
@@ -138,5 +137,5 @@ ban-relative-imports = "parents"
 output-format = "concise"
 
 [[tool.mypy.overrides]]
-module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
 ignore_missing_imports = true

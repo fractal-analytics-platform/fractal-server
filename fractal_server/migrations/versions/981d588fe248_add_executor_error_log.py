@@ -7,7 +7,6 @@ Create Date: 2025-09-15 08:31:10.363449
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -23,7 +22,7 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column(
                 "executor_error_log",
-                sqlmodel.sql.sqltypes.AutoString(),
+                sa.String(),
                 nullable=True,
             )
         )

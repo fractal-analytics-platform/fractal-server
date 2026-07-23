@@ -36,10 +36,10 @@ from fastapi_users.models import UP
 from fastapi_users.password import PasswordHelper
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db

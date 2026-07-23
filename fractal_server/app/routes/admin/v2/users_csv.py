@@ -10,10 +10,10 @@ from fastapi import Depends
 from fastapi.responses import StreamingResponse
 from pydantic.types import AwareDatetime
 from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Bundle
 from sqlalchemy.orm import join
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup

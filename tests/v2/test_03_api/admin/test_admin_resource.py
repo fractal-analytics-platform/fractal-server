@@ -167,7 +167,8 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "profile_resource_id_fkey"' in res.json()["detail"]
+            'key constraint "fk_profile_resource_id_resource"'
+            in res.json()["detail"]
         )
         res = await client.delete(f"/admin/v2/profile/{profile['id']}/")
         assert res.status_code == 204
@@ -179,7 +180,7 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "projectv2_resource_id_fkey"'
+            'key constraint "fk_projectv2_resource_id_resource"'
             in res.json()["detail"]
         )
         await db.delete(project)
@@ -198,7 +199,7 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "taskgroupv2_resource_id_fkey"'
+            'key constraint "fk_taskgroupv2_resource_id_resource"'
             in res.json()["detail"]
         )
         await db.delete(task_group)

@@ -10,7 +10,6 @@ from datetime import datetime
 from datetime import timezone
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -26,24 +25,14 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("user_group_id", sa.Integer(), nullable=True),
-        sa.Column("origin", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "pkg_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("version", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "python_version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "venv_path", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "wheel_path", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "pip_extras", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("origin", sa.String(), nullable=False),
+        sa.Column("pkg_name", sa.String(), nullable=False),
+        sa.Column("version", sa.String(), nullable=True),
+        sa.Column("python_version", sa.String(), nullable=True),
+        sa.Column("path", sa.String(), nullable=True),
+        sa.Column("venv_path", sa.String(), nullable=True),
+        sa.Column("wheel_path", sa.String(), nullable=True),
+        sa.Column("pip_extras", sa.String(), nullable=True),
         sa.Column(
             "pinned_package_versions",
             sa.JSON(),
@@ -91,21 +80,9 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column("taskgroupv2_id", sa.Integer(), nullable=True)
         )
-        batch_op.add_column(
-            sa.Column(
-                "category", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-            )
-        )
-        batch_op.add_column(
-            sa.Column(
-                "modality", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-            )
-        )
-        batch_op.add_column(
-            sa.Column(
-                "authors", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-            )
-        )
+        batch_op.add_column(sa.Column("category", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("modality", sa.String(), nullable=True))
+        batch_op.add_column(sa.Column("authors", sa.String(), nullable=True))
         batch_op.add_column(
             sa.Column("tags", sa.JSON(), server_default="[]", nullable=False)
         )

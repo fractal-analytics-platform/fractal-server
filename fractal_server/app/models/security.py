@@ -1,22 +1,20 @@
 from datetime import datetime
-from typing import Optional
 
-from pydantic import ConfigDict
-from pydantic import EmailStr
-from sqlalchemy import Column
+from sqlalchemy import ARRAY
+from sqlalchemy import BOOLEAN
+from sqlalchemy import CheckConstraint
+from sqlalchemy import ForeignKey
 from sqlalchemy import String
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import DateTime
-from sqlmodel import BOOLEAN
-from sqlmodel import CheckConstraint
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class OAuthAccount(SQLModel, table=True):
+class OAuthAccount(Base):
     """
     ORM model for OAuth accounts (`oauthaccount` database table).
 
@@ -37,19 +35,26 @@ class OAuthAccount(SQLModel, table=True):
 
     __tablename__ = "oauthaccount"
 
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
-    oauth_name: str = Field(index=True, nullable=False)
-    access_token: str = Field(nullable=False)
-    expires_at: int | None = Field(nullable=True, default=None)
-    refresh_token: str | None = Field(nullable=True, default=None)
-    account_id: str = Field(index=True, nullable=False)
-    account_email: str = Field(nullable=False)
-    model_config = ConfigDict(from_attributes=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id"), nullable=False
+    )
+    user: Mapped["UserOAuth | None"] = relationship(
+        back_populates="oauth_accounts"
+    )
+    oauth_name: Mapped[str] = mapped_column(index=True, nullable=False)
+    access_token: Mapped[str] = mapped_column(nullable=False)
+    expires_at: Mapped[int | None] = mapped_column(
+        nullable=True, default=lambda: None
+    )
+    refresh_token: Mapped[str | None] = mapped_column(
+        nullable=True, default=lambda: None
+    )
+    account_id: Mapped[str] = mapped_column(index=True, nullable=False)
+    account_email: Mapped[str] = mapped_column(nullable=False)
 
 
-class UserOAuth(SQLModel, table=True):
+class UserOAuth(Base):
     """
     ORM model for the `user_oauth` database table.
 
@@ -88,45 +93,37 @@ class UserOAuth(SQLModel, table=True):
             List of SLURM accounts that the user can select upon running a job.
     """
 
-    model_config = ConfigDict(from_attributes=True)
-
     __tablename__ = "user_oauth"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    email: EmailStr = Field(
-        sa_column_kwargs={"unique": True, "index": True},
+    email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str]
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_guest: Mapped[bool] = mapped_column(
+        BOOLEAN,
+        server_default="false",
         nullable=False,
     )
-    hashed_password: str
-    is_active: bool = Field(default=True, nullable=False)
-    is_superuser: bool = Field(default=False, nullable=False)
-    is_verified: bool = Field(default=False, nullable=False)
-    is_guest: bool = Field(
-        sa_column=Column(
-            BOOLEAN,
-            server_default="false",
-            nullable=False,
-        ),
-    )
 
-    oauth_accounts: list["OAuthAccount"] = Relationship(
+    oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
         back_populates="user",
-        sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
+        lazy="joined",
+        cascade="all, delete",
     )
 
-    profile_id: int | None = Field(
-        foreign_key="profile.id",
-        default=None,
-        ondelete="RESTRICT",
+    profile_id: Mapped[int | None] = mapped_column(
+        ForeignKey("profile.id", ondelete="RESTRICT"), default=lambda: None
     )
 
-    project_dirs: list[str] = Field(
-        sa_column=Column(ARRAY(String), nullable=False),
+    project_dirs: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=False
     )
 
-    slurm_accounts: list[str] = Field(
-        sa_column=Column(ARRAY(String), server_default="{}"),
+    slurm_accounts: Mapped[list[str]] = mapped_column(
+        ARRAY(String), nullable=True, server_default="{}"
     )
 
     __table_args__ = (
@@ -137,7 +134,7 @@ class UserOAuth(SQLModel, table=True):
     )
 
 
-class UserGroup(SQLModel, table=True):
+class UserGroup(Base):
     """
     ORM model for the `usergroup` database table.
 
@@ -147,9 +144,10 @@ class UserGroup(SQLModel, table=True):
         timestamp_created: Time of creation
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(unique=True)
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    __tablename__ = "usergroup"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )

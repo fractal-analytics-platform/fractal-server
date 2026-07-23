@@ -8,7 +8,7 @@ from fastapi import Depends
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db

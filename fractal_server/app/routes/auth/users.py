@@ -10,9 +10,9 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
@@ -104,10 +104,9 @@ async def patch_user(
             safe=False,
             request=None,
         )
-        validated_user = UserOAuth.model_validate(user.model_dump())
         patched_user = await db.get_one(
             UserOAuth,
-            validated_user.id,
+            user.id,
             populate_existing=True,
         )
     except exceptions.InvalidPasswordException as e:

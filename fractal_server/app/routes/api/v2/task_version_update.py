@@ -6,10 +6,10 @@ from packaging.version import Version
 from packaging.version import parse
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from sqlmodel import String
-from sqlmodel import cast
-from sqlmodel import or_
-from sqlmodel import select
+from sqlalchemy import String
+from sqlalchemy import cast
+from sqlalchemy import or_
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db

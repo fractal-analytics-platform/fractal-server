@@ -8,9 +8,9 @@ from fastapi import status
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from sqlmodel import func
-from sqlmodel import select
-from sqlmodel import update
+from sqlalchemy import func
+from sqlalchemy import select
+from sqlalchemy import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db

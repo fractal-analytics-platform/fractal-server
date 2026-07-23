@@ -1,44 +1,51 @@
 from typing import Any
 
-from pydantic import ConfigDict
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+
+from fractal_server.app.models.base import Base
 
 from .task import TaskV2
 
 
-class WorkflowTaskV2(SQLModel, table=True):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class WorkflowTaskV2(Base):
+    __tablename__ = "workflowtaskv2"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    workflow_id: int = Field(foreign_key="workflowv2.id", ondelete="CASCADE")
-    order: int | None = None
-    meta_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    workflow_id: Mapped[int] = mapped_column(
+        ForeignKey("workflowv2.id", ondelete="CASCADE")
     )
-    meta_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    order: Mapped[int | None] = mapped_column(default=lambda: None)
+    meta_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, default=lambda: None
     )
-    args_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+    meta_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, default=lambda: None
     )
-    args_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSONB), default=None
+    args_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB, default=lambda: None
+    )
+    args_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB, default=lambda: None
     )
 
-    type_filters: dict[str, bool] = Field(
-        sa_column=Column(JSONB, nullable=False, server_default="{}")
+    type_filters: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
     )
 
     # Task
-    task_type: str
-    task_id: int = Field(foreign_key="taskv2.id")
-    task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
+    task_type: Mapped[str]
+    task_id: Mapped[int] = mapped_column(ForeignKey("taskv2.id"))
+    task: Mapped["TaskV2"] = relationship(lazy="selectin")
 
-    alias: str | None = Field(default=None, nullable=True)
-    description: str | None = Field(default=None, nullable=True)
+    alias: Mapped[str | None] = mapped_column(
+        default=lambda: None, nullable=True
+    )
+    description: Mapped[str | None] = mapped_column(
+        default=lambda: None, nullable=True
+    )
