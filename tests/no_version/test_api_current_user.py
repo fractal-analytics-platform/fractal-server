@@ -103,6 +103,22 @@ async def test_patch_current_user(client, MockCurrentUser):
         assert res.status_code == 200
         assert res.json()["slurm_accounts"] == ["foo", "bar"]
 
+        # Empty account names are rejected
+        res = await client.patch(PREFIX, json={"slurm_accounts": [""]})
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == "String should have at least 1 character"
+        )
+
+        # Account names with forbidden characters are rejected
+        res = await client.patch(PREFIX, json={"slurm_accounts": ["&"]})
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"][0]["msg"]
+            == r"String should match pattern '^[a-zA-Z0-9_\-\.]+$'"
+        )
+
     async with MockCurrentUser(is_guest=True):
         res = await client.get(f"{PREFIX}?group_ids_names=True")
         pre_patch_user = res.json()
