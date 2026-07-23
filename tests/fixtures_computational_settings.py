@@ -13,6 +13,7 @@ from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
 from fractal_server.app.schemas.v2 import ValidResourceLocal
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
+from fractal_server.ssh._fabric import SSH_DEFAULT_PORT
 from tests.fixtures_slurm import SLURM_USER
 
 SLURM_CONFIG = {
@@ -149,6 +150,7 @@ def slurm_ssh_resource_profile_objects(
         name="SLURM cluster A",
         type=ResourceType.SLURM_SSH,
         host=slurmlogin_ip,
+        port_internal=SSH_DEFAULT_PORT,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         jobs_slurm_python_worker=(
@@ -200,6 +202,7 @@ def slurm_ssh_resource_profile_fake_objects(
         name="SLURM cluster A",
         type=ResourceType.SLURM_SSH,
         host="localhost",
+        port_internal=SSH_DEFAULT_PORT,
         jobs_local_dir=(tmp777_path / "local-jobs").as_posix(),
         tasks_local_dir=(tmp777_path / "local-tasks").as_posix(),
         jobs_slurm_python_worker=(

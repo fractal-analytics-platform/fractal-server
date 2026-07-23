@@ -23,6 +23,7 @@ from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 
 SSH_MONITORING_LOGGER_NAME = "ssh-log"
+SSH_DEFAULT_PORT = 22
 
 
 class FractalSSHTimeoutError(RuntimeError):
@@ -45,6 +46,7 @@ class SSHConfig(BaseModel):
     host: str
     user: str
     key_path: str
+    port: int = SSH_DEFAULT_PORT
 
 
 def retry_if_socket_error(func):
@@ -657,7 +659,14 @@ class FractalSSHList:
         """
         return len(self._data.values())
 
-    def get(self, *, host: str, user: str, key_path: str) -> FractalSSH:
+    def get(
+        self,
+        *,
+        host: str,
+        user: str,
+        key_path: str,
+        port: int = SSH_DEFAULT_PORT,
+    ) -> FractalSSH:
         """
         Get the `FractalSSH` for the current credentials, or create one.
 
@@ -667,6 +676,7 @@ class FractalSSHList:
             host:
             user:
             key_path:
+            port:
         """
         key = (host, user, key_path)
         fractal_ssh = self._data.get(key, None)
@@ -680,6 +690,7 @@ class FractalSSHList:
             connection = Connection(
                 host=host,
                 user=user,
+                port=port,
                 forward_agent=False,
                 connect_kwargs={
                     "key_filename": key_path,

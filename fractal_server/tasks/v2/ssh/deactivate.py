@@ -73,6 +73,7 @@ def deactivate_ssh(
                 ssh_config=SSHConfig(
                     user=profile.username,
                     host=resource.host,
+                    port=resource.port_or_default,
                     key_path=profile.ssh_key_path,
                 ),
                 logger_name=LOGGER_NAME,

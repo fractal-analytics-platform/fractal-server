@@ -89,6 +89,7 @@ def collect_ssh_pixi(
             with SingleUseFractalSSH(
                 ssh_config=SSHConfig(
                     host=resource.host,
+                    port=resource.port_or_default,
                     user=profile.username,
                     key_path=profile.ssh_key_path,
                 ),

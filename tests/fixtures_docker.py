@@ -13,6 +13,7 @@ import pytest
 from pytest import TempPathFactory
 from pytest_docker.plugin import containers_scope
 
+from fractal_server.ssh._fabric import SSH_DEFAULT_PORT
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 
@@ -230,6 +231,7 @@ def fractal_ssh_list(
     collection = FractalSSHList()
     fractal_ssh_obj: FractalSSH = collection.get(
         host=slurmlogin_ip,
+        port=SSH_DEFAULT_PORT,
         user="fractal",
         key_path=ssh_keys["private"],
     )
@@ -253,6 +255,7 @@ def ssh_config_dict(
 ) -> dict[str, str | dict[str, str]]:
     return dict(
         host=slurmlogin_ip,
+        port=SSH_DEFAULT_PORT,
         user=ssh_username,
         key_path=ssh_keys["private"],
     )
