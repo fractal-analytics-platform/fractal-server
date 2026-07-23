@@ -1,11 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.24.2 (unreleased)
+# 2.24.2
 
-* Testing:
-    * Add `network: host` to build options in docker compose (\#3412).
 * API:
     * Introduce `/job/squeue/` endpoint to retrieve Slurm cluster queue (\#3416).
+* Testing:
+    * Add `network: host` to build options in docker compose (\#3412).
 
 # 2.24.1
 
