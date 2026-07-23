@@ -4,6 +4,8 @@
 
 * Testing:
     * Add `network: host` to build options in docker compose (\#3412).
+* API:
+    * Introduce `/job/squeue/` endpoint to retrieve Slurm cluster queue (\#3416).
 
 # 2.24.1
 
