@@ -80,7 +80,10 @@ async def test_run_squeue_error(
     ) as _:
         res = await client.get(f"{PREFIX}/job/squeue/?scope=accounts")
         assert res.status_code == 422
-        assert res.json()["detail"] == "Error executing squeue command."
+        assert (
+            res.json()["detail"]
+            == "Error executing squeue command - please retry later."
+        )
 
 
 @pytest.mark.container

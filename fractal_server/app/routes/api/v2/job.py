@@ -277,7 +277,7 @@ async def get_squeue(
 
     command = (
         f"squeue {flags} --format="
-        f'"%.18i %.9P %.20j %.14u %.14a %.11T %.12M %.6D %R"'
+        f'"%.12i %.9P %.24j %.14u %.14a %.11T %.12M %.6D %.4C %.10m %R"'
     )
 
     try:
@@ -299,5 +299,5 @@ async def get_squeue(
         logger.error(f"Cannot execute squeue command. Original error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Error executing squeue command.",
+            detail="Error executing squeue command - please retry later.",
         )
