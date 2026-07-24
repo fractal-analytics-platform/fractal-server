@@ -1,12 +1,16 @@
 import asyncio
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Literal
 from typing import Sequence
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from fastapi.params import Query
+from fastapi.responses import PlainTextResponse
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
@@ -22,10 +26,20 @@ from fractal_server.app.routes.aux._job import (
 )
 from fractal_server.app.routes.aux._job import _write_shutdown_file_or_422
 from fractal_server.app.routes.aux._runner import _check_shutdown_is_supported
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.ssh._fabric import SingleUseFractalSSH
+from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.syringe import Inject
+from fractal_server.utils import execute_command_sync
 from fractal_server.zip_tools import _zip_folder_to_byte_stream_iterator
 
 from ._aux_functions import _get_job_check_access
@@ -41,6 +55,8 @@ async def zip_folder_threaded(folder: str) -> Iterator[bytes]:
 
 
 router = APIRouter()
+
+logger = set_logger(__name__)
 
 
 @router.get("/job/", response_model=list[JobRead])
@@ -228,3 +244,60 @@ async def stop_job(
     _write_shutdown_file_or_422(job=job)
 
     return Response(status_code=status.HTTP_202_ACCEPTED)
+
+
+@router.get(
+    "/job/squeue/",
+    response_model=str,
+)
+async def get_squeue(
+    scope: Literal["all", "user", "accounts"] = Query(default="all"),
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend not in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"This endpoint is not available for "
+            f"FRACTAL_RUNNER_BACKEND={backend}.",
+        )
+
+    resource, profile = await validate_user_profile(
+        user=user,
+        db=db,
+    )
+
+    flags = ""
+    if scope == "user":
+        flags = f"--user {profile.username}"
+    elif scope == "accounts" and len(user.slurm_accounts) > 0:
+        flags = f"--accounts={','.join(user.slurm_accounts)}"
+
+    command = (
+        f"squeue {flags} --format="
+        f'"%.12i %.9P %.24j %.14u %.14a %.11T %.12M %.6D %.4C %.10m %R"'
+    )
+
+    try:
+        if resource.type == ResourceType.SLURM_SSH:
+            with SingleUseFractalSSH(
+                ssh_config=SSHConfig(
+                    host=resource.host,
+                    user=profile.username,
+                    key_path=profile.ssh_key_path,
+                ),
+                logger_name=logger.name,
+            ) as fractal_ssh:
+                out = fractal_ssh.run_command(cmd=command)
+                return PlainTextResponse(content=out)
+        else:
+            out = execute_command_sync(command=command)
+            return PlainTextResponse(content=out)
+    except Exception as e:
+        logger.error(f"Cannot execute squeue command. Original error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Error executing squeue command - please retry later.",
+        )
