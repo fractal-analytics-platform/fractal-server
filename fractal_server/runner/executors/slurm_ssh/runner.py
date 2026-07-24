@@ -3,6 +3,9 @@ from pathlib import Path
 from typing import Self
 from typing import override
 
+from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.ssh_exception import SSHException
+
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
@@ -16,12 +19,32 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.ssh._fabric import FractalSSHTimeoutError
+from fractal_server.ssh._fabric import FractalSSHUnknownError
 
 from .run_subprocess import run_subprocess
 from .tar_commands import get_tar_compression_cmd
 from .tar_commands import get_tar_extraction_cmd
 
 logger = set_logger(__name__)
+
+# `run_squeue` placeholder returned when we cannot actually query SLURM
+# (SSH transport failure, lock timeout). Chosen so that it is NOT part of
+# `STATES_FINISHED`, which prevents `_get_finished_jobs` from wrongly
+# marking every polled job as COMPLETED when the SSH channel is unusable.
+_SQUEUE_STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
+
+# Transport-level SSH exceptions that indicate the channel is (possibly)
+# broken but not that any actual command failed. When we see these we
+# should NOT interpret them as "no jobs / task done" and we should retry
+# the operation later (after refreshing the connection).
+_SSH_TRANSPORT_ERRORS: tuple[type[BaseException], ...] = (
+    OSError,
+    EOFError,
+    SSHException,
+    NoValidConnectionsError,
+    FractalSSHUnknownError,
+    FractalSSHTimeoutError,
+)
 
 
 class SlurmSSHRunner(BaseSlurmRunner):
@@ -86,13 +109,74 @@ class SlurmSSHRunner(BaseSlurmRunner):
         finished_slurm_jobs: list[SlurmJob],
     ) -> None:
         """
-        Fetch artifacts for a list of SLURM jobs.
-        """
+        Fetch artifacts for a list of SLURM jobs, with retries on SSH failure.
 
-        # Check length
+        Wraps `_fetch_artifacts_impl` with exponential backoff and an SSH
+        reconnection attempt between retries. On final failure, re-raises
+        the last exception (callers mark the affected tasks as FAILED).
+        """
         if len(finished_slurm_jobs) == 0:
             logger.debug(f"[_fetch_artifacts] EXIT ({finished_slurm_jobs=}).")
             return None
+
+        max_attempts = 5
+        base_wait_seconds = 2.0
+        last_exception: Exception | None = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                self._fetch_artifacts_impl(finished_slurm_jobs)
+                if attempt > 1:
+                    logger.warning(
+                        f"[_fetch_artifacts] Succeeded on attempt {attempt}/"
+                        f"{max_attempts} after transient failure(s)."
+                    )
+                return None
+            except Exception as e:
+                last_exception = e
+                logger.warning(
+                    f"[_fetch_artifacts] Attempt {attempt}/{max_attempts} "
+                    f"failed ({type(e).__name__}): {e}"
+                )
+                if attempt == max_attempts:
+                    break
+                # Try to bring the SSH channel back before the next attempt.
+                try:
+                    self.fractal_ssh.check_connection()
+                except Exception as reconnect_err:
+                    logger.warning(
+                        "[_fetch_artifacts] SSH reconnection attempt failed: "
+                        f"{reconnect_err}. Will still retry the fetch."
+                    )
+                wait_seconds = base_wait_seconds * (2 ** (attempt - 1))
+                logger.info(
+                    f"[_fetch_artifacts] Sleeping {wait_seconds:.1f}s before "
+                    f"retry {attempt + 1}/{max_attempts}."
+                )
+                time.sleep(wait_seconds)
+
+        logger.error(
+            f"[_fetch_artifacts] Giving up after {max_attempts} attempts. "
+            f"Last error ({type(last_exception).__name__}): {last_exception}. "
+            "Affected SLURM jobs will be marked as FAILED even though the "
+            "compute may have completed successfully on the cluster. Task "
+            "output files can still be found on the remote working directory."
+        )
+        raise last_exception  # type: ignore[misc]
+
+    def _fetch_artifacts_impl(
+        self,
+        finished_slurm_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Fetch artifacts for a list of SLURM jobs.
+
+        Note: this is idempotent -- the remote tarball, the local tarball
+        and the extracted files are all overwritten on each call. The
+        temporary remote filelist gets a unique name (`time.time()` suffix)
+        so leftovers from a failed attempt do not collide. This makes the
+        retry-wrapper `_fetch_artifacts` safe to invoke multiple times.
+        """
 
         t_0 = time.perf_counter()
         logger.debug(f"[_fetch_artifacts] START ({len(finished_slurm_jobs)=}).")
@@ -256,11 +340,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
            lock of the `FractalSSH` object for a long time, mock the standard
            output of the `squeue` command so that it looks like jobs are not
            completed yet.
-        4. When the SSH command fails for other reasons, despite a forgiving
-           setup (7 connection attempts with base waiting interval of 2
-           seconds, with a cumulative timeout of 126 seconds), return an empty
-           string. This will be treated upstream as an empty `squeu` output,
-           indirectly resulting in marking the job as completed.
+        4. When the SSH command fails for other reasons (transport-level SSH
+           failure or any other unexpected error), return the same placeholder
+           as in (3) and attempt to refresh the SSH connection, so jobs are
+           not wrongly marked as completed and the next poll can retry.
         """
 
         if len(job_ids) == 0:
@@ -278,16 +361,39 @@ class SlurmSSHRunner(BaseSlurmRunner):
             )
             return stdout
         except FractalSSHCommandError as e:
+            # Genuine `squeue` failure (e.g. invalid job id). Let upstream
+            # decide (`_get_finished_jobs` falls back to per-job queries).
             raise e
         except FractalSSHTimeoutError:
             logger.warning(
                 "[run_squeue] Could not acquire lock, use stdout placeholder."
             )
-            FAKE_STATUS = "FRACTAL_STATUS_PLACEHOLDER"
-            placeholder_stdout = "\n".join(
-                [f"{job_id} {FAKE_STATUS}" for job_id in job_ids]
+            return "\n".join(
+                f"{job_id} {_SQUEUE_STATUS_PLACEHOLDER}" for job_id in job_ids
             )
-            return placeholder_stdout
+        except _SSH_TRANSPORT_ERRORS as e:
+            logger.error(
+                "[run_squeue] Transport-level SSH failure "
+                f"({type(e).__name__}): {e}. "
+                "Returning placeholder so that jobs are NOT marked as "
+                "completed. Will try to refresh SSH connection."
+            )
+            try:
+                self.fractal_ssh.check_connection()
+            except Exception as reconnect_err:
+                logger.warning(
+                    "[run_squeue] SSH reconnection attempt failed: "
+                    f"{reconnect_err}. Next poll cycle will try again."
+                )
+            return "\n".join(
+                f"{job_id} {_SQUEUE_STATUS_PLACEHOLDER}" for job_id in job_ids
+            )
         except Exception as e:
-            logger.error(f"Ignoring `squeue` command failure {e}")
-            return ""
+            logger.error(
+                "[run_squeue] Unexpected failure "
+                f"({type(e).__name__}): {e}. "
+                "Returning placeholder (jobs will be re-polled)."
+            )
+            return "\n".join(
+                f"{job_id} {_SQUEUE_STATUS_PLACEHOLDER}" for job_id in job_ids
+            )
