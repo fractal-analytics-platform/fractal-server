@@ -22,9 +22,16 @@ async def get_current_user_allowed_viewer_paths(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
-    Returns a list of data paths that the user can access. allowed viewer paths for current user.
+    Returns a list of data paths that the user should have access to.
 
-    NOTE: `include_shared_projects` is an obsolete query-parameter name,
+    In its default behavior, this endpoint returns a list made of two kinds
+    of paths:
+
+    1. All the project directories of the current user.
+    2. The zarr directories of all datasets which are accessible to the current
+       user (either as a project owner or as a project guest).
+
+    NOTE: `include_shared_projects` is an legacy query-parameter name,
     because it does not make a difference between owners/guests. A better
     naming would be e.g. `include_zarr_dirs`, but it would require a fix
     in `fractal-web` as well.
@@ -40,7 +47,7 @@ async def get_current_user_allowed_viewer_paths(
             .where(LinkUserProjectV2.is_verified.is_(True))
             .distinct()
         )
-        authorized_zarr_dirs = list(res.scalars().all())
+        authorized_zarr_dirs: list[str] = list(res.scalars().all())
         # Note that `project_dirs` and the `authorized_zarr_dirs` may have some
         # common elements, and then the response may include non-unique items.
         return current_user.project_dirs + authorized_zarr_dirs
