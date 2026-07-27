@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Documentation:
+    * Add docs page about data access and `fractal-data` integration (\#3419).
+
 # 2.24.2
 
 * API:
