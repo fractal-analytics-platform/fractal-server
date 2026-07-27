@@ -31,10 +31,10 @@ async def get_current_user_allowed_viewer_paths(
     2. The zarr directories of all datasets which are accessible to the current
        user (either as a project owner or as a project guest).
 
-    NOTE: `include_shared_projects` is an legacy query-parameter name,
-    because it does not make a difference between owners/guests. A better
+    NOTE: `include_shared_projects` is a legacy query-parameter name,
+    which does not make a difference between owners/guests. A better
     naming would be e.g. `include_zarr_dirs`, but it would require a fix
-    in `fractal-web` as well.
+    in `fractal-web` which is currently postponed.
     """
     if include_shared_projects:
         res = await db.execute(
