@@ -115,11 +115,11 @@ The Fractal platform runs through a privileged service user, which has some (lim
 Depending on the deployment details, this service user may also have broad data access.
 
 The `fractal-server` Fractal backend does not include a supported way to expand a Fractal-user's permissions
-beyond the ones of their cluster user. As an example, if the `n_surname` cluster user has no read or read-write
+beyond the ones of their cluster user. As an example, if the `n_surname` cluster user has no read or read/write
 access to `/tmp/some-file`, then there is no supported way they can run a job orchestrated by `fractal-server`
 which grants them access to that file.
 
-The `fractal-data` data-streaming service, on the other hand, _may_ provide read access to `/tmp/some-data` to the
+The `fractal-data` data-streaming service, on the other hand, _may_ provide HTTP read access to `/tmp/some-data` to the
 name.surname@example.org Fractal user, even in a situation where the `n_surname` cluster user does not have on-disk
 access to it. The rest of this section describes the context and details of how the Fractal platform (notably
 through its `fractal-server` and `fractal-data` components) implements the authorization scheme for this use case.
@@ -142,14 +142,14 @@ which in the examples above takes the value `["/tmp/user-project-dir-1", "/tmp/u
 These project directories are the only allowed base folders for Fractal-dataset zarr directories, both in terms of Fractal metadata
 (stored in the database at `Dataset.zarr_dir` - with a valid example being `"/tmp/user-project-dir-1/my-dataset` and an invalid
 example being `/tmp/somewhere-else/my-dataset`) and in terms of on-disk OME-Zarr data (which should be written within `Dataset.zarr_dir`).
-For this reason, it makes sense that the project directories of a given Fractal user are read-write-accessible on-disk for the
+For this reason, it makes sense that the project directories of a given Fractal user are read/write-accessible on disk for the
 corresponding cluster user.
 
 > **Note**: Fractal does not let a user create a dataset with a `Dataset.zarr_dir` which is not a subfolder of any of their `project_dirs`.
 
 Regarding shared projects, a meaningful on-disk access pattern depends on the kind of collaboration which is meant to happen:
 
-* If both the project owner and the guest are expected to run jobs that modify data on-disk, then it's meaningful that both their cluster users have
+* If both the project owner and the guest are expected to run jobs that modify data on disk, then it's meaningful that both their cluster users have
   read/write on-disk access.
 * If the guest is only meant to look at data, without running jobs on the cluster, then the corresponding on-disk access is not required.
 
