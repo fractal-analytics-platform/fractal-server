@@ -22,7 +22,7 @@ async def get_current_user_allowed_viewer_paths(
     db: AsyncSession = Depends(get_async_db),
 ) -> list[str]:
     """
-    Returns the allowed viewer paths for current user.
+    Returns a list of data paths that the user can access. allowed viewer paths for current user.
 
     NOTE: `include_shared_projects` is an obsolete query-parameter name,
     because it does not make a difference between owners/guests. A better

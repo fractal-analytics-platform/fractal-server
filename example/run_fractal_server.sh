@@ -10,7 +10,6 @@ uv run --frozen fractalctl init-db-data --resource default --profile default --a
 # Start the server
 uv run --frozen gunicorn fractal_server.main:app \
     --workers 2 \
-    --bind "0.0.0.0:8000" \
     --access-logfile - \
     --error-logfile - \
     --worker-class fractal_server.gunicorn_fractal.FractalWorker \
