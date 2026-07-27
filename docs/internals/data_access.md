@@ -164,7 +164,7 @@ This decision consists in a request to the `fractal-server` endpoint at `/auth/c
 In its default behavior, this endpoint returns a list made of two kinds of paths: (1) All the project directories of the current user, and (2) the zarr directories of all datasets which are accessible to the current user (either as a project owner or as a project guest).
 Here are some examples:
 
-* The current user has two project directories and no datasets:
+* The current user has two project directories (assigned by a Fractal admin) and no datasets:
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
