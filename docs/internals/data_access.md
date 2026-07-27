@@ -55,27 +55,27 @@ If the token was not found, or if the server does not respond with a valid user,
 
 Here is a list of example behaviors:
 
-1. Anonymous user gets a 401-Unauthorized response:
+* Anonymous user gets a 401-Unauthorized response:
 ```console
 $ curl -s -i  http://localhost:3000/data/files/some/path/ | head -n1
 HTTP/1.1 401 Unauthorized
 ```
-2. Invalid token leads to a 401-Unauthorized response:
+* Invalid token leads to a 401-Unauthorized response:
 ```console
 $ curl -s -i  http://localhost:3000/data/files/some/path/ -H "Authorization: Bearer invalid" | head -n1
 HTTP/1.1 401 Unauthorized
 ```
-3. Authenticated user requesting an invalid path gets a 403-Forbidden response (more details in the [Authorization section](#authorization) below):
+* Authenticated user requesting an invalid path gets a 403-Forbidden response (more details in the [Authorization section](#authorization) below):
 ```console
 $ curl -s -i  http://localhost:3000/data/files/some/path/ -H "Authorization: Bearer ey..." | head -n1
 HTTP/1.1 403 Forbidden
 ```
-4. Authenticated user requesting a valid but missing file gets a 404-Not-found response (more details in the [Authorization section](#authorization) below):
+* Authenticated user requesting a valid but missing file gets a 404-Not-found response (more details in the [Authorization section](#authorization) below):
 ```console
 $ curl -s -i http://localhost:3000/data/files/tmp/user-project-dir-1/missing-file.txt -H "Authorization: Bearer ey..." | head -n1
 HTTP/1.1 404 Not Found
 ```
-5. Authenticated user requesting a valid existing file gets the file contents (more details in the [Authorization section](#authorization) below):
+* Authenticated user requesting a valid existing file gets the file contents (more details in the [Authorization section](#authorization) below):
 ```console
 $ curl -s  http://localhost:3000/data/files/tmp/user-project-dir-1/test.txt -H "Authorization: Bearer ey..."
 Some file contents
@@ -157,10 +157,11 @@ the service relies on the [`authorizer` module](https://github.com/fractal-analy
 to decide whether this specific user should have access to the specific `/some/path` file
 (provided that the file exists and is accessible to the `fractal-data` service user).
 
-This decision consists in a request to the `fractal-server` endpoint at `/auth/current-user/allowed-viewer-paths/`, which
-behaves as in these examples:
+This decision consists in a request to the `fractal-server` endpoint at `/auth/current-user/allowed-viewer-paths/`.
+In its default behavior, this endpoint returns a list made of two kinds of paths: (1) All the project directories of the current user, and (2) the zarr directories of all datasets which are accessible to the current user (either as a project owner or as a project guest).
+Here are some examples:
 
-1. The current user has two project directories and no datasets:
+* The current user has two project directories and no datasets:
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
@@ -169,7 +170,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-2. Same as above, but the current user also own a dataset with `zarr_dir="/tmp/user-project-dir-1/my-dataset-1"`:
+* Same as above, but the current user also own a dataset with `zarr_dir="/tmp/user-project-dir-1/my-dataset-1"`:
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
@@ -179,7 +180,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-3. Same as above, but a second user created a dataset with `zarr_dir="/tmp/user-project-dir-2/another-dataset"` and shared it with the current user. Note that for this to happen, both user should have `/tmp/user-project-dir-2` as one of their admin-provided project directories.
+* Same as above, but a second user created a dataset with `zarr_dir="/tmp/user-project-dir-2/another-dataset"` and shared it with the current user. Note that for this to happen, both user should have `/tmp/user-project-dir-2` as one of their admin-provided project directories.
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
