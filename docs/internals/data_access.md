@@ -23,15 +23,18 @@ This page describes the `fractal-server` logic, and the additional details on ho
 ## Authentication
 
 As for authentication, `fractal-data` fully relies on `fractal-server`. As a first step, `fractal-data` parses the
-HTTP request it receives, looking for the expected Fractal-athentication cookie or token.
+HTTP request it receives, looking for the expected Fractal-authentication cookie or token.
 If the token is found, `fractal-data` makes a request to the `/auth/current-user/` endpoint of `fractal-server`,
-which behaves as in these examples
+which behaves as in these examples:
+
+* Anonymous user:
 ```console
-# Anonymous user
 $ curl http://localhost:8000/auth/current-user/
 {"detail":"Unauthorized"}
+```
 
-# Authenticated user
+* Authenticated user:
+```console
 $ curl -s http://localhost:8000/auth/current-user/ -H "Authorization: Bearer ey..." | jq '.'
 {
   "id": 1,
@@ -170,7 +173,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-* Same as above, but the current user also own a dataset with `zarr_dir="/tmp/user-project-dir-1/my-dataset-1"`:
+* Same as above, but the current user also owns a dataset with `zarr_dir="/tmp/user-project-dir-1/my-dataset-1"`:
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
@@ -180,7 +183,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-* Same as above, but a second user created a dataset with `zarr_dir="/tmp/user-project-dir-2/another-dataset"` and shared it with the current user. Note that for this to happen, both user should have `/tmp/user-project-dir-2` as one of their admin-provided project directories.
+* Same as above, but a second user created a dataset with `zarr_dir="/tmp/user-project-dir-2/another-dataset"` and shared it with the current user. Note that for this to happen both users should have `/tmp/user-project-dir-2` as one of their admin-provided project directories.
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
@@ -191,7 +194,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-> **Note**: Here is the [implementation of the `/auth/current-user/allowed-viewer-paths/` endpoint](../../code_reference/app/routes/auth/viewer_paths/?h=get_current_user_allowed_viewer_paths#fractal_server.app.routes.auth.viewer_paths.get_current_user_allowed_viewer_paths).
+> **Note**: Here is the [implementation of the `/auth/current-user/allowed-viewer-paths/` endpoint](../code_reference/app/routes/auth/viewer_paths/?h=get_current_user_allowed_viewer_paths#fractal_server.app.routes.auth.viewer_paths.get_current_user_allowed_viewer_paths).
 
 After this request to `fractal-server`, `fractal-data` finds out whether the requested-file path is a subpath of one of the authorized paths
 (as provided by `fractal-server`):
