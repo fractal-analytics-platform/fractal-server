@@ -124,7 +124,7 @@ beyond the ones of their cluster user. As an example, if the `n_surname` cluster
 access to `/tmp/some-file`, then there is no supported way they can run a job orchestrated by `fractal-server`
 which grants them access to that file.
 
-The `fractal-data` data-streaming service, on the other hand, _may_ provide HTTP read access to `/tmp/some-data` to the
+The `fractal-data` data-streaming service, on the other hand, _may_ provide HTTP read access to `/tmp/some-path` to the
 name.surname@example.org Fractal user, even in a situation where the `n_surname` cluster user does not have on-disk
 access to it. The rest of this section describes the context and details of how the Fractal platform (notably
 through its `fractal-server` and `fractal-data` components) implements the authorization scheme for this use case.
