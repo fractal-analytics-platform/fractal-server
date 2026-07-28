@@ -104,15 +104,20 @@ description of how this affects the `fractal-data` authorization layer.
 
 ### Context: Actors and permissions
 
-A "Fractal user" is a user who can interact with the Fractal platform;
+A _Fractal user_ is a user who can interact with the Fractal platform;
 their details are stored in the Fractal database, and their permissions are defined by Fractal.
-Each Fractal user is associated to a "cluster user", that is, is a machine user who exists on the cluster;
+Each Fractal user is associated to a _cluster user_, that is, is a machine user who exists on the cluster;
 their permissions are defined by the cluster admins e.g. through UNIX groups and/or filesystem ACLs.
 As an example, the Fractal user name.surname@example.org may correspond to the `n_surname` cluster user.
 
-The Fractal platform runs through a privileged service user, which has some (limited) impersonation rights
-(see e.g. [the supported-approaches details](./integrations/#supported-integrations)).
-Depending on the deployment details, this service user may also have broad data access.
+The `fractal-server` service is run by a dedicated user (often called `fractal`) who needs a way to impersonate
+cluster users for job execution. This impersonation is [configured differently](./integrations/#supported-integrations)
+for different Fractal instances, and it either takes place through `sudo` (e.g. via commands like
+`sudo -u n_surname sbatch /some/submission/script.sh`) or via SSH impersonation of dedicated service users on the
+cluster.
+The same `fractal` user that runs the `fractal-server` service usually also runs the other Fractal services on the same
+host (including the `fractal-data` streaming service), and depending on the deployment details this user may also have
+broad read access to scientific-data directories.
 
 The `fractal-server` Fractal backend does not include a supported way to expand a Fractal-user's permissions
 beyond the ones of their cluster user. As an example, if the `n_surname` cluster user has no read or read/write
@@ -183,14 +188,14 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-* Same as above, but a second user created a dataset with `zarr_dir="/tmp/user-project-dir-2/another-dataset"` and shared it with the current user. Note that for this to happen both users should have `/tmp/user-project-dir-2` as one of their admin-provided project directories.
+* Same as above, but a second user created a dataset with `zarr_dir="/tmp/project-dir-for-second-user/xyz"` and shared it with the current user. Note: this requires that an admin assigned `/tmp/project-dir-for-second-user` as a project directory of the second user.
 ```console
 $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Authorization: Bearer ey..." | jq '.'
 [
   "/tmp/user-project-dir-1",
   "/tmp/user-project-dir-2",
   "/tmp/user-project-dir-1/my-dataset-1",
-  "/tmp/user-project-dir-2/another-dataset"
+  "/tmp/project-dir-for-second-user/xyz"
 ]
 ```
 
