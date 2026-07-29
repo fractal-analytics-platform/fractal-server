@@ -1,21 +1,20 @@
-import datetime
-
-from sqlalchemy.sql.operators import is_not
-from sqlmodel import and_
-from sqlmodel import case
-from sqlmodel import or_
-from sqlmodel import select
-
-from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import JobV2
-from fractal_server.app.models import TaskGroupActivityV2
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.schemas.v2.job import JobStatusType
-from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
-from fractal_server.utils import get_timestamp
-
-
 def recent(*, minutes: int) -> None:
+    import datetime
+
+    from sqlalchemy.sql.operators import is_not
+    from sqlmodel import and_
+    from sqlmodel import case
+    from sqlmodel import or_
+    from sqlmodel import select
+
+    from fractal_server.app.db import get_sync_db
+    from fractal_server.app.models import JobV2
+    from fractal_server.app.models import TaskGroupActivityV2
+    from fractal_server.app.models import UserOAuth
+    from fractal_server.app.schemas.v2.job import JobStatusType
+    from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+    from fractal_server.utils import get_timestamp
+
     def format_timestamp(timestamp: datetime.datetime | None) -> str:
         if timestamp is None:
             return "-"
