@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* CLI:
+    * Lazy-load dependencies for CLI commands (\#3421).
 * Documentation:
     * Add docs page about data access and `fractal-data` integration (\#3419).
 
