@@ -23,12 +23,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastapi >= 0.137.2, <0.138.0",
-    "sqlmodel == 0.0.38",
+    "fastapi>=0.137.2,<0.140.14",
+    "sqlmodel==0.0.39",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
-    "uvicorn >= 0.50.0, <0.51.0",
+    "uvicorn>=0.50.0,<0.52.1",
     "uvicorn-worker == 0.4.0",
     "pydantic >=2.13.0,<2.14.0",
     "pydantic-settings ==2.14.2",

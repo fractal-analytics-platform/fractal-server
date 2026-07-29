@@ -7,6 +7,8 @@
 * Documentation:
     * Add docs page about data access and `fractal-data` integration (\#3419).
     * Add Trove classifiers (7ce44457ed).
+* Dependencies;
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` upper bounds (\#3422).
 
 # 2.24.2
 
