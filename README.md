@@ -113,15 +113,17 @@
 | fractal\_server/app/schemas/v2/workflowtask.py                               |       73 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/security/\_\_init\_\_.py                                 |      199 |        5 |       42 |        5 |     96% |107, 138-139, 145, 159, 295-\>303, 361-\>342 |
 | fractal\_server/app/shutdown.py                                              |       37 |        0 |       10 |        0 |    100% |           |
+| fractal\_server/cli/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/cli/\_\_main\_\_.py                                          |       29 |        8 |       14 |        7 |     65% |18, 20, 22, 30, 32, 38, 46-47 |
+| fractal\_server/cli/\_aux\_sync\_core\_tasks.py                              |       22 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/cli/\_init\_db\_data.py                                      |       74 |        0 |       16 |        0 |    100% |           |
 | fractal\_server/cli/\_openapi.py                                             |        9 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/cli/\_parser.py                                              |       32 |        3 |        0 |        0 |     91% |   164-166 |
-| fractal\_server/cli/\_recent.py                                              |       40 |        0 |       16 |        1 |     98% | 121-\>132 |
-| fractal\_server/cli/\_set\_db.py                                             |       12 |        6 |        0 |        0 |     50% |     19-26 |
-| fractal\_server/cli/\_start.py                                               |        3 |        1 |        0 |        0 |     67% |        10 |
-| fractal\_server/cli/\_sync\_core\_tasks.py                                   |       63 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/cli/\_update\_db\_data.py                                    |       28 |       22 |        6 |        0 |     18% |     15-70 |
+| fractal\_server/cli/\_recent.py                                              |       40 |        0 |       16 |        1 |     98% | 120-\>131 |
+| fractal\_server/cli/\_set\_db.py                                             |       12 |       11 |        0 |        0 |      8% |      9-25 |
+| fractal\_server/cli/\_start.py                                               |        3 |        2 |        0 |        0 |     33% |       7-9 |
+| fractal\_server/cli/\_sync\_core\_tasks.py                                   |       46 |        0 |        6 |        0 |    100% |           |
+| fractal\_server/cli/\_update\_db\_data.py                                    |       28 |       27 |        6 |        0 |      3% |      6-69 |
 | fractal\_server/config/\_\_init\_\_.py                                       |       13 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_database.py                                         |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_email.py                                            |       44 |        0 |        8 |        0 |    100% |           |
@@ -226,7 +228,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11440** |  **151** | **1964** |   **88** | **98%** |           |
+| **TOTAL**                                                                    | **11445** |  **162** | **1964** |   **88** | **98%** |           |
 
 
 ## Setup coverage badge
