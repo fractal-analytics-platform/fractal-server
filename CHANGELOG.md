@@ -2,10 +2,11 @@
 
 # Unreleased
 
-* CLI:
+* `fractalctl` CLI:
     * Lazy-load dependencies for CLI commands (\#3421).
 * Documentation:
     * Add docs page about data access and `fractal-data` integration (\#3419).
+    * Add Trove classifiers (7ce44457ed).
 
 # 2.24.2
 
