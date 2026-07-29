@@ -1,23 +1,3 @@
-import asyncio
-import json
-import sys
-from pathlib import Path
-
-from pydantic import ValidationError
-from sqlalchemy import func
-from sqlalchemy import select
-
-from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import Profile
-from fractal_server.app.models import Resource
-from fractal_server.app.models.security import UserOAuth
-from fractal_server.app.schemas.v2 import ResourceType
-from fractal_server.app.schemas.v2.profile import cast_serialize_profile
-from fractal_server.app.schemas.v2.resource import cast_serialize_resource
-from fractal_server.app.security import _create_first_group
-from fractal_server.app.security import _create_first_user
-
-
 def init_db_data(
     *,
     resource: str | None = None,
@@ -26,6 +6,25 @@ def init_db_data(
     admin_password: str | None = None,
     admin_project_dir: str | None = None,
 ) -> None:
+    import asyncio
+    import json
+    import sys
+    from pathlib import Path
+
+    from pydantic import ValidationError
+    from sqlalchemy import func
+    from sqlalchemy import select
+
+    from fractal_server.app.db import get_sync_db
+    from fractal_server.app.models import Profile
+    from fractal_server.app.models import Resource
+    from fractal_server.app.models.security import UserOAuth
+    from fractal_server.app.schemas.v2 import ResourceType
+    from fractal_server.app.schemas.v2.profile import cast_serialize_profile
+    from fractal_server.app.schemas.v2.resource import cast_serialize_resource
+    from fractal_server.app.security import _create_first_group
+    from fractal_server.app.security import _create_first_user
+
     # Create default group and user
     print()
     _create_first_group()

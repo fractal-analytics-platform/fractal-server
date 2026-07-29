@@ -1,12 +1,3 @@
-from pathlib import Path
-
-import alembic.config
-
-import fractal_server
-from fractal_server.config import get_db_settings
-from fractal_server.syringe import Inject
-
-
 def set_db() -> None:
     """
     Upgrade database schemas.
@@ -14,6 +5,14 @@ def set_db() -> None:
     Call alembic to upgrade to the latest migration.
     Ref: https://stackoverflow.com/a/56683030/283972
     """
+
+    from pathlib import Path
+
+    import alembic.config
+
+    import fractal_server
+    from fractal_server.config import get_db_settings
+    from fractal_server.syringe import Inject
 
     # Validate DB settings
     Inject(get_db_settings)
