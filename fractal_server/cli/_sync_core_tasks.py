@@ -16,11 +16,8 @@ def sync_core_tasks(
     import json
     import sys
 
-    from pydantic import RootModel
-    from sqlalchemy import func
     from sqlalchemy import select
     from sqlalchemy import update
-    from sqlalchemy.orm import Session
 
     from fractal_server.app.db import get_sync_db
     from fractal_server.app.models import Resource
@@ -30,51 +27,9 @@ def sync_core_tasks(
     from fractal_server.config import get_email_settings
     from fractal_server.send_mail import send_fractal_email_or_log_failure
     from fractal_server.syringe import Inject
-    from fractal_server.types import NonEmptyStr
 
-    _SetThreeStringsTuple = set[
-        tuple[
-            NonEmptyStr,
-            NonEmptyStr,
-            NonEmptyStr,
-        ]
-    ]
-
-    class _CoreInfoSet(RootModel):
-        """
-        Set of `(pkg_name, version, task_name)` tuples.
-        """
-
-        root: _SetThreeStringsTuple
-
-    def _read_set_from_file(path: Path | None) -> _SetThreeStringsTuple:
-        """
-        Read a file (if any) and parse into a set of core-task info items.
-        """
-        json_data = path.read_text() if path else "[]"
-        return _CoreInfoSet.model_validate_json(json_data).root
-
-    def _get_final_set(
-        *,
-        base: Path | None = None,
-        add: Path | None = None,
-        remove: Path | None = None,
-    ) -> _SetThreeStringsTuple:
-        base_set = _read_set_from_file(base)
-        add_set = _read_set_from_file(add)
-        remove_set = _read_set_from_file(remove)
-        final_set = (base_set.union(add_set)).difference(remove_set)
-        return final_set
-
-    def _count_core_tasks(db_sync: Session) -> int:
-        """
-        Count core tasks.
-        """
-        count_stm = select(func.count(TaskV2.id)).where(
-            TaskV2.is_core.is_(True)
-        )
-        res = db_sync.execute(count_stm)
-        return res.scalar_one()
+    from ._aux_sync_core_tasks import _count_core_tasks
+    from ._aux_sync_core_tasks import _get_final_set
 
     resources_and_groups: list[dict[str, int]] = json.loads(
         resources_and_groups.read_text()
