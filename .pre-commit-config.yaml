@@ -28,13 +28,18 @@ repos:
       entry: bash -c 'for file in "$@"; do if grep -n "fractal_server.types" "$file"; then echo "$file" && exit 1; fi; done' --
       language: system
       files: fractal_server/app/models/
+    - id: update-pylock
+      name: Update pylock file
+      entry: uv export --format pylock.toml --no-group dev --no-group docs --no-emit-project -o pylock.prod.toml
+      language: system
+      files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
+      pass_filenames: false
+      additional_dependencies: []
 -   repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
     - id: shellcheck
       files: fractal_server/
-
-
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
