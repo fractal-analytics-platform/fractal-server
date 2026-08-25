@@ -102,6 +102,7 @@ commit_message = "bump version {old_version} -> {new_version}"
 commit = true
 tag = true
 push = true
+pre_commit_hook = "scripts/pre-bumpver.sh"
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
