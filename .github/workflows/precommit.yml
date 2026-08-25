@@ -31,5 +31,5 @@ jobs:
       - run: uvx pre-commit@4.6.0 run --all-files --show-diff-on-failure --color=always
 
       # Experimental running of `ty`
-      - run: uvx ty@0.056 check ./fractal_server
+      - run: uvx ty@0.0.56 check ./fractal_server
         continue-on-error: true
