@@ -610,7 +610,7 @@ docs = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.13.1,<2.0.0" },
     { name = "fabric", specifier = ">=3.2.2,<3.3.0" },
-    { name = "fastapi", specifier = ">=0.137.3,<0.140.14" },
+    { name = "fastapi", specifier = ">=0.137.2,<0.140.14" },
     { name = "fastapi-users", extras = ["oauth"], specifier = ">=15,<16" },
     { name = "gunicorn", specifier = ">=26,<27" },
     { name = "packaging", specifier = ">=26.0.0,<27.0.0" },
