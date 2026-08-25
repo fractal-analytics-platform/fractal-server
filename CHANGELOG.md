@@ -11,6 +11,7 @@
     * Add Trove classifiers (7ce44457ed).
 * Dependencies;
     * Bump `fastapi`, `sqlmodel` and `uvicorn` upper bounds (\#3422).
+    * Add `pylock.prod.toml` file and adapt pre-commit configuration (\#3428).
 
 # 2.24.2
 
