@@ -30,7 +30,7 @@ repos:
       files: fractal_server/app/models/
     - id: update-pylock
       name: Update pylock file
-      entry: uv export --format pylock.toml --no-group dev --no-group docs --no-emit-project -o pylock.prod.toml
+      entry: bash -c "uv export --format pylock.toml --no-group dev --no-group docs --no-emit-project -o pylock.prod.toml > /dev/null"
       language: system
       files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
       pass_filenames: false
