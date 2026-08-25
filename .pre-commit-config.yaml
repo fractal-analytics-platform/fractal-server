@@ -1,48 +1,58 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 'v6.0.0'
+  - repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v6.0.0
     hooks:
-    - id: check-yaml
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
--   repo: https://github.com/astral-sh/ruff-pre-commit
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: 'https://github.com/astral-sh/ruff-pre-commit'
     rev: v0.14.5
     hooks:
       - id: ruff-check
-        args: ["--fix"]
+        args: ['--fix']
       - id: ruff-format
--   repo: https://github.com/PyCQA/bandit
-    rev: '1.9.1'
+  - repo: 'https://github.com/PyCQA/bandit'
+    rev: 1.9.1
     hooks:
-    - id: bandit
-      args: ["--exclude", "tests/*", "benchmarks/*", "example/*"]
--   repo: local
+      - id: bandit
+        args:
+          - '--exclude'
+          - tests/*
+          - benchmarks/*
+          - example/*
+  - repo: local
     hooks:
-    - id: grep-for-devtools
-      name: Check for devtools in fractal_server files
-      entry: bash -c 'for file in "$@"; do if grep -n "devtools" "$file"; then echo "$file" && exit 1; fi; done' --
-      language: system
-      files: fractal_server/
-    - id: grep-for-fractal-types-in-models
-      name: Check for custom types in SQLModel models
-      entry: bash -c 'for file in "$@"; do if grep -n "fractal_server.types" "$file"; then echo "$file" && exit 1; fi; done' --
-      language: system
-      files: fractal_server/app/models/
-    - id: update-pylock
-      name: Update pylock file
-      entry: uv export --frozen --format pylock.toml --no-group dev --no-group docs --no-emit-project -o pylock.prod.toml --quiet
-      language: system
-      files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
-      pass_filenames: false
-      additional_dependencies: []
--   repo: https://github.com/shellcheck-py/shellcheck-py
+      - id: grep-for-devtools
+        name: Check for devtools in fractal_server files
+        entry: >-
+          bash -c 'for file in "$@"; do if grep -n "devtools" "$file"; then echo "$file" && exit 1; fi; done' --
+        language: system
+        files: fractal_server/
+      - id: grep-for-fractal-types-in-models
+        name: Check for custom types in SQLModel models
+        entry: >-
+          bash -c 'for file in "$@"; do if grep -n "fractal_server.types" "$file"; then echo "$file" && exit 1; fi; done' --
+        language: system
+        files: fractal_server/app/models/
+      - id: update-pylock
+        name: Update pylock file
+        entry: >-
+          uv export --frozen --format pylock.toml --no-group dev --no-group docs
+          --no-emit-project -o pylock.prod.toml --quiet
+        language: system
+        files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
+        pass_filenames: false
+        additional_dependencies: []
+  - repo: 'https://github.com/shellcheck-py/shellcheck-py'
     rev: v0.11.0.1
     hooks:
-    - id: shellcheck
-      files: fractal_server/
--   repo: https://github.com/codespell-project/codespell
+      - id: shellcheck
+        files: fractal_server/
+  - repo: 'https://github.com/codespell-project/codespell'
     rev: v2.4.1
     hooks:
       - id: codespell
-        args: ["--ignore-words", ".codespellignore"]
+        args:
+          - '--ignore-words'
+          - .codespellignore
         files: ^(fractal_server/|docs/)
