@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.24.3
 
 * `fractalctl` CLI:
     * Lazy-load dependencies for CLI commands (\#3421).
