@@ -49,16 +49,3 @@ repos:
     rev: 0.12.5
     hooks:
       - id: uv-lock
-      - id: uv-export
-        args:
-          - '--frozen'
-          - '--format'
-          - 'pylock.toml'
-          - '--no-group'
-          - 'dev'
-          - '--no-group'
-          - 'docs'
-          - '--no-emit-project'
-          - '--output-file'
-          - 'pylock.prod.toml'
-          - '--quiet'
