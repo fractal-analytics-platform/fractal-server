@@ -60,7 +60,7 @@ jobs:
           WHEEL_FILENAME: "fractal_server-${{ github.ref_name }}-py3-none-any.whl"
 
       # Build and upload a pylock file for each Python version
-      - run: uv export --frozen --format pylock.toml --no-group dev --no-group docs --no-emit-project --output-file "$PYLOCK_FILENAME" --quiet
+      - run: uv export --frozen --format pylock.toml --no-group dev --no-group docs --no-emit-project --output-file "$PYLOCK_FILENAME"
         env:
           PYLOCK_FILENAME: "pylock.prod-${{ matrix.node-version }}.toml"
 
