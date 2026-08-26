@@ -76,6 +76,7 @@ def _get_slurm_config_internal(
         needs_gpu = interpret_as_bool(wftask_meta.get("needs_gpu", False))
     else:
         needs_gpu = False
+    slurm_dict["needs_gpu"] = needs_gpu
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu and shared_config.gpu_slurm_config is not None:
         for key, value in shared_config.gpu_slurm_config.model_dump(
@@ -143,6 +144,7 @@ def _get_slurm_config_internal(
     else:
         tasks_per_job = None
         parallel_tasks_per_job = None
+
     slurm_dict["tasks_per_job"] = tasks_per_job
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
@@ -183,6 +185,7 @@ def get_slurm_config(
         # Optional WorkflowTask attributes:
         tasks_per_job=config.tasks_per_job,
         parallel_tasks_per_job=config.parallel_tasks_per_job,  # noqa
+        needs_gpu=config.needs_gpu,
         # Task requirements (multiple possible sources):
         cpus_per_task=config.cpus_per_task,
         mem_per_task=config.mem_per_task_MB,

@@ -6,6 +6,9 @@
     * Lazy-load dependencies for CLI commands (\#3421).
 * Database:
     * Add `NOT (is_superuser AND is_guest)` check constraint (\#3426).
+* Runner:
+    * Add `SlurmConfig.needs_gpu` attribute (\#XXXX).
+    * Set `parallel_tasks_per_job=1` for GPU tasks (\#XXXX).
 * Documentation:
     * Add docs page about data access and `fractal-data` integration (\#3419).
     * Add Trove classifiers (7ce44457ed).

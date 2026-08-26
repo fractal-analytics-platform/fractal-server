@@ -153,6 +153,7 @@ def test_get_slurm_config_internal_gpu_options():
     )
     assert slurm_config.partition == STANDARD_PARTITION
     assert slurm_config.gpus is None
+    assert not slurm_config.needs_gpu
 
     # When `needs_gpu` is set, parameters in `gpu_slurm_config` are used
     mywftask = WorkflowTaskMock(meta_non_parallel=dict(needs_gpu=True))
@@ -164,6 +165,7 @@ def test_get_slurm_config_internal_gpu_options():
     assert slurm_config.partition == GPU_PARTITION
     assert slurm_config.gpus == GPUS
     assert slurm_config.mem_per_task_MB == GPU_MEM_PER_TASK_MB
+    assert slurm_config.needs_gpu
 
 
 def test_SlurmConfig():
