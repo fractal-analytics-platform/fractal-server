@@ -50,10 +50,10 @@ jobs:
 
       # Build and upload the wheel file only for a single Python version
       - run: uv build --verbose
-        if: ${{ matrix.node-version == "3.14" }}
+        if: ${{ matrix.node-version == '3.14' }}
 
       - run: gh release upload "${GH_REF_NAME}" "$WHEEL_FILENAME"
-        if: ${{ matrix.node-version == "3.14" }}
+        if: ${{ matrix.node-version == '3.14' }}
         env:
           GH_REF_NAME: ${{ github.ref_name }}
           GH_TOKEN: ${{ github.token }}
