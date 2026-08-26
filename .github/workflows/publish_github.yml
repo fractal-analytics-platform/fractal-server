@@ -34,7 +34,20 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: [skip]
+        python-version-underscore: [skip]
+
+        include:
+          - python-version: "3.12"
+            python-version-underscore: "3_12"
+          - python-version: "3.13"
+            python-version-underscore: "3_13"
+          - python-version: "3.13"
+            python-version-underscore: "3_14"
+        exclude:
+          - python-version: "skip"
+            python-version-underscore: "skip"
+
 
     steps:
 
@@ -62,13 +75,12 @@ jobs:
       # Build and upload a pylock file for each Python version
       - run: uv export --frozen --format pylock.toml --no-group dev --no-group docs --no-emit-project --output-file "$PYLOCK_FILENAME"
         env:
-          PYLOCK_FILENAME: "pylock.prod-${{ matrix.python-version }}.toml"
-
+          PYLOCK_FILENAME: "pylock.prod-${{ matrix.python-version-underscore }}.toml"
       - run: gh release upload "${GH_REF_NAME}" "$PYLOCK_FILENAME"
         env:
           GH_REF_NAME: ${{ github.ref_name }}
           GH_TOKEN: ${{ github.token }}
-          PYLOCK_FILENAME: "pylock.prod-${{ matrix.python-version }}.toml"
+          PYLOCK_FILENAME: "pylock.prod-${{ matrix.python-version-underscore }}.toml"
 
   publish-release:
     runs-on: ubuntu-latest
