@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.24.3
 
 * `fractalctl` CLI:
     * Lazy-load dependencies for CLI commands (\#3421).
@@ -14,6 +14,8 @@
     * Add Trove classifiers (7ce44457ed).
 * Dependencies;
     * Bump `fastapi`, `sqlmodel` and `uvicorn` upper bounds (\#3422).
+    * Generate `pylock` files and upload them to GitHub releases (\#3428).
+    * Add pre-bumpver hook to update `uv.lock` for new releases (\#3248).
 
 # 2.24.2
 
