@@ -65,7 +65,7 @@ jobs:
       - run: uv build --verbose
         if: ${{ matrix.python-version == '3.14' }}
 
-      - run: gh release upload "${GH_REF_NAME}" "$WHEEL_FILENAME"
+      - run: gh release upload "${GH_REF_NAME}" "dist/$WHEEL_FILENAME"
         if: ${{ matrix.python-version == '3.14' }}
         env:
           GH_REF_NAME: ${{ github.ref_name }}
