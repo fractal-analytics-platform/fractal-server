@@ -39,6 +39,27 @@ def test_heuristics():
     with pytest.raises(SlurmHeuristicsError):
         heuristics(**current_args)
 
+    # Target resources lead to 2 tasks per job (due to
+    # cpus_per_task=2 and target_cpus_per_job=4), with no internal queue.
+    current_args = copy(args)
+    new_tasks_per_job, new_parallel_tasks_per_job = heuristics(**current_args)
+    assert new_tasks_per_job == 2
+    assert new_parallel_tasks_per_job == 2
+
+    # needs_gpu=False does not lead to any change
+    current_args = copy(args) | dict(needs_gpu=False)
+    new_tasks_per_job, new_parallel_tasks_per_job = heuristics(**current_args)
+    assert new_tasks_per_job == 2
+    assert new_parallel_tasks_per_job == 2
+
+    # needs_gpu=True does not change batching (new_tasks_per_job=2) but
+    # it creates a strictly-sequential internal queue
+    current_args = copy(args) | dict(needs_gpu=True)
+    new_tasks_per_job, new_parallel_tasks_per_job = heuristics(**current_args)
+    assert new_tasks_per_job == 2
+    assert new_parallel_tasks_per_job == 1
+
+    # Provided parallel_tasks_per_job is larger than tasks_per_job
     current_args = copy(args) | dict(tasks_per_job=2, parallel_tasks_per_job=5)
     new_tasks_per_job, new_parallel_tasks_per_job = heuristics(**current_args)
     assert new_tasks_per_job == 2
