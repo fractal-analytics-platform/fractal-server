@@ -42,7 +42,7 @@ jobs:
             python-version-underscore: "3_12"
           - python-version: "3.13"
             python-version-underscore: "3_13"
-          - python-version: "3.13"
+          - python-version: "3.14"
             python-version-underscore: "3_14"
         exclude:
           - python-version: "skip"
