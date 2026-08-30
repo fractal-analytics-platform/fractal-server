@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Drop `network: host` from CI docker-compose files (\#XXXX).
+
 # 2.24.3
 
 * `fractalctl` CLI:
