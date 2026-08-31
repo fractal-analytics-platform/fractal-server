@@ -3,7 +3,7 @@
 # Unreleased
 
 * Testing:
-    * Drop `network: host` from CI docker-compose files (\#XXXX).
+    * Drop `network: host` from CI docker-compose files (\#3432).
 
 # 2.24.3
 
