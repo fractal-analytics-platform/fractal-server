@@ -1,6 +1,6 @@
 from typing import Any
 
-import pydantic_core
+from pydantic import TypeAdapter
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
@@ -41,6 +41,8 @@ class Base(DeclarativeBase):
         include: set[str] | None = None,
         exclude: set[str] | None = None,
     ) -> str:
-        return pydantic_core.to_json(
-            self.model_dump(include=include, exclude=exclude)
-        ).decode()
+        return (
+            TypeAdapter(dict[str, Any])
+            .dump_json(self.model_dump(include=include, exclude=exclude))
+            .decode()
+        )
