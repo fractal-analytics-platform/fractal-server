@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import TypeAdapter
 from sqlalchemy import MetaData
+from sqlalchemy import inspect
 from sqlalchemy.orm import DeclarativeBase
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
@@ -27,7 +28,7 @@ class Base(DeclarativeBase):
         included, omitting columns whose value is still pending a
         server-side default on a not-yet-flushed instance.
         """
-        column_names = {c.key for c in self.__mapper__.column_attrs}
+        column_names = {c.key for c in inspect(self).mapper.column_attrs}
         set_names = column_names & self.__dict__.keys()
         if include is not None:
             set_names &= include
