@@ -560,6 +560,19 @@ oauth = [
 ]
 
 [[package]]
+name = "fastapi-users-db-sqlalchemy"
+version = "7.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi-users" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/12/bc9e6146ae31564741cefc87ee6e37fa5b566933f0afe8aa030779d60e60/fastapi_users_db_sqlalchemy-7.0.0.tar.gz", hash = "sha256:6823eeedf8a92f819276a2b2210ef1dcfd71fe8b6e37f7b4da8d1c60e3dfd595", size = 10877, upload-time = "2025-01-04T13:09:05.086Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/08/9968963c1fb8c34627b7f1fbcdfe9438540f87dc7c9bfb59bb4fd19a4ecf/fastapi_users_db_sqlalchemy-7.0.0-py3-none-any.whl", hash = "sha256:5fceac018e7cfa69efc70834dd3035b3de7988eb4274154a0dbe8b14f5aa001e", size = 6891, upload-time = "2025-01-04T13:09:02.869Z" },
+]
+
+[[package]]
 name = "fractal-server"
 version = "2.24.3"
 source = { editable = "." }
@@ -568,6 +581,7 @@ dependencies = [
     { name = "fabric" },
     { name = "fastapi" },
     { name = "fastapi-users", extra = ["oauth"] },
+    { name = "fastapi-users-db-sqlalchemy" },
     { name = "gunicorn" },
     { name = "packaging" },
     { name = "paramiko" },
@@ -608,6 +622,7 @@ requires-dist = [
     { name = "fabric", specifier = ">=3.2.2,<3.3.0" },
     { name = "fastapi", specifier = ">=0.137.2,<0.140.14" },
     { name = "fastapi-users", extras = ["oauth"], specifier = ">=15,<16" },
+    { name = "fastapi-users-db-sqlalchemy", specifier = ">=7,<8" },
     { name = "gunicorn", specifier = ">=26,<27" },
     { name = "packaging", specifier = ">=26.0.0,<27.0.0" },
     { name = "paramiko", specifier = ">=5.0.0,<5.1.0" },

@@ -19,16 +19,13 @@ class Base(DeclarativeBase):
         """
         Dump mapped-column attributes into a dict.
 
-        Table classes used to be `SQLModel`s (hence also `pydantic.BaseModel`s),
-        and a lot of code relies on calling `.model_dump()`/`.model_dump_json()`
-        directly on ORM instances. This replicates that subset of behavior:
-        only mapped columns are included (never `relationship()` attributes,
-        matching `SQLModel`'s exclusion of `Relationship()` fields from
-        `model_dump`), and only columns that already have a concrete value in
+        A lot of code relies on calling `.model_dump()`/`.model_dump_json()`
+        directly on ORM instances, mirroring their former pydantic-based
+        behavior: only mapped columns are included (never `relationship()`
+        attributes), and only columns that already have a concrete value in
         `__dict__` (i.e. loaded from the DB, or explicitly assigned) are
-        included, matching `SQLModel`'s behavior of omitting columns whose
-        value is still pending a server-side default on a not-yet-flushed
-        instance.
+        included, omitting columns whose value is still pending a
+        server-side default on a not-yet-flushed instance.
         """
         column_names = {c.key for c in self.__mapper__.column_attrs}
         set_names = column_names & self.__dict__.keys()
