@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.cli._sync_core_tasks import _count_core_tasks
-from fractal_server.cli._sync_core_tasks import _get_final_set
+from fractal_server.cli._aux_sync_core_tasks import _count_core_tasks
+from fractal_server.cli._aux_sync_core_tasks import _get_final_set
 from fractal_server.cli._sync_core_tasks import sync_core_tasks
 
 

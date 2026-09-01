@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.24.1"
+version = "2.24.3"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -13,12 +13,21 @@ license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 
 requires-python = ">=3.12,<3.15"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: FastAPI",
+    "Intended Audience :: Science/Research",
+]
+
 dependencies = [
-    "fastapi >= 0.137.2, <0.138.0",
+    "fastapi>=0.137.2,<0.140.14",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
-    "uvicorn >= 0.50.0, <0.51.0",
+    "uvicorn>=0.50.0,<0.52.1",
     "uvicorn-worker == 0.4.0",
     "pydantic >=2.13.0,<2.14.0",
     "pydantic-settings ==2.14.2",
@@ -31,6 +40,7 @@ dependencies = [
     "starlette >= 1.3.1",
     "pyyaml >= 6.0.3, <6.1.0",
 ]
+
 
 [project.urls]
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
@@ -57,14 +67,14 @@ dev = [
 ]
 
 docs = [
-    "zensical==0.0.47",
+    "zensical==0.0.57",
     "mkdocstrings-python>=2.0.4,<2.1.0",
     "griffe_pydantic >=1.3.1,<1.4.0",
 ]
 
 
 [build-system]
-requires = ["uv_build>=0.9.18,<0.10.0"]
+requires = ["uv_build>=0.9.18,<0.13.0"]
 build-backend = "uv_build"
 
 # See https://docs.astral.sh/uv/concepts/build-backend/#file-inclusion-and-exclusion
@@ -85,12 +95,13 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth", "basic_auth"]
 
 [tool.bumpver]
-current_version = "2.24.1"
+current_version = "2.24.3"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
 tag = true
 push = true
+pre_commit_hook = "scripts/pre-bumpver.sh"
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
@@ -135,6 +146,9 @@ ban-relative-imports = "parents"
 
 [tool.ty.terminal]
 output-format = "concise"
+
+[tool.ty.environment]
+python = ".venv"
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]

@@ -20,6 +20,7 @@ nav = [
             "internals/integrations/tasks.md",
         ]
         },
+        { "Data access" = "internals/data_access.md" },
         { "Database" = "internals/database.md" },
         { "Logging" = "internals/logging.md" },
         { "Version upgrades" = [

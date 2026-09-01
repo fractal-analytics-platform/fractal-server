@@ -1,7 +1,26 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.24.2 (unreleased)
+# 2.24.3
 
+* `fractalctl` CLI:
+    * Lazy-load dependencies for CLI commands (\#3421).
+* Database:
+    * Add `NOT (is_superuser AND is_guest)` check constraint (\#3426).
+* Runner:
+    * Add `SlurmConfig.needs_gpu` attribute (\#XXXX).
+    * Set `parallel_tasks_per_job=1` for GPU tasks (\#XXXX).
+* Documentation:
+    * Add docs page about data access and `fractal-data` integration (\#3419).
+    * Add Trove classifiers (7ce44457ed).
+* Dependencies;
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` upper bounds (\#3422).
+    * Generate `pylock` files and upload them to GitHub releases (\#3428).
+    * Add pre-bumpver hook to update `uv.lock` for new releases (\#3248).
+
+# 2.24.2
+
+* API:
+    * Introduce `/job/squeue/` endpoint to retrieve Slurm cluster queue (\#3416).
 * Testing:
     * Add `network: host` to build options in docker compose (\#3412).
 

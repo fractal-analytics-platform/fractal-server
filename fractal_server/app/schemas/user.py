@@ -8,16 +8,22 @@ from pydantic import EmailStr
 from pydantic import Field
 
 from fractal_server.string_tools import validate_cmd
-from fractal_server.types import ListUniqueNonEmptyString
 from fractal_server.types import ListUniqueNonNegativeInt
 from fractal_server.types import ListUniqueProjectDir
 from fractal_server.types import NonEmptyStr
+from fractal_server.types import val_unique_list
 
 
 def _validate_cmd_list(value: list[str]) -> list[str]:
     for v in value:
         validate_cmd(v)
     return value
+
+
+SlurmAccountsList = Annotated[
+    list[Annotated[str, Field(min_length=1, pattern=r"^[a-zA-Z0-9_\-\.]+$")]],
+    AfterValidator(val_unique_list),
+]
 
 
 class OAuthAccountRead(BaseModel):
@@ -85,7 +91,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     project_dirs: Annotated[
         ListUniqueProjectDir, AfterValidator(_validate_cmd_list)
     ] = Field(default=None, min_length=1)
-    slurm_accounts: ListUniqueNonEmptyString = None
+    slurm_accounts: SlurmAccountsList = None
 
 
 class UserUpdateStrict(BaseModel):
@@ -97,7 +103,7 @@ class UserUpdateStrict(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: ListUniqueNonEmptyString = None
+    slurm_accounts: SlurmAccountsList = None
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -116,7 +122,7 @@ class UserCreate(schemas.BaseUserCreate):
     project_dirs: Annotated[
         ListUniqueProjectDir, AfterValidator(_validate_cmd_list)
     ] = Field(min_length=1)
-    slurm_accounts: list[str] = Field(default_factory=list)
+    slurm_accounts: SlurmAccountsList = Field(default_factory=list)
 
 
 class UserUpdateGroups(BaseModel):

@@ -62,7 +62,7 @@ def retry_if_socket_error(func):
             self.logger.warning(f"Now retry {func.__name__}")
             return func(*args, **kwargs)
         except OSError as e:
-            self.logger.warning(f"Something goes wrong,{e}")
+            self.logger.warning(f"OSError {e}")
             if "Socket is closed" in str(e):
                 self.logger.warning("Now refresh connection")
                 self.refresh_connection()
