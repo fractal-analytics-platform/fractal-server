@@ -577,7 +577,7 @@ wheels = [
 
 [[package]]
 name = "fractal-server"
-version = "2.24.3"
+version = "2.24.4a0"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
