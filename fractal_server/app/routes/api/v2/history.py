@@ -5,8 +5,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -186,7 +186,7 @@ async def get_history_run_units(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[HistoryUnit]:
+) -> PaginationResponse[HistoryUnitRead]:
     # Access control
     await get_wftask_check_access(
         project_id=project_id,

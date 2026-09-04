@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from devtools import debug
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models.v2 import TaskGroupV2
 

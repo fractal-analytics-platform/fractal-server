@@ -3,8 +3,8 @@ import time
 
 import pytest
 from devtools import debug
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit

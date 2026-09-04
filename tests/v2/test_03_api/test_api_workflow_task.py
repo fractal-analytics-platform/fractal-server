@@ -1,8 +1,8 @@
 from typing import Literal
 
 from devtools import debug  # noqa
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup

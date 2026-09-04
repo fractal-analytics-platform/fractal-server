@@ -3,9 +3,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import delete
+from sqlalchemy import update
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import delete
-from sqlmodel import update
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v2 import AccountingRecord

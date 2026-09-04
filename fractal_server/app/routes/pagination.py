@@ -7,8 +7,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import ValidationError
 from pydantic import model_validator
-from sqlmodel.sql.expression import Select
-from sqlmodel.sql.expression import SelectOfScalar
+from sqlalchemy import Select
 
 from fractal_server.app.db import AsyncSession
 
@@ -73,11 +72,11 @@ class PaginationResponse(PaginationData, Generic[T]):
 
 async def get_pagination_data(
     *,
-    stm: Select[T] | SelectOfScalar[T],
-    stm_count: SelectOfScalar[int],
+    stm: Select[T],
+    stm_count: Select[int],
     pagination: PaginationRequest,
     db: AsyncSession,
-) -> tuple[Select[T] | SelectOfScalar[T], PaginationData]:
+) -> tuple[Select[T], PaginationData]:
     """
     Apply pagination to a SQLAlchemy statement and compute pagination metadata.
 
@@ -120,8 +119,8 @@ async def get_pagination_data(
 
 async def get_paginated_response(
     *,
-    stm: SelectOfScalar[T],
-    stm_count: SelectOfScalar[int],
+    stm: Select[T],
+    stm_count: Select[int],
     pagination: PaginationRequest,
     db: AsyncSession,
 ) -> PaginationResponse[T]:

@@ -2,10 +2,10 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.routing import iter_route_contexts
+from sqlalchemy import asc
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import asc
-from sqlmodel import or_
-from sqlmodel import select
 
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2

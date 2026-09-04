@@ -1,6 +1,6 @@
 [project]
 name = "fractal-server"
-version = "2.24.3"
+version = "2.24.4a0"
 description = "Backend component of the Fractal analytics platform"
 authors = [
     { name="Tommaso Comparin", email="tommaso.comparin@exact-lab.it" },
@@ -24,9 +24,8 @@ classifiers = [
 
 dependencies = [
     "fastapi>=0.137.2,<0.140.14",
-    "sqlmodel==0.0.39",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
-    "fastapi-users[oauth] >=15,<16",
+    "fastapi-users[oauth,sqlalchemy] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
     "uvicorn>=0.50.0,<0.52.1",
     "uvicorn-worker == 0.4.0",
@@ -96,7 +95,7 @@ filterwarnings = [
 markers = ["container", "ssh", "fails_on_macos", "oauth", "basic_auth"]
 
 [tool.bumpver]
-current_version = "2.24.3"
+current_version = "2.24.4a0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -152,5 +151,5 @@ output-format = "concise"
 python = ".venv"
 
 [[tool.mypy.overrides]]
-module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "sqlmodel", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg", "pydantic", "sqlalchemy", "sqlalchemy.types", "pydantic.types", "dotenv", "pydantic_settings", "sqlalchemy.engine", "sqlalchemy.ext.asyncio", "sqlalchemy.orm", "sqlalchemy.dialects.postgresql", "sqlalchemy.ext.orderinglist", "fastapi_users", "uvicorn_worker", "gunicorn.glogging"]
 ignore_missing_imports = true

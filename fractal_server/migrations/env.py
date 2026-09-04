@@ -1,9 +1,8 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlmodel import SQLModel
 
-from fractal_server.migrations.naming_convention import NAMING_CONVENTION
+from fractal_server.app.models.base import Base
 
 # Alembic Config object (provides access to the values within the .ini file)
 config = context.config
@@ -15,12 +14,12 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 
-target_metadata = SQLModel.metadata
-target_metadata.naming_convention = NAMING_CONVENTION
-# Importing `fractal_server.app.models` *after* defining
-# `SQLModel.metadata.naming_convention` in order to apply the naming convention
-# when autogenerating migrations (see issue #1819).
+# Import `fractal_server.app.models` to register all table classes on
+# `Base.metadata` (the naming convention is already set on `Base.metadata`
+# at class-definition time, see `fractal_server/app/models/base.py`).
 from fractal_server.app import models  # noqa
+
+target_metadata = Base.metadata
 
 
 def run_migrations_online() -> None:

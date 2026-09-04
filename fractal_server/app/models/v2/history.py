@@ -1,95 +1,95 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import ConfigDict
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
-from sqlmodel import Field
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class HistoryRun(SQLModel, table=True):
+class HistoryRun(Base):
     """
     HistoryRun table.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    __tablename__ = "historyrun"
 
-    id: int | None = Field(default=None, primary_key=True)
-    dataset_id: int = Field(
-        foreign_key="datasetv2.id",
-        ondelete="CASCADE",
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dataset_id: Mapped[int] = mapped_column(
+        ForeignKey("datasetv2.id", ondelete="CASCADE"),
     )
-    workflowtask_id: int | None = Field(
-        foreign_key="workflowtaskv2.id",
-        default=None,
-        ondelete="SET NULL",
+    workflowtask_id: Mapped[int | None] = mapped_column(
+        ForeignKey("workflowtaskv2.id", ondelete="SET NULL"),
+        default=lambda: None,
     )
-    job_id: int = Field(foreign_key="jobv2.id")
-    task_id: int | None = Field(foreign_key="taskv2.id", ondelete="SET NULL")
-
-    workflowtask_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False),
-    )
-    task_group_dump: dict[str, Any] = Field(
-        sa_column=Column(JSONB, nullable=False),
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobv2.id"))
+    task_id: Mapped[int | None] = mapped_column(
+        ForeignKey("taskv2.id", ondelete="SET NULL")
     )
 
-    timestamp_started: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-        default_factory=get_timestamp,
+    workflowtask_dump: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False
     )
-    status: str
-    num_available_images: int
+    task_group_dump: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False
+    )
+
+    timestamp_started: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
+    )
+    status: Mapped[str]
+    num_available_images: Mapped[int]
 
 
-class HistoryUnit(SQLModel, table=True):
+class HistoryUnit(Base):
     """
     HistoryUnit table.
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    history_run_id: int = Field(
-        foreign_key="historyrun.id",
-        ondelete="CASCADE",
+    __tablename__ = "historyunit"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    history_run_id: Mapped[int] = mapped_column(
+        ForeignKey("historyrun.id", ondelete="CASCADE"),
         index=True,
     )
 
-    logfile: str
-    has_warnings: bool = False
-    status: str
-    zarr_urls: list[str] = Field(
-        sa_column=Column(ARRAY(String)),
-        default_factory=list,
+    logfile: Mapped[str]
+    has_warnings: Mapped[bool] = mapped_column(default=False)
+    status: Mapped[str]
+    zarr_urls: Mapped[list[str]] = mapped_column(
+        ARRAY(String),
+        nullable=True,
+        default=list,
     )
 
 
-class HistoryImageCache(SQLModel, table=True):
+class HistoryImageCache(Base):
     """
     HistoryImageCache table.
     """
 
-    zarr_url: str = Field(primary_key=True)
-    dataset_id: int = Field(
+    __tablename__ = "historyimagecache"
+
+    zarr_url: Mapped[str] = mapped_column(primary_key=True)
+    dataset_id: Mapped[int] = mapped_column(
+        ForeignKey("datasetv2.id", ondelete="CASCADE"),
         primary_key=True,
-        foreign_key="datasetv2.id",
-        ondelete="CASCADE",
         index=True,
     )
-    workflowtask_id: int = Field(
+    workflowtask_id: Mapped[int] = mapped_column(
+        ForeignKey("workflowtaskv2.id", ondelete="CASCADE"),
         primary_key=True,
-        foreign_key="workflowtaskv2.id",
-        ondelete="CASCADE",
         index=True,
     )
 
-    latest_history_unit_id: int = Field(
-        foreign_key="historyunit.id",
-        ondelete="CASCADE",
+    latest_history_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("historyunit.id", ondelete="CASCADE"),
         index=True,
     )

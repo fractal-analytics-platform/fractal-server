@@ -6,11 +6,11 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import EmailStr
+from sqlalchemy import case
+from sqlalchemy import func
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlmodel import case
-from sqlmodel import func
-from sqlmodel import or_
-from sqlmodel import select
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession

@@ -1,7 +1,7 @@
 import itertools
 from typing import Any
 
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup

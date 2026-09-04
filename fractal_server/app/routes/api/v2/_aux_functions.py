@@ -7,9 +7,9 @@ from typing import TypedDict
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy import Select
+from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import select
-from sqlmodel.sql.expression import SelectOfScalar
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
@@ -366,10 +366,10 @@ async def _get_job_check_access(
     return dict(job=job, project=project)
 
 
-def _get_submitted_jobs_statement() -> SelectOfScalar:
+def _get_submitted_jobs_statement() -> Select:
     """
     Returns:
-        A sqlmodel statement that selects all `Job`s with
+        A statement that selects all `Job`s with
         `Job.status` equal to `submitted`.
     """
     stm = select(JobV2).where(JobV2.status == JobStatusType.SUBMITTED)

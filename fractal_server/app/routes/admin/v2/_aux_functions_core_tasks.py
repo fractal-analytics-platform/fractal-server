@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from fastapi import status
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.v2 import TaskGroupV2

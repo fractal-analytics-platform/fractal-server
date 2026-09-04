@@ -83,6 +83,11 @@ def local_resource_profile_objects(
         name="local_resource_profile_objects",
         resource_id=123456789,
         resource_type=ResourceType.LOCAL,
+        username=None,
+        ssh_key_path=None,
+        jobs_remote_dir=None,
+        tasks_remote_dir=None,
+        pixi_cache_dir=None,
     )
     ValidResourceLocal(**res.model_dump())
     ValidProfileLocal(**prof.model_dump())
@@ -127,6 +132,10 @@ def slurm_sudo_resource_profile_objects(
         resource_id=123456789,
         username=SLURM_USER,
         resource_type=ResourceType.SLURM_SUDO,
+        ssh_key_path=None,
+        jobs_remote_dir=None,
+        tasks_remote_dir=None,
+        pixi_cache_dir=None,
     )
     ValidResourceSlurmSudo(**res.model_dump())
     ValidProfileSlurmSudo(**prof.model_dump())
@@ -230,6 +239,7 @@ def slurm_ssh_resource_profile_fake_objects(
         ssh_key_path="/fake/key",
         jobs_remote_dir="/fake/jobs",
         tasks_remote_dir="/fake/tasks",
+        pixi_cache_dir=None,
     )
     ValidResourceSlurmSSH(**res.model_dump())
     ValidProfileSlurmSSH(**prof.model_dump())

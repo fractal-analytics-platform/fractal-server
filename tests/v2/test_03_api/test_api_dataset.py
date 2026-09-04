@@ -1,5 +1,5 @@
 from devtools import debug
-from sqlmodel import func
+from sqlalchemy import func
 
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2

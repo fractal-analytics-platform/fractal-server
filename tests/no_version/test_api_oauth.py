@@ -25,10 +25,10 @@ from httpx import Client
 from httpx import ConnectError
 from httpx_oauth.exceptions import GetIdEmailError
 from pydantic import SecretStr
+from sqlalchemy import delete
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import delete
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth

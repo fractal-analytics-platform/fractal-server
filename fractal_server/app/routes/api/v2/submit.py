@@ -8,8 +8,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
-from sqlmodel import select
-from sqlmodel import update
+from sqlalchemy import select
+from sqlalchemy import update
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession

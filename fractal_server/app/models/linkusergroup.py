@@ -1,26 +1,28 @@
 from datetime import datetime
 
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
-from sqlmodel import Field
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class LinkUserGroup(SQLModel, table=True):
+class LinkUserGroup(Base):
     """
     Crossing table between User and UserGroup
     """
 
-    group_id: int = Field(
-        foreign_key="usergroup.id", primary_key=True, ondelete="CASCADE"
+    __tablename__ = "linkusergroup"
+
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey("usergroup.id", ondelete="CASCADE"), primary_key=True
     )
-    user_id: int = Field(
-        foreign_key="user_oauth.id", primary_key=True, ondelete="CASCADE"
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id", ondelete="CASCADE"), primary_key=True
     )
 
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )

@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import EmailStr
 from pydantic.types import AwareDatetime
 from sqlalchemy import func
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -58,7 +58,7 @@ async def view_job(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[JobV2]:
+) -> PaginationResponse[JobRead]:
     """
     Query `JobV2` table.
 

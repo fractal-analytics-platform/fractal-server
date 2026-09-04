@@ -5,8 +5,8 @@ from fastapi import Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic.types import AwareDatetime
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -42,7 +42,7 @@ async def query_accounting(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[AccountingRecord]:
+) -> PaginationResponse[AccountingRecordRead]:
     stm = select(AccountingRecord).order_by(AccountingRecord.id)
     stm_count = select(func.count(AccountingRecord.id))
     if query.user_id is not None:

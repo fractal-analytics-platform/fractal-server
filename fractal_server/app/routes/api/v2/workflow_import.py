@@ -7,9 +7,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.sql.operators import is_not
-from sqlmodel import or_
-from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
