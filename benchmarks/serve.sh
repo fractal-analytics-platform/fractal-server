@@ -2,7 +2,7 @@
 
 N_WORKERS=1
 BIND=0.0.0.0:8000
-WORKER_CLASS=uvicorn.workers.UvicornWorker
+WORKER_CLASS=asgi
 
 gunicorn "fractal_server.main:app" \
     --bind=$BIND \
