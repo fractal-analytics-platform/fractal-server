@@ -29,7 +29,6 @@ dependencies = [
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
     "uvicorn>=0.50.0,<0.52.1",
-    "uvicorn-worker == 0.4.0",
     "pydantic >=2.13.0,<2.14.0",
     "pydantic-settings ==2.14.2",
     "packaging >= 26.0.0, <27.0.0",
