@@ -13,7 +13,7 @@ COMMANDS = [
         "gunicorn fractal_server.main:app "
         "--workers 1 "
         "--bind 0.0.0.0:8000 "
-        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
+        "--worker-class asgi "
         "--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger "
     ),
 ]
