@@ -35,8 +35,8 @@ async def test_schemas_workflow():
     # Read
 
     WorkflowRead(
-        **workflow.model_dump(),
-        project=project.model_dump(),
+        **workflow.dump_model(),
+        project=project.dump_model(),
         task_list=workflow.task_list,
     )
 

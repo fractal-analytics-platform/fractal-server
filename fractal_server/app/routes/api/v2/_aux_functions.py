@@ -592,7 +592,7 @@ async def _create_workflow_export(
             name=wftask.task.name,
         )
     workflow_export = WorkflowExport(
-        **workflow.model_dump(),
+        **workflow.dump_model(),
         task_list=wf_task_list,
     )
     return workflow_export

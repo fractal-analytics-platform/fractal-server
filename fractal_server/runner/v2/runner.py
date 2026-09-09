@@ -175,7 +175,7 @@ def execute_tasks(
         with next(get_sync_db()) as db:
             # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
-                **wftask.model_dump(exclude={"task"}),
+                **wftask.dump_model(exclude={"task"}),
                 task=TaskDump(**wftask.task.model_dump()).model_dump(),
             )
             task_group = db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)

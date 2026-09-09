@@ -107,7 +107,7 @@ async def create_single_group(
     db.add(new_group)
     await db.commit()
 
-    return dict(new_group.model_dump(), user_ids=[])
+    return dict(new_group.dump_model(), user_ids=[])
 
 
 @router_group.delete("/group/{group_id}/", status_code=204)

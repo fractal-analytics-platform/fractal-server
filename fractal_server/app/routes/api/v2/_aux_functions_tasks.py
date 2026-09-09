@@ -358,7 +358,7 @@ async def _add_warnings_to_workflow_tasks(
 ) -> list[dict[str, Any]]:
     wftask_list_with_warnings = []
     for wftask in wftask_list:
-        wftask_data = dict(wftask.model_dump(), task=wftask.task)
+        wftask_data = dict(wftask.dump_model(), task=wftask.task)
         try:
             task_group = await _get_task_group_read_access(
                 task_group_id=wftask.task.taskgroupv2_id,

@@ -354,7 +354,7 @@ async def _import_workflow(
         wftask_list=db_workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **db_workflow.model_dump(),
+        **db_workflow.dump_model(),
         project=db_workflow.project,
         task_list=wftask_list_with_warnings,
     )

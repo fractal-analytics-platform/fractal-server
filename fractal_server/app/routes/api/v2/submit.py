@@ -214,10 +214,12 @@ async def submit_job(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history", "is_starred"})
+            dataset.dump_model_to_json(
+                exclude={"images", "history", "is_starred"}
+            )
         ),
         workflow_dump=json.loads(
-            workflow.model_dump_json(
+            workflow.dump_model_to_json(
                 exclude={
                     "task_list",
                     "description",
@@ -227,7 +229,7 @@ async def submit_job(
             )
         ),
         project_dump=json.loads(
-            project.model_dump_json(
+            project.dump_model_to_json(
                 exclude={
                     "resource_id",
                     "is_starred",

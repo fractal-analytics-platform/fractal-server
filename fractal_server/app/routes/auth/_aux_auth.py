@@ -75,7 +75,7 @@ async def _get_single_user_with_groups(
     ]
 
     return UserRead(
-        **user.model_dump(),
+        **user.dump_model(),
         group_ids_names=group_ids_names,
         oauth_accounts=oauth_accounts,
     )
@@ -103,7 +103,7 @@ async def _get_single_usergroup_with_user_ids(
     links = res.scalars().all()
     user_ids = [link.user_id for link in links]
 
-    return UserGroupRead(**group.model_dump(), user_ids=user_ids)
+    return UserGroupRead(**group.dump_model(), user_ids=user_ids)
 
 
 async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:

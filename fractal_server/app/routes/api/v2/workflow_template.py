@@ -220,7 +220,7 @@ async def get_workflow_template(
     user_email = res.scalars().one()
     return dict(
         user_email=user_email,
-        **template.model_dump(exclude={"user_id"}),
+        **template.dump_model(exclude={"user_id"}),
     )
 
 
@@ -276,7 +276,7 @@ async def post_workflow_template(
     await db.refresh(template)
     return dict(
         user_email=user.email,
-        **template.model_dump(exclude={"user_id"}),
+        **template.dump_model(exclude={"user_id"}),
     )
 
 
@@ -306,7 +306,7 @@ async def patch_workflow_template(
 
     return dict(
         user_email=user.email,
-        **template.model_dump(exclude={"user_id"}),
+        **template.dump_model(exclude={"user_id"}),
     )
 
 
@@ -369,7 +369,7 @@ async def import_workflow_template(
 
     return dict(
         user_email=user.email,
-        **template.model_dump(exclude={"user_id"}),
+        **template.dump_model(exclude={"user_id"}),
     )
 
 

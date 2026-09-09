@@ -180,7 +180,7 @@ def serialize_task_group(
     """
     serialized_task_group = dict(
         task_list=[task.model_dump() for task in task_group.task_list],
-        **task_group.model_dump(),
+        **task_group.dump_model(),
     )
     if user_email is not None:
         serialized_task_group["user_email"] = user_email

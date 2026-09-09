@@ -89,8 +89,8 @@ def local_resource_profile_objects(
         tasks_remote_dir=None,
         pixi_cache_dir=None,
     )
-    ValidResourceLocal(**res.model_dump())
-    ValidProfileLocal(**prof.model_dump())
+    ValidResourceLocal(**res.dump_model())
+    ValidProfileLocal(**prof.dump_model())
     return res, prof
 
 
@@ -137,8 +137,8 @@ def slurm_sudo_resource_profile_objects(
         tasks_remote_dir=None,
         pixi_cache_dir=None,
     )
-    ValidResourceSlurmSudo(**res.model_dump())
-    ValidProfileSlurmSudo(**prof.model_dump())
+    ValidResourceSlurmSudo(**res.dump_model())
+    ValidProfileSlurmSudo(**prof.dump_model())
 
     return res, prof
 
@@ -190,8 +190,8 @@ def slurm_ssh_resource_profile_objects(
         tasks_remote_dir=(tmp777_path / "remote-tasks").as_posix(),
         pixi_cache_dir=(tmp777_path / "pixi-cache").as_posix(),
     )
-    ValidResourceSlurmSSH(**res.model_dump())
-    ValidProfileSlurmSSH(**prof.model_dump())
+    ValidResourceSlurmSSH(**res.dump_model())
+    ValidProfileSlurmSSH(**prof.dump_model())
 
     return res, prof
 
@@ -241,8 +241,8 @@ def slurm_ssh_resource_profile_fake_objects(
         tasks_remote_dir="/fake/tasks",
         pixi_cache_dir=None,
     )
-    ValidResourceSlurmSSH(**res.model_dump())
-    ValidProfileSlurmSSH(**prof.model_dump())
+    ValidResourceSlurmSSH(**res.dump_model())
+    ValidProfileSlurmSSH(**prof.dump_model())
 
     return res, prof
 

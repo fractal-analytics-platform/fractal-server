@@ -11,7 +11,7 @@ from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
-    def model_dump(
+    def dump_model(
         self,
         *,
         include: set[str] | None = None,
@@ -36,7 +36,7 @@ class Base(DeclarativeBase):
             set_names -= exclude
         return {name: self.__dict__[name] for name in set_names}
 
-    def model_dump_json(
+    def dump_model_to_json(
         self,
         *,
         include: set[str] | None = None,
@@ -44,6 +44,6 @@ class Base(DeclarativeBase):
     ) -> str:
         return (
             TypeAdapter(dict[str, Any])
-            .dump_json(self.model_dump(include=include, exclude=exclude))
+            .dump_json(self.dump_model(include=include, exclude=exclude))
             .decode()
         )

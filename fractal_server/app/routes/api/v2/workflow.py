@@ -130,7 +130,7 @@ async def read_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.model_dump(),
+        **workflow.dump_model(),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )
@@ -205,7 +205,7 @@ async def update_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.model_dump(),
+        **workflow.dump_model(),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )
