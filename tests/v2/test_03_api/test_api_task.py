@@ -368,7 +368,7 @@ async def test_patch_task(
                 assert v == payload[k]
             else:
                 # assert non patched items are still the same
-                assert v == task_compound.model_dump()[k]
+                assert v == task_compound.dump_model()[k]
 
         # Patch task-pip
         res = await client.patch(

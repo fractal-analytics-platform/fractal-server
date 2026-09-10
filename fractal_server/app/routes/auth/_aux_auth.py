@@ -71,7 +71,7 @@ async def _get_single_user_with_groups(
 
     # Create dump of `user.oauth_accounts` relationship
     oauth_accounts = [
-        oauth_account.model_dump() for oauth_account in user.oauth_accounts
+        oauth_account.dump_model() for oauth_account in user.oauth_accounts
     ]
 
     return UserRead(

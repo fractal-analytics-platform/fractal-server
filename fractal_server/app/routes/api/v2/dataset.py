@@ -422,8 +422,8 @@ async def get_all_datasets(
             dict(
                 image_count=image_count,
                 owner_email=owner_email,
-                project=dataset.project.model_dump(),
-                **dataset.model_dump(),
+                project=dataset.project.dump_model(),
+                **dataset.dump_model(),
             )
             for dataset, owner_email, image_count in records
         ],

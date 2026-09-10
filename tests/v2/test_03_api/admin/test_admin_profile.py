@@ -52,7 +52,7 @@ async def test_profile_api(
         # PUT one profile / success
         NEW_NAME = "new-name"
         NEW_USERNAME = "new-username"
-        new_ssh_profile = slurm_ssh_prof.model_dump()
+        new_ssh_profile = slurm_ssh_prof.dump_model()
         new_ssh_profile["name"] = NEW_NAME
         new_ssh_profile["username"] = NEW_USERNAME
         res = await client.put(

@@ -179,7 +179,7 @@ def serialize_task_group(
     Optionally include `user_email` and `in_use` if provided.
     """
     serialized_task_group = dict(
-        task_list=[task.model_dump() for task in task_group.task_list],
+        task_list=[task.dump_model() for task in task_group.task_list],
         **task_group.dump_model(),
     )
     if user_email is not None:

@@ -163,7 +163,7 @@ async def get_history_run_list(
 
     runs = [
         dict(
-            **run.model_dump(),
+            **run.dump_model(),
             **count_map[run.id],
             **task_args.get(run.task_id, {}),
         )

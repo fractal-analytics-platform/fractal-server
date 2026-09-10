@@ -176,11 +176,11 @@ def execute_tasks(
             # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
                 **wftask.dump_model(exclude={"task"}),
-                task=TaskDump(**wftask.task.model_dump()).model_dump(),
+                task=TaskDump(**wftask.task.dump_model()).model_dump(),
             )
             task_group = db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
             task_group_dump = TaskGroupDump(
-                **task_group.model_dump()
+                **task_group.dump_model()
             ).model_dump()
             # Create HistoryRun
             history_run = HistoryRun(

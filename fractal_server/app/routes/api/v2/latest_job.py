@@ -212,5 +212,5 @@ async def get_latest_job(
     statuses.update(statuses_update)
 
     return JobWithTaskStatuses(
-        **latest_job.model_dump(), task_statuses=statuses
+        **latest_job.dump_model(), task_statuses=statuses
     )

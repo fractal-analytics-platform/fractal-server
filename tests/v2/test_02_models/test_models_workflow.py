@@ -32,7 +32,7 @@ async def test_project_and_workflows(db, local_resource_profile_db):
 
     # test relationships
     assert db_workflow1.project_id == db_project.id
-    assert db_workflow1.project.model_dump() == db_project.model_dump()
+    assert db_workflow1.project.dump_model() == db_project.dump_model()
     # test defaults
     assert db_workflow1.task_list == []
 
@@ -52,7 +52,7 @@ async def test_project_and_workflows(db, local_resource_profile_db):
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
-    assert db_workflow2.project.model_dump() == db_project.model_dump()
+    assert db_workflow2.project.dump_model() == db_project.dump_model()
 
     # delete just one workflow
     await db.delete(db_workflow2)

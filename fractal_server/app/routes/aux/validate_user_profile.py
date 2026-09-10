@@ -39,10 +39,10 @@ async def validate_user_profile(
     resource = await db.get_one(Resource, profile.resource_id)
     try:
         cast_serialize_resource(
-            resource.model_dump(exclude={"id", "timestamp_created"}),
+            resource.dump_model(exclude={"id", "timestamp_created"}),
         )
         cast_serialize_profile(
-            profile.model_dump(exclude={"resource_id", "id"}),
+            profile.dump_model(exclude={"resource_id", "id"}),
         )
         db.expunge(resource)
         db.expunge(profile)

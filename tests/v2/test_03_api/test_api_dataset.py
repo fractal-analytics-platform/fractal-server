@@ -488,7 +488,7 @@ async def test_export_dataset(
             f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
         )
         assert res.status_code == 200
-        assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()
+        assert res.json() == DatasetExport(**dataset.dump_model()).model_dump()
 
 
 async def test_get_datasets(

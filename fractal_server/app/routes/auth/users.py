@@ -155,7 +155,7 @@ async def list_users(
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
     users_dict = [
         dict(
-            **user_obj.model_dump(),
+            **user_obj.dump_model(),
             oauth_accounts=user_obj.oauth_accounts,
             group_ids=[
                 link.group_id for link in links if link.user_id == user_obj.id

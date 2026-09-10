@@ -201,7 +201,7 @@ async def query_tasks(
         task_info_list.append(
             dict(
                 task=dict(
-                    **task.model_dump(),
+                    **task.dump_model(),
                     pkg_name=pkg_name,
                     active=_active,
                     owner=owner,

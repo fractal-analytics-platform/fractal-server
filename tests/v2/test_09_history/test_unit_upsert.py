@@ -136,7 +136,7 @@ async def test_upsert_function(
             .scalars()
             .all()
         )
-        actual_caches = [cache.model_dump() for cache in caches]
+        actual_caches = [cache.dump_model() for cache in caches]
         expected_chaches = [
             {
                 "zarr_url": zarr_url,

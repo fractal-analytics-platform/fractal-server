@@ -81,7 +81,7 @@ async def view_projects(
     res = await db.execute(stm)
 
     projects = [
-        dict(user_email=email, **project.model_dump())
+        dict(user_email=email, **project.dump_model())
         for project, email in res.all()
     ]
 

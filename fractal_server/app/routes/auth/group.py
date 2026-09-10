@@ -58,7 +58,7 @@ async def get_list_user_groups(
         # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
         for ind, group in enumerate(groups):
             groups[ind] = dict(
-                group.model_dump(),
+                group.dump_model(),
                 user_ids=[
                     link.user_id for link in links if link.group_id == group.id
                 ],

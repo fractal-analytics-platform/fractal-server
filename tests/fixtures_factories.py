@@ -191,12 +191,12 @@ async def job_factory(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=json.loads(
-                dataset.model_dump_json(
+                dataset.dump_model_to_json(
                     exclude={"history", "images", "is_starred"}
                 )
             ),
             workflow_dump=json.loads(
-                workflow.model_dump_json(
+                workflow.dump_model_to_json(
                     exclude={
                         "task_list",
                         "description",
@@ -206,7 +206,7 @@ async def job_factory(db: AsyncSession):
                 )
             ),
             project_dump=json.loads(
-                project.model_dump_json(
+                project.dump_model_to_json(
                     exclude={
                         "resource_id",
                         "is_starred",

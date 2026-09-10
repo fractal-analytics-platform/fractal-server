@@ -29,7 +29,7 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
         versions={"0.54.1": "/fake/0.54.1"},
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
-        ValidResourceBase(**res.model_dump())
+        ValidResourceBase(**res.dump_model())
 
 
 def test_TaskGroupOverridesPip():
