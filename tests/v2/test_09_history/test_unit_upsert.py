@@ -6,6 +6,7 @@ from devtools import debug
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -136,7 +137,7 @@ async def test_upsert_function(
             .scalars()
             .all()
         )
-        actual_caches = [cache.dump_model() for cache in caches]
+        actual_caches = [dump_model(cache) for cache in caches]
         expected_chaches = [
             {
                 "zarr_url": zarr_url,

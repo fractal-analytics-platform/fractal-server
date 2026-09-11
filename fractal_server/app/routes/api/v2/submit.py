@@ -17,6 +17,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model_to_json
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
@@ -214,27 +215,29 @@ async def submit_job(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=json.loads(
-            dataset.dump_model_to_json(
-                exclude={"images", "history", "is_starred"}
+            dump_model_to_json(
+                dataset, exclude={"images", "history", "is_starred"}
             )
         ),
         workflow_dump=json.loads(
-            workflow.dump_model_to_json(
+            dump_model_to_json(
+                workflow,
                 exclude={
                     "task_list",
                     "description",
                     "template_id",
                     "is_starred",
-                }
+                },
             )
         ),
         project_dump=json.loads(
-            project.dump_model_to_json(
+            dump_model_to_json(
+                project,
                 exclude={
                     "resource_id",
                     "is_starred",
                     "description",
-                }
+                },
             )
         ),
         fractal_server_version=__VERSION__,

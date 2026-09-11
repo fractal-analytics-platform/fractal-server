@@ -15,6 +15,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -354,7 +355,7 @@ async def _import_workflow(
         wftask_list=db_workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **db_workflow.dump_model(),
+        **dump_model(db_workflow),
         project=db_workflow.project,
         task_list=wftask_list_with_warnings,
     )

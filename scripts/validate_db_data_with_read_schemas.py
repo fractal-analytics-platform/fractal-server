@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.security import UserOAuth
@@ -37,14 +38,14 @@ with next(get_sync_db()) as db:
     stm = select(UserOAuth)
     users = db.execute(stm).scalars().unique().all()
     for user in sorted(users, key=lambda x: x.id):
-        UserRead(**user.dump_model(), oauth_accounts=user.oauth_accounts)
+        UserRead(**dump_model(user), oauth_accounts=user.oauth_accounts)
         print(f"User {user.id} validated")
 
     # USER GROUPS
     stm = select(UserGroup)
     groups = db.execute(stm).scalars().unique().all()
     for group in sorted(groups, key=lambda x: x.id):
-        UserGroupRead(**group.dump_model())
+        UserGroupRead(**dump_model(group))
         print(f"UserGroup {group.id} validated")
 
     # DEFAULT GROUP
@@ -77,14 +78,14 @@ with next(get_sync_db()) as db:
     stm = select(ProjectV2)
     projects = db.execute(stm).scalars().all()
     for project in sorted(projects, key=lambda x: x.id):
-        ProjectRead(**project.dump_model())
+        ProjectRead(**dump_model(project))
         print(f"Project {project.id} validated")
 
     # TASKS
     stm = select(TaskV2)
     tasks = db.execute(stm).scalars().all()
     for task in sorted(tasks, key=lambda x: x.id):
-        TaskRead(**task.dump_model())
+        TaskRead(**dump_model(task))
         print(f"Task {task.id} validated")
 
     # TASK GROUPS
@@ -93,9 +94,9 @@ with next(get_sync_db()) as db:
     for task_group in sorted(task_groups, key=lambda x: x.id):
         task_list = []
         for task in task_group.task_list:
-            task_list.append(TaskRead(**task.dump_model()))
+            task_list.append(TaskRead(**dump_model(task)))
         TaskGroupRead(
-            **task_group.dump_model(),
+            **dump_model(task_group),
             task_list=task_list,
             user_email="fractal@example.org",
             in_use=False,
@@ -106,7 +107,7 @@ with next(get_sync_db()) as db:
     stm = select(TaskGroupActivityV2)
     task_group_activities = db.execute(stm).scalars().all()
     for activity in sorted(task_group_activities, key=lambda x: x.id):
-        TaskGroupActivityRead(**activity.dump_model())
+        TaskGroupActivityRead(**dump_model(activity))
         print(f"TaskGroupActivity {activity.id} validated")
 
     # WORKFLOWS
@@ -118,14 +119,14 @@ with next(get_sync_db()) as db:
         for wftask in workflow.task_list:
             task_list.append(
                 WorkflowTaskRead(
-                    **wftask.dump_model(),
-                    task=TaskRead(**wftask.task.dump_model()),
+                    **dump_model(wftask),
+                    task=TaskRead(**dump_model(wftask.task)),
                 )
             )
 
         WorkflowRead(
-            **workflow.dump_model(),
-            project=ProjectRead(**workflow.project.dump_model()),
+            **dump_model(workflow),
+            project=ProjectRead(**dump_model(workflow.project)),
             task_list=task_list,
         )
         print(f"Workflow {workflow.id} validated")
@@ -135,8 +136,8 @@ with next(get_sync_db()) as db:
     datasets = db.execute(stm).scalars().all()
     for dataset in sorted(datasets, key=lambda x: x.id):
         DatasetRead(
-            **dataset.dump_model(),
-            project=ProjectRead(**dataset.project.dump_model()),
+            **dump_model(dataset),
+            project=ProjectRead(**dump_model(dataset.project)),
         )
         print(f"Dataset {dataset.id} validated")
 
@@ -144,21 +145,21 @@ with next(get_sync_db()) as db:
     stm = select(JobV2)
     jobs = db.execute(stm).scalars().all()
     for job in sorted(jobs, key=lambda x: x.id):
-        JobRead(**job.dump_model())
+        JobRead(**dump_model(job))
         print(f"Job {job.id} validated")
 
     # RESOURCE
     stm = select(Resource)
     resources = db.execute(stm).scalars().all()
     for resource in sorted(resources, key=lambda x: x.id):
-        ResourceRead(**resource.dump_model())
+        ResourceRead(**dump_model(resource))
         print(f"Resource {resource.id} validated")
 
     # PROFILE
     stm = select(Profile)
     profiles = db.execute(stm).scalars().all()
     for profile in sorted(profiles, key=lambda x: x.id):
-        ProfileRead(**profile.dump_model())
+        ProfileRead(**dump_model(profile))
         print(f"Profile {profile.id} validated")
 
     # WORKFLOW TEMPLATE
@@ -167,6 +168,6 @@ with next(get_sync_db()) as db:
     for template in sorted(templates, key=lambda x: x.id):
         WorkflowTemplateRead(
             user_email="user@example.org",
-            **template.dump_model(),
+            **dump_model(template),
         )
         print(f"WorkflowTemplate {template.id} validated")

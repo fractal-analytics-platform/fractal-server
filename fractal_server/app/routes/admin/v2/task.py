@@ -17,6 +17,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -201,7 +202,7 @@ async def query_tasks(
         task_info_list.append(
             dict(
                 task=dict(
-                    **task.dump_model(),
+                    **dump_model(task),
                     pkg_name=pkg_name,
                     active=_active,
                     owner=owner,

@@ -8,6 +8,7 @@ from sqlalchemy import update
 from sqlalchemy.orm.attributes import flag_modified
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import AccountingRecord
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -175,12 +176,12 @@ def execute_tasks(
         with next(get_sync_db()) as db:
             # Create dumps for workflowtask and taskgroup
             workflowtask_dump = dict(
-                **wftask.dump_model(exclude={"task"}),
-                task=TaskDump(**wftask.task.dump_model()).model_dump(),
+                **dump_model(wftask, exclude={"task"}),
+                task=TaskDump(**dump_model(wftask.task)).model_dump(),
             )
             task_group = db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
             task_group_dump = TaskGroupDump(
-                **task_group.dump_model()
+                **dump_model(task_group)
             ).model_dump()
             # Create HistoryRun
             history_run = HistoryRun(

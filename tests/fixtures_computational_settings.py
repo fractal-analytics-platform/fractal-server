@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.models import dump_model
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import ValidProfileLocal
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
@@ -89,8 +90,8 @@ def local_resource_profile_objects(
         tasks_remote_dir=None,
         pixi_cache_dir=None,
     )
-    ValidResourceLocal(**res.dump_model())
-    ValidProfileLocal(**prof.dump_model())
+    ValidResourceLocal(**dump_model(res))
+    ValidProfileLocal(**dump_model(prof))
     return res, prof
 
 
@@ -137,8 +138,8 @@ def slurm_sudo_resource_profile_objects(
         tasks_remote_dir=None,
         pixi_cache_dir=None,
     )
-    ValidResourceSlurmSudo(**res.dump_model())
-    ValidProfileSlurmSudo(**prof.dump_model())
+    ValidResourceSlurmSudo(**dump_model(res))
+    ValidProfileSlurmSudo(**dump_model(prof))
 
     return res, prof
 
@@ -190,8 +191,8 @@ def slurm_ssh_resource_profile_objects(
         tasks_remote_dir=(tmp777_path / "remote-tasks").as_posix(),
         pixi_cache_dir=(tmp777_path / "pixi-cache").as_posix(),
     )
-    ValidResourceSlurmSSH(**res.dump_model())
-    ValidProfileSlurmSSH(**prof.dump_model())
+    ValidResourceSlurmSSH(**dump_model(res))
+    ValidProfileSlurmSSH(**dump_model(prof))
 
     return res, prof
 
@@ -241,8 +242,8 @@ def slurm_ssh_resource_profile_fake_objects(
         tasks_remote_dir="/fake/tasks",
         pixi_cache_dir=None,
     )
-    ValidResourceSlurmSSH(**res.dump_model())
-    ValidProfileSlurmSSH(**prof.dump_model())
+    ValidResourceSlurmSSH(**dump_model(res))
+    ValidProfileSlurmSSH(**dump_model(prof))
 
     return res, prof
 

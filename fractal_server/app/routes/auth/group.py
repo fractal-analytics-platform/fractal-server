@@ -17,6 +17,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.schemas.user_group import UserGroupCreate
 from fractal_server.app.schemas.user_group import UserGroupRead
 from fractal_server.config import get_settings
@@ -58,7 +59,7 @@ async def get_list_user_groups(
         # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
         for ind, group in enumerate(groups):
             groups[ind] = dict(
-                group.dump_model(),
+                dump_model(group),
                 user_ids=[
                     link.user_id for link in links if link.group_id == group.id
                 ],
@@ -107,7 +108,7 @@ async def create_single_group(
     db.add(new_group)
     await db.commit()
 
-    return dict(new_group.dump_model(), user_ids=[])
+    return dict(dump_model(new_group), user_ids=[])
 
 
 @router_group.delete("/group/{group_id}/", status_code=204)

@@ -15,6 +15,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
@@ -585,14 +586,14 @@ async def _create_workflow_export(
     wf_task_list = []
     for wftask in workflow.task_list:
         task_group = await db.get_one(TaskGroupV2, wftask.task.taskgroupv2_id)
-        wf_task_list.append(wftask.dump_model())
+        wf_task_list.append(dump_model(wftask))
         wf_task_list[-1]["task"] = dict(
             pkg_name=task_group.pkg_name,
             version=task_group.version,
             name=wftask.task.name,
         )
     workflow_export = WorkflowExport(
-        **workflow.dump_model(),
+        **dump_model(workflow),
         task_list=wf_task_list,
     )
     return workflow_export

@@ -1,5 +1,6 @@
 import pytest
 
+from fractal_server.app.models import dump_model
 from fractal_server.app.routes.admin.v2.task_group_reset import (
     TaskGroupOverridesPip,
 )
@@ -29,7 +30,7 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
         versions={"0.54.1": "/fake/0.54.1"},
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
-        ValidResourceBase(**res.dump_model())
+        ValidResourceBase(**dump_model(res))
 
 
 def test_TaskGroupOverridesPip():

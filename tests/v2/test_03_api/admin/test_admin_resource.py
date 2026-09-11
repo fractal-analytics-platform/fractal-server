@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -13,9 +14,9 @@ def test_check_resource_type_match_or_422(
     local_resource_profile_objects,
 ):
     resource, old_profile = local_resource_profile_objects[:]
-    new_profile_ok = Profile(**old_profile.dump_model())
+    new_profile_ok = Profile(**dump_model(old_profile))
     new_profile_bad = Profile(
-        **old_profile.dump_model(exclude={"resource_type"}),
+        **dump_model(old_profile, exclude={"resource_type"}),
         resource_type="slurm_ssh",
     )
 
@@ -44,9 +45,10 @@ async def test_resource_api(
         assert len(res.json()) == 1
 
         # POST one resource / fail due to invalid payload
-        faulty_slurm_ssh_resource = slurm_ssh_resource_profile_fake_objects[
-            0
-        ].dump_model(exclude={"timestamp_created", "id"})
+        faulty_slurm_ssh_resource = dump_model(
+            slurm_ssh_resource_profile_fake_objects[0],
+            exclude={"timestamp_created", "id"},
+        )
         FAULTY_RESOURCE_EXPECTED_ERROR = {
             "detail": [
                 {
@@ -71,8 +73,9 @@ async def test_resource_api(
         # POST one resource / fail due to wrong resource.type
         res = await client.post(
             "/admin/v2/resource/",
-            json=slurm_ssh_resource_profile_fake_objects[0].dump_model(
-                exclude={"timestamp_created", "id"}
+            json=dump_model(
+                slurm_ssh_resource_profile_fake_objects[0],
+                exclude={"timestamp_created", "id"},
             ),
         )
         assert res.status_code == 422
@@ -81,7 +84,8 @@ async def test_resource_api(
         # POST one resource / fail due to non-unique name
         res = await client.post(
             "/admin/v2/resource/",
-            json=local_resource_profile_db[0].dump_model(
+            json=dump_model(
+                local_resource_profile_db[0],
                 exclude={"timestamp_created", "id"},
             ),
         )
@@ -89,12 +93,13 @@ async def test_resource_api(
         assert "already exists" in str(res.json()["detail"])
 
         # POST one resource / success
-        valid_resource = local_resource_profile_db[0].dump_model(
+        valid_resource = dump_model(
+            local_resource_profile_db[0],
             exclude={
                 "timestamp_created",
                 "name",
                 "id",
-            }
+            },
         )
         NAME = "another resource name"
         valid_resource["name"] = NAME
@@ -132,11 +137,12 @@ async def test_resource_api(
         assert res.json() == FAULTY_RESOURCE_EXPECTED_ERROR
 
         # PUT one resource / failure due to non-unique name
-        valid_new_resource = local_resource_profile_db[0].dump_model(
+        valid_new_resource = dump_model(
+            local_resource_profile_db[0],
             exclude={
                 "timestamp_created",
                 "id",
-            }
+            },
         )
         valid_new_resource["name"] = local_resource_profile_db[0].name
         res = await client.put(

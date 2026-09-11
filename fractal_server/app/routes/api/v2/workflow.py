@@ -13,6 +13,7 @@ from sqlalchemy import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -130,7 +131,7 @@ async def read_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.dump_model(),
+        **dump_model(workflow),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )
@@ -205,7 +206,7 @@ async def update_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.dump_model(),
+        **dump_model(workflow),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )
