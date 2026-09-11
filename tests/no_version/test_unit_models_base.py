@@ -5,7 +5,11 @@ from pathlib import Path
 
 import pytest
 from pydantic_core import PydanticSerializationError
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import synonym
 
+from fractal_server.app.models.base import Base
 from fractal_server.app.models.v2.history import HistoryRun
 from fractal_server.app.models.v2.history import HistoryUnit
 
@@ -130,3 +134,22 @@ def test_dump_model_to_json_include_exclude():
     without_status = json.loads(hr.dump_model_to_json(exclude={"status"}))
     assert "status" not in without_status
     assert without_status["num_available_images"] == 5
+
+
+class _TableWithAlias(Base):
+    __tablename__ = "test_table_with_alias"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    attribute: Mapped[str] = mapped_column("db_col")
+    attr_alias = synonym("attribute")
+
+
+def test_dump_model_supports_column_name_and_synonym_aliases():
+    obj = _TableWithAlias(id=1, attr_alias="hello")
+    assert obj.attribute == obj.attr_alias == "hello"
+
+    dumped = obj.dump_model()
+    assert dumped == {"id": 1, "attribute": "hello"}
+
+    dumped_json = json.loads(obj.dump_model_to_json())
+    assert dumped_json == {"id": 1, "attribute": "hello"}
