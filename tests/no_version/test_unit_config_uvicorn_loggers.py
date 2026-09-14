@@ -1,7 +1,7 @@
 import logging
 
 import fractal_server.logger._config_file_state as _logger_module
-from fractal_server.logger import config_uvicorn_loggers
+from fractal_server.logger import config_known_loggers
 
 
 def test_config_uvicorn_loggers():
@@ -9,7 +9,7 @@ def test_config_uvicorn_loggers():
     This test simply runs `config_uvicorn_loggers`, but it does not assert
     anything. It is only meant to catch some trivial errors.
     """
-    config_uvicorn_loggers()
+    config_known_loggers()
 
 
 def test_config_uvicorn_loggers_is_noop_when_external_config_loaded():
@@ -29,7 +29,7 @@ def test_config_uvicorn_loggers_is_noop_when_external_config_loaded():
         access_logger.handlers[0].setFormatter(sentinel_formatter)
 
         _logger_module._CONFIG_LOADED = True
-        config_uvicorn_loggers()
+        config_known_loggers()
 
         assert access_logger.handlers[0].formatter is sentinel_formatter
     finally:

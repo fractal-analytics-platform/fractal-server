@@ -171,12 +171,12 @@ def reset_logger_handlers(logger: logging.Logger) -> None:
     logger.handlers.clear()
 
 
-def config_uvicorn_loggers() -> None:
+def config_known_loggers() -> None:
     """
-    Change the formatter for the uvicorn access/error loggers.
+    Change the formatter for the uvicorn&gunicorn access/error loggers.
 
     Skipped when an external logging config file is loaded, since that file
-    already configures the uvicorn loggers.
+    already configures the uvicorn loggers - FIXME for gunicorn.
 
     This is similar to https://stackoverflow.com/a/68864979/19085332. See also
     https://github.com/tiangolo/fastapi/issues/1508.
@@ -194,13 +194,15 @@ def config_uvicorn_loggers() -> None:
     if _state._CONFIG_LOADED:
         return
 
-    access_logger = logging.getLogger("uvicorn.access")
-    if len(access_logger.handlers) > 0:
-        access_logger.handlers[0].setFormatter(LOG_FORMATTER)
-
-    error_logger = logging.getLogger("uvicorn.error")
-    if len(error_logger.handlers) > 0:
-        error_logger.handlers[0].setFormatter(LOG_FORMATTER)
+    for logger_name in (
+        "uvicorn.access",
+        "uvicorn.error",
+        "gunicorn.error",
+        "gunicorn.access",
+    ):
+        logger = logging.getLogger(logger_name)
+        if len(logger.handlers) > 0:
+            logger.handlers[0].setFormatter(LOG_FORMATTER)
 
 
 def _load_logging_config(config_env: str) -> None:

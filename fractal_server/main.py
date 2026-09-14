@@ -24,7 +24,7 @@ from .config import get_email_settings
 from .config import get_settings
 from .logger import _load_logging_config
 from .logger import close_logger
-from .logger import config_uvicorn_loggers
+from .logger import config_known_loggers
 from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
     else:
         app.state.fractal_ssh_list = None
 
-    config_uvicorn_loggers()
+    config_known_loggers()
     logger_startup.info("END")
     reset_logger_handlers(logger_startup)
 
