@@ -102,9 +102,36 @@ async def test_lifespan_shutdown_empty_jobs_list(
     async with lifespan(app):
         logger = logging.getLogger("fractal_server.lifespan")
         logger.propagate = True
-
     log_text = "All jobs are either done or failed. Exit."
     assert any(record.message == log_text for record in caplog.records)
+
+
+async def test_lifespan_shutdown_local(
+    caplog,
+    monkeypatch,
+):
+    """
+    Here we use a local resource, for coverage of different teardown branches.
+    """
+    import fractal_server.main
+    from fractal_server.logger import set_logger as set_logger_raw
+
+    def _set_logger_and_propagate(logger_name, **kwargs):
+        logger = set_logger_raw(logger_name, **kwargs)
+        if logger_name == "lifespan.teardown":
+            logger.propagate = True
+        return logger
+
+    monkeypatch.setattr(
+        fractal_server.main, "set_logger", _set_logger_and_propagate
+    )
+
+    # Actual test
+    caplog.set_level(logging.INFO)
+    async with lifespan(FastAPI()):
+        pass
+    log_text = "Shutdown not available for this backend runner."
+    assert log_text in caplog.text
 
 
 async def test_lifespan_shutdown_raise_error(
