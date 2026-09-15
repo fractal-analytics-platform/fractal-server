@@ -138,7 +138,7 @@
 | fractal\_server/images/warnings\_tools.py                                    |       12 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/logger/\_\_init\_\_.py                                       |       72 |        6 |       32 |        6 |     88% |111-\>114, 129, 149, 167-168, 199, 203 |
 | fractal\_server/logger/\_config\_file\_state.py                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/main.py                                                      |      115 |        2 |       18 |        2 |     97% |  133, 218 |
+| fractal\_server/main.py                                                      |      121 |        1 |       18 |        1 |     99% |       231 |
 | fractal\_server/runner/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/components.py                                         |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/config/\_\_init\_\_.py                                |        2 |        0 |        0 |        0 |    100% |           |
@@ -228,7 +228,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11453** |  **162** | **1964** |   **88** | **98%** |           |
+| **TOTAL**                                                                    | **11459** |  **161** | **1964** |   **87** | **98%** |           |
 
 
 ## Setup coverage badge
