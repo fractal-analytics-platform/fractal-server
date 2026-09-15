@@ -44,6 +44,8 @@ jobs:
             python-version-underscore: "3_13"
           - python-version: "3.14"
             python-version-underscore: "3_14"
+          - python-version: "3.15"
+            python-version-underscore: "3_15"
         exclude:
           - python-version: "skip"
             python-version-underscore: "skip"
