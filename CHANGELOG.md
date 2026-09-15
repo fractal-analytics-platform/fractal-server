@@ -1,7 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.24.4 (unreleased)
 
+* Database:
+    * Dispose of the connection pool during app teardown (\#3435).
 * Testing:
     * Drop `network: host` from CI docker-compose files (\#3432).
 
