@@ -14,6 +14,7 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from fractal_server import __VERSION__
+from fractal_server.app.db import DB
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.exceptions import HTTPExceptionWithData
 
@@ -131,6 +132,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
             )
     else:
         logger_teardown.info("Shutdown not available for this backend runner.")
+
+    logger_teardown.info(
+        "Database-connection pool status (before disposal): "
+        f"{DB.engine_sync().pool.status()}"
+    )
+    logger_teardown.info("Now dispose of the pool of sync/async engines.")
+    DB.engine_sync().dispose()
+    await DB.engine_async().dispose()
+    logger_teardown.info(
+        "Database-connection pool status (after disposal): "
+        f"{DB.engine_sync().pool.status()}"
+    )
 
     logger_teardown.info("END")
     reset_logger_handlers(logger_teardown)
