@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import WorkflowCreate
@@ -8,10 +9,17 @@ from fractal_server.app.schemas.v2 import WorkflowRead
 from fractal_server.app.schemas.v2 import WorkflowTaskCreate
 from fractal_server.app.schemas.v2 import WorkflowTaskUpdate
 from fractal_server.app.schemas.v2 import WorkflowUpdate
+from fractal_server.utils import get_timestamp
 
 
 async def test_schemas_workflow():
-    project = ProjectV2(id=1, name="project", is_starred=False)
+    project = ProjectV2(
+        id=1,
+        name="project",
+        is_starred=False,
+        description=None,
+        timestamp_created=get_timestamp(),
+    )
 
     # Create
 
@@ -22,13 +30,14 @@ async def test_schemas_workflow():
         id=1,
         project_id=project.id,
         is_starred=False,
+        timestamp_created=get_timestamp(),
     )
 
     # Read
 
     WorkflowRead(
-        **workflow.model_dump(),
-        project=project.model_dump(),
+        **dump_model(workflow),
+        project=dump_model(project),
         task_list=workflow.task_list,
     )
 

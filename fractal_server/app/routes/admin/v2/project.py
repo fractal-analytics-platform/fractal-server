@@ -6,15 +6,16 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlalchemy import and_
+from sqlalchemy import delete
 from sqlalchemy import func
-from sqlmodel import and_
-from sqlmodel import delete
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
@@ -81,7 +82,7 @@ async def view_projects(
     res = await db.execute(stm)
 
     projects = [
-        dict(user_email=email, **project.model_dump())
+        dict(user_email=email, **dump_model(project))
         for project, email in res.all()
     ]
 

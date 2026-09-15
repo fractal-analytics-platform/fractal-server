@@ -5,6 +5,7 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import dump_model_to_json
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -165,9 +166,7 @@ async def test_submit_job_ssh_connection_failure(
         profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(
-            project_id=project.id, name="ds1", type="type1"
-        )
+        dataset = await dataset_factory(project_id=project.id, name="ds1")
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id, name="1to2")
         await _workflow_insert_task(
@@ -328,12 +327,8 @@ async def test_project_apply_workflow_subset(
         profile_id=prof.id,
     ) as user:
         project = await project_factory(user)
-        dataset1 = await dataset_factory(
-            project_id=project.id, name="ds1", type="type1"
-        )
-        dataset2 = await dataset_factory(
-            project_id=project.id, name="ds2", type="type2"
-        )
+        dataset1 = await dataset_factory(project_id=project.id, name="ds1")
+        dataset2 = await dataset_factory(project_id=project.id, name="ds2")
 
         wf = await workflow_factory(project_id=project.id)
 
@@ -428,31 +423,33 @@ async def test_project_apply_workflow_subset(
         )
         expected_project_dump = ProjectDump(
             **json.loads(
-                project.model_dump_json(
+                dump_model_to_json(
+                    project,
                     exclude={
                         "resource_id",
                         "is_starred",
                         "description",
-                    }
+                    },
                 )
             )
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
-                wf.model_dump_json(
+                dump_model_to_json(
+                    wf,
                     exclude={
                         "task_list",
                         "description",
                         "template_id",
                         "is_starred",
-                    }
+                    },
                 )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(
             **json.loads(
-                dataset1.model_dump_json(
-                    exclude={"history", "images", "is_starred"}
+                dump_model_to_json(
+                    dataset1, exclude={"history", "images", "is_starred"}
                 )
             )
         ).model_dump()
@@ -477,9 +474,7 @@ async def test_project_apply_slurm_account(
         profile_id=profile.id,
     ) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(
-            project_id=project.id, name="ds1", type="type1"
-        )
+        dataset = await dataset_factory(project_id=project.id, name="ds1")
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(user_id=user.id)
         await _workflow_insert_task(
@@ -514,15 +509,10 @@ async def test_project_apply_slurm_account(
         slurm_accounts=SLURM_LIST,
     ) as user2:
         project = await project_factory(user2)
-        dataset = await dataset_factory(
-            project_id=project.id, name="ds2", type="type2"
-        )
+        dataset = await dataset_factory(project_id=project.id, name="ds2")
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(
             user_id=user2.id,
-            input_type="type2",
-            output_type="type2",
-            command="ls",
             name="ls",
         )
         await _workflow_insert_task(

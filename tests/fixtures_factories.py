@@ -2,10 +2,11 @@ import json
 from typing import Literal
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
-from sqlmodel import select
 
+from fractal_server.app.models import dump_model_to_json
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -191,27 +192,29 @@ async def job_factory(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=json.loads(
-                dataset.model_dump_json(
-                    exclude={"history", "images", "is_starred"}
+                dump_model_to_json(
+                    dataset, exclude={"history", "images", "is_starred"}
                 )
             ),
             workflow_dump=json.loads(
-                workflow.model_dump_json(
+                dump_model_to_json(
+                    workflow,
                     exclude={
                         "task_list",
                         "description",
                         "template_id",
                         "is_starred",
-                    }
+                    },
                 )
             ),
             project_dump=json.loads(
-                project.model_dump_json(
+                dump_model_to_json(
+                    project,
                     exclude={
                         "resource_id",
                         "is_starred",
                         "description",
-                    }
+                    },
                 )
             ),
             last_task_index=last_task_index,

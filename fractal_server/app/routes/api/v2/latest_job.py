@@ -3,7 +3,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy import func
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -12,6 +12,7 @@ from fractal_server.app.models import HistoryRun
 from fractal_server.app.models import HistoryUnit
 from fractal_server.app.models import TaskV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.workflowtask import WorkflowTaskV2
 from fractal_server.app.routes.auth import get_api_guest
@@ -211,6 +212,4 @@ async def get_latest_job(
             statuses_update[wftask_id] = status_value
     statuses.update(statuses_update)
 
-    return JobWithTaskStatuses(
-        **latest_job.model_dump(), task_statuses=statuses
-    )
+    return JobWithTaskStatuses(**dump_model(latest_job), task_statuses=statuses)

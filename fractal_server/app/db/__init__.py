@@ -1,8 +1,3 @@
-"""
-`db` module, loosely adapted from
-https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
-"""
-
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 

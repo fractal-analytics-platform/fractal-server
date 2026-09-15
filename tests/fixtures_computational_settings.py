@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
+from fractal_server.app.models import dump_model
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import ValidProfileLocal
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
@@ -83,9 +84,14 @@ def local_resource_profile_objects(
         name="local_resource_profile_objects",
         resource_id=123456789,
         resource_type=ResourceType.LOCAL,
+        username=None,
+        ssh_key_path=None,
+        jobs_remote_dir=None,
+        tasks_remote_dir=None,
+        pixi_cache_dir=None,
     )
-    ValidResourceLocal(**res.model_dump())
-    ValidProfileLocal(**prof.model_dump())
+    ValidResourceLocal(**dump_model(res))
+    ValidProfileLocal(**dump_model(prof))
     return res, prof
 
 
@@ -127,9 +133,13 @@ def slurm_sudo_resource_profile_objects(
         resource_id=123456789,
         username=SLURM_USER,
         resource_type=ResourceType.SLURM_SUDO,
+        ssh_key_path=None,
+        jobs_remote_dir=None,
+        tasks_remote_dir=None,
+        pixi_cache_dir=None,
     )
-    ValidResourceSlurmSudo(**res.model_dump())
-    ValidProfileSlurmSudo(**prof.model_dump())
+    ValidResourceSlurmSudo(**dump_model(res))
+    ValidProfileSlurmSudo(**dump_model(prof))
 
     return res, prof
 
@@ -181,8 +191,8 @@ def slurm_ssh_resource_profile_objects(
         tasks_remote_dir=(tmp777_path / "remote-tasks").as_posix(),
         pixi_cache_dir=(tmp777_path / "pixi-cache").as_posix(),
     )
-    ValidResourceSlurmSSH(**res.model_dump())
-    ValidProfileSlurmSSH(**prof.model_dump())
+    ValidResourceSlurmSSH(**dump_model(res))
+    ValidProfileSlurmSSH(**dump_model(prof))
 
     return res, prof
 
@@ -230,9 +240,10 @@ def slurm_ssh_resource_profile_fake_objects(
         ssh_key_path="/fake/key",
         jobs_remote_dir="/fake/jobs",
         tasks_remote_dir="/fake/tasks",
+        pixi_cache_dir=None,
     )
-    ValidResourceSlurmSSH(**res.model_dump())
-    ValidProfileSlurmSSH(**prof.model_dump())
+    ValidResourceSlurmSSH(**dump_model(res))
+    ValidProfileSlurmSSH(**dump_model(prof))
 
     return res, prof
 

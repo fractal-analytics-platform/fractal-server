@@ -10,14 +10,15 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserRead
@@ -104,10 +105,9 @@ async def patch_user(
             safe=False,
             request=None,
         )
-        validated_user = UserOAuth.model_validate(user.model_dump())
         patched_user = await db.get_one(
             UserOAuth,
-            validated_user.id,
+            user.id,
             populate_existing=True,
         )
     except exceptions.InvalidPasswordException as e:
@@ -156,7 +156,7 @@ async def list_users(
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
     users_dict = [
         dict(
-            **user_obj.model_dump(),
+            **dump_model(user_obj),
             oauth_accounts=user_obj.oauth_accounts,
             group_ids=[
                 link.group_id for link in links if link.user_id == user_obj.id
