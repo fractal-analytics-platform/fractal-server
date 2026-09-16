@@ -19,6 +19,9 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
+AnyTypeAdapter = TypeAdapter(Any)
+
+
 def _json_serializer(obj: Any) -> str:
     """
     Serializer for `JSON`/`JSONB` columns, used in place of plain
@@ -27,7 +30,7 @@ def _json_serializer(obj: Any) -> str:
     `dict[str, Any]` column are encoded the same way as in
     `dump_model_to_json` (pydantic's `model_dump_json` semantics).
     """
-    return TypeAdapter(Any).dump_json(obj).decode()
+    return AnyTypeAdapter.dump_json(obj).decode()
 
 
 class DB:

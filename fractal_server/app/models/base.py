@@ -12,6 +12,9 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
+DictTypeAdapter = TypeAdapter(dict[str, Any])
+
+
 def dump_model(
     obj: Base,
     *,
@@ -44,8 +47,5 @@ def dump_model_to_json(
     include: set[str] | None = None,
     exclude: set[str] | None = None,
 ) -> str:
-    return (
-        TypeAdapter(dict[str, Any])
-        .dump_json(dump_model(obj, include=include, exclude=exclude))
-        .decode()
-    )
+    dumped = dump_model(obj, include=include, exclude=exclude)
+    return DictTypeAdapter.dump_json(dumped).decode()
