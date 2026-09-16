@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from devtools import debug
 from pydantic_core import PydanticSerializationError
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -76,7 +77,16 @@ def test_dump_model_to_json_array_column():
     assert dumped["zarr_urls"] == ["/a/b", "/c/d"]
 
 
-def test_dump_model_to_json_array_of_timestamps_nested_in_json_column():
+async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    job_factory,
+    db_sync,
+    MockCurrentUser,
+):
     """
     There is no ARRAY(DateTime) column in the schema today, but a JSON
     column can hold a list of `datetime` objects on the Python side (e.g.
@@ -84,7 +94,24 @@ def test_dump_model_to_json_array_of_timestamps_nested_in_json_column():
     serialized independently and recursively, the same way a top-level
     `datetime` column is: as an ISO-8601 string.
     """
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        await workflowtask_factory(workflow_id=workflow.id, task_id=task.id)
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
+
     hr = _history_run(
+        dataset_id=dataset.id,
+        job_id=job.id,
+        task_id=task.id,
         workflowtask_dump={
             "timestamps": [
                 datetime(2023, 1, 1),
@@ -92,6 +119,12 @@ def test_dump_model_to_json_array_of_timestamps_nested_in_json_column():
             ]
         },
     )
+
+    db_sync.add(hr)
+    db_sync.commit()
+    db_sync.refresh(hr)
+    debug(hr)
+
     dumped = json.loads(dump_model_to_json(hr))
     assert dumped["workflowtask_dump"]["timestamps"] == [
         datetime(2023, 1, 1, 0, 0).isoformat(),
