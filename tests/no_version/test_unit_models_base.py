@@ -45,7 +45,10 @@ def test_dump_model_scalar_types():
 def test_dump_model_to_json_datetime_is_isoformat():
     hr = _history_run()
     dumped = json.loads(dump_model_to_json(hr))
-    assert dumped["timestamp_started"] == "2023-01-01T12:00:00"
+    assert (
+        dumped["timestamp_started"]
+        == datetime(2023, 1, 1, 12, 0, 0).isoformat()
+    )
 
 
 def test_dump_model_to_json_json_column_round_trips():
@@ -91,8 +94,8 @@ def test_dump_model_to_json_array_of_timestamps_nested_in_json_column():
     )
     dumped = json.loads(dump_model_to_json(hr))
     assert dumped["workflowtask_dump"]["timestamps"] == [
-        "2023-01-01T00:00:00",
-        "2023-01-02T08:30:00",
+        datetime(2023, 1, 1, 0, 0).isoformat(),
+        datetime(2023, 1, 2, 8, 30).isoformat(),
     ]
 
 
