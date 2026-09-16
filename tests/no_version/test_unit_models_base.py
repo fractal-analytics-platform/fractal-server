@@ -132,16 +132,48 @@ async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
     ]
 
 
-def test_dump_model_to_json_uuid_and_path_in_json_column():
+async def test_dump_model_to_json_uuid_and_path_in_json_column(
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    job_factory,
+    db_sync,
+    MockCurrentUser,
+):
     """
     `UUID`/`Path` values are not used by any current column, but if one
     ever ends up inside a `dict[str, Any]`/JSON column, it is serialized
     to its string representation - same as pydantic's `model_dump_json`.
     """
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(user_id=user.id)
+        await workflowtask_factory(workflow_id=workflow.id, task_id=task.id)
+        job = await job_factory(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir="/foo",
+            status="done",
+        )
+
     some_uuid = uuid.uuid4()
     hr = _history_run(
+        dataset_id=dataset.id,
+        job_id=job.id,
+        task_id=task.id,
         workflowtask_dump={"id": some_uuid, "path": Path("/tmp/foo/bar")},
     )
+
+    db_sync.add(hr)
+    db_sync.commit()
+    db_sync.refresh(hr)
+    debug(hr)
+
     dumped = json.loads(dump_model_to_json(hr))
     assert dumped["workflowtask_dump"] == {
         "id": str(some_uuid),
