@@ -48,54 +48,29 @@ As part of https://github.com/fractal-analytics-platform/fractal-server/pull/341
 
 Here we compare the former method (by working on the current `main` branch) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418).
 
-
-
 ```console
-tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ pwd
+$ pwd
 /redacted/fractal-server/benchmarks/json_serialization
 
-tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ git show --oneline -s
+$ git show --oneline -s
 78abf91120 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) more assertions
 
-tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
+$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
 [  UserOAuth]: mean=2.39 ns  median=2.22 ns  min=2.07 ns  max=3.89 ns
 [TaskGroupV2]: mean=3.44 ns  median=2.99 ns  min=2.83 ns  max=6.97 ns
 
-
-
-
-
-
-New version:
-```console
-$ git show --oneline -s
-f42bd2fe75 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) refactor benchmark
-
-$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
-[  UserOAuth]: mean=2.40 ns  median=2.19 ns  min=2.10 ns  max=3.64 ns
-[TaskGroupV2]: mean=3.28 ns  median=3.00 ns  min=2.92 ns  max=7.16 ns
-```
-
-Old version
-```console
 $ git switch main
 Switched to branch 'main'
 Your branch is up to date with 'origin/main'.
 
-$ git switch -c benchmark-sqlmodel-model-dump
-Switched to a new branch 'benchmark-sqlmodel-model-dump'
+$ git switch -c tmp-branch
+Switched to a new branch 'tmp-branch'
 
-$ pwd
-/redacted/fractal-server/benchmarks/json_serialization
-
-$ git checkout 3413-explore-sqlmodel-sqlalchemy-migration .
-Updated 5 paths from df3bf08ba0
-
-$ ls
-bench_json_serializer.py  bench_orm_object_dump_sqlalchemy.py  bench_orm_object_dump_sqlmodel.py  __pycache__  README.md  utils_for_orm_dump.py
+$ git checkout  3413-explore-sqlmodel-sqlalchemy-migration .
+Updated 5 paths from 3e9adc91ba
 
 $ git status
-On branch benchmark-sqlmodel-model-dump
+On branch tmp-branch
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
 	new file:   README.md
@@ -105,15 +80,12 @@ Changes to be committed:
 	new file:   utils_for_orm_dump.py
 
 $ git show --oneline -s
-5d4f994946 (HEAD -> benchmark-sqlmodel-model-dump, origin/main, origin/HEAD, main) Merge pull request #3437 from fractal-analytics-platform/dependabot/uv/version-updates-a88bc2595b
+5d4f994946 (HEAD -> tmp-branch, origin/main, origin/HEAD, main, benchmark-sqlmodel-model-dump) Merge pull request #3437 from fractal-analytics-platform/dependabot/uv/version-updates-a88bc2595b
 
-$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlmodel.py
-/redacted/fractal-server/.venv/lib/python3.14/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
-  PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='path', input_value=PosixPath('/some/path'), input_type=PosixPath])
-  return self.__pydantic_serializer__.to_python(
-[  UserOAuth]: mean=2.69 ns  median=2.48 ns  min=2.40 ns  max=4.70 ns
-[TaskGroupV2]: mean=12.80 ns  median=11.23 ns  min=9.61 ns  max=27.01 ns
+[to be continued]
 ```
 
 
-We note that the old (SQLModel/Pydantic) approach would raise a (relevant) warning, but still
+Known differences:
+* The old (SQLModel/Pydantic) approach would raise a (relevant) warning.
+* We need to work with db-committed ORM objects, or there would be two different ways of setting default values.
