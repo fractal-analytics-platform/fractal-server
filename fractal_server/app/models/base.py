@@ -15,24 +15,24 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
-def _json_default(obj: Any) -> str:
-    """
-    `json.dumps(..., default=...)` hook covering the only non-JSON-native
-    types that can end up nested in a `dict[str, Any]`/JSON column.
-    """
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif isinstance(obj, Path):
-        return obj.as_posix()
-    elif isinstance(obj, UUID):
-        return str(obj)
-    raise TypeError(
-        f"Object of type {type(obj).__name__} is not JSON serializable"
-    )
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, Path):
+            return obj.as_posix()
+        elif isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
 
 
 def json_dumps(obj: Any) -> str:
-    return json.dumps(obj, default=_json_default)
+    """
+    Possible optimization through `pydantic.TypeAdapter`:
+        return pydantic.TypeAdapter(Any).dump_json(obj).decode()
+    See `benchmarks/bench_json_serializer.py`.
+    """
+    return json.dumps(obj, cls=CustomEncoder)
 
 
 def dump_model(

@@ -43,7 +43,7 @@ class CustomEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def json_encoder_dumps(obj: Any) -> str:
+def json_dumps(obj: Any) -> str:
     return json.dumps(obj, cls=CustomEncoder, indent=2)
 
 
@@ -129,13 +129,13 @@ def main() -> None:
     print(f"Generated nested structure with {n_nodes} nodes.\n")
 
     # Sanity check: both serializers must agree on the encoded value.
-    encoded_via_json = json.loads(json_encoder_dumps(data))
+    encoded_via_json = json.loads(json_dumps(data))
     encoded_via_pydantic = json.loads(type_adapter_dumps(data))
     if encoded_via_json != encoded_via_pydantic:
         raise RuntimeError("serializers disagree on output")
 
     print(f"Timing each serializer over {REPETITIONS} repetitions:\n")
-    json_timings = time_calls(json_encoder_dumps, data, REPETITIONS)
+    json_timings = time_calls(json_dumps, data, REPETITIONS)
     adapter_timings = time_calls(type_adapter_dumps, data, REPETITIONS)
 
     json_mean = report("json.dumps(default=...)", json_timings)
