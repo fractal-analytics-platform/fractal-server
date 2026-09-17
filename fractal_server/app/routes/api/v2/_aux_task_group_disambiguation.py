@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.config import get_settings
@@ -180,8 +180,8 @@ def serialize_task_group(
     Optionally include `user_email` and `in_use` if provided.
     """
     serialized_task_group = dict(
-        task_list=[dump_model(task) for task in task_group.task_list],
-        **dump_model(task_group),
+        task_list=[orm_model_to_dict(task) for task in task_group.task_list],
+        **orm_model_to_dict(task_group),
     )
     if user_email is not None:
         serialized_task_group["user_email"] = user_email

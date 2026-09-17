@@ -7,7 +7,7 @@ from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserGroup
@@ -72,11 +72,12 @@ async def _get_single_user_with_groups(
 
     # Create dump of `user.oauth_accounts` relationship
     oauth_accounts = [
-        dump_model(oauth_account) for oauth_account in user.oauth_accounts
+        orm_model_to_dict(oauth_account)
+        for oauth_account in user.oauth_accounts
     ]
 
     return UserRead(
-        **dump_model(user),
+        **orm_model_to_dict(user),
         group_ids_names=group_ids_names,
         oauth_accounts=oauth_accounts,
     )
@@ -104,7 +105,7 @@ async def _get_single_usergroup_with_user_ids(
     links = res.scalars().all()
     user_ids = [link.user_id for link in links]
 
-    return UserGroupRead(**dump_model(group), user_ids=user_ids)
+    return UserGroupRead(**orm_model_to_dict(group), user_ids=user_ids)
 
 
 async def _user_or_404(user_id: int, db: AsyncSession) -> UserOAuth:

@@ -15,7 +15,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
@@ -82,7 +82,7 @@ async def view_projects(
     res = await db.execute(stm)
 
     projects = [
-        dict(user_email=email, **dump_model(project))
+        dict(user_email=email, **orm_model_to_dict(project))
         for project, email in res.all()
     ]
 

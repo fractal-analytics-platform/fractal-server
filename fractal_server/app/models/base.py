@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
-def dump_model(
+def orm_model_to_dict(
     obj: Base,
     *,
     include: set[str] | None = None,

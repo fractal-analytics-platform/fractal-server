@@ -12,7 +12,7 @@ from sqlalchemy import select
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -423,8 +423,8 @@ async def get_all_datasets(
             dict(
                 image_count=image_count,
                 owner_email=owner_email,
-                project=dump_model(dataset.project),
-                **dump_model(dataset),
+                project=orm_model_to_dict(dataset.project),
+                **orm_model_to_dict(dataset),
             )
             for dataset, owner_email, image_count in records
         ],

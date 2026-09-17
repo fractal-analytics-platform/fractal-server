@@ -16,7 +16,7 @@ from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.linkusergroup import LinkUserGroup
 from fractal_server.app.models.v2 import WorkflowTemplate
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -221,7 +221,7 @@ async def get_workflow_template(
     user_email = res.scalars().one()
     return dict(
         user_email=user_email,
-        **dump_model(template, exclude={"user_id"}),
+        **orm_model_to_dict(template, exclude={"user_id"}),
     )
 
 
@@ -277,7 +277,7 @@ async def post_workflow_template(
     await db.refresh(template)
     return dict(
         user_email=user.email,
-        **dump_model(template, exclude={"user_id"}),
+        **orm_model_to_dict(template, exclude={"user_id"}),
     )
 
 
@@ -307,7 +307,7 @@ async def patch_workflow_template(
 
     return dict(
         user_email=user.email,
-        **dump_model(template, exclude={"user_id"}),
+        **orm_model_to_dict(template, exclude={"user_id"}),
     )
 
 
@@ -370,7 +370,7 @@ async def import_workflow_template(
 
     return dict(
         user_email=user.email,
-        **dump_model(template, exclude={"user_id"}),
+        **orm_model_to_dict(template, exclude={"user_id"}),
     )
 
 

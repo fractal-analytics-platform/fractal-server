@@ -16,7 +16,7 @@ from fractal_server.app.db import AsyncSession
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -359,7 +359,7 @@ async def _add_warnings_to_workflow_tasks(
 ) -> list[dict[str, Any]]:
     wftask_list_with_warnings = []
     for wftask in wftask_list:
-        wftask_data = dict(dump_model(wftask), task=wftask.task)
+        wftask_data = dict(orm_model_to_dict(wftask), task=wftask.task)
         try:
             task_group = await _get_task_group_read_access(
                 task_group_id=wftask.task.taskgroupv2_id,
