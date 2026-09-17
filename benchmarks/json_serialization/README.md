@@ -60,7 +60,39 @@ $ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalch
 
 Old version
 ```console
-(3413-explore-sqlmodel-sqlalchemy)$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
-[  UserOAuth]: mean=2.42 ns  median=2.13 ns  min=2.05 ns  max=4.78 ns
-[TaskGroupV2]: mean=3.17 ns  median=2.84 ns  min=2.76 ns  max=7.26 ns
+$ git switch main
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+
+$ git switch -c benchmark-sqlmodel-model-dump
+Switched to a new branch 'benchmark-sqlmodel-model-dump'
+
+$ pwd
+/redacted/fractal-server/benchmarks/json_serialization
+
+$ git checkout  3413-explore-sqlmodel-sqlalchemy-migration .
+Updated 5 paths from df3bf08ba0
+
+$ ls
+bench_json_serializer.py  bench_orm_object_dump_sqlalchemy.py  bench_orm_object_dump_sqlmodel.py  __pycache__  README.md  utils_for_orm_dump.py
+$ git status
+On branch benchmark-sqlmodel-model-dump
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   README.md
+	new file:   bench_json_serializer.py
+	new file:   bench_orm_object_dump_sqlalchemy.py
+	new file:   bench_orm_object_dump_sqlmodel.py
+	new file:   utils_for_orm_dump.py
+
+$ git show --oneline -s
+5d4f994946 (HEAD -> benchmark-sqlmodel-model-dump, origin/main, origin/HEAD, main) Merge pull request #3437 from fractal-analytics-platform/dependabot/uv/version-updates-a88bc2595b
+
+$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlmodel.py
+/redacted/fractal-server/.venv/lib/python3.14/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected `str` - serialized value may not be as expected [field_name='path', input_value=PosixPath('/some/path'), input_type=PosixPath])
+  return self.__pydantic_serializer__.to_python(
+[  UserOAuth]: mean=2.69 ns  median=2.48 ns  min=2.40 ns  max=4.70 ns
+[TaskGroupV2]: mean=12.80 ns  median=11.23 ns  min=9.61 ns  max=27.01 ns
+
 ```
