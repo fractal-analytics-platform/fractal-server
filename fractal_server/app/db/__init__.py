@@ -1,8 +1,6 @@
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
-from typing import Any
 
-from pydantic import TypeAdapter
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,25 +10,12 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
+from fractal_server.app.models.base import json_dumps
 from fractal_server.config import get_db_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
-
-
-AnyTypeAdapter = TypeAdapter(Any)
-
-
-def _json_serializer(obj: Any) -> str:
-    """
-    Serializer for `JSON`/`JSONB` columns, used in place of plain
-    `json.dumps` so that values which are not natively JSON-serializable
-    (e.g. `datetime`, `UUID`, `Path`) but can appear nested in a
-    `dict[str, Any]` column are encoded the same way as in
-    `dump_model_to_json` (pydantic's `model_dump_json` semantics).
-    """
-    return AnyTypeAdapter.dump_json(obj).decode()
 
 
 class DB:
@@ -63,7 +48,7 @@ class DB:
             echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
-            json_serializer=_json_serializer,
+            json_serializer=json_dumps,
         )
         cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
@@ -80,7 +65,7 @@ class DB:
             echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
-            json_serializer=_json_serializer,
+            json_serializer=json_dumps,
         )
 
         cls._sync_session_maker = sessionmaker(cls._engine_sync)
