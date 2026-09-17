@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
-from fractal_server.app.models.base import json_dumps
 from fractal_server.config import get_db_settings
+from fractal_server.json_utils import json_dumps
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
