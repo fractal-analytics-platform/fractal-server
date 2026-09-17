@@ -32,23 +32,19 @@ def _make_leaf(i: int) -> Any:
 # --- Serializer 1: plain json.dumps with a `default` hook -----------------
 
 
-def _json_default(obj: Any) -> str:
-    """
-    Mirrors `fractal_server.app.models.base._json_default`.
-    """
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif isinstance(obj, Path):
-        return obj.as_posix()
-    elif isinstance(obj, uuid.UUID):
-        return str(obj)
-    raise TypeError(
-        f"Object of type {type(obj).__name__} is not JSON serializable"
-    )
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, Path):
+            return obj.as_posix()
+        elif isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
 
 
 def json_encoder_dumps(obj: Any) -> str:
-    return json.dumps(obj, default=_json_default)
+    return json.dumps(obj, cls=CustomEncoder, indent=2)
 
 
 # --- Serializer 2: pydantic TypeAdapter(Any) -------------------------------
