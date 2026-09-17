@@ -48,6 +48,24 @@ As part of https://github.com/fractal-analytics-platform/fractal-server/pull/341
 
 Here we compare the former method (by working on the current `main` branch) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418).
 
+
+
+```console
+tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ pwd
+/redacted/fractal-server/benchmarks/json_serialization
+
+tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ git show --oneline -s
+78abf91120 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) more assertions
+
+tommaso@exact2:~/Fractal/fractal-server/benchmarks/json_serialization (3413-explore-sqlmodel-sqlalchemy)$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
+[  UserOAuth]: mean=2.39 ns  median=2.22 ns  min=2.07 ns  max=3.89 ns
+[TaskGroupV2]: mean=3.44 ns  median=2.99 ns  min=2.83 ns  max=6.97 ns
+
+
+
+
+
+
 New version:
 ```console
 $ git show --oneline -s
