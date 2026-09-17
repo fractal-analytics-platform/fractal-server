@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 from utils_for_orm_dump import REPETITIONS
+from utils_for_orm_dump import expected_task_group_dict
 from utils_for_orm_dump import expected_user_dict
 from utils_for_orm_dump import report
 from utils_for_orm_dump import task_group_orm_object
@@ -23,6 +24,7 @@ def profile(obj: BaseModel, **kwargs):
 
 # Assert full output
 assert user_orm_object.model_dump() == expected_user_dict
+assert task_group_orm_object.model_dump() == expected_task_group_dict
 
 # Check that we only moved from an ORM model to a dictionary, without making it
 # a JSON-serializable one

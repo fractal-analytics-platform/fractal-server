@@ -61,7 +61,7 @@ $ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalch
 Old version
 ```console
 $ git switch main
-Already on 'main'
+Switched to branch 'main'
 Your branch is up to date with 'origin/main'.
 
 $ git switch -c benchmark-sqlmodel-model-dump
@@ -70,11 +70,12 @@ Switched to a new branch 'benchmark-sqlmodel-model-dump'
 $ pwd
 /redacted/fractal-server/benchmarks/json_serialization
 
-$ git checkout  3413-explore-sqlmodel-sqlalchemy-migration .
+$ git checkout 3413-explore-sqlmodel-sqlalchemy-migration .
 Updated 5 paths from df3bf08ba0
 
 $ ls
 bench_json_serializer.py  bench_orm_object_dump_sqlalchemy.py  bench_orm_object_dump_sqlmodel.py  __pycache__  README.md  utils_for_orm_dump.py
+
 $ git status
 On branch benchmark-sqlmodel-model-dump
 Changes to be committed:
@@ -94,5 +95,7 @@ $ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlmode
   return self.__pydantic_serializer__.to_python(
 [  UserOAuth]: mean=2.69 ns  median=2.48 ns  min=2.40 ns  max=4.70 ns
 [TaskGroupV2]: mean=12.80 ns  median=11.23 ns  min=9.61 ns  max=27.01 ns
-
 ```
+
+
+We note that the old (SQLModel/Pydantic) approach would raise a (relevant) warning, but still

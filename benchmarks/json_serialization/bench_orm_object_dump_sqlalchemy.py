@@ -2,6 +2,7 @@ import time
 from pathlib import Path
 
 from utils_for_orm_dump import REPETITIONS
+from utils_for_orm_dump import expected_task_group_dict
 from utils_for_orm_dump import expected_user_dict
 from utils_for_orm_dump import report
 from utils_for_orm_dump import task_group_orm_object
@@ -24,6 +25,7 @@ def profile(fn, *args, **kwargs):
 
 # Assert full output
 assert orm_model_to_dict(user_orm_object) == expected_user_dict
+assert orm_model_to_dict(task_group_orm_object) == expected_task_group_dict
 
 # Check that we only moved from an ORM model to a dictionary, without making it
 # a JSON-serializable one
