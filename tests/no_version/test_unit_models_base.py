@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from pydantic_core import PydanticSerializationError
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import synonym
@@ -192,7 +191,7 @@ def test_dump_model_to_json_unsupported_type_raises():
         pass
 
     hr = _history_run(workflowtask_dump={"x": Unsupported()})
-    with pytest.raises(PydanticSerializationError):
+    with pytest.raises(TypeError):
         dump_model_to_json(hr)
 
 
