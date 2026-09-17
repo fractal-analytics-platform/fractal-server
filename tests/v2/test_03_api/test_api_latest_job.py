@@ -1,11 +1,9 @@
-import json
-
 from devtools import debug
 
 from fractal_server.app.models import JobV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import TaskV2
-from fractal_server.app.models import dump_model_to_json
+from fractal_server.app.models import dump_model
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -181,31 +179,25 @@ async def test_get_latest_job_tasks_statuses(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         user_email="",
-        dataset_dump=json.loads(
-            dump_model_to_json(
-                dataset, exclude={"images", "history", "is_starred"}
-            )
+        dataset_dump=dump_model(
+            dataset, exclude={"images", "history", "is_starred"}
         ),
-        workflow_dump=json.loads(
-            dump_model_to_json(
-                workflow,
-                exclude={
-                    "task_list",
-                    "description",
-                    "template_id",
-                    "is_starred",
-                },
-            )
+        workflow_dump=dump_model(
+            workflow,
+            exclude={
+                "task_list",
+                "description",
+                "template_id",
+                "is_starred",
+            },
         ),
-        project_dump=json.loads(
-            dump_model_to_json(
-                project,
-                exclude={
-                    "resource_id",
-                    "is_starred",
-                    "description",
-                },
-            )
+        project_dump=dump_model(
+            project,
+            exclude={
+                "resource_id",
+                "is_starred",
+                "description",
+            },
         ),
     )
     job_A = JobV2(

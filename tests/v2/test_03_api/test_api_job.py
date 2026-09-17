@@ -5,7 +5,8 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import dump_model_to_json
+from fractal_server.app.models import dump_model
+from fractal_server.app.models.base import json_dumps
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -423,33 +424,39 @@ async def test_project_apply_workflow_subset(
         )
         expected_project_dump = ProjectDump(
             **json.loads(
-                dump_model_to_json(
-                    project,
-                    exclude={
-                        "resource_id",
-                        "is_starred",
-                        "description",
-                    },
+                json_dumps(
+                    dump_model(
+                        project,
+                        exclude={
+                            "resource_id",
+                            "is_starred",
+                            "description",
+                        },
+                    )
                 )
             )
         ).model_dump()
         expected_workflow_dump = WorkflowDump(
             **json.loads(
-                dump_model_to_json(
-                    wf,
-                    exclude={
-                        "task_list",
-                        "description",
-                        "template_id",
-                        "is_starred",
-                    },
+                json_dumps(
+                    dump_model(
+                        wf,
+                        exclude={
+                            "task_list",
+                            "description",
+                            "template_id",
+                            "is_starred",
+                        },
+                    )
                 )
             )
         ).model_dump()
         expected_dataset_dump = DatasetDump(
             **json.loads(
-                dump_model_to_json(
-                    dataset1, exclude={"history", "images", "is_starred"}
+                json_dumps(
+                    dump_model(
+                        dataset1, exclude={"history", "images", "is_starred"}
+                    )
                 )
             )
         ).model_dump()

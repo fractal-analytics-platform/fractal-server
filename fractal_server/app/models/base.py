@@ -59,13 +59,3 @@ def dump_model(
     if exclude is not None:
         set_names -= exclude
     return {name: obj.__dict__[name] for name in set_names}
-
-
-def dump_model_to_json(
-    obj: Base,
-    *,
-    include: set[str] | None = None,
-    exclude: set[str] | None = None,
-) -> str:
-    dumped = dump_model(obj, include=include, exclude=exclude)
-    return json_dumps(dumped)

@@ -5,7 +5,6 @@ will not be picked up by alembic.
 """
 
 from .base import dump_model  # noqa: F401
-from .base import dump_model_to_json  # noqa: F401
 from .linkusergroup import LinkUserGroup  # noqa: F401
 from .linkuserproject import LinkUserProjectV2  # noqa: F401
 from .security import *  # noqa
