@@ -46,16 +46,19 @@ As part of https://github.com/fractal-analytics-platform/fractal-server/pull/341
 
 > **Note**: In both cases, the resulting dictionary may not be JSON-serializable by a vanilla `json.dumps`, e.g. because it contains some `pathlib.Path` or `datetime.datetime` objects.
 
-Here we compare the former method (by working on the current `main` branch, that is, 5d4f994946d60b8369c7f3938b72123479393c0d) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418 - e.g. at e62e3d67c32c44fad772c9bfb5369483e0885e81).
+Here we compare the former method (by working on the current `main` branch) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418).
 
-We run the
+New version:
 ```console
-(main)$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlmodel.py
-[  UserOAuth]: mean=3.13 ns  median=2.82 ns  min=2.72 ns  max=5.63 ns
-[TaskGroupV2]: mean=8.67 ns  median=7.48 ns  min=7.30 ns  max=29.52 ns
+$ git show --oneline -s
+f42bd2fe75 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) refactor benchmark
+
+$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
+[  UserOAuth]: mean=2.40 ns  median=2.19 ns  min=2.10 ns  max=3.64 ns
+[TaskGroupV2]: mean=3.28 ns  median=3.00 ns  min=2.92 ns  max=7.16 ns
 ```
 
-Run as
+Old version
 ```console
 (3413-explore-sqlmodel-sqlalchemy)$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
 [  UserOAuth]: mean=2.42 ns  median=2.13 ns  min=2.05 ns  max=4.78 ns
