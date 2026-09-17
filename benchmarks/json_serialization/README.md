@@ -44,3 +44,9 @@ TypeAdapter speed-up ratio: 2.15x
 ORM objects of the `sqlmodel.SQLModel` type have a `model_dump` method based on `pydantic`, which is sometimes used in `fractal-server` to produce a JSON-serializable version of the ORM object.
 As part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418, we implemented an equivalent function for `sqlalchemy.DeclarativeBase` objects, also based on the custom JSON encoder benchmarked in section 1.
 Here we compare the former method (by working on a `main`-derived branch) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418).
+
+
+Run as
+```bash
+POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python ./bench_orm_object_dump.py
+```
