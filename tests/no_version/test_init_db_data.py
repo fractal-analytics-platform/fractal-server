@@ -8,7 +8,7 @@ from sqlalchemy import select
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.cli.__main__ import init_db_data
 
 
@@ -29,9 +29,11 @@ def test_init_db_data_resource_and_profile(
     profile_path = tmp_path / "profile.json"
 
     with resource_path.open("w") as f:
-        json.dump(dump_model(resource, exclude={"id", "timestamp_created"}), f)
+        json.dump(
+            orm_model_to_dict(resource, exclude={"id", "timestamp_created"}), f
+        )
     with profile_path.open("w") as f:
-        json.dump(dump_model(profile, exclude={"id"}), f)
+        json.dump(orm_model_to_dict(profile, exclude={"id"}), f)
 
     with pytest.raises(SystemExit):
         init_db_data(resource=resource_path.as_posix())
@@ -74,10 +76,13 @@ def test_init_db_data_all_args(
     profile_path = tmp_path / "profile.json"
     with resource_path.open("w") as f:
         json.dump(
-            dump_model(resource_obj, exclude={"id", "timestamp_created"}), f
+            orm_model_to_dict(
+                resource_obj, exclude={"id", "timestamp_created"}
+            ),
+            f,
         )
     with profile_path.open("w") as f:
-        json.dump(dump_model(profile_obj, exclude={"id"}), f)
+        json.dump(orm_model_to_dict(profile_obj, exclude={"id"}), f)
 
     init_db_data(
         resource=resource_path,
@@ -92,9 +97,9 @@ def test_init_db_data_all_args(
     assert user.profile_id is not None
     profile = db_sync.get(Profile, user.profile_id)
 
-    assert dump_model(profile, exclude={"id", "resource_id"}) == dump_model(
-        profile_obj, exclude={"id", "resource_id"}
-    )
+    assert orm_model_to_dict(
+        profile, exclude={"id", "resource_id"}
+    ) == orm_model_to_dict(profile_obj, exclude={"id", "resource_id"})
 
 
 def test_init_db_data_from_file(
@@ -110,13 +115,13 @@ def test_init_db_data_from_file(
     res_json_file = tmp_path / "res.json"
     with res_json_file.open("w") as f:
         json.dump(
-            dump_model(resource, exclude={"id", "timestamp_created"}),
+            orm_model_to_dict(resource, exclude={"id", "timestamp_created"}),
             f,
         )
     prof_json_file = tmp_path / "prof.json"
     with prof_json_file.open("w") as f:
         json.dump(
-            dump_model(profile, exclude={"id", "resource_id"}),
+            orm_model_to_dict(profile, exclude={"id", "resource_id"}),
             f,
         )
     init_db_data(

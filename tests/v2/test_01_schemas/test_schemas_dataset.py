@@ -3,7 +3,7 @@ import os
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import DatasetCreate
@@ -71,7 +71,9 @@ async def test_schemas_dataset():
     )
 
     # Read
-    DatasetRead(**dump_model(dataset), project=dump_model(project))
+    DatasetRead(
+        **orm_model_to_dict(dataset), project=orm_model_to_dict(project)
+    )
 
     # Update
 

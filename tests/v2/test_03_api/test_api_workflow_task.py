@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -1009,7 +1009,7 @@ async def test_replace_task_in_workflowtask(
         )
 
         # replace task in wft3 with task5
-        old_wft3 = dump_model(wft3)
+        old_wft3 = orm_model_to_dict(wft3)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"replace-task/?workflow_task_id={wft3.id}&task_id={task5.id}",
@@ -1017,7 +1017,7 @@ async def test_replace_task_in_workflowtask(
         )
         assert res.status_code == 201
         await db.refresh(wft3)
-        assert dump_model(wft3.task) == dump_model(task5)
+        assert orm_model_to_dict(wft3.task) == orm_model_to_dict(task5)
         assert wft3.task_id == task5.id
         assert wft3.args_parallel == old_wft3["args_parallel"]
         assert wft3.args_non_parallel == old_wft3["args_non_parallel"]

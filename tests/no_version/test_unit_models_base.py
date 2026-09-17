@@ -9,11 +9,11 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import synonym
 
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.base import Base
-from fractal_server.app.models.base import json_dumps
 from fractal_server.app.models.v2.history import HistoryRun
 from fractal_server.app.models.v2.history import HistoryUnit
+from fractal_server.json_utils import json_dumps
 
 
 def _history_run(**overrides) -> HistoryRun:
@@ -36,7 +36,7 @@ def test_dump_model_scalar_types():
     `dump_model` returns plain Python values (no serialization yet).
     """
     hr = _history_run()
-    dumped = dump_model(hr)
+    dumped = orm_model_to_dict(hr)
     assert dumped["status"] == "done"
     assert dumped["num_available_images"] == 5
     assert dumped["timestamp_started"] == datetime(2023, 1, 1, 12, 0, 0)
@@ -44,7 +44,7 @@ def test_dump_model_scalar_types():
 
 def test_dump_model_to_json_datetime_is_isoformat():
     hr = _history_run()
-    dumped = json.loads(json_dumps(dump_model(hr)))
+    dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
     assert (
         dumped["timestamp_started"]
         == datetime(2023, 1, 1, 12, 0, 0).isoformat()
@@ -59,7 +59,7 @@ def test_dump_model_to_json_json_column_round_trips():
     hr = _history_run(
         workflowtask_dump={"nested": {"list": [1, 2, {"x": None}]}},
     )
-    dumped = json.loads(json_dumps(dump_model(hr)))
+    dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
     assert dumped["workflowtask_dump"] == {
         "nested": {"list": [1, 2, {"x": None}]}
     }
@@ -72,7 +72,7 @@ def test_dump_model_to_json_array_column():
         status="done",
         zarr_urls=["/a/b", "/c/d"],
     )
-    dumped = json.loads(json_dumps(dump_model(hu)))
+    dumped = json.loads(json_dumps(orm_model_to_dict(hu)))
     assert dumped["zarr_urls"] == ["/a/b", "/c/d"]
 
 
@@ -124,7 +124,7 @@ async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
     db_sync.refresh(hr)
     debug(hr)
 
-    dumped = json.loads(json_dumps(dump_model(hr)))
+    dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
     assert dumped["workflowtask_dump"]["timestamps"] == [
         datetime(2023, 1, 1, 0, 0).isoformat(),
         datetime(2023, 1, 2, 8, 30).isoformat(),
@@ -173,7 +173,7 @@ async def test_dump_model_to_json_uuid_and_path_in_json_column(
     db_sync.refresh(hr)
     debug(hr)
 
-    dumped = json.loads(json_dumps(dump_model(hr)))
+    dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
     assert dumped["workflowtask_dump"] == {
         "id": str(some_uuid),
         "path": "/tmp/foo/bar",
@@ -192,15 +192,19 @@ def test_dump_model_to_json_unsupported_type_raises():
 
     hr = _history_run(workflowtask_dump={"x": Unsupported()})
     with pytest.raises(TypeError):
-        json_dumps(dump_model(hr))
+        json_dumps(orm_model_to_dict(hr))
 
 
 def test_dump_model_to_json_include_exclude():
     hr = _history_run()
-    only_status = json.loads(json_dumps(dump_model(hr, include={"status"})))
+    only_status = json.loads(
+        json_dumps(orm_model_to_dict(hr, include={"status"}))
+    )
     assert only_status == {"status": "done"}
 
-    without_status = json.loads(json_dumps(dump_model(hr, exclude={"status"})))
+    without_status = json.loads(
+        json_dumps(orm_model_to_dict(hr, exclude={"status"}))
+    )
     assert "status" not in without_status
     assert without_status["num_available_images"] == 5
 
@@ -217,8 +221,8 @@ def test_dump_model_supports_column_name_and_synonym_aliases():
     obj = _TableWithAlias(id=1, attr_alias="hello")
     assert obj.attribute == obj.attr_alias == "hello"
 
-    dumped = dump_model(obj)
+    dumped = orm_model_to_dict(obj)
     assert dumped == {"id": 1, "attribute": "hello"}
 
-    dumped_json = json.loads(json_dumps(dump_model(obj)))
+    dumped_json = json.loads(json_dumps(orm_model_to_dict(obj)))
     assert dumped_json == {"id": 1, "attribute": "hello"}

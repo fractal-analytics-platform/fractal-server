@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import WorkflowCreate
@@ -36,8 +36,8 @@ async def test_schemas_workflow():
     # Read
 
     WorkflowRead(
-        **dump_model(workflow),
-        project=dump_model(project),
+        **orm_model_to_dict(workflow),
+        project=orm_model_to_dict(project),
         task_list=workflow.task_list,
     )
 

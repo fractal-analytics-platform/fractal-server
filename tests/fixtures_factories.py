@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
@@ -190,10 +190,10 @@ async def job_factory(db: AsyncSession):
             project_id=project_id,
             dataset_id=dataset_id,
             workflow_id=workflow_id,
-            dataset_dump=dump_model(
+            dataset_dump=orm_model_to_dict(
                 dataset, exclude={"history", "images", "is_starred"}
             ),
-            workflow_dump=dump_model(
+            workflow_dump=orm_model_to_dict(
                 workflow,
                 exclude={
                     "task_list",
@@ -202,7 +202,7 @@ async def job_factory(db: AsyncSession):
                     "is_starred",
                 },
             ),
-            project_dump=dump_model(
+            project_dump=orm_model_to_dict(
                 project,
                 exclude={
                     "resource_id",

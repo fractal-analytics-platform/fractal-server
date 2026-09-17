@@ -1,4 +1,4 @@
-from fractal_server.app.models import dump_model
+from fractal_server.app.models import orm_model_to_dict
 
 
 async def test_profile_api(
@@ -55,7 +55,7 @@ async def test_profile_api(
         # PUT one profile / success
         NEW_NAME = "new-name"
         NEW_USERNAME = "new-username"
-        new_ssh_profile = dump_model(slurm_ssh_prof)
+        new_ssh_profile = orm_model_to_dict(slurm_ssh_prof)
         new_ssh_profile["name"] = NEW_NAME
         new_ssh_profile["username"] = NEW_USERNAME
         res = await client.put(

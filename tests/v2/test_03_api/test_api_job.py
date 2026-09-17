@@ -5,8 +5,7 @@ from datetime import timedelta
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import dump_model
-from fractal_server.app.models.base import json_dumps
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -18,6 +17,7 @@ from fractal_server.app.schemas.v2.dumps import ProjectDump
 from fractal_server.app.schemas.v2.dumps import WorkflowDump
 from fractal_server.app.schemas.v2.job import JobStatusType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
+from fractal_server.json_utils import json_dumps
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 
@@ -425,7 +425,7 @@ async def test_project_apply_workflow_subset(
         expected_project_dump = ProjectDump(
             **json.loads(
                 json_dumps(
-                    dump_model(
+                    orm_model_to_dict(
                         project,
                         exclude={
                             "resource_id",
@@ -439,7 +439,7 @@ async def test_project_apply_workflow_subset(
         expected_workflow_dump = WorkflowDump(
             **json.loads(
                 json_dumps(
-                    dump_model(
+                    orm_model_to_dict(
                         wf,
                         exclude={
                             "task_list",
@@ -454,7 +454,7 @@ async def test_project_apply_workflow_subset(
         expected_dataset_dump = DatasetDump(
             **json.loads(
                 json_dumps(
-                    dump_model(
+                    orm_model_to_dict(
                         dataset1, exclude={"history", "images", "is_starred"}
                     )
                 )
