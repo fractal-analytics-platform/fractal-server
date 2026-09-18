@@ -14,7 +14,6 @@ registers the client and the relative routes.
 import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
-from typing import Generic
 from typing import Optional
 from typing import Self
 from typing import override
@@ -23,11 +22,8 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi_users import BaseUserManager
 from fastapi_users import IntegerIDMixin
-from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.exceptions import InvalidPasswordException
 from fastapi_users.exceptions import UserAlreadyExists
-from fastapi_users.models import ID
-from fastapi_users.models import UP
 from fastapi_users.password import PasswordHelper
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
@@ -53,7 +49,7 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
-class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
+class SQLAlchemyUserDatabase:
     """
     Database adapter for SQLAlchemy.
 
@@ -61,7 +57,9 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     Original Copyright: 2021 François Voron, released under MIT licence.
 
     Changes with respect to the original version:
-    * Using the fractal-server `UserOAuth` and `OAuthAccount` classes.
+    * Using the fractal-server `UserOAuth` and `OAuthAccount` classes rather
+      than protocols.
+    * Using `int` rather than the generic `ID`.
     * `Optional[X]` --> `X | None`
     * No requirement about sqlalchemy version being lower than 2.1.0.
 
@@ -90,7 +88,7 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         self.user_table = user_table
         self.oauth_account_table = oauth_account_table
 
-    async def get(self, id: ID) -> Optional[UserOAuth]:
+    async def get(self, id: int) -> Optional[UserOAuth]:
         statement = select(self.user_table).where(self.user_table.id == id)
         return await self._get_user(statement)
 
