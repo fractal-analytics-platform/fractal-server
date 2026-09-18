@@ -1,8 +1,4 @@
 Benchmarks in this folder are relevant in the context of https://github.com/fractal-analytics-platform/fractal-server/pull/3418, where we migrate from SQLModel to plain SQLAlchemy.
-Als
-
-
-
 
 ## (1) Object serialization to JSON
 
