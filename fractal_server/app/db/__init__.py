@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
+from sqlalchemy import URL
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,17 +40,20 @@ class DB:
             cls.set_sync_db()
             return cls._engine_sync
 
-    @classmethod
-    def set_async_db(cls) -> None:
+    @property
+    def _engine_attributes(cls) -> dict[str, URL | str | bool | callable]:
         db_settings = Inject(get_db_settings)
-
-        cls._engine_async = create_async_engine(
-            db_settings.DATABASE_URL,
+        return dict(
+            url=db_settings.DATABASE_URL,
             echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
             json_serializer=json_dumps,
         )
+
+    @classmethod
+    def set_async_db(cls) -> None:
+        cls._engine_async = create_async_engine(**cls._engine_attributes)
         cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
@@ -58,16 +62,7 @@ class DB:
 
     @classmethod
     def set_sync_db(cls) -> None:
-        db_settings = Inject(get_db_settings)
-
-        cls._engine_sync = create_engine(
-            db_settings.DATABASE_URL,
-            echo=(db_settings.DB_ECHO == "true"),
-            future=True,
-            pool_pre_ping=True,
-            json_serializer=json_dumps,
-        )
-
+        cls._engine_sync = create_engine(**cls._engine_attributes)
         cls._sync_session_maker = sessionmaker(cls._engine_sync)
 
     @classmethod
