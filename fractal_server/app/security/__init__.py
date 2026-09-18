@@ -126,9 +126,10 @@ class SQLAlchemyUserDatabase:
         await self.session.refresh(user)
         return user
 
-    async def delete(self, user: UserOAuth) -> None:
-        await self.session.delete(user)
-        await self.session.commit()
+    # async def delete(self, user: UserOAuth) -> None:
+    #     # NOTE: User deletion is not currently supported.
+    #     await self.session.delete(user)
+    #     await self.session.commit()
 
     async def add_oauth_account(
         self, user: UserOAuth, create_dict: dict[str, Any]
