@@ -62,7 +62,7 @@ async def get_task_group_activity_list(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskGroupActivityRead]:
+) -> PaginationResponse[TaskGroupActivityV2]:
     stm = select(TaskGroupActivityV2).order_by(
         TaskGroupActivityV2.timestamp_started.desc()
     )

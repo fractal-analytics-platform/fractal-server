@@ -187,7 +187,7 @@ async def get_history_run_units(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[HistoryUnitRead]:
+) -> PaginationResponse[HistoryUnit]:
     # Access control
     await get_wftask_check_access(
         project_id=project_id,
