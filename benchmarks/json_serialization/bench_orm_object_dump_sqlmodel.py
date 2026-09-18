@@ -2,13 +2,13 @@ import time
 from datetime import datetime
 
 from pydantic import BaseModel
+from sqlmodel import SQLModel
 from utils_for_orm_dump import REPETITIONS
 from utils_for_orm_dump import get_expected_dicts
 from utils_for_orm_dump import get_orm_objects
 from utils_for_orm_dump import report
 
 from fractal_server.app.db import DB
-from fractal_server.app.models.base import Base
 
 
 def profile(obj: BaseModel):
@@ -24,7 +24,7 @@ def profile(obj: BaseModel):
 if __name__ == "__main__":
     DB.set_sync_db()
     engine = DB.engine_sync()
-    metadata = Base.metadata
+    metadata = SQLModel.metadata
     metadata.create_all(engine)
 
     try:
