@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
+from typing import Callable
 
 from sqlalchemy import URL
 from sqlalchemy import create_engine
@@ -41,7 +42,7 @@ class DB:
             return cls._engine_sync
 
     @property
-    def _engine_attributes(cls) -> dict[str, URL | str | bool | callable]:
+    def _engine_attributes(cls) -> dict[str, URL | str | bool | Callable]:
         db_settings = Inject(get_db_settings)
         return dict(
             url=db_settings.DATABASE_URL,
