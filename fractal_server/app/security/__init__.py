@@ -9,8 +9,6 @@ In particular, this module links the appropriate database models, sets up
 `FastAPIUsers` with Bearer-token transport and register local routes.
 Then, for each OAuth client defined in the Fractal Settings configuration, it
 registers the client and the relative routes.
-
-All routes are registered under the `auth/` prefix.
 """
 
 import contextlib
