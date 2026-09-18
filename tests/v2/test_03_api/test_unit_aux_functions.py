@@ -410,6 +410,6 @@ async def test_get_job_check_access(
 
 async def test_get_submitted_jobs_statement():
     stm = _get_submitted_jobs_statement()
-    from sqlmodel.sql.expression import SelectOfScalar
+    from sqlalchemy import Select
 
-    assert type(stm) is SelectOfScalar
+    assert type(stm) is Select

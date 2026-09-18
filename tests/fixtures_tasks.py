@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 from pytest import TempdirFactory
+from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSyncSession
-from sqlmodel import select
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth

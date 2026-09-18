@@ -134,13 +134,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
         logger_teardown.info("Shutdown not available for this backend runner.")
 
     logger_teardown.info(
-        f"Database-connection pool status: {DB.engine_sync().pool.status()}"
+        "Database-connection pool status (before disposal): "
+        f"{DB.engine_sync().pool.status()}"
     )
     logger_teardown.info("Now dispose of the pool of sync/async engines.")
     DB.engine_sync().dispose()
     await DB.engine_async().dispose()
     logger_teardown.info(
-        f"Database-connection pool status: {DB.engine_sync().pool.status()}"
+        "Database-connection pool status (after disposal): "
+        f"{DB.engine_sync().pool.status()}"
     )
 
     logger_teardown.info("END")

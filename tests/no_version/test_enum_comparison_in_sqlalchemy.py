@@ -5,7 +5,7 @@ https://github.com/fractal-analytics-platform/fractal-server/issues/2449
 
 from enum import StrEnum
 
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models.v2 import ProjectV2
 
