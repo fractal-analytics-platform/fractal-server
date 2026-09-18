@@ -20,6 +20,17 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
+def _get_engine_atrs() -> dict[str, URL | str | bool | Callable]:
+    db_settings = Inject(get_db_settings)
+    return dict(
+        url=db_settings.DATABASE_URL,
+        echo=(db_settings.DB_ECHO == "true"),
+        future=True,
+        pool_pre_ping=True,
+        json_serializer=json_dumps,
+    )
+
+
 class DB:
     """
     DB class
@@ -41,20 +52,9 @@ class DB:
             cls.set_sync_db()
             return cls._engine_sync
 
-    @property
-    def _engine_attributes(cls) -> dict[str, URL | str | bool | Callable]:
-        db_settings = Inject(get_db_settings)
-        return dict(
-            url=db_settings.DATABASE_URL,
-            echo=(db_settings.DB_ECHO == "true"),
-            future=True,
-            pool_pre_ping=True,
-            json_serializer=json_dumps,
-        )
-
     @classmethod
     def set_async_db(cls) -> None:
-        cls._engine_async = create_async_engine(**cls._engine_attributes)
+        cls._engine_async = create_async_engine(**_get_engine_atrs())
         cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
@@ -63,7 +63,7 @@ class DB:
 
     @classmethod
     def set_sync_db(cls) -> None:
-        cls._engine_sync = create_engine(**cls._engine_attributes)
+        cls._engine_sync = create_engine(**_get_engine_atrs())
         cls._sync_session_maker = sessionmaker(cls._engine_sync)
 
     @classmethod
