@@ -31,9 +31,9 @@ def _history_run(**overrides) -> HistoryRun:
     return HistoryRun(**kwargs)
 
 
-def test_dump_model_scalar_types():
+def test_orm_model_to_dict_scalar_types():
     """
-    `dump_model` returns plain Python values (no serialization yet).
+    `orm_model_to_dict` returns plain Python values (no serialization yet).
     """
     hr = _history_run()
     dumped = orm_model_to_dict(hr)
@@ -42,7 +42,11 @@ def test_dump_model_scalar_types():
     assert dumped["timestamp_started"] == datetime(2023, 1, 1, 12, 0, 0)
 
 
-def test_dump_model_to_json_datetime_is_isoformat():
+def test_orm_model_to_dict_to_json_datetime_is_isoformat():
+    """
+    After a json.loads/json_dumps round-trip, timestamps are serialized to their
+    ISO format.
+    """
     hr = _history_run()
     dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
     assert (
@@ -51,32 +55,34 @@ def test_dump_model_to_json_datetime_is_isoformat():
     )
 
 
-def test_dump_model_to_json_json_column_round_trips():
+def test_orm_model_to_dict_to_json_json_column_round_trips():
     """
     Values that are already JSON-native (dict/list/str/int/float/bool/None)
     are left untouched, however deeply nested.
     """
-    hr = _history_run(
-        workflowtask_dump={"nested": {"list": [1, 2, {"x": None}]}},
-    )
+    VALUE = {"nested": {"list": [1, 2, {"x": None}]}}
+    hr = _history_run(workflowtask_dump=VALUE)
     dumped = json.loads(json_dumps(orm_model_to_dict(hr)))
-    assert dumped["workflowtask_dump"] == {
-        "nested": {"list": [1, 2, {"x": None}]}
-    }
+    assert dumped["workflowtask_dump"] == VALUE
 
 
-def test_dump_model_to_json_array_column():
+def test_json_array_paths():
     hu = HistoryUnit(
         history_run_id=1,
         logfile="x.log",
         status="done",
-        zarr_urls=["/a/b", "/c/d"],
+        zarr_urls=[Path("/a/b"), "/c/d"],
     )
-    dumped = json.loads(json_dumps(orm_model_to_dict(hu)))
+    # `orm_model_to_dict` does not serialize `pathlib.Path` objects
+    hu_dict = orm_model_to_dict(hu)
+    assert hu_dict["zarr_urls"] == [Path("/a/b"), "/c/d"]
+
+    # `json_dumps` serializes `pathlib.Path` objects to strings
+    dumped = json.loads(json_dumps(hu_dict))
     assert dumped["zarr_urls"] == ["/a/b", "/c/d"]
 
 
-async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
+async def test_json_array_of_timestamps_nested_in_json_column(
     project_factory,
     dataset_factory,
     workflow_factory,
@@ -87,7 +93,7 @@ async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
     MockCurrentUser,
 ):
     """
-    There is no ARRAY(DateTime) column in the schema today, but a JSON
+    There is no ARRAY(DateTime) column in the database schemas today, but a JSON
     column can hold a list of `datetime` objects on the Python side (e.g.
     before it round-trips through the database). Each element is
     serialized independently and recursively, the same way a top-level
@@ -131,7 +137,7 @@ async def test_dump_model_to_json_array_of_timestamps_nested_in_json_column(
     ]
 
 
-async def test_dump_model_to_json_uuid_and_path_in_json_column(
+async def test_orm_model_to_dict_to_json_uuid_and_path_in_json_column(
     project_factory,
     dataset_factory,
     workflow_factory,
@@ -180,7 +186,7 @@ async def test_dump_model_to_json_uuid_and_path_in_json_column(
     }
 
 
-def test_dump_model_to_json_unsupported_type_raises():
+def test_json_dumps_unsupported_type():
     """
     An arbitrary object with no known serializer is *not* silently
     stringified: it raises, so unsupported data shapes fail loudly
@@ -191,20 +197,20 @@ def test_dump_model_to_json_unsupported_type_raises():
         pass
 
     hr = _history_run(workflowtask_dump={"x": Unsupported()})
+    hr_dict = orm_model_to_dict(hr)
     with pytest.raises(TypeError):
-        json_dumps(orm_model_to_dict(hr))
+        json_dumps(hr_dict)
 
 
-def test_dump_model_to_json_include_exclude():
+def test_orm_model_to_dict_include():
     hr = _history_run()
-    only_status = json.loads(
-        json_dumps(orm_model_to_dict(hr, include={"status"}))
-    )
+    only_status = orm_model_to_dict(hr, include={"status"})
     assert only_status == {"status": "done"}
 
-    without_status = json.loads(
-        json_dumps(orm_model_to_dict(hr, exclude={"status"}))
-    )
+
+def test_orm_model_to_dict_exclude():
+    hr = _history_run()
+    without_status = orm_model_to_dict(hr, exclude={"status"})
     assert "status" not in without_status
     assert without_status["num_available_images"] == 5
 
@@ -217,7 +223,7 @@ class _TableWithAlias(Base):
     attr_alias = synonym("attribute")
 
 
-def test_dump_model_supports_column_name_and_synonym_aliases():
+def test_orm_model_to_dict_supports_column_name_and_synonym_aliases():
     obj = _TableWithAlias(id=1, attr_alias="hello")
     assert obj.attribute == obj.attr_alias == "hello"
 
