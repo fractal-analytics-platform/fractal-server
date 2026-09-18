@@ -1,46 +1,58 @@
 import time
-from pathlib import Path
+from datetime import datetime
 
 from pydantic import BaseModel
 from utils_for_orm_dump import REPETITIONS
-from utils_for_orm_dump import expected_task_group_dict
-from utils_for_orm_dump import expected_user_dict
+from utils_for_orm_dump import get_expected_dicts
+from utils_for_orm_dump import get_orm_objects
 from utils_for_orm_dump import report
-from utils_for_orm_dump import task_group_orm_object
-from utils_for_orm_dump import user_orm_object
+
+from fractal_server.app.db import DB
+from fractal_server.app.models.base import Base
 
 
-def profile(obj: BaseModel, **kwargs):
+def profile(obj: BaseModel):
     timings = []
     for _ in range(REPETITIONS):
         start = time.perf_counter()
-        obj.model_dump(**kwargs)
+        obj.model_dump()
         stop = time.perf_counter()
         timings.append(stop - start)
     return timings
 
 
-### CHECKS
+if __name__ == "__main__":
+    DB.set_sync_db()
+    engine = DB.engine_sync()
+    metadata = Base.metadata
+    metadata.create_all(engine)
 
-# Assert full output
-assert user_orm_object.model_dump() == expected_user_dict
-assert task_group_orm_object.model_dump() == expected_task_group_dict
+    try:
+        with next(DB.get_sync_db()) as db:
+            orm_objects = get_orm_objects(db)
 
-# Check that we only moved from an ORM model to a dictionary, without making it
-# a JSON-serializable one
-assert isinstance(task_group_orm_object.model_dump()["path"], Path)
+        # Verify expected behavior
+        expected_dicts = get_expected_dicts()
+        for ind in range(4):
+            assert orm_objects[ind].model_dump() == expected_dicts[ind]
+        resource_orm_object = orm_objects[0]
+        assert isinstance(resource_orm_object.timestamp_created, datetime)
+        assert isinstance(
+            resource_orm_object.model_dump()["timestamp_created"],
+            datetime,
+        )
+        assert "id" not in resource_orm_object.model_dump(
+            exclude={"id", "name"}
+        )
+        assert "id" not in resource_orm_object.model_dump(
+            include={"name", "type"}
+        )
 
-# Check exclude
-assert "profile_id" not in user_orm_object.model_dump(exclude={"profile_id"})
+        # Benchmarks
+        for orm_obj in orm_objects:
+            timings = profile(orm_obj)
+            report(type(orm_obj).__name__, timings)
 
-# Check include
-assert "venv_path" not in task_group_orm_object.model_dump(
-    include={"pkg_name", "version"}
-)
-
-### BENCHMARKS
-
-timings = profile(user_orm_object, exclude={"profile_id"})
-report("UserOAuth", timings)
-timings = profile(task_group_orm_object, exclude={"id", "venv_path"})
-report("TaskGroupV2", timings)
+    finally:
+        metadata.drop_all(engine)
+        engine.dispose()
