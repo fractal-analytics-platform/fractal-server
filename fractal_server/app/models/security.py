@@ -18,7 +18,7 @@ class OAuthAccount(Base):
     """
     ORM model for OAuth accounts (`oauthaccount` database table).
 
-    This class is based on
+    This class is a modification of
     [`SQLAlchemyBaseOAuthAccountTable`](https://github.com/fastapi-users/fastapi-users-db-sqlalchemy/blob/main/fastapi_users_db_sqlalchemy/__init__.py).
     Original Copyright: 2021 François Voron, released under MIT licence.
 
@@ -62,11 +62,11 @@ class UserOAuth(Base):
     This class is a modification of
     [`SQLAlchemyBaseUserTable`](https://github.com/fastapi-users/fastapi-users-db-sqlalchemy/blob/main/fastapi_users_db_sqlalchemy/__init__.py)
     from `fastapi_users_db_sqlalchemy`.
-    Original Copyright: 2022 François Voron, released under MIT licence.
+    Original Copyright: 2021 François Voron, released under MIT licence.
 
-    Note that several class attributes are
-    [the default ones from `fastapi-users`
-    ](https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas/).
+    Note that some class attributes (e.g `is_active`, `is_verified` and
+    `is_superuser`) are the default ones from `fastapi-users` - see
+    https://fastapi-users.github.io/fastapi-users/latest/configuration/schemas.
 
     Attributes:
         id:
