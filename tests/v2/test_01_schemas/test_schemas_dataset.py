@@ -3,6 +3,7 @@ import os
 import pytest
 from pydantic import ValidationError
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import DatasetCreate
@@ -10,10 +11,17 @@ from fractal_server.app.schemas.v2 import DatasetImport
 from fractal_server.app.schemas.v2 import DatasetRead
 from fractal_server.app.schemas.v2 import DatasetUpdate
 from fractal_server.urls import normalize_url
+from fractal_server.utils import get_timestamp
 
 
 async def test_schemas_dataset():
-    project = ProjectV2(id=1, name="project", is_starred=False)
+    project = ProjectV2(
+        id=1,
+        name="project",
+        is_starred=False,
+        description=None,
+        timestamp_created=get_timestamp(),
+    )
 
     # Test zarr_dir=None is valid
     DatasetCreate(name="name", project_dir=None)
@@ -52,18 +60,20 @@ async def test_schemas_dataset():
     )
 
     dataset = DatasetV2(
-        **dataset_create.model_dump(),
+        **dataset_create.model_dump(exclude={"project_dir", "zarr_subfolder"}),
         id=1,
         project_id=project.id,
-        history=[],
         zarr_dir=os.path.join(
             dataset_create.project_dir, dataset_create.zarr_subfolder
         ),
         is_starred=False,
+        timestamp_created=get_timestamp(),
     )
 
     # Read
-    DatasetRead(**dataset.model_dump(), project=project.model_dump())
+    DatasetRead(
+        **orm_model_to_dict(dataset), project=orm_model_to_dict(project)
+    )
 
     # Update
 

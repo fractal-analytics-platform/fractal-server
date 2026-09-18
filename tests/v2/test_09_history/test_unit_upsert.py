@@ -3,9 +3,10 @@ from typing import Any
 
 import pytest
 from devtools import debug
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlmodel import select
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -136,7 +137,7 @@ async def test_upsert_function(
             .scalars()
             .all()
         )
-        actual_caches = [cache.model_dump() for cache in caches]
+        actual_caches = [orm_model_to_dict(cache) for cache in caches]
         expected_chaches = [
             {
                 "zarr_url": zarr_url,

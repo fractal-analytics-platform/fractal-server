@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 from devtools import debug  # noqa: F401
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import HistoryImageCache
@@ -62,7 +62,7 @@ async def add_history_image_cache(
 
     hu = HistoryUnit(
         status=status,
-        zarr_url=zarr_urls,
+        zarr_urls=zarr_urls,
         history_run_id=hr.id,
         logfile="/fake/logs",
     )
