@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.25.0
+
+* Drop SQLModel, in favor of bare SQLAlchemy (\#3418).
+
 # 2.24.4
 
 * Database:

@@ -1,33 +1,35 @@
 from datetime import datetime
 
-from sqlalchemy import Column
+from sqlalchemy import BOOLEAN
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
-from sqlmodel import BOOLEAN
-from sqlmodel import Field
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class ProjectV2(SQLModel, table=True):
+class ProjectV2(Base):
     """
     Project table.
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+    __tablename__ = "projectv2"
 
-    is_starred: bool = Field(
-        sa_column=Column(
-            BOOLEAN,
-            server_default="false",
-            nullable=False,
-        ),
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+
+    is_starred: Mapped[bool] = mapped_column(
+        BOOLEAN,
+        server_default="false",
+        nullable=False,
     )
-    description: str | None = None
+    description: Mapped[str | None] = mapped_column(default=lambda: None)
 
-    resource_id: int = Field(foreign_key="resource.id", ondelete="RESTRICT")
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    resource_id: Mapped[int] = mapped_column(
+        ForeignKey("resource.id", ondelete="RESTRICT")
+    )
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )

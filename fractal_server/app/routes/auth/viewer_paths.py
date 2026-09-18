@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth

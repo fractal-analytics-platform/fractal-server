@@ -1,8 +1,3 @@
-"""
-`db` module, loosely adapted from
-https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
-"""
-
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
@@ -16,6 +11,7 @@ from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
 from fractal_server.config import get_db_settings
+from fractal_server.json_utils import json_dumps
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
@@ -52,6 +48,7 @@ class DB:
             echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
+            json_serializer=json_dumps,
         )
         cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
@@ -68,6 +65,7 @@ class DB:
             echo=(db_settings.DB_ECHO == "true"),
             future=True,
             pool_pre_ping=True,
+            json_serializer=json_dumps,
         )
 
         cls._sync_session_maker = sessionmaker(cls._engine_sync)

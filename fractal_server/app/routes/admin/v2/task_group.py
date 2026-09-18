@@ -6,12 +6,12 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic.types import AwareDatetime
+from sqlalchemy import func
+from sqlalchemy import not_
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.sql.operators import is_
 from sqlalchemy.sql.operators import is_not
-from sqlmodel import func
-from sqlmodel import not_
-from sqlmodel import select
-from sqlmodel import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -62,7 +62,7 @@ async def get_task_group_activity_list(
     pagination: PaginationRequest = Depends(get_pagination_params),
     superuser: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[TaskGroupActivityV2]:
+) -> PaginationResponse[TaskGroupActivityRead]:
     stm = select(TaskGroupActivityV2).order_by(
         TaskGroupActivityV2.timestamp_started.desc()
     )

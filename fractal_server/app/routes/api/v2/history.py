@@ -5,12 +5,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import JSONResponse
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
@@ -163,7 +164,7 @@ async def get_history_run_list(
 
     runs = [
         dict(
-            **run.model_dump(),
+            **orm_model_to_dict(run),
             **count_map[run.id],
             **task_args.get(run.task_id, {}),
         )
@@ -186,7 +187,7 @@ async def get_history_run_units(
     user: UserOAuth = Depends(get_api_guest),
     db: AsyncSession = Depends(get_async_db),
     pagination: PaginationRequest = Depends(get_pagination_params),
-) -> PaginationResponse[HistoryUnit]:
+) -> PaginationResponse[HistoryUnitRead]:
     # Access control
     await get_wftask_check_access(
         project_id=project_id,
