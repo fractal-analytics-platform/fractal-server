@@ -58,7 +58,7 @@ async def view_job(
     pagination: PaginationRequest = Depends(get_pagination_params),
     user: UserOAuth = Depends(current_superuser_act),
     db: AsyncSession = Depends(get_async_db),
-) -> PaginationResponse[JobRead]:
+) -> PaginationResponse[JobV2]:
     """
     Query `JobV2` table.
 
