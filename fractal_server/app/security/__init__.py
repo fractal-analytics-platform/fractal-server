@@ -63,6 +63,12 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     Changes with respect to the original version:
     * Using the fractal-server `OAuthAccount` class.
+    * No requirement about sqlalchemy version being lower than 2.1.0.
+
+    > NOTE: We can move back to the upstream project as soon as it
+    > supports sqlalchemy v2.1. Tracked at
+    > https://github.com/fastapi-users/fastapi-users-db-sqlalchemy/issues/25
+
 
     Attributes:
         session: SQLAlchemy session instance.
