@@ -1,17 +1,18 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.types import DateTime
-from sqlmodel import Field
-from sqlmodel import Index
-from sqlmodel import SQLModel
 
+from fractal_server.app.models.base import Base
 from fractal_server.utils import get_timestamp
 
 
-class WorkflowTemplate(SQLModel, table=True):
+class WorkflowTemplate(Base):
     """
     Model for the `workflowtemplate` database table.
 
@@ -28,28 +29,30 @@ class WorkflowTemplate(SQLModel, table=True):
         data:
     """
 
-    id: int | None = Field(default=None, primary_key=True)
+    __tablename__ = "workflowtemplate"
 
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    name: str
-    version: int
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    fractal_server_version: str
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user_oauth.id"), nullable=False
     )
-    timestamp_last_used: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-    )
+    name: Mapped[str]
+    version: Mapped[int]
 
-    user_group_id: int | None = Field(
-        foreign_key="usergroup.id", default=None, ondelete="SET NULL"
+    fractal_server_version: Mapped[str]
+    timestamp_created: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
+    )
+    timestamp_last_used: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=get_timestamp
     )
 
-    description: str | None = None
-    data: dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
+    user_group_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usergroup.id", ondelete="SET NULL"), default=lambda: None
+    )
+
+    description: Mapped[str | None] = mapped_column(default=lambda: None)
+    data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
     __table_args__ = (
         Index(

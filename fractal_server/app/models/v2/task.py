@@ -1,15 +1,17 @@
 from typing import Any
 
-from sqlalchemy import Column
+from sqlalchemy import BOOLEAN
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import BOOLEAN
-from sqlmodel import Field
-from sqlmodel import Index
-from sqlmodel import SQLModel
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+
+from fractal_server.app.models.base import Base
 
 
-class TaskV2(SQLModel, table=True):
+class TaskV2(Base):
     """
     Model for the `taskv2` database table.
 
@@ -36,48 +38,56 @@ class TaskV2(SQLModel, table=True):
         tags:
     """
 
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+    __tablename__ = "taskv2"
 
-    type: str
-    command_non_parallel: str | None = None
-    command_parallel: str | None = None
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
 
-    meta_non_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
+    type: Mapped[str]
+    command_non_parallel: Mapped[str | None] = mapped_column(
+        default=lambda: None
     )
-    meta_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
+    command_parallel: Mapped[str | None] = mapped_column(default=lambda: None)
+
+    meta_non_parallel: Mapped[dict[str, Any]] = mapped_column(
+        JSON, server_default="{}", default={}, nullable=False
+    )
+    meta_parallel: Mapped[dict[str, Any]] = mapped_column(
+        JSON, server_default="{}", default={}, nullable=False
     )
 
-    version: str
-    args_schema_non_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    version: Mapped[str]
+    args_schema_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, default=lambda: None
     )
-    args_schema_parallel: dict[str, Any] | None = Field(
-        sa_column=Column(JSON), default=None
+    args_schema_parallel: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, default=lambda: None
     )
-    args_schema_version: str | None = None
-    docs_info: str | None = None
-    docs_link: str | None = None
-
-    input_types: dict[str, bool] = Field(sa_column=Column(JSONB), default={})
-    output_types: dict[str, bool] = Field(sa_column=Column(JSONB), default={})
-
-    taskgroupv2_id: int = Field(foreign_key="taskgroupv2.id")
-
-    category: str | None = None
-    modality: str | None = None
-    authors: str | None = None
-    tags: list[str] = Field(
-        sa_column=Column(JSONB, server_default="[]", nullable=False)
+    args_schema_version: Mapped[str | None] = mapped_column(
+        default=lambda: None
     )
-    is_core: bool = Field(
-        sa_column=Column(
-            BOOLEAN,
-            server_default="false",
-            nullable=False,
-        )
+    docs_info: Mapped[str | None] = mapped_column(default=lambda: None)
+    docs_link: Mapped[str | None] = mapped_column(default=lambda: None)
+
+    input_types: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=True, default={}
+    )
+    output_types: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=True, default={}
+    )
+
+    taskgroupv2_id: Mapped[int] = mapped_column(ForeignKey("taskgroupv2.id"))
+
+    category: Mapped[str | None] = mapped_column(default=lambda: None)
+    modality: Mapped[str | None] = mapped_column(default=lambda: None)
+    authors: Mapped[str | None] = mapped_column(default=lambda: None)
+    tags: Mapped[list[str]] = mapped_column(
+        JSONB, server_default="[]", nullable=False
+    )
+    is_core: Mapped[bool] = mapped_column(
+        BOOLEAN,
+        server_default="false",
+        nullable=False,
     )
     __table_args__ = (
         Index(
