@@ -1,15 +1,12 @@
 """
 Auth subsystem
 
-This module implements the authorisation/authentication subsystem of the
-Fractal Server. It is based on the
-[FastAPI Users](https://fastapi-users.github.io/fastapi-users/)
-library, with
-[support](https://fastapi-users.github.io/fastapi-users/latest/configuration/databases/sqlalchemy/)
-for the SQLAlchemy database adapter.
+This module implements the authorisation/authentication subsystem
+This module relies on the `fastapi-users` library (https://fastapi-users.github.io/fastapi-users)
+and on its SQLAlchemy database adapter (https://fastapi-users.github.io/fastapi-users/latest/configuration/databases/sqlalchemy).
 
 In particular, this module links the appropriate database models, sets up
-FastAPIUsers with Barer Token transport and register local routes.
+`FastAPIUsers` with Bearer-token transport and register local routes.
 Then, for each OAuth client defined in the Fractal Settings configuration, it
 registers the client and the relative routes.
 
