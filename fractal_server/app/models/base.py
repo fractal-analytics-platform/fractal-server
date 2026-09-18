@@ -18,13 +18,14 @@ def orm_model_to_dict(
     exclude: set[str] | None = None,
 ) -> dict[str, Any]:
     """
-    Dump mapped-column attributes into a dict.
+    Dump mapped-column attributes into a Python dictionary.
 
-    A lot of code relies on calling `.model_dump()`/`.model_dump_json()`
-    directly on ORM instances, mirroring their former pydantic-based
-    behavior: only mapped columns are included (never `relationship()`
+    This is a replacement of the `SQLModel.model_dump` method, which cannot
+    be used any more as of version 2.25.0.
+
+    Behavior: only mapped columns are included (never `relationship()`
     attributes), and only columns that already have a concrete value in
-    `__dict__` (i.e. loaded from the DB, or explicitly assigned) are
+    `__dict__` (i.e. loaded from the database, or explicitly assigned) are
     included, omitting columns whose value is still pending a
     server-side default on a not-yet-flushed instance.
     """
