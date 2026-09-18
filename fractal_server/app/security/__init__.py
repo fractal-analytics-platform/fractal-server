@@ -76,13 +76,13 @@ class SQLAlchemyUserDatabase:
 
     session: AsyncSession
     user_table: type[UserOAuth]
-    oauth_account_table: Optional[type[OAuthAccount]]
+    oauth_account_table: type[OAuthAccount]
 
     def __init__(
         self,
         session: AsyncSession,
         user_table: type[UserOAuth],
-        oauth_account_table: Optional[type[OAuthAccount]] = None,
+        oauth_account_table: type[OAuthAccount],
     ):
         self.session = session
         self.user_table = user_table
@@ -101,9 +101,6 @@ class SQLAlchemyUserDatabase:
     async def get_by_oauth_account(
         self, oauth: str, account_id: str
     ) -> UserOAuth | None:
-        if self.oauth_account_table is None:
-            raise NotImplementedError()
-
         statement = (
             select(self.user_table)
             .join(self.oauth_account_table)
@@ -136,9 +133,6 @@ class SQLAlchemyUserDatabase:
     async def add_oauth_account(
         self, user: UserOAuth, create_dict: dict[str, Any]
     ) -> UserOAuth:
-        if self.oauth_account_table is None:
-            raise NotImplementedError()
-
         await self.session.refresh(user)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
@@ -155,9 +149,6 @@ class SQLAlchemyUserDatabase:
         oauth_account: OAuthAccount,
         update_dict: dict[str, Any],
     ) -> UserOAuth:
-        if self.oauth_account_table is None:
-            raise NotImplementedError()
-
         for key, value in update_dict.items():
             setattr(oauth_account, key, value)
         self.session.add(oauth_account)
