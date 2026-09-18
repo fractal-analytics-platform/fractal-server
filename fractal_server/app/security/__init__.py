@@ -14,7 +14,6 @@ registers the client and the relative routes.
 import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import override
 
@@ -60,6 +59,7 @@ class SQLAlchemyUserDatabase:
     * Using the fractal-server `UserOAuth` and `OAuthAccount` classes rather
       than protocols.
     * Using `int` rather than the generic `ID`.
+    * `oauth_account_table` is now required.
     * `Optional[X]` --> `X | None`
     * No requirement about sqlalchemy version being lower than 2.1.0.
 
@@ -88,7 +88,7 @@ class SQLAlchemyUserDatabase:
         self.user_table = user_table
         self.oauth_account_table = oauth_account_table
 
-    async def get(self, id: int) -> Optional[UserOAuth]:
+    async def get(self, id: int) -> UserOAuth | None:
         statement = select(self.user_table).where(self.user_table.id == id)
         return await self._get_user(statement)
 
