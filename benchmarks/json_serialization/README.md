@@ -48,44 +48,45 @@ As part of https://github.com/fractal-analytics-platform/fractal-server/pull/341
 
 Here we compare the former method (by working on the current `main` branch) and the new one (by working in the current branch as part of https://github.com/fractal-analytics-platform/fractal-server/pull/3418).
 
-```console
+Note that we use the database-committed objects. This is to avoid a discrepancy about when defaults are populated (which for SQLModel takes place uponc object construction, while for SQLAlchemy takes place in the databse).
+
+```
 $ pwd
 /redacted/fractal-server/benchmarks/json_serialization
 
 $ git show --oneline -s
-78abf91120 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) more assertions
+5a5c1f3418 (HEAD -> 3413-explore-sqlmodel-sqlalchemy-migration) Use proper SQLModel base
 
-$ POSTGRES_DB=123 JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
-[  UserOAuth]: mean=2.39 ns  median=2.22 ns  min=2.07 ns  max=3.89 ns
-[TaskGroupV2]: mean=3.44 ns  median=2.99 ns  min=2.83 ns  max=6.97 ns
+$ dropdb --if-exists json-benchmarks
 
-$ git switch main
-Switched to branch 'main'
-Your branch is up to date with 'origin/main'.
+$ createdb json-benchmarks
 
-$ git switch -c tmp-branch
-Switched to a new branch 'tmp-branch'
+$ POSTGRES_HOST=/var/run/postgresql POSTGRES_DB=json-benchmarks JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlalchemy.py
+      Built fractal-server @ file:///home/tommaso/Fractal/fractal-server                                                                                                                                                         Uninstalled 1 package in 0.35ms
+Installed 1 package in 1ms
+[   Resource]: mean=2.38 ns  median=2.33 ns  min=2.24 ns  max=3.01 ns
+[    Profile]: mean=2.15 ns  median=1.96 ns  min=1.90 ns  max=5.03 ns
+[  UserOAuth]: mean=2.32 ns  median=2.18 ns  min=1.94 ns  max=4.45 ns
+[TaskGroupV2]: mean=3.67 ns  median=3.24 ns  min=3.02 ns  max=7.45 ns
 
-$ git checkout  3413-explore-sqlmodel-sqlalchemy-migration .
-Updated 5 paths from 3e9adc91ba
+$ git checkout main ../../fractal_server/
+Updated 85 paths from 80623de687
+
+$ POSTGRES_HOST=/var/run/postgresql POSTGRES_DB=json-benchmarks JWT_SECRET_KEY=123 uv run python bench_orm_object_dump_sqlmodel.py
+[   Resource]: mean=2.80 ns  median=2.70 ns  min=2.64 ns  max=3.67 ns
+[    Profile]: mean=2.28 ns  median=2.11 ns  min=2.03 ns  max=5.20 ns
+[  UserOAuth]: mean=2.53 ns  median=2.38 ns  min=2.26 ns  max=5.09 ns
+[TaskGroupV2]: mean=6.67 ns  median=6.43 ns  min=6.30 ns  max=10.56 ns
+
+
+$ git restore --staged ../../fractal_server/
+
+$ git restore  ../../fractal_server/
 
 $ git status
-On branch tmp-branch
-Changes to be committed:
-  (use "git restore --staged <file>..." to unstage)
-	new file:   README.md
-	new file:   bench_json_serializer.py
-	new file:   bench_orm_object_dump_sqlalchemy.py
-	new file:   bench_orm_object_dump_sqlmodel.py
-	new file:   utils_for_orm_dump.py
+On branch 3413-explore-sqlmodel-sqlalchemy-migration
+Your branch is ahead of 'origin/3413-explore-sqlmodel-sqlalchemy-migration' by 17 commits.
+  (use "git push" to publish your local commits)
 
-$ git show --oneline -s
-5d4f994946 (HEAD -> tmp-branch, origin/main, origin/HEAD, main, benchmark-sqlmodel-model-dump) Merge pull request #3437 from fractal-analytics-platform/dependabot/uv/version-updates-a88bc2595b
-
-[to be continued]
+nothing to commit, working tree clean
 ```
-
-
-Known differences:
-* The old (SQLModel/Pydantic) approach would raise a (relevant) warning.
-* We need to work with db-committed ORM objects, or there would be two different ways of setting default values.
