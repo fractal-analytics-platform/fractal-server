@@ -18,9 +18,10 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
         exclude:
           - python-version: ${{ github.ref != 'refs/heads/main' && '3.13' }}
+          - python-version: ${{ github.ref != 'refs/heads/main' && '3.14' }}
 
     steps:
 
