@@ -1,7 +1,7 @@
 import pytest
 from devtools import debug
 from fastapi import HTTPException
-from sqlmodel import delete
+from sqlalchemy import delete
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import TaskGroupActivityV2

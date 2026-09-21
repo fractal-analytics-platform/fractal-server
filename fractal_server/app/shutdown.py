@@ -1,6 +1,6 @@
 import time
 
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models.v2 import JobV2

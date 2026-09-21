@@ -18,6 +18,7 @@ async def test_accounting(
                 user_id=user1.id,
                 num_new_images=1,
                 num_tasks=1,
+                timestamp=get_timestamp(),
             )
         )
         intermediate_time = get_timestamp()
@@ -26,6 +27,7 @@ async def test_accounting(
                 user_id=user1.id,
                 num_new_images=2,
                 num_tasks=2,
+                timestamp=get_timestamp(),
             )
         )
         await db.commit()
@@ -121,13 +123,20 @@ async def test_accounting_slurm(
     job = await job_factory_full()
     async with MockCurrentUser(is_superuser=True) as user:
         timestamp_min = get_timestamp().isoformat()
-        db.add(AccountingRecordSlurm(user_id=user.id, slurm_job_ids=[1, 4]))
+        db.add(
+            AccountingRecordSlurm(
+                user_id=user.id,
+                slurm_job_ids=[1, 4],
+                timestamp=get_timestamp(),
+            )
+        )
         db.add(
             AccountingRecordSlurm(
                 user_id=user.id,
                 slurm_job_ids=[2, 3],
                 fractal_job_id=job.id,
                 resource_id=resource.id,
+                timestamp=get_timestamp(),
             )
         )
         timestamp_max = get_timestamp().isoformat()
