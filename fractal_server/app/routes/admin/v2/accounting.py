@@ -5,8 +5,8 @@ from fastapi import Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydantic.types import AwareDatetime
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
