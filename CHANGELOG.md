@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.25.1 (unreleased)
+
+* Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+
 # 2.25.0
 
 * Drop SQLModel, in favor of bare SQLAlchemy (\#3418).
