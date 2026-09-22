@@ -63,11 +63,7 @@ class HistoryUnit(Base):
     logfile: Mapped[str]
     has_warnings: Mapped[bool] = mapped_column(default=False)
     status: Mapped[str]
-    zarr_urls: Mapped[list[str]] = mapped_column(
-        ARRAY(String),
-        nullable=True,
-        default=list,
-    )
+    zarr_urls: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
 
 class HistoryImageCache(Base):
