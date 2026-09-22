@@ -45,9 +45,6 @@ class TaskGroupV2(Base):
     )
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
-    user_group_id: Mapped[int | None] = mapped_column(
-        ForeignKey("usergroup.id", ondelete="SET NULL"), default=lambda: None
-    )
     resource_id: Mapped[int] = mapped_column(
         ForeignKey("resource.id", ondelete="RESTRICT")
     )
@@ -55,17 +52,20 @@ class TaskGroupV2(Base):
     origin: Mapped[str]
     pkg_name: Mapped[str]
     version: Mapped[str]
-    python_version: Mapped[str | None] = mapped_column(default=lambda: None)
-    pixi_version: Mapped[str | None] = mapped_column(default=lambda: None)
-    path: Mapped[str | None] = mapped_column(default=lambda: None)
-    archive_path: Mapped[str | None] = mapped_column(default=lambda: None)
-    pip_extras: Mapped[str | None] = mapped_column(default=lambda: None)
     pinned_package_versions_pre: Mapped[dict[str, str]] = mapped_column(
         JSONB,
         server_default="{}",
         default={},
         nullable=True,
     )
+    user_group_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usergroup.id", ondelete="SET NULL"), default=lambda: None
+    )
+    python_version: Mapped[str | None] = mapped_column(default=lambda: None)
+    pixi_version: Mapped[str | None] = mapped_column(default=lambda: None)
+    path: Mapped[str | None] = mapped_column(default=lambda: None)
+    archive_path: Mapped[str | None] = mapped_column(default=lambda: None)
+    pip_extras: Mapped[str | None] = mapped_column(default=lambda: None)
     pinned_package_versions_post: Mapped[dict[str, str]] = mapped_column(
         JSONB,
         server_default="{}",
@@ -145,22 +145,22 @@ class TaskGroupActivityV2(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
+    pkg_name: Mapped[str]
+    version: Mapped[str]
+    status: Mapped[str]
+    action: Mapped[str]
+    fractal_server_version: Mapped[str] = mapped_column(
+        String, server_default="pre-2.19.0", nullable=False
+    )
     taskgroupv2_id: Mapped[int | None] = mapped_column(
         ForeignKey("taskgroupv2.id", ondelete="SET NULL"), default=lambda: None
     )
     timestamp_started: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    pkg_name: Mapped[str]
-    version: Mapped[str]
-    status: Mapped[str]
-    action: Mapped[str]
     log: Mapped[str | None] = mapped_column(default=lambda: None)
     timestamp_ended: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), default=lambda: None
-    )
-    fractal_server_version: Mapped[str] = mapped_column(
-        String, server_default="pre-2.19.0", nullable=False
     )
 
     __table_args__ = (

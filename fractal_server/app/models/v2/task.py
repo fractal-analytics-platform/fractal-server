@@ -44,6 +44,17 @@ class TaskV2(Base):
     name: Mapped[str]
 
     type: Mapped[str]
+    taskgroupv2_id: Mapped[int] = mapped_column(ForeignKey("taskgroupv2.id"))
+
+    tags: Mapped[list[str]] = mapped_column(
+        JSONB, server_default="[]", nullable=False
+    )
+    is_core: Mapped[bool] = mapped_column(
+        BOOLEAN,
+        server_default="false",
+        nullable=False,
+    )
+    version: Mapped[str]
     command_non_parallel: Mapped[str | None] = mapped_column(
         default=lambda: None
     )
@@ -56,7 +67,6 @@ class TaskV2(Base):
         JSON, server_default="{}", default={}, nullable=False
     )
 
-    version: Mapped[str]
     args_schema_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, default=lambda: None
     )
@@ -76,19 +86,9 @@ class TaskV2(Base):
         JSONB, nullable=True, default={}
     )
 
-    taskgroupv2_id: Mapped[int] = mapped_column(ForeignKey("taskgroupv2.id"))
-
     category: Mapped[str | None] = mapped_column(default=lambda: None)
     modality: Mapped[str | None] = mapped_column(default=lambda: None)
     authors: Mapped[str | None] = mapped_column(default=lambda: None)
-    tags: Mapped[list[str]] = mapped_column(
-        JSONB, server_default="[]", nullable=False
-    )
-    is_core: Mapped[bool] = mapped_column(
-        BOOLEAN,
-        server_default="false",
-        nullable=False,
-    )
     __table_args__ = (
         Index(
             "ix_taskv2_one_task_name_per_task_group",

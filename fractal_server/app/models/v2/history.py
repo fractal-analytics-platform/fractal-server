@@ -24,14 +24,12 @@ class HistoryRun(Base):
     dataset_id: Mapped[int] = mapped_column(
         ForeignKey("datasetv2.id", ondelete="CASCADE"),
     )
-    workflowtask_id: Mapped[int | None] = mapped_column(
-        ForeignKey("workflowtaskv2.id", ondelete="SET NULL"),
-        default=lambda: None,
-    )
     job_id: Mapped[int] = mapped_column(ForeignKey("jobv2.id"))
     task_id: Mapped[int | None] = mapped_column(
         ForeignKey("taskv2.id", ondelete="SET NULL")
     )
+    status: Mapped[str]
+    num_available_images: Mapped[int]
 
     workflowtask_dump: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False
@@ -40,11 +38,13 @@ class HistoryRun(Base):
         JSONB, nullable=False
     )
 
+    workflowtask_id: Mapped[int | None] = mapped_column(
+        ForeignKey("workflowtaskv2.id", ondelete="SET NULL"),
+        default=lambda: None,
+    )
     timestamp_started: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    status: Mapped[str]
-    num_available_images: Mapped[int]
 
 
 class HistoryUnit(Base):
@@ -61,8 +61,8 @@ class HistoryUnit(Base):
     )
 
     logfile: Mapped[str]
-    has_warnings: Mapped[bool] = mapped_column(default=False)
     status: Mapped[str]
+    has_warnings: Mapped[bool] = mapped_column(default=False)
     zarr_urls: Mapped[list[str]] = mapped_column(
         ARRAY(String),
         nullable=True,

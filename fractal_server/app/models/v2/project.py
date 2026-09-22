@@ -20,6 +20,9 @@ class ProjectV2(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
+    resource_id: Mapped[int] = mapped_column(
+        ForeignKey("resource.id", ondelete="RESTRICT")
+    )
     is_starred: Mapped[bool] = mapped_column(
         BOOLEAN,
         server_default="false",
@@ -27,9 +30,6 @@ class ProjectV2(Base):
     )
     description: Mapped[str | None] = mapped_column(default=lambda: None)
 
-    resource_id: Mapped[int] = mapped_column(
-        ForeignKey("resource.id", ondelete="RESTRICT")
-    )
     timestamp_created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )

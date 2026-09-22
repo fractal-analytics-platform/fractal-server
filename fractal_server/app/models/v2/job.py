@@ -23,6 +23,24 @@ class JobV2(Base):
     __tablename__ = "jobv2"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_email: Mapped[str] = mapped_column(nullable=False)
+
+    dataset_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    workflow_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    project_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    fractal_server_version: Mapped[str] = mapped_column(
+        String, server_default="pre-2.19.0", nullable=False
+    )
+
+    first_task_index: Mapped[int]
+    last_task_index: Mapped[int]
+    attribute_filters: Mapped[dict[str, list[int | float | str | bool]]] = (
+        mapped_column(JSONB, nullable=False, server_default="{}")
+    )
+    type_filters: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projectv2.id", ondelete="SET NULL"), default=lambda: None
     )
@@ -32,22 +50,10 @@ class JobV2(Base):
     dataset_id: Mapped[int | None] = mapped_column(
         ForeignKey("datasetv2.id", ondelete="SET NULL"), default=lambda: None
     )
-
-    user_email: Mapped[str] = mapped_column(nullable=False)
     slurm_account: Mapped[str | None] = mapped_column(default=lambda: None)
-
-    dataset_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    workflow_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    project_dump: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    fractal_server_version: Mapped[str] = mapped_column(
-        String, server_default="pre-2.19.0", nullable=False
-    )
-
     worker_init: Mapped[str | None] = mapped_column(default=lambda: None)
     working_dir: Mapped[str | None] = mapped_column(default=lambda: None)
     working_dir_user: Mapped[str | None] = mapped_column(default=lambda: None)
-    first_task_index: Mapped[int]
-    last_task_index: Mapped[int]
 
     start_timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
@@ -58,13 +64,6 @@ class JobV2(Base):
     status: Mapped[str] = mapped_column(default=JobStatusType.SUBMITTED)
     log: Mapped[str | None] = mapped_column(default=lambda: None)
     executor_error_log: Mapped[str | None] = mapped_column(default=lambda: None)
-
-    attribute_filters: Mapped[dict[str, list[int | float | str | bool]]] = (
-        mapped_column(JSONB, nullable=False, server_default="{}")
-    )
-    type_filters: Mapped[dict[str, bool]] = mapped_column(
-        JSONB, nullable=False, server_default="{}"
-    )
 
     __table_args__ = (
         Index(

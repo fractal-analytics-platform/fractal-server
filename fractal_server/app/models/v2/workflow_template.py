@@ -39,6 +39,7 @@ class WorkflowTemplate(Base):
     name: Mapped[str]
     version: Mapped[int]
 
+    data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     fractal_server_version: Mapped[str]
     timestamp_created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
@@ -52,7 +53,6 @@ class WorkflowTemplate(Base):
     )
 
     description: Mapped[str | None] = mapped_column(default=lambda: None)
-    data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
     __table_args__ = (
         Index(
