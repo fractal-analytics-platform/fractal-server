@@ -3,11 +3,12 @@ from typing import Any
 from sqlalchemy import MetaData
 from sqlalchemy import inspect
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import MappedAsDataclass
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 
 
-class Base(DeclarativeBase):
+class Base(MappedAsDataclass, DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
