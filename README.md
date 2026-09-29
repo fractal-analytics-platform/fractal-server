@@ -91,7 +91,7 @@
 | fractal\_server/app/routes/aux/\_versions.py                                 |       17 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/pixi\_version.py                              |       11 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/validate\_user\_profile.py                    |       29 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/app/routes/pagination.py                                     |       45 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/app/routes/pagination.py                                     |       48 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                                  |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/user.py                                          |       47 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/schemas/user\_group.py                                   |       14 |        0 |        0 |        0 |    100% |           |
@@ -231,7 +231,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11517** |  **156** | **1964** |   **84** | **98%** |           |
+| **TOTAL**                                                                    | **11520** |  **156** | **1964** |   **84** | **98%** |           |
 
 
 ## Setup coverage badge
