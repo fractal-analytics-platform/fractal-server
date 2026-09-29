@@ -1,11 +1,8 @@
-"""
-`db` module, loosely adapted from
-https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
-"""
-
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
+from typing import Callable
 
+from sqlalchemy import URL
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,10 +13,22 @@ from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
 from fractal_server.config import get_db_settings
+from fractal_server.json_utils import json_dumps
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
+
+
+def _get_engine_atrs() -> dict[str, URL | str | bool | Callable]:
+    db_settings = Inject(get_db_settings)
+    return dict(
+        url=db_settings.DATABASE_URL,
+        echo=(db_settings.DB_ECHO == "true"),
+        future=True,
+        pool_pre_ping=True,
+        json_serializer=json_dumps,
+    )
 
 
 class DB:
@@ -45,14 +54,7 @@ class DB:
 
     @classmethod
     def set_async_db(cls) -> None:
-        db_settings = Inject(get_db_settings)
-
-        cls._engine_async = create_async_engine(
-            db_settings.DATABASE_URL,
-            echo=(db_settings.DB_ECHO == "true"),
-            future=True,
-            pool_pre_ping=True,
-        )
+        cls._engine_async = create_async_engine(**_get_engine_atrs())
         cls._async_session_maker = async_sessionmaker(
             cls._engine_async,
             class_=AsyncSession,
@@ -61,15 +63,7 @@ class DB:
 
     @classmethod
     def set_sync_db(cls) -> None:
-        db_settings = Inject(get_db_settings)
-
-        cls._engine_sync = create_engine(
-            db_settings.DATABASE_URL,
-            echo=(db_settings.DB_ECHO == "true"),
-            future=True,
-            pool_pre_ping=True,
-        )
-
+        cls._engine_sync = create_engine(**_get_engine_atrs())
         cls._sync_session_maker = sessionmaker(cls._engine_sync)
 
     @classmethod

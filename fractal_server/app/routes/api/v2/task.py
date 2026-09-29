@@ -6,8 +6,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import or_
-from sqlmodel import select
+from sqlalchemy import or_
+from sqlalchemy import select
 
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,

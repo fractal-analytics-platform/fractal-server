@@ -7,14 +7,15 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from pydantic import BaseModel
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.sql.operators import is_not
-from sqlmodel import or_
-from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -354,7 +355,7 @@ async def _import_workflow(
         wftask_list=db_workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **db_workflow.model_dump(),
+        **orm_model_to_dict(db_workflow),
         project=db_workflow.project,
         task_list=wftask_list_with_warnings,
     )

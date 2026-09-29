@@ -8,15 +8,16 @@ from fastapi import status
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from sqlmodel import func
-from sqlmodel import select
-from sqlmodel import update
+from sqlalchemy import func
+from sqlalchemy import select
+from sqlalchemy import update
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserProjectV2
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.security import UserGroup
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -201,7 +202,7 @@ async def query_tasks(
         task_info_list.append(
             dict(
                 task=dict(
-                    **task.model_dump(),
+                    **orm_model_to_dict(task),
                     pkg_name=pkg_name,
                     active=_active,
                     owner=owner,

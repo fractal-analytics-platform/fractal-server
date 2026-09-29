@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 
@@ -8,8 +7,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
-from sqlmodel import select
-from sqlmodel import update
+from sqlalchemy import select
+from sqlalchemy import update
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import AsyncSession
@@ -17,6 +16,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import Profile
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_task_read_access,
@@ -213,27 +213,25 @@ async def submit_job(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        dataset_dump=json.loads(
-            dataset.model_dump_json(exclude={"images", "history", "is_starred"})
+        dataset_dump=orm_model_to_dict(
+            dataset, exclude={"images", "history", "is_starred"}
         ),
-        workflow_dump=json.loads(
-            workflow.model_dump_json(
-                exclude={
-                    "task_list",
-                    "description",
-                    "template_id",
-                    "is_starred",
-                }
-            )
+        workflow_dump=orm_model_to_dict(
+            workflow,
+            exclude={
+                "task_list",
+                "description",
+                "template_id",
+                "is_starred",
+            },
         ),
-        project_dump=json.loads(
-            project.model_dump_json(
-                exclude={
-                    "resource_id",
-                    "is_starred",
-                    "description",
-                }
-            )
+        project_dump=orm_model_to_dict(
+            project,
+            exclude={
+                "resource_id",
+                "is_starred",
+                "description",
+            },
         ),
         fractal_server_version=__VERSION__,
         **job_create.model_dump(),

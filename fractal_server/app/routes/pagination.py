@@ -1,18 +1,21 @@
 from typing import Generic
 from typing import Self
 from typing import TypeVar
+from typing import TypeVarTuple
+from typing import Unpack
 
 from fastapi import HTTPException
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import ValidationError
 from pydantic import model_validator
-from sqlmodel.sql.expression import Select
-from sqlmodel.sql.expression import SelectOfScalar
+from sqlalchemy import Select
 
 from fractal_server.app.db import AsyncSession
 
 T = TypeVar("T")
+Ts = TypeVarTuple("Ts")
 
 
 class PaginationRequest(BaseModel):
@@ -61,6 +64,13 @@ class PaginationResponse(PaginationData, Generic[T]):
     Paginated response container including both pagination metadata and result
     items.
 
+    Note: We include `arbitrary_types_allowed=True` for cases like
+    ```
+    PaginationResponse[X]
+    ```
+    where `X` is an ORM table class (e.g. `PaginationResponse[JobV2]`).
+    Not doing so would make openapi generation fail.
+
     Attributes:
         current_page:
         page_size:
@@ -68,16 +78,17 @@ class PaginationResponse(PaginationData, Generic[T]):
         items:
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     items: list[T]
 
 
 async def get_pagination_data(
     *,
-    stm: Select[T] | SelectOfScalar[T],
-    stm_count: SelectOfScalar[int],
+    stm: Select[Unpack[Ts]],
+    stm_count: Select[int],
     pagination: PaginationRequest,
     db: AsyncSession,
-) -> tuple[Select[T] | SelectOfScalar[T], PaginationData]:
+) -> tuple[Select[Unpack[Ts]], PaginationData]:
     """
     Apply pagination to a SQLAlchemy statement and compute pagination metadata.
 
@@ -100,7 +111,7 @@ async def get_pagination_data(
     """
 
     res_total_count = await db.execute(stm_count)
-    total_count = res_total_count.scalar()
+    total_count = res_total_count.scalar_one()
 
     if pagination.page_size is not None:
         page_size = pagination.page_size
@@ -120,8 +131,8 @@ async def get_pagination_data(
 
 async def get_paginated_response(
     *,
-    stm: SelectOfScalar[T],
-    stm_count: SelectOfScalar[int],
+    stm: Select[T],
+    stm_count: Select[int],
     pagination: PaginationRequest,
     db: AsyncSession,
 ) -> PaginationResponse[T]:

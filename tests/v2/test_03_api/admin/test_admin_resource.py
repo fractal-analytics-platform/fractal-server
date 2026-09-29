@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskGroupV2
@@ -13,9 +14,9 @@ def test_check_resource_type_match_or_422(
     local_resource_profile_objects,
 ):
     resource, old_profile = local_resource_profile_objects[:]
-    new_profile_ok = Profile(**old_profile.model_dump())
+    new_profile_ok = Profile(**orm_model_to_dict(old_profile))
     new_profile_bad = Profile(
-        **old_profile.model_dump(exclude={"resource_type"}),
+        **orm_model_to_dict(old_profile, exclude={"resource_type"}),
         resource_type="slurm_ssh",
     )
 
@@ -44,9 +45,10 @@ async def test_resource_api(
         assert len(res.json()) == 1
 
         # POST one resource / fail due to invalid payload
-        faulty_slurm_ssh_resource = slurm_ssh_resource_profile_fake_objects[
-            0
-        ].model_dump(exclude={"timestamp_created", "id"})
+        faulty_slurm_ssh_resource = orm_model_to_dict(
+            slurm_ssh_resource_profile_fake_objects[0],
+            exclude={"timestamp_created", "id"},
+        )
         FAULTY_RESOURCE_EXPECTED_ERROR = {
             "detail": [
                 {
@@ -71,8 +73,9 @@ async def test_resource_api(
         # POST one resource / fail due to wrong resource.type
         res = await client.post(
             "/admin/v2/resource/",
-            json=slurm_ssh_resource_profile_fake_objects[0].model_dump(
-                exclude={"timestamp_created", "id"}
+            json=orm_model_to_dict(
+                slurm_ssh_resource_profile_fake_objects[0],
+                exclude={"timestamp_created", "id"},
             ),
         )
         assert res.status_code == 422
@@ -81,7 +84,8 @@ async def test_resource_api(
         # POST one resource / fail due to non-unique name
         res = await client.post(
             "/admin/v2/resource/",
-            json=local_resource_profile_db[0].model_dump(
+            json=orm_model_to_dict(
+                local_resource_profile_db[0],
                 exclude={"timestamp_created", "id"},
             ),
         )
@@ -89,12 +93,13 @@ async def test_resource_api(
         assert "already exists" in str(res.json()["detail"])
 
         # POST one resource / success
-        valid_resource = local_resource_profile_db[0].model_dump(
+        valid_resource = orm_model_to_dict(
+            local_resource_profile_db[0],
             exclude={
                 "timestamp_created",
                 "name",
                 "id",
-            }
+            },
         )
         NAME = "another resource name"
         valid_resource["name"] = NAME
@@ -132,11 +137,12 @@ async def test_resource_api(
         assert res.json() == FAULTY_RESOURCE_EXPECTED_ERROR
 
         # PUT one resource / failure due to non-unique name
-        valid_new_resource = local_resource_profile_db[0].model_dump(
+        valid_new_resource = orm_model_to_dict(
+            local_resource_profile_db[0],
             exclude={
                 "timestamp_created",
                 "id",
-            }
+            },
         )
         valid_new_resource["name"] = local_resource_profile_db[0].name
         res = await client.put(
@@ -167,7 +173,8 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "profile_resource_id_fkey"' in res.json()["detail"]
+            'key constraint "fk_profile_resource_id_resource"'
+            in res.json()["detail"]
         )
         res = await client.delete(f"/admin/v2/profile/{profile['id']}/")
         assert res.status_code == 204
@@ -179,7 +186,7 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "projectv2_resource_id_fkey"'
+            'key constraint "fk_projectv2_resource_id_resource"'
             in res.json()["detail"]
         )
         await db.delete(project)
@@ -198,7 +205,7 @@ async def test_resource_api(
         res = await client.delete(f"/admin/v2/resource/{resource_id}/")
         assert res.status_code == 422
         assert (
-            'key constraint "taskgroupv2_resource_id_fkey"'
+            'key constraint "fk_taskgroupv2_resource_id_resource"'
             in res.json()["detail"]
         )
         await db.delete(task_group)

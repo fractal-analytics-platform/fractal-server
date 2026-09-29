@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.models import UserGroup
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.app.schemas.v2 import TaskUpdate
 
@@ -368,7 +369,7 @@ async def test_patch_task(
                 assert v == payload[k]
             else:
                 # assert non patched items are still the same
-                assert v == task_compound.model_dump()[k]
+                assert v == orm_model_to_dict(task_compound)[k]
 
         # Patch task-pip
         res = await client.patch(

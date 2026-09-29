@@ -2,8 +2,8 @@ from fastapi import HTTPException
 from fastapi import status
 from httpx import AsyncClient
 from httpx import TimeoutException
-from sqlmodel import func
-from sqlmodel import select
+from sqlalchemy import func
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.models.v2 import JobV2

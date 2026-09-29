@@ -9,8 +9,8 @@ from devtools import debug
 from fastapi import FastAPI
 from httpx import ASGITransport
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import Profile
@@ -130,9 +130,8 @@ def override_oauth_settings_factory():
 
 @pytest.fixture(scope="function")
 async def db_create_tables():
-    from sqlmodel import SQLModel
-
     from fractal_server.app.db import DB
+    from fractal_server.app.models.base import Base
 
     # Calling both set_sync_db and set_async_db guarantees that a new pair of
     # sync/async engines is created every time.
@@ -147,7 +146,7 @@ async def db_create_tables():
     engine = DB.engine_sync()
     engine_async = DB.engine_async()
 
-    metadata = SQLModel.metadata
+    metadata = Base.metadata
     metadata.create_all(engine)
 
     yield

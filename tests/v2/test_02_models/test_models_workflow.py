@@ -1,7 +1,8 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 
@@ -32,7 +33,9 @@ async def test_project_and_workflows(db, local_resource_profile_db):
 
     # test relationships
     assert db_workflow1.project_id == db_project.id
-    assert db_workflow1.project.model_dump() == db_project.model_dump()
+    assert orm_model_to_dict(db_workflow1.project) == orm_model_to_dict(
+        db_project
+    )
     # test defaults
     assert db_workflow1.task_list == []
 
@@ -52,7 +55,9 @@ async def test_project_and_workflows(db, local_resource_profile_db):
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
-    assert db_workflow2.project.model_dump() == db_project.model_dump()
+    assert orm_model_to_dict(db_workflow2.project) == orm_model_to_dict(
+        db_project
+    )
 
     # delete just one workflow
     await db.delete(db_workflow2)

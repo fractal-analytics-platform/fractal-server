@@ -12,7 +12,7 @@ from fastapi import status
 from fastapi.params import Query
 from fastapi.responses import PlainTextResponse
 from fastapi.responses import StreamingResponse
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db

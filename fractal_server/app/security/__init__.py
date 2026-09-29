@@ -1,25 +1,19 @@
 """
 Auth subsystem
 
-This module implements the authorisation/authentication subsystem of the
-Fractal Server. It is based on the
-[FastAPI Users](https://fastapi-users.github.io/fastapi-users/)
-library with
-[support](https://github.com/fastapi-users/fastapi-users-db-sqlmodel) for the
-SQLModel database adapter.
+This module implements the authorisation/authentication subsystem
+This module relies on the `fastapi-users` library (https://fastapi-users.github.io/fastapi-users)
+and on its SQLAlchemy database adapter (https://fastapi-users.github.io/fastapi-users/latest/configuration/databases/sqlalchemy).
 
 In particular, this module links the appropriate database models, sets up
-FastAPIUsers with Barer Token transport and register local routes.
+`FastAPIUsers` with Bearer-token transport and register local routes.
 Then, for each OAuth client defined in the Fractal Settings configuration, it
 registers the client and the relative routes.
-
-All routes are registered under the `auth/` prefix.
 """
 
 import contextlib
 from collections.abc import AsyncGenerator
 from typing import Any
-from typing import Generic
 from typing import Self
 from typing import override
 
@@ -27,19 +21,15 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi_users import BaseUserManager
 from fastapi_users import IntegerIDMixin
-from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.exceptions import InvalidPasswordException
 from fastapi_users.exceptions import UserAlreadyExists
-from fastapi_users.models import ID
-from fastapi_users.models import OAP
-from fastapi_users.models import UP
 from fastapi_users.password import PasswordHelper
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
+from sqlalchemy import Select
+from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
@@ -58,75 +48,77 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 
-class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
+class SQLAlchemyUserDatabase:
     """
-    This class is from fastapi_users_db_sqlmodel
-    Original Copyright: 2022 François Voron, released under MIT licence
+    Database adapter for SQLAlchemy.
 
-    Database adapter for SQLModel working purely asynchronously.
+    Updated from https://github.com/fastapi-users/fastapi-users-db-sqlalchemy
+    Original Copyright: 2021 François Voron, released under MIT licence.
 
-    Args:
-        user_model: SQLModel model of a DB representation of a user.
-        session: SQLAlchemy async session.
+    Changes with respect to the original version:
+    * Using the fractal-server `UserOAuth` and `OAuthAccount` classes rather
+      than protocols.
+    * Using `int` rather than the generic `ID`.
+    * `oauth_account_table` is now required.
+    * `Optional[X]` --> `X | None`
+    * No requirement about sqlalchemy version being lower than 2.1.0.
+
+    > NOTE: We can move back to the upstream project as soon as it
+    > supports sqlalchemy v2.1. Tracked at
+    > https://github.com/fastapi-users/fastapi-users-db-sqlalchemy/issues/25
+
+
+    Attributes:
+        session: SQLAlchemy session instance.
+        user_table: SQLAlchemy user model.
+        oauth_account_table: Optional SQLAlchemy OAuth accounts model.
     """
 
     session: AsyncSession
-    user_model: type[UP]
-    oauth_account_model: type[OAuthAccount] | None = None
+    user_table: type[UserOAuth]
+    oauth_account_table: type[OAuthAccount]
 
     def __init__(
         self,
         session: AsyncSession,
-        user_model: type[UP],
-        oauth_account_model: type[OAuthAccount] | None = None,
-    ) -> None:
+        user_table: type[UserOAuth],
+        oauth_account_table: type[OAuthAccount],
+    ):
         self.session = session
-        self.user_model = user_model
-        self.oauth_account_model = oauth_account_model
+        self.user_table = user_table
+        self.oauth_account_table = oauth_account_table
 
-    async def get(self, id: ID) -> UP | None:
-        """Get a single user by id."""
-        return await self.session.get(self.user_model, id)
+    async def get(self, id: int) -> UserOAuth | None:
+        statement = select(self.user_table).where(self.user_table.id == id)
+        return await self._get_user(statement)
 
-    async def get_by_email(self, email: str) -> UP | None:
-        """Get a single user by email."""
-        statement = select(self.user_model).where(
-            func.lower(self.user_model.email) == func.lower(email)
+    async def get_by_email(self, email: str) -> UserOAuth | None:
+        statement = select(self.user_table).where(
+            func.lower(self.user_table.email) == func.lower(email)
         )
-        results = await self.session.execute(statement)
-        object = results.first()
-        if object is None:
-            return None
-        return object[0]
+        return await self._get_user(statement)
 
     async def get_by_oauth_account(
         self, oauth: str, account_id: str
-    ) -> UP | None:  # noqa
-        """Get a single user by OAuth account id."""
-        if self.oauth_account_model is None:
-            raise NotImplementedError()
+    ) -> UserOAuth | None:
         statement = (
-            select(self.oauth_account_model)
-            .where(self.oauth_account_model.oauth_name == oauth)
-            .where(self.oauth_account_model.account_id == account_id)
-            .options(selectinload(self.oauth_account_model.user))  # noqa
+            select(self.user_table)
+            .join(self.oauth_account_table)
+            .where(self.oauth_account_table.oauth_name == oauth)  # type: ignore
+            .where(self.oauth_account_table.account_id == account_id)  # type: ignore
         )
-        results = await self.session.execute(statement)
-        oauth_account = results.first()
-        if oauth_account:
-            user = oauth_account[0].user
-            return user
-        return None
+        return await self._get_user(statement)
 
-    async def create(self, create_dict: dict[str, Any]) -> UP:
-        """Create a user."""
-        user = self.user_model(**create_dict)
+    async def create(self, create_dict: dict[str, Any]) -> UserOAuth:
+        user = self.user_table(**create_dict)
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
         return user
 
-    async def update(self, user: UP, update_dict: dict[str, Any]) -> UP:
+    async def update(
+        self, user: UserOAuth, update_dict: dict[str, Any]
+    ) -> UserOAuth:
         for key, value in update_dict.items():
             setattr(user, key, value)
         self.session.add(user)
@@ -134,18 +126,18 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         await self.session.refresh(user)
         return user
 
-    async def delete(self, user: UP) -> None:
-        await self.session.delete(user)
-        await self.session.commit()
+    # async def delete(self, user: UserOAuth) -> None:
+    #     # NOTE: User deletion is not currently supported.
+    #     await self.session.delete(user)
+    #     await self.session.commit()
 
     async def add_oauth_account(
-        self, user: UP, create_dict: dict[str, Any]
-    ) -> UP:  # noqa
-        if self.oauth_account_model is None:
-            raise NotImplementedError()
-
-        oauth_account = self.oauth_account_model(**create_dict)
-        user.oauth_accounts.append(oauth_account)
+        self, user: UserOAuth, create_dict: dict[str, Any]
+    ) -> UserOAuth:
+        await self.session.refresh(user)
+        oauth_account = self.oauth_account_table(**create_dict)
+        self.session.add(oauth_account)
+        user.oauth_accounts.append(oauth_account)  # type: ignore
         self.session.add(user)
 
         await self.session.commit()
@@ -153,11 +145,11 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         return user
 
     async def update_oauth_account(
-        self, user: UP, oauth_account: OAP, update_dict: dict[str, Any]
-    ) -> UP:
-        if self.oauth_account_model is None:
-            raise NotImplementedError()
-
+        self,
+        user: UserOAuth,
+        oauth_account: OAuthAccount,
+        update_dict: dict[str, Any],
+    ) -> UserOAuth:
         for key, value in update_dict.items():
             setattr(oauth_account, key, value)
         self.session.add(oauth_account)
@@ -165,11 +157,15 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
         return user
 
+    async def _get_user(self, statement: Select) -> UserOAuth | None:
+        results = await self.session.execute(statement)
+        return results.unique().scalar_one_or_none()
+
 
 async def get_user_db(
     session: AsyncSession = Depends(get_async_db),
-) -> AsyncGenerator[SQLModelUserDatabaseAsync, None]:
-    yield SQLModelUserDatabaseAsync(session, UserOAuth, OAuthAccount)
+) -> AsyncGenerator[SQLAlchemyUserDatabase, None]:
+    yield SQLAlchemyUserDatabase(session, UserOAuth, OAuthAccount)
 
 
 password_hash = PasswordHash(hashers=(BcryptHasher(),))
@@ -370,7 +366,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
 
 
 async def get_user_manager(
-    user_db: SQLModelUserDatabaseAsync = Depends(get_user_db),
+    user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
 ) -> AsyncGenerator[UserManager, None]:
     yield UserManager(user_db)
 

@@ -5,6 +5,7 @@ from typing import TypeVar
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session as DBSyncSession
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.schemas.v2 import TaskCreate
@@ -46,7 +47,7 @@ def get_activity_and_task_group(
     # Log some info about task group
     logger = get_logger(logger_name=logger_name)
     for key, value in sorted(
-        task_group.model_dump(exclude={"env_info"}).items()
+        orm_model_to_dict(task_group, exclude={"env_info"}).items()
     ):
         logger.debug(f"task_group.{key}: {value}")
 

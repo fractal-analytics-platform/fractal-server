@@ -1,4 +1,4 @@
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models.v2 import TaskGroupV2
