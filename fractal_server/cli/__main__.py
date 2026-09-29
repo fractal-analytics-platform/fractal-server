@@ -7,6 +7,8 @@ from ._parser import parse_args
 from ._recent import recent
 from ._set_db import set_db
 from ._start import start
+from ._submissions import submissions_disable
+from ._submissions import submissions_enable
 from ._sync_core_tasks import sync_core_tasks
 from ._update_db_data import update_db_data
 
@@ -43,5 +45,9 @@ def run() -> None:
                 add=args.additions,
                 remove=args.removals,
             )
+        case "submissions-enable":
+            submissions_enable()
+        case "submissions-disable":
+            submissions_disable()
         case _:
             sys.exit(f"Error: invalid command '{args.cmd}'.")
