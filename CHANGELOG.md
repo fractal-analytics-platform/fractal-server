@@ -2,11 +2,15 @@
 
 # 2.25.1 (unreleased)
 
-* Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+* Database:
+    * Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+* Dependencies:
+    * Bump `sqlalchemy` to v2.1 (\#3447).
 
 # 2.25.0
 
-* Drop SQLModel, in favor of bare SQLAlchemy (\#3418).
+* Database:
+    * Drop SQLModel, in favor of bare SQLAlchemy (\#3418).
 
 # 2.24.4
 
