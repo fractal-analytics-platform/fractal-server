@@ -157,6 +157,15 @@ def get_parser() -> ap.ArgumentParser:
         ),
     )
 
+    # fractalctl submissions
+    subparsers.add_parser(
+        "submissions-enable",
+        description="Re-enable job submissions for all resources.",
+    )
+    subparsers.add_parser(
+        "submissions-disable",
+        description="Disable job submissions for all resources.",
+    )
     return parser
 
 
