@@ -4,6 +4,8 @@
 
 * Database:
     * Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+* `fractalctl` CLI:
+    * Added `submissions-enable` and `submissions-disable` commands (\#3451).
 * Dependencies:
     * Bump `sqlalchemy` to v2.1 (\#3447).
 
