@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+from pydantic.experimental.missing_sentinel import MISSING
 
 from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas.v2 import DatasetCreate
@@ -77,8 +78,8 @@ def test_task_collect_pip():
 
 def test_task_update():
     t = TaskUpdate()
-    assert t.input_types is None
-    assert t.output_types is None
+    assert t.input_types is MISSING
+    assert t.output_types is MISSING
     with pytest.raises(ValidationError):
         TaskUpdate(input_types=None)
     with pytest.raises(ValidationError):

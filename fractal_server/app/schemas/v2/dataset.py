@@ -6,6 +6,7 @@ from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
 from pydantic import model_validator
+from pydantic.experimental.missing_sentinel import MISSING
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectRead
@@ -98,13 +99,12 @@ class DatasetUpdate(BaseModel):
     DatasetUpdate
 
     Attributes:
-        name:
-        zarr_dir:
+        name: The new dataset name.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    name: SafeNonEmptyStr = None
+    name: SafeNonEmptyStr | MISSING = MISSING
 
 
 class DatasetImport(BaseModel):

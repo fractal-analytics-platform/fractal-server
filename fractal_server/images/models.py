@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic.experimental.missing_sentinel import MISSING
 
 from fractal_server.types import DictStrAny
 from fractal_server.types import ImageAttributes
@@ -44,5 +45,5 @@ class SingleImage(SingleImageBase):
 
 class SingleImageUpdate(BaseModel):
     zarr_url: ZarrUrlStr
-    attributes: ImageAttributes = None
+    attributes: ImageAttributes | MISSING = MISSING
     types: ImageTypes | None = None

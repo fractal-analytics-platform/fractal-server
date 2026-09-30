@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
+from pydantic.experimental.missing_sentinel import MISSING
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectRead
@@ -47,7 +48,7 @@ class WorkflowReadWithWarnings(WorkflowRead):
 class WorkflowUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr = None
+    name: NonEmptyStr | MISSING = MISSING
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
     description: NonEmptyStr | None = None
 

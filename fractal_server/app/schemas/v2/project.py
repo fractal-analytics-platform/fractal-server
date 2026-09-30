@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
+from pydantic.experimental.missing_sentinel import MISSING
 from pydantic.types import AwareDatetime
 
 from fractal_server.types import NonEmptyStr
@@ -35,5 +36,5 @@ class ProjectReadSuperuser(ProjectRead):
 class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: SafeNonEmptyStr = None
+    name: SafeNonEmptyStr | MISSING = MISSING
     description: NonEmptyStr | None = None
