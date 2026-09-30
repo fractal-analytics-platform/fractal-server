@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
+from pydantic.experimental.missing_sentinel import MISSING
 
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
@@ -136,10 +137,10 @@ class TaskReadSlim(BaseModel):
 class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: NonEmptyStr = None
-    command_non_parallel: NonEmptyStr = None
-    input_types: TypeFilters = None
-    output_types: TypeFilters = None
+    command_parallel: NonEmptyStr | MISSING = MISSING
+    command_non_parallel: NonEmptyStr | MISSING = MISSING
+    input_types: TypeFilters | MISSING = MISSING
+    output_types: TypeFilters | MISSING = MISSING
 
     category: NonEmptyStr | None = None
     modality: NonEmptyStr | None = None
