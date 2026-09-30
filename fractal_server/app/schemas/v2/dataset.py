@@ -99,8 +99,7 @@ class DatasetUpdate(BaseModel):
     DatasetUpdate
 
     Attributes:
-        name:
-        zarr_dir:
+        name: The new dataset name.
     """
 
     model_config = ConfigDict(extra="forbid")
