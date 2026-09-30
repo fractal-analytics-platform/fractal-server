@@ -8,6 +8,7 @@ def submissions_enable():
     with next(get_sync_db()) as db:
         db.execute(stm)
         db.commit()
+    print("All resources now have `prevent_new_submissions=False`.")
 
 
 def submissions_disable():
@@ -20,3 +21,4 @@ def submissions_disable():
     with next(get_sync_db()) as db:
         db.execute(stm)
         db.commit()
+    print("All resources now have `prevent_new_submissions=True`.")
