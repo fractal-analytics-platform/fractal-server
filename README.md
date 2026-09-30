@@ -123,7 +123,7 @@
 | fractal\_server/cli/\_recent.py                                              |       40 |        0 |       16 |        1 |     98% | 120-\>131 |
 | fractal\_server/cli/\_set\_db.py                                             |       12 |       11 |        0 |        0 |      8% |      9-25 |
 | fractal\_server/cli/\_start.py                                               |        3 |        2 |        0 |        0 |     33% |       7-9 |
-| fractal\_server/cli/\_submissions.py                                         |       16 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/cli/\_submissions.py                                         |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/cli/\_sync\_core\_tasks.py                                   |       46 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/cli/\_update\_db\_data.py                                    |       28 |       27 |        6 |        0 |      3% |      6-69 |
 | fractal\_server/config/\_\_init\_\_.py                                       |       13 |        0 |        0 |        0 |    100% |           |
@@ -232,7 +232,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11544** |  **156** | **1968** |   **85** | **98%** |           |
+| **TOTAL**                                                                    | **11546** |  **156** | **1968** |   **85** | **98%** |           |
 
 
 ## Setup coverage badge
