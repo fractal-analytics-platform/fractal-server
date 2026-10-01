@@ -148,13 +148,13 @@ class SlurmSudoRunner(BaseSlurmRunner):
             except RuntimeError as e:
                 if self._is_error_skippable(str(e)):
                     logger.warning(
-                        f"SKIP copy {source} into {target}. "
-                        f"Original error: {str(e)}"
+                        f"Copying {source} into {target} failed with a "
+                        f"skippable error: {str(e)}"
                     )
                 else:
-                    logger.error(
-                        f"Copying {source} int {target} failed with a "
-                        "non-skippable error."
+                    logger.warning(
+                        f"Copying {source} into {target} failed with a "
+                        f"non-skippable error: {str(e)}"
                     )
                     raise e
         logger.debug(f"[_fetch_artifacts_single_job] {job.slurm_job_id=} END")
