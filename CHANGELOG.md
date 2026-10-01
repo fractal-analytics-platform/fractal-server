@@ -2,6 +2,8 @@
 
 # 2.25.2 (unreleased)
 
+* SLURM-sudo runner:
+    * Only ignore file-not-found errors when fetching remote job artifacts via `sudo -u` (\#3455).
 * `fractalctl` CLI:
     * Improve logging for `submissions` commands (7b5b49e378).
 

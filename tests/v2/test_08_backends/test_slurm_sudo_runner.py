@@ -7,8 +7,15 @@ from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import TaskExecutionError
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmJob,
+)
+from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
+    SlurmTask,
+)
 from fractal_server.runner.executors.slurm_sudo.runner import SlurmSudoRunner
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
+from fractal_server.runner.task_files import TaskFiles
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -357,3 +364,63 @@ async def test_multisubmit_parallel_partial_failure(
             assert unit.status == HistoryUnitStatus.FAILED
         else:
             assert unit.status == HistoryUnitStatus.DONE
+
+
+@pytest.mark.container
+async def test_skippable_artifacts(
+    db,
+    tmp777_path,
+    monkey_slurm,
+    slurm_sudo_resource_profile_db,
+    fractal_job_id_mock,
+):
+    resource, profile = slurm_sudo_resource_profile_db[:]
+
+    slurm_job = SlurmJob(
+        slurm_job_id="0",
+        prefix="prefix",
+        workdir_local=tmp777_path / "server/workdir",
+        workdir_remote=tmp777_path / "user/workdir",
+        tasks=[
+            SlurmTask(
+                component="component",
+                prefix="prefix",
+                workdir_local=tmp777_path / "server/workdir/task",
+                workdir_remote=tmp777_path / "user/workdir/task",
+                parameters={},
+                zarr_url=None,
+                index=0,
+                workflow_task_id=0,
+                workflow_task_order=0,
+                task_name="task_name",
+                task_files=TaskFiles(
+                    root_dir_local=tmp777_path / "server/workdir/task",
+                    root_dir_remote=tmp777_path / "user/workdir/task",
+                    task_name="task_name",
+                    task_order=0,
+                    component="component",
+                    prefix="prefix",
+                ),
+            )
+        ],
+    )
+
+    with SlurmSudoRunner(
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache").as_posix(),
+        resource=resource,
+        profile=profile,
+        fractal_job_id=fractal_job_id_mock,
+        resource_id=resource.id,
+    ) as runner:
+        # Skippable file-not-found errors
+        runner._fetch_artifacts_single_job(slurm_job)
+
+        # Trigger non-skippable autenthication error
+        runner.slurm_user = "fake-username"
+        with pytest.raises(
+            RuntimeError,
+            match="sudo: unknown user fake-username",
+        ):
+            runner._fetch_artifacts_single_job(slurm_job)
