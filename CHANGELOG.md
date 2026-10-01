@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.25.2 (unreleased)
+
+* `fractalctl` CLI:
+    * Improve logging for `submissions` commands (7b5b49e378).
+
 # 2.25.1
 
 * Database:
