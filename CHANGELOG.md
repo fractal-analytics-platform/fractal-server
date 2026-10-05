@@ -1,9 +1,19 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.1 (unreleased)
+# 2.25.2
+
+* SLURM-sudo runner:
+    * Make `SlurmSudoRunner._fetch_artifacts` raise for `ThreadPoolExecutor.map` (\#3455).
+    * Only ignore file-not-found errors when fetching remote job artifacts via `sudo -u` (\#3455).
+* `fractalctl` CLI:
+    * Improve logging for `submissions` commands (7b5b49e378).
+
+# 2.25.1
 
 * Database:
     * Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+* `fractalctl` CLI:
+    * Added `submissions-enable` and `submissions-disable` commands (\#3451).
 * Dependencies:
     * Bump `sqlalchemy` to v2.1 (\#3447).
 
