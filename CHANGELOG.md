@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.2 (unreleased)
+# 2.25.2
 
 * SLURM-sudo runner:
     * Make `SlurmSudoRunner._fetch_artifacts` raise for `ThreadPoolExecutor.map` (\#3455).
