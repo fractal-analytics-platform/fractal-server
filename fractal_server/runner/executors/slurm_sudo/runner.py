@@ -176,10 +176,12 @@ class SlurmSudoRunner(BaseSlurmRunner):
             max_workers=MAX_NUM_THREADS,
             thread_name_prefix=THREAD_NAME_PREFIX,
         ) as executor:
-            executor.map(
+            result_iterator = executor.map(
                 self._fetch_artifacts_single_job,
                 finished_slurm_jobs,
             )
+            # Consume iterator to make sure it raises exceptions if needed
+            list(result_iterator)
         logger.debug("[_fetch_artifacts] END.")
 
     @override
