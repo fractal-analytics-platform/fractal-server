@@ -2,6 +2,9 @@
 
 # 2.25.2 (unreleased)
 
+* SLURM-sudo runner:
+    * Make `SlurmSudoRunner._fetch_artifacts` raise for `ThreadPoolExecutor.map` (\#3455).
+    * Only ignore file-not-found errors when fetching remote job artifacts via `sudo -u` (\#3455).
 * `fractalctl` CLI:
     * Improve logging for `submissions` commands (7b5b49e378).
 
