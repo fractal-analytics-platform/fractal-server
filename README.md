@@ -170,7 +170,7 @@
 | fractal\_server/runner/executors/slurm\_ssh/tar\_commands.py                 |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/runner/executors/slurm\_sudo/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/executors/slurm\_sudo/\_subprocess\_run\_as\_user.py  |       23 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/runner/executors/slurm\_sudo/runner.py                       |       77 |        1 |        6 |        1 |     98% |       200 |
+| fractal\_server/runner/executors/slurm\_sudo/runner.py                       |       83 |        1 |        8 |        1 |     98% |       212 |
 | fractal\_server/runner/filenames.py                                          |        2 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/set\_start\_and\_last\_task\_index.py                 |       14 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/runner/task\_files.py                                        |       70 |        2 |        6 |        2 |     95% |    54, 75 |
@@ -232,7 +232,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11546** |  **156** | **1968** |   **85** | **98%** |           |
+| **TOTAL**                                                                    | **11552** |  **156** | **1970** |   **85** | **98%** |           |
 
 
 ## Setup coverage badge
