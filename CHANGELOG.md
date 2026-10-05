@@ -1,9 +1,15 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.2 (unreleased)
+# 2.25.3 (unreleased)
 
 * API and schemas:
     * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies (\#3452).
+
+# 2.25.2
+
+* SLURM-sudo runner:
+    * Make `SlurmSudoRunner._fetch_artifacts` raise for `ThreadPoolExecutor.map` (\#3455).
+    * Only ignore file-not-found errors when fetching remote job artifacts via `sudo -u` (\#3455).
 * `fractalctl` CLI:
     * Improve logging for `submissions` commands (7b5b49e378).
 
