@@ -1,6 +1,6 @@
 import pytest
+from pydantic import MISSING
 from pydantic import ValidationError
-from pydantic.experimental.missing_sentinel import MISSING
 
 from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas.v2 import DatasetCreate

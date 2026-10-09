@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_serializer
-from pydantic.experimental.missing_sentinel import MISSING
 from pydantic.types import AwareDatetime
 
 from fractal_server.app.schemas.v2.project import ProjectRead

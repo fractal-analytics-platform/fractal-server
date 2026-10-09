@@ -7,8 +7,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic import MISSING
 from pydantic import BaseModel
-from pydantic.experimental.missing_sentinel import MISSING
 from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
