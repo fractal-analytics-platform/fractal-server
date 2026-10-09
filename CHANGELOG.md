@@ -5,7 +5,8 @@
 * API and schemas:
     * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452).
 * Dependencies:
-    * Bump pydantic to `2.14` (\#3452).
+    * Bump `pydantic` to `2.14` (\#3452).
+    * Bump `fastapi` to `0.143` (\#3460).
 
 # 2.25.2
 
