@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from typing import Self
 from typing import override
@@ -6,10 +7,13 @@ from typing import override
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
 )
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
+from fractal_server.runner.v2.resume.slurm_evidence import TaggedSlurmJob
+from fractal_server.runner.v2.resume.slurm_evidence import collect_tagged_jobs
 from fractal_server.ssh._fabric import FractalSSH
 
 from .client import SlurmRestClient
@@ -21,6 +25,12 @@ from .token import SlurmTokenProvider
 logger = set_logger(__name__)
 
 STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
+HEREDOC_DELIMITER = re.compile(r"FRACTAL_EOF_[0-9a-f]{32}")
+
+
+def normalize_script(script: str) -> str:
+    # Heredoc delimiters are random, see `build_rest_script`
+    return HEREDOC_DELIMITER.sub("FRACTAL_EOF", script)
 
 
 class SlurmRestRunner(SlurmSSHRunner):
@@ -30,11 +40,16 @@ class SlurmRestRunner(SlurmSSHRunner):
 
     SSH is still used for: connection/version checks, remote `mkdir`,
     `scontrol token`, and fetching artifacts (`_fetch_artifacts`).
+
+    In adopt mode (used to resume an orphaned fractal job), a SLURM job
+    with the same tag as the one about to be submitted is taken over
+    instead, if it was submitted with the same script.
     """
 
     rest_client: SlurmRestClient
     remote_home: str
     remote_username: str
+    adopt: bool = False
     _poll_failures: int = 0
 
     def __init__(
@@ -50,7 +65,17 @@ class SlurmRestRunner(SlurmSSHRunner):
         fractal_ssh: FractalSSH,
         fractal_job_id: int,
         resource_id: int,
+        adopt_since: int | None = None,
     ) -> None:
+        """
+        Args:
+            adopt_since:
+                If set, enable adopt mode for SLURM jobs started after this
+                Unix timestamp.
+        """
+        self.adopt = adopt_since is not None
+        self._adoptable: dict[tuple[str, str], TaggedSlurmJob] = {}
+        self._adopted_ids: set[str] = set()
         super().__init__(
             root_dir_local=root_dir_local,
             root_dir_remote=root_dir_remote,
@@ -82,6 +107,18 @@ class SlurmRestRunner(SlurmSSHRunner):
             timeout=self.rest_settings.FRACTAL_SLURM_REST_TIMEOUT,
         )
         self.rest_client.ping()
+        if self.adopt:
+            # Sorted by SLURM job ID, so the most recent one wins
+            for tagged in collect_tagged_jobs(
+                client=self.rest_client,
+                fractal_job_id=fractal_job_id,
+                start_time=adopt_since,
+            ):
+                if tagged.subfolder is not None:
+                    self._adoptable[(tagged.subfolder, tagged.prefix)] = tagged
+            logger.info(
+                f"Adopt mode: {len(self._adoptable)} tagged SLURM jobs found."
+            )
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
             f"user={self.remote_username})."
@@ -92,6 +129,22 @@ class SlurmRestRunner(SlurmSSHRunner):
             f"PATH={self.rest_settings.FRACTAL_SLURM_REST_JOB_PATH}",
             f"HOME={self.remote_home}",
             f"USER={self.remote_username}",
+        ]
+
+    @override
+    def _mkdir_local_folder(self: Self, folder: str) -> None:
+        # In adopt mode, the folder of the interrupted task already exists
+        Path(folder).mkdir(parents=True, exist_ok=self.adopt)
+
+    @property
+    @override
+    def job_ids_int(self) -> list[int]:
+        # Only used for `AccountingRecordSlurm`; adopted SLURM jobs were
+        # already accounted for by the interrupted run
+        return [
+            int(job_id)
+            for job_id in self.jobs
+            if job_id not in self._adopted_ids
         ]
 
     @override
@@ -154,6 +207,19 @@ class SlurmRestRunner(SlurmSSHRunner):
             job=job_description,
         )
         request_path = script_local_path.with_suffix(".json")
+        if self.adopt:
+            tagged = self._adoptable.pop(
+                (slurm_job.workdir_remote.name, slurm_job.prefix), None
+            )
+            if tagged is not None and self._adopt(
+                slurm_job=slurm_job,
+                tagged=tagged,
+                previous_script=self._previous_script(
+                    slurm_job=slurm_job, request_path=request_path
+                ),
+                script=request_body["script"],
+            ):
+                return
         request_path.write_text(json.dumps(request_body, indent=2))
         logger.debug(f"[_submit_single_sbatch] Written {request_path}.")
 
@@ -162,6 +228,56 @@ class SlurmRestRunner(SlurmSSHRunner):
         slurm_job.slurm_job_id = str(submitted_job_id)
         self.jobs[slurm_job.slurm_job_id] = slurm_job
         logger.debug("[_submit_single_sbatch] END (REST)")
+
+    def _previous_script(
+        self, *, slurm_job: SlurmJob, request_path: Path
+    ) -> str | None:
+        """
+        Script of the earlier submission, from the local request file or
+        from the remote copy (which only exists once the job started).
+        """
+        if request_path.exists():
+            return json.loads(request_path.read_text())["script"]
+        remote_copy = slurm_job.slurm_submission_script_remote
+        if self.fractal_ssh.remote_exists(remote_copy):
+            return self.fractal_ssh.read_remote_text_file(remote_copy)
+        return None
+
+    def _adopt(
+        self,
+        *,
+        slurm_job: SlurmJob,
+        tagged: TaggedSlurmJob,
+        previous_script: str | None,
+        script: str,
+    ) -> bool:
+        """
+        Take over `tagged` for `slurm_job`.
+
+        Returns:
+            Whether the SLURM job was adopted; if not, a new one must be
+            submitted.
+        """
+        if previous_script is None:
+            logger.warning(
+                f"[_adopt] Cannot verify SLURM job {tagged.slurm_job_id} "
+                f"({tagged.state}), submit a new one."
+            )
+            if tagged.is_active:
+                self.rest_client.cancel_job(tagged.slurm_job_id)
+            return False
+        if normalize_script(previous_script) != normalize_script(script):
+            raise JobExecutionError(
+                f"SLURM job {tagged.slurm_job_id} was submitted with a "
+                "different script, it cannot be adopted."
+            )
+        logger.info(
+            f"[_adopt] Adopt SLURM job {tagged.slurm_job_id} ({tagged.state})."
+        )
+        slurm_job.slurm_job_id = tagged.slurm_job_id
+        self.jobs[tagged.slurm_job_id] = slurm_job
+        self._adopted_ids.add(tagged.slurm_job_id)
+        return True
 
     @override
     def run_squeue(self: Self, *, job_ids: list[str]) -> str:
