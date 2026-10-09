@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
+from pydantic import MISSING
 from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,7 +71,7 @@ async def patch_user(
     # Check that user exists
     user_to_patch = await _user_or_404(user_id, db)
 
-    if user_update.profile_id is not None:
+    if user_update.profile_id is not MISSING:
         profile = await db.get(Profile, user_update.profile_id)
         if profile is None:
             raise HTTPException(
@@ -78,7 +79,7 @@ async def patch_user(
                 detail=f"Profile {user_update.profile_id} not found.",
             )
 
-    if user_update.project_dirs is not None:
+    if user_update.project_dirs is not MISSING:
         await _check_project_dirs_update(
             old_project_dirs=user_to_patch.project_dirs,
             new_project_dirs=user_update.project_dirs,
@@ -88,10 +89,10 @@ async def patch_user(
 
     will_be_superuser = (
         user_update.is_superuser
-        if user_update.is_superuser is not None
+        if user_update.is_superuser is not MISSING
         else user_to_patch.is_superuser
     )
-    if user_update.is_guest and will_be_superuser:
+    if user_update.is_guest is True and will_be_superuser:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Superuser cannot be guest.",
