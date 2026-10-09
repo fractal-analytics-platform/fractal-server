@@ -8,6 +8,7 @@ the individual backends.
 
 import os
 import traceback
+from functools import partial
 from pathlib import Path
 from typing import Protocol
 
@@ -39,6 +40,7 @@ from ._local import process_workflow as local_process_workflow
 from ._slurm_rest import process_workflow as slurm_rest_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
+from .resume.spec import ResumeSpec
 
 
 class ProcessWorkflowType(Protocol):
@@ -95,6 +97,7 @@ def submit_workflow(
     profile: Profile,
     worker_init: str | None = None,
     fractal_ssh: FractalSSH | None = None,
+    resume: ResumeSpec | None = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -126,6 +129,9 @@ def submit_workflow(
         profile:
             Computational profile to be used for this job.
         fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
+        resume:
+            If set, continue an orphaned job with the SLURM REST runner in
+            adopt mode.
     """
     # Declare runner backend and set `process_workflow` function
     logger_name = f"WF{workflow_id}_job{job_id}"
@@ -172,7 +178,9 @@ def submit_workflow(
                     )
                     os.umask(original_umask)
                 case ResourceType.SLURM_SSH:
-                    local_job_dir.mkdir(parents=True, exist_ok=False)
+                    local_job_dir.mkdir(
+                        parents=True, exist_ok=resume is not None
+                    )
 
         except Exception as e:
             error_type = type(e).__name__
@@ -242,6 +250,16 @@ def submit_workflow(
                 else:
                     process_workflow = slurm_ssh_process_workflow
 
+        first_task_index = job.first_task_index
+        job_type_filters = job.type_filters
+        if resume is not None:
+            logger.info(f"Resume job from task {resume.first_task_index}.")
+            process_workflow = partial(
+                slurm_rest_process_workflow, adopt_since=resume.adopt_since
+            )
+            first_task_index = resume.first_task_index
+            job_type_filters = resume.type_filters
+
         process_workflow(
             workflow=workflow,
             dataset=dataset,
@@ -251,10 +269,10 @@ def submit_workflow(
             workflow_dir_remote=remote_job_dir,
             logger_name=logger_name,
             worker_init=worker_init,
-            first_task_index=job.first_task_index,
+            first_task_index=first_task_index,
             last_task_index=job.last_task_index,
             job_attribute_filters=job.attribute_filters,
-            job_type_filters=job.type_filters,
+            job_type_filters=job_type_filters,
             resource=resource,
             profile=profile,
             user_cache_dir=user_cache_dir,
