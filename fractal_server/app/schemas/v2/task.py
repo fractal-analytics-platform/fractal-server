@@ -2,6 +2,7 @@ from enum import StrEnum
 from typing import Any
 from typing import Self
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -35,15 +36,15 @@ class TaskCreate(BaseModel):
 
     name: NonEmptyStr
 
-    command_non_parallel: NonEmptyStr = None
-    command_parallel: NonEmptyStr = None
+    command_non_parallel: NonEmptyStr | MISSING = MISSING
+    command_parallel: NonEmptyStr | MISSING = MISSING
 
     meta_non_parallel: DictStrAny | None = None
     meta_parallel: DictStrAny | None = None
     version: NonEmptyStr
     args_schema_non_parallel: DictStrAny | None = None
     args_schema_parallel: DictStrAny | None = None
-    args_schema_version: NonEmptyStr = None
+    args_schema_version: NonEmptyStr | MISSING = MISSING
     docs_info: str | None = None
     docs_link: HttpUrlStr | None = None
 
@@ -61,14 +62,14 @@ class TaskCreate(BaseModel):
     def validate_commands(self) -> Self:
         command_parallel = self.command_parallel
         command_non_parallel = self.command_non_parallel
-        if (command_parallel is None) and (command_non_parallel is None):
+        if (command_parallel is MISSING) and (command_non_parallel is MISSING):
             raise ValueError(
                 "Task must have at least one valid command "
                 "(parallel and/or non_parallel)"
             )
-        if command_parallel is not None:
+        if command_parallel is not MISSING:
             validate_cmd(command_parallel)
-        if command_non_parallel is not None:
+        if command_non_parallel is not MISSING:
             validate_cmd(command_non_parallel)
 
         return self
@@ -81,9 +82,9 @@ class TaskCreate(BaseModel):
                 "which will be deprecated in a future version. "
                 "Please move to `fractal-task-tools`."
             )
-            if self.command_non_parallel is None:
+            if self.command_non_parallel is MISSING:
                 self.type = TaskType.PARALLEL
-            elif self.command_parallel is None:
+            elif self.command_parallel is MISSING:
                 self.type = TaskType.NON_PARALLEL
             else:
                 self.type = TaskType.COMPOUND
@@ -136,10 +137,10 @@ class TaskReadSlim(BaseModel):
 class TaskUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    command_parallel: NonEmptyStr = None
-    command_non_parallel: NonEmptyStr = None
-    input_types: TypeFilters = None
-    output_types: TypeFilters = None
+    command_parallel: NonEmptyStr | MISSING = MISSING
+    command_non_parallel: NonEmptyStr | MISSING = MISSING
+    input_types: TypeFilters | MISSING = MISSING
+    output_types: TypeFilters | MISSING = MISSING
 
     category: NonEmptyStr | None = None
     modality: NonEmptyStr | None = None

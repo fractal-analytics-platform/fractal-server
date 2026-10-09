@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import field_serializer
@@ -35,5 +36,5 @@ class ProjectReadSuperuser(ProjectRead):
 class ProjectUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: SafeNonEmptyStr = None
+    name: SafeNonEmptyStr | MISSING = MISSING
     description: NonEmptyStr | None = None
