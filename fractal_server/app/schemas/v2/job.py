@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -46,7 +47,7 @@ class JobCreate(BaseModel):
     first_task_index: NonNegativeInt | None = None
     last_task_index: NonNegativeInt | None = None
     slurm_account: StrictStr | None = None
-    worker_init: NonEmptyStr = None
+    worker_init: NonEmptyStr | MISSING = MISSING
 
     attribute_filters: AttributeFilters = Field(default_factory=dict)
     type_filters: TypeFilters = Field(default_factory=dict)
