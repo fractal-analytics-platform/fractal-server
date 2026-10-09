@@ -1,3 +1,4 @@
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -44,5 +45,5 @@ class SingleImage(SingleImageBase):
 
 class SingleImageUpdate(BaseModel):
     zarr_url: ZarrUrlStr
-    attributes: ImageAttributes = None
+    attributes: ImageAttributes | MISSING = MISSING
     types: ImageTypes | None = None

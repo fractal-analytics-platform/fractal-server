@@ -138,7 +138,7 @@ async def test_task_group_reset(
         assert res.status_code == 202
         taskgroupv2_id = res.json()["taskgroupv2_id"]
 
-        task_group = await db.get(TaskGroupV2, taskgroupv2_id)
+        task_group = await db.get_one(TaskGroupV2, taskgroupv2_id)
         if package_origin == "pixi":
             internal_path = Path(task_group.path, SOURCE_DIR_NAME).as_posix()
         else:
