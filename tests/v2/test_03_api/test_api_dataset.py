@@ -394,6 +394,17 @@ async def test_patch_dataset(
         debug(dataset)
         assert dataset["name"] == NEW_NAME
 
+        # Dummy patch
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json={},
+        )
+        assert res.status_code == 200
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+        )
+        assert res.status_code == 200
+
 
 async def test_dataset_import(
     client,

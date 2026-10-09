@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.25.3 (unreleased)
+
+* API and schemas:
+    * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452).
+* Dependencies:
+    * Bump pydantic to `2.14` (\#3452).
+
 # 2.25.2
 
 * SLURM-sudo runner:

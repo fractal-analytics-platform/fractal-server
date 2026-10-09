@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic import MISSING
 from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
@@ -131,7 +132,10 @@ async def update_project(
     )
 
     # Check that there is no project with the same user and name
-    if project_update.name is not None and project_update.name != project.name:
+    if (
+        project_update.name is not MISSING
+        and project_update.name != project.name
+    ):
         await _check_project_exists(
             project_name=project_update.name, user_id=user.id, db=db
         )

@@ -58,7 +58,7 @@ class TaskManifestV2(BaseModel):
     modality: str | None = None
     tags: list[str] = Field(default_factory=list)
 
-    type: None | TaskType = None
+    type: TaskType | None = None
 
     @model_validator(mode="after")
     def validate_executable_args_meta(self) -> Self:

@@ -1,5 +1,6 @@
 from typing import Any
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -68,7 +69,7 @@ class WorkflowTaskUpdate(BaseModel):
     meta_parallel: DictStrAny | None = None
     args_non_parallel: WorkflowTaskArgument | None = None
     args_parallel: WorkflowTaskArgument | None = None
-    type_filters: TypeFilters = None
+    type_filters: TypeFilters | MISSING = MISSING
     description: NonEmptyStr | None = None
     alias: NonEmptyStr | None = None
 

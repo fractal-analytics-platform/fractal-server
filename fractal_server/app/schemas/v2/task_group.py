@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -45,12 +46,12 @@ class TaskGroupCreate(BaseModel):
     origin: TaskGroupOriginEnum
     pkg_name: str
     version: str
-    python_version: NonEmptyStr = None
-    pixi_version: NonEmptyStr = None
-    path: AbsolutePathStr = None
-    venv_path: AbsolutePathStr = None
-    archive_path: AbsolutePathStr = None
-    pip_extras: NonEmptyStr = None
+    python_version: NonEmptyStr | MISSING = MISSING
+    pixi_version: NonEmptyStr | MISSING = MISSING
+    path: AbsolutePathStr | MISSING = MISSING
+    venv_path: AbsolutePathStr | MISSING = MISSING
+    archive_path: AbsolutePathStr | MISSING = MISSING
+    pip_extras: NonEmptyStr | MISSING = MISSING
     env_info: str | None = None
     pinned_package_versions_pre: DictStrStr = Field(default_factory=dict)
     pinned_package_versions_post: DictStrStr = Field(default_factory=dict)

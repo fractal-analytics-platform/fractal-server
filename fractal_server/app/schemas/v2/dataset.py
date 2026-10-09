@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Self
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -98,13 +99,12 @@ class DatasetUpdate(BaseModel):
     DatasetUpdate
 
     Attributes:
-        name:
-        zarr_dir:
+        name: The new dataset name.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    name: SafeNonEmptyStr = None
+    name: SafeNonEmptyStr | MISSING = MISSING
 
 
 class DatasetImport(BaseModel):
