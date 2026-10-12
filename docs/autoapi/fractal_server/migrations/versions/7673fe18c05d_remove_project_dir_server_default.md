@@ -1,1 +1,0 @@
-::: fractal_server.migrations.versions.7673fe18c05d_remove_project_dir_server_default

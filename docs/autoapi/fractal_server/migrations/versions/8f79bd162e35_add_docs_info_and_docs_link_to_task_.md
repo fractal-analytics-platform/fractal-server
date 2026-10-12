@@ -1,1 +1,0 @@
-::: fractal_server.migrations.versions.8f79bd162e35_add_docs_info_and_docs_link_to_task_

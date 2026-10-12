@@ -1,1 +1,0 @@
-::: fractal_server.migrations.versions.40d6d6511b20_add_index_to_history_models

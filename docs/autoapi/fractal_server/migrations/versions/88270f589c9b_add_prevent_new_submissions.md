@@ -1,1 +1,0 @@
-::: fractal_server.migrations.versions.88270f589c9b_add_prevent_new_submissions
