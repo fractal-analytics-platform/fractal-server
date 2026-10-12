@@ -7,6 +7,7 @@
 * Dependencies:
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
+    * Bump lockfile (7acf272264).
 
 # 2.25.2
 
