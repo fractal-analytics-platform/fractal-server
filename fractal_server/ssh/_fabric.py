@@ -185,8 +185,7 @@ class FractalSSH:
             e: Original exception
 
         Raises:
-            The original exception, or a `RuntimeError` with a more precise
-            description.
+            The original exception, possibly with a modified message.
         """
         try:
             self.logger.error(message)
