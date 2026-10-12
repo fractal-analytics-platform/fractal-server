@@ -176,9 +176,18 @@ class FractalSSH:
         """
         Log and re-raise an exception from a FractalSSH method.
 
+        `SSHException`s are transformed into `RuntimeError`s, to make a
+        user-facing error log more informative. Note that we don't do this
+        for `NoValidConnectionsError`, since the `retry_if_socket_error`
+        decorator relies on it.
+
         Args:
             message: Additional message to be logged.
             e: Original exception
+
+        Raises:
+            The original exception, or a `RuntimeError` with a more precise
+            description.
         """
         try:
             self.logger.error(message)
@@ -186,6 +195,8 @@ class FractalSSH:
             if isinstance(e, NoValidConnectionsError):
                 for ind, err in enumerate(e.errors):
                     self.logger.error(f"NoValidConnectionsError[{ind}]: {err}")
+            elif isinstance(e, SSHException):
+                e = RuntimeError(f"SSHException: {e}")
         except Exception as exception:
             # Handle unexpected cases, e.g. when `e` has no `type` or `e.errors`
             # is not iterable.
