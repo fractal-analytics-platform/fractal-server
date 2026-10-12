@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.7226c20dc233_add_workflowtemplate_table

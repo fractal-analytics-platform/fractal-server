@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.caba9fb1ea5e_drop_useroauth_user_settings_id

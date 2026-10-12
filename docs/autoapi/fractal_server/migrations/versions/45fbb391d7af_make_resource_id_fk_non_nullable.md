@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.45fbb391d7af_make_resource_id_fk_non_nullable

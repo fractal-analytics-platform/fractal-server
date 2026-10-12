@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.4c308bcaea2b_add_task_args_schema_and_task_args_

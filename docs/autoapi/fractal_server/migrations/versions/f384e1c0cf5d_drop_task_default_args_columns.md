@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.f384e1c0cf5d_drop_task_default_args_columns

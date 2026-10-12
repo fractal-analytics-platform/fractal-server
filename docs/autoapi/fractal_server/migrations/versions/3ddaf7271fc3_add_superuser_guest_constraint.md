@@ -1,0 +1,1 @@
+::: fractal_server.migrations.versions.3ddaf7271fc3_add_superuser_guest_constraint
