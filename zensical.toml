@@ -29,7 +29,7 @@ nav = [
     { "Contributing" = "development.md" },
     { "Reference" = [
         { "API" = "openapi.md" },
-        { "Code" = "autoapi/" },
+        { "Code" = "code_reference/" },
         { "CLI" = "cli_reference.md" },
     ]},
 ]
@@ -82,10 +82,13 @@ toggle.name = "Switch to light mode"
 
 [project.plugins.mkdocs-autoapi]
 autoapi_dir = "fractal_server/"
+autoapi_ignore = ["**/data_migrations/**", "**/migrations/**", "**/json_schemas/**"]
 autoapi_root = "code_reference"
 
+[project.plugins.mkdocstrings]
+
 [project.plugins.mkdocstrings.handlers.python]
-paths = ["."]
+paths = ["fractal_server"]
 inventories = [
     "https://docs.python.org/3/objects.inv",
     "https://docs.pydantic.dev/latest/objects.inv",
