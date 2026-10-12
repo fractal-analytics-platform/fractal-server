@@ -82,8 +82,7 @@ toggle.name = "Switch to light mode"
 
 [project.plugins.mkdocs-autoapi]
 autoapi_dir = "fractal_server/"
-
-autoapi_keep_files = true
+autoapi_root = "code_reference"
 
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["."]
@@ -97,7 +96,6 @@ filters = []
 group_by_category = true
 show_category_heading = true
 summary = true
-
 backlinks = "tree"
 docstring_style = "google"
 docstring_section_style = "spacy"
