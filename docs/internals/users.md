@@ -80,7 +80,7 @@ $ curl \
 
 Fractal Server also allows a different authentication procedure, not based on the knowledge of a user's password but on external `OAuth2` authentication clients.
 
-Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/code_reference/httpx_oauth.clients/) can be readily included).
+Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/autoapi/fractal_server/httpx_oauth.clients/) can be readily included).
 
 #### Configuration
 
