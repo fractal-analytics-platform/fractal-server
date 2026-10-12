@@ -4,9 +4,9 @@ from typing import Literal
 from pydantic import BaseModel
 
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
-from fractal_server.ssh._fabric import FractalSSH
 
-TAG_PREFIX = "fractal:job"
+# See `SlurmJob.slurm_stdout_remote_path`; SLURM keeps the `%j` placeholder
+STDOUT_SUFFIX = "-slurm-%j.out"
 ACTIVE_STATES = {
     "PENDING",
     "RUNNING",
@@ -18,10 +18,10 @@ ACTIVE_STATES = {
 }
 
 
-class TaggedSlurmJob(BaseModel):
+class FractalSlurmJob(BaseModel):
     slurm_job_id: str
     state: str
-    subfolder: str | None
+    subfolder: str
     prefix: str
     source: Literal["slurm", "slurmdb"]
     end_time: int | None = None
@@ -31,20 +31,27 @@ class TaggedSlurmJob(BaseModel):
         return self.state in ACTIVE_STATES
 
 
-def parse_tag(
-    comment: str | None, fractal_job_id: int
-) -> tuple[str | None, str] | None:
+def parse_stdout_path(
+    stdout: str | None, job_root: str
+) -> tuple[str, str] | None:
     """
-    Parse `fractal:job{id}:{subfolder}:{prefix}` into `(subfolder, prefix)`.
+    Split `{job_root}/{subfolder}/{prefix}-slurm-%j.out` into
+    `(subfolder, prefix)`, for a SLURM job of the fractal job with remote
+    folder `job_root`.
     """
-    head = f"{TAG_PREFIX}{fractal_job_id}:"
-    if not comment or not comment.startswith(head):
+    head = f"{job_root.rstrip('/')}/"
+    if (
+        not stdout
+        or not stdout.startswith(head)
+        or not stdout.endswith(STDOUT_SUFFIX)
+    ):
         return None
-    parts = comment[len(head) :].split(":")
-    if len(parts) == 1:
-        # Tags written before the subfolder was added
-        return None, parts[0]
-    return parts[0], parts[1]
+    subfolder, _, prefix = stdout[len(head) : -len(STDOUT_SUFFIX)].partition(
+        "/"
+    )
+    if not subfolder or not prefix or "/" in prefix:
+        return None
+    return subfolder, prefix
 
 
 def _first_state(value: Any) -> str:
@@ -60,45 +67,46 @@ def _timestamp(value: Any) -> int | None:
     return value or None
 
 
-def collect_tagged_jobs(
+def collect_fractal_slurm_jobs(
     *,
     client: SlurmRestClient,
-    fractal_job_id: int,
+    job_root: str,
     start_time: int,
-) -> list[TaggedSlurmJob]:
+) -> list[FractalSlurmJob]:
     """
-    Find the SLURM jobs of a fractal job, both finished and active.
+    Find the SLURM jobs of a fractal job, both finished and active, from the
+    stdout path that SLURM stores for each job.
 
     Args:
         client:
-        fractal_job_id:
+        job_root: Remote folder of the fractal job (`job.working_dir_user`).
         start_time: Unix timestamp, lower bound for the accounting query.
     """
-    jobs: dict[str, TaggedSlurmJob] = {}
+    jobs: dict[str, FractalSlurmJob] = {}
     for item in client.list_accounting_jobs(start_time=start_time):
-        tag = parse_tag((item.get("comment") or {}).get("job"), fractal_job_id)
-        if tag is None:
+        parsed = parse_stdout_path(item.get("stdout"), job_root)
+        if parsed is None:
             continue
         slurm_job_id = str(item["job_id"])
-        jobs[slurm_job_id] = TaggedSlurmJob(
+        jobs[slurm_job_id] = FractalSlurmJob(
             slurm_job_id=slurm_job_id,
             state=_first_state((item.get("state") or {}).get("current")),
-            subfolder=tag[0],
-            prefix=tag[1],
+            subfolder=parsed[0],
+            prefix=parsed[1],
             source="slurmdb",
             end_time=_timestamp((item.get("time") or {}).get("end")),
         )
-    # slurmdbd only stores the comment once a job ended, so live data wins
+    # Live data is more up to date
     for item in client.list_jobs():
-        tag = parse_tag(item.get("comment"), fractal_job_id)
-        if tag is None:
+        parsed = parse_stdout_path(item.get("standard_output"), job_root)
+        if parsed is None:
             continue
         slurm_job_id = str(item["job_id"])
-        job = TaggedSlurmJob(
+        job = FractalSlurmJob(
             slurm_job_id=slurm_job_id,
             state=_first_state(item.get("job_state")),
-            subfolder=tag[0],
-            prefix=tag[1],
+            subfolder=parsed[0],
+            prefix=parsed[1],
             source="slurm",
         )
         # For active jobs, `end_time` is the expected end
@@ -106,17 +114,3 @@ def collect_tagged_jobs(
             job.end_time = _timestamp(item.get("end_time"))
         jobs[slurm_job_id] = job
     return sorted(jobs.values(), key=lambda job: int(job.slurm_job_id))
-
-
-def read_task_outputs(
-    *, fractal_ssh: FractalSSH, folder: str
-) -> dict[str, Any]:
-    """
-    Read all `*-output.json` files of a remote task subfolder.
-    """
-    names = fractal_ssh.run_command(cmd=f"ls -1 {folder}").split()
-    return {
-        name: fractal_ssh.read_remote_json_file(f"{folder}/{name}")
-        for name in names
-        if name.endswith("-output.json")
-    }

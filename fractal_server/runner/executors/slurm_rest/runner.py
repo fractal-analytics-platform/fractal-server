@@ -12,12 +12,15 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
 )
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
-from fractal_server.runner.v2.resume.slurm_evidence import TaggedSlurmJob
-from fractal_server.runner.v2.resume.slurm_evidence import collect_tagged_jobs
+from fractal_server.runner.v2.resume.slurm_evidence import FractalSlurmJob
+from fractal_server.runner.v2.resume.slurm_evidence import (
+    collect_fractal_slurm_jobs,
+)
 from fractal_server.ssh._fabric import FractalSSH
 
 from .client import SlurmRestClient
 from .job_description import build_job_description
+from .job_description import validate_sbatch_lines
 from .script import build_rest_script
 from .settings import get_slurm_rest_settings
 from .token import SlurmTokenProvider
@@ -42,8 +45,9 @@ class SlurmRestRunner(SlurmSSHRunner):
     `scontrol token`, and fetching artifacts (`_fetch_artifacts`).
 
     In adopt mode (used to resume an orphaned fractal job), a SLURM job
-    with the same tag as the one about to be submitted is taken over
-    instead, if it was submitted with the same script.
+    with the same subfolder and prefix (from its stdout path) as the one
+    about to be submitted is taken over instead, if it was submitted with
+    the same script.
     """
 
     rest_client: SlurmRestClient
@@ -74,7 +78,7 @@ class SlurmRestRunner(SlurmSSHRunner):
                 Unix timestamp.
         """
         self.adopt = adopt_since is not None
-        self._adoptable: dict[tuple[str, str], TaggedSlurmJob] = {}
+        self._adoptable: dict[tuple[str, str], FractalSlurmJob] = {}
         self._adopted_ids: set[str] = set()
         super().__init__(
             root_dir_local=root_dir_local,
@@ -87,6 +91,16 @@ class SlurmRestRunner(SlurmSSHRunner):
             fractal_ssh=fractal_ssh,
             fractal_job_id=fractal_job_id,
             resource_id=resource_id,
+        )
+        # Fail at job start rather than at the first submission of a task
+        validate_sbatch_lines(
+            self.shared_config.default_slurm_config.extra_lines
+            + (
+                self.shared_config.gpu_slurm_config.extra_lines
+                if self.shared_config.gpu_slurm_config is not None
+                else []
+            )
+            + self.common_script_lines
         )
         self.rest_settings = get_slurm_rest_settings()
         self.remote_username = profile.username
@@ -109,16 +123,13 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.rest_client.ping()
         if self.adopt:
             # Sorted by SLURM job ID, so the most recent one wins
-            for tagged in collect_tagged_jobs(
+            for found in collect_fractal_slurm_jobs(
                 client=self.rest_client,
-                fractal_job_id=fractal_job_id,
+                job_root=root_dir_remote.as_posix(),
                 start_time=adopt_since,
             ):
-                if tagged.subfolder is not None:
-                    self._adoptable[(tagged.subfolder, tagged.prefix)] = tagged
-            logger.info(
-                f"Adopt mode: {len(self._adoptable)} tagged SLURM jobs found."
-            )
+                self._adoptable[(found.subfolder, found.prefix)] = found
+            logger.info(f"Adopt mode: {len(self._adoptable)} SLURM jobs found.")
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
             f"user={self.remote_username})."
@@ -190,13 +201,6 @@ class SlurmRestRunner(SlurmSSHRunner):
         job_description = build_job_description(
             script=original_script,
             environment=self._job_environment(),
-            # NOTE: Not part of the original `SlurmSSHRunner`. This tag lets
-            # a future "resume" feature find the SLURM jobs of a fractal job;
-            # the subfolder makes it unique across tasks.
-            comment=(
-                f"fractal:job{self.fractal_job_id}:"
-                f"{slurm_job.workdir_remote.name}:{slurm_job.prefix}"
-            ),
         )
         request_body = dict(
             script=build_rest_script(
@@ -208,12 +212,12 @@ class SlurmRestRunner(SlurmSSHRunner):
         )
         request_path = script_local_path.with_suffix(".json")
         if self.adopt:
-            tagged = self._adoptable.pop(
+            found = self._adoptable.pop(
                 (slurm_job.workdir_remote.name, slurm_job.prefix), None
             )
-            if tagged is not None and self._adopt(
+            if found is not None and self._adopt(
                 slurm_job=slurm_job,
-                tagged=tagged,
+                found=found,
                 previous_script=self._previous_script(
                     slurm_job=slurm_job, request_path=request_path
                 ),
@@ -247,12 +251,12 @@ class SlurmRestRunner(SlurmSSHRunner):
         self,
         *,
         slurm_job: SlurmJob,
-        tagged: TaggedSlurmJob,
+        found: FractalSlurmJob,
         previous_script: str | None,
         script: str,
     ) -> bool:
         """
-        Take over `tagged` for `slurm_job`.
+        Take over `found` for `slurm_job`.
 
         Returns:
             Whether the SLURM job was adopted; if not, a new one must be
@@ -260,23 +264,23 @@ class SlurmRestRunner(SlurmSSHRunner):
         """
         if previous_script is None:
             logger.warning(
-                f"[_adopt] Cannot verify SLURM job {tagged.slurm_job_id} "
-                f"({tagged.state}), submit a new one."
+                f"[_adopt] Cannot verify SLURM job {found.slurm_job_id} "
+                f"({found.state}), submit a new one."
             )
-            if tagged.is_active:
-                self.rest_client.cancel_job(tagged.slurm_job_id)
+            if found.is_active:
+                self.rest_client.cancel_job(found.slurm_job_id)
             return False
         if normalize_script(previous_script) != normalize_script(script):
             raise JobExecutionError(
-                f"SLURM job {tagged.slurm_job_id} was submitted with a "
+                f"SLURM job {found.slurm_job_id} was submitted with a "
                 "different script, it cannot be adopted."
             )
         logger.info(
-            f"[_adopt] Adopt SLURM job {tagged.slurm_job_id} ({tagged.state})."
+            f"[_adopt] Adopt SLURM job {found.slurm_job_id} ({found.state})."
         )
-        slurm_job.slurm_job_id = tagged.slurm_job_id
-        self.jobs[tagged.slurm_job_id] = slurm_job
-        self._adopted_ids.add(tagged.slurm_job_id)
+        slurm_job.slurm_job_id = found.slurm_job_id
+        self.jobs[found.slurm_job_id] = slurm_job
+        self._adopted_ids.add(found.slurm_job_id)
         return True
 
     @override

@@ -3,7 +3,8 @@ Read-only planning of the resume of orphaned jobs.
 
 A job is an orphan if it is `submitted`, runs on a SLURM REST resource and
 started before the cutoff (by default, the start of this server process).
-The database tells where the job stopped; SLURM (via the job tags) and the
+The database tells where the job stopped; SLURM (via the stdout path stored
+for each job) and the
 remote output files tell what happened to the interrupted task.
 """
 
@@ -50,12 +51,12 @@ from fractal_server.runner.task_files import SUBMIT_PREFIX
 from fractal_server.runner.task_files import task_subfolder_name
 from fractal_server.runner.v2.merge_outputs import merge_outputs
 from fractal_server.runner.v2.task_interface import TaskOutput
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.utils import get_timestamp
 
-from .slurm_evidence import TaggedSlurmJob
-from .slurm_evidence import collect_tagged_jobs
-from .slurm_evidence import read_task_outputs
+from .slurm_evidence import FractalSlurmJob
+from .slurm_evidence import collect_fractal_slurm_jobs
 
 logger = set_logger(__name__)
 
@@ -109,7 +110,7 @@ class InterruptedTask(BaseModel):
     num_selected_images: int | None = None
     selection_matches_units: bool | None = None
     outputs_reflected_in_dataset: bool | None = None
-    slurm_jobs: list[TaggedSlurmJob] = Field(default_factory=list)
+    slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
 
 
 class ResumePlan(BaseModel):
@@ -122,7 +123,7 @@ class ResumePlan(BaseModel):
     resume_from_task_index: int | None = None
     type_filters: dict[str, bool] | None = None
     interrupted_task: InterruptedTask | None = None
-    other_slurm_jobs: list[TaggedSlurmJob] = Field(default_factory=list)
+    other_slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
     resume_marker_present: bool = False
     reasons: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -466,29 +467,27 @@ def _add_remote_evidence(
         ca_bundle=settings.FRACTAL_SLURM_REST_CA_BUNDLE,
         timeout=settings.FRACTAL_SLURM_REST_TIMEOUT,
     )
-    tagged_jobs = collect_tagged_jobs(
+    found_jobs = collect_fractal_slurm_jobs(
         client=client,
-        fractal_job_id=ctx.job_id,
+        job_root=ctx.remote_root,
         start_time=int(ctx.start_timestamp.timestamp())
         - ACCOUNTING_START_MARGIN,
     )
 
     info = plan.interrupted_task
-    for job in tagged_jobs:
+    for job in found_jobs:
         if job.subfolder == info.subfolder:
             info.slurm_jobs.append(job)
         else:
             plan.other_slurm_jobs.append(job)
 
-    if any(job.subfolder is None for job in tagged_jobs):
-        plan.warnings.append("Some SLURM jobs have tags without subfolder.")
     prefixes = [job.prefix for job in info.slurm_jobs]
     if len(prefixes) != len(set(prefixes)):
         plan.warnings.append(
-            "Several SLURM jobs share a tag; the most recent one would be "
-            "adopted."
+            "Several SLURM jobs for the same batch; the most recent one "
+            "would be adopted."
         )
-    if any(job.subfolder in ctx.later_subfolders for job in tagged_jobs):
+    if any(job.subfolder in ctx.later_subfolders for job in found_jobs):
         return _refuse(plan, "Found SLURM jobs for tasks not started yet.")
     if (
         plan.case
@@ -502,7 +501,7 @@ def _add_remote_evidence(
         return _refuse(plan, "Found SLURM jobs for a task without units.")
 
     if plan.case == ResumeCase.UNITS_FINISHED:
-        outputs = read_task_outputs(
+        outputs = _read_task_outputs(
             fractal_ssh=fractal_ssh,
             folder=f"{ctx.remote_root}/{info.subfolder}",
         )
@@ -540,6 +539,20 @@ def _add_remote_evidence(
                 plan.resume_from_task_index = None
             else:
                 plan.resume_from_task_index = info.task_index + 1
+
+
+def _read_task_outputs(
+    *, fractal_ssh: FractalSSH, folder: str
+) -> dict[str, Any]:
+    """
+    Read all `*-output.json` files of a remote task subfolder.
+    """
+    names = fractal_ssh.run_command(cmd=f"ls -1 {folder}").split()
+    return {
+        name: fractal_ssh.read_remote_json_file(f"{folder}/{name}")
+        for name in names
+        if name.endswith("-output.json")
+    }
 
 
 def _task_output_from_files(

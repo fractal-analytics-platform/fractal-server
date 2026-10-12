@@ -131,6 +131,19 @@ class SlurmRestClient:
         """
         payload = self._request("POST", "/job/submit", body=request_body)
         job_id = payload.get("job_id")
+        # slurmrestd accepts the job and only warns about unknown fields, so
+        # a wrong mapping in `job_description.py` would silently drop options
+        unknown_fields = [
+            warning.get("description")
+            for warning in payload.get("warnings", [])
+            if "unknown field" in str(warning.get("description")).lower()
+        ]
+        if unknown_fields:
+            if job_id is not None:
+                self.cancel_job(str(job_id))
+            raise SlurmRestError(
+                f"Job description has unknown fields: {unknown_fields}"
+            )
         if job_id is None:
             raise SlurmRestError(f"No `job_id` in submit response: {payload}")
         return int(job_id)
@@ -164,8 +177,6 @@ class SlurmRestClient:
     def list_accounting_jobs(self, *, start_time: int) -> list[dict[str, Any]]:
         """
         Return the user's jobs from `slurmdbd`, started after `start_time`.
-
-        Note: `comment` is only filled once a job has ended.
 
         Args:
             start_time: Unix timestamp.

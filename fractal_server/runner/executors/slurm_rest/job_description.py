@@ -4,6 +4,16 @@ Translate the `#SBATCH` preamble of a fractal submission script into a
 
 `slurmrestd` ignores `#SBATCH` lines in the submitted script (verified on
 sHPC with v0.0.44), so every option must become a JSON field.
+
+Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
+REST job description, and options and JSON fields differ in names and units
+(`--mem` -> `memory_per_node` in MB, `--time` -> `time_limit` in minutes,
+`--ntasks` -> `tasks`, ...), so a generic name-based translation would be
+wrong. The lines are a closed set (`SlurmConfig.to_sbatch_preamble` plus the
+runner) except for admin `extra_lines`. Gaps fail loudly: unknown options
+raise here (also at runner start, for the resource `extra_lines`), unknown
+JSON fields are rejected at submission, and a unit test covers every
+`SlurmConfig` option.
 """
 
 from typing import Any
@@ -142,11 +152,19 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
             )
 
 
+def validate_sbatch_lines(lines: list[str]) -> None:
+    """
+    Raise `SlurmConfigError` if any `#SBATCH` line cannot be translated.
+    """
+    for line in lines:
+        if line.startswith(SBATCH_PREFIX):
+            _apply_option({}, *_parse_sbatch_line(line))
+
+
 def build_job_description(
     *,
     script: str,
     environment: list[str],
-    comment: str | None = None,
 ) -> dict[str, Any]:
     """
     Build the `job` part of a `POST /job/submit` request.
@@ -156,7 +174,6 @@ def build_job_description(
         environment:
             Base environment (`KEY=value` items). `slurmrestd` requires it,
             and jobs do not inherit any login environment.
-        comment: Optional SLURM job comment.
     """
     job: dict[str, Any] = {}
     for line in script.splitlines():
@@ -170,7 +187,4 @@ def build_job_description(
     if "cpus_per_task" in job:
         job_environment.append(f"SLURM_CPUS_PER_TASK={job['cpus_per_task']}")
     job["environment"] = job_environment
-
-    if comment is not None:
-        job["comment"] = comment
     return job
