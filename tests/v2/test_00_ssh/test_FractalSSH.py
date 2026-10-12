@@ -78,13 +78,12 @@ def test_log_and_raise(tmp_path: Path, caplog):
 
         caplog.clear
         ssh_exception = SSHException("Invalid key")
-        with pytest.raises(RuntimeError) as exc_info:
+        with pytest.raises(SSHException) as exc_info:
             mocked_fractal_ssh.log_and_raise(
                 e=ssh_exception,
                 message="test4",
             )
-        assert "SSHException" in str(exc_info.value)
-        assert "Invalid key" in str(exc_info.value)
+        assert str(exc_info.value) == "SSHException: Invalid key"
         assert "SSHException" in caplog.text
         assert "Invalid key" in caplog.text
 
