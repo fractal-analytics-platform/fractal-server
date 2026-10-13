@@ -10,13 +10,17 @@
     * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#3464).
 * Dependencies:
     * Support Python3.15 (\#3465).
-    * Bump `pytest`, `coverage` and `devtools` (\#3465).
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
+    * Bump `pydantic-settings` to `2.15` (\#3466).
+    * Bump `uvicorn` to `0.54` (\#3466).
     * Bump lockfile (7acf272264).
+    * Bump `pytest`, `coverage` and `devtools` (\#3465).
+    * Bump `pytest-env` and `zensical` (\#3466).
 * Testing:
     * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
     * Make CI run on Python 3.12, 3.13, 3.14 and 3.15 on `main` (\#3465).
+    * Make GitHub actions run on ubuntu-26.04 (\#3466).
 
 # 2.25.2
 
@@ -698,7 +702,7 @@ resource&profile concepts, and a review of the application settings.
 * Testing and GitHub actions:
     * Simplify Python environment in documentation GitHub action (\#2919).
     * Simplify PyPI-publish GitHub action (\#2927).
-    * Drop explicit dependency on `python-dotenv (\#2921).
+    * Drop explicit dependency on `python-dotenv` (\#2921).
 * Testing:
     * Introduce `pytest-env` dependency.
     * Update testing database to version 2.16.6 (\#2909).
