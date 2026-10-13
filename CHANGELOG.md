@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.3 (unreleased)
+# 2.25.3
 
 * API and schemas:
     * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452, \#3463).
