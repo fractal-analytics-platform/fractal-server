@@ -4,8 +4,7 @@ Read-only planning of the resume of orphaned jobs.
 A job is an orphan if it is `submitted`, runs on a SLURM REST resource and
 started before the cutoff (by default, the start of this server process).
 The database tells where the job stopped; SLURM (via the stdout path stored
-for each job) and the
-remote output files tell what happened to the interrupted task.
+for each job) tells which SLURM jobs of the interrupted task can be adopted.
 """
 
 import re
@@ -17,7 +16,6 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import ValidationError
 from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
@@ -47,12 +45,7 @@ from fractal_server.runner.executors.slurm_rest.settings import (
     is_slurm_rest_enabled,
 )
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenProvider
-from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
-from fractal_server.runner.task_files import SUBMIT_PREFIX
 from fractal_server.runner.task_files import task_subfolder_name
-from fractal_server.runner.v2.merge_outputs import merge_outputs
-from fractal_server.runner.v2.task_interface import TaskOutput
-from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.utils import get_timestamp
 
@@ -92,8 +85,7 @@ class ResumeCase(StrEnum):
     TASK_FAILED = "C3_task_failed"
     NEXT_TASK_NOT_STARTED = "C4_next_task_not_started"
     RUN_WITHOUT_UNITS = "C5_run_without_units"
-    UNITS_IN_PROGRESS = "C6_units_in_progress"
-    UNITS_FINISHED = "C7_units_finished_run_open"
+    RUN_WITH_UNITS = "C6_run_with_units"
 
 
 class ResumeAction(StrEnum):
@@ -114,7 +106,6 @@ class InterruptedTask(BaseModel):
     unit_status_counts: dict[str, int] = Field(default_factory=dict)
     num_selected_images: int | None = None
     selection_matches_units: bool | None = None
-    outputs_reflected_in_dataset: bool | None = None
     slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
 
 
@@ -140,16 +131,9 @@ class _RemoteContext:
     job_id: int
     start_timestamp: datetime
     remote_root: str
-    last_task_index: int
     resource: Resource
     profile: Profile
-    task_type: str
-    output_types: dict[str, bool]
     later_subfolders: set[str]
-    dataset_images: list[dict[str, Any]]
-    unit_selection: list[str] | None
-    predicted_selection: list[str] | None
-    any_unit_failed: bool
 
 
 def _refuse(plan: ResumePlan, reason: str) -> None:
@@ -285,6 +269,9 @@ def _plan_from_db(
         return None
     plan.resumable = True
 
+    # TODO: C0 comes from the separate commits in `submit_job`
+    # (`app/routes/api/v2/submit.py`), which could be merged into one; not a
+    # problem as is, since the job is just marked failed.
     if job.working_dir is None or job.working_dir_user is None:
         plan.case = ResumeCase.NO_WORKING_DIR
         plan.action = ResumeAction.MARK_FAILED
@@ -383,10 +370,9 @@ def _plan_from_db(
             )
         if not units:
             plan.case = ResumeCase.RUN_WITHOUT_UNITS
-        elif any(u.status == HistoryUnitStatus.SUBMITTED for u in units):
-            plan.case = ResumeCase.UNITS_IN_PROGRESS
         else:
-            plan.case = ResumeCase.UNITS_FINISHED
+            # Units may be finished or not: the runner adopts either way
+            plan.case = ResumeCase.RUN_WITH_UNITS
 
     uses_status_filter = IMAGE_STATUS_KEY in job.attribute_filters
     if uses_status_filter and (k != first or units):
@@ -412,16 +398,13 @@ def _plan_from_db(
         predicted_selection = [img["zarr_url"] for img in selected]
         info.num_selected_images = len(predicted_selection)
 
-    unit_selection = _selection_from_units(wftask.task_type, units)
     if units and predicted_selection is not None:
-        info.selection_matches_units = predicted_selection == unit_selection
-        # For C7 a mismatch is expected if results were already saved
-        if (
-            plan.case == ResumeCase.UNITS_IN_PROGRESS
-            and not info.selection_matches_units
-        ):
+        info.selection_matches_units = predicted_selection == (
+            _selection_from_units(wftask.task_type, units)
+        )
+        if not info.selection_matches_units:
             return _refuse(
-                plan, "Images selected now differ from the running units."
+                plan, "Images selected now differ from the task units."
             )
 
     profile_id = db.execute(
@@ -434,20 +417,11 @@ def _plan_from_db(
         job_id=job.id,
         start_timestamp=job.start_timestamp,
         remote_root=job.working_dir_user,
-        last_task_index=last,
         resource=resource,
         profile=db.get_one(Profile, profile_id),
-        task_type=wftask.task_type,
-        output_types=dict(wftask.task.output_types),
         later_subfolders={
             _subfolder(wftasks[idx]) for idx in range(k + 1, last + 1)
         },
-        dataset_images=dataset.images,
-        unit_selection=unit_selection,
-        predicted_selection=predicted_selection,
-        any_unit_failed=any(
-            u.status == HistoryUnitStatus.FAILED for u in units
-        ),
     )
 
 
@@ -518,127 +492,3 @@ def _add_remote_evidence(
             "SLURM jobs from an interrupted resume of this task; they are "
             "adopted only if their script matches."
         )
-
-    if plan.case == ResumeCase.UNITS_FINISHED:
-        outputs = _read_task_outputs(
-            fractal_ssh=fractal_ssh,
-            folder=f"{ctx.remote_root}/{info.subfolder}",
-        )
-        task_output = _task_output_from_files(
-            outputs=outputs,
-            task_type=ctx.task_type,
-            unit_selection=ctx.unit_selection or [],
-        )
-        reflected = _outputs_reflected(
-            task_output=task_output,
-            images=ctx.dataset_images,
-            output_types=ctx.output_types,
-        )
-        info.outputs_reflected_in_dataset = reflected
-        if not reflected:
-            # Results not saved: rerun the task and adopt its SLURM jobs
-            if info.selection_matches_units is False:
-                _refuse(
-                    plan,
-                    "Images selected now differ from the finished units.",
-                )
-        elif ctx.any_unit_failed:
-            plan.action = ResumeAction.MARK_FAILED
-            plan.warnings.append(
-                "Results already saved; mark the task run and job failed."
-            )
-        else:
-            plan.warnings.append(
-                "Results already saved; mark the task run done and skip "
-                "the accounting record."
-            )
-            plan.type_filters.update(ctx.output_types)
-            if info.task_index == ctx.last_task_index:
-                plan.action = ResumeAction.MARK_DONE
-                plan.resume_from_task_index = None
-            else:
-                plan.resume_from_task_index = info.task_index + 1
-
-
-def _read_task_outputs(
-    *, fractal_ssh: FractalSSH, folder: str
-) -> dict[str, Any]:
-    """
-    Read all `*-output.json` files of a remote task subfolder.
-    """
-    names = fractal_ssh.run_command(cmd=f"ls -1 {folder}").split()
-    return {
-        name: fractal_ssh.read_remote_json_file(f"{folder}/{name}")
-        for name in names
-        if name.endswith("-output.json")
-    }
-
-
-def _task_output_from_files(
-    *,
-    outputs: dict[str, Any],
-    task_type: str,
-    unit_selection: list[str],
-) -> TaskOutput:
-    """
-    Rebuild the merged task output, as the engine does after execution.
-    """
-    if task_type in (TaskType.NON_PARALLEL, TaskType.CONVERTER_NON_PARALLEL):
-        prefix = f"{SUBMIT_PREFIX}-"
-    else:
-        # Parallel and compound-compute outputs (compound init is skipped)
-        prefix = f"{MULTISUBMIT_PREFIX}-"
-    task_outputs = []
-    for name in sorted(outputs):
-        if not name.startswith(prefix):
-            continue
-        success, result = outputs[name][0], outputs[name][1]
-        if not success:
-            continue
-        try:
-            task_outputs.append(
-                TaskOutput(**result) if result is not None else TaskOutput()
-            )
-        except (TypeError, ValidationError):
-            continue
-    if not task_outputs:
-        return TaskOutput()
-    merged = merge_outputs(task_outputs)
-    if merged.image_list_updates == [] and merged.image_list_removals == []:
-        # Same as the engine: flag all input images as modified
-        merged = TaskOutput(
-            image_list_updates=[dict(zarr_url=url) for url in unit_selection]
-        )
-    return merged
-
-
-def _outputs_reflected(
-    *,
-    task_output: TaskOutput,
-    images: list[dict[str, Any]],
-    output_types: dict[str, bool],
-) -> bool:
-    """
-    Whether the dataset images already include the task output.
-    """
-    images_by_url = {img["zarr_url"]: img for img in images}
-    if any(url in images_by_url for url in task_output.image_list_removals):
-        return False
-    for update in task_output.image_list_updates:
-        image = images_by_url.get(update.zarr_url)
-        if image is None:
-            return False
-        for key, value in update.attributes.items():
-            if value is None:
-                if key in image["attributes"]:
-                    return False
-            elif image["attributes"].get(key) != value:
-                return False
-        expected_types = {**update.types, **output_types}
-        if any(image["types"].get(k) != v for k, v in expected_types.items()):
-            return False
-        if update.origin not in (None, update.zarr_url) and (
-            image.get("origin") != update.origin
-        ):
-            return False
-    return True

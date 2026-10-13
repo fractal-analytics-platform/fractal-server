@@ -8,7 +8,6 @@ from pathlib import Path
 
 from sqlmodel import delete
 from sqlmodel import select
-from sqlmodel import update
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import UserOAuth
@@ -17,7 +16,6 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
-from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.utils import get_timestamp
 
@@ -25,7 +23,6 @@ from .plan import ACCOUNTING_START_MARGIN
 from .plan import RESUME_MARKER
 from .plan import SERVER_BOOT_TIMESTAMP
 from .plan import ResumeAction
-from .plan import ResumeCase
 from .plan import ResumePlan
 from .spec import ResumeSpec
 
@@ -90,24 +87,10 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
 
         info = plan.interrupted_task
         run_id = info.history_run_id if info is not None else None
-        if run_id is not None:
-            if (
-                plan.case == ResumeCase.UNITS_FINISHED
-                and info.outputs_reflected_in_dataset
-            ):
-                db.execute(
-                    update(HistoryRun)
-                    .where(HistoryRun.id == run_id)
-                    .values(
-                        status=HistoryUnitStatus.FAILED
-                        if plan.action == ResumeAction.MARK_FAILED
-                        else HistoryUnitStatus.DONE
-                    )
-                )
-            elif plan.action == ResumeAction.RESUME:
-                # Units and their image-cache rows go by cascade; the rerun
-                # creates new ones for the same images
-                db.execute(delete(HistoryRun).where(HistoryRun.id == run_id))
+        if run_id is not None and plan.action == ResumeAction.RESUME:
+            # Units and their image-cache rows go by cascade; the rerun
+            # creates new ones for the same images
+            db.execute(delete(HistoryRun).where(HistoryRun.id == run_id))
 
         resumed_task = (
             f" k={plan.resume_from_task_index}"
