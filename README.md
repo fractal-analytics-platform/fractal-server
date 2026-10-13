@@ -139,7 +139,7 @@
 | fractal\_server/images/tools.py                                              |       54 |        0 |       20 |        0 |    100% |           |
 | fractal\_server/images/warnings\_tools.py                                    |       12 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/json\_utils.py                                               |       17 |        0 |        6 |        0 |    100% |           |
-| fractal\_server/logger/\_\_init\_\_.py                                       |       72 |        6 |       32 |        6 |     88% |111-\>114, 129, 149, 167-168, 199, 203 |
+| fractal\_server/logger/\_\_init\_\_.py                                       |       72 |        6 |       32 |        6 |     88% |110-\>113, 128, 148, 166-167, 198, 202 |
 | fractal\_server/logger/\_config\_file\_state.py                              |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/main.py                                                      |      121 |        1 |       18 |        1 |     99% |       231 |
 | fractal\_server/migrations/naming\_convention.py                             |        1 |        0 |        0 |        0 |    100% |           |
