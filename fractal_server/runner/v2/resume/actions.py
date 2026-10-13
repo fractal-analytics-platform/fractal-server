@@ -106,7 +106,15 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
                 # creates new ones for the same images
                 db.execute(delete(HistoryRun).where(HistoryRun.id == run_id))
 
-        job.log = f"{log}\n{marker} {plan.case} -> {plan.action} at {now}\n"
+        resumed_task = (
+            f" k={plan.resume_from_task_index}"
+            if plan.action == ResumeAction.RESUME
+            else ""
+        )
+        job.log = (
+            f"{log}\n{marker}{resumed_task} {plan.case} -> {plan.action} "
+            f"at {now}\n"
+        )
         if plan.action != ResumeAction.RESUME:
             job.status = (
                 JobStatusType.DONE

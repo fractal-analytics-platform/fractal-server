@@ -1,5 +1,6 @@
 from fractal_server.runner.v2.resume.plan import _outputs_reflected
 from fractal_server.runner.v2.resume.plan import _task_output_from_files
+from fractal_server.runner.v2.resume.plan import last_resumed_task_index
 from fractal_server.runner.v2.resume.slurm_evidence import (
     collect_fractal_slurm_jobs,
 )
@@ -8,6 +9,23 @@ from fractal_server.runner.v2.task_interface import TaskOutput
 
 ROOT = "/remote/jobs/proj_v2_0000001_wf_0000001_job_0000001_20261012_100000"
 OTHER_ROOT = ROOT.replace("job_0000001", "job_0000011")
+
+
+def test_last_resumed_task_index():
+    boot = "2026-10-13T10:00:00.000001+00:00"
+    assert last_resumed_task_index(None) is None
+    assert last_resumed_task_index("some log") is None
+    log = (
+        "some log\n"
+        f"RESUME boot={boot} k=2 C6_units_in_progress -> resume at x\n"
+        "\n"
+        f"RESUME boot={boot} k=13 C4_next_task_not_started -> resume at y\n"
+    )
+    assert last_resumed_task_index(log) == 13
+    # Mark-only resumes do not relaunch the job
+    log += f"\nRESUME boot={boot} C2_all_tasks_done -> mark_done at z\n"
+    assert last_resumed_task_index(log) == 13
+    assert last_resumed_task_index(f"x RESUME boot={boot} k=1 C4 -> ") is None
 
 
 def test_parse_stdout_path():

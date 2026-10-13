@@ -8,6 +8,7 @@ for each job) and the
 remote output files tell what happened to the interrupted task.
 """
 
+import re
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
@@ -61,6 +62,10 @@ from .slurm_evidence import collect_fractal_slurm_jobs
 logger = set_logger(__name__)
 
 RESUME_MARKER = "RESUME boot="
+# Marker line of a resume that relaunched the job, see `apply_resume_plan`
+_RESUMED_TASK_PATTERN = re.compile(
+    rf"^{re.escape(RESUME_MARKER)}\S+ k=(\d+) ", flags=re.MULTILINE
+)
 # Imported at app creation, so this is (roughly) the server start time
 SERVER_BOOT_TIMESTAMP = get_timestamp()
 # Margin between server and SLURM clocks, for the accounting query
@@ -125,6 +130,7 @@ class ResumePlan(BaseModel):
     interrupted_task: InterruptedTask | None = None
     other_slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
     resume_marker_present: bool = False
+    previously_resumed_task_index: int | None = None
     reasons: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -181,6 +187,14 @@ def _selection_from_units(
     return list(units[0].zarr_urls) if units else []
 
 
+def last_resumed_task_index(log: str | None) -> int | None:
+    """
+    Task index from which the latest resume relaunched the job, if any.
+    """
+    matches = _RESUMED_TASK_PATTERN.findall(log or "")
+    return int(matches[-1]) if matches else None
+
+
 def list_orphan_candidates(*, started_before: datetime) -> list[int]:
     with next(get_sync_db()) as db:
         stm = (
@@ -220,6 +234,7 @@ def plan_resume(
             job_status=job.status,
             start_timestamp=job.start_timestamp,
             resume_marker_present=RESUME_MARKER in (job.log or ""),
+            previously_resumed_task_index=last_resumed_task_index(job.log),
         )
         ctx = _plan_from_db(
             db=db, job=job, plan=plan, started_before=started_before
@@ -498,7 +513,14 @@ def _add_remote_evidence(
         )
         and info.slurm_jobs
     ):
-        return _refuse(plan, "Found SLURM jobs for a task without units.")
+        # A resume of this task deleted its run and was interrupted before
+        # the rerun created new units
+        if plan.previously_resumed_task_index != info.task_index:
+            return _refuse(plan, "Found SLURM jobs for a task without units.")
+        plan.warnings.append(
+            "SLURM jobs from an interrupted resume of this task; they are "
+            "adopted only if their script matches."
+        )
 
     if plan.case == ResumeCase.UNITS_FINISHED:
         outputs = _read_task_outputs(
