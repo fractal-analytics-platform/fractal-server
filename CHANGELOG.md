@@ -702,7 +702,7 @@ resource&profile concepts, and a review of the application settings.
 * Testing and GitHub actions:
     * Simplify Python environment in documentation GitHub action (\#2919).
     * Simplify PyPI-publish GitHub action (\#2927).
-    * Drop explicit dependency on `python-dotenv (\#2921).
+    * Drop explicit dependency on `python-dotenv` (\#2921).
 * Testing:
     * Introduce `pytest-env` dependency.
     * Update testing database to version 2.16.6 (\#2909).
