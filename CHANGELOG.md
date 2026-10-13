@@ -7,8 +7,7 @@
 * SSH:
     * Make user-facing `SSHException`s more informative (\#3461).
 * Logging:
-    * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#XXX).
-
+    * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#3464).
 * Dependencies:
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
