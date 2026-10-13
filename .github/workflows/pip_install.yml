@@ -12,14 +12,20 @@ jobs:
 
   pip_install:
 
+
     strategy:
       matrix:
         os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
 
     name: "Core, Python ${{ matrix.python-version }}, ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 5
+    concurrency:
+      # This makes a single `pip_install` job run at the time (per-GHA, per-ref),
+      # while keeping up to 100 jobs in the queue.
+      group: ${{ github.workflow }}-${{ github.ref }}
+      queue: max
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
