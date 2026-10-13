@@ -23,12 +23,6 @@ nav = [
         { "Data access" = "internals/data_access.md" },
         { "Database" = "internals/database.md" },
         { "Logging" = "internals/logging.md" },
-        { "Version upgrades" = [
-            "internals/version_upgrades/index.md",
-            "internals/version_upgrades/upgrade_2_16_6_to_2_17_0.md",
-            "internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md",
-        ]
-        },
     ]
     },
     { "Changelog" = "changelog.md" },
@@ -84,28 +78,27 @@ toggle.name = "Switch to light mode"
 
 [project.plugins.search]
 
-[project.plugins.autorefs]
-resolve_closest=true
-
 [project.plugins.section-index]
 
+[project.plugins.mkdocs-autoapi]
+autoapi_dir = "fractal_server/"
+autoapi_ignore = ["**/data_migrations/**", "**/migrations/**", "**/json_schemas/**"]
+autoapi_root = "code_reference"
+
+[project.plugins.mkdocstrings]
 
 [project.plugins.mkdocstrings.handlers.python]
-paths = ["src"]
+paths = ["fractal_server"]
 inventories = [
     "https://docs.python.org/3/objects.inv",
     "https://docs.pydantic.dev/latest/objects.inv",
 ]
 
 [project.plugins.mkdocstrings.handlers.python.options]
-
-paths = ["fractal_server"]
 filters = []
-
 group_by_category = true
 show_category_heading = true
 summary = true
-
 backlinks = "tree"
 docstring_style = "google"
 docstring_section_style = "spacy"

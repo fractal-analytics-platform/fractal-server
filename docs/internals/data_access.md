@@ -199,7 +199,7 @@ $ curl -s http://localhost:8000/auth/current-user/allowed-viewer-paths/ -H "Auth
 ]
 ```
 
-> **Note**: Here is the [implementation of the `/auth/current-user/allowed-viewer-paths/` endpoint](../code_reference/app/routes/auth/viewer_paths/?h=get_current_user_allowed_viewer_paths#fractal_server.app.routes.auth.viewer_paths.get_current_user_allowed_viewer_paths).
+> **Note**: Here is the [implementation of the `/auth/current-user/allowed-viewer-paths/` endpoint](../code_reference/fractal_server/app/routes/auth/viewer_paths/?h=get_current_user_allowed_viewer_paths#fractal_server.app.routes.auth.viewer_paths.get_current_user_allowed_viewer_paths).
 
 After this request to `fractal-server`, `fractal-data` finds out whether the requested-file path is a subpath of one of the authorized paths
 (as provided by `fractal-server`):
