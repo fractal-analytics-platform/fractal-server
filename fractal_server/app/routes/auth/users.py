@@ -13,6 +13,7 @@ from fastapi_users.router.common import ErrorCode
 from pydantic import MISSING
 from sqlalchemy import func
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import get_async_db
@@ -71,9 +72,10 @@ async def patch_user(
     # Check that user exists
     user_to_patch = await _user_or_404(user_id, db)
 
-    if user_update.profile_id is not MISSING:
-        profile = await db.get(Profile, user_update.profile_id)
-        if profile is None:
+    if user_update.profile_id not in (MISSING, None):
+        try:
+            await db.get_one(Profile, user_update.profile_id)
+        except NoResultFound:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Profile {user_update.profile_id} not found.",
