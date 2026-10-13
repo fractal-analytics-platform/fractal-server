@@ -14,6 +14,9 @@
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
     * Bump lockfile (7acf272264).
+    * Bump `pydantic-settings` to `2.15` (\#3453).
+    * Bump `uvicorn` to `0.54` (\#3453).
+
 * Testing:
     * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
     * Make CI run on Python 3.12, 3.13, 3.14 and 3.15 on `main` (\#3465).
