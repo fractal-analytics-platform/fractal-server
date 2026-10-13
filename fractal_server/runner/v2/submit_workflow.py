@@ -236,6 +236,13 @@ def submit_workflow(
         logger.debug(f'START workflow "{workflow.name}"')
         job_working_dir = job.working_dir
 
+    resume_note = (
+        "Job resumed after a server restart, from task "
+        f"{resume.first_task_index}.\n"
+        if resume is not None
+        else ""
+    )
+
     try:
         process_workflow: ProcessWorkflowType
         match resource.type:
@@ -253,7 +260,7 @@ def submit_workflow(
         first_task_index = job.first_task_index
         job_type_filters = job.type_filters
         if resume is not None:
-            logger.info(f"Resume job from task {resume.first_task_index}.")
+            logger.info(resume_note.rstrip())
             process_workflow = partial(
                 slurm_rest_process_workflow, adopt_since=resume.adopt_since
             )
@@ -306,7 +313,7 @@ def submit_workflow(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"JOB ERROR in Fractal job {job.id}:\n"
+                    f"{resume_note}JOB ERROR in Fractal job {job.id}:\n"
                     f"TRACEBACK:\n{e.assemble_error()}"
                 ),
                 logger_name=logger_name,
@@ -323,7 +330,7 @@ def submit_workflow(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"UNKNOWN ERROR in Fractal job {job.id}\n"
+                    f"{resume_note}UNKNOWN ERROR in Fractal job {job.id}\n"
                     f"TRACEBACK:\n{current_traceback}"
                 ),
                 logger_name=logger_name,

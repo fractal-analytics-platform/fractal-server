@@ -17,17 +17,28 @@ from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.utils import get_timestamp
+from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 from .plan import ACCOUNTING_START_MARGIN
 from .plan import RESUME_MARKER
 from .plan import SERVER_BOOT_TIMESTAMP
 from .plan import ResumeAction
+from .plan import ResumeCase
 from .plan import ResumePlan
 from .spec import ResumeSpec
 
 # Same as in `app/routes/api/v2/submit.py`
 FRACTAL_CACHE_DIR = "fractal/.fractal_cache"
+MARK_ONLY_REASONS = {
+    ResumeCase.NO_WORKING_DIR: "The server stopped while the job was being "
+    "submitted.",
+    ResumeCase.ALL_TASKS_DONE: "All tasks had completed when the server "
+    "stopped.",
+    ResumeCase.TASK_FAILED: "A task had failed when the server stopped; see "
+    "the task history for the error.",
+}
 
 
 class ResumeError(RuntimeError):
@@ -64,6 +75,8 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
         raise ResumeError(f"Nothing to apply for action '{plan.action}'.")
 
     now = get_timestamp()
+    # Written to `job.log`: blocks a second resume by the same server boot,
+    # and its `k=` lets a later plan recognise an interrupted resume
     marker = f"{RESUME_MARKER}{SERVER_BOOT_TIMESTAMP.isoformat()}"
     with next(get_sync_db()) as db:
         job = db.execute(
@@ -102,41 +115,60 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
             f"at {now}\n"
         )
         if plan.action != ResumeAction.RESUME:
-            job.status = (
+            status = (
                 JobStatusType.DONE
                 if plan.action == ResumeAction.MARK_DONE
                 else JobStatusType.FAILED
             )
+            # Same content as a normal job end (the workflow log), plus why
+            # the job was closed without running
+            working_dir = job.working_dir
+            workflow_log = ""
+            if working_dir is not None:
+                log_path = Path(working_dir, WORKFLOW_LOG_FILENAME)
+                if log_path.exists():
+                    workflow_log = log_path.read_text()
+            job.log = (
+                f"{workflow_log}{job.log}"
+                f"Job marked as {status} after a server restart. "
+                f"{MARK_ONLY_REASONS.get(plan.case, '')}\n"
+            )
+            job.status = status
             job.end_timestamp = now
             db.commit()
-            return None
-        db.commit()
+        else:
+            db.commit()
 
-        user = (
-            db.execute(
-                select(UserOAuth).where(UserOAuth.email == job.user_email)
+            user = (
+                db.execute(
+                    select(UserOAuth).where(UserOAuth.email == job.user_email)
+                )
+                .unique()
+                .scalar_one()
             )
-            .unique()
-            .scalar_one()
-        )
-        project = db.get_one(ProjectV2, job.project_id)
-        launch = ResumeLaunch(
-            workflow_id=job.workflow_id,
-            dataset_id=job.dataset_id,
-            job_id=job.id,
-            user_id=user.id,
-            worker_init=job.worker_init,
-            user_cache_dir=Path(
-                user.project_dirs[0], FRACTAL_CACHE_DIR
-            ).as_posix(),
-            resource=db.get_one(Resource, project.resource_id),
-            profile=db.get_one(Profile, user.profile_id),
-            resume=ResumeSpec(
-                first_task_index=plan.resume_from_task_index,
-                type_filters=plan.type_filters,
-                adopt_since=int(job.start_timestamp.timestamp())
-                - ACCOUNTING_START_MARGIN,
-            ),
-        )
-        db.expunge_all()
-        return launch
+            project = db.get_one(ProjectV2, job.project_id)
+            launch = ResumeLaunch(
+                workflow_id=job.workflow_id,
+                dataset_id=job.dataset_id,
+                job_id=job.id,
+                user_id=user.id,
+                worker_init=job.worker_init,
+                user_cache_dir=Path(
+                    user.project_dirs[0], FRACTAL_CACHE_DIR
+                ).as_posix(),
+                resource=db.get_one(Resource, project.resource_id),
+                profile=db.get_one(Profile, user.profile_id),
+                resume=ResumeSpec(
+                    first_task_index=plan.resume_from_task_index,
+                    type_filters=plan.type_filters,
+                    adopt_since=int(job.start_timestamp.timestamp())
+                    - ACCOUNTING_START_MARGIN,
+                ),
+            )
+            db.expunge_all()
+            return launch
+
+    # As at the end of `submit_workflow`
+    if working_dir is not None and Path(working_dir).is_dir():
+        _zip_folder_to_file_and_remove(folder=working_dir)
+    return None
