@@ -1,7 +1,7 @@
+import json
 import logging
 
 import pytest
-import yaml
 
 import fractal_server.logger._config_file_state as _logger_module
 from fractal_server.logger import close_logger
@@ -76,10 +76,10 @@ def test_reset_logger_handlers_is_noop_when_external_config_loaded():
 
 
 def test_load_logging_config_success(tmp_path):
-    """On a valid YAML dictConfig, _CONFIG_LOADED becomes True."""
+    """On a valid JSON dictConfig, _CONFIG_LOADED becomes True."""
     config = {"version": 1, "disable_existing_loggers": False}
-    config_file = tmp_path / "logging.yaml"
-    config_file.write_text(yaml.dump(config))
+    config_file = tmp_path / "logging.json"
+    config_file.write_text(json.dumps(config))
 
     _logger_module._CONFIG_LOADED = False
 
@@ -91,8 +91,8 @@ def test_load_logging_config_success(tmp_path):
 def test_load_logging_config_is_noop_when_already_loaded(tmp_path):
     """When _CONFIG_LOADED is already True, a second call is
     a no-op."""
-    config_file = tmp_path / "logging.yaml"
-    config_file.write_text("this is not valid yaml: [")
+    config_file = tmp_path / "logging.json"
+    config_file.write_text("this is not valid json: [")
 
     _logger_module._CONFIG_LOADED = True
 
@@ -105,15 +105,15 @@ def test_load_logging_config_file_not_found(caplog):
     """On a missing file, a log is printed.
     carries a warning."""
     _logger_module._CONFIG_LOADED = False
-    _load_logging_config("/nonexistent/path/logging.yaml")
+    _load_logging_config("/nonexistent/path/logging.json")
     assert _logger_module._CONFIG_LOADED is False
     assert "[fractal-server] WARNING" in caplog.text
 
 
-def test_load_logging_config_invalid_yaml(tmp_path, caplog):
-    """On invalid YAML syntax, logs carry a warning."""
-    config_file = tmp_path / "logging.yaml"
-    config_file.write_text("key: [\n  unclosed bracket\n")
+def test_load_logging_config_invalid_json(tmp_path, caplog):
+    """On invalid JSON syntax, logs carry a warning."""
+    config_file = tmp_path / "logging.json"
+    config_file.write_text('{"key": [1, 2, 3')
 
     _logger_module._CONFIG_LOADED = False
 
@@ -124,11 +124,11 @@ def test_load_logging_config_invalid_yaml(tmp_path, caplog):
 
 
 def test_load_logging_config_invalid_dictconfig(tmp_path, caplog):
-    """On valid YAML but a dictConfig missing the required 'version' key,
+    """On valid JSON but a dictConfig missing the required 'version' key,
     logs carry a warning."""
     config = {"formatters": {"simple": {"format": "%(message)s"}}}
-    config_file = tmp_path / "logging.yaml"
-    config_file.write_text(yaml.dump(config))
+    config_file = tmp_path / "logging.json"
+    config_file.write_text(json.dumps(config))
 
     _logger_module._CONFIG_LOADED = False
 

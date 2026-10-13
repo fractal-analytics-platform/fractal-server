@@ -6,6 +6,9 @@
     * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452, \#3463).
 * SSH:
     * Make user-facing `SSHException`s more informative (\#3461).
+* Logging:
+    * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#XXX).
+
 * Dependencies:
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).

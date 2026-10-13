@@ -10,13 +10,13 @@ documentation](../code_reference/fractal_server/logger/).
 
 ## External config file
 
-Set the `LOG_CONFIG_FILE` environment variable to the path of a YAML
+Set the `LOG_CONFIG_FILE` environment variable to the path of a JSON
 file containing a standard Python
 [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig)
 configuration. When this variable is set, it is the only one determining
 application-level logging: the `FRACTAL_LOGGING_LEVEL` setting and
 programmatic stream-handler setup (`config_uvicorn_loggers()`, and
-`set_logger()` calls without a `log_file_path`) become no-ops, and the YAML
+`set_logger()` calls without a `log_file_path`) become no-ops, and the JSON
 file is the sole authority over the logging hierarchy.
 
 **Exception - job log files:** calls to `set_logger()` that include a
