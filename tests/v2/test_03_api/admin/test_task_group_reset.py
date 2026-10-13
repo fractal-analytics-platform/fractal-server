@@ -139,12 +139,8 @@ async def test_task_group_reset(
         activity_id = res.json()["id"]
         taskgroupv2_id = res.json()["taskgroupv2_id"]
 
-        task_activity = await db.get_one(TaskGroupActivityV2, activity_id)
-        from devtools import debug
-
-        debug(task_activity)
-        print(task_activity.log)
-        return
+        activity = await db.get_one(TaskGroupActivityV2, activity_id)
+        assert activity.status == "OK"
 
         task_group = await db.get_one(TaskGroupV2, taskgroupv2_id)
         if package_origin == "pixi":
