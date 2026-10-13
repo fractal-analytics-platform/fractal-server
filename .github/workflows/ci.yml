@@ -40,7 +40,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -85,7 +84,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -130,7 +128,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -188,7 +185,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -246,7 +242,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -324,7 +319,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --group dev
 
@@ -383,7 +377,6 @@ jobs:
           version: "0.11.14"
           enable-cache: true
           python-version: "3.12"
-          cache-dependency-glob: ["pyproject.toml", "uv.lock"]
 
       - run: uv sync --frozen --only-group dev
 
