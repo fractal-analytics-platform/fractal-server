@@ -24,7 +24,7 @@ jobs:
     concurrency:
       # This makes a single `pip_install` job run at the time (per-GHA, per-ref),
       # while keeping up to 100 jobs in the queue.
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}
       queue: max
 
     steps:
