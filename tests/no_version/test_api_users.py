@@ -401,6 +401,14 @@ async def test_edit_users_as_superuser(
     assert res.json()["is_superuser"] is False
     assert res.json()["is_guest"] is True
 
+    # Unset user's profile
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={"profile_id": None},
+    )
+    assert res.status_code == 200
+    assert res.json()["id"] is None
+
 
 async def test_edit_user_project_dirs(
     registered_superuser_client,
