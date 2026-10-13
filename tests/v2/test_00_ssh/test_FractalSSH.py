@@ -6,6 +6,7 @@ import pytest
 from devtools import debug
 from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.ssh_exception import SSHException
 
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
@@ -74,6 +75,17 @@ def test_log_and_raise(tmp_path: Path, caplog):
                 message="test3",
             )
         assert "Unexpected error" in caplog.text
+
+        caplog.clear
+        ssh_exception = SSHException("Invalid key")
+        with pytest.raises(SSHException) as exc_info:
+            mocked_fractal_ssh.log_and_raise(
+                e=ssh_exception,
+                message="test4",
+            )
+        assert str(exc_info.value) == "SSHException: Invalid key"
+        assert "SSHException" in caplog.text
+        assert "Invalid key" in caplog.text
 
 
 @pytest.mark.container

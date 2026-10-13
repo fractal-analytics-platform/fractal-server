@@ -176,9 +176,16 @@ class FractalSSH:
         """
         Log and re-raise an exception from a FractalSSH method.
 
+        For `SSHException`s, we make the exception message more informative for
+        when it appears in a user-facing log, even if this may make the
+        fractal-server logs include a redundant `"SSHException"` string.
+
         Args:
             message: Additional message to be logged.
             e: Original exception
+
+        Raises:
+            The original exception, possibly with a modified message.
         """
         try:
             self.logger.error(message)
@@ -186,6 +193,8 @@ class FractalSSH:
             if isinstance(e, NoValidConnectionsError):
                 for ind, err in enumerate(e.errors):
                     self.logger.error(f"NoValidConnectionsError[{ind}]: {err}")
+            elif isinstance(e, SSHException):
+                e = SSHException(f"SSHException: {e}")
         except Exception as exception:
             # Handle unexpected cases, e.g. when `e` has no `type` or `e.errors`
             # is not iterable.

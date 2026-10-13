@@ -259,7 +259,7 @@ class SlurmSSHRunner(BaseSlurmRunner):
         4. When the SSH command fails for other reasons, despite a forgiving
            setup (7 connection attempts with base waiting interval of 2
            seconds, with a cumulative timeout of 126 seconds), return an empty
-           string. This will be treated upstream as an empty `squeu` output,
+           string. This will be treated upstream as an empty `squeue` output,
            indirectly resulting in marking the job as completed.
         """
 
