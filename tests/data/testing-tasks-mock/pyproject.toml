@@ -1,6 +1,6 @@
 [project]
 name = "testing-tasks-mock"
-version = "0.1.4"
+version = "0.1.5"
 description = "Fake tasks package"
 
 authors = [
@@ -9,8 +9,8 @@ authors = [
 license = {text ="BSD-3-Clause"}
 
 
-requires-python = ">=3.10"
-dependencies = ["fractal-task-tools==0.1.1"]
+requires-python = ">=3.11"
+dependencies = ["fractal-task-tools==0.5.1"]
 
 [project.optional-dependencies]
 dev = ["build", "bumpver"]
