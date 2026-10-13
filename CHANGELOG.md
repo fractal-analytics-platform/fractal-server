@@ -10,12 +10,13 @@
     * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#3464).
 * Dependencies:
     * Support Python3.15 (\#3465).
-    * Bump `pytest`, `coverage` and `devtools` (\#3465).
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
-    * Bump lockfile (7acf272264).
     * Bump `pydantic-settings` to `2.15` (\#3453).
     * Bump `uvicorn` to `0.54` (\#3453).
+    * Bump lockfile (7acf272264).
+    * Bump `pytest`, `coverage` and `devtools` (\#3465).
+    * Bump `pytest-env` and `zensical` (\#3453).
 
 * Testing:
     * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
