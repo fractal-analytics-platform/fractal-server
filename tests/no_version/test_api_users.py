@@ -407,7 +407,7 @@ async def test_edit_users_as_superuser(
         json={"profile_id": None},
     )
     assert res.status_code == 200
-    assert res.json()["id"] is None
+    assert res.json()["profile_id"] is None
 
 
 async def test_edit_user_project_dirs(
