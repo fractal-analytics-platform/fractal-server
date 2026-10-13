@@ -13,11 +13,10 @@
 This module provides logging utilities
 """
 
+import json
 import logging
 import logging.config
 from pathlib import Path
-
-import yaml
 
 import fractal_server.logger._config_file_state as _state
 from fractal_server.config import get_settings
@@ -205,7 +204,7 @@ def config_uvicorn_loggers() -> None:
 
 def _load_logging_config(config_env: str) -> None:
     """
-    Load logging configuration from a YAML file path.
+    Load logging configuration from a JSON file path.
 
     On success sets `_CONFIG_LOADED = True`.
     """
@@ -215,7 +214,7 @@ def _load_logging_config(config_env: str) -> None:
     try:
         logging_config_path = Path(config_env)
         with logging_config_path.open("r") as f:
-            config = yaml.safe_load(f)
+            config = json.load(f)
         logging.config.dictConfig(config)
         _state._CONFIG_LOADED = True
     except Exception as _e:

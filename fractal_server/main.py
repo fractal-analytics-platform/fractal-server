@@ -226,7 +226,7 @@ def start_application() -> FastAPI:
 
     settings = Inject(get_settings)
 
-    # Load logging configuration from YAML
+    # Load logging configuration from JSON
     if settings.LOG_CONFIG_FILE is not None:
         _load_logging_config(settings.LOG_CONFIG_FILE)
 
