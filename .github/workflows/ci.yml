@@ -47,7 +47,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-api-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "not (container or oauth or basic_auth)" tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest -vv -m "not (container or oauth or basic_auth)" tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -91,7 +91,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-tasks-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -135,7 +135,7 @@ jobs:
         env:
           COVERAGE_FILE: coverage-data-other-${{ matrix.python-version }}
           DO_NOT_USE_DOCKER: 1
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore=tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest --ignore=tests/v2/test_06_tasks_lifecycle/ -vv -m "not (container or oauth or basic_auth)" --ignore tests/v2/test_03_api --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -191,7 +191,7 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-containers-ssh-${{ matrix.python-version }}
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container and ssh" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest -vv -m "container and ssh" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -248,7 +248,7 @@ jobs:
       - name: Test with pytest
         env:
           COVERAGE_FILE: coverage-data-containers-non-ssh-${{ matrix.python-version }}
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "container and not ssh" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest -vv -m "container and not ssh" --durations 0
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -336,14 +336,14 @@ jobs:
           FRACTAL_HELP_URL: https://example.org/info
           # Coverage
           COVERAGE_FILE: "coverage-data-oauth-${{ matrix.python-version }}"
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest -vv -m "oauth" --durations 0
 
       - name: Basic-auth test
         env:
           FRACTAL_DISABLE_BASIC_AUTH: "true"
           # Coverage
           COVERAGE_FILE: "coverage-data-basic-auth-${{ matrix.python-version }}"
-        run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
+        run: uv run --frozen coverage run --concurrency=thread,multiprocessing -m pytest -vv -m "basic_auth" --durations 0
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
