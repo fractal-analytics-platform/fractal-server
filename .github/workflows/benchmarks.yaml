@@ -12,7 +12,7 @@ jobs:
 
   benchmark_api:
     name: Benchmarks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     permissions:
       pull-requests: write  # For https://github.com/mshick/add-pr-comment

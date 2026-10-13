@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   create-release-draft:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
@@ -27,7 +27,7 @@ jobs:
           GH_REF_NAME: ${{ github.ref_name }}
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: create-release-draft
     permissions:
       contents: write
@@ -85,7 +85,7 @@ jobs:
           PYLOCK_FILENAME: "pylock.prod-${{ matrix.python-version-underscore }}.toml"
 
   publish-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     needs: [build]
