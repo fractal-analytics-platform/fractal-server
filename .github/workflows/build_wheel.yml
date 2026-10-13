@@ -21,6 +21,6 @@ jobs:
         with:
           version: "latest-known"
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
 
       - run: uv build
