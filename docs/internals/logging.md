@@ -6,17 +6,17 @@ logging levels are defined
 [here](https://docs.python.org/3/library/logging.html#logging-levels).
 
 Two different approaches to logging configuration are described below. For a more detailed view on `fractal-server` logging, see the [logger module
-documentation](../code_reference/logger/).
+documentation](../code_reference/fractal_server/logger/).
 
 ## External config file
 
-Set the `LOG_CONFIG_FILE` environment variable to the path of a YAML
+Set the `LOG_CONFIG_FILE` environment variable to the path of a JSON
 file containing a standard Python
 [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig)
 configuration. When this variable is set, it is the only one determining
 application-level logging: the `FRACTAL_LOGGING_LEVEL` setting and
 programmatic stream-handler setup (`config_uvicorn_loggers()`, and
-`set_logger()` calls without a `log_file_path`) become no-ops, and the YAML
+`set_logger()` calls without a `log_file_path`) become no-ops, and the JSON
 file is the sole authority over the logging hierarchy.
 
 **Exception - job log files:** calls to `set_logger()` that include a
@@ -34,11 +34,11 @@ logs for Uvicorn.
 
 ## Built-in logger (default)
 
-The [logger module](../code_reference/logger/) exposes the
+The [logger module](../code_reference/fractal_server/logger/) exposes the
 functions to set/get/close a logger, and it defines where the records are sent to
 (e.g. the `fractal-server` console or a specific file). The logging levels of
 a logger created with
-[`set_logger`](../code_reference/logger#fractal_server.logger.set_logger)
+[`set_logger`](../code_reference/fractal_server/logger#fractal_server.logger.set_logger)
 are defined as follows:
 
 * The minimum logging level for logs to appear in the console is set by
