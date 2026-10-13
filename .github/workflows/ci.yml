@@ -37,7 +37,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -81,7 +81,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -125,7 +125,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -182,7 +182,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -239,7 +239,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -316,7 +316,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -374,7 +374,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: "3.12"
 
