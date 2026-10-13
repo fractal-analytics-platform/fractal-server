@@ -92,7 +92,7 @@ def test_load_logging_config_is_noop_when_already_loaded(tmp_path):
     """When _CONFIG_LOADED is already True, a second call is
     a no-op."""
     config_file = tmp_path / "logging.json"
-    config_file.write_text("this is not valid json: [")
+    config_file.write_text('{"key":')
 
     _logger_module._CONFIG_LOADED = True
 
