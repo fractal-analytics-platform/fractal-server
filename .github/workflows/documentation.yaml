@@ -29,7 +29,7 @@ jobs:
         with:
           version: "0.11.26"
           enable-cache: false
-          python-version: "3.12"
+          python-version: "3.14"
       - run: uv sync --frozen --group docs
       - run: uv run --frozen fractalctl openapi -f docs/openapi.json
       - run: uv run --frozen python docs/scripts/generate_swagger_ui.py

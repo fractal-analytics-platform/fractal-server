@@ -44,6 +44,8 @@ jobs:
             python-version-underscore: "3_13"
           - python-version: "3.14"
             python-version-underscore: "3_14"
+          - python-version: "3.15"
+            python-version-underscore: "3_15"
         exclude:
           - python-version: "skip"
             python-version-underscore: "skip"
@@ -57,7 +59,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          version: "0.12.5"
+          version: "0.13.0"
           enable-cache: false
           python-version: ${{ matrix.python-version }}
 
