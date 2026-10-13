@@ -9,9 +9,14 @@
 * Logging:
     * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#3464).
 * Dependencies:
+    * Support Python3.15 (\#3465).
+    * Bump `pytest`, `coverage` and `devtools` (\#3465).
     * Bump `pydantic` to `2.14` (\#3452).
     * Bump `fastapi` to `0.143` (\#3460).
     * Bump lockfile (7acf272264).
+* Testing:
+    * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
+    * Make CI run on Python 3.12, 3.13, 3.14 and 3.15 on `main` (\#3465).
 
 # 2.25.2
 
