@@ -285,15 +285,6 @@ def _plan_from_db(
         return None
     plan.resumable = True
 
-    profile_id = db.execute(
-        select(UserOAuth.profile_id).where(UserOAuth.email == job.user_email)
-    ).scalar_one_or_none()
-    if profile_id is None:
-        return _refuse(plan, f"No user or profile for '{job.user_email}'.")
-    profile = db.get_one(Profile, profile_id)
-    if profile.resource_id != resource.id:
-        return _refuse(plan, "User profile is not on the project resource.")
-
     if job.working_dir is None or job.working_dir_user is None:
         plan.case = ResumeCase.NO_WORKING_DIR
         plan.action = ResumeAction.MARK_FAILED
@@ -433,13 +424,19 @@ def _plan_from_db(
                 plan, "Images selected now differ from the running units."
             )
 
+    profile_id = db.execute(
+        select(UserOAuth.profile_id).where(UserOAuth.email == job.user_email)
+    ).scalar_one_or_none()
+    if profile_id is None:
+        return _refuse(plan, f"No user or profile for '{job.user_email}'.")
+
     return _RemoteContext(
         job_id=job.id,
         start_timestamp=job.start_timestamp,
         remote_root=job.working_dir_user,
         last_task_index=last,
         resource=resource,
-        profile=profile,
+        profile=db.get_one(Profile, profile_id),
         task_type=wftask.task_type,
         output_types=dict(wftask.task.output_types),
         later_subfolders={

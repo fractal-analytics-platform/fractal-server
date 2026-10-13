@@ -29,7 +29,6 @@ from .plan import ResumeCase
 from .plan import ResumePlan
 from .spec import ResumeSpec
 
-MAX_RESUME_ATTEMPTS = 3
 # Same as in `app/routes/api/v2/submit.py`
 FRACTAL_CACHE_DIR = "fractal/.fractal_cache"
 
@@ -82,8 +81,12 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
             raise ResumeError(f"Job status is '{job.status}'.")
         if marker in log:
             raise ResumeError("Job was already resumed by this server.")
-        if log.count(RESUME_MARKER) >= MAX_RESUME_ATTEMPTS:
-            raise ResumeError(f"Job was resumed {MAX_RESUME_ATTEMPTS} times.")
+        # TODO(review): no limit on the number of resumes. If a task itself
+        # kills the server process (e.g. OOM while the engine merges its
+        # outputs into a large image list), its resume would crash the server
+        # again at every restart. Discuss whether this is a real risk; if so,
+        # mark the job failed after N resumes from the same task (`k=` in the
+        # marker). Is this a real concern?
 
         info = plan.interrupted_task
         run_id = info.history_run_id if info is not None else None
