@@ -7,15 +7,23 @@ from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 
 # See `SlurmJob.slurm_stdout_remote_path`; SLURM keeps the `%j` placeholder
 STDOUT_SUFFIX = "-slurm-%j.out"
-ACTIVE_STATES = {
-    "PENDING",
-    "RUNNING",
-    "CONFIGURING",
-    "COMPLETING",
-    "SUSPENDED",
-    "REQUEUED",
-    "RESIZING",
+# Any other state (also unknown ones) counts as active, so that the job is
+# cancelled rather than possibly run twice
+FINISHED_STATES = {
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+    "TIMEOUT",
+    "OUT_OF_MEMORY",
+    "NODE_FAIL",
+    "PREEMPTED",
+    "BOOT_FAIL",
+    "DEADLINE",
 }
+
+
+def is_active_state(state: str) -> bool:
+    return state not in FINISHED_STATES
 
 
 class FractalSlurmJob(BaseModel):
@@ -28,7 +36,7 @@ class FractalSlurmJob(BaseModel):
 
     @property
     def is_active(self) -> bool:
-        return self.state in ACTIVE_STATES
+        return is_active_state(self.state)
 
 
 def parse_stdout_path(

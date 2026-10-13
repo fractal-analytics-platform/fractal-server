@@ -16,9 +16,11 @@ from fractal_server.runner.v2.resume.slurm_evidence import FractalSlurmJob
 from fractal_server.runner.v2.resume.slurm_evidence import (
     collect_fractal_slurm_jobs,
 )
+from fractal_server.runner.v2.resume.slurm_evidence import is_active_state
 from fractal_server.ssh._fabric import FractalSSH
 
 from .client import SlurmRestClient
+from .client import SlurmRestError
 from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
 from .script import build_rest_script
@@ -268,7 +270,19 @@ class SlurmRestRunner(SlurmSSHRunner):
                 f"({found.state}), submit a new one."
             )
             if found.is_active:
-                self.rest_client.cancel_job(found.slurm_job_id)
+                try:
+                    self.rest_client.cancel_job(found.slurm_job_id)
+                except SlurmRestError:
+                    # Fine if it finished meanwhile (missing = finished)
+                    state = self.rest_client.get_job_states().get(
+                        found.slurm_job_id, "COMPLETED"
+                    )
+                    if is_active_state(state):
+                        raise
+                    logger.info(
+                        f"[_adopt] SLURM job {found.slurm_job_id} already "
+                        f"finished ({state})."
+                    )
             return False
         if normalize_script(previous_script) != normalize_script(script):
             raise JobExecutionError(

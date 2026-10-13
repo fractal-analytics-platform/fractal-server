@@ -7,6 +7,7 @@ from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
 )
+from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.executors.slurm_rest.runner import normalize_script
 from fractal_server.runner.executors.slurm_rest.script import build_rest_script
@@ -17,11 +18,18 @@ FILES = [("/remote/1_t/x-args.json", '{"a": 1}')]
 
 
 class _FakeClient:
-    def __init__(self):
+    def __init__(self, cancel_error: bool = False, states=None):
         self.cancelled = []
+        self.cancel_error = cancel_error
+        self.states = states or {}
 
     def cancel_job(self, job_id):
+        if self.cancel_error:
+            raise SlurmRestError("DELETE failed")
         self.cancelled.append(job_id)
+
+    def get_job_states(self):
+        return self.states
 
 
 class _FakeSSH:
@@ -102,7 +110,8 @@ def test_adopt_different_script(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "state,cancelled", [("PENDING", ["42"]), ("FAILED", [])]
+    "state,cancelled",
+    [("PENDING", ["42"]), ("STAGE_OUT", ["42"]), ("FAILED", [])],
 )
 def test_adopt_unverifiable(tmp_path, state, cancelled):
     runner = _runner()
@@ -114,6 +123,26 @@ def test_adopt_unverifiable(tmp_path, state, cancelled):
     )
     assert runner.rest_client.cancelled == cancelled
     assert runner.jobs == {}
+
+
+@pytest.mark.parametrize(
+    "states,raises",
+    [({"42": "COMPLETED"}, False), ({}, False), ({"42": "RUNNING"}, True)],
+)
+def test_adopt_unverifiable_cancel_fails(tmp_path, states, raises):
+    runner = _runner()
+    runner.rest_client = _FakeClient(cancel_error=True, states=states)
+    kwargs = dict(
+        slurm_job=_slurm_job(tmp_path),
+        found=_found("RUNNING"),
+        previous_script=None,
+        script=SCRIPT,
+    )
+    if raises:
+        with pytest.raises(SlurmRestError):
+            runner._adopt(**kwargs)
+    else:
+        assert not runner._adopt(**kwargs)
 
 
 def test_previous_script(tmp_path):
