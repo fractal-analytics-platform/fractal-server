@@ -3,7 +3,7 @@
 # 2.25.3 (unreleased)
 
 * API and schemas:
-    * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452).
+    * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452, \#3463).
 * SSH:
     * Make user-facing `SSHException`s more informative (\#3461).
 * Dependencies:
