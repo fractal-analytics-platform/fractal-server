@@ -13,7 +13,7 @@ jobs:
   tests_api:
 
     name: "API - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -59,7 +59,7 @@ jobs:
   tests_tasks:
 
     name: "Task lifecycle - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -104,7 +104,7 @@ jobs:
   tests_other:
 
     name: "Other - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -149,7 +149,7 @@ jobs:
   tests_containers_ssh:
 
     name: "Containers SSH - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -210,7 +210,7 @@ jobs:
   tests_containers_non_ssh:
 
     name: "Containers non-SSH - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -271,7 +271,7 @@ jobs:
   tests_auth:
 
     name: "OAuth and basic-auth - Python ${{ matrix.python-version }}"
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     strategy:
@@ -367,7 +367,7 @@ jobs:
 
   coverage:
     name: Coverage
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     needs: [tests_api, tests_tasks, tests_other, tests_containers_ssh, tests_containers_non_ssh, tests_auth]
 
     permissions:

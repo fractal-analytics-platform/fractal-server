@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   zizmor:
-    uns-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     permissions:
       security-events: write
       # contents: read # only needed for private or internal repos
