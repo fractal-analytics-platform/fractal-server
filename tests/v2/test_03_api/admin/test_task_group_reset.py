@@ -97,7 +97,7 @@ async def test_task_group_reset(
         archive_path = (
             testdata_path
             / "testing-tasks-mock/dist"
-            / "testing_tasks_mock-0.1.4-py3-none-any.whl"
+            / "testing_tasks_mock-0.1.5-py3-none-any.whl"
         )
         with archive_path.open("rb") as f:
             collect_request = dict(
@@ -136,7 +136,11 @@ async def test_task_group_reset(
             f"api/v2/task/collect/{pip_or_pixi}/", **collect_request
         )
         assert res.status_code == 202
+        activity_id = res.json()["id"]
         taskgroupv2_id = res.json()["taskgroupv2_id"]
+
+        activity = await db.get_one(TaskGroupActivityV2, activity_id)
+        assert activity.status == "OK"
 
         task_group = await db.get_one(TaskGroupV2, taskgroupv2_id)
         if package_origin == "pixi":

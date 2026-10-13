@@ -184,7 +184,7 @@ async def test_adding_task_group_activity(
         task_group = TaskGroupV2(
             user_id=user.id,
             pkg_name="testing-tasks-mock",
-            version="0.1.4",
+            version="0.1.5",
             origin="pypi",
             resource_id=resource.id,
         )
@@ -199,7 +199,7 @@ async def test_adding_task_group_activity(
             action=TaskGroupActivityAction.COLLECT,
             status=TaskGroupActivityStatus.PENDING,
             pkg_name="testing-tasks-mock",
-            version="0.1.4",
+            version="0.1.5",
         )
         db.add(task_group_activity_1)
         await db.commit()
@@ -213,7 +213,7 @@ async def test_adding_task_group_activity(
                 action=TaskGroupActivityAction.COLLECT,
                 status=TaskGroupActivityStatus.PENDING,
                 pkg_name="testing-tasks-mock",
-                version="0.1.4",
+                version="0.1.5",
             )
         )
         with pytest.raises(
@@ -230,7 +230,7 @@ async def test_adding_task_group_activity(
                 action=TaskGroupActivityAction.DELETE,
                 status=TaskGroupActivityStatus.PENDING,
                 pkg_name="testing-tasks-mock",
-                version="0.1.4",
+                version="0.1.5",
             )
         )
         await db.commit()
