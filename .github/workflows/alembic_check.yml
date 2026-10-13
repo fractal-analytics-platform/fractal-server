@@ -13,7 +13,7 @@ jobs:
   alembic-check:
 
     name: "alembic check"
-    runs-on: ubuntu-24.04
+    uns-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:

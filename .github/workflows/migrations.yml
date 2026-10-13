@@ -29,7 +29,7 @@ jobs:
 
   migrations:
     name: "Migrations - pg${{ matrix.postgres-version }} - py${{ matrix.python-version }}"
-    runs-on: ubuntu-24.04
+    uns-on: ubuntu-26.04
     timeout-minutes: 20
 
     strategy:
@@ -88,7 +88,7 @@ jobs:
 
   downgrade:
     name: "Alembic downgrade - pg${{ matrix.postgres-version }}"
-    runs-on: ubuntu-24.04
+    uns-on: ubuntu-26.04
     timeout-minutes: 5
 
     strategy:

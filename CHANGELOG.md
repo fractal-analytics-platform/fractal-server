@@ -17,10 +17,10 @@
     * Bump lockfile (7acf272264).
     * Bump `pytest`, `coverage` and `devtools` (\#3465).
     * Bump `pytest-env` and `zensical` (\#3466).
-
 * Testing:
     * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
     * Make CI run on Python 3.12, 3.13, 3.14 and 3.15 on `main` (\#3465).
+    * Run GitHub Actions on `ubuntu-26.04` (\#3466).
 
 # 2.25.2
 
