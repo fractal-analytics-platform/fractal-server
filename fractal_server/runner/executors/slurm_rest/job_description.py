@@ -2,8 +2,8 @@
 Translate the `#SBATCH` preamble of a fractal submission script into a
 `slurmrestd` job description.
 
-`slurmrestd` ignores `#SBATCH` lines in the submitted script (verified on
-sHPC with v0.0.44), so every option must become a JSON field.
+`slurmrestd` ignores `#SBATCH` lines in the submitted script, so every 
+option must become a JSON field.
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
 REST job description, and options and JSON fields differ in names and units
@@ -132,7 +132,7 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
             job["current_working_directory"] = value
         case "constraint":
             job["constraints"] = value
-        # Mappings below are not verified on sHPC yet
+        # TODO(LA): Verify these mappings on cluster
         case "gres":
             job["tres_per_node"] = f"gres/{value}"
         case "gpus":
