@@ -46,8 +46,7 @@ def send_fractal_email_or_log_failure(
         # email clients. See e.g. https://support.google.com/mail/answer/5900.
         references_header = f"<{uuid.uuid4()}>"
         logger.info(f"Add 'References: {references_header}' header.")
-        msg.add_header("References", references_header)
-        mail_msg.add_header("References", f"<{uuid.uuid4()}>")
+        mail_msg.add_header("References", references_header)
 
         with smtplib.SMTP(
             email_settings.smtp_server,
