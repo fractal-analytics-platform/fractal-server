@@ -36,12 +36,13 @@ class OAuthAccount(Base):
 
     __tablename__ = "oauthaccount"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False
     )
     user: Mapped["UserOAuth | None"] = relationship(
-        back_populates="oauth_accounts"
+        back_populates="oauth_accounts",
+        init=False,
     )
     oauth_name: Mapped[str] = mapped_column(index=True, nullable=False)
     access_token: Mapped[str] = mapped_column(nullable=False)
@@ -96,7 +97,7 @@ class UserOAuth(Base):
 
     __tablename__ = "user_oauth"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
     hashed_password: Mapped[str]
@@ -107,9 +108,7 @@ class UserOAuth(Base):
     )
 
     oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
-        back_populates="user",
-        lazy="joined",
-        cascade="all, delete",
+        back_populates="user", lazy="joined", cascade="all, delete", init=False
     )
     project_dirs: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False
@@ -146,7 +145,7 @@ class UserGroup(Base):
 
     __tablename__ = "usergroup"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     name: Mapped[str] = mapped_column(unique=True)
     timestamp_created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp

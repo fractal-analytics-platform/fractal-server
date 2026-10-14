@@ -18,7 +18,7 @@ class AccountingRecord(Base):
 
     __tablename__ = "accountingrecord"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False
     )
@@ -36,7 +36,7 @@ class AccountingRecordSlurm(Base):
 
     __tablename__ = "accountingrecordslurm"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False
     )

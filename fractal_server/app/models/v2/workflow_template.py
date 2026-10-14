@@ -31,7 +31,7 @@ class WorkflowTemplate(Base):
 
     __tablename__ = "workflowtemplate"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False

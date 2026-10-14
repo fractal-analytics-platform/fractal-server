@@ -39,9 +39,9 @@ def _create_dependency_string(pinned_versions: dict[str, str]) -> str:
 class TaskGroupV2(Base):
     __tablename__ = "taskgroupv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     task_list: Mapped[list["TaskV2"]] = relationship(
-        lazy="selectin", cascade="all, delete-orphan"
+        lazy="selectin", cascade="all, delete-orphan", init=False
     )
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
@@ -143,7 +143,7 @@ class TaskGroupV2(Base):
 class TaskGroupActivityV2(Base):
     __tablename__ = "taskgroupactivityv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user_oauth.id"))
     pkg_name: Mapped[str]
     version: Mapped[str]

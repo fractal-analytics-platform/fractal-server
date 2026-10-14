@@ -20,7 +20,7 @@ class Resource(Base):
 
     __tablename__ = "resource"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     type: Mapped[str]
     """

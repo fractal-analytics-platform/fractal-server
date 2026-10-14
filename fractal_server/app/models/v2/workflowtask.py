@@ -15,10 +15,10 @@ from .task import TaskV2
 class WorkflowTaskV2(Base):
     __tablename__ = "workflowtaskv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     workflow_id: Mapped[int] = mapped_column(
-        ForeignKey("workflowv2.id", ondelete="CASCADE")
+        ForeignKey("workflowv2.id", ondelete="CASCADE"), init=False
     )
 
     type_filters: Mapped[dict[str, bool]] = mapped_column(
@@ -28,7 +28,7 @@ class WorkflowTaskV2(Base):
     # Task
     task_type: Mapped[str]
     task_id: Mapped[int] = mapped_column(ForeignKey("taskv2.id"))
-    task: Mapped["TaskV2"] = relationship(lazy="selectin")
+    task: Mapped["TaskV2"] = relationship(lazy="selectin", init=False)
 
     order: Mapped[int | None] = mapped_column(default=lambda: None)
     meta_parallel: Mapped[dict[str, Any] | None] = mapped_column(

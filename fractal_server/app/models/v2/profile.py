@@ -12,7 +12,7 @@ class Profile(Base):
 
     __tablename__ = "profile"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     resource_id: Mapped[int] = mapped_column(
         ForeignKey("resource.id", ondelete="RESTRICT")

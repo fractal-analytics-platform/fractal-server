@@ -22,13 +22,13 @@ class DatasetV2(Base):
 
     __tablename__ = "datasetv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     name: Mapped[str]
 
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projectv2.id", ondelete="CASCADE")
     )
-    project: Mapped["ProjectV2"] = relationship(lazy="selectin")
+    project: Mapped["ProjectV2"] = relationship(lazy="selectin", init=False)
     is_starred: Mapped[bool] = mapped_column(
         BOOLEAN,
         server_default="false",

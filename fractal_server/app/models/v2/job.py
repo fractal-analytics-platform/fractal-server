@@ -22,7 +22,7 @@ class JobV2(Base):
 
     __tablename__ = "jobv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     user_email: Mapped[str] = mapped_column(nullable=False)
 

@@ -20,7 +20,7 @@ class HistoryRun(Base):
 
     __tablename__ = "historyrun"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     dataset_id: Mapped[int] = mapped_column(
         ForeignKey("datasetv2.id", ondelete="CASCADE"),
     )
@@ -54,7 +54,7 @@ class HistoryUnit(Base):
 
     __tablename__ = "historyunit"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     history_run_id: Mapped[int] = mapped_column(
         ForeignKey("historyrun.id", ondelete="CASCADE"),
         index=True,

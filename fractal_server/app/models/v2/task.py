@@ -40,7 +40,7 @@ class TaskV2(Base):
 
     __tablename__ = "taskv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     name: Mapped[str]
 
     type: Mapped[str]

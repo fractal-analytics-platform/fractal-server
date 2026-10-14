@@ -150,8 +150,7 @@ async def collect_task_custom(
         package_version=task_collect.version,
     )
 
-    # Prepare task-group attributes
-    task_group_attrs = dict(
+    TaskGroupCreate(
         origin=TaskGroupOriginEnum.OTHER,
         pkg_name=task_collect.label,
         user_id=user.id,
@@ -159,9 +158,15 @@ async def collect_task_custom(
         version=task_collect.version,
         resource_id=resource_id,
     )
-    TaskGroupCreate(**task_group_attrs)
 
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(
+        origin=TaskGroupOriginEnum.OTHER,
+        pkg_name=task_collect.label,
+        user_id=user.id,
+        user_group_id=user_group_id,
+        version=task_collect.version,
+        resource_id=resource_id,
+    )
 
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(

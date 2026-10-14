@@ -18,12 +18,12 @@ from .workflowtask import WorkflowTaskV2
 class WorkflowV2(Base):
     __tablename__ = "workflowv2"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
     name: Mapped[str]
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projectv2.id", ondelete="CASCADE")
     )
-    project: Mapped["ProjectV2"] = relationship(lazy="selectin")
+    project: Mapped["ProjectV2"] = relationship(lazy="selectin", init=False)
     is_starred: Mapped[bool] = mapped_column(
         BOOLEAN,
         server_default="false",
@@ -35,6 +35,7 @@ class WorkflowV2(Base):
         order_by="WorkflowTaskV2.order",
         collection_class=ordering_list("order"),
         cascade="all, delete-orphan",
+        init=False,
     )
     template_id: Mapped[int | None] = mapped_column(
         ForeignKey("workflowtemplate.id", ondelete="SET NULL"),

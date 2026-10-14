@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import cast
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -179,35 +180,33 @@ async def collect_tasks_pip(
     task_collect = request_data.task_collect
 
     # Initialize task-group attributes
-    task_group_attrs = dict(
-        user_id=user.id,
-        resource_id=resource_id,
-        origin=request_data.origin,
-    )
+    task_group_user_id = user.id
+    task_group_resource_id = resource_id
+    task_group_origin = request_data.origin
 
     # Set/check python version
     if task_collect.python_version is None:
-        task_group_attrs["python_version"] = resource.tasks_python_config[
+        task_group_python_version = resource.tasks_python_config[
             "default_version"
         ]
     else:
-        task_group_attrs["python_version"] = task_collect.python_version
+        task_group_python_version = task_collect.python_version
         get_python_interpreter_or_422(
-            python_version=task_group_attrs["python_version"],
+            python_version=task_group_python_version,
             resource=resource,
         )
 
     # Set pip_extras
     if task_collect.package_extras is not None:
-        task_group_attrs["pip_extras"] = task_collect.package_extras
+        task_group_pip_extras = task_collect.package_extras
 
     # Set pinned_package_versions
     if task_collect.pinned_package_versions_pre is not None:
-        task_group_attrs["pinned_package_versions_pre"] = (
+        task_group_pinned_package_versions_pre = (
             task_collect.pinned_package_versions_pre
         )
     if task_collect.pinned_package_versions_post is not None:
-        task_group_attrs["pinned_package_versions_post"] = (
+        task_group_pinned_package_versions_post = (
             task_collect.pinned_package_versions_post
         )
 
@@ -217,9 +216,11 @@ async def collect_tasks_pip(
     # Set pkg_name, version, origin and archive_path
     if request_data.origin == TaskGroupOriginEnum.WHEELFILE:
         try:
-            wheel_filename = request_data.file.filename
+            request_data_file = request_data.file
+            request_data_file = cast(UploadFile, request_data_file)
+            wheel_filename = request_data_file.filename
             wheel_info = _parse_wheel_filename(wheel_filename)
-            wheel_file_content = await request_data.file.read()
+            wheel_file_content = await request_data_file.read()
             wheel_file = FractalUploadedFile(
                 filename=wheel_filename,
                 contents=wheel_file_content,
@@ -232,29 +233,24 @@ async def collect_tasks_pip(
                     f"Original error: {str(e)}",
                 ),
             )
-        task_group_attrs["pkg_name"] = normalize_package_name(
-            wheel_info["distribution"]
-        )
-        task_group_attrs["version"] = wheel_info["version"]
+        task_group_pkg_name = normalize_package_name(wheel_info["distribution"])
+        task_group_version = wheel_info["version"]
     elif request_data.origin == TaskGroupOriginEnum.PYPI:
         pkg_name = task_collect.package
-        task_group_attrs["pkg_name"] = normalize_package_name(pkg_name)
+        task_group_pkg_name = normalize_package_name(pkg_name)
         latest_version = await get_package_version_from_pypi(
             task_collect.package,
             task_collect.package_version,
         )
-        task_group_attrs["version"] = latest_version
+        task_group_version = latest_version
 
     # Validate query parameters related to user-group ownership
-    user_group_id = await _get_valid_user_group_id(
+    task_group_user_group_id = await _get_valid_user_group_id(
         user_group_id=user_group_id,
         private=private,
         user_id=user.id,
         db=db,
     )
-
-    # Set user_group_id
-    task_group_attrs["user_group_id"] = user_group_id
 
     # Set path and venv_path
     if resource.type == ResourceType.SLURM_SSH:
@@ -264,16 +260,29 @@ async def collect_tasks_pip(
     task_group_path = (
         Path(base_tasks_path)
         / str(user.id)
-        / task_group_attrs["pkg_name"]
-        / task_group_attrs["version"]
+        / task_group_pkg_name
+        / task_group_version
     ).as_posix()
     verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
-    task_group_attrs["path"] = task_group_path
-    task_group_attrs["venv_path"] = Path(task_group_path, "venv").as_posix()
+    task_group_path = task_group_path
+    task_group_venv_path = Path(task_group_path, "venv").as_posix()
 
     # Validate TaskGroupV2 attributes
     try:
-        TaskGroupCreateStrict(**task_group_attrs)
+        TaskGroupCreateStrict(
+            pkg_name=task_group_pkg_name,
+            version=task_group_version,
+            origin=task_group_origin,
+            user_id=task_group_user_id,
+            user_group_id=task_group_user_group_id,
+            resource_id=task_group_resource_id,
+            python_version=task_group_python_version,
+            path=task_group_path,
+            venv_path=task_group_venv_path,
+            pip_extras=task_group_pip_extras,
+            pinned_package_versions_pre=task_group_pinned_package_versions_pre,
+            pinned_package_versions_post=task_group_pinned_package_versions_post,
+        )
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -282,7 +291,20 @@ async def collect_tasks_pip(
 
     # Database checks
 
-    task_group = TaskGroupV2(**task_group_attrs)
+    task_group = TaskGroupV2(
+        pkg_name=task_group_pkg_name,
+        version=task_group_version,
+        origin=task_group_origin,
+        user_id=task_group_user_id,
+        user_group_id=task_group_user_group_id,
+        resource_id=task_group_resource_id,
+        python_version=task_group_python_version,
+        path=task_group_path,
+        venv_path=task_group_venv_path,
+        pip_extras=task_group_pip_extras,
+        pinned_package_versions_pre=task_group_pinned_package_versions_pre,
+        pinned_package_versions_post=task_group_pinned_package_versions_post,
+    )
 
     # Verify non-duplication constraints
     await _verify_non_duplication_user_constraint(
