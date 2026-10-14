@@ -186,7 +186,7 @@
 | fractal\_server/runner/v2/runner\_functions.py                               |      198 |       11 |       48 |        8 |     92% |142, 172, 202-\>205, 282, 367-372, 432-\>436, 484-485, 583-588 |
 | fractal\_server/runner/v2/submit\_workflow.py                                |      128 |        0 |       18 |        2 |     99% |170-\>198, 234-\>237 |
 | fractal\_server/runner/v2/task\_interface.py                                 |       39 |        0 |        4 |        0 |    100% |           |
-| fractal\_server/send\_mail.py                                                |       28 |        2 |        6 |        2 |     88% |49-50, 51-\>56 |
+| fractal\_server/send\_mail.py                                                |       32 |        2 |        6 |        2 |     89% |57-58, 59-\>64 |
 | fractal\_server/ssh/\_\_init\_\_.py                                          |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/ssh/\_fabric.py                                              |      304 |        2 |       36 |        2 |     99% |216-\>218, 318-319, 364-\>366 |
 | fractal\_server/string\_tools.py                                             |       27 |        0 |       16 |        0 |    100% |           |
@@ -232,7 +232,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11571** |  **156** | **1970** |   **85** | **98%** |           |
+| **TOTAL**                                                                    | **11575** |  **156** | **1970** |   **85** | **98%** |           |
 
 
 ## Setup coverage badge
