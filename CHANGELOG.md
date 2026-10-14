@@ -2,8 +2,8 @@
 
 # 2.25.4 (unreleased)
 
-* Email notifications:
-    * Add `References: <some-uuid4>` message header, to avoid spurious message grouping (e.g. of notifications coming from different Fractal instances) in email clients.
+* App:
+    * Add unique `References` header, to avoid spurious message grouping (e.g. of notifications coming from different instances) in email clients (\#3467).
 
 # 2.25.3
 
