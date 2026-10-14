@@ -22,11 +22,11 @@ class AccountingRecord(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("user_oauth.id"), nullable=False
     )
+    num_tasks: Mapped[int]
+    num_new_images: Mapped[int]
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
-    num_tasks: Mapped[int]
-    num_new_images: Mapped[int]
 
 
 class AccountingRecordSlurm(Base):

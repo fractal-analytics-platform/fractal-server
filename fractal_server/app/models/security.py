@@ -45,14 +45,14 @@ class OAuthAccount(Base):
     )
     oauth_name: Mapped[str] = mapped_column(index=True, nullable=False)
     access_token: Mapped[str] = mapped_column(nullable=False)
+    account_id: Mapped[str] = mapped_column(index=True, nullable=False)
+    account_email: Mapped[str] = mapped_column(nullable=False)
     expires_at: Mapped[int | None] = mapped_column(
         nullable=True, default=lambda: None
     )
     refresh_token: Mapped[str | None] = mapped_column(
         nullable=True, default=lambda: None
     )
-    account_id: Mapped[str] = mapped_column(index=True, nullable=False)
-    account_email: Mapped[str] = mapped_column(nullable=False)
 
 
 class UserOAuth(Base):
@@ -100,9 +100,6 @@ class UserOAuth(Base):
 
     email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
     hashed_password: Mapped[str]
-    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
-    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
     is_guest: Mapped[bool] = mapped_column(
         BOOLEAN,
         server_default="false",
@@ -114,17 +111,19 @@ class UserOAuth(Base):
         lazy="joined",
         cascade="all, delete",
     )
-
-    profile_id: Mapped[int | None] = mapped_column(
-        ForeignKey("profile.id", ondelete="RESTRICT"), default=lambda: None
-    )
-
     project_dirs: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=False
     )
 
     slurm_accounts: Mapped[list[str]] = mapped_column(
         ARRAY(String), nullable=True, server_default="{}"
+    )
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    profile_id: Mapped[int | None] = mapped_column(
+        ForeignKey("profile.id", ondelete="RESTRICT"), default=lambda: None
     )
 
     __table_args__ = (

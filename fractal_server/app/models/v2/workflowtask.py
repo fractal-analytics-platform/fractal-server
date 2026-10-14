@@ -20,6 +20,16 @@ class WorkflowTaskV2(Base):
     workflow_id: Mapped[int] = mapped_column(
         ForeignKey("workflowv2.id", ondelete="CASCADE")
     )
+
+    type_filters: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
+
+    # Task
+    task_type: Mapped[str]
+    task_id: Mapped[int] = mapped_column(ForeignKey("taskv2.id"))
+    task: Mapped["TaskV2"] = relationship(lazy="selectin")
+
     order: Mapped[int | None] = mapped_column(default=lambda: None)
     meta_parallel: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, default=lambda: None
@@ -33,16 +43,6 @@ class WorkflowTaskV2(Base):
     args_non_parallel: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, default=lambda: None
     )
-
-    type_filters: Mapped[dict[str, bool]] = mapped_column(
-        JSONB, nullable=False, server_default="{}"
-    )
-
-    # Task
-    task_type: Mapped[str]
-    task_id: Mapped[int] = mapped_column(ForeignKey("taskv2.id"))
-    task: Mapped["TaskV2"] = relationship(lazy="selectin")
-
     alias: Mapped[str | None] = mapped_column(
         default=lambda: None, nullable=True
     )

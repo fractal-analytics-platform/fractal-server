@@ -25,11 +25,11 @@ class ProjectV2(Base):
         server_default="false",
         nullable=False,
     )
-    description: Mapped[str | None] = mapped_column(default=lambda: None)
-
     resource_id: Mapped[int] = mapped_column(
         ForeignKey("resource.id", ondelete="RESTRICT")
     )
+    description: Mapped[str | None] = mapped_column(default=lambda: None)
+
     timestamp_created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=get_timestamp
     )
