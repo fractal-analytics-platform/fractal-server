@@ -218,10 +218,14 @@ def submit_workflow(
             logger_name=logger_name,
             log_file_path=log_file_path,
         )
-        logger.info(
-            f'Start execution of workflow "{workflow.name}"; '
-            f"more logs at {str(log_file_path)}"
-        )
+        if resume is None:
+            start_msg = f'Start execution of workflow "{workflow.name}"'
+        else:
+            start_msg = (
+                f'Resume execution of workflow "{workflow.name}" after a '
+                f"server restart, from task {resume.first_task_index}"
+            )
+        logger.info(f"{start_msg}; more logs at {str(log_file_path)}")
         logger.debug(f"Resource name: {resource.name}")
         logger.debug(f"Profile name: {profile.name}")
         logger.debug(f"Username: {profile.username}")
@@ -231,7 +235,14 @@ def submit_workflow(
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
-        logger.debug(f"job.first_task_index: {job.first_task_index}")
+        logger.debug(
+            f"job.first_task_index: {job.first_task_index}"
+            + (
+                f" (this run starts at task {resume.first_task_index})"
+                if resume is not None
+                else ""
+            )
+        )
         logger.debug(f"job.last_task_index: {job.last_task_index}")
         logger.debug(f'START workflow "{workflow.name}"')
         job_working_dir = job.working_dir
@@ -260,7 +271,6 @@ def submit_workflow(
         first_task_index = job.first_task_index
         job_type_filters = job.type_filters
         if resume is not None:
-            logger.info(resume_note.rstrip())
             process_workflow = partial(
                 slurm_rest_process_workflow, adopt_since=resume.adopt_since
             )
