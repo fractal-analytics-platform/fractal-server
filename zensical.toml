@@ -117,6 +117,9 @@ inherited_members = true
 extensions= ["griffe_pydantic"]
 
 [project.markdown_extensions]
+attr_list = {}
+md_in_html = {}
+pymdownx.blocks.caption = {}
 pymdownx.details = {}
 pymdownx.highlight.anchor_linenums = true
 pymdownx.highlight.linenums = true
