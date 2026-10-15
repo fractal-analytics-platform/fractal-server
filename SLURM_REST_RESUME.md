@@ -75,7 +75,7 @@ With `FRACTAL_RESUME_ON_STARTUP=true` (and backend `slurm_ssh`), every server st
 
 - It is the `lifespan` of the resume router ([resume.py](fractal_server/app/routes/admin/v2/resume.py)); FastAPI runs it after the app startup in `main.py`, which is unchanged. No API token is needed.
 - It runs in a background task: the server answers requests at once, and a slow SSH/SLURM call cannot delay the startup.
-- Every gunicorn worker runs it; the job-row lock and the resume marker (same server start time in all workers) let only one worker apply each plan, the others log `skipped`.
+- Every gunicorn worker starts it, but only the one that takes a Postgres advisory lock (`pg_try_advisory_lock`, no waiting) runs it; the others log `run by another worker`. Jobs whose log already has this server start's resume marker are not planned again. The job-row lock and the marker still guarantee one resume per job and server start. Postgres releases the advisory lock if the worker or its connection dies.
 - Errors are logged per job and never raised. A crash at any point leaves the job `submitted`, and the next start plans it again.
 - Resumed jobs are added to `app.state.jobs`, so the graceful shutdown handles them like any other job.
 

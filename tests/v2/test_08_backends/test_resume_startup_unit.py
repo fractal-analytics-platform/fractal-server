@@ -2,12 +2,14 @@ import asyncio
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
+import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 
 from fractal_server.app.routes.admin.v2 import resume as resume_module
 from fractal_server.app.routes.admin.v2 import router_admin
 from fractal_server.runner.v2.resume.actions import ResumeError
+from fractal_server.runner.v2.resume.plan import BOOT_MARKER
 from fractal_server.runner.v2.resume.plan import ResumeAction
 from fractal_server.runner.v2.resume.plan import ResumePlan
 from fractal_server.utils import get_timestamp
@@ -24,7 +26,15 @@ def _fake_app() -> SimpleNamespace:
     )
 
 
-async def test_resume_orphans_on_startup(monkeypatch):
+@pytest.fixture
+def released_locks(monkeypatch) -> list:
+    released = []
+    monkeypatch.setattr(resume_module, "_try_startup_lock", lambda: "lock")
+    monkeypatch.setattr(resume_module, "_release_startup_lock", released.append)
+    return released
+
+
+async def test_resume_orphans_on_startup(monkeypatch, released_locks):
     actions = {
         1: ResumeAction.RESUME,
         2: ResumeAction.REFUSE,
@@ -64,10 +74,14 @@ async def test_resume_orphans_on_startup(monkeypatch):
         )
 
     submitted = []
+    listed_with = []
+
+    def fake_list_orphan_candidates(*, started_before, exclude_marker):
+        listed_with.append(exclude_marker)
+        return [1, 2, 3, 4, 5, 6]
+
     monkeypatch.setattr(
-        resume_module,
-        "list_orphan_candidates",
-        lambda *, started_before: [1, 2, 3, 4, 5, 6],
+        resume_module, "list_orphan_candidates", fake_list_orphan_candidates
     )
     monkeypatch.setattr(resume_module, "plan_resume", fake_plan_resume)
     monkeypatch.setattr(
@@ -91,14 +105,32 @@ async def test_resume_orphans_on_startup(monkeypatch):
     assert submitted[0]["job_id"] == 1
     assert submitted[0]["fractal_ssh"] == "ssh:user@host"
     assert submitted[0]["resume"] == "spec"
+    # Jobs already resumed by this server are not listed again
+    assert listed_with == [BOOT_MARKER]
+    assert released_locks == ["lock"]
 
 
-async def test_resume_orphans_on_startup_listing_fails(monkeypatch):
-    def fail(*, started_before):
+async def test_resume_orphans_on_startup_listing_fails(
+    monkeypatch, released_locks
+):
+    def fail(*, started_before, exclude_marker):
         raise RuntimeError("DB down")
 
     monkeypatch.setattr(resume_module, "list_orphan_candidates", fail)
     await resume_module.resume_orphans_on_startup(_fake_app())
+    assert released_locks == ["lock"]
+
+
+async def test_resume_orphans_on_startup_lock_taken(monkeypatch):
+    listed = []
+    monkeypatch.setattr(resume_module, "_try_startup_lock", lambda: None)
+    monkeypatch.setattr(
+        resume_module,
+        "list_orphan_candidates",
+        lambda **kwargs: listed.append(kwargs) or [],
+    )
+    await resume_module.resume_orphans_on_startup(_fake_app())
+    assert listed == []
 
 
 async def test_startup_hook_in_app_lifespan(monkeypatch, tmp_path):

@@ -22,8 +22,7 @@ from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 from .plan import ACCOUNTING_START_MARGIN
-from .plan import RESUME_MARKER
-from .plan import SERVER_BOOT_TIMESTAMP
+from .plan import BOOT_MARKER
 from .plan import ResumeAction
 from .plan import ResumeCase
 from .plan import ResumePlan
@@ -77,7 +76,7 @@ def apply_resume_plan(plan: ResumePlan) -> ResumeLaunch | None:
     now = get_timestamp()
     # Written to `job.log`: blocks a second resume by the same server boot,
     # and its `k=` lets a later plan recognise an interrupted resume
-    marker = f"{RESUME_MARKER}{SERVER_BOOT_TIMESTAMP.isoformat()}"
+    marker = BOOT_MARKER
     with next(get_sync_db()) as db:
         job = db.execute(
             select(JobV2)

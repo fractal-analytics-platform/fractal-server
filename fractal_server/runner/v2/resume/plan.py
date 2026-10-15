@@ -17,6 +17,7 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
+from sqlmodel import or_
 from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
@@ -64,6 +65,8 @@ _RESUMED_TASK_PATTERN = re.compile(
 SERVER_BOOT_TIMESTAMP = datetime.fromisoformat(
     os.environ[BOOT_TIMESTAMP_ENV_VAR]
 )
+# Written to `job.log` by `apply_resume_plan`
+BOOT_MARKER = f"{RESUME_MARKER}{SERVER_BOOT_TIMESTAMP.isoformat()}"
 # Margin between server and SLURM clocks, for the accounting query
 ACCOUNTING_START_MARGIN = 3600
 WFTASK_DUMP_KEYS = (
@@ -182,7 +185,9 @@ def last_resumed_task_index(log: str | None) -> int | None:
     return int(matches[-1]) if matches else None
 
 
-def list_orphan_candidates(*, started_before: datetime) -> list[int]:
+def list_orphan_candidates(
+    *, started_before: datetime, exclude_marker: str | None = None
+) -> list[int]:
     with next(get_sync_db()) as db:
         stm = (
             select(JobV2.id)
@@ -190,6 +195,13 @@ def list_orphan_candidates(*, started_before: datetime) -> list[int]:
             .where(JobV2.start_timestamp < started_before)
             .order_by(JobV2.id)
         )
+        if exclude_marker is not None:
+            stm = stm.where(
+                or_(
+                    JobV2.log.is_(None),
+                    ~JobV2.log.contains(exclude_marker, autoescape=True),
+                )
+            )
         return list(db.execute(stm).scalars().all())
 
 
