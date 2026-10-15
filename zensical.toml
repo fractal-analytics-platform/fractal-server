@@ -20,9 +20,11 @@ nav = [
             "internals/integrations/tasks.md",
         ]
         },
-        { "Data access" = "internals/data_access.md" },
         { "Database" = "internals/database.md" },
         { "Logging" = "internals/logging.md" },
+        { "Users" = "internals/users.md" },
+        { "Data access" = "internals/data_access.md" },
+
     ]
     },
     { "Changelog" = "changelog.md" },
@@ -113,3 +115,15 @@ unwrap_annotated = true
 show_attribute_values = true
 inherited_members = true
 extensions= ["griffe_pydantic"]
+
+[project.markdown_extensions]
+pymdownx.details = {}
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.linenums = true
+pymdownx.highlight.line_spans = "__span"
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.snippets = {}
+pymdownx.superfences = {}
+pymdownx.tabbed.alternate_style = true
+pymdownx.tabbed.combine_header_slug = true

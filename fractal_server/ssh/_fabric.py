@@ -185,7 +185,7 @@ class FractalSSH:
             e: Original exception
 
         Raises:
-            The original exception, possibly with a modified message.
+            Exception: The original exception, possibly with a modified message.
         """
         try:
             self.logger.error(message)
