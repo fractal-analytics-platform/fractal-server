@@ -23,35 +23,24 @@ class SlurmRestSettings(BaseSettings):
         FRACTAL_SLURM_REST_API_VERSION:
             OpenAPI plugin version, e.g. `v0.0.44`.
         FRACTAL_SLURM_REST_VERIFY_TLS:
-            Whether to verify the TLS certificate of `slurmrestd`.
+            If `"true"`, verify the TLS certificate of `slurmrestd`.
         FRACTAL_SLURM_REST_CA_BUNDLE:
             Optional CA file (PEM) for TLS verification, e.g. for an
             internal CA.
-        FRACTAL_SLURM_REST_TIMEOUT:
-            Timeout (seconds) of each HTTP request.
-        FRACTAL_SLURM_REST_TOKEN_LIFESPAN:
-            Lifespan (seconds) of tokens obtained via `scontrol token`.
-        FRACTAL_SLURM_REST_JOB_PATH:
-            Value of `PATH` in the SLURM-job environment.
-        FRACTAL_SLURM_REST_MAX_POLL_FAILURES:
-            Number of consecutive failed status queries before giving up.
         FRACTAL_RESUME_ON_STARTUP:
-            If true, every server start resumes (or marks done/failed) the
-            orphaned jobs, as `POST /admin/v2/resume/job/{id}/` does.
+            If `"true"`, every server start resumes (or marks done/failed)
+            the orphaned jobs, as `POST /admin/v2/resume/job/{id}/` does.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
     FRACTAL_SLURM_REST_ENABLED: Literal["true", "false"] = "false"
+    # TODO: move URL, API version and CA bundle to `Resource`
     FRACTAL_SLURM_REST_URL: str | None = None
     FRACTAL_SLURM_REST_API_VERSION: str = "v0.0.44"
-    FRACTAL_SLURM_REST_VERIFY_TLS: bool = True
     FRACTAL_SLURM_REST_CA_BUNDLE: str | None = None
-    FRACTAL_SLURM_REST_TIMEOUT: float = 30.0
-    FRACTAL_SLURM_REST_TOKEN_LIFESPAN: int = 3600
-    FRACTAL_SLURM_REST_JOB_PATH: str = "/usr/bin:/bin"
-    FRACTAL_SLURM_REST_MAX_POLL_FAILURES: int = 20
-    FRACTAL_RESUME_ON_STARTUP: bool = False
+    FRACTAL_SLURM_REST_VERIFY_TLS: Literal["true", "false"] = "true"
+    FRACTAL_RESUME_ON_STARTUP: Literal["true", "false"] = "false"
 
     @model_validator(mode="after")
     def _url_required_if_enabled(self) -> Self:

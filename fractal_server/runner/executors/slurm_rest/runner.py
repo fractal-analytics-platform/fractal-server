@@ -30,6 +30,8 @@ from .token import SlurmTokenProvider
 logger = set_logger(__name__)
 
 STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
+# Consecutive failed status queries before giving up
+MAX_POLL_FAILURES = 20
 HEREDOC_DELIMITER = re.compile(r"FRACTAL_EOF_[0-9a-f]{32}")
 
 
@@ -54,6 +56,7 @@ class SlurmRestRunner(SlurmSSHRunner):
 
     rest_client: SlurmRestClient
     remote_home: str
+    remote_path: str
     remote_username: str
     adopt: bool = False
     _poll_failures: int = 0
@@ -109,18 +112,19 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.remote_home = self.fractal_ssh.run_command(
             cmd="printenv HOME"
         ).strip()
-        token_provider = SlurmTokenProvider(
-            fractal_ssh=self.fractal_ssh,
-            lifespan=self.rest_settings.FRACTAL_SLURM_REST_TOKEN_LIFESPAN,
-        )
+        # Same `PATH` that `sbatch` over SSH passes on to the SLURM job
+        self.remote_path = self.fractal_ssh.run_command(
+            cmd="printenv PATH"
+        ).strip()
+        token_provider = SlurmTokenProvider(fractal_ssh=self.fractal_ssh)
         self.rest_client = SlurmRestClient(
             base_url=self.rest_settings.FRACTAL_SLURM_REST_URL,
             api_version=self.rest_settings.FRACTAL_SLURM_REST_API_VERSION,
             username=self.remote_username,
             get_token=token_provider.get_token,
-            verify_tls=self.rest_settings.FRACTAL_SLURM_REST_VERIFY_TLS,
+            verify_tls=self.rest_settings.FRACTAL_SLURM_REST_VERIFY_TLS
+            == "true",
             ca_bundle=self.rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
-            timeout=self.rest_settings.FRACTAL_SLURM_REST_TIMEOUT,
         )
         self.rest_client.ping()
         if self.adopt:
@@ -139,7 +143,7 @@ class SlurmRestRunner(SlurmSSHRunner):
 
     def _job_environment(self) -> list[str]:
         return [
-            f"PATH={self.rest_settings.FRACTAL_SLURM_REST_JOB_PATH}",
+            f"PATH={self.remote_path}",
             f"HOME={self.remote_home}",
             f"USER={self.remote_username}",
         ]
@@ -304,8 +308,7 @@ class SlurmRestRunner(SlurmSSHRunner):
 
         Jobs missing from the response are omitted (and then treated as
         completed upstream, as for `squeue`). Transient failures return a
-        placeholder status, up to `FRACTAL_SLURM_REST_MAX_POLL_FAILURES`
-        consecutive failures.
+        placeholder status, up to `MAX_POLL_FAILURES` consecutive failures.
         """
         if len(job_ids) == 0:
             return ""
@@ -314,14 +317,11 @@ class SlurmRestRunner(SlurmSSHRunner):
             self._poll_failures = 0
         except Exception as e:
             self._poll_failures += 1
-            max_failures = (
-                self.rest_settings.FRACTAL_SLURM_REST_MAX_POLL_FAILURES
-            )
             logger.warning(
                 f"[run_squeue] REST query failed ({self._poll_failures}/"
-                f"{max_failures}). Original error: {str(e)}"
+                f"{MAX_POLL_FAILURES}). Original error: {str(e)}"
             )
-            if self._poll_failures >= max_failures:
+            if self._poll_failures >= MAX_POLL_FAILURES:
                 raise
             return "\n".join(
                 f"{job_id} {STATUS_PLACEHOLDER}" for job_id in job_ids

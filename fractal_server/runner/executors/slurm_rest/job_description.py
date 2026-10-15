@@ -2,7 +2,7 @@
 Translate the `#SBATCH` preamble of a fractal submission script into a
 `slurmrestd` job description.
 
-`slurmrestd` ignores `#SBATCH` lines in the submitted script, so every 
+`slurmrestd` ignores `#SBATCH` lines in the submitted script, so every
 option must become a JSON field.
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a

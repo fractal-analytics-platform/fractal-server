@@ -443,18 +443,14 @@ def _add_remote_evidence(
     )
     fractal_ssh.check_connection()
     settings = get_slurm_rest_settings()
-    token_provider = SlurmTokenProvider(
-        fractal_ssh=fractal_ssh,
-        lifespan=settings.FRACTAL_SLURM_REST_TOKEN_LIFESPAN,
-    )
+    token_provider = SlurmTokenProvider(fractal_ssh=fractal_ssh)
     client = SlurmRestClient(
         base_url=settings.FRACTAL_SLURM_REST_URL,
         api_version=settings.FRACTAL_SLURM_REST_API_VERSION,
         username=ctx.profile.username,
         get_token=token_provider.get_token,
-        verify_tls=settings.FRACTAL_SLURM_REST_VERIFY_TLS,
+        verify_tls=settings.FRACTAL_SLURM_REST_VERIFY_TLS == "true",
         ca_bundle=settings.FRACTAL_SLURM_REST_CA_BUNDLE,
-        timeout=settings.FRACTAL_SLURM_REST_TIMEOUT,
     )
     found_jobs = collect_fractal_slurm_jobs(
         client=client,

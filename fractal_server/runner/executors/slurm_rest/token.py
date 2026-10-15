@@ -5,6 +5,10 @@ from fractal_server.ssh._fabric import FractalSSH
 
 logger = set_logger(__name__)
 
+# A cluster cap (`AuthAltParameters=max_token_lifespan`) makes tokens expire
+# earlier: the client then refreshes them on the 401/511 answer
+TOKEN_LIFESPAN = 3600
+
 
 class SlurmTokenProvider:
     """
@@ -13,7 +17,9 @@ class SlurmTokenProvider:
     Tokens are only kept in memory and refreshed after 80% of their lifespan.
     """
 
-    def __init__(self, *, fractal_ssh: FractalSSH, lifespan: int) -> None:
+    def __init__(
+        self, *, fractal_ssh: FractalSSH, lifespan: int = TOKEN_LIFESPAN
+    ) -> None:
         self.fractal_ssh = fractal_ssh
         self.lifespan = lifespan
         self._token: str | None = None

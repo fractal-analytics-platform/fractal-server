@@ -35,20 +35,16 @@ TEMPORARY SETTING STRUCTURE:
 | `FRACTAL_SLURM_REST_API_VERSION` | `v0.0.44` | OpenAPI plugin version |
 | `FRACTAL_SLURM_REST_VERIFY_TLS` | `true` | Verify the TLS certificate of `slurmrestd` |
 | `FRACTAL_SLURM_REST_CA_BUNDLE` | – | PEM file with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs |
-| `FRACTAL_SLURM_REST_TIMEOUT` | `30` | Timeout (s) of each HTTP request |
-| `FRACTAL_SLURM_REST_TOKEN_LIFESPAN` | `3600` | Lifespan (s) of the SLURM token |
-| `FRACTAL_SLURM_REST_JOB_PATH` | `/usr/bin:/bin` | `PATH` inside the SLURM job |
-| `FRACTAL_SLURM_REST_MAX_POLL_FAILURES` | `20` | Consecutive failed status queries before giving up |
 | `FRACTAL_RESUME_ON_STARTUP` | `false` | Resume orphaned jobs automatically at server start, see [Startup hook](#startup-hook) |
 
-These live in their own settings class ([settings.py](fractal_server/runner/executors/slurm_rest/settings.py)), so the main `Settings` is unchanged.
+These live in their own settings class ([settings.py](fractal_server/runner/executors/slurm_rest/settings.py)), so the main `Settings` is unchanged. URL, API version and CA bundle are per cluster and should move to the `Resource` (TODO in the code); as global settings, all `slurm_ssh` resources share them. Fixed in the code: HTTP timeout 30 s ([client.py](fractal_server/runner/executors/slurm_rest/client.py)), token lifespan 3600 s ([token.py](fractal_server/runner/executors/slurm_rest/token.py)), 20 consecutive failed status queries before giving up ([runner.py](fractal_server/runner/executors/slurm_rest/runner.py)).
 
 ### How it works
 
 - **Authentication**: the server runs `scontrol token lifespan=...` over SSH (as the profile user), keeps the token in memory only (never logged), and sends it in the `X-SLURM-USER-NAME` / `X-SLURM-USER-TOKEN` headers. It is refreshed at 80% of its lifespan, or once on HTTP 401/511. --> TEMPORARY UNTIL FIGURING OUT PROPER SSO AUTH
 - **Submission**: the `#SBATCH` lines are converted to the JSON job description; an unknown option is an error. If `slurmrestd` warns about an unknown field, the job is cancelled and the submission fails.
 - **No upload**: the job script itself writes its input/args JSON files (quoted heredocs) and a copy of itself (`cp "$0"`) in the remote folder. Limit: 4 MB per script.
-- **SSH is still needed** for: connection and worker-version checks, `mkdir`, `printenv HOME`, (the token), and fetching outputs (file list + `tar` + SFTP), as in the SSH runner.
+- **SSH is still needed** for: connection and worker-version checks, `mkdir`, `printenv HOME` and `printenv PATH` (the job gets the same `PATH` as with `sbatch` over SSH), (the token), and fetching outputs (file list + `tar` + SFTP), as in the SSH runner.
 - **Identification**: every SLURM job is found by its stdout path `{job.working_dir_user}/{subfolder}/{prefix}-slurm-%j.out` from the API (SLURM stores for every job).
 
 | REST call | When |

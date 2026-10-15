@@ -120,7 +120,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Runs after the app lifespan has set `app.state`
     task = None
     if (
-        get_slurm_rest_settings().FRACTAL_RESUME_ON_STARTUP
+        get_slurm_rest_settings().FRACTAL_RESUME_ON_STARTUP == "true"
         and app.state.fractal_ssh_list is not None
     ):
         task = asyncio.create_task(resume_orphans_on_startup(app))
@@ -135,6 +135,7 @@ router = APIRouter(lifespan=_lifespan)
 
 
 # --- Endpoints for managing orphaned job resumes ---
+
 
 @router.get("/orphans/", response_model=list[ResumePlan])
 async def get_orphan_resume_plans(

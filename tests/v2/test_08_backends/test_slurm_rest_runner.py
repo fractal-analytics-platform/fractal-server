@@ -204,7 +204,7 @@ def test_rest_scancel_and_poll_failures(
     fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_db[:]
-    monkeypatch.setenv("FRACTAL_SLURM_REST_MAX_POLL_FAILURES", "2")
+    monkeypatch.setattr(runner_module, "MAX_POLL_FAILURES", 2)
 
     with _get_runner(
         tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
