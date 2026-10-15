@@ -5,7 +5,7 @@
 * App:
     * Add unique `References` header, to avoid spurious message grouping (e.g. of notifications coming from different instances) in email clients (\#3467).
 * Docs:
-    * Fix `markdown_extensions` configuration in `zensical.toml` (\#3469).
+    * Fix `markdown_extensions` configuration in `zensical.toml` (\#3469, \#3470).
     * Re-include missing users page in documentation (\#3469).
 * Dependencies:
     * Udpdate lock (\#3469).
