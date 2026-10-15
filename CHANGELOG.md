@@ -7,6 +7,8 @@
 * Docs:
     * Fix `markdown_extensions` configuration in `zensical.toml` (\#3469).
     * Re-include missing users page in documentation (\#3469).
+* Dependencies:
+    * Udpdate lock (\#3469).
 
 # 2.25.3
 
