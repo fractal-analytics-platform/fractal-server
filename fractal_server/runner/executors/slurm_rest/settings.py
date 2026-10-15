@@ -35,6 +35,9 @@ class SlurmRestSettings(BaseSettings):
             Value of `PATH` in the SLURM-job environment.
         FRACTAL_SLURM_REST_MAX_POLL_FAILURES:
             Number of consecutive failed status queries before giving up.
+        FRACTAL_RESUME_ON_STARTUP:
+            If true, every server start resumes (or marks done/failed) the
+            orphaned jobs, as `POST /admin/v2/resume/job/{id}/` does.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -48,6 +51,7 @@ class SlurmRestSettings(BaseSettings):
     FRACTAL_SLURM_REST_TOKEN_LIFESPAN: int = 3600
     FRACTAL_SLURM_REST_JOB_PATH: str = "/usr/bin:/bin"
     FRACTAL_SLURM_REST_MAX_POLL_FAILURES: int = 20
+    FRACTAL_RESUME_ON_STARTUP: bool = False
 
     @model_validator(mode="after")
     def _url_required_if_enabled(self) -> Self:

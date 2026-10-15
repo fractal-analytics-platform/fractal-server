@@ -7,6 +7,7 @@ The database tells where the job stopped; SLURM (via the stdout path stored
 for each job) tells which SLURM jobs of the interrupted task can be adopted.
 """
 
+import os
 import re
 from copy import copy
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.gunicorn_fractal import BOOT_TIMESTAMP_ENV_VAR
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
 from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import merge_type_filters
@@ -47,7 +49,6 @@ from fractal_server.runner.executors.slurm_rest.settings import (
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenProvider
 from fractal_server.runner.task_files import task_subfolder_name
 from fractal_server.ssh._fabric import FractalSSHList
-from fractal_server.utils import get_timestamp
 
 from .slurm_evidence import FractalSlurmJob
 from .slurm_evidence import collect_fractal_slurm_jobs
@@ -59,8 +60,10 @@ RESUME_MARKER = "RESUME boot="
 _RESUMED_TASK_PATTERN = re.compile(
     rf"^{re.escape(RESUME_MARKER)}\S+ k=(\d+) ", flags=re.MULTILINE
 )
-# Imported at app creation, so this is (roughly) the server start time
-SERVER_BOOT_TIMESTAMP = get_timestamp()
+# Start of the gunicorn master, shared by all its workers
+SERVER_BOOT_TIMESTAMP = datetime.fromisoformat(
+    os.environ[BOOT_TIMESTAMP_ENV_VAR]
+)
 # Margin between server and SLURM clocks, for the accounting query
 ACCOUNTING_START_MARGIN = 3600
 WFTASK_DUMP_KEYS = (

@@ -5,7 +5,15 @@ import signal
 from gunicorn.glogging import Logger as GunicornLogger
 from uvicorn_worker import UvicornWorker
 
+from fractal_server.utils import get_timestamp
+
 logger = logging.getLogger("uvicorn.error")
+
+# Server start time for the resume of orphaned jobs. Gunicorn imports this
+# module in the master (via `--logger-class`), so all workers inherit the same
+# value; without gunicorn, it is set on first import.
+BOOT_TIMESTAMP_ENV_VAR = "FRACTAL_SERVER_BOOT_TIMESTAMP"
+os.environ.setdefault(BOOT_TIMESTAMP_ENV_VAR, get_timestamp().isoformat())
 
 
 class FractalGunicornLogger(GunicornLogger):
