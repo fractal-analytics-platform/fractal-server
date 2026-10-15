@@ -193,7 +193,7 @@ fractalctl init-db-data \
 Now the user wants to log in using her GitHub account associated to the same email.
 
 First, she makes a call to `/auth/github/authorize/`:
-```
+```console
 $ curl \
     -X GET \
     http://127.0.0.1:8000/auth/github/authorize/
@@ -219,7 +219,7 @@ http://127.0.0.1:8000/auth/github/callback/?
 ```
 
 The callback function does not return anything, but the response cookie contains a JWT token
-```
+```json
 "fastapiusersauth": {
 	"httpOnly": true,
 	"path": "/",
@@ -232,8 +232,8 @@ The callback function does not return anything, but the response cookie contains
 > The response cookie can be found using the developer tools of the browser, inspecting the response on the network page.
 
 The user can now make [authenticated calls](#authenticated-calls) using this token, as in
-```
-curl \
+```console
+$ curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
     http://127.0.0.1:8000/auth/current-user/
