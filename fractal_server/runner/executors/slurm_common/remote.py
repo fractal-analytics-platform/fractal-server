@@ -1,3 +1,8 @@
+"""
+NOTE: Do not import any 3rd-party dependency from this module, since it needs
+to run in an environment where no dependencies are installed.
+"""
+
 import argparse
 import json
 import os
