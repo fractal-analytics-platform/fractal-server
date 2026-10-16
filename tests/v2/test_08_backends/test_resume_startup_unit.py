@@ -27,14 +27,11 @@ def _fake_app() -> SimpleNamespace:
 
 
 @pytest.fixture
-def released_locks(monkeypatch) -> list:
-    released = []
-    monkeypatch.setattr(resume_module, "_try_startup_lock", lambda: "lock")
-    monkeypatch.setattr(resume_module, "_release_startup_lock", released.append)
-    return released
+def claimed(monkeypatch) -> None:
+    monkeypatch.setattr(resume_module, "_claim_startup_resume", lambda: True)
 
 
-async def test_resume_orphans_on_startup(monkeypatch, released_locks):
+async def test_resume_orphans_on_startup(monkeypatch, claimed):
     actions = {
         1: ResumeAction.RESUME,
         2: ResumeAction.REFUSE,
@@ -107,23 +104,19 @@ async def test_resume_orphans_on_startup(monkeypatch, released_locks):
     assert submitted[0]["resume"] == "spec"
     # Jobs already resumed by this server are not listed again
     assert listed_with == [BOOT_MARKER]
-    assert released_locks == ["lock"]
 
 
-async def test_resume_orphans_on_startup_listing_fails(
-    monkeypatch, released_locks
-):
+async def test_resume_orphans_on_startup_listing_fails(monkeypatch, claimed):
     def fail(*, started_before, exclude_marker):
         raise RuntimeError("DB down")
 
     monkeypatch.setattr(resume_module, "list_orphan_candidates", fail)
     await resume_module.resume_orphans_on_startup(_fake_app())
-    assert released_locks == ["lock"]
 
 
-async def test_resume_orphans_on_startup_lock_taken(monkeypatch):
+async def test_resume_orphans_on_startup_not_claimed(monkeypatch):
     listed = []
-    monkeypatch.setattr(resume_module, "_try_startup_lock", lambda: None)
+    monkeypatch.setattr(resume_module, "_claim_startup_resume", lambda: False)
     monkeypatch.setattr(
         resume_module,
         "list_orphan_candidates",
@@ -131,6 +124,17 @@ async def test_resume_orphans_on_startup_lock_taken(monkeypatch):
     )
     await resume_module.resume_orphans_on_startup(_fake_app())
     assert listed == []
+
+
+def test_claim_startup_resume(monkeypatch, tmp_path):
+    monkeypatch.setattr(resume_module.tempfile, "gettempdir", lambda: tmp_path)
+    # Only the first worker of a server start claims the resume
+    assert resume_module._claim_startup_resume()
+    assert not resume_module._claim_startup_resume()
+    # A file from an earlier server start does not block this one
+    later = resume_module.SERVER_BOOT_TIMESTAMP.replace(year=2100)
+    monkeypatch.setattr(resume_module, "SERVER_BOOT_TIMESTAMP", later)
+    assert resume_module._claim_startup_resume()
 
 
 async def test_startup_hook_in_app_lifespan(monkeypatch, tmp_path):

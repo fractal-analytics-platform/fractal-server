@@ -4,8 +4,10 @@ optional resume at server startup.
 """
 
 import asyncio
+import tempfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter
@@ -17,10 +19,7 @@ from fastapi import Request
 from fastapi import status
 from fastapi.concurrency import run_in_threadpool
 from pydantic.types import AwareDatetime
-from sqlalchemy import Connection
-from sqlalchemy import text
 
-from fractal_server.app.db import DB
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.logger import set_logger
@@ -41,8 +40,6 @@ from fractal_server.runner.v2.submit_workflow import submit_workflow
 logger = set_logger(__name__)
 # Strong references, so that running tasks are not garbage-collected
 _startup_tasks: set[asyncio.Task] = set()
-# Postgres advisory-lock key, unused elsewhere in fractal-server
-STARTUP_LOCK_KEY = 5_065_183_418_093_015_381
 
 
 def _submit_workflow_kwargs(
@@ -72,47 +69,45 @@ def _keep_task(task: asyncio.Task) -> None:
     task.add_done_callback(_startup_tasks.discard)
 
 
-def _try_startup_lock() -> Connection | None:
+def _claim_startup_resume() -> bool:
     """
-    Take the startup-resume lock on a dedicated connection, without waiting.
+    Whether this worker runs the startup resume: the first worker that
+    creates the lock file wins (the creation is atomic).
+
+    NOTE: if the worker that created the file crashes during the scan,
+    no other worker retries in that boot. The remaining orphans wait for
+    the next restart or the manual POST endpoint.
     """
-    connection = DB.engine_sync().connect()
-    acquired = connection.execute(
-        text("SELECT pg_try_advisory_lock(:key)"),
-        dict(key=STARTUP_LOCK_KEY),
-    ).scalar()
-    connection.commit()
-    if acquired:
-        return connection
-    connection.close()
-    return None
-
-
-def _release_startup_lock(connection: Connection) -> None:
-    # Closing the DBAPI connection releases the lock, also if a query failed
-    connection.invalidate()
-    connection.close()
+    # The boot timestamp in the name keeps a file left by an earlier server
+    # start (the file is never deleted) from blocking this start's resume
+    lock_file = Path(
+        tempfile.gettempdir(),
+        f"fractal-resume-{SERVER_BOOT_TIMESTAMP.timestamp():.6f}.lock",
+    )
+    try:
+        lock_file.touch(exist_ok=False)
+    except FileExistsError:
+        return False
+    return True
 
 
 async def resume_orphans_on_startup(app: FastAPI) -> None:
     """
     Apply the resume plan of every job started before the server start.
 
-    Every gunicorn worker calls this; the advisory lock lets one of them
-    run it. Errors are logged, never raised.
+    Every gunicorn worker calls this; one of them runs it. A job is never
+    resumed twice in any case, see `apply_resume_plan`. Errors are logged,
+    never raised.
     """
     try:
-        lock = await run_in_threadpool(_try_startup_lock)
-    except Exception as e:
-        logger.error(f"Startup resume: cannot take the lock: {e}")
+        claimed = _claim_startup_resume()
+    except OSError as e:
+        logger.error(f"Startup resume: cannot create the lock file: {e}")
         return
-    if lock is None:
+    if not claimed:
         logger.info("Startup resume: run by another worker.")
         return
-    try:
-        await _resume_orphans(app)
-    finally:
-        _release_startup_lock(lock)
+    await _resume_orphans(app)
 
 
 async def _resume_orphans(app: FastAPI) -> None:
