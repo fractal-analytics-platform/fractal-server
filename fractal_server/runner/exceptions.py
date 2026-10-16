@@ -4,8 +4,6 @@ part of `runner/executors/slurm_common/remote.py` - which needs to run in an
 environment where no dependencies are installed.
 """
 
-import pydantic  # noqa: F401
-
 
 class TaskExecutionError(RuntimeError):
     """
