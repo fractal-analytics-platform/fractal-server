@@ -10,7 +10,7 @@
 * Dependencies:
     * Udpdate lock (\#3469).
 * Testing:
-    * Test that `remote.py` can running without 3rd-party dependencies (\#3472).
+    * Test that `remote.py` can run without 3rd-party dependencies (\#3472).
 
 # 2.25.3
 
