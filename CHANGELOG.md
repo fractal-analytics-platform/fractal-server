@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Runner:
+    * Add SLURM REST runner for `slurm_ssh` resources, which submits, polls and cancels SLURM jobs through `slurmrestd`; disabled by default, enabled via `FRACTAL_SLURM_REST_ENABLED`.
+
 # 2.24.2
 
 * API:

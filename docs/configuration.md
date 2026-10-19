@@ -43,6 +43,10 @@ Here are all the configuration variables with their description (note: expand th
     options:
       show_root_heading: true
 
+### ::: fractal_server.runner.executors.slurm_rest.settings.SlurmRestSettings
+    options:
+      show_root_heading: true
+
 
 ## Minimal working example
 
