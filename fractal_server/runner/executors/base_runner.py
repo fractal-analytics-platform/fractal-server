@@ -91,6 +91,7 @@ class BaseRunner:
         resource: Resource,
         profile: Profile,
         fractal_ssh: FractalSSH,
+        user_id: int,
         job_root: str,
         since: int,
     ) -> list[FractalSlurmJob]:
@@ -101,6 +102,7 @@ class BaseRunner:
             resource:
             profile:
             fractal_ssh:
+            user_id: Owner of the Fractal job.
             job_root: Remote folder of the Fractal job.
             since: Unix timestamp, lower bound for the job start time.
         """

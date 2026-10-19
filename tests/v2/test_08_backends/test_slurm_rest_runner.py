@@ -128,8 +128,7 @@ async def test_rest_submit(
 
     assert len(fake_rest.submitted) == 1
     job = fake_rest.submitted[0]["job"]
-    # Same stdout path as `sbatch` over SSH
-    # (`<subfolder>/<prefix>-slurm-%j.out`)
+    # Resume identifies SLURM jobs by this path, see `parse_stdout_path`
     assert job["standard_output"] == (
         f"{task_files.wftask_subfolder_remote.as_posix()}/"
         f"{task_files.prefix}-slurm-%j.out"

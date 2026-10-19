@@ -1,6 +1,7 @@
 import json
 import ssl
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from typing import Any
@@ -61,6 +62,7 @@ class SlurmRestClient:
         if not base_url.startswith(("https://", "http://")):
             raise ValueError(f"Invalid slurmrestd URL scheme: '{base_url}'.")
         self.base_url = f"{base_url.rstrip('/')}/slurm/{api_version}"
+        self.slurmdb_url = f"{base_url.rstrip('/')}/slurmdb/{api_version}"
         self.username = username
         self.get_token = get_token
         self.timeout = timeout
@@ -77,8 +79,9 @@ class SlurmRestClient:
         method: str,
         path: str,
         body: dict[str, Any] | None = None,
+        slurmdb: bool = False,
     ) -> dict[str, Any]:
-        url = f"{self.base_url}{path}"
+        url = f"{self.slurmdb_url if slurmdb else self.base_url}{path}"
         data = json.dumps(body).encode() if body is not None else None
         for attempt in (1, 2):
             request = urllib.request.Request(
@@ -167,3 +170,27 @@ class SlurmRestClient:
 
     def cancel_job(self, job_id: str) -> None:
         self._request("DELETE", f"/job/{job_id}")
+
+    def list_jobs(self) -> list[dict[str, Any]]:
+        """
+        Return all jobs visible to the user (raw `GET /jobs` items).
+        """
+        return self._request("GET", "/jobs").get("jobs", [])
+
+    def list_accounting_jobs(self, *, start_time: int) -> list[dict[str, Any]]:
+        """
+        Return the user's jobs from `slurmdbd`, started after `start_time`.
+
+        Args:
+            start_time: Unix timestamp.
+        """
+        query = urllib.parse.urlencode(
+            dict(
+                users=self.username,
+                start_time=start_time,
+                skip_steps="true",
+            )
+        )
+        return self._request("GET", f"/jobs?{query}", slurmdb=True).get(
+            "jobs", []
+        )

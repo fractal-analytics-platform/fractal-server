@@ -44,11 +44,13 @@ def process_workflow(
     slurm_account: str | None = None,
     worker_init: str | None = None,
     user_cache_dir: str,
+    adopt_since: int | None = None,
 ) -> None:
     """
     Run a workflow through the SLURM REST runner.
 
-    Arguments are the same as for `_slurm_ssh.process_workflow`.
+    Arguments are the same as for `_slurm_ssh.process_workflow`, plus
+    `adopt_since` (see `SlurmRestRunner`).
     """
     num_tasks = len(workflow.task_list)
     first_task_index, last_task_index = set_start_and_last_task_index(
@@ -69,6 +71,7 @@ def process_workflow(
         fractal_job_id=job_id,
         resource_id=resource.id,
         user_id=user_id,
+        adopt_since=adopt_since,
     ) as runner:
         execute_tasks(
             wf_task_list=workflow.task_list[
