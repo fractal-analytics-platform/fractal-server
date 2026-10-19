@@ -29,7 +29,7 @@ These settings are global, so all `slurm_ssh` resources share the same `slurmres
 - **No upload**: the job script writes its input/args JSON files (via quoted heredocs) and a copy of itself (`cp "$0"`) in the remote folder. Submission scripts are limited to 4 MB.
 - **Environment**: the job gets the same `PATH` and `HOME` as with `sbatch` over SSH (read via `printenv` at runner start), and `SLURM_CPUS_PER_TASK` is set explicitly.
 - **Polling**: one `GET /jobs` call per poll. Transient failures are tolerated up to 20 consecutive failed queries.
-- **Restart behaviour**: the same as for the SLURM/SSH runner. On graceful shutdown, running SLURM jobs are cancelled (through `slurmrestd`) and the job is marked as failed.
+- **Restart behaviour**: the same as for the SLURM/SSH runner. On graceful shutdown, running SLURM jobs are cancelled (through `slurmrestd`) and the job is marked as failed. After a hard crash, the job can be continued with the [resume of orphaned jobs](./resume.md).
 
 | REST call | When |
 |---|---|
@@ -37,6 +37,7 @@ These settings are global, so all `slurm_ssh` resources share the same `slurmres
 | `POST /slurm/<v>/job/submit` | Each SLURM job submission |
 | `GET /slurm/<v>/jobs` | Each poll |
 | `DELETE /slurm/<v>/job/{id}` | Job stop/shutdown, or unknown-field warning |
+| `GET /slurmdb/<v>/jobs` | Resume only (finished SLURM jobs) |
 
 ## SSH is still required
 

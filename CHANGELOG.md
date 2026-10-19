@@ -5,6 +5,10 @@
 * Runner:
     * Add SLURM REST runner for `slurm_ssh` resources, which submits, polls and cancels SLURM jobs through `slurmrestd`; disabled by default, enabled via `FRACTAL_SLURM_REST_ENABLED`.
     * SLURM REST runner can use the SSO (OAuth/OIDC) token of the user, refreshed with the stored refresh token (`FRACTAL_SLURM_REST_TOKEN_SOURCE=sso`); `scontrol token` over SSH, the `FRACTAL_SLURM_REST_TOKEN_SOURCE` setting and the `FRACTAL_SLURM_REST_TOKEN` override (development only) are temporary.
+    * Add resume of orphaned jobs (left `submitted` by a server crash) for runners that support it (today only the SLURM REST runner), with an optional automatic resume at server start (`FRACTAL_RESUME_ON_STARTUP`).
+    * Save the outputs of each task (images, accounting record, task-run status) in a single database commit.
+* API:
+    * Add superuser endpoints `/admin/v2/resume/` to plan and apply the resume of orphaned jobs.
 
 # 2.24.2
 

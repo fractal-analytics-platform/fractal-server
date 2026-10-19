@@ -18,6 +18,7 @@ nav = [
             "internals/integrations/index.md",
             "internals/integrations/runners.md",
             "internals/integrations/slurm_rest.md",
+            "internals/integrations/resume.md",
             "internals/integrations/tasks.md",
         ]
         },
