@@ -26,6 +26,9 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import JobExecutionError
+from fractal_server.runner.executors.slurm_rest.settings import (
+    is_slurm_rest_enabled,
+)
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
@@ -33,6 +36,7 @@ from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
 from ._local import process_workflow as local_process_workflow
+from ._slurm_rest import process_workflow as slurm_rest_process_workflow
 from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
 
@@ -232,7 +236,11 @@ def submit_workflow(
             case ResourceType.SLURM_SUDO:
                 process_workflow = slurm_sudo_process_workflow
             case ResourceType.SLURM_SSH:
-                process_workflow = slurm_ssh_process_workflow
+                if is_slurm_rest_enabled():
+                    logger.debug("Using SLURM REST runner.")
+                    process_workflow = slurm_rest_process_workflow
+                else:
+                    process_workflow = slurm_ssh_process_workflow
 
         process_workflow(
             workflow=workflow,
