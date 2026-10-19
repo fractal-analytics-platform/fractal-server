@@ -1,0 +1,497 @@
+"""
+Read-only planning of the resume of orphaned jobs.
+
+A job is an orphan if it is `submitted`, runs with a runner that supports
+resume (`BaseRunner.supports_resume`, today `SlurmRestRunner`) and started
+before the cutoff (by default, the start of this server process).
+The database tells where the job stopped; SLURM (via the stdout path stored
+for each job) tells which SLURM jobs of the interrupted task can be adopted.
+"""
+
+import os
+import re
+from copy import copy
+from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel
+from pydantic import Field
+from sqlmodel import or_
+from sqlmodel import select
+
+from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import HistoryRun
+from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import Resource
+from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import JobStatusType
+from fractal_server.app.schemas.v2 import TaskType
+from fractal_server.gunicorn_fractal import BOOT_TIMESTAMP_ENV_VAR
+from fractal_server.images.status_tools import IMAGE_STATUS_KEY
+from fractal_server.images.tools import filter_image_list
+from fractal_server.images.tools import merge_type_filters
+from fractal_server.logger import set_logger
+from fractal_server.runner.executors.base_runner import BaseRunner
+from fractal_server.runner.executors.slurm_common.fractal_slurm_jobs import (
+    FractalSlurmJob,
+)
+from fractal_server.runner.task_files import task_subfolder_name
+from fractal_server.runner.v2._backends import get_backend
+from fractal_server.ssh._fabric import FractalSSHList
+
+logger = set_logger(__name__)
+
+RESUME_MARKER = "RESUME boot="
+# Marker line of a resume that relaunched the job, see `apply_resume_plan`
+_RESUMED_TASK_PATTERN = re.compile(
+    rf"^{re.escape(RESUME_MARKER)}\S+ k=(\d+) ", flags=re.MULTILINE
+)
+# Start of the gunicorn master, shared by all its workers
+SERVER_BOOT_TIMESTAMP = datetime.fromisoformat(
+    os.environ[BOOT_TIMESTAMP_ENV_VAR]
+)
+# Written to `job.log` by `apply_resume_plan`
+BOOT_MARKER = f"{RESUME_MARKER}{SERVER_BOOT_TIMESTAMP.isoformat()}"
+# Margin between server and SLURM clocks, for the accounting query
+ACCOUNTING_START_MARGIN = 3600
+WFTASK_DUMP_KEYS = (
+    "task_id",
+    "order",
+    "type_filters",
+    "args_parallel",
+    "args_non_parallel",
+    "meta_parallel",
+    "meta_non_parallel",
+)
+CONVERTER_TYPES = (
+    TaskType.CONVERTER_NON_PARALLEL,
+    TaskType.CONVERTER_COMPOUND,
+)
+
+
+class ResumeCase(StrEnum):
+    NO_WORKING_DIR = "C0_no_working_dir"
+    NO_HISTORY = "C1_no_history"
+    ALL_TASKS_DONE = "C2_all_tasks_done"
+    TASK_FAILED = "C3_task_failed"
+    NEXT_TASK_NOT_STARTED = "C4_next_task_not_started"
+    RUN_WITHOUT_UNITS = "C5_run_without_units"
+    RUN_WITH_UNITS = "C6_run_with_units"
+
+
+class ResumeAction(StrEnum):
+    NONE = "none"
+    RESUME = "resume"
+    MARK_DONE = "mark_done"
+    MARK_FAILED = "mark_failed"
+    REFUSE = "refuse"
+
+
+class InterruptedTask(BaseModel):
+    task_index: int
+    workflowtask_id: int
+    task_name: str
+    task_type: str
+    subfolder: str
+    history_run_id: int | None = None
+    unit_status_counts: dict[str, int] = Field(default_factory=dict)
+    num_selected_images: int | None = None
+    selection_matches_units: bool | None = None
+    slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
+
+
+class ResumePlan(BaseModel):
+    job_id: int
+    job_status: str
+    start_timestamp: datetime
+    resumable: bool = False
+    case: ResumeCase | None = None
+    action: ResumeAction = ResumeAction.NONE
+    resume_from_task_index: int | None = None
+    type_filters: dict[str, bool] | None = None
+    interrupted_task: InterruptedTask | None = None
+    other_slurm_jobs: list[FractalSlurmJob] = Field(default_factory=list)
+    resume_marker_present: bool = False
+    previously_resumed_task_index: int | None = None
+    reasons: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+@dataclass
+class _RemoteContext:
+    job_id: int
+    user_id: int
+    start_timestamp: datetime
+    remote_root: str
+    resource: Resource
+    profile: Profile
+    runner_class: type[BaseRunner]
+    later_subfolders: set[str]
+
+
+def _refuse(plan: ResumePlan, reason: str) -> None:
+    plan.action = ResumeAction.REFUSE
+    plan.reasons.append(reason)
+    return None
+
+
+def _subfolder(wftask: WorkflowTaskV2) -> str:
+    # Same as `TaskFiles.subfolder_name`
+    return task_subfolder_name(
+        order=str(wftask.order or 0), task_name=wftask.task.name
+    )
+
+
+def _changed_dump_keys(
+    dump: dict[str, Any], wftask: WorkflowTaskV2
+) -> list[str]:
+    return [
+        key for key in WFTASK_DUMP_KEYS if dump.get(key) != getattr(wftask, key)
+    ]
+
+
+def _selection_from_units(
+    task_type: str, units: list[HistoryUnit]
+) -> list[str] | None:
+    """
+    Image selection at submission time, as stored in the history units.
+    """
+    if task_type in CONVERTER_TYPES:
+        return None
+    if task_type == TaskType.PARALLEL:
+        return [url for unit in units for url in unit.zarr_urls]
+    # Non-parallel unit, or compound init unit (the first one)
+    return list(units[0].zarr_urls) if units else []
+
+
+def last_resumed_task_index(log: str | None) -> int | None:
+    """
+    Task index from which the latest resume relaunched the job, if any.
+    """
+    matches = _RESUMED_TASK_PATTERN.findall(log or "")
+    return int(matches[-1]) if matches else None
+
+
+def list_orphan_candidates(
+    *, started_before: datetime, exclude_marker: str | None = None
+) -> list[int]:
+    with next(get_sync_db()) as db:
+        stm = (
+            select(JobV2.id)
+            .where(JobV2.status == JobStatusType.SUBMITTED)
+            .where(JobV2.start_timestamp < started_before)
+            .order_by(JobV2.id)
+        )
+        if exclude_marker is not None:
+            stm = stm.where(
+                or_(
+                    JobV2.log.is_(None),
+                    ~JobV2.log.contains(exclude_marker, autoescape=True),
+                )
+            )
+        return list(db.execute(stm).scalars().all())
+
+
+def plan_resume(
+    *,
+    job_id: int,
+    fractal_ssh_list: FractalSSHList | None,
+    started_before: datetime | None = None,
+    check_remote: bool = True,
+) -> ResumePlan | None:
+    """
+    Build the resume plan of a job, without changing anything.
+
+    Args:
+        job_id:
+        fractal_ssh_list: Used for `scontrol token` and remote outputs.
+        started_before: If set, jobs started later are not orphans.
+        check_remote: Whether to query SLURM and read remote files.
+
+    Returns:
+        The plan, or `None` if the job does not exist.
+    """
+    with next(get_sync_db()) as db:
+        job = db.get(JobV2, job_id)
+        if job is None:
+            return None
+        plan = ResumePlan(
+            job_id=job.id,
+            job_status=job.status,
+            start_timestamp=job.start_timestamp,
+            resume_marker_present=RESUME_MARKER in (job.log or ""),
+            previously_resumed_task_index=last_resumed_task_index(job.log),
+        )
+        ctx = _plan_from_db(
+            db=db, job=job, plan=plan, started_before=started_before
+        )
+
+    if ctx is None:
+        return plan
+    if not check_remote:
+        plan.warnings.append("SLURM and remote-file checks were skipped.")
+        return plan
+    try:
+        _add_remote_evidence(
+            ctx=ctx, plan=plan, fractal_ssh_list=fractal_ssh_list
+        )
+    except Exception as e:
+        logger.error(f"Remote checks for job {job_id} failed: {e}")
+        _refuse(plan, f"SLURM or remote-file checks failed: {e}")
+    return plan
+
+
+def _plan_from_db(
+    *,
+    db,
+    job: JobV2,
+    plan: ResumePlan,
+    started_before: datetime | None,
+) -> _RemoteContext | None:
+    if job.status != JobStatusType.SUBMITTED:
+        plan.reasons.append(f"Job status is '{job.status}'.")
+        return None
+    if started_before is not None and job.start_timestamp >= started_before:
+        plan.reasons.append(
+            f"Job started after {started_before.isoformat()}, "
+            "so a live server process owns it."
+        )
+        return None
+    if None in (job.project_id, job.workflow_id, job.dataset_id):
+        return _refuse(plan, "Project, workflow or dataset was deleted.")
+
+    project = db.get_one(ProjectV2, job.project_id)
+    workflow = db.get_one(WorkflowV2, job.workflow_id)
+    dataset = db.get_one(DatasetV2, job.dataset_id)
+    resource = db.get_one(Resource, project.resource_id)
+    runner_class = get_backend(resource).runner_class
+    if not runner_class.supports_resume:
+        plan.reasons.append(
+            f"Resource '{resource.name}' uses {runner_class.__name__}, "
+            "which does not support resume."
+        )
+        return None
+    plan.resumable = True
+
+    # TODO: C0 comes from the separate commits in `submit_job`
+    # (`app/routes/api/v2/submit.py`), which could be merged into one; not a
+    # problem as is, since the job is just marked failed.
+    if job.working_dir is None or job.working_dir_user is None:
+        plan.case = ResumeCase.NO_WORKING_DIR
+        plan.action = ResumeAction.MARK_FAILED
+        return None
+
+    first, last = job.first_task_index, job.last_task_index
+    wftasks = workflow.task_list
+    if last >= len(wftasks):
+        return _refuse(plan, "Workflow has fewer tasks than at submission.")
+    index_by_wftask_id = {
+        wftasks[idx].id: idx for idx in range(first, last + 1)
+    }
+
+    runs = (
+        db.execute(
+            select(HistoryRun)
+            .where(HistoryRun.job_id == job.id)
+            .order_by(HistoryRun.id)
+        )
+        .scalars()
+        .all()
+    )
+    latest_runs: dict[int, HistoryRun] = {}
+    for run in runs:
+        if run.workflowtask_id not in index_by_wftask_id:
+            return _refuse(
+                plan,
+                f"HistoryRun {run.id} does not match the current tasks "
+                "of the workflow.",
+            )
+        latest_runs[run.workflowtask_id] = run
+
+    if any(
+        run.status == HistoryUnitStatus.FAILED for run in latest_runs.values()
+    ):
+        plan.case = ResumeCase.TASK_FAILED
+        plan.action = ResumeAction.MARK_FAILED
+        return None
+
+    # Replay the type filters that the engine accumulates across tasks
+    type_filters = copy(job.type_filters)
+    k = None
+    for idx in range(first, last + 1):
+        run = latest_runs.get(wftasks[idx].id)
+        if run is None or run.status != HistoryUnitStatus.DONE:
+            k = idx
+            break
+        type_filters.update(wftasks[idx].task.output_types)
+    if k is None:
+        plan.case = ResumeCase.ALL_TASKS_DONE
+        plan.action = ResumeAction.MARK_DONE
+        return None
+    if any(index_by_wftask_id[wid] > k for wid in latest_runs):
+        return _refuse(plan, f"Found runs for tasks after task {k}.")
+
+    wftask = wftasks[k]
+    run = latest_runs.get(wftask.id)
+    plan.type_filters = type_filters
+    plan.resume_from_task_index = k
+    plan.action = ResumeAction.RESUME
+    info = InterruptedTask(
+        task_index=k,
+        workflowtask_id=wftask.id,
+        task_name=wftask.task.name,
+        task_type=wftask.task_type,
+        subfolder=_subfolder(wftask),
+    )
+    plan.interrupted_task = info
+
+    units: list[HistoryUnit] = []
+    if run is None:
+        plan.case = (
+            ResumeCase.NO_HISTORY
+            if not latest_runs
+            else ResumeCase.NEXT_TASK_NOT_STARTED
+        )
+    else:
+        info.history_run_id = run.id
+        changed = _changed_dump_keys(run.workflowtask_dump, wftask)
+        if changed:
+            return _refuse(
+                plan, f"Task {k} changed since it started: {changed}."
+            )
+        units = (
+            db.execute(
+                select(HistoryUnit)
+                .where(HistoryUnit.history_run_id == run.id)
+                .order_by(HistoryUnit.id)
+            )
+            .scalars()
+            .all()
+        )
+        for unit in units:
+            info.unit_status_counts[unit.status] = (
+                info.unit_status_counts.get(unit.status, 0) + 1
+            )
+        if not units:
+            plan.case = ResumeCase.RUN_WITHOUT_UNITS
+        else:
+            # Units may be finished or not: the runner adopts either way
+            plan.case = ResumeCase.RUN_WITH_UNITS
+
+    uses_status_filter = IMAGE_STATUS_KEY in job.attribute_filters
+    if uses_status_filter and (k != first or units):
+        return _refuse(
+            plan,
+            "The image-status filter would select different images on resume.",
+        )
+
+    # Image selection that the engine would compute on resume
+    predicted_selection = None
+    if wftask.task_type not in CONVERTER_TYPES and not uses_status_filter:
+        task_type_filters = copy(type_filters)
+        task_type_filters.update(
+            merge_type_filters(
+                task_input_types=wftask.task.input_types,
+                wftask_type_filters=wftask.type_filters,
+            )
+        )
+        selected = filter_image_list(
+            filter_image_list(dataset.images, type_filters=task_type_filters),
+            attribute_filters=job.attribute_filters,
+        )
+        predicted_selection = [img["zarr_url"] for img in selected]
+        info.num_selected_images = len(predicted_selection)
+
+    if units and predicted_selection is not None:
+        info.selection_matches_units = predicted_selection == (
+            _selection_from_units(wftask.task_type, units)
+        )
+        if not info.selection_matches_units:
+            return _refuse(
+                plan, "Images selected now differ from the task units."
+            )
+
+    user = db.execute(
+        select(UserOAuth).where(UserOAuth.email == job.user_email)
+    ).scalar_one_or_none()
+    if user is None or user.profile_id is None:
+        return _refuse(plan, f"No user or profile for '{job.user_email}'.")
+
+    return _RemoteContext(
+        job_id=job.id,
+        user_id=user.id,
+        start_timestamp=job.start_timestamp,
+        remote_root=job.working_dir_user,
+        resource=resource,
+        profile=db.get_one(Profile, user.profile_id),
+        runner_class=runner_class,
+        later_subfolders={
+            _subfolder(wftasks[idx]) for idx in range(k + 1, last + 1)
+        },
+    )
+
+
+def _add_remote_evidence(
+    *,
+    ctx: _RemoteContext,
+    plan: ResumePlan,
+    fractal_ssh_list: FractalSSHList | None,
+) -> None:
+    if fractal_ssh_list is None:
+        raise RuntimeError("No SSH connection list available.")
+    fractal_ssh = fractal_ssh_list.get(
+        host=ctx.resource.host,
+        user=ctx.profile.username,
+        key_path=ctx.profile.ssh_key_path,
+    )
+    fractal_ssh.check_connection()
+    found_jobs = ctx.runner_class.list_fractal_jobs(
+        resource=ctx.resource,
+        profile=ctx.profile,
+        fractal_ssh=fractal_ssh,
+        user_id=ctx.user_id,
+        job_root=ctx.remote_root,
+        since=int(ctx.start_timestamp.timestamp()) - ACCOUNTING_START_MARGIN,
+    )
+
+    info = plan.interrupted_task
+    for job in found_jobs:
+        if job.subfolder == info.subfolder:
+            info.slurm_jobs.append(job)
+        else:
+            plan.other_slurm_jobs.append(job)
+
+    prefixes = [job.prefix for job in info.slurm_jobs]
+    if len(prefixes) != len(set(prefixes)):
+        plan.warnings.append(
+            "Several SLURM jobs for the same batch; the most recent one "
+            "would be adopted."
+        )
+    if any(job.subfolder in ctx.later_subfolders for job in found_jobs):
+        return _refuse(plan, "Found SLURM jobs for tasks not started yet.")
+    if (
+        plan.case
+        in (
+            ResumeCase.NO_HISTORY,
+            ResumeCase.NEXT_TASK_NOT_STARTED,
+            ResumeCase.RUN_WITHOUT_UNITS,
+        )
+        and info.slurm_jobs
+    ):
+        # A resume of this task deleted its run and was interrupted before
+        # the rerun created new units
+        if plan.previously_resumed_task_index != info.task_index:
+            return _refuse(plan, "Found SLURM jobs for a task without units.")
+        plan.warnings.append(
+            "SLURM jobs from an interrupted resume of this task; they are "
+            "adopted only if their script matches."
+        )

@@ -8,6 +8,7 @@ the individual backends.
 
 import os
 import traceback
+from functools import partial
 from pathlib import Path
 from typing import Protocol
 
@@ -26,19 +27,14 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.runner.executors.slurm_rest.settings import (
-    is_slurm_rest_enabled,
-)
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
 from fractal_server.utils import get_timestamp
 from fractal_server.zip_tools import _zip_folder_to_file_and_remove
 
-from ._local import process_workflow as local_process_workflow
-from ._slurm_rest import process_workflow as slurm_rest_process_workflow
-from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
-from ._slurm_sudo import process_workflow as slurm_sudo_process_workflow
+from ._backends import get_backend
+from .resume.spec import ResumeSpec
 
 
 class ProcessWorkflowType(Protocol):
@@ -95,6 +91,7 @@ def submit_workflow(
     profile: Profile,
     worker_init: str | None = None,
     fractal_ssh: FractalSSH | None = None,
+    resume: ResumeSpec | None = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -126,6 +123,9 @@ def submit_workflow(
         profile:
             Computational profile to be used for this job.
         fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
+        resume:
+            If set, continue an orphaned job (only for runners with
+            `supports_resume`), adopting its existing SLURM jobs.
     """
     # Declare runner backend and set `process_workflow` function
     logger_name = f"WF{workflow_id}_job{job_id}"
@@ -172,7 +172,9 @@ def submit_workflow(
                     )
                     os.umask(original_umask)
                 case ResourceType.SLURM_SSH:
-                    local_job_dir.mkdir(parents=True, exist_ok=False)
+                    local_job_dir.mkdir(
+                        parents=True, exist_ok=resume is not None
+                    )
 
         except Exception as e:
             error_type = type(e).__name__
@@ -210,10 +212,14 @@ def submit_workflow(
             logger_name=logger_name,
             log_file_path=log_file_path,
         )
-        logger.info(
-            f'Start execution of workflow "{workflow.name}"; '
-            f"more logs at {str(log_file_path)}"
-        )
+        if resume is None:
+            start_msg = f'Start execution of workflow "{workflow.name}"'
+        else:
+            start_msg = (
+                f'Resume execution of workflow "{workflow.name}" after a '
+                f"server restart, from task {resume.first_task_index}"
+            )
+        logger.info(f"{start_msg}; more logs at {str(log_file_path)}")
         logger.debug(f"Resource name: {resource.name}")
         logger.debug(f"Profile name: {profile.name}")
         logger.debug(f"Username: {profile.username}")
@@ -223,24 +229,42 @@ def submit_workflow(
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
-        logger.debug(f"job.first_task_index: {job.first_task_index}")
+        logger.debug(
+            f"job.first_task_index: {job.first_task_index}"
+            + (
+                f" (this run starts at task {resume.first_task_index})"
+                if resume is not None
+                else ""
+            )
+        )
         logger.debug(f"job.last_task_index: {job.last_task_index}")
         logger.debug(f'START workflow "{workflow.name}"')
         job_working_dir = job.working_dir
 
+    resume_note = (
+        "Job resumed after a server restart, from task "
+        f"{resume.first_task_index}.\n"
+        if resume is not None
+        else ""
+    )
+
     try:
-        process_workflow: ProcessWorkflowType
-        match resource.type:
-            case ResourceType.LOCAL:
-                process_workflow = local_process_workflow
-            case ResourceType.SLURM_SUDO:
-                process_workflow = slurm_sudo_process_workflow
-            case ResourceType.SLURM_SSH:
-                if is_slurm_rest_enabled():
-                    logger.debug("Using SLURM REST runner.")
-                    process_workflow = slurm_rest_process_workflow
-                else:
-                    process_workflow = slurm_ssh_process_workflow
+        backend = get_backend(resource)
+        logger.debug(f"Runner: {backend.runner_class.__name__}.")
+        process_workflow: ProcessWorkflowType = backend.process_workflow
+
+        first_task_index = job.first_task_index
+        job_type_filters = job.type_filters
+        if resume is not None:
+            if not backend.runner_class.supports_resume:
+                raise RuntimeError(
+                    f"{backend.runner_class.__name__} does not support resume."
+                )
+            process_workflow = partial(
+                backend.process_workflow, adopt_since=resume.adopt_since
+            )
+            first_task_index = resume.first_task_index
+            job_type_filters = resume.type_filters
 
         process_workflow(
             workflow=workflow,
@@ -251,10 +275,10 @@ def submit_workflow(
             workflow_dir_remote=remote_job_dir,
             logger_name=logger_name,
             worker_init=worker_init,
-            first_task_index=job.first_task_index,
+            first_task_index=first_task_index,
             last_task_index=job.last_task_index,
             job_attribute_filters=job.attribute_filters,
-            job_type_filters=job.type_filters,
+            job_type_filters=job_type_filters,
             resource=resource,
             profile=profile,
             user_cache_dir=user_cache_dir,
@@ -288,7 +312,7 @@ def submit_workflow(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"JOB ERROR in Fractal job {job.id}:\n"
+                    f"{resume_note}JOB ERROR in Fractal job {job.id}:\n"
                     f"TRACEBACK:\n{e.assemble_error()}"
                 ),
                 logger_name=logger_name,
@@ -305,7 +329,7 @@ def submit_workflow(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    f"UNKNOWN ERROR in Fractal job {job.id}\n"
+                    f"{resume_note}UNKNOWN ERROR in Fractal job {job.id}\n"
                     f"TRACEBACK:\n{current_traceback}"
                 ),
                 logger_name=logger_name,
