@@ -1,11 +1,18 @@
 from enum import StrEnum
 from typing import Any
+from typing import ClassVar
 
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2.task import TaskType
 from fractal_server.logger import set_logger
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.executors.slurm_common.fractal_slurm_jobs import (
+    FractalSlurmJob,
+)
 from fractal_server.runner.task_files import TaskFiles
+from fractal_server.ssh._fabric import FractalSSH
 
 
 class SubmitTaskType(StrEnum):
@@ -65,12 +72,39 @@ logger = set_logger(__name__)
 class BaseRunner:
     """
     Base class for Fractal runners.
+
+    A runner with `supports_resume = True` can continue an orphaned job (see
+    `fractal_server.runner.v2.resume`): it implements `list_fractal_jobs`,
+    and its constructor accepts an `adopt_since` keyword argument.
     """
 
     shared_config: JobRunnerConfigLocal | JobRunnerConfigSLURM
     fractal_job_id: int
     resource_id: int
     executor_error_log: str | None = None
+    supports_resume: ClassVar[bool] = False
+
+    @classmethod
+    def list_fractal_jobs(
+        cls,
+        *,
+        resource: Resource,
+        profile: Profile,
+        fractal_ssh: FractalSSH,
+        job_root: str,
+        since: int,
+    ) -> list[FractalSlurmJob]:
+        """
+        List the SLURM jobs of a Fractal job (only for resumable runners).
+
+        Args:
+            resource:
+            profile:
+            fractal_ssh:
+            job_root: Remote folder of the Fractal job.
+            since: Unix timestamp, lower bound for the job start time.
+        """
+        raise NotImplementedError(f"{cls.__name__} does not support resume.")
 
     def submit(
         self,
