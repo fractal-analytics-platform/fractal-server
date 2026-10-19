@@ -460,6 +460,18 @@ def execute_tasks(
             raise e
 
         with next(get_sync_db()) as db:
+            # Store the SLURM error in the job database (first, since it
+            # rolls back the session on `DataError`)
+            update_executor_error_log_safe(
+                job_id=job_id,
+                executor_error_log=runner.executor_error_log,
+                db=db,
+            )
+
+            # Images, image cache, accounting record and `HistoryRun` status
+            # go in a single commit: after a crash, a `submitted` run then
+            # always means that the task output was not saved (see resume).
+
             # Write current dataset images into the database.
             db_dataset = db.get_one(DatasetV2, dataset.id)
             if ENRICH_IMAGES_WITH_STATUS:
@@ -480,15 +492,6 @@ def execute_tasks(
                 )
             )
 
-            db.commit()
-
-            # Store the SLURM error in the job database
-            update_executor_error_log_safe(
-                job_id=job_id,
-                executor_error_log=runner.executor_error_log,
-                db=db,
-            )
-
             # Create accounting record
             record = AccountingRecord(
                 user_id=user_id,
@@ -496,21 +499,25 @@ def execute_tasks(
                 num_new_images=num_new_images,
             )
             db.add(record)
-            db.commit()
 
             # Update `HistoryRun` entry, and raise an error if task failed
-            try:
-                first_exception = next(
+            first_exception = next(
+                (
                     value.exception
                     for value in outcomes_dict.values()
                     if value.exception is not None
-                )
-                # An exception was found
-                update_status_of_history_run(
-                    history_run_id=history_run_id,
-                    status=HistoryUnitStatus.FAILED,
-                    db_sync=db,
-                )
+                ),
+                None,
+            )
+            history_run = db.get_one(HistoryRun, history_run_id)
+            history_run.status = (
+                HistoryUnitStatus.DONE
+                if first_exception is None
+                else HistoryUnitStatus.FAILED
+            )
+            db.commit()
+
+            if first_exception is not None:
                 logger.warning(f"END    {task_log_description} - ERROR.")
                 # Raise first error
                 raise JobExecutionError(
@@ -519,12 +526,4 @@ def execute_tasks(
                         f"Original error:\n{first_exception}"
                     )
                 )
-            except StopIteration:
-                # No exception was found
-                update_status_of_history_run(
-                    history_run_id=history_run_id,
-                    status=HistoryUnitStatus.DONE,
-                    db_sync=db,
-                )
-                db.commit()
-                logger.debug(f"END    {task_log_description}")
+            logger.debug(f"END    {task_log_description}")
