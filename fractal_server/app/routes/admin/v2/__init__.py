@@ -10,6 +10,7 @@ from .job import router as job_router
 from .profile import router as profile_router
 from .project import router as project_router
 from .resource import router as resource_router
+from .resume import router as resume_router
 from .sharing import router as sharing_router
 from .task import router as task_router
 from .task_group import router as task_group_router
@@ -31,3 +32,4 @@ router_admin.include_router(profile_router, prefix="/profile")
 router_admin.include_router(sharing_router, prefix="/linkuserproject")
 router_admin.include_router(project_router, prefix="/project")
 router_admin.include_router(users_csv_router, prefix="/users-csv")
+router_admin.include_router(resume_router, prefix="/resume")
