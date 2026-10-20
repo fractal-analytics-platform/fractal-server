@@ -17,7 +17,7 @@ from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
 from .script import build_rest_script
 from .settings import get_slurm_rest_settings
-from .token import SlurmTokenProvider
+from .token import get_token_provider
 
 logger = set_logger(__name__)
 
@@ -32,7 +32,8 @@ class SlurmRestRunner(SlurmSSHRunner):
     `slurmrestd`.
 
     SSH is still used for: connection/version checks, remote `mkdir`,
-    `scontrol token`, and fetching artifacts (`_fetch_artifacts`).
+    `scontrol token` (if `FRACTAL_SLURM_REST_TOKEN_SOURCE=scontrol`), and
+    fetching artifacts (`_fetch_artifacts`).
     """
 
     rest_client: SlurmRestClient
@@ -54,6 +55,7 @@ class SlurmRestRunner(SlurmSSHRunner):
         fractal_ssh: FractalSSH,
         fractal_job_id: int,
         resource_id: int,
+        user_id: int,
     ) -> None:
         super().__init__(
             root_dir_local=root_dir_local,
@@ -86,7 +88,12 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.remote_path = self.fractal_ssh.run_command(
             cmd="printenv PATH"
         ).strip()
-        token_provider = SlurmTokenProvider(fractal_ssh=self.fractal_ssh)
+        token_provider = get_token_provider(
+            settings=self.rest_settings,
+            fractal_ssh=self.fractal_ssh,
+            user_id=user_id,
+            slurm_username=self.remote_username,
+        )
         self.rest_client = SlurmRestClient(
             base_url=self.rest_settings.FRACTAL_SLURM_REST_URL,
             api_version=self.rest_settings.FRACTAL_SLURM_REST_API_VERSION,
@@ -99,7 +106,8 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.rest_client.ping()
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
-            f"user={self.remote_username})."
+            f"user={self.remote_username}, "
+            f"token source={token_provider.source})."
         )
 
     def _job_environment(self) -> list[str]:

@@ -59,12 +59,17 @@ class SSHFakeRestClient:
         self.fractal_ssh.run_command(cmd=f"scancel {job_id}")
 
 
+class FakeTokenProvider:
+    def get_token(self, force_refresh: bool = False) -> str:
+        return "x"
+
+
 @pytest.fixture
 def fake_rest(monkeypatch, fractal_ssh, tmp777_path):
     fake = SSHFakeRestClient(fractal_ssh, tmp777_path / "user")
     monkeypatch.setattr(runner_module, "SlurmRestClient", lambda **_: fake)
     monkeypatch.setattr(
-        runner_module.SlurmTokenProvider, "get_token", lambda *a, **k: "x"
+        runner_module, "get_token_provider", lambda **_: FakeTokenProvider()
     )
     return fake
 
@@ -79,6 +84,7 @@ def _get_runner(tmp777_path, fractal_ssh, res, prof, job_id):
         profile=prof,
         fractal_job_id=job_id,
         resource_id=res.id,
+        user_id=1,
     )
 
 
