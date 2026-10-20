@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.4 (unreleased)
+# 2.25.4
 
 * App:
     * Add unique `References` header, to avoid spurious message grouping (e.g. of notifications coming from different instances) in email clients (\#3467).
@@ -8,7 +8,8 @@
     * Fix `markdown_extensions` configuration in `zensical.toml` (\#3469, \#3470).
     * Re-include missing users page in documentation (\#3469).
 * Dependencies:
-    * Udpdate lock (\#3469).
+    * Update lock (\#3469).
+    * Update lock (6a7d42cae8) - ref https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2.
 * Testing:
     * Test that `remote.py` can run without 3rd-party dependencies (\#3472).
 
