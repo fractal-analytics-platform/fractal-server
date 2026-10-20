@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.25.4 (unreleased)
+# 2.25.4
 
 * App:
     * Add unique `References` header, to avoid spurious message grouping (e.g. of notifications coming from different instances) in email clients (\#3467).
