@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Bump `fastapi` to v0.156.8 (\#3473).
+
 # 2.25.4
 
 * App:
