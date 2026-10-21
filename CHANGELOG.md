@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Use pixi v0.82.1 in tests (\#3474).
+
 # 2.25.4
 
 * App:
