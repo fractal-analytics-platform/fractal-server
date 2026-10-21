@@ -26,8 +26,8 @@ def test_get_discriminator_value():
 def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
     res, prof = slurm_ssh_resource_profile_fake_objects
     res.tasks_pixi_config = dict(
-        default_version="0.54.1",
-        versions={"0.54.1": "/fake/0.54.1"},
+        default_version="0.82.1",
+        versions={"0.82.1": "/fake/0.82.1"},
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
         ValidResourceBase(**orm_model_to_dict(res))
