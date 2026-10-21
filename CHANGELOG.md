@@ -3,7 +3,7 @@
 # Unreleased
 
 * Testing:
-    * Use pixi v0.82.1 in tests (\#XXXX).
+    * Use pixi v0.82.1 in tests (\#3474).
 
 # 2.25.4
 
