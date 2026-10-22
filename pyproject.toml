@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastapi>=0.146.0,<0.147.0",
+    "fastapi>=0.147.0,<0.148.0",
     "sqlalchemy[asyncio] >=2.1.1,<2.2.0",
     "fastapi-users[oauth] >=15,<16",
     "alembic >=1.13.1, <2.0.0",
