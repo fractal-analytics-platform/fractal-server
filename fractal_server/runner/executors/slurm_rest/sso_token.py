@@ -118,20 +118,22 @@ class SsoTokenProvider:
     it. The refresh locks the database row, so that runners in other threads
     or server workers do not refresh it at the same time.
 
+    The SLURM user is the `account_id` (`sub` claim) of the OAuth account,
+    which may differ from `Profile.username` (the SSH user).
+
     Args:
         user_id: ID of the Fractal user.
-        slurm_username:
-            SLURM user (`Profile.username`); must match the `account_id`
-            (`sub`) of the OAuth account.
     """
 
     source = "sso"
 
-    def __init__(self, *, user_id: int, slurm_username: str) -> None:
+    def __init__(self, *, user_id: int) -> None:
         self.user_id = user_id
-        self.slurm_username = slurm_username
         self._token: str | None = None
         self._expires_at: int | None = None
+        with next(get_sync_db()) as db:
+            account = self._get_account(db, lock=False)
+        self.slurm_username: str = account.account_id
 
     def _is_usable(
         self, token: str, expires_at: int | None, rejected: str | None
@@ -180,22 +182,23 @@ class SsoTokenProvider:
         return token
 
     def _get_account(self, db: Session, *, lock: bool) -> OAuthAccount:
-        stm = (
-            select(OAuthAccount)
-            .where(OAuthAccount.user_id == self.user_id)
-            .where(OAuthAccount.account_id == self.slurm_username)
-        )
+        stm = select(OAuthAccount).where(OAuthAccount.user_id == self.user_id)
         if lock:
             # `populate_existing`: reload the row already in the session
             stm = stm.with_for_update().execution_options(
                 populate_existing=True
             )
         accounts = db.execute(stm).scalars().all()
-        if len(accounts) != 1:
+        if len(accounts) == 0:
             raise SlurmTokenError(
-                f"Expected one OAuth account of user {self.user_id} for "
-                f"SLURM user '{self.slurm_username}', found {len(accounts)}. "
+                f"No SSO account for user {self.user_id}. "
                 "Hint: the user must log in to Fractal via SSO."
+            )
+        if len(accounts) > 1:
+            names = sorted(account.oauth_name for account in accounts)
+            raise SlurmTokenError(
+                f"User {self.user_id} has several SSO accounts ({names}): "
+                "cannot choose the SLURM user."
             )
         return accounts[0]
 

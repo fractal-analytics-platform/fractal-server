@@ -60,6 +60,11 @@ class SSHFakeRestClient:
 
 
 class FakeTokenProvider:
+    source = "fake"
+
+    def __init__(self, slurm_username: str):
+        self.slurm_username = slurm_username
+
     def get_token(self, force_refresh: bool = False) -> str:
         return "x"
 
@@ -69,7 +74,9 @@ def fake_rest(monkeypatch, fractal_ssh, tmp777_path):
     fake = SSHFakeRestClient(fractal_ssh, tmp777_path / "user")
     monkeypatch.setattr(runner_module, "SlurmRestClient", lambda **_: fake)
     monkeypatch.setattr(
-        runner_module, "get_token_provider", lambda **_: FakeTokenProvider()
+        runner_module,
+        "get_token_provider",
+        lambda **kwargs: FakeTokenProvider(kwargs["profile_username"]),
     )
     return fake
 
@@ -136,6 +143,7 @@ async def test_rest_submit(
     )
     assert "SLURM_CPUS_PER_TASK=1" in job["environment"]
     assert any(env.startswith("HOME=/") for env in job["environment"])
+    assert f"USER={prof.username}" in job["environment"]
     assert job["current_working_directory"] == (
         task_files.wftask_subfolder_remote.as_posix()
     )

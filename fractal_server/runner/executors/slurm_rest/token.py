@@ -7,7 +7,7 @@ from fractal_server.ssh._fabric import FractalSSH
 from .settings import SlurmRestSettings
 from .sso_token import SlurmTokenError
 from .sso_token import SsoTokenProvider
-from .sso_token import check_token_user
+from .sso_token import jwt_claims
 
 logger = set_logger(__name__)
 
@@ -19,6 +19,8 @@ TOKEN_LIFESPAN = 3600
 class TokenProvider(Protocol):
     # Token source, for logs
     source: str
+    # User that `slurmrestd` acts as (the token user)
+    slurm_username: str
 
     def get_token(self, force_refresh: bool = False) -> str: ...
 
@@ -35,9 +37,14 @@ class ScontrolTokenProvider:
     source = "scontrol (temporary)"
 
     def __init__(
-        self, *, fractal_ssh: FractalSSH, lifespan: int = TOKEN_LIFESPAN
+        self,
+        *,
+        fractal_ssh: FractalSSH,
+        slurm_username: str,
+        lifespan: int = TOKEN_LIFESPAN,
     ) -> None:
         self.fractal_ssh = fractal_ssh
+        self.slurm_username = slurm_username
         self.lifespan = lifespan
         self._token: str | None = None
         self._refresh_at: float = 0.0
@@ -67,13 +74,17 @@ class ScontrolTokenProvider:
 class StaticTokenProvider:
     """
     TEMPORARY (development only): a fixed token, from
-    `FRACTAL_SLURM_REST_TOKEN`. It cannot be refreshed.
+    `FRACTAL_SLURM_REST_TOKEN`. It cannot be refreshed. The SLURM user is
+    the token user (`sub` or `sun` claim), else `default_username`.
     """
 
     source = "FRACTAL_SLURM_REST_TOKEN (temporary)"
 
-    def __init__(self, *, token: str, slurm_username: str) -> None:
-        check_token_user(token, slurm_username)
+    def __init__(self, *, token: str, default_username: str) -> None:
+        claims = jwt_claims(token)
+        self.slurm_username: str = claims.get(
+            "sub", claims.get("sun", default_username)
+        )
         self._token = token
 
     def get_token(self, force_refresh: bool = False) -> str:
@@ -89,26 +100,33 @@ def get_token_provider(
     settings: SlurmRestSettings,
     fractal_ssh: FractalSSH,
     user_id: int,
-    slurm_username: str,
+    profile_username: str,
 ) -> TokenProvider:
     """
     Token provider selected by `FRACTAL_SLURM_REST_TOKEN_SOURCE`, unless the
     temporary `FRACTAL_SLURM_REST_TOKEN` override is set.
+
+    Args:
+        settings:
+        fractal_ssh:
+        user_id: Fractal user.
+        profile_username:
+            SSH user; also the SLURM user for `scontrol` tokens.
     """
     provider: TokenProvider
     if settings.FRACTAL_SLURM_REST_TOKEN is not None:
         provider = StaticTokenProvider(
             token=settings.FRACTAL_SLURM_REST_TOKEN.get_secret_value(),
-            slurm_username=slurm_username,
+            default_username=profile_username,
         )
     elif settings.FRACTAL_SLURM_REST_TOKEN_SOURCE == "sso":
-        provider = SsoTokenProvider(
-            user_id=user_id, slurm_username=slurm_username
-        )
+        provider = SsoTokenProvider(user_id=user_id)
     else:
-        provider = ScontrolTokenProvider(fractal_ssh=fractal_ssh)
+        provider = ScontrolTokenProvider(
+            fractal_ssh=fractal_ssh, slurm_username=profile_username
+        )
     logger.info(
-        f"SLURM token source: {provider.source} "
-        f"({user_id=}, {slurm_username=})."
+        f"SLURM token source: {provider.source} ({user_id=}, "
+        f"ssh user={profile_username}, slurm user={provider.slurm_username})."
     )
     return provider

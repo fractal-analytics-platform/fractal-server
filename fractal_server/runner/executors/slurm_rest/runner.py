@@ -34,12 +34,17 @@ class SlurmRestRunner(SlurmSSHRunner):
     SSH is still used for: connection/version checks, remote `mkdir`,
     `scontrol token` (if `FRACTAL_SLURM_REST_TOKEN_SOURCE=scontrol`), and
     fetching artifacts (`_fetch_artifacts`).
+
+    SSH runs as `Profile.username`, while SLURM jobs run as the token user
+    (`slurm_username`), which may differ (e.g. SSO token of the Fractal
+    user, with a shared SSH service account): both users must share the
+    remote job folders.
     """
 
     rest_client: SlurmRestClient
-    remote_home: str
+    slurm_home: str
     remote_path: str
-    remote_username: str
+    slurm_username: str
     _poll_failures: int = 0
 
     def __init__(
@@ -80,24 +85,26 @@ class SlurmRestRunner(SlurmSSHRunner):
             + self.common_script_lines
         )
         self.rest_settings = get_slurm_rest_settings()
-        self.remote_username = profile.username
-        self.remote_home = self.fractal_ssh.run_command(
-            cmd="printenv HOME"
-        ).strip()
-        # Same `PATH` that `sbatch` over SSH passes on to the SLURM job
-        self.remote_path = self.fractal_ssh.run_command(
-            cmd="printenv PATH"
-        ).strip()
         token_provider = get_token_provider(
             settings=self.rest_settings,
             fractal_ssh=self.fractal_ssh,
             user_id=user_id,
-            slurm_username=self.remote_username,
+            profile_username=profile.username,
         )
+        self.slurm_username = token_provider.slurm_username
+        # Not `printenv HOME`, which is the home of the SSH user
+        passwd_entry = self.fractal_ssh.run_command(
+            cmd=f"getent passwd {self.slurm_username}"
+        )
+        self.slurm_home = passwd_entry.strip().split(":")[5]
+        # Same `PATH` that `sbatch` over SSH passes on to the SLURM job
+        self.remote_path = self.fractal_ssh.run_command(
+            cmd="printenv PATH"
+        ).strip()
         self.rest_client = SlurmRestClient(
             base_url=self.rest_settings.FRACTAL_SLURM_REST_URL,
             api_version=self.rest_settings.FRACTAL_SLURM_REST_API_VERSION,
-            username=self.remote_username,
+            username=self.slurm_username,
             get_token=token_provider.get_token,
             verify_tls=self.rest_settings.FRACTAL_SLURM_REST_VERIFY_TLS
             == "true",
@@ -106,16 +113,22 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.rest_client.ping()
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
-            f"user={self.remote_username}, "
+            f"ssh user={profile.username}, "
+            f"slurm user={self.slurm_username}, "
             f"token source={token_provider.source})."
         )
 
     def _job_environment(self) -> list[str]:
         return [
             f"PATH={self.remote_path}",
-            f"HOME={self.remote_home}",
-            f"USER={self.remote_username}",
+            f"HOME={self.slurm_home}",
+            f"USER={self.slurm_username}",
         ]
+
+    @override
+    def _mkdir_remote_folder(self: Self, folder: str) -> None:
+        # Group-writable and setgid, for jobs running as the SLURM user
+        self.fractal_ssh.run_command(cmd=f"mkdir -p -m 2775 {folder}")
 
     @override
     def _send_many_job_inputs(

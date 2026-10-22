@@ -1,6 +1,7 @@
 import base64
 import json
 import time
+from uuid import uuid4
 
 import pytest
 from httpx_oauth.oauth2 import RefreshTokenError
@@ -26,6 +27,8 @@ from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
 
 USERNAME = "slurm-user"
+# Shared SSH service account (`Profile.username`)
+SSH_USERNAME = "ssh-service-user"
 
 
 def _jwt(**claims) -> str:
@@ -52,31 +55,42 @@ def test_jwt_claims_and_token_user():
 
 def test_static_token_provider():
     token = _jwt(sub=USERNAME)
-    provider = StaticTokenProvider(token=token, slurm_username=USERNAME)
+    provider = StaticTokenProvider(token=token, default_username=SSH_USERNAME)
+    assert provider.slurm_username == USERNAME
     assert provider.get_token() == token
     with pytest.raises(SlurmTokenError, match="rejected"):
         provider.get_token(force_refresh=True)
-    with pytest.raises(SlurmTokenError, match="differs"):
-        StaticTokenProvider(token=_jwt(sub="other"), slurm_username=USERNAME)
+    provider = StaticTokenProvider(
+        token=_jwt(sun=USERNAME), default_username=SSH_USERNAME
+    )
+    assert provider.slurm_username == USERNAME
+    provider = StaticTokenProvider(
+        token="opaque-token", default_username=SSH_USERNAME
+    )
+    assert provider.slurm_username == SSH_USERNAME
 
 
-def test_get_token_provider(monkeypatch, tmp_path):
+def test_get_token_provider(monkeypatch, tmp_path, oauth_user):
     # Avoid reading a local `.fractal_server.env`
     monkeypatch.chdir(tmp_path)
     for key in ("FRACTAL_SLURM_REST_TOKEN", "FRACTAL_SLURM_REST_TOKEN_SOURCE"):
         monkeypatch.delenv(key, raising=False)
-    kwargs = dict(fractal_ssh=None, user_id=1, slurm_username=USERNAME)
+    user_id = oauth_user(access_token=_jwt(sub=USERNAME), expires_at=None)
+    kwargs = dict(
+        fractal_ssh=None, user_id=user_id, profile_username=SSH_USERNAME
+    )
 
     settings = SlurmRestSettings()
     assert settings.FRACTAL_SLURM_REST_TOKEN_SOURCE == "scontrol"
-    assert isinstance(
-        get_token_provider(settings=settings, **kwargs), ScontrolTokenProvider
-    )
+    provider = get_token_provider(settings=settings, **kwargs)
+    assert isinstance(provider, ScontrolTokenProvider)
+    assert provider.slurm_username == SSH_USERNAME
 
     settings = SlurmRestSettings(FRACTAL_SLURM_REST_TOKEN_SOURCE="sso")
     provider = get_token_provider(settings=settings, **kwargs)
     assert isinstance(provider, SsoTokenProvider)
-    assert provider.user_id == 1
+    assert provider.user_id == user_id
+    assert provider.slurm_username == USERNAME
 
     token = _jwt(sub=USERNAME)
     monkeypatch.setenv("FRACTAL_SLURM_REST_TOKEN", token)
@@ -96,20 +110,22 @@ def oauth_user(db_sync):
         expires_at: int | None,
         refresh_token: str | None = "refresh-1",
         account_id: str = USERNAME,
+        oauth_names: tuple[str, ...] = ("openid",),
     ) -> int:
         user = UserOAuth(
-            email="sso-user@example.org",
+            email=f"sso-{uuid4().hex}@example.org",
             hashed_password="xxx",
             project_dirs=["/fake"],
             oauth_accounts=[
                 OAuthAccount(
-                    oauth_name="openid",
+                    oauth_name=oauth_name,
                     access_token=access_token,
                     expires_at=expires_at,
                     refresh_token=refresh_token,
                     account_id=account_id,
                     account_email="sso-user@example.org",
                 )
+                for oauth_name in oauth_names
             ],
         )
         db_sync.add(user)
@@ -148,7 +164,7 @@ def test_sso_token_valid(db_sync, oauth_user, fake_idp):
     calls, _ = fake_idp
     token = _jwt(sub=USERNAME)
     user_id = oauth_user(access_token=token, expires_at=int(time.time()) + 3600)
-    provider = SsoTokenProvider(user_id=user_id, slurm_username=USERNAME)
+    provider = SsoTokenProvider(user_id=user_id)
     assert provider.get_token() == token
     assert provider.get_token() == token
     assert calls == []
@@ -160,7 +176,7 @@ def test_sso_token_expiry_from_jwt(db_sync, oauth_user, fake_idp):
     new = _jwt(sub=USERNAME, n=2)
     user_id = oauth_user(access_token=old, expires_at=None)
     responses.append(dict(access_token=new, expires_at=None))
-    provider = SsoTokenProvider(user_id=user_id, slurm_username=USERNAME)
+    provider = SsoTokenProvider(user_id=user_id)
     assert provider.get_token() == new
     assert calls == ["refresh-1"]
     # No `exp` in the new token, nor `expires_at`: used until rejected
@@ -180,7 +196,7 @@ def test_sso_token_refresh(db_sync, oauth_user, fake_idp):
     responses.append(
         dict(access_token=new, expires_at=now + 300, refresh_token="refresh-2")
     )
-    provider = SsoTokenProvider(user_id=user_id, slurm_username=USERNAME)
+    provider = SsoTokenProvider(user_id=user_id)
     assert provider.get_token() == new
     assert provider.get_token() == new
     assert calls == ["refresh-1"]
@@ -209,7 +225,7 @@ def test_sso_token_refreshed_elsewhere(db_sync, oauth_user, fake_idp):
     old = _jwt(sub=USERNAME, n=1)
     new = _jwt(sub=USERNAME, n=2)
     user_id = oauth_user(access_token=old, expires_at=now + 3600)
-    provider = SsoTokenProvider(user_id=user_id, slurm_username=USERNAME)
+    provider = SsoTokenProvider(user_id=user_id)
     assert provider.get_token() == old
 
     account = _get_account(db_sync, user_id)
@@ -227,21 +243,26 @@ def test_sso_token_errors(db_sync, oauth_user, fake_idp):
     calls, responses = fake_idp
     now = int(time.time())
 
-    # No account for this SLURM user
+    # No SSO account
     user_id = oauth_user(
-        access_token=_jwt(sub="other"),
-        expires_at=now + 3600,
-        account_id="other",
+        access_token=_jwt(sub=USERNAME), expires_at=None, oauth_names=()
     )
-    provider = SsoTokenProvider(user_id=user_id, slurm_username=USERNAME)
-    with pytest.raises(SlurmTokenError, match="found 0"):
-        provider.get_token()
+    with pytest.raises(SlurmTokenError, match="No SSO account"):
+        SsoTokenProvider(user_id=user_id)
 
-    # Account for this SLURM user, but token of another one
-    account = _get_account(db_sync, user_id)
-    account.account_id = USERNAME
-    db_sync.add(account)
-    db_sync.commit()
+    # Several SSO accounts
+    user_id = oauth_user(
+        access_token=_jwt(sub=USERNAME),
+        expires_at=None,
+        oauth_names=("openid", "github"),
+    )
+    with pytest.raises(SlurmTokenError, match="several SSO accounts"):
+        SsoTokenProvider(user_id=user_id)
+
+    # Token of another user than the account
+    user_id = oauth_user(access_token=_jwt(sub="other"), expires_at=now + 3600)
+    provider = SsoTokenProvider(user_id=user_id)
+    assert provider.slurm_username == USERNAME
     with pytest.raises(SlurmTokenError, match="differs"):
         provider.get_token()
 

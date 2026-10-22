@@ -17,7 +17,8 @@ def build_rest_script(
 
     Without the SSH upload step, the files that `remote.py` needs (input and
     args JSON files) are written by the job itself via quoted heredocs, right
-    after the shebang/`#SBATCH` header.
+    after the shebang/`#SBATCH` header. The job uses `umask 0002`, so that
+    its files are group-writable and readable by the SSH user.
 
     Args:
         script: Original submission script.
@@ -40,7 +41,7 @@ def build_rest_script(
     if any("'" in path for path in paths):
         raise ValueError(f"Single quotes are not allowed in paths: {paths}.")
 
-    block = []
+    block = ["umask 0002"]
     for remote_path, content in files:
         delimiter = f"FRACTAL_EOF_{uuid4().hex}"
         if delimiter in content:

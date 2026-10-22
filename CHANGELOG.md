@@ -4,7 +4,7 @@
 
 * Runner:
     * Add SLURM REST runner for `slurm_ssh` resources, which submits, polls and cancels SLURM jobs through `slurmrestd`; disabled by default, enabled via `FRACTAL_SLURM_REST_ENABLED`.
-    * SLURM REST runner can use the SSO (OAuth/OIDC) token of the user, refreshed with the stored refresh token (`FRACTAL_SLURM_REST_TOKEN_SOURCE=sso`); `scontrol token` over SSH, the `FRACTAL_SLURM_REST_TOKEN_SOURCE` setting and the `FRACTAL_SLURM_REST_TOKEN` override (development only) are temporary.
+    * SLURM REST runner can use the SSO (OAuth/OIDC) token of the user, refreshed with the stored refresh token (`FRACTAL_SLURM_REST_TOKEN_SOURCE=sso`); SLURM jobs then run as the SSO user, while SSH stays with `Profile.username`; `scontrol token` over SSH, the `FRACTAL_SLURM_REST_TOKEN_SOURCE` setting and the `FRACTAL_SLURM_REST_TOKEN` override (development only) are temporary.
 
 # 2.24.2
 

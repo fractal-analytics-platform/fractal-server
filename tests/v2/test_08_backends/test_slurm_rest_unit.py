@@ -150,7 +150,8 @@ def test_build_rest_script_writes_files(tmp_path):
     lines = script.splitlines()
     assert lines[0] == "#!/bin/sh"
     assert all(line.startswith("#SBATCH") for line in lines[1:11])
-    assert lines[11].startswith(f"cat > '{input_path}'")
+    assert lines[11] == "umask 0002"
+    assert lines[12].startswith(f"cat > '{input_path}'")
 
     script_path = tmp_path / "submit.sh"
     script_path.write_text(script)

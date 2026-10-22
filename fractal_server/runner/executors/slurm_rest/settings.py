@@ -34,11 +34,13 @@ class SlurmRestSettings(BaseSettings):
             over SSH, as the profile user) or `"sso"` (the OAuth/OIDC access
             token stored at the user's Fractal login, refreshed with the
             stored refresh token; `slurmrestd` must trust the identity
-            provider and map its `sub` claim to `Profile.username`).
+            provider and use its `sub` claim as user name). SLURM jobs run
+            as the token user, SSH as `Profile.username`.
         FRACTAL_SLURM_REST_TOKEN:
             TEMPORARY, development only. If set, this token is used for all
-            requests, instead of `FRACTAL_SLURM_REST_TOKEN_SOURCE`. Its user
-            must match `Profile.username`, and it is never refreshed.
+            requests, instead of `FRACTAL_SLURM_REST_TOKEN_SOURCE`. SLURM
+            jobs run as its user (`sub`/`sun` claim, else
+            `Profile.username`), and it is never refreshed.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
