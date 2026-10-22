@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -84,7 +85,7 @@ async def collect_task_pixi(
     background_tasks: BackgroundTasks,
     file: UploadFile,
     pixi_version: NonEmptyStr | None = Form(None),
-    use_pixi_lockfile: bool = Form(True),
+    use_pixi_lockfile: Literal["true", "false"] = Form("true"),
     private: bool = False,
     user_group_id: int | None = None,
     user: UserOAuth = Depends(get_api_user),
@@ -185,7 +186,7 @@ async def collect_task_pixi(
         tar_gz_file=tar_gz_file,
         resource=resource,
         profile=profile,
-        use_pixi_lockfile=use_pixi_lockfile,
+        use_pixi_lockfile=(use_pixi_lockfile == "true"),
     )
     logger.info(
         "Task-collection endpoint: start background collection "
