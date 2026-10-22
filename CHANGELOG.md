@@ -4,6 +4,8 @@
 
 * Dependencies:
     * Bump `fastapi` to v0.159.1 (\#3473).
+* Testing:
+    * Use pixi v0.82.1 in tests (\#3474).
 
 # 2.25.4
 

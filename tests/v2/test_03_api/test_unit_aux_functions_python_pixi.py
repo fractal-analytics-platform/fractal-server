@@ -21,7 +21,7 @@ def test_get_python_interpreter_or_422(
 
 
 def test_get_pixi_version_or_422(local_resource_profile_objects):
-    default_version = "0.54.1"
+    default_version = "0.82.1"
     another_version = "10.11.12"
 
     pixi = TasksPixiSettings(

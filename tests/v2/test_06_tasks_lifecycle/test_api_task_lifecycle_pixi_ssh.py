@@ -36,10 +36,11 @@ def pixi_ssh(tmp777_path: Path) -> TasksPixiSettings:
     original_umask = os.umask(0)
     pixi_common.mkdir(mode=0o777)
     os.umask(original_umask)
-    pixi_home = pixi_common / "0.54.1"
+    pixi_home = pixi_common / "0.82.1"
     script_contents = (
         "export PIXI_NO_PATH_UPDATE=1\n"
-        "export PIXI_VERSION=0.54.1\n"
+        "export PIXI_VERSION=0.82.1\n"
+        "export DO_NOT_TRACK=1\n"
         f"export PIXI_HOME={pixi_home.as_posix()}\n"
         "curl -fsSL https://pixi.sh/install.sh | sh\n"
         f"chmod -R 777 {pixi_home.as_posix()}\n"
@@ -55,8 +56,8 @@ def pixi_ssh(tmp777_path: Path) -> TasksPixiSettings:
     logging.info(f"END   running {cmd=}")
 
     return TasksPixiSettings(
-        default_version="0.54.1",
-        versions={"0.54.1": pixi_home.as_posix()},
+        default_version="0.82.1",
+        versions={"0.82.1": pixi_home.as_posix()},
         SLURM_CONFIG=PixiSLURMConfig(
             partition="main",
             cpus=1,
