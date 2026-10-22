@@ -3,7 +3,7 @@
 # Unreleased
 
 * Dependencies:
-    * Bump `fastapi` to v0.156.8 (\#3473).
+    * Bump `fastapi` to v0.159.1 (\#3473).
 
 # 2.25.4
 
