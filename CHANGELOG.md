@@ -7,7 +7,7 @@
 * API:
     * Make `use_pixi_lockfile` form field of `POST /api/v2/task/collect/pixi/` a `Literal["true", "false"]` (\#3473).
 * Dependencies:
-    * Bump `fastapi` to v0.159.1 (\#3473).
+    * Bump `fastapi` to v0.162 (\#3473).
     * Drop support for Python3.12 (\#3477).
     * Update lock file (\#3477).
 * Testing:
