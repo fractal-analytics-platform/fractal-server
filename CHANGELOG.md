@@ -1,7 +1,12 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.26.0 (unreleased)
 
+> **NOTE**: This release drops support for Python 3.12.
+
+* Dependencies:
+    * Drop support for Python3.12 (\#3477).
+    * Update lock file (\#3477).
 * Testing:
     * Use pixi v0.82.1 in tests (\#3474).
 * Documentation:
