@@ -80,6 +80,9 @@ toggle.name = "Switch to light mode"
 
 [project.plugins.search]
 
+[project.plugins.privacy]
+log_level = "info"
+
 [project.plugins.section-index]
 
 [project.plugins.mkdocs-autoapi]
