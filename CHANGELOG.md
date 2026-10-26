@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.26.0 (unreleased)
+# 2.26.0
 
 > **NOTE**: This release drops support for Python 3.12.
 
