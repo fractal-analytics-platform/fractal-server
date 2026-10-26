@@ -4,6 +4,8 @@
 
 * Testing:
     * Use pixi v0.82.1 in tests (\#3474).
+* Documentation:
+    * Bump zensical to 0.0.72 and enable privacy plugin (\#3475).
 
 # 2.25.4
 
