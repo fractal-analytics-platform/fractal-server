@@ -1,13 +1,19 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.26.0 (unreleased)
+
+> **NOTE**: This release drops support for Python 3.12.
 
 * API:
     * Make `use_pixi_lockfile` form field of `POST /api/v2/task/collect/pixi/` a `Literal["true", "false"]` (\#3473).
 * Dependencies:
     * Bump `fastapi` to v0.159.1 (\#3473).
+    * Drop support for Python3.12 (\#3477).
+    * Update lock file (\#3477).
 * Testing:
     * Use pixi v0.82.1 in tests (\#3474).
+* Documentation:
+    * Bump zensical to 0.0.72 and enable privacy plugin (\#3475).
 
 # 2.25.4
 

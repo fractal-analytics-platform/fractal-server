@@ -27,14 +27,14 @@
       "max_num_jobs": 4
     }
   },
-  "jobs_slurm_python_worker": "/some/venv/bin/python3.12",
+  "jobs_slurm_python_worker": "/some/venv/bin/python3.14",
   "jobs_poll_interval": 10,
   "tasks_local_dir": "/somewhere/local-tasks",
   "tasks_python_config": {
-    "default_version": "3.12",
+    "default_version": "3.14",
     "versions": {
       "3.11": "/some/venv/bin/python3.11",
-      "3.12": "/some/venv/bin/python3.12"
+      "3.14": "/some/venv/bin/python3.14"
     }
   },
   "tasks_pixi_config": {},
