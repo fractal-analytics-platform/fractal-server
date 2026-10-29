@@ -24,10 +24,12 @@ from fractal_server.runner.executors.slurm_rest.job_description import (
 from fractal_server.runner.executors.slurm_rest.job_description import (
     validate_sbatch_lines,
 )
+from fractal_server.runner.executors.slurm_rest.job_script import (
+    build_job_script,
+)
 from fractal_server.runner.executors.slurm_rest.runner import MAX_POLL_FAILURES
 from fractal_server.runner.executors.slurm_rest.runner import STATUS_PLACEHOLDER
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
-from fractal_server.runner.executors.slurm_rest.script import build_rest_script
 from fractal_server.runner.executors.slurm_rest.settings import (
     SlurmRestSettings,
 )
@@ -37,7 +39,7 @@ from fractal_server.runner.executors.slurm_rest.settings import (
 from fractal_server.runner.executors.slurm_rest.settings import (
     is_slurm_rest_enabled,
 )
-from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
+from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
 from fractal_server.syringe import Inject
 from tests.v2._aux_runner import get_default_slurm_config
@@ -151,12 +153,12 @@ def test_validate_sbatch_lines():
         validate_sbatch_lines(["#SBATCH --mail-type=ALL"])
 
 
-def test_build_rest_script_writes_files(tmp_path):
+def test_build_job_script_writes_files(tmp_path):
     input_path = tmp_path / "x-input.json"
     args_path = tmp_path / "x-args.json"
     copy_path = tmp_path / "x-slurm-submit.sh"
     tricky = json.dumps({"a": "$HOME `id` $(id) 'q' \"dq\" \\"}, indent=2)
-    script = build_rest_script(
+    script = build_job_script(
         script=FRACTAL_SCRIPT.replace("/cache/foo", str(tmp_path)),
         files=[(str(input_path), '{"k": 1}'), (str(args_path), tricky)],
         script_copy_path=str(copy_path),
@@ -175,11 +177,11 @@ def test_build_rest_script_writes_files(tmp_path):
     assert copy_path.read_text() == script
 
 
-def test_build_rest_script_limits():
+def test_build_job_script_limits():
     with pytest.raises(ValueError, match="Single quotes"):
-        build_rest_script(script="#!/bin/sh\n", files=[("/a'b", "")])
+        build_job_script(script="#!/bin/sh\n", files=[("/a'b", "")])
     with pytest.raises(ValueError, match="limit"):
-        build_rest_script(
+        build_job_script(
             script="#!/bin/sh\n", files=[("/a", "x" * 5 * 1024 * 1024)]
         )
 

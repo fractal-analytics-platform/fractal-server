@@ -26,7 +26,9 @@ from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.job_description import (
     build_job_description,
 )
-from fractal_server.runner.executors.slurm_rest.script import build_rest_script
+from fractal_server.runner.executors.slurm_rest.job_script import (
+    build_job_script,
+)
 
 ENV_PREFIX = "FRACTAL_TEST_SLURM_REST_"
 REQUIRED = ["URL", "USER", "TOKEN", "WORKDIR"]
@@ -69,7 +71,7 @@ def _request_body(*, body: str, files: list[tuple[str, str]]) -> dict:
         header.append(f"#SBATCH --partition={_env('PARTITION')}")
     script = "\n".join(header + [body]) + "\n"
     return dict(
-        script=build_rest_script(script=script, files=files),
+        script=build_job_script(script=script, files=files),
         job=build_job_description(
             script=script,
             environment=[

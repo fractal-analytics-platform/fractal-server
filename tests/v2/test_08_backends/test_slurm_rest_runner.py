@@ -60,8 +60,6 @@ class SSHFakeRestClient:
 
 
 class FakeTokenProvider:
-    source = "fake"
-
     def __init__(self, slurm_username: str):
         self.slurm_username = slurm_username
 

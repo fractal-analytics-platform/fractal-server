@@ -16,9 +16,9 @@ from fractal_server.syringe import Inject
 from .client import SlurmRestClient
 from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
-from .script import build_rest_script
+from .job_script import build_job_script
 from .settings import get_slurm_rest_settings
-from .sso_token import SlurmTokenError
+from .token import SlurmTokenError
 from .token import get_token_provider
 
 logger = set_logger(__name__)
@@ -113,8 +113,7 @@ class SlurmRestRunner(SlurmSSHRunner):
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
             f"ssh user={profile.username}, "
-            f"slurm user={self.slurm_username}, "
-            f"token source={token_provider.source})."
+            f"slurm user={self.slurm_username})."
         )
 
     def _job_environment(self) -> list[str]:
@@ -174,7 +173,7 @@ class SlurmRestRunner(SlurmSSHRunner):
             environment=self._job_environment(),
         )
         request_body = dict(
-            script=build_rest_script(
+            script=build_job_script(
                 script=original_script,
                 files=files,
                 script_copy_path=slurm_job.slurm_submission_script_remote,

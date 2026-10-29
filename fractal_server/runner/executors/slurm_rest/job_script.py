@@ -6,19 +6,21 @@ from .job_description import SBATCH_PREFIX
 MAX_SCRIPT_BYTES = 4 * 1024 * 1024
 
 
-def build_rest_script(
+def build_job_script(
     *,
     script: str,
     files: list[tuple[str, str]],
     script_copy_path: str | None = None,
 ) -> str:
     """
-    Embed input files into a submission script.
+    Build the `script` of a `POST /job/submit` request (the `job` part comes
+    from `job_description.py`), embedding the input files.
 
-    Without the SSH upload step, the files that `remote.py` needs (input and
-    args JSON files) are written by the job itself via quoted heredocs, right
-    after the shebang/`#SBATCH` header. The job uses `umask 0002`, so that
-    its files are group-writable and readable by the SSH user.
+    The REST runner has no SSH upload step: the files that `remote.py` needs
+    (input and args JSON files) are written by the job itself via quoted
+    heredocs, right after the shebang/`#SBATCH` header. The job uses
+    `umask 0002`, so that its files are group-writable and readable by the
+    SSH user.
 
     Args:
         script: Original submission script.

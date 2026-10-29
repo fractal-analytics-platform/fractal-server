@@ -16,7 +16,7 @@ from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
 )
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
-from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
+from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )

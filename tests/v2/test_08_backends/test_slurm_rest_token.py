@@ -9,20 +9,16 @@ from httpx_oauth.oauth2 import RefreshTokenError
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
-from fractal_server.runner.executors.slurm_rest import sso_token
+from fractal_server.runner.executors.slurm_rest import token as token_module
 from fractal_server.runner.executors.slurm_rest.settings import (
     SlurmRestSettings,
 )
-from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
-from fractal_server.runner.executors.slurm_rest.sso_token import (
-    SsoTokenProvider,
-)
-from fractal_server.runner.executors.slurm_rest.sso_token import (
-    check_token_user,
-)
-from fractal_server.runner.executors.slurm_rest.sso_token import jwt_claims
+from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
+from fractal_server.runner.executors.slurm_rest.token import SsoTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
+from fractal_server.runner.executors.slurm_rest.token import check_token_user
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
+from fractal_server.runner.executors.slurm_rest.token import jwt_claims
 
 USERNAME = "slurm-user"
 # Shared SSH service account (`Profile.username`)
@@ -144,7 +140,9 @@ def fake_idp(monkeypatch):
             raise response
         return response
 
-    monkeypatch.setattr(sso_token, "_refresh_with_identity_provider", _refresh)
+    monkeypatch.setattr(
+        token_module, "_refresh_with_identity_provider", _refresh
+    )
     return calls, responses
 
 
@@ -285,19 +283,21 @@ def test_refresh_with_identity_provider(
         OAUTH_CLIENT_NAME=None, OAUTH_CLIENT_ID=None, OAUTH_CLIENT_SECRET=None
     )
     with pytest.raises(SlurmTokenError, match="not configured"):
-        sso_token._refresh_with_identity_provider("refresh-1")
+        token_module._refresh_with_identity_provider("refresh-1")
 
     class FakeClient:
         async def refresh_token(self, refresh_token: str) -> dict:
             return dict(access_token=f"new-from-{refresh_token}")
 
-    monkeypatch.setattr(sso_token, "_get_oauth_client", lambda _: FakeClient())
+    monkeypatch.setattr(
+        token_module, "_get_oauth_client", lambda _: FakeClient()
+    )
     override_oauth_settings_factory(
         OAUTH_CLIENT_NAME="github",
         OAUTH_CLIENT_ID="id",
         OAUTH_CLIENT_SECRET="secret",
     )
-    assert sso_token._refresh_with_identity_provider("refresh-1") == dict(
+    assert token_module._refresh_with_identity_provider("refresh-1") == dict(
         access_token="new-from-refresh-1"
     )
 
