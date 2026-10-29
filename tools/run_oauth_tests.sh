@@ -15,7 +15,7 @@ export FRACTAL_EMAIL_RECIPIENTS=recipient1@example.org,recipient2@example.org
 export FRACTAL_EMAIL_USE_STARTTLS=false
 export FRACTAL_EMAIL_USE_LOGIN=true
 export FRACTAL_EMAIL_PASSWORD=fakepassword
-export FRACTAL_HELP_URL=https://example.org/info
+export FRACTAL_REGISTRATION_URL=https://example.org/info
 
 uv run --frozen pytest -m "oauth" -vv -s --durations=0
 
