@@ -107,8 +107,8 @@ class SQLAlchemyUserDatabase:
         statement = (
             select(self.user_table)
             .join(self.oauth_account_table)
-            .where(self.oauth_account_table.oauth_name == oauth)  # type: ignore
-            .where(self.oauth_account_table.account_id == account_id)  # type: ignore
+            .where(self.oauth_account_table.oauth_name == oauth)
+            .where(self.oauth_account_table.account_id == account_id)
         )
         return await self._get_user(statement)
 
@@ -140,7 +140,7 @@ class SQLAlchemyUserDatabase:
         await self.session.refresh(user)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
-        user.oauth_accounts.append(oauth_account)  # type: ignore
+        user.oauth_accounts.append(oauth_account)
         self.session.add(user)
 
         await self.session.commit()
