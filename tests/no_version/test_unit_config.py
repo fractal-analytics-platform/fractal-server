@@ -160,7 +160,11 @@ def test_python_config():
     valid = dict(default_version="3.12", versions={"3.12": "/fake"})
     TasksPythonSettings(**valid)
 
-    invalid = dict(default_version="3.11", versions={"3.10": "/fake"})
+    invalid = dict(default_version="3.10", versions={"3.10": "/fake"})
+    with pytest.raises(ValueError):
+        TasksPythonSettings(**invalid)
+
+    invalid = dict(default_version="3.11", versions={"3.12": "/fake"})
     with pytest.raises(ValueError):
         TasksPythonSettings(**invalid)
 
