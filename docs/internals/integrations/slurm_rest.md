@@ -4,18 +4,16 @@ For `slurm_ssh` resources, the SLURM REST runner submits, polls and cancels SLUR
 
 ## Enabling it
 
-The resource type stays `slurm_ssh`. When `FRACTAL_SLURM_REST_ENABLED=true`, **all** `slurm_ssh` resources use the REST runner (the setting is read for each job, and there is no fallback to SSH). The other settings are described in [`SlurmRestSettings`](../../configuration.md#fractal_server.runner.executors.slurm_rest.settings.SlurmRestSettings); in short:
+The resource type stays `slurm_ssh`. When `FRACTAL_SLURM_REST_ENABLED=true`, **all** `slurm_ssh` resources use the REST runner (settings are read at server startup, and invalid values make it fail; there is no fallback to SSH). The other settings are described in [`SlurmRestSettings`](../../configuration.md#fractal_server.runner.executors.slurm_rest.settings.SlurmRestSettings); in short:
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `FRACTAL_SLURM_REST_ENABLED` | `false` | `true` to use the REST runner |
-| `FRACTAL_SLURM_REST_URL` | – | Base URL of `slurmrestd` (without `/slurm/<version>`); required if enabled |
-| `FRACTAL_SLURM_REST_API_VERSION` | `v0.0.44` | OpenAPI plugin version |
-| `FRACTAL_SLURM_REST_VERIFY_TLS` | `true` | Verify the TLS certificate of `slurmrestd` |
-| `FRACTAL_SLURM_REST_CA_BUNDLE` | – | PEM file with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs |
+| `FRACTAL_SLURM_REST_URL` | – | HTTPS base URL of `slurmrestd` (without `/slurm/<version>`); required if enabled |
+| `FRACTAL_SLURM_REST_CA_BUNDLE` | – | PEM file with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs. TLS verification cannot be disabled |
 | `FRACTAL_SLURM_REST_TOKEN` | – | **Development only**: fixed token used for all requests of all users, instead of their SSO token (never refreshed) |
 
-These settings are global, so all `slurm_ssh` resources share the same `slurmrestd` instance.
+These settings are global, so all `slurm_ssh` resources share the same `slurmrestd` instance. The `slurmrestd` OpenAPI version is fixed in the code (`v0.0.44`, `SLURM_REST_API_VERSION`), since the JSON job description and the response parsing follow it. The settings describe a cluster, and should move to `Resource` (e.g. a dedicated `slurm_rest` resource type), as `host` and the other cluster settings.
 
 ## How it works
 

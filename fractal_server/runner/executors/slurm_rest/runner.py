@@ -11,6 +11,7 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 )
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.syringe import Inject
 
 from .client import SlurmRestClient
 from .job_description import build_job_description
@@ -86,7 +87,7 @@ class SlurmRestRunner(SlurmSSHRunner):
             )
             + self.common_script_lines
         )
-        self.rest_settings = get_slurm_rest_settings()
+        self.rest_settings = Inject(get_slurm_rest_settings)
         token_provider = get_token_provider(
             settings=self.rest_settings,
             user_id=user_id,
@@ -103,12 +104,9 @@ class SlurmRestRunner(SlurmSSHRunner):
             cmd="printenv PATH"
         ).strip()
         self.rest_client = SlurmRestClient(
-            base_url=self.rest_settings.FRACTAL_SLURM_REST_URL,
-            api_version=self.rest_settings.FRACTAL_SLURM_REST_API_VERSION,
+            base_url=self.rest_settings.base_url,
             username=self.slurm_username,
             get_token=token_provider.get_token,
-            verify_tls=self.rest_settings.FRACTAL_SLURM_REST_VERIFY_TLS
-            == "true",
             ca_bundle=self.rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
         )
         self.rest_client.ping()

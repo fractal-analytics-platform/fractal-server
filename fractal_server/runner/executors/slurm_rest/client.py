@@ -9,6 +9,11 @@ from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 
+# The response parsing below and the job description built in
+# `job_description.py` follow this version of the `slurmrestd` OpenAPI
+# plugin: supporting another version needs code changes, not configuration
+SLURM_REST_API_VERSION = "v0.0.44"
+
 
 class SlurmRestError(RuntimeError):
     pass
@@ -33,17 +38,17 @@ def _error_descriptions(payload: dict[str, Any]) -> list[str]:
 
 class SlurmRestClient:
     """
-    Minimal `slurmrestd` client (`/slurm/<api_version>/` endpoints only).
+    Minimal `slurmrestd` client (`/slurm/<SLURM_REST_API_VERSION>/` endpoints
+    only).
 
     Args:
         base_url: e.g. `https://ctrl1.example.org`.
-        api_version: e.g. `v0.0.44`.
         username: Value of `X-SLURM-USER-NAME`.
         get_token:
             Callable returning a valid JWT; called with `force_refresh=True`
             after a 401 or 511 response.
-        verify_tls: Whether to verify the server TLS certificate.
-        ca_bundle: Optional CA file (PEM) used for TLS verification.
+        ca_bundle:
+            Optional CA file (PEM) for TLS verification (else system CAs).
         timeout: Timeout of each request, in seconds.
     """
 
@@ -51,26 +56,18 @@ class SlurmRestClient:
         self,
         *,
         base_url: str,
-        api_version: str,
         username: str,
         get_token: Callable[..., str],
-        verify_tls: bool = True,
         ca_bundle: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         if not base_url.startswith(("https://", "http://")):
             raise ValueError(f"Invalid slurmrestd URL scheme: '{base_url}'.")
-        self.base_url = f"{base_url.rstrip('/')}/slurm/{api_version}"
+        self.base_url = f"{base_url.rstrip('/')}/slurm/{SLURM_REST_API_VERSION}"
         self.username = username
         self.get_token = get_token
         self.timeout = timeout
-        if verify_tls:
-            self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
-        else:
-            logger.warning("TLS verification is disabled for slurmrestd.")
-            self._ssl_context = ssl.create_default_context()
-            self._ssl_context.check_hostname = False
-            self._ssl_context.verify_mode = ssl.CERT_NONE
+        self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
 
     def _request(
         self,

@@ -31,8 +31,15 @@ from fractal_server.runner.executors.slurm_rest.script import build_rest_script
 from fractal_server.runner.executors.slurm_rest.settings import (
     SlurmRestSettings,
 )
+from fractal_server.runner.executors.slurm_rest.settings import (
+    get_slurm_rest_settings,
+)
+from fractal_server.runner.executors.slurm_rest.settings import (
+    is_slurm_rest_enabled,
+)
 from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
 from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
+from fractal_server.syringe import Inject
 from tests.v2._aux_runner import get_default_slurm_config
 
 FRACTAL_SCRIPT = """#!/bin/sh
@@ -184,8 +191,24 @@ def test_settings(monkeypatch, tmp_path):
     monkeypatch.setenv("FRACTAL_SLURM_REST_ENABLED", "true")
     with pytest.raises(ValueError, match="FRACTAL_SLURM_REST_URL"):
         SlurmRestSettings()
-    monkeypatch.setenv("FRACTAL_SLURM_REST_URL", "https://example.org")
-    assert SlurmRestSettings().FRACTAL_SLURM_REST_URL == "https://example.org"
+    monkeypatch.setenv("FRACTAL_SLURM_REST_URL", "https://example.org/")
+    settings = SlurmRestSettings()
+    assert settings.base_url == "https://example.org"
+    for url in ("http://example.org", "example.org"):
+        with pytest.raises(ValueError, match="FRACTAL_SLURM_REST_URL"):
+            SlurmRestSettings(FRACTAL_SLURM_REST_URL=url)
+    with pytest.raises(ValueError, match="not found"):
+        SlurmRestSettings(FRACTAL_SLURM_REST_CA_BUNDLE=str(tmp_path / "x"))
+    ca_bundle = tmp_path / "ca.pem"
+    ca_bundle.write_text("")
+    settings = SlurmRestSettings(FRACTAL_SLURM_REST_CA_BUNDLE=str(ca_bundle))
+    assert settings.FRACTAL_SLURM_REST_CA_BUNDLE == str(ca_bundle)
+
+    Inject.override(get_slurm_rest_settings, lambda: settings)
+    try:
+        assert is_slurm_rest_enabled()
+    finally:
+        Inject.pop(get_slurm_rest_settings)
 
 
 class _FakeResponse(io.BytesIO):
@@ -232,7 +255,6 @@ def test_client(monkeypatch):
 
     client = SlurmRestClient(
         base_url="https://example.org/",
-        api_version="v0.0.44",
         username="user",
         get_token=get_token,
     )
@@ -298,7 +320,6 @@ def test_client_url_scheme():
     with pytest.raises(ValueError, match="URL scheme"):
         SlurmRestClient(
             base_url="file:///etc",
-            api_version="v0.0.44",
             username="user",
             get_token=lambda force_refresh=False: "token",
         )
