@@ -48,7 +48,7 @@ class SelfRegistrationExceptionData(BaseModel):
         return text
 
 
-def get_self_registration_error_data() -> SelfRegistrationExceptionData:
+def get_self_registration_error() -> SelfRegistrationExceptionData:
     """
     Construct error message to be displayed to the user.
     """

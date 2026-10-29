@@ -46,7 +46,7 @@ from fractal_server.logger import set_logger
 from fractal_server.send_mail import send_fractal_email_or_log_failure
 from fractal_server.syringe import Inject
 
-from ._oauth_self_registration import get_self_registration_error_data
+from .self_registration import get_self_registration_error
 
 logger = set_logger(__name__)
 
@@ -283,8 +283,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 # (0) Log
                 logger.warning(f"Self-registration attempt by {account_email}.")
 
-                # (1) Prepare user-facing error message
-                error_data = get_self_registration_error_data()
+                # (1) Prepare error and its admin-facing version
+                error_data = get_self_registration_error()
                 error_text = error_data.to_text()
 
                 # (2) Send email to admins
