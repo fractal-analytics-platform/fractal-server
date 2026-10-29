@@ -2,6 +2,10 @@
 
 # 2.26.1 (unreleased)
 
+> **NOTE**: When upgrading to this version, you should also upgrade
+> `fractal-web` to version XXX - to make sure self-registration error responses
+> are handled properly.
+
 * App:
     * Rename `FRACTAL_HELP_URL` into `FRACTAL_REGISTRATION_URL` (\#3483).
     * Add `FRACTAL_HELP_EMAIL` configuration variable (\#3483).
