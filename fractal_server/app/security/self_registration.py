@@ -47,6 +47,12 @@ class SelfRegistrationExceptionData(BaseModel):
             text = text.replace(r"%s", param.to_text(), count=1)
         return text
 
+    def to_dict(self: Self) -> dict[str, str | list[dict[str, str]]]:
+        """
+        Use `mode="json"` so that `HttpUrl` is serialized as a string.
+        """
+        return self.model_dump(mode="json")
+
 
 def get_self_registration_error() -> SelfRegistrationExceptionData:
     """

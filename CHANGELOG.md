@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.26.1 (unreleased)
+
+* App:
+    * Rename `FRACTAL_HELP_URL` into `FRACTAL_REGISTRATION_URL` (\#3483).
+    * Add `FRACTAL_HELP_EMAIL` configuration variable (\#3483).
+* Authentication:
+    * Customize errors for OAuth self-registration (\#3483).
+
 # 2.26.0
 
 > **NOTE**: This release drops support for Python 3.12.

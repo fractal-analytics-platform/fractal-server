@@ -301,10 +301,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                     email_settings=email_settings.public,
                 )
 
-                # (3) Raise
+                # (3) Raise exception
                 raise HTTPExceptionWithData(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    data=error_data.model_dump(),
+                    data=error_data.to_dict(),
                 )
         else:
             # Update oauth

@@ -99,4 +99,4 @@ async def test_oauth_callback(
                         account_id="x",
                         account_email="xxx@example.org",
                     )
-                assert HELP_PAGE in str(exc_info.value)
+                assert HELP_PAGE in str(exc_info.value.data)

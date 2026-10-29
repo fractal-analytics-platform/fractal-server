@@ -17,12 +17,14 @@ def test_SelfRegistrationExceptionData():
         params=[{"text": "an url", "url": "https://example.org"}],
     )
     assert data.to_text() == "Here is [an url](https://example.org/)."
+    assert isinstance(data.to_dict()["params"][0]["url"], str)
 
     data = SelfRegistrationExceptionData(
         error_msg="Here is %s.",
         params=[{"text": "an email", "email": "someone@example.org"}],
     )
     assert data.to_text() == "Here is [an email](someone@example.org)."
+    assert isinstance(data.to_dict()["params"][0]["email"], str)
 
     with pytest.raises(ValueError):
         SelfRegistrationExceptionData(
