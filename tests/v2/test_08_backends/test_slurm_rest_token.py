@@ -21,9 +21,6 @@ from fractal_server.runner.executors.slurm_rest.sso_token import (
     check_token_user,
 )
 from fractal_server.runner.executors.slurm_rest.sso_token import jwt_claims
-from fractal_server.runner.executors.slurm_rest.token import (
-    ScontrolTokenProvider,
-)
 from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
 
@@ -74,20 +71,11 @@ def test_static_token_provider():
 def test_get_token_provider(monkeypatch, tmp_path, oauth_user):
     # Avoid reading a local `.fractal_server.env`
     monkeypatch.chdir(tmp_path)
-    for key in ("FRACTAL_SLURM_REST_TOKEN", "FRACTAL_SLURM_REST_TOKEN_SOURCE"):
-        monkeypatch.delenv(key, raising=False)
+    monkeypatch.delenv("FRACTAL_SLURM_REST_TOKEN", raising=False)
     user_id = oauth_user(access_token=_jwt(sub=USERNAME), expires_at=None)
-    kwargs = dict(
-        fractal_ssh=None, user_id=user_id, profile_username=SSH_USERNAME
-    )
+    kwargs = dict(user_id=user_id, profile_username=SSH_USERNAME)
 
     settings = SlurmRestSettings()
-    assert settings.FRACTAL_SLURM_REST_TOKEN_SOURCE == "scontrol"
-    provider = get_token_provider(settings=settings, **kwargs)
-    assert isinstance(provider, ScontrolTokenProvider)
-    assert provider.slurm_username == SSH_USERNAME
-
-    settings = SlurmRestSettings(FRACTAL_SLURM_REST_TOKEN_SOURCE="sso")
     provider = get_token_provider(settings=settings, **kwargs)
     assert isinstance(provider, SsoTokenProvider)
     assert provider.user_id == user_id
@@ -95,7 +83,6 @@ def test_get_token_provider(monkeypatch, tmp_path, oauth_user):
 
     token = _jwt(sub=USERNAME)
     monkeypatch.setenv("FRACTAL_SLURM_REST_TOKEN", token)
-    monkeypatch.setenv("FRACTAL_SLURM_REST_TOKEN_SOURCE", "sso")
     settings = SlurmRestSettings()
     assert token not in repr(settings)
     provider = get_token_provider(settings=settings, **kwargs)

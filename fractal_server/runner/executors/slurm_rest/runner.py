@@ -32,14 +32,14 @@ class SlurmRestRunner(SlurmSSHRunner):
     `slurm_ssh` runner where submission, polling and cancellation go through
     `slurmrestd`.
 
-    SSH is still used for: connection/version checks, remote `mkdir`,
-    `scontrol token` (if `FRACTAL_SLURM_REST_TOKEN_SOURCE=scontrol`), and
-    fetching artifacts (`_fetch_artifacts`).
+    SSH is still used for: connection/version checks, `printenv PATH`,
+    `getent passwd`, remote `mkdir`, and fetching artifacts
+    (`_fetch_artifacts`).
 
     SSH runs as `Profile.username`, while SLURM jobs run as the token user
-    (`slurm_username`), which may differ (e.g. SSO token of the Fractal
-    user, with a shared SSH service account): both users must share the
-    remote job folders.
+    (`slurm_username`, the `sub` of the SSO token of the Fractal user),
+    which may differ (e.g. with a shared SSH service account): both users
+    must share the remote job folders.
     """
 
     rest_client: SlurmRestClient
@@ -89,7 +89,6 @@ class SlurmRestRunner(SlurmSSHRunner):
         self.rest_settings = get_slurm_rest_settings()
         token_provider = get_token_provider(
             settings=self.rest_settings,
-            fractal_ssh=self.fractal_ssh,
             user_id=user_id,
             profile_username=profile.username,
         )

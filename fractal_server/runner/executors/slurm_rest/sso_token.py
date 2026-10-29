@@ -65,7 +65,7 @@ def check_token_user(token: str, slurm_username: str) -> None:
     Fail if the token is a JWT for a user other than `slurm_username`.
 
     `slurmrestd` runs the request as the user in the token (`sub` for
-    identity-provider tokens, `sun` for `scontrol token` ones), not as the
+    identity-provider tokens, `sun` for Slurm-issued ones), not as the
     one in the `X-SLURM-USER-NAME` header.
     """
     claims = jwt_claims(token)
