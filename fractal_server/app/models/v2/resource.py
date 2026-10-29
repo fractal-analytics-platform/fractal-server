@@ -95,11 +95,11 @@ class Resource(Base):
     Python configuration for task collection. Example:
     ```json
     {
-      "default_version": "3.10",
+      "default_version": "3.13",
       "versions:{
-        "3.10": "/xxx/venv-3.10/bin/python",
-        "3.11": "/xxx/venv-3.11/bin/python",
-        "3.12": "/xxx/venv-3.12/bin/python"
+        "3.12": "/xxx/venv-3.12/bin/python",
+        "3.13": "/xxx/venv-3.13/bin/python",
+        "3.14": "/xxx/venv-3.14/bin/python"
        }
     }
     ```

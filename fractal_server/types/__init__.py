@@ -232,8 +232,6 @@ Type of a JSON document.
 
 
 PythonVersion = Literal[
-    "3.9",
-    "3.10",
     "3.11",
     "3.12",
     "3.13",
