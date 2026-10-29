@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Task collection:
+    * Deprecate Python 3.9 and 3.10 for `pip`-based task collections (\#3481).
 * Testing:
     * Use pixi v0.82.1 in tests (\#3474).
 * Documentation:
