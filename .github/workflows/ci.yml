@@ -337,7 +337,7 @@ jobs:
           FRACTAL_EMAIL_USE_STARTTLS: false
           FRACTAL_EMAIL_USE_LOGIN: true
           FRACTAL_EMAIL_PASSWORD: fakepassword
-          FRACTAL_HELP_URL: https://example.org/info
+          FRACTAL_REGISTRATION_URL: https://example.org/info
           # Coverage
           COVERAGE_FILE: "coverage-data-oauth-${{ matrix.python-version }}"
         run: uv run --frozen coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -vv -m "oauth" --durations 0
