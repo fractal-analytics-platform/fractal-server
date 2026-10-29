@@ -1,11 +1,13 @@
 import io
 import json
 import subprocess
+import types
 import typing
 import urllib.error
 
 import pytest
 
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
@@ -22,10 +24,15 @@ from fractal_server.runner.executors.slurm_rest.job_description import (
 from fractal_server.runner.executors.slurm_rest.job_description import (
     validate_sbatch_lines,
 )
+from fractal_server.runner.executors.slurm_rest.runner import MAX_POLL_FAILURES
+from fractal_server.runner.executors.slurm_rest.runner import STATUS_PLACEHOLDER
+from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.executors.slurm_rest.script import build_rest_script
 from fractal_server.runner.executors.slurm_rest.settings import (
     SlurmRestSettings,
 )
+from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
+from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
 from tests.v2._aux_runner import get_default_slurm_config
 
 FRACTAL_SCRIPT = """#!/bin/sh
@@ -295,3 +302,80 @@ def test_client_url_scheme():
             username="user",
             get_token=lambda force_refresh=False: "token",
         )
+
+
+class _FakeStatesClient:
+    """
+    `get_job_states` raises the queued exceptions, then returns `states`.
+    """
+
+    def __init__(self, errors: list[Exception], states: dict[str, str]):
+        self.errors = errors
+        self.states = states
+
+    def get_job_states(self) -> dict[str, str]:
+        if self.errors:
+            raise self.errors.pop(0)
+        return self.states
+
+
+def _runner_with_client(client: _FakeStatesClient) -> SlurmRestRunner:
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.rest_client = client
+    return runner
+
+
+def test_run_squeue_waits_for_token():
+    """
+    Without a valid token, jobs stay active for longer than
+    `MAX_POLL_FAILURES` polls, and are not marked as completed.
+    """
+    n_errors = MAX_POLL_FAILURES + 5
+    runner = _runner_with_client(
+        _FakeStatesClient(
+            errors=[SlurmTokenError("log in again")] * n_errors,
+            states={"1": "RUNNING", "2": "COMPLETED"},
+        )
+    )
+    for _ in range(n_errors):
+        assert runner._get_finished_jobs(job_ids=["1", "2"]) == set()
+        assert runner._poll_failures == 0
+        assert runner._waiting_for_token
+    assert runner._get_finished_jobs(job_ids=["1", "2"]) == {"2"}
+    assert not runner._waiting_for_token
+
+
+def test_run_squeue_poll_failures():
+    runner = _runner_with_client(
+        _FakeStatesClient(
+            errors=[SlurmRestError("down")] * MAX_POLL_FAILURES,
+            states={},
+        )
+    )
+    for _ in range(MAX_POLL_FAILURES - 1):
+        assert runner.run_squeue(job_ids=["1"]) == f"1 {STATUS_PLACEHOLDER}"
+    with pytest.raises(SlurmRestError, match="down"):
+        runner.run_squeue(job_ids=["1"])
+    assert runner.run_squeue(job_ids=[]) == ""
+
+
+def test_process_workflow_token_error(monkeypatch, tmp_path):
+    def _fail(**kwargs):
+        raise SlurmTokenError("Hint: the user must log in to Fractal again.")
+
+    monkeypatch.setattr(slurm_rest_backend, "SlurmRestRunner", _fail)
+    with pytest.raises(JobExecutionError) as exc_info:
+        slurm_rest_backend.process_workflow(
+            job_id=1,
+            workflow=types.SimpleNamespace(task_list=[None]),
+            dataset=None,
+            workflow_dir_local=tmp_path,
+            logger_name="test",
+            job_attribute_filters={},
+            job_type_filters={},
+            user_id=1,
+            resource=types.SimpleNamespace(id=1),
+            profile=None,
+            user_cache_dir=str(tmp_path),
+        )
+    assert "log in to Fractal again" in exc_info.value.assemble_error()

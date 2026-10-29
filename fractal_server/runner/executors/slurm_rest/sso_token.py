@@ -39,6 +39,8 @@ REFRESH_MARGIN = 60
 class SlurmTokenError(RuntimeError):
     """
     No valid SLURM token is available for the user.
+
+    This may happen if the access token is missing or expired.
     """
 
 
@@ -100,6 +102,20 @@ def _get_oauth_client(oauth_settings: OAuthSettings) -> BaseOAuth2:
             return _create_client_oidc(oauth_settings)
 
 
+def _is_invalid_grant(response: httpx.Response | None) -> bool:
+    """
+    Whether the identity provider refused the refresh token (RFC 6749,
+    section 5.2), e.g. Roche WAM: HTTP 400, `invalid_grant`, "unknown,
+    invalid, or expired refresh token".
+    """
+    if response is None or response.status_code != 400:
+        return False
+    try:
+        return response.json().get("error") == "invalid_grant"
+    except ValueError:
+        return False
+
+
 def _refresh_with_identity_provider(refresh_token: str) -> dict[str, Any]:
     oauth_settings = Inject(get_oauth_settings)
     if not oauth_settings.is_set:
@@ -131,6 +147,8 @@ class SsoTokenProvider:
         self.user_id = user_id
         self._token: str | None = None
         self._expires_at: int | None = None
+        # Not sent again to the identity provider; a new login replaces it
+        self._failed_refresh_token: str | None = None
         with next(get_sync_db()) as db:
             account = self._get_account(db, lock=False)
         self.slurm_username: str = account.account_id
@@ -208,9 +226,18 @@ class SsoTokenProvider:
                 f"SSO token of user {self.user_id} expired and cannot be "
                 "refreshed. Hint: the user must log in to Fractal again."
             )
+        if account.refresh_token == self._failed_refresh_token:
+            raise SlurmTokenError(
+                f"SSO refresh token of user {self.user_id} was already "
+                "refused. Hint: the user must log in to Fractal again."
+            )
         try:
             new = _refresh_with_identity_provider(account.refresh_token)
         except (OAuth2Error, httpx.HTTPError) as e:
+            # Only a refused grant needs a new login; network errors, 5xx and
+            # client misconfiguration (e.g. `invalid_client`) are retried
+            if _is_invalid_grant(getattr(e, "response", None)):
+                self._failed_refresh_token = account.refresh_token
             raise SlurmTokenError(
                 f"Cannot refresh the SSO token of user {self.user_id} "
                 f"({type(e).__name__}: {e}). "

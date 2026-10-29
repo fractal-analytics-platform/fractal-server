@@ -3,6 +3,7 @@ import json
 import time
 from uuid import uuid4
 
+import httpx
 import pytest
 from httpx_oauth.oauth2 import RefreshTokenError
 
@@ -312,3 +313,61 @@ def test_refresh_with_identity_provider(
     assert sso_token._refresh_with_identity_provider("refresh-1") == dict(
         access_token="new-from-refresh-1"
     )
+
+
+def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
+    """
+    A refresh token refused by the identity provider is not sent again,
+    until a new login replaces it; network errors are retried.
+    """
+    calls, responses = fake_idp
+    now = int(time.time())
+    user_id = oauth_user(access_token=_jwt(sub=USERNAME), expires_at=now - 10)
+    provider = SsoTokenProvider(user_id=user_id)
+
+    def _idp_error(status_code: int, **body) -> RefreshTokenError:
+        response = httpx.Response(
+            status_code,
+            json=body or None,
+            request=httpx.Request("POST", "https://idp.example.org/token"),
+        )
+        return RefreshTokenError("refresh failed", response)
+
+    # Retried at the next call: network error, client misconfiguration,
+    # server error, non-JSON answer
+    responses.extend(
+        [
+            RefreshTokenError("connection failed"),
+            _idp_error(401, error="invalid_client"),
+            _idp_error(500),
+            _idp_error(400),
+        ]
+    )
+    for _ in range(4):
+        with pytest.raises(SlurmTokenError, match="log in to Fractal again"):
+            provider.get_token()
+    assert calls == ["refresh-1"] * 4
+
+    # Refused (answer of Roche WAM): not sent again
+    responses.append(
+        _idp_error(
+            400,
+            error="invalid_grant",
+            error_description="unknown, invalid, or expired refresh token",
+        )
+    )
+    with pytest.raises(SlurmTokenError, match="log in to Fractal again"):
+        provider.get_token()
+    with pytest.raises(SlurmTokenError, match="already refused"):
+        provider.get_token()
+    assert calls == ["refresh-1"] * 5
+
+    # New login, with an expired access token: refreshed again
+    account = _get_account(db_sync, user_id)
+    account.refresh_token = "refresh-2"
+    db_sync.add(account)
+    db_sync.commit()
+    new = _jwt(sub=USERNAME, n=2)
+    responses.append(dict(access_token=new, expires_at=now + 3600))
+    assert provider.get_token() == new
+    assert calls == ["refresh-1"] * 5 + ["refresh-2"]

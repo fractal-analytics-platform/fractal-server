@@ -17,6 +17,7 @@ from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
 from .script import build_rest_script
 from .settings import get_slurm_rest_settings
+from .sso_token import SlurmTokenError
 from .token import get_token_provider
 
 logger = set_logger(__name__)
@@ -46,6 +47,7 @@ class SlurmRestRunner(SlurmSSHRunner):
     remote_path: str
     slurm_username: str
     _poll_failures: int = 0
+    _waiting_for_token: bool = False
 
     def __init__(
         self,
@@ -200,12 +202,29 @@ class SlurmRestRunner(SlurmSSHRunner):
         Jobs missing from the response are omitted (and then treated as
         completed upstream, as for `squeue`). Transient failures return a
         placeholder status, up to `MAX_POLL_FAILURES` consecutive failures.
+
+        Without a valid token (e.g. SSO login expired), jobs keep the
+        placeholder status until the user logs in again or the job is
+        stopped: they are not treated as completed, and this does not
+        count towards `MAX_POLL_FAILURES`.
         """
         if len(job_ids) == 0:
             return ""
+        placeholder_output = "\n".join(
+            f"{job_id} {STATUS_PLACEHOLDER}" for job_id in job_ids
+        )
         try:
             states = self.rest_client.get_job_states()
             self._poll_failures = 0
+        except SlurmTokenError as e:
+            # TODO: notify the user, and give up after a (long) limit
+            if not self._waiting_for_token:
+                self._waiting_for_token = True
+                logger.warning(
+                    "[run_squeue] No valid SLURM token, waiting for a new "
+                    f"login. Original error: {str(e)}"
+                )
+            return placeholder_output
         except Exception as e:
             self._poll_failures += 1
             logger.warning(
@@ -214,9 +233,10 @@ class SlurmRestRunner(SlurmSSHRunner):
             )
             if self._poll_failures >= MAX_POLL_FAILURES:
                 raise
-            return "\n".join(
-                f"{job_id} {STATUS_PLACEHOLDER}" for job_id in job_ids
-            )
+            return placeholder_output
+        if self._waiting_for_token:
+            self._waiting_for_token = False
+            logger.info("[run_squeue] Valid SLURM token again.")
         return "\n".join(
             f"{job_id} {states[job_id]}"
             for job_id in job_ids

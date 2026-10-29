@@ -11,10 +11,12 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
 )
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
+from fractal_server.runner.executors.slurm_rest.sso_token import SlurmTokenError
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
@@ -57,32 +59,36 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    with SlurmRestRunner(
-        fractal_ssh=fractal_ssh,
-        root_dir_local=workflow_dir_local,
-        root_dir_remote=workflow_dir_remote,
-        slurm_account=slurm_account,
-        resource=resource,
-        profile=profile,
-        common_script_lines=_get_worker_init_lines(worker_init),
-        user_cache_dir=user_cache_dir,
-        fractal_job_id=job_id,
-        resource_id=resource.id,
-        user_id=user_id,
-    ) as runner:
-        execute_tasks(
-            wf_task_list=workflow.task_list[
-                first_task_index : (last_task_index + 1)
-            ],
-            dataset=dataset,
-            job_id=job_id,
-            runner=runner,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_remote,
-            logger_name=logger_name,
-            get_runner_config=get_slurm_config,
-            job_attribute_filters=job_attribute_filters,
-            job_type_filters=job_type_filters,
-            user_id=user_id,
+    try:
+        with SlurmRestRunner(
+            fractal_ssh=fractal_ssh,
+            root_dir_local=workflow_dir_local,
+            root_dir_remote=workflow_dir_remote,
+            slurm_account=slurm_account,
+            resource=resource,
+            profile=profile,
+            common_script_lines=_get_worker_init_lines(worker_init),
+            user_cache_dir=user_cache_dir,
+            fractal_job_id=job_id,
             resource_id=resource.id,
-        )
+            user_id=user_id,
+        ) as runner:
+            execute_tasks(
+                wf_task_list=workflow.task_list[
+                    first_task_index : (last_task_index + 1)
+                ],
+                dataset=dataset,
+                job_id=job_id,
+                runner=runner,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
+                logger_name=logger_name,
+                get_runner_config=get_slurm_config,
+                job_attribute_filters=job_attribute_filters,
+                job_type_filters=job_type_filters,
+                user_id=user_id,
+                resource_id=resource.id,
+            )
+    except SlurmTokenError as e:
+        # Show the hint (e.g. "log in again") instead of a full traceback
+        raise JobExecutionError(info=str(e)) from e
