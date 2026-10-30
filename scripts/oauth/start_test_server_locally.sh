@@ -5,7 +5,7 @@ set -e
 export FRACTAL_RUNNER_BACKEND=local
 export JWT_SECRET_KEY="very_secret_key-very_secret_key-very_secret_key"
 export JWT_EXPIRE_SECONDS=1000
-export FRACTAL_HELP_URL=https://example.org/info
+export FRACTAL_REGISTRATION_URL=https://example.org/info
 
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres

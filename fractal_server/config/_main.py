@@ -1,6 +1,7 @@
 import logging
 from typing import Literal
 
+from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
@@ -36,8 +37,10 @@ class Settings(BaseSettings):
             `app.state`.
         FRACTAL_GRACEFUL_SHUTDOWN_TIME:
             Waiting time for the shutdown phase of executors, in seconds.
-        FRACTAL_HELP_URL:
-            The URL of an instance-specific Fractal help page.
+        FRACTAL_REGISTRATION_URL:
+            The URL of an instance-specific Fractal-registration help page.
+        FRACTAL_HELP_EMAIL:
+            An email address for Fractal-instance administrators.
         FRACTAL_DEFAULT_GROUP_NAME:
             Name of the default user group.
 
@@ -68,7 +71,8 @@ class Settings(BaseSettings):
     LOG_CONFIG_FILE: str | None = None
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
-    FRACTAL_HELP_URL: HttpUrl | None = None
+    FRACTAL_REGISTRATION_URL: HttpUrl | None = None
+    FRACTAL_HELP_EMAIL: EmailStr | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None
     FRACTAL_LONG_REQUEST_TIME: float = 30.0
     FRACTAL_DISABLE_BASIC_AUTH: Literal["true", "false"] = "false"

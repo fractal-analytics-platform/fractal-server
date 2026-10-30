@@ -40,10 +40,13 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.config import get_email_settings
 from fractal_server.config import get_settings
+from fractal_server.exceptions import HTTPExceptionWithData
 from fractal_server.logger import close_logger
 from fractal_server.logger import set_logger
 from fractal_server.send_mail import send_fractal_email_or_log_failure
 from fractal_server.syringe import Inject
+
+from .self_registration import get_self_registration_error
 
 logger = set_logger(__name__)
 
@@ -104,8 +107,8 @@ class SQLAlchemyUserDatabase:
         statement = (
             select(self.user_table)
             .join(self.oauth_account_table)
-            .where(self.oauth_account_table.oauth_name == oauth)  # type: ignore
-            .where(self.oauth_account_table.account_id == account_id)  # type: ignore
+            .where(self.oauth_account_table.oauth_name == oauth)
+            .where(self.oauth_account_table.account_id == account_id)
         )
         return await self._get_user(statement)
 
@@ -137,7 +140,7 @@ class SQLAlchemyUserDatabase:
         await self.session.refresh(user)
         oauth_account = self.oauth_account_table(**create_dict)
         self.session.add(oauth_account)
-        user.oauth_accounts.append(oauth_account)  # type: ignore
+        user.oauth_accounts.append(oauth_account)
         self.session.add(user)
 
         await self.session.commit()
@@ -253,7 +256,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
         Defaults to False.
         :return: A user.
         """
-        from fastapi import HTTPException
         from fastapi import status
         from fastapi_users import exceptions
 
@@ -281,19 +283,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                 # (0) Log
                 logger.warning(f"Self-registration attempt by {account_email}.")
 
-                # (1) Prepare user-facing error message
-                error_msg = (
-                    "Thank you for registering for the Fractal service. "
-                    "Administrators have been informed to configure your "
-                    "account and will get back to you."
-                )
-                settings = Inject(get_settings)
-                if settings.FRACTAL_HELP_URL is not None:
-                    error_msg = (
-                        f"{error_msg}\n"
-                        "You can find more information about the onboarding "
-                        f"process at {settings.FRACTAL_HELP_URL}."
-                    )
+                # (1) Prepare error and its admin-facing version
+                error_data = get_self_registration_error()
+                error_text = error_data.to_text()
 
                 # (2) Send email to admins
                 email_settings = Inject(get_email_settings)
@@ -304,15 +296,15 @@ class UserManager(IntegerIDMixin, BaseUserManager[UserOAuth, int]):
                         "self-register through OAuth.\n"
                         "Please create the Fractal account manually.\n"
                         "Here is the error message displayed to the "
-                        f"user:\n{error_msg}"
+                        f"user:\n{error_text}"
                     ),
                     email_settings=email_settings.public,
                 )
 
-                # (3) Raise
-                raise HTTPException(
+                # (3) Raise exception
+                raise HTTPExceptionWithData(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=error_msg,
+                    data=error_data.to_dict(),
                 )
         else:
             # Update oauth

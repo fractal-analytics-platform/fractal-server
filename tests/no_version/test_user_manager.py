@@ -25,7 +25,7 @@ async def test_oauth_callback(
         )
     )
     HELP_PAGE = "https://example.org/fractal-help-page"
-    override_settings_factory(FRACTAL_HELP_URL=HELP_PAGE)
+    override_settings_factory(FRACTAL_REGISTRATION_URL=HELP_PAGE)
     user = UserOAuth(
         email="user1@example.org",
         hashed_password="xxx",
@@ -99,4 +99,4 @@ async def test_oauth_callback(
                         account_id="x",
                         account_email="xxx@example.org",
                     )
-                assert HELP_PAGE in str(exc_info.value)
+                assert HELP_PAGE in str(exc_info.value.data)
