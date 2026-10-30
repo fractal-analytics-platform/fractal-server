@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.27.0 (unreleased)
+
+* Task collection:
+    * Deprecate Python 3.9 and 3.10 for `pip`-based task collections (\#3481).
+
 # 2.26.0
 
 > **NOTE**: This release drops support for Python 3.12.
