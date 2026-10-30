@@ -6,7 +6,10 @@ Translate the `#SBATCH` preamble of a fractal submission script into a
 option must become a JSON field.
 
 JSON fields follow the `SLURM_REST_API_VERSION` (`client.py`) of the
-`slurmrestd` OpenAPI plugin.
+`slurmrestd` OpenAPI plugin. All mappings were checked against `sbatch` on a
+real cluster (Slurm 25.11, `v0.0.44`): jobs submitted both ways get the same
+`scontrol show job` values, also for node lists and ranges in `--nodelist`
+and `--exclude`.
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
 REST job description, and options and JSON fields differ in names and units
@@ -135,7 +138,6 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
             job["current_working_directory"] = value
         case "constraint":
             job["constraints"] = value
-        # TODO(LA): Verify these mappings on cluster
         case "gres":
             job["tres_per_node"] = f"gres/{value}"
         case "gpus":
@@ -145,7 +147,8 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
         case "nodelist":
             job["required_nodes"] = [value]
         case "nodes":
-            job["minimum_nodes"] = int(value)
+            # `--nodes=N` means exactly N nodes
+            job["minimum_nodes"] = job["maximum_nodes"] = int(value)
         case "qos":
             job["qos"] = value
         case _:
@@ -183,6 +186,11 @@ def build_job_description(
         if line.startswith(SBATCH_PREFIX):
             key, value = _parse_sbatch_line(line)
             _apply_option(job, key, value)
+
+    # As `sbatch` does ("can't run 1 processes on 2 nodes, setting nnodes to
+    # 1"), while `slurmrestd` would allocate the extra nodes
+    if job.get("minimum_nodes", 0) > job.get("tasks", float("inf")):
+        job["minimum_nodes"] = job["maximum_nodes"] = job["tasks"]
 
     job_environment = list(environment)
     # Unlike with sbatch, SLURM_CPUS_PER_TASK is not set in REST-submitted

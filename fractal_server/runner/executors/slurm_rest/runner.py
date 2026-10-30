@@ -26,6 +26,8 @@ from .token import get_token_provider
 
 logger = set_logger(__name__)
 
+# Not a SLURM state (so jobs stay active), same as in
+# `SlurmSSHRunner.run_squeue` when `squeue` cannot be run
 STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
 
 
@@ -88,9 +90,9 @@ class SlurmRestRunner(SlurmSSHRunner):
             )
             + self.common_script_lines
         )
-        self.rest_settings = Inject(get_slurm_rest_settings)
+        rest_settings = Inject(get_slurm_rest_settings)
         token_provider = get_token_provider(
-            settings=self.rest_settings,
+            settings=rest_settings,
             user_id=user_id,
             profile_username=profile.username,
         )
@@ -101,10 +103,10 @@ class SlurmRestRunner(SlurmSSHRunner):
             cmd="printenv PATH"
         ).strip()
         self.rest_client = SlurmRestClient(
-            base_url=self.rest_settings.base_url,
+            base_url=rest_settings.base_url,
             username=self.slurm_username,
             get_token=token_provider.get_token,
-            ca_bundle=self.rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
+            ca_bundle=rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
         )
         self.rest_client.ping()
         logger.info(

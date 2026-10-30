@@ -61,8 +61,11 @@ class SlurmRestClient:
         ca_bundle: str | None = None,
         timeout: float = 30.0,
     ) -> None:
-        if not base_url.startswith(("https://", "http://")):
-            raise ValueError(f"Invalid slurmrestd URL scheme: '{base_url}'.")
+        # Tokens are sent in request headers
+        if not base_url.startswith("https://"):
+            raise ValueError(
+                f"Invalid slurmrestd URL scheme (https only): '{base_url}'."
+            )
         self.base_url = f"{base_url.rstrip('/')}/slurm/{SLURM_REST_API_VERSION}"
         self.username = username
         self.get_token = get_token
@@ -91,7 +94,7 @@ class SlurmRestClient:
                 },
             )
             try:
-                # URL scheme is checked in `__init__`
+                # `https` scheme is checked in `__init__`
                 with urllib.request.urlopen(  # nosec B310
                     request, timeout=self.timeout, context=self._ssl_context
                 ) as response:
@@ -108,9 +111,10 @@ class SlurmRestClient:
                     f"{method} {path} -> HTTP {e.code}: "
                     f"{_error_descriptions(payload)}"
                 ) from None
-            errors = _error_descriptions(payload)
             if payload.get("errors"):
-                raise SlurmRestError(f"{method} {path} -> errors: {errors}")
+                raise SlurmRestError(
+                    f"{method} {path} -> errors: {_error_descriptions(payload)}"
+                )
             for warning in payload.get("warnings", []):
                 logger.warning(f"{method} {path} -> warning: {warning}")
             return payload

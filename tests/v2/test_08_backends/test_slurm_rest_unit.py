@@ -132,6 +132,21 @@ def test_build_job_description_variants():
         build_job_description(script="#SBATCH -Z 1\n", environment=[])
 
 
+@pytest.mark.parametrize(
+    "ntasks,nodes,expected",
+    [(1, 2, 1), (2, 2, 2), (4, 2, 2), (None, 3, 3)],
+)
+def test_build_job_description_nodes(ntasks, nodes, expected):
+    """
+    As `sbatch`, at most one node per task.
+    """
+    script = f"#SBATCH --nodes={nodes}\n"
+    if ntasks is not None:
+        script += f"#SBATCH --ntasks={ntasks}\n"
+    job = build_job_description(script=script, environment=[])
+    assert job["minimum_nodes"] == job["maximum_nodes"] == expected
+
+
 @pytest.mark.parametrize("use_mem_per_cpu", [False, True])
 def test_build_job_description_covers_slurm_config(use_mem_per_cpu):
     # Fails when `SlurmConfig` gains an option the REST runner cannot map
@@ -145,8 +160,8 @@ def test_build_job_description_covers_slurm_config(use_mem_per_cpu):
     )
     sbatch_lines = [line for line in lines if line.startswith("#SBATCH")]
     job = build_job_description(script="\n".join(lines), environment=[])
-    # One JSON field per option, plus `environment`
-    assert len(job) == len(sbatch_lines) + 1
+    # One JSON field per option (two for `--nodes`), plus `environment`
+    assert len(job) == len(sbatch_lines) + 2
 
 
 def test_validate_sbatch_lines():
@@ -320,10 +335,11 @@ def test_client(monkeypatch):
     )
 
 
-def test_client_url_scheme():
+@pytest.mark.parametrize("base_url", ["file:///etc", "http://example.org"])
+def test_client_url_scheme(base_url):
     with pytest.raises(ValueError, match="URL scheme"):
         SlurmRestClient(
-            base_url="file:///etc",
+            base_url=base_url,
             username="user",
             get_token=lambda force_refresh=False: "token",
         )
