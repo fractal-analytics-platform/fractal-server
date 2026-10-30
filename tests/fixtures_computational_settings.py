@@ -116,7 +116,7 @@ def slurm_sudo_resource_profile_objects(
             "default_version": current_py_version,
             "versions": {
                 v: f"/.venv{v}/bin/python{v}"
-                for v in ("3.10", "3.11", "3.12", "3.13", "3.14", "3.15")
+                for v in ("3.11", "3.12", "3.13", "3.14", "3.15")
             },
         },
         tasks_pixi_config={},
@@ -163,7 +163,7 @@ def slurm_ssh_resource_profile_objects(
             "default_version": current_py_version,
             "versions": {
                 v: f"/.venv{v}/bin/python{v}"
-                for v in ("3.10", "3.11", "3.12", "3.13", "3.14", "3.15")
+                for v in ("3.11", "3.12", "3.13", "3.14", "3.15")
             },
         },
         tasks_pixi_config={},
@@ -208,7 +208,7 @@ def slurm_ssh_resource_profile_fake_objects(
             "default_version": current_py_version,
             "versions": {
                 v: f"/.venv{v}/bin/python{v}"
-                for v in ("3.10", "3.11", "3.12", "3.13", "3.14", "3.15")
+                for v in ("3.11", "3.12", "3.13", "3.14", "3.15")
             },
         },
         tasks_pixi_config={},

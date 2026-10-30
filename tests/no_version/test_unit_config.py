@@ -157,10 +157,16 @@ def test_email_settings():
 
 
 def test_python_config():
-    valid = dict(default_version="3.10", versions={"3.10": "/fake"})
+    valid = dict(default_version="3.12", versions={"3.12": "/fake"})
     TasksPythonSettings(**valid)
 
-    invalid = dict(default_version="3.11", versions={"3.10": "/fake"})
+    # Python version not supported
+    invalid = dict(default_version="3.10", versions={"3.10": "/fake"})
+    with pytest.raises(ValueError):
+        TasksPythonSettings(**invalid)
+
+    # Default python version not part of versions
+    invalid = dict(default_version="3.11", versions={"3.12": "/fake"})
     with pytest.raises(ValueError):
         TasksPythonSettings(**invalid)
 
