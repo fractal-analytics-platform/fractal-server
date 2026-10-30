@@ -15,7 +15,7 @@ FRACTAL_EMAIL_RECIPIENTS=recipient1@example.org,recipient2@example.org
 FRACTAL_EMAIL_USE_STARTTLS=false
 FRACTAL_EMAIL_USE_LOGIN=true
 FRACTAL_EMAIL_PASSWORD=fakepassword
-FRACTAL_HELP_URL=https://example.org/info
+FRACTAL_REGISTRATION_URL=https://example.org/info
 ```
 """
 
@@ -268,7 +268,7 @@ async def test_oauth(registered_superuser_client, db, client):
     assert email["ReturnPath"] == email_settings.FRACTAL_EMAIL_SENDER
     email_msg = email["Text"]
     assert "tried to self-register" in email_msg
-    assert str(settings.FRACTAL_HELP_URL) in email_msg
+    assert str(settings.FRACTAL_REGISTRATION_URL) in email_msg
 
     # For each subsequent OAuth Login, an additional identical email is sent
     # TODO fix with issue #2937

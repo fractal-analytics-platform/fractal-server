@@ -2,8 +2,17 @@
 
 # 2.27.0 (unreleased)
 
+> **NOTE**: When upgrading to this version, you should also upgrade
+> `fractal-web` to version 1.30.0 (or more recent) - to make sure that
+> self-registration error responses are handled properly.
+
 * Task collection:
     * Deprecate Python 3.9 and 3.10 for `pip`-based task collections (\#3481).
+* App:
+    * Rename `FRACTAL_HELP_URL` into `FRACTAL_REGISTRATION_URL` (\#3483).
+    * Add `FRACTAL_HELP_EMAIL` configuration variable (\#3483).
+* Authentication:
+    * Customize errors for OAuth self-registration (\#3483).
 
 # 2.26.0
 
