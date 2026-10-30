@@ -4,6 +4,7 @@ import subprocess
 import types
 import typing
 import urllib.error
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,6 +14,7 @@ from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
 )
 from fractal_server.runner.executors.slurm_rest import client as client_module
+from fractal_server.runner.executors.slurm_rest import runner as runner_module
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.job_description import (
@@ -27,7 +29,6 @@ from fractal_server.runner.executors.slurm_rest.job_description import (
 from fractal_server.runner.executors.slurm_rest.job_script import (
     build_job_script,
 )
-from fractal_server.runner.executors.slurm_rest.runner import MAX_POLL_FAILURES
 from fractal_server.runner.executors.slurm_rest.runner import STATUS_PLACEHOLDER
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.executors.slurm_rest.settings import (
@@ -41,6 +42,7 @@ from fractal_server.runner.executors.slurm_rest.settings import (
 )
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
+from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.syringe import Inject
 from tests.v2._aux_runner import get_default_slurm_config
 
@@ -348,38 +350,85 @@ def _runner_with_client(client: _FakeStatesClient) -> SlurmRestRunner:
     return runner
 
 
-def test_run_squeue_waits_for_token():
+@pytest.mark.parametrize(
+    "error",
+    [
+        SlurmTokenError("log in again"),
+        SlurmRestError("GET /jobs -> HTTP 500"),
+        OSError("Connection refused"),
+    ],
+)
+def test_run_squeue_failed_queries_keep_jobs_active(error):
     """
-    Without a valid token, jobs stay active for longer than
-    `MAX_POLL_FAILURES` polls, and are not marked as completed.
+    Failed status queries (no valid token, or `slurmrestd` unreachable or
+    failing) never mark jobs as completed, with no limit on their number,
+    and the job states are used again as soon as a query succeeds.
     """
-    n_errors = MAX_POLL_FAILURES + 5
+    n_errors = 100
     runner = _runner_with_client(
         _FakeStatesClient(
-            errors=[SlurmTokenError("log in again")] * n_errors,
+            errors=[error] * n_errors,
             states={"1": "RUNNING", "2": "COMPLETED"},
         )
     )
     for _ in range(n_errors):
         assert runner._get_finished_jobs(job_ids=["1", "2"]) == set()
-        assert runner._poll_failures == 0
-        assert runner._waiting_for_token
+        assert runner._poll_problem is not None
     assert runner._get_finished_jobs(job_ids=["1", "2"]) == {"2"}
-    assert not runner._waiting_for_token
+    assert runner._poll_problem is None
+    assert runner.run_squeue(job_ids=[]) == ""
 
 
-def test_run_squeue_poll_failures():
+def test_run_squeue_logs_once(monkeypatch):
+    logger = MagicMock()
+    monkeypatch.setattr(runner_module, "logger", logger)
     runner = _runner_with_client(
         _FakeStatesClient(
-            errors=[SlurmRestError("down")] * MAX_POLL_FAILURES,
-            states={},
+            errors=[SlurmRestError("down")] * 3
+            + [SlurmTokenError("log in again")] * 3,
+            states={"1": "RUNNING"},
         )
     )
-    for _ in range(MAX_POLL_FAILURES - 1):
+    for _ in range(6):
         assert runner.run_squeue(job_ids=["1"]) == f"1 {STATUS_PLACEHOLDER}"
-    with pytest.raises(SlurmRestError, match="down"):
-        runner.run_squeue(job_ids=["1"])
-    assert runner.run_squeue(job_ids=[]) == ""
+    assert runner.run_squeue(job_ids=["1"]) == "1 RUNNING"
+    messages = [
+        call.args[0]
+        for call in logger.warning.call_args_list + logger.info.call_args_list
+    ]
+    assert sum("Cannot query SLURM job states" in m for m in messages) == 1
+    assert sum("No valid SLURM token" in m for m in messages) == 1
+    assert sum("available again" in m for m in messages) == 1
+
+
+class _FakeSSH:
+    def __init__(self, output: str | Exception):
+        self.output = output
+        self.commands = []
+
+    def run_command(self, *, cmd: str) -> str:
+        self.commands.append(cmd)
+        if isinstance(self.output, Exception):
+            raise self.output
+        return self.output
+
+
+def test_get_slurm_home():
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.slurm_username = "alice"
+    runner.fractal_ssh = _FakeSSH("alice:x:1:2::/home/alice:/bin/bash\n")
+    assert runner._get_slurm_home() == "/home/alice"
+    assert runner.fractal_ssh.commands == ["getent passwd alice"]
+
+    runner.slurm_username = "a b;c"
+    runner._get_slurm_home()
+    assert runner.fractal_ssh.commands[-1] == "getent passwd 'a b;c'"
+
+    for output in (FractalSSHCommandError("exit code 2"), ""):
+        runner.fractal_ssh = _FakeSSH(output)
+        with pytest.raises(JobExecutionError) as exc_info:
+            runner._get_slurm_home()
+        assert "unknown on the cluster" in exc_info.value.assemble_error()
 
 
 def test_process_workflow_token_error(monkeypatch, tmp_path):

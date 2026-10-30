@@ -212,12 +212,10 @@ def test_rest_scancel_and_poll_failures(
     tmp777_path,
     fractal_ssh,
     fake_rest,
-    monkeypatch,
     slurm_ssh_resource_profile_db: tuple[Resource, Profile],
     fractal_job_id_mock,
 ):
     res, prof = slurm_ssh_resource_profile_db[:]
-    monkeypatch.setattr(runner_module, "MAX_POLL_FAILURES", 2)
 
     with _get_runner(
         tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
@@ -230,8 +228,8 @@ def test_rest_scancel_and_poll_failures(
             raise RuntimeError("network down")
 
         fake_rest.get_job_states = _fail
-        assert runner.run_squeue(job_ids=["11"]) == (
-            "11 FRACTAL_STATUS_PLACEHOLDER"
-        )
-        with pytest.raises(RuntimeError, match="network down"):
-            runner.run_squeue(job_ids=["11"])
+        # Failed queries keep jobs active, with no limit
+        for _ in range(30):
+            assert runner.run_squeue(job_ids=["11"]) == (
+                "11 FRACTAL_STATUS_PLACEHOLDER"
+            )

@@ -1,4 +1,5 @@
 import json
+import shlex
 from pathlib import Path
 from typing import Self
 from typing import override
@@ -6,11 +7,13 @@ from typing import override
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
 )
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import FractalSSH
+from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.syringe import Inject
 
 from .client import SlurmRestClient
@@ -24,8 +27,6 @@ from .token import get_token_provider
 logger = set_logger(__name__)
 
 STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
-# Consecutive failed status queries before giving up
-MAX_POLL_FAILURES = 20
 
 
 class SlurmRestRunner(SlurmSSHRunner):
@@ -47,8 +48,8 @@ class SlurmRestRunner(SlurmSSHRunner):
     slurm_home: str
     remote_path: str
     slurm_username: str
-    _poll_failures: int = 0
-    _waiting_for_token: bool = False
+    # Why job states cannot be queried, if they cannot (for logs)
+    _poll_problem: str | None = None
 
     def __init__(
         self,
@@ -94,11 +95,7 @@ class SlurmRestRunner(SlurmSSHRunner):
             profile_username=profile.username,
         )
         self.slurm_username = token_provider.slurm_username
-        # Not `printenv HOME`, which is the home of the SSH user
-        passwd_entry = self.fractal_ssh.run_command(
-            cmd=f"getent passwd {self.slurm_username}"
-        )
-        self.slurm_home = passwd_entry.strip().split(":")[5]
+        self.slurm_home = self._get_slurm_home()
         # Same `PATH` that `sbatch` over SSH passes on to the SLURM job
         self.remote_path = self.fractal_ssh.run_command(
             cmd="printenv PATH"
@@ -115,6 +112,23 @@ class SlurmRestRunner(SlurmSSHRunner):
             f"ssh user={profile.username}, "
             f"slurm user={self.slurm_username})."
         )
+
+    def _get_slurm_home(self) -> str:
+        """
+        Home folder of the SLURM user, from `getent passwd` (not
+        `printenv HOME`, which is the home of the SSH user).
+        """
+        cmd = f"getent passwd {shlex.quote(self.slurm_username)}"
+        try:
+            return self.fractal_ssh.run_command(cmd=cmd).split(":")[5].strip()
+        except (FractalSSHCommandError, IndexError):
+            raise JobExecutionError(
+                info=(
+                    f"SLURM user '{self.slurm_username}' is unknown on the "
+                    "cluster (`getent passwd` failed). Hint: the SSO user "
+                    "name must be a UNIX user of the cluster."
+                )
+            ) from None
 
     def _job_environment(self) -> list[str]:
         return [
@@ -196,43 +210,37 @@ class SlurmRestRunner(SlurmSSHRunner):
         Mock `squeue --format='%i %T'` output, based on `GET /jobs`.
 
         Jobs missing from the response are omitted (and then treated as
-        completed upstream, as for `squeue`). Transient failures return a
-        placeholder status, up to `MAX_POLL_FAILURES` consecutive failures.
+        completed upstream, as for `squeue`).
 
-        Without a valid token (e.g. SSO login expired), jobs keep the
-        placeholder status until the user logs in again or the job is
-        stopped: they are not treated as completed, and this does not
-        count towards `MAX_POLL_FAILURES`.
+        If job states cannot be queried (no valid token, e.g. expired SSO
+        login, or `slurmrestd` unreachable or failing), all jobs get a
+        placeholder status and stay active, and the query is repeated at the
+        next poll, with no limit. A failed query never marks jobs as
+        completed: that would fetch their outputs too early and leave the
+        SLURM jobs running untracked.
         """
         if len(job_ids) == 0:
             return ""
-        placeholder_output = "\n".join(
-            f"{job_id} {STATUS_PLACEHOLDER}" for job_id in job_ids
-        )
         try:
             states = self.rest_client.get_job_states()
-            self._poll_failures = 0
-        except SlurmTokenError as e:
-            # TODO: notify the user, and give up after a (long) limit
-            if not self._waiting_for_token:
-                self._waiting_for_token = True
-                logger.warning(
-                    "[run_squeue] No valid SLURM token, waiting for a new "
-                    f"login. Original error: {str(e)}"
-                )
-            return placeholder_output
         except Exception as e:
-            self._poll_failures += 1
-            logger.warning(
-                f"[run_squeue] REST query failed ({self._poll_failures}/"
-                f"{MAX_POLL_FAILURES}). Original error: {str(e)}"
+            # TODO: notify the user, and give up after a (long) limit
+            if isinstance(e, SlurmTokenError):
+                problem = "No valid SLURM token, waiting for a new login"
+            else:
+                problem = "Cannot query SLURM job states, retrying"
+            # Logged once per problem, not at every poll
+            if problem != self._poll_problem:
+                self._poll_problem = problem
+                logger.warning(
+                    f"[run_squeue] {problem}. Original error: {str(e)}"
+                )
+            return "\n".join(
+                f"{job_id} {STATUS_PLACEHOLDER}" for job_id in job_ids
             )
-            if self._poll_failures >= MAX_POLL_FAILURES:
-                raise
-            return placeholder_output
-        if self._waiting_for_token:
-            self._waiting_for_token = False
-            logger.info("[run_squeue] Valid SLURM token again.")
+        if self._poll_problem is not None:
+            self._poll_problem = None
+            logger.info("[run_squeue] SLURM job states available again.")
         return "\n".join(
             f"{job_id} {states[job_id]}"
             for job_id in job_ids
