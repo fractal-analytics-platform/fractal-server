@@ -16,6 +16,7 @@
 * Dependencies:
     * Update lock (\#3484).
     * Bump `pydantic-settings` version (\#3484).
+    * Bump `zensical` version (\#3484).
 
 # 2.26.0
 
