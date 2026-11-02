@@ -13,6 +13,9 @@
     * Add `FRACTAL_HELP_EMAIL` configuration variable (\#3483).
 * Authentication:
     * Customize errors for OAuth self-registration (\#3483).
+* Dependencies:
+    * Update lock (\#3484).
+    * Bump `pydantic-settings` version (\#3484).
 
 # 2.26.0
 
