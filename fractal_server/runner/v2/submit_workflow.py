@@ -63,6 +63,26 @@ class ProcessWorkflowType(Protocol):
     ) -> None: ...
 
 
+# No `-> ProcessWorkflowType`: the protocol lacks `fractal_ssh` and
+# `slurm_account`, so type checkers would reject the call in `submit_workflow`
+def _get_process_workflow(resource_type: str):
+    """
+    Backend for a resource type; `slurm_ssh` resources use the SLURM REST
+    backend if `FRACTAL_SLURM_REST_ENABLED=true`.
+    """
+    match resource_type:
+        case ResourceType.LOCAL:
+            return local_process_workflow
+        case ResourceType.SLURM_SUDO:
+            return slurm_sudo_process_workflow
+        case ResourceType.SLURM_SSH:
+            if is_slurm_rest_enabled():
+                return slurm_rest_process_workflow
+            return slurm_ssh_process_workflow
+        case _:
+            raise ValueError(f"Unknown resource type: {resource_type}.")
+
+
 def fail_job(
     *,
     db: DBSyncSession,
@@ -229,19 +249,8 @@ def submit_workflow(
         job_working_dir = job.working_dir
 
     try:
-        process_workflow: ProcessWorkflowType
-        match resource.type:
-            case ResourceType.LOCAL:
-                process_workflow = local_process_workflow
-            case ResourceType.SLURM_SUDO:
-                process_workflow = slurm_sudo_process_workflow
-            case ResourceType.SLURM_SSH:
-                if is_slurm_rest_enabled():
-                    logger.debug("Using SLURM REST runner.")
-                    process_workflow = slurm_rest_process_workflow
-                else:
-                    process_workflow = slurm_ssh_process_workflow
-
+        process_workflow = _get_process_workflow(resource.type)
+        logger.debug(f"Backend: {process_workflow.__module__}")
         process_workflow(
             workflow=workflow,
             dataset=dataset,

@@ -3,6 +3,11 @@ Run `SlurmRestRunner` against the dockerized SLURM cluster, which has no
 `slurmrestd`: the REST client is replaced by a fake that submits the REST
 script through `sbatch` over SSH. This covers everything except HTTP (in
 particular: inputs embedded in the script, no SSH upload).
+
+Only what `SlurmRestRunner` overrides or adds is tested here (and in
+`test_slurm_rest_unit.py`). Inherited behaviour (task failures, compound
+tasks, shutdown, fetching and postprocessing outputs, ...) is the same as for
+`SlurmSSHRunner`, and is covered by the SLURM/SSH and SLURM/sudo runner tests.
 """
 
 import json
@@ -34,7 +39,6 @@ class SSHFakeRestClient:
         self.fractal_ssh = fractal_ssh
         self.script_dir = script_dir
         self.submitted: list[dict] = []
-        self.cancelled: list[str] = []
 
     def ping(self) -> None:
         pass
@@ -55,13 +59,16 @@ class SSHFakeRestClient:
         return dict(line.split() for line in stdout.splitlines())
 
     def cancel_job(self, job_id: str) -> None:
-        self.cancelled.append(job_id)
         self.fractal_ssh.run_command(cmd=f"scancel {job_id}")
 
 
+# SLURM user of the fake token: different from the SSH user (as with SSO
+# tokens and a shared SSH account), and known in the container
+SLURM_USERNAME = "root"
+
+
 class FakeTokenProvider:
-    def __init__(self, slurm_username: str):
-        self.slurm_username = slurm_username
+    slurm_username = SLURM_USERNAME
 
     def get_token(self, force_refresh: bool = False) -> str:
         return "x"
@@ -70,11 +77,14 @@ class FakeTokenProvider:
 @pytest.fixture
 def fake_rest(monkeypatch, fractal_ssh, tmp777_path):
     fake = SSHFakeRestClient(fractal_ssh, tmp777_path / "user")
-    monkeypatch.setattr(runner_module, "SlurmRestClient", lambda **_: fake)
+
+    def _client(**kwargs) -> SSHFakeRestClient:
+        fake.client_kwargs = kwargs
+        return fake
+
+    monkeypatch.setattr(runner_module, "SlurmRestClient", _client)
     monkeypatch.setattr(
-        runner_module,
-        "get_token_provider",
-        lambda **kwargs: FakeTokenProvider(kwargs["profile_username"]),
+        runner_module, "get_token_provider", lambda **_: FakeTokenProvider()
     )
     return fake
 
@@ -140,8 +150,12 @@ async def test_rest_submit(
         f"{task_files.prefix}-slurm-%j.out"
     )
     assert "SLURM_CPUS_PER_TASK=1" in job["environment"]
-    assert any(env.startswith("HOME=/") for env in job["environment"])
-    assert f"USER={prof.username}" in job["environment"]
+    # SLURM requests and job environment use the SLURM (token) user, not the
+    # SSH user
+    assert prof.username != SLURM_USERNAME
+    assert fake_rest.client_kwargs["username"] == SLURM_USERNAME
+    assert f"USER={SLURM_USERNAME}" in job["environment"]
+    assert "HOME=/root" in job["environment"]
     assert job["current_working_directory"] == (
         task_files.wftask_subfolder_remote.as_posix()
     )
@@ -204,32 +218,3 @@ async def test_rest_multisubmit_parallel(
     assert len(fake_rest.submitted) >= 1
 
     fractal_ssh.run_command(cmd=f"chmod -R 777 {tmp777_path / 'user'}")
-
-
-@pytest.mark.ssh
-@pytest.mark.container
-def test_rest_scancel_and_poll_failures(
-    tmp777_path,
-    fractal_ssh,
-    fake_rest,
-    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
-    fractal_job_id_mock,
-):
-    res, prof = slurm_ssh_resource_profile_db[:]
-
-    with _get_runner(
-        tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
-    ) as runner:
-        runner.jobs = {"11": None, "12": None}
-        assert runner.scancel_jobs() == ["11", "12"]
-        assert fake_rest.cancelled == ["11", "12"]
-
-        def _fail():
-            raise RuntimeError("network down")
-
-        fake_rest.get_job_states = _fail
-        # Failed queries keep jobs active, with no limit
-        for _ in range(30):
-            assert runner.run_squeue(job_ids=["11"]) == (
-                "11 FRACTAL_STATUS_PLACEHOLDER"
-            )

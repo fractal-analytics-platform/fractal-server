@@ -64,22 +64,24 @@ def test_static_token_provider():
     assert provider.slurm_username == SSH_USERNAME
 
 
-def test_get_token_provider(monkeypatch, tmp_path, oauth_user):
-    # Avoid reading a local `.fractal_server.env`
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("FRACTAL_SLURM_REST_TOKEN", raising=False)
-    user_id = oauth_user(access_token=_jwt(sub=USERNAME), expires_at=None)
-    kwargs = dict(user_id=user_id, profile_username=SSH_USERNAME)
+def test_get_token_provider(monkeypatch):
+    class _FakeSsoTokenProvider:
+        def __init__(self, *, user_id: int):
+            self.user_id = user_id
+            self.slurm_username = USERNAME
 
-    settings = SlurmRestSettings()
+    monkeypatch.setattr(token_module, "SsoTokenProvider", _FakeSsoTokenProvider)
+    kwargs = dict(user_id=7, profile_username=SSH_USERNAME)
+
+    # SSO by default
+    settings = SlurmRestSettings(_env_file=None, FRACTAL_SLURM_REST_TOKEN=None)
     provider = get_token_provider(settings=settings, **kwargs)
-    assert isinstance(provider, SsoTokenProvider)
-    assert provider.user_id == user_id
-    assert provider.slurm_username == USERNAME
+    assert isinstance(provider, _FakeSsoTokenProvider)
+    assert provider.user_id == 7
 
+    # Development override, never shown in the settings
     token = _jwt(sub=USERNAME)
-    monkeypatch.setenv("FRACTAL_SLURM_REST_TOKEN", token)
-    settings = SlurmRestSettings()
+    settings = SlurmRestSettings(_env_file=None, FRACTAL_SLURM_REST_TOKEN=token)
     assert token not in repr(settings)
     provider = get_token_provider(settings=settings, **kwargs)
     assert isinstance(provider, StaticTokenProvider)
@@ -146,16 +148,6 @@ def fake_idp(monkeypatch):
     return calls, responses
 
 
-def test_sso_token_valid(db_sync, oauth_user, fake_idp):
-    calls, _ = fake_idp
-    token = _jwt(sub=USERNAME)
-    user_id = oauth_user(access_token=token, expires_at=int(time.time()) + 3600)
-    provider = SsoTokenProvider(user_id=user_id)
-    assert provider.get_token() == token
-    assert provider.get_token() == token
-    assert calls == []
-
-
 def test_sso_token_expiry_from_jwt(db_sync, oauth_user, fake_idp):
     calls, responses = fake_idp
     old = _jwt(sub=USERNAME, exp=int(time.time()) + 30)
@@ -204,7 +196,8 @@ def test_sso_token_refresh(db_sync, oauth_user, fake_idp):
 def test_sso_token_refreshed_elsewhere(db_sync, oauth_user, fake_idp):
     """
     After a rejection, a token refreshed by another runner (or a new login)
-    is used without a new refresh.
+    is used without a new refresh. Also covers a valid token being reused,
+    without any refresh.
     """
     calls, _ = fake_idp
     now = int(time.time())
@@ -320,20 +313,19 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         )
         return RefreshTokenError("refresh failed", response)
 
-    # Retried at the next call: network error, client misconfiguration,
-    # server error, non-JSON answer
+    # Retried at the next call: network error, client misconfiguration (also
+    # the path of 5xx answers), non-JSON answer
     responses.extend(
         [
             RefreshTokenError("connection failed"),
             _idp_error(401, error="invalid_client"),
-            _idp_error(500),
             _idp_error(400),
         ]
     )
-    for _ in range(4):
+    for _ in range(3):
         with pytest.raises(SlurmTokenError, match="log in to Fractal again"):
             provider.get_token()
-    assert calls == ["refresh-1"] * 4
+    assert calls == ["refresh-1"] * 3
 
     # Refused (answer of Roche WAM): not sent again
     responses.append(
@@ -347,7 +339,7 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         provider.get_token()
     with pytest.raises(SlurmTokenError, match="already refused"):
         provider.get_token()
-    assert calls == ["refresh-1"] * 5
+    assert calls == ["refresh-1"] * 4
 
     # New login, with an expired access token: refreshed again
     account = _get_account(db_sync, user_id)
@@ -357,4 +349,4 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
     new = _jwt(sub=USERNAME, n=2)
     responses.append(dict(access_token=new, expires_at=now + 3600))
     assert provider.get_token() == new
-    assert calls == ["refresh-1"] * 5 + ["refresh-2"]
+    assert calls == ["refresh-1"] * 4 + ["refresh-2"]

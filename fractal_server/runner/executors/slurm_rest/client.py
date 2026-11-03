@@ -26,10 +26,18 @@ def _parse_body(raw: bytes) -> dict[str, Any]:
         return {"raw": raw.decode(errors="replace")[:500]}
 
 
+def _error_description(err: dict[str, Any]) -> str:
+    # `description` is often generic (e.g. "Batch job submission failed"),
+    # while `error` has the cause (e.g. "Job cannot be submitted without the
+    # current working directory specified.")
+    parts = [err.get("description"), err.get("error")]
+    text = ": ".join(dict.fromkeys(part for part in parts if part))
+    return text or str(err)
+
+
 def _error_descriptions(payload: dict[str, Any]) -> list[str]:
     descriptions = [
-        err.get("description") or err.get("error") or str(err)
-        for err in payload.get("errors", [])
+        _error_description(err) for err in payload.get("errors", [])
     ]
     if not descriptions and "raw" in payload:
         descriptions = [payload["raw"]]

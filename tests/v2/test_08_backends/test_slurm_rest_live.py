@@ -66,6 +66,8 @@ def _request_body(*, body: str, files: list[tuple[str, str]]) -> dict:
         "#SBATCH --time=10",
         f"#SBATCH --output={workdir}/{name}-%j.out",
         f"#SBATCH --error={workdir}/{name}-%j.err",
+        # Required by `slurmrestd` (Fractal scripts always set it)
+        f"#SBATCH --chdir={workdir}",
     ]
     if _env("PARTITION"):
         header.append(f"#SBATCH --partition={_env('PARTITION')}")

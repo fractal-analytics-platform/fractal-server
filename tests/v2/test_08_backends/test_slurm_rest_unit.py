@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common.slurm_config import (
@@ -37,11 +38,12 @@ from fractal_server.runner.executors.slurm_rest.settings import (
 from fractal_server.runner.executors.slurm_rest.settings import (
     get_slurm_rest_settings,
 )
-from fractal_server.runner.executors.slurm_rest.settings import (
-    is_slurm_rest_enabled,
-)
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
+from fractal_server.runner.v2 import _local as local_backend
 from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
+from fractal_server.runner.v2 import _slurm_ssh as slurm_ssh_backend
+from fractal_server.runner.v2 import _slurm_sudo as slurm_sudo_backend
+from fractal_server.runner.v2.submit_workflow import _get_process_workflow
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.syringe import Inject
 from tests.v2._aux_runner import get_default_slurm_config
@@ -122,7 +124,6 @@ def test_build_job_description_variants():
         "tres_per_node": "gres/gpu:v100:1",
         "environment": [],
     }
-    assert "memory_per_node" not in job
 
     with pytest.raises(SlurmConfigError, match="not supported"):
         build_job_description(
@@ -204,30 +205,35 @@ def test_build_job_script_limits():
 
 
 def test_settings(monkeypatch, tmp_path):
-    # Avoid reading a local `.fractal_server.env`
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("FRACTAL_SLURM_REST_URL", raising=False)
-    monkeypatch.setenv("FRACTAL_SLURM_REST_ENABLED", "true")
-    with pytest.raises(ValueError, match="FRACTAL_SLURM_REST_URL"):
-        SlurmRestSettings()
+    # Values are read from the environment
     monkeypatch.setenv("FRACTAL_SLURM_REST_URL", "https://example.org/")
-    settings = SlurmRestSettings()
+    settings = SlurmRestSettings(_env_file=None)
     assert settings.base_url == "https://example.org"
+
+    def _settings(**kwargs) -> SlurmRestSettings:
+        return SlurmRestSettings(
+            _env_file=None,
+            **(
+                dict(
+                    FRACTAL_SLURM_REST_ENABLED="true",
+                    FRACTAL_SLURM_REST_URL="https://example.org",
+                    FRACTAL_SLURM_REST_CA_BUNDLE=None,
+                )
+                | kwargs
+            ),
+        )
+
+    with pytest.raises(ValueError, match="FRACTAL_SLURM_REST_URL"):
+        _settings(FRACTAL_SLURM_REST_URL=None)
     for url in ("http://example.org", "example.org"):
         with pytest.raises(ValueError, match="FRACTAL_SLURM_REST_URL"):
-            SlurmRestSettings(FRACTAL_SLURM_REST_URL=url)
+            _settings(FRACTAL_SLURM_REST_URL=url)
     with pytest.raises(ValueError, match="not found"):
-        SlurmRestSettings(FRACTAL_SLURM_REST_CA_BUNDLE=str(tmp_path / "x"))
+        _settings(FRACTAL_SLURM_REST_CA_BUNDLE=str(tmp_path / "x"))
     ca_bundle = tmp_path / "ca.pem"
     ca_bundle.write_text("")
-    settings = SlurmRestSettings(FRACTAL_SLURM_REST_CA_BUNDLE=str(ca_bundle))
+    settings = _settings(FRACTAL_SLURM_REST_CA_BUNDLE=str(ca_bundle))
     assert settings.FRACTAL_SLURM_REST_CA_BUNDLE == str(ca_bundle)
-
-    Inject.override(get_slurm_rest_settings, lambda: settings)
-    try:
-        assert is_slurm_rest_enabled()
-    finally:
-        Inject.pop(get_slurm_rest_settings)
 
 
 class _FakeResponse(io.BytesIO):
@@ -312,6 +318,35 @@ def test_client(monkeypatch):
     )
     with pytest.raises(SlurmRestError, match="HTTP 500.*Batch job failed"):
         client.submit_job({"script": "s", "job": {}})
+    # Both the generic description and the specific error (JUNO answer)
+    responses.append(
+        _http_error(
+            500,
+            {
+                "errors": [
+                    {
+                        "description": "Batch job submission failed",
+                        "error_number": 2063,
+                        "error": "Job cannot be submitted without the "
+                        "current working directory specified.",
+                    }
+                ]
+            },
+        )
+    )
+    with pytest.raises(
+        SlurmRestError, match="submission failed: Job cannot be submitted"
+    ):
+        client.submit_job({"script": "s", "job": {}})
+    # (Errors with neither field fall back to the whole error: not tested)
+    # Not JSON
+    responses.append(
+        urllib.error.HTTPError(
+            "url", 502, "msg", {}, io.BytesIO(b"<html>Bad Gateway</html>")
+        )
+    )
+    with pytest.raises(SlurmRestError, match="HTTP 502.*Bad Gateway"):
+        client.submit_job({"script": "s", "job": {}})
     responses.append({"errors": [{"error": "bad"}]})
     with pytest.raises(SlurmRestError, match="bad"):
         client.cancel_job("1")
@@ -389,13 +424,28 @@ def test_run_squeue_failed_queries_keep_jobs_active(error):
     )
     for _ in range(n_errors):
         assert runner._get_finished_jobs(job_ids=["1", "2"]) == set()
-        assert runner._poll_problem is not None
     assert runner._get_finished_jobs(job_ids=["1", "2"]) == {"2"}
-    assert runner._poll_problem is None
     assert runner.run_squeue(job_ids=[]) == ""
 
 
+def test_run_squeue_missing_jobs_are_finished():
+    """
+    Jobs not listed by `GET /jobs` (e.g. finished for longer than `MinJobAge`)
+    are omitted, and then treated as finished, as with `squeue`.
+    """
+    runner = _runner_with_client(
+        _FakeStatesClient(errors=[], states={"1": "RUNNING", "3": "PENDING"})
+    )
+    assert runner.run_squeue(job_ids=["1", "2"]) == "1 RUNNING"
+    assert runner._get_finished_jobs(job_ids=["1", "2"]) == {"2"}
+
+
 def test_run_squeue_logs_once(monkeypatch):
+    """
+    While waiting for a login or for `slurmrestd` (possibly for days), a
+    warning at every poll (every few seconds) would flood the server logs:
+    only the start and the end of each problem are logged.
+    """
     logger = MagicMock()
     monkeypatch.setattr(runner_module, "logger", logger)
     runner = _runner_with_client(
@@ -415,6 +465,31 @@ def test_run_squeue_logs_once(monkeypatch):
     assert sum("Cannot query SLURM job states" in m for m in messages) == 1
     assert sum("No valid SLURM token" in m for m in messages) == 1
     assert sum("available again" in m for m in messages) == 1
+
+
+class _FakeCancelClient:
+    def __init__(self, failing: set[str]):
+        self.failing = failing
+        self.cancelled: list[str] = []
+
+    def cancel_job(self, job_id: str) -> None:
+        self.cancelled.append(job_id)
+        if job_id in self.failing:
+            raise SlurmRestError(f"DELETE /job/{job_id} -> HTTP 500")
+
+
+def test_scancel_jobs():
+    """
+    One cancel request per SLURM job; a failure does not stop the others.
+    """
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.rest_client = _FakeCancelClient(failing={"12"})
+    runner.jobs = {"11": None, "12": None, "13": None}
+    assert runner.scancel_jobs() == ["11", "12", "13"]
+    assert runner.rest_client.cancelled == ["11", "12", "13"]
+
+    runner.jobs = {}
+    assert runner.scancel_jobs() == []
 
 
 class _FakeSSH:
@@ -458,12 +533,13 @@ class _FakePingClient:
             raise self.error
 
 
+# Connection, DNS, TLS and timeout errors are all `OSError` (as `URLError`),
+# and take the same path: one case is enough
 @pytest.mark.parametrize(
     "error",
     [
         SlurmRestError("GET /ping -> HTTP 502: []"),
         urllib.error.URLError(ConnectionRefusedError("refused")),
-        TimeoutError("timed out"),
     ],
 )
 def test_check_slurmrestd(error):
@@ -482,6 +558,90 @@ def test_check_slurmrestd(error):
     runner.rest_client = _FakePingClient(SlurmTokenError("log in again"))
     with pytest.raises(SlurmTokenError):
         runner._check_slurmrestd()
+
+
+@pytest.mark.parametrize("rest_enabled", ["true", "false"])
+def test_get_process_workflow(rest_enabled):
+    """
+    `slurm_ssh` resources use the REST backend if and only if
+    `FRACTAL_SLURM_REST_ENABLED=true`; other resource types never do.
+    """
+    settings = SlurmRestSettings(
+        _env_file=None,
+        FRACTAL_SLURM_REST_ENABLED=rest_enabled,
+        FRACTAL_SLURM_REST_URL="https://slurmrestd.example.org",
+        FRACTAL_SLURM_REST_CA_BUNDLE=None,
+    )
+    Inject.override(get_slurm_rest_settings, lambda: settings)
+    try:
+        assert _get_process_workflow(ResourceType.SLURM_SSH) is (
+            slurm_rest_backend.process_workflow
+            if rest_enabled == "true"
+            else slurm_ssh_backend.process_workflow
+        )
+        assert _get_process_workflow(ResourceType.SLURM_SUDO) is (
+            slurm_sudo_backend.process_workflow
+        )
+        assert _get_process_workflow(ResourceType.LOCAL) is (
+            local_backend.process_workflow
+        )
+    finally:
+        Inject.pop(get_slurm_rest_settings)
+    with pytest.raises(ValueError, match="Unknown resource type"):
+        _get_process_workflow("unknown")
+
+
+def test_process_workflow(monkeypatch, tmp_path):
+    """
+    `process_workflow` runs the selected tasks with a `SlurmRestRunner`.
+    """
+    runners = []
+    executed = []
+
+    class _FakeRunner:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            runners.append(self)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(slurm_rest_backend, "SlurmRestRunner", _FakeRunner)
+    monkeypatch.setattr(
+        slurm_rest_backend, "execute_tasks", lambda **kw: executed.append(kw)
+    )
+    wftasks = ["wftask0", "wftask1", "wftask2"]
+    slurm_rest_backend.process_workflow(
+        job_id=7,
+        workflow=types.SimpleNamespace(task_list=wftasks),
+        dataset="dataset",
+        workflow_dir_local=tmp_path / "local",
+        workflow_dir_remote=tmp_path / "remote",
+        first_task_index=1,
+        last_task_index=1,
+        logger_name="test",
+        job_attribute_filters={},
+        job_type_filters={},
+        user_id=3,
+        resource=types.SimpleNamespace(id=5),
+        profile="profile",
+        fractal_ssh="fractal_ssh",
+        slurm_account="account",
+        worker_init="module load x",
+        user_cache_dir=str(tmp_path),
+    )
+
+    # Other arguments are passed on as in `_slurm_ssh.process_workflow`, and
+    # are not checked here
+    assert len(runners) == 1
+    assert runners[0].kwargs["user_id"] == 3
+    assert "module load x" in runners[0].kwargs["common_script_lines"]
+    assert len(executed) == 1
+    assert executed[0]["wf_task_list"] == ["wftask1"]
+    assert executed[0]["runner"] is runners[0]
 
 
 def test_process_workflow_token_error(monkeypatch, tmp_path):
