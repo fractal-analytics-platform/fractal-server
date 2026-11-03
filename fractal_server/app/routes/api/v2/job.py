@@ -1,4 +1,5 @@
 import asyncio
+import shlex
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
@@ -16,9 +17,12 @@ from sqlmodel import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import LinkUserProjectV2
+from fractal_server.app.models.v2 import Profile
+from fractal_server.app.models.v2 import Resource
 from fractal_server.app.routes.auth import get_api_guest
 from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux._job import (
@@ -35,6 +39,9 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.runner.executors.slurm_rest.settings import (
+    is_slurm_rest_enabled,
+)
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
@@ -246,6 +253,34 @@ async def stop_job(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
+async def _get_squeue_user(
+    *,
+    user: UserOAuth,
+    resource: Resource,
+    profile: Profile,
+    db: AsyncSession,
+) -> str:
+    """
+    SLURM user of the jobs of `user`.
+
+    With the SLURM REST runner, jobs of `slurm_ssh` resources run as the SSO
+    user (`OAuthAccount.account_id`, i.e. the `sub` claim, see
+    `SsoTokenProvider`), not as the SSH user `Profile.username`.
+    """
+    if resource.type == ResourceType.SLURM_SSH and is_slurm_rest_enabled():
+        res = await db.execute(
+            select(OAuthAccount.account_id).where(
+                OAuthAccount.user_id == user.id
+            )
+        )
+        account_ids = res.scalars().all()
+        # As for `SsoTokenProvider`: no or several SSO accounts, no REST jobs
+        if len(account_ids) == 1:
+            return account_ids[0]
+    # Always set for SLURM profiles
+    return profile.username or ""
+
+
 @router.get(
     "/job/squeue/",
     response_model=str,
@@ -271,7 +306,10 @@ async def get_squeue(
 
     flags = ""
     if scope == "user":
-        flags = f"--user {profile.username}"
+        squeue_user = await _get_squeue_user(
+            user=user, resource=resource, profile=profile, db=db
+        )
+        flags = f"--user {shlex.quote(squeue_user)}"
     elif scope == "accounts" and len(user.slurm_accounts) > 0:
         flags = f"--accounts={','.join(user.slurm_accounts)}"
 
