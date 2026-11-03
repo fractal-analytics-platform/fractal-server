@@ -65,6 +65,7 @@ E.g. with a shared SSH service account in the profiles:
 - `tests/v2/test_08_backends/test_slurm_rest_unit.py`: unit tests, no cluster needed.
 - `tests/v2/test_08_backends/test_slurm_rest_token.py`: token providers (SSO refresh with a fake identity provider), needs the test database.
 - `tests/v2/test_08_backends/test_slurm_rest_runner.py`: needs the SLURM docker containers (a fake REST client runs `sbatch` over SSH).
+- `tests/v2/test_07_full_workflow/test_full_workflow_slurm_rest.py`: a full job, from the API to `SlurmRestRunner`, with the same fake REST client; needs the SLURM docker containers.
 - `tests/v2/test_08_backends/test_slurm_rest_live.py`: opt-in tests against a real `slurmrestd`, skipped unless the `FRACTAL_TEST_SLURM_REST_*` environment variables are set (see the module docstring).
 
 These tests only cover what `SlurmRestRunner` overrides or adds; inherited behaviour (task failures, compound tasks, shutdown, fetching outputs, ...) is covered by the SLURM/SSH and SLURM/sudo runner tests.

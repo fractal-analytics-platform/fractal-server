@@ -1,8 +1,9 @@
 """
 Run `SlurmRestRunner` against the dockerized SLURM cluster, which has no
 `slurmrestd`: the REST client is replaced by a fake that submits the REST
-script through `sbatch` over SSH. This covers everything except HTTP (in
-particular: inputs embedded in the script, no SSH upload).
+script through `sbatch` over SSH (see `tests/v2/_aux_slurm_rest.py`). This
+covers everything except HTTP (in particular: inputs embedded in the script,
+no SSH upload).
 
 Only what `SlurmRestRunner` overrides or adds is tested here (and in
 `test_slurm_rest_unit.py`). Inherited behaviour (task failures, compound
@@ -11,8 +12,6 @@ tasks, shutdown, fetching and postprocessing outputs, ...) is the same as for
 """
 
 import json
-from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -20,11 +19,12 @@ from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
-from fractal_server.runner.executors.slurm_rest import runner as runner_module
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
-from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
+from tests.v2._aux_slurm_rest import SLURM_USERNAME
+from tests.v2._aux_slurm_rest import SSHFakeRestClient
+from tests.v2._aux_slurm_rest import use_fake_slurm_rest
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
 from .aux_unit_runner import *  # noqa
@@ -32,61 +32,9 @@ from .aux_unit_runner import ZARR_URLS
 from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
 
 
-class SSHFakeRestClient:
-    base_url = "fake://slurmrestd"
-
-    def __init__(self, fractal_ssh: FractalSSH, script_dir: Path):
-        self.fractal_ssh = fractal_ssh
-        self.script_dir = script_dir
-        self.submitted: list[dict] = []
-
-    def ping(self) -> None:
-        pass
-
-    def submit_job(self, request_body: dict) -> int:
-        self.submitted.append(request_body)
-        path = (self.script_dir / f"rest-{uuid4().hex}.sh").as_posix()
-        self.fractal_ssh.write_remote_file(
-            path=path, content=request_body["script"]
-        )
-        stdout = self.fractal_ssh.run_command(cmd=f"sbatch --parsable {path}")
-        return int(stdout.strip())
-
-    def get_job_states(self) -> dict[str, str]:
-        stdout = self.fractal_ssh.run_command(
-            cmd="squeue --noheader --format='%i %T' --states=all"
-        )
-        return dict(line.split() for line in stdout.splitlines())
-
-    def cancel_job(self, job_id: str) -> None:
-        self.fractal_ssh.run_command(cmd=f"scancel {job_id}")
-
-
-# SLURM user of the fake token: different from the SSH user (as with SSO
-# tokens and a shared SSH account), and known in the container
-SLURM_USERNAME = "root"
-
-
-class FakeTokenProvider:
-    slurm_username = SLURM_USERNAME
-
-    def get_token(self, force_refresh: bool = False) -> str:
-        return "x"
-
-
 @pytest.fixture
-def fake_rest(monkeypatch, fractal_ssh, tmp777_path):
-    fake = SSHFakeRestClient(fractal_ssh, tmp777_path / "user")
-
-    def _client(**kwargs) -> SSHFakeRestClient:
-        fake.client_kwargs = kwargs
-        return fake
-
-    monkeypatch.setattr(runner_module, "SlurmRestClient", _client)
-    monkeypatch.setattr(
-        runner_module, "get_token_provider", lambda **_: FakeTokenProvider()
-    )
-    return fake
+def fake_rest(monkeypatch, fractal_ssh) -> SSHFakeRestClient:
+    return use_fake_slurm_rest(monkeypatch, fractal_ssh)
 
 
 def _get_runner(tmp777_path, fractal_ssh, res, prof, job_id):
