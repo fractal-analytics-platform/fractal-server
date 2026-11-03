@@ -1,11 +1,5 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
-
-* Runner:
-    * Add SLURM REST runner for `slurm_ssh` resources, which submits, polls and cancels SLURM jobs through `slurmrestd`; disabled by default, enabled via `FRACTAL_SLURM_REST_ENABLED`.
-    * SLURM REST runner authenticates with the SSO (OAuth/OIDC) token of the user, refreshed with the stored refresh token; SLURM jobs run as the SSO user, while SSH stays with `Profile.username`; `FRACTAL_SLURM_REST_TOKEN` overrides it with a fixed token (development only).
-
 # 2.24.2
 
 * API:
