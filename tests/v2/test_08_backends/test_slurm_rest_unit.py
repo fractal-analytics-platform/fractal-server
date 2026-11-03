@@ -447,6 +447,43 @@ def test_get_slurm_home():
         assert "unknown on the cluster" in exc_info.value.assemble_error()
 
 
+class _FakePingClient:
+    base_url = "https://example.org/slurm/v0.0.44"
+
+    def __init__(self, error: Exception | None):
+        self.error = error
+
+    def ping(self) -> None:
+        if self.error is not None:
+            raise self.error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        SlurmRestError("GET /ping -> HTTP 502: []"),
+        urllib.error.URLError(ConnectionRefusedError("refused")),
+        TimeoutError("timed out"),
+    ],
+)
+def test_check_slurmrestd(error):
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.rest_client = _FakePingClient(None)
+    runner._check_slurmrestd()
+
+    runner.rest_client = _FakePingClient(error)
+    with pytest.raises(JobExecutionError) as exc_info:
+        runner._check_slurmrestd()
+    message = exc_info.value.assemble_error()
+    assert "Cannot reach slurmrestd at https://example.org" in message
+    assert type(error).__name__ in message
+
+    # Token errors are left to `process_workflow`
+    runner.rest_client = _FakePingClient(SlurmTokenError("log in again"))
+    with pytest.raises(SlurmTokenError):
+        runner._check_slurmrestd()
+
+
 def test_process_workflow_token_error(monkeypatch, tmp_path):
     def _fail(**kwargs):
         raise SlurmTokenError("Hint: the user must log in to Fractal again.")

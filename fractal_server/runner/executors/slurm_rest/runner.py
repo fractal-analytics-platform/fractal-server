@@ -17,6 +17,7 @@ from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.syringe import Inject
 
 from .client import SlurmRestClient
+from .client import SlurmRestError
 from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
 from .job_script import build_job_script
@@ -108,12 +109,32 @@ class SlurmRestRunner(SlurmSSHRunner):
             get_token=token_provider.get_token,
             ca_bundle=rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
         )
-        self.rest_client.ping()
+        self._check_slurmrestd()
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
             f"ssh user={profile.username}, "
             f"slurm user={self.slurm_username})."
         )
+
+    def _check_slurmrestd(self) -> None:
+        """
+        Fail at runner start (before any submission) if `slurmrestd` cannot
+        be reached, with a job error instead of a traceback.
+
+        Token errors are not handled here (see `_slurm_rest.py`).
+        """
+        try:
+            self.rest_client.ping()
+        except (SlurmRestError, OSError) as e:
+            # `OSError` includes connection, DNS, TLS and timeout errors
+            raise JobExecutionError(
+                info=(
+                    f"Cannot reach slurmrestd at {self.rest_client.base_url} "
+                    f"({type(e).__name__}: {e}). Hint: check that slurmrestd "
+                    "is running and reachable, FRACTAL_SLURM_REST_URL, and "
+                    "the trusted CAs (FRACTAL_SLURM_REST_CA_BUNDLE)."
+                )
+            ) from None
 
     def _get_slurm_home(self) -> str:
         """

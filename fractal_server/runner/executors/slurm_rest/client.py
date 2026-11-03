@@ -49,6 +49,8 @@ class SlurmRestClient:
             after a 401 or 511 response.
         ca_bundle:
             Optional CA file (PEM) for TLS verification (else system CAs).
+            Needed only when the system CAs are insufficient to verify the
+            `slurmrestd` server's TLS certificate (eg. local dev).
         timeout: Timeout of each request, in seconds.
     """
 

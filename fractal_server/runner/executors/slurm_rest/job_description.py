@@ -7,9 +7,7 @@ option must become a JSON field.
 
 JSON fields follow the `SLURM_REST_API_VERSION` (`client.py`) of the
 `slurmrestd` OpenAPI plugin. All mappings were checked against `sbatch` on a
-real cluster (Slurm 25.11, `v0.0.44`): jobs submitted both ways get the same
-`scontrol show job` values, also for node lists and ranges in `--nodelist`
-and `--exclude`.
+real cluster (Slurm 25.11, `v0.0.44`).
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
 REST job description, and options and JSON fields differ in names and units

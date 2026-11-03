@@ -84,13 +84,6 @@ def check_token_user(token: str, slurm_username: str) -> None:
         )
 
 
-class TokenProvider(Protocol):
-    # User that `slurmrestd` acts as (the token user)
-    slurm_username: str
-
-    def get_token(self, force_refresh: bool = False) -> str: ...
-
-
 def _expires_at(account: OAuthAccount) -> int | None:
     if account.expires_at is not None:
         return account.expires_at
@@ -102,6 +95,8 @@ def _get_oauth_client(oauth_settings: OAuthSettings) -> BaseOAuth2:
     Same OAuth client as in `get_oauth_router`, which is not reused so that
     `fractal_server.app.routes` is not modified.
     """
+    # TODO: small refactor in oauth.py to remove the need of this copied code
+
     # Imported here, to avoid loading the API routes in the runner modules
     from fractal_server.app.routes.auth.oauth import _create_client_github
     from fractal_server.app.routes.auth.oauth import _create_client_google
@@ -137,6 +132,16 @@ def _refresh_with_identity_provider(refresh_token: str) -> dict[str, Any]:
     client = _get_oauth_client(oauth_settings)
     # The runner runs in a worker thread, without a running event loop
     return asyncio.run(client.refresh_token(refresh_token))
+
+
+# --- Token provider interface and implementation ---
+
+
+class TokenProvider(Protocol):
+    # User that `slurmrestd` acts as (the token user)
+    slurm_username: str
+
+    def get_token(self, force_refresh: bool = False) -> str: ...
 
 
 class SsoTokenProvider(TokenProvider):
