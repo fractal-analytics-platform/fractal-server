@@ -14,6 +14,9 @@ from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common import (
     base_slurm_runner as base_runner_module,
 )
+from fractal_server.runner.executors.slurm_common._job_states import (
+    STATES_FINISHED,
+)
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
 )
@@ -21,6 +24,7 @@ from fractal_server.runner.executors.slurm_rest import client as client_module
 from fractal_server.runner.executors.slurm_rest import runner as runner_module
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
+from fractal_server.runner.executors.slurm_rest.client import squeue_state
 from fractal_server.runner.executors.slurm_rest.job_description import (
     build_job_description,
 )
@@ -313,7 +317,7 @@ def test_client(monkeypatch):
             ]
         }
     )
-    assert client.get_job_states() == {"1": "COMPLETED", "2": "RUNNING"}
+    assert client.get_job_states() == {"1": "COMPLETING", "2": "RUNNING"}
 
     # Errors
     responses.append(
@@ -412,6 +416,26 @@ def test_job_states_invalid_response(monkeypatch, body):
     )
     assert client.get_job_states() == {}
     assert runner._get_finished_jobs(job_ids=["1"]) == {"1"}
+
+
+@pytest.mark.parametrize(
+    "job_state,expected,finished",
+    [
+        (["RUNNING"], "RUNNING", False),
+        (["COMPLETED"], "COMPLETED", True),
+        # Epilog still running: not finished yet, as with `squeue`
+        (["COMPLETED", "COMPLETING"], "COMPLETING", False),
+        (["CANCELLED", "COMPLETING"], "COMPLETING", False),
+        (["PENDING", "REQUEUED"], "REQUEUED", False),
+        (["PENDING", "SPECIAL_EXIT"], "SPECIAL_EXIT", True),
+        # Flags that `squeue` does not report: not finished until cleared
+        (["PENDING", "POWER_UP_NODE"], "POWER_UP_NODE", False),
+        ([], "UNKNOWN", False),
+    ],
+)
+def test_squeue_state(job_state, expected, finished):
+    assert squeue_state(job_state) == expected
+    assert (squeue_state(job_state) in STATES_FINISHED) is finished
 
 
 @pytest.mark.parametrize("base_url", ["file:///etc", "http://example.org"])

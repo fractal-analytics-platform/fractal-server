@@ -15,6 +15,22 @@ logger = set_logger(__name__)
 SLURM_REST_API_VERSION = "v0.0.44"
 
 
+def squeue_state(job_state: list[str]) -> str:
+    """
+    Single job state, close to what `squeue --format=%T` reports.
+
+    `slurmrestd` returns the base state followed by the flags of a job, e.g.
+    `["COMPLETED", "COMPLETING"]` while the epilog runs, while `squeue`
+    reports a flag instead of the base state. Hence the last item: a job
+    with flags is not finished yet (except with `SPECIAL_EXIT`, a finished
+    state).
+
+    Args:
+        job_state: `job_state` of a `slurmrestd` job.
+    """
+    return job_state[-1] if job_state else "UNKNOWN"
+
+
 class SlurmRestError(RuntimeError):
     pass
 
@@ -192,7 +208,7 @@ class SlurmRestClient:
             job_state = job.get("job_state")
             # v0.0.44 returns a list, e.g. ["COMPLETED", "COMPLETING"]
             if isinstance(job_state, list):
-                job_state = job_state[0] if job_state else "UNKNOWN"
+                job_state = squeue_state(job_state)
             states[str(job["job_id"])] = job_state
         return states
 
