@@ -373,6 +373,47 @@ def test_client(monkeypatch):
     )
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"<html>Service unavailable</html>",
+        b"[]",
+        b"{}",
+        b'{"jobs": null}',
+        b'{"jobs": {}}',
+    ],
+)
+def test_job_states_invalid_response(monkeypatch, body):
+    """
+    A successful (HTTP 200) response without a job list, e.g. an HTML page
+    from a proxy in front of `slurmrestd`, is an error: it must not mean "no
+    jobs", which would mark all jobs as completed.
+    """
+    monkeypatch.setattr(
+        client_module.urllib.request,
+        "urlopen",
+        lambda request, timeout, context: _FakeResponse(body),
+    )
+    client = SlurmRestClient(
+        base_url="https://example.org",
+        username="user",
+        get_token=lambda force_refresh=False: "token",
+    )
+    with pytest.raises(SlurmRestError):
+        client.get_job_states()
+    runner = _runner_with_client(client)
+    assert runner._get_finished_jobs(job_ids=["1"]) == set()
+
+    # An empty job list is valid: jobs are missing, hence completed
+    monkeypatch.setattr(
+        client_module.urllib.request,
+        "urlopen",
+        lambda request, timeout, context: _FakeResponse(b'{"jobs": []}'),
+    )
+    assert client.get_job_states() == {}
+    assert runner._get_finished_jobs(job_ids=["1"]) == {"1"}
+
+
 @pytest.mark.parametrize("base_url", ["file:///etc", "http://example.org"])
 def test_client_url_scheme(base_url):
     with pytest.raises(ValueError, match="URL scheme"):

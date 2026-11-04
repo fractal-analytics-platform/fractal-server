@@ -20,10 +20,17 @@ class SlurmRestError(RuntimeError):
 
 
 def _parse_body(raw: bytes) -> dict[str, Any]:
+    """
+    Parse a response body; anything else than a JSON object (e.g. an HTML
+    page from a proxy) is returned as `{"raw": <beginning of the body>}`.
+    """
     try:
-        return json.loads(raw)
+        payload = json.loads(raw)
     except ValueError:
+        payload = None
+    if not isinstance(payload, dict):
         return {"raw": raw.decode(errors="replace")[:500]}
+    return payload
 
 
 def _error_description(err: dict[str, Any]) -> str:
@@ -121,6 +128,11 @@ class SlurmRestClient:
                     f"{method} {path} -> HTTP {e.code}: "
                     f"{_error_descriptions(payload)}"
                 ) from None
+            if "raw" in payload:
+                raise SlurmRestError(
+                    f"{method} {path} -> response is not a JSON object: "
+                    f"{payload['raw']!r}"
+                )
             if payload.get("errors"):
                 raise SlurmRestError(
                     f"{method} {path} -> errors: {_error_descriptions(payload)}"
@@ -167,8 +179,16 @@ class SlurmRestClient:
         `GET /jobs` call. Jobs older than `MinJobAge` are not listed.
         """
         payload = self._request("GET", "/jobs")
+        # A missing job is considered completed upstream: a response without
+        # a job list must fail, not mean "no jobs"
+        jobs = payload.get("jobs")
+        if not isinstance(jobs, list):
+            raise SlurmRestError(
+                f"GET /jobs -> no `jobs` list in response (keys: "
+                f"{sorted(payload)})."
+            )
         states = {}
-        for job in payload.get("jobs", []):
+        for job in jobs:
             job_state = job.get("job_state")
             # v0.0.44 returns a list, e.g. ["COMPLETED", "COMPLETING"]
             if isinstance(job_state, list):
