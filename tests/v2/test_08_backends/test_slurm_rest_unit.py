@@ -11,6 +11,9 @@ import pytest
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import SlurmConfigError
+from fractal_server.runner.executors.slurm_common import (
+    base_slurm_runner as base_runner_module,
+)
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
 )
@@ -490,6 +493,67 @@ def test_scancel_jobs():
 
     runner.jobs = {}
     assert runner.scancel_jobs() == []
+
+
+class _FakeDownClient:
+    """
+    No valid token, or `slurmrestd` down: every request fails.
+    """
+
+    def __init__(self):
+        self.requests: list[str] = []
+
+    def get_job_states(self) -> dict[str, str]:
+        self.requests.append("GET /jobs")
+        raise SlurmTokenError("log in again")
+
+    def cancel_job(self, job_id: str) -> None:
+        self.requests.append(f"DELETE /job/{job_id}")
+        raise SlurmTokenError("log in again")
+
+
+def test_stop_while_requests_fail(tmp_path, monkeypatch):
+    """
+    Stopping a job while SLURM jobs can be neither polled nor cancelled: the
+    jobs stay tracked, and polling and cancellation are retried once per
+    `poll_interval`, not in a busy loop. Only the start and the end of the
+    problem are logged above debug level, not every retry.
+    """
+    sleeps = []
+    monkeypatch.setattr(runner_module.time, "sleep", sleeps.append)
+    rest_logger = MagicMock()
+    base_logger = MagicMock()
+    monkeypatch.setattr(runner_module, "logger", rest_logger)
+    monkeypatch.setattr(base_runner_module, "logger", base_logger)
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.rest_client = _FakeDownClient()
+    runner.jobs = {"1": None}
+    runner.poll_interval = 5
+    runner.poll_interval_internal = 0.5
+    runner.shutdown_file = tmp_path / "shutdown"
+    runner.shutdown_file.touch()
+
+    # Same steps as the retrieval loop of `submit` and `multisubmit`
+    for _ in range(3):
+        assert runner._get_finished_jobs(job_ids=runner.job_ids) == set()
+        assert runner.wait_and_check_shutdown() == ["1"]
+    assert runner.job_ids == ["1"]
+    assert runner.rest_client.requests == ["GET /jobs", "DELETE /job/1"] * 3
+    assert sleeps == [5, 5, 5]
+    assert rest_logger.error.call_count == 1
+    assert rest_logger.warning.call_count == 1  # From `run_squeue`
+    assert rest_logger.info.call_count == 3  # START, count, END
+    base_messages = [call.args[0] for call in base_logger.info.call_args_list]
+    assert sum("Shutdown file detected" in m for m in base_messages) == 1
+
+    # Cancellation is possible again
+    runner.rest_client = _FakeCancelClient(failing=set())
+    assert runner.wait_and_check_shutdown() == ["1"]
+    assert runner.rest_client.cancelled == ["1"]
+    assert sleeps == [5, 5, 5, 5]
+    messages = [call.args[0] for call in rest_logger.info.call_args_list]
+    assert sum("Cancel possible again" in m for m in messages) == 1
+    assert not runner._cancel_failed
 
 
 class _FakeSSH:

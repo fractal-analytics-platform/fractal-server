@@ -1,5 +1,6 @@
 import json
 import shlex
+import time
 from pathlib import Path
 from typing import Self
 from typing import override
@@ -53,6 +54,8 @@ class SlurmRestRunner(SlurmSSHRunner):
     slurm_username: str
     # Why job states cannot be queried, if they cannot (for logs)
     _poll_problem: str | None = None
+    # Whether the last cancellation failed (for logs and retries)
+    _cancel_failed: bool = False
 
     def __init__(
         self,
@@ -272,17 +275,53 @@ class SlurmRestRunner(SlurmSSHRunner):
 
     @override
     def scancel_jobs(self) -> list[str]:
-        logger.info("[scancel_jobs] START (REST)")
+        """
+        Cancel all SLURM jobs via `DELETE /job/{id}`.
+
+        While cancellation keeps failing (after a shutdown, it is retried at
+        each poll, see `wait_and_check_shutdown`), only the first failure is
+        logged above debug level, as for `run_squeue`.
+        """
+        log = logger.debug if self._cancel_failed else logger.info
+        log("[scancel_jobs] START (REST)")
         scancelled_job_ids = self.job_ids
-        logger.info(f"[scancel_jobs] {len(scancelled_job_ids)=}")
+        log(f"[scancel_jobs] {len(scancelled_job_ids)=}")
+        errors = {}
         for job_id in scancelled_job_ids:
             try:
                 self.rest_client.cancel_job(job_id)
                 logger.warning(f"[scancel_jobs] Cancelled {job_id}.")
             except Exception as e:
-                logger.error(
-                    f"[scancel_jobs] Cancel of {job_id} failed. "
-                    f"Original error:\n{str(e)}"
-                )
-        logger.info("[scancel_jobs] END (REST)")
+                errors[job_id] = str(e)
+        if errors:
+            log_error = logger.debug if self._cancel_failed else logger.error
+            log_error(
+                f"[scancel_jobs] Cancel failed. Original errors: {errors}"
+            )
+            self._cancel_failed = True
+        elif self._cancel_failed:
+            self._cancel_failed = False
+            logger.info("[scancel_jobs] Cancel possible again.")
+        log("[scancel_jobs] END (REST)")
+        return scancelled_job_ids
+
+    @override
+    def wait_and_check_shutdown(self) -> list[str]:
+        """
+        Same as `SlurmSSHRunner`, but wait `poll_interval` after the
+        cancellation of a shutdown, and retry a failed cancellation without
+        the upstream logs.
+
+        Upstream returns right after `scancel_jobs`, expecting the SLURM jobs
+        to be finished at the next poll. With REST, both the cancellation
+        and the poll may fail (no valid token, `slurmrestd` down), and jobs
+        then stay active: without waiting, cancellation and polling would be
+        retried in a busy loop until the problem ends.
+        """
+        if self._cancel_failed and self.is_shutdown():
+            scancelled_job_ids = self.scancel_jobs()
+        else:
+            scancelled_job_ids = super().wait_and_check_shutdown()
+        if scancelled_job_ids:
+            time.sleep(self.poll_interval)
         return scancelled_job_ids

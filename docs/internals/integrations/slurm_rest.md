@@ -56,9 +56,9 @@ E.g. with a shared SSH service account in the profiles:
 ## Known limitations
 
 - If job states cannot be queried (no valid SSO token, or `slurmrestd` down or failing), a running job waits with no time limit (see **Polling**):
-    - the user is not notified: the Fractal job just stays `submitted`, and only a server log warning is written;
-    - stopping the job (or a graceful server shutdown) while waiting marks it as failed, but cannot cancel its SLURM jobs (the cancel request fails as well), which run until they end;
-    - if the problem never ends (e.g. the user never logs in again), the job stays `submitted` until it is stopped.
+    - the user is not notified (TODO): the Fractal job just stays `submitted`, and only a server log warning is written;
+    - stopping the Fractal job while waiting does not end it: the cancel requests fail as well, and cancelling and polling are retried at each poll (every `jobs_poll_interval`), so that its SLURM jobs stay tracked. The Fractal job stays `submitted` until a request succeeds, and then fails as any stopped job. If the problem never ends (e.g. the user never logs in again), it stays `submitted` until the server shuts down;
+    - when the server shuts down gracefully (e.g. restart), the Fractal job is marked as failed after `FRACTAL_GRACEFUL_SHUTDOWN_TIME` (as any job still running), but its SLURM jobs cannot be cancelled: they keep running, untracked, until they end.
 - Submission is not retried: if the token is missing or `slurmrestd` fails when a task submits its SLURM jobs, that task fails (as when `sbatch` fails with the SLURM/SSH runner).
 
 ## Testing
