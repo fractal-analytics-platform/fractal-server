@@ -20,6 +20,8 @@ JSON fields are rejected at submission, and a unit test covers every
 `SlurmConfig` option.
 """
 
+import getopt
+import shlex
 from typing import Any
 
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
@@ -27,24 +29,29 @@ from fractal_server.runner.exceptions import SlurmConfigError
 
 SBATCH_PREFIX = "#SBATCH"
 
-SHORT_OPTIONS = {
-    "A": "account",
-    "C": "constraint",
-    "D": "chdir",
-    "G": "gpus",
-    "J": "job-name",
-    "N": "nodes",
-    "c": "cpus-per-task",
-    "e": "error",
-    "n": "ntasks",
-    "o": "output",
-    "p": "partition",
-    "q": "qos",
-    "t": "time",
-    "w": "nodelist",
-    "x": "exclude",
+# Supported options (all take a value), with their short form if any; each
+# one must be handled in `_apply_option`
+OPTIONS = {
+    "account": "A",
+    "chdir": "D",
+    "constraint": "C",
+    "cpus-per-task": "c",
+    "error": "e",
+    "exclude": "x",
+    "gpus": "G",
+    "gres": None,
+    "job-name": "J",
+    "mem": None,
+    "mem-per-cpu": None,
+    "nodelist": "w",
+    "nodes": "N",
+    "ntasks": "n",
+    "output": "o",
+    "partition": "p",
+    "qos": "q",
+    "time": "t",
 }
-LONG_ALIASES = {"err": "error", "out": "output"}
+_LONG_NAMES = {short: name for name, short in OPTIONS.items() if short}
 
 
 def _set_number(value: int) -> dict[str, Any]:
@@ -60,11 +67,12 @@ def slurm_time_to_minutes(value: str) -> int:
     try:
         days = 0
         if "-" in value:
-            days_str, value = value.split("-", 1)
+            days_str, hms = value.split("-", 1)
             days = int(days_str)
-            hours, minutes, seconds = (
-                [int(x) for x in value.split(":")] + [0, 0]
-            )[:3]
+            parts = [int(x) for x in hms.split(":")]
+            if len(parts) > 3:
+                raise ValueError
+            hours, minutes, seconds = parts + [0] * (3 - len(parts))
         else:
             parts = [int(x) for x in value.split(":")]
             if len(parts) == 1:
@@ -87,27 +95,42 @@ def _mem_MB(value: str) -> int:
     return slurm_mem_to_MB(value)
 
 
-def _parse_sbatch_line(line: str) -> tuple[str, str]:
-    option = line[len(SBATCH_PREFIX) :].strip()
-    if option.startswith("--"):
-        option = option[2:]
-        if "=" in option:
-            key, value = option.split("=", 1)
-        else:
-            key, _, value = option.partition(" ")
-        key = LONG_ALIASES.get(key, key)
-    elif option.startswith("-") and len(option) > 1:
-        short = option[1]
-        if short not in SHORT_OPTIONS:
-            raise SlurmConfigError(f"Unsupported SBATCH option in '{line}'.")
-        key = SHORT_OPTIONS[short]
-        value = option[2:].lstrip(" =")
-    else:
-        raise SlurmConfigError(f"Cannot parse SBATCH line '{line}'.")
-    value = value.strip()
-    if not value:
-        raise SlurmConfigError(f"Missing value in SBATCH line '{line}'.")
-    return key, value
+def _gres_to_tres(value: str) -> str:
+    # As `gres_prepend_tres_type` in Slurm: `gpu:1,shard:2` becomes
+    # `gres/gpu:1,gres/shard:2`
+    return ",".join(
+        item if item.startswith("gres/") else f"gres/{item}"
+        for item in value.split(",")
+    )
+
+
+def _parse_sbatch_line(line: str) -> list[tuple[str, str]]:
+    """
+    Return the `(long option name, value)` pairs of an `#SBATCH` line.
+
+    The line is split as `sbatch` does (quotes, `#` comments, several
+    options per line, `--opt=value` or `--opt value`); unsupported options
+    are an error.
+    """
+    try:
+        options, extra = getopt.gnu_getopt(
+            shlex.split(line[len(SBATCH_PREFIX) :], comments=True),
+            "".join(f"{short}:" for short in _LONG_NAMES),
+            [f"{name}=" for name in OPTIONS],
+        )
+    except (getopt.GetoptError, ValueError) as e:
+        raise SlurmConfigError(
+            f"SBATCH line '{line}' is not supported by the SLURM REST "
+            f"runner ({e})."
+        )
+    if extra:
+        raise SlurmConfigError(
+            f"Unexpected arguments {extra} in SBATCH line '{line}'."
+        )
+    return [
+        (_LONG_NAMES[option[1]] if len(option) == 2 else option[2:], value)
+        for option, value in options
+    ]
 
 
 def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
@@ -137,7 +160,7 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
         case "constraint":
             job["constraints"] = value
         case "gres":
-            job["tres_per_node"] = f"gres/{value}"
+            job["tres_per_node"] = _gres_to_tres(value)
         case "gpus":
             job["tres_per_job"] = f"gres/gpu:{value}"
         case "exclude":
@@ -162,7 +185,8 @@ def validate_sbatch_lines(lines: list[str]) -> None:
     """
     for line in lines:
         if line.startswith(SBATCH_PREFIX):
-            _apply_option({}, *_parse_sbatch_line(line))
+            for key, value in _parse_sbatch_line(line):
+                _apply_option({}, key, value)
 
 
 def build_job_description(
@@ -182,8 +206,8 @@ def build_job_description(
     job: dict[str, Any] = {}
     for line in script.splitlines():
         if line.startswith(SBATCH_PREFIX):
-            key, value = _parse_sbatch_line(line)
-            _apply_option(job, key, value)
+            for key, value in _parse_sbatch_line(line):
+                _apply_option(job, key, value)
 
     # As `sbatch` does ("can't run 1 processes on 2 nodes, setting nnodes to
     # 1"), while `slurmrestd` would allocate the extra nodes

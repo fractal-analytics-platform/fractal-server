@@ -25,6 +25,10 @@ from fractal_server.runner.executors.slurm_rest import runner as runner_module
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.client import squeue_state
+from fractal_server.runner.executors.slurm_rest.job_description import OPTIONS
+from fractal_server.runner.executors.slurm_rest.job_description import (
+    _apply_option,
+)
 from fractal_server.runner.executors.slurm_rest.job_description import (
     build_job_description,
 )
@@ -88,10 +92,82 @@ def test_slurm_time_to_minutes(value, minutes):
 
 
 def test_slurm_time_to_minutes_invalid():
+    for value in ("1:2:3:4", "1-02:03:04:999", "1-", "UNLIMITED"):
+        with pytest.raises(SlurmConfigError, match=value):
+            slurm_time_to_minutes(value)
+
+
+@pytest.mark.parametrize(
+    "line,expected",
+    [
+        # As Fractal's own configuration (`slurm_mem_to_MB`, powers of 1000)
+        ("--mem=600", {"memory_per_node": {"set": True, "number": 600}}),
+        ("--mem=600M", {"memory_per_node": {"set": True, "number": 600}}),
+        ("--mem=2G", {"memory_per_node": {"set": True, "number": 2000}}),
+        ("--mem=2GB", {"memory_per_node": {"set": True, "number": 2000}}),
+        ("--mem=1T", {"memory_per_node": {"set": True, "number": 1000000}}),
+        ("--mem-per-cpu=2G", {"memory_per_cpu": {"set": True, "number": 2000}}),
+        # Each GRES gets its `gres/` prefix, as with `sbatch`
+        ("--gres=gpu:a100:1", {"tres_per_node": "gres/gpu:a100:1"}),
+        (
+            "--gres=gpu:a100:1,shard:2",
+            {"tres_per_node": "gres/gpu:a100:1,gres/shard:2"},
+        ),
+    ],
+)
+def test_build_job_description_values(line, expected):
+    job = build_job_description(script=f"#SBATCH {line}\n", environment=[])
+    assert job == expected | {"environment": []}
+
+
+@pytest.mark.parametrize(
+    "line,expected",
+    [
+        ("--partition=main", {"partition": "main"}),
+        ("--partition main", {"partition": "main"}),
+        ("-p main", {"partition": "main"}),
+        ("-pmain", {"partition": "main"}),
+        # Unambiguous abbreviations, as with `sbatch`
+        ("--err=/x.err", {"standard_error": "/x.err"}),
+        # Quotes and comments, as with `sbatch`
+        ('--job-name="my job"', {"name": "my job"}),
+        ("--job-name='my job'", {"name": "my job"}),
+        ("--time=10 # comment", {"time_limit": {"set": True, "number": 10}}),
+        # Several options on one line
+        ("--qos=high --account=acc", {"qos": "high", "account": "acc"}),
+    ],
+)
+def test_build_job_description_line_syntax(line, expected):
+    job = build_job_description(script=f"#SBATCH {line}\n", environment=[])
+    assert job == expected | {"environment": []}
+
+
+def test_options_are_all_handled():
+    # Every option accepted by the parser has a JSON mapping
+    for name in OPTIONS:
+        _apply_option({}, name, "1")
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "--mem=2X",
+        "--mem=2BG",
+        "--mem=-1G",
+        "--mem=1500K",
+        "--mem=2g",
+        "--partition=main extra",
+        '--job-name="unclosed',
+        "--partition",
+        "--mail-type=ALL",
+        "-Z 1",
+        # Ambiguous abbreviation (`nodelist`, `nodes`, `ntasks`)
+        "--n=1",
+    ],
+)
+def test_build_job_description_invalid_values(line):
     with pytest.raises(SlurmConfigError):
-        slurm_time_to_minutes("1:2:3:4")
-    with pytest.raises(SlurmConfigError):
-        slurm_time_to_minutes("UNLIMITED")
+        build_job_description(script=f"#SBATCH {line}\n", environment=[])
 
 
 def test_build_job_description():
@@ -136,7 +212,7 @@ def test_build_job_description_variants():
         build_job_description(
             script="#SBATCH --mail-type=ALL\n", environment=[]
         )
-    with pytest.raises(SlurmConfigError, match="Unsupported"):
+    with pytest.raises(SlurmConfigError, match="not supported"):
         build_job_description(script="#SBATCH -Z 1\n", environment=[])
 
 
