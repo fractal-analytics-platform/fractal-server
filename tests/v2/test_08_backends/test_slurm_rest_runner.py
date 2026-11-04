@@ -1,14 +1,18 @@
 """
 Run `SlurmRestRunner` against the dockerized SLURM cluster, which has no
 `slurmrestd`: the REST client is replaced by a fake that submits the REST
-script through `sbatch` over SSH (see `tests/v2/_aux_slurm_rest.py`). This
-covers everything except HTTP (in particular: inputs embedded in the script,
-no SSH upload).
+script through `sbatch` over SSH (see `tests/v2/_aux_slurm_rest.py`).
 
-Only what `SlurmRestRunner` overrides or adds is tested here (and in
-`test_slurm_rest_unit.py`). Inherited behaviour (task failures, compound
-tasks, shutdown, fetching and postprocessing outputs, ...) is the same as for
-`SlurmSSHRunner`, and is covered by the SLURM/SSH and SLURM/sudo runner tests.
+This covers the runner and the submitted script (in particular: inputs
+embedded in the script, no SSH upload). It does not cover the JSON job
+description (`sbatch` reads the `#SBATCH` lines instead), the job
+environment, the job states of `slurmrestd` (`squeue` is used), nor running
+as a SLURM user different from the SSH user (jobs run as the SSH user): see
+`test_slurm_rest_unit.py` and the opt-in `test_slurm_rest_live.py`.
+
+Inherited behaviour (task failures, compound tasks, fetching and
+postprocessing outputs, ...) is the same as for `SlurmSSHRunner`, and is
+covered by the SLURM/SSH and SLURM/sudo runner tests.
 """
 
 import json

@@ -1,6 +1,6 @@
 # SLURM REST runner
 
-For `slurm_ssh` resources, the SLURM REST runner submits, polls and cancels SLURM jobs through [`slurmrestd`](https://slurm.schedmd.com/rest.html) (HTTPS), instead of running `sbatch`, `squeue` and `scancel` over SSH. All other parts of job execution are the same as for the SLURM/SSH runner: `SlurmRestRunner` is a subclass of `SlurmSSHRunner` that only overrides these three operations.
+For `slurm_ssh` resources, the SLURM REST runner submits, polls and cancels SLURM jobs through [`slurmrestd`](https://slurm.schedmd.com/rest.html) (HTTPS), instead of running `sbatch`, `squeue` and `scancel` over SSH. `SlurmRestRunner` is a subclass of `SlurmSSHRunner`: besides these three operations, it changes how the job inputs reach the cluster (embedded in the submission script, no upload), the mode of the remote folders, the job environment, and the wait after a shutdown request (see **How it works**). The rest (task execution, fetching outputs, ...) is the same as for the SLURM/SSH runner.
 
 ## Enabling it
 
@@ -65,8 +65,8 @@ E.g. with a shared SSH service account in the profiles:
 
 - `tests/v2/test_08_backends/test_slurm_rest_unit.py`: unit tests, no cluster needed.
 - `tests/v2/test_08_backends/test_slurm_rest_token.py`: token providers (SSO refresh with a fake identity provider), needs the test database.
-- `tests/v2/test_08_backends/test_slurm_rest_runner.py`: needs the SLURM docker containers (a fake REST client runs `sbatch` over SSH).
+- `tests/v2/test_08_backends/test_slurm_rest_runner.py`: needs the SLURM docker containers. A fake REST client submits the REST script with `sbatch` over SSH: this covers the script (embedded inputs) and the runner, but not the JSON job description (`sbatch` reads the `#SBATCH` lines), the job environment, nor running as a SLURM user different from the SSH user.
 - `tests/v2/test_07_full_workflow/test_full_workflow_slurm_rest.py`: a full job, from the API to `SlurmRestRunner`, with the same fake REST client; needs the SLURM docker containers.
-- `tests/v2/test_08_backends/test_slurm_rest_live.py`: opt-in tests against a real `slurmrestd`, skipped unless the `FRACTAL_TEST_SLURM_REST_*` environment variables are set (see the module docstring).
+- `tests/v2/test_08_backends/test_slurm_rest_live.py`: opt-in tests against a real `slurmrestd` (JSON job description, job states, cancellation), skipped unless the `FRACTAL_TEST_SLURM_REST_*` environment variables are set (see the module docstring).
 
-These tests only cover what `SlurmRestRunner` overrides or adds; inherited behaviour (task failures, compound tasks, shutdown, fetching outputs, ...) is covered by the SLURM/SSH and SLURM/sudo runner tests.
+Inherited behaviour (task failures, compound tasks, fetching outputs, ...) is covered by the SLURM/SSH and SLURM/sudo runner tests. What `SlurmRestRunner` changes, including polling and cancellation during a shutdown request while `slurmrestd` cannot be reached, is covered by the tests above.
