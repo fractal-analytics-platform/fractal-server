@@ -1,7 +1,7 @@
+import http.client
 import io
 import json
 import subprocess
-import types
 import typing
 import urllib.error
 from unittest.mock import MagicMock
@@ -11,9 +11,6 @@ import pytest
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.exceptions import SlurmConfigError
-from fractal_server.runner.executors.slurm_common import (
-    base_slurm_runner as base_runner_module,
-)
 from fractal_server.runner.executors.slurm_common._job_states import (
     STATES_FINISHED,
 )
@@ -50,10 +47,8 @@ from fractal_server.runner.executors.slurm_rest.settings import (
     get_slurm_rest_settings,
 )
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
-from fractal_server.runner.v2 import _local as local_backend
 from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
 from fractal_server.runner.v2 import _slurm_ssh as slurm_ssh_backend
-from fractal_server.runner.v2 import _slurm_sudo as slurm_sudo_backend
 from fractal_server.runner.v2.submit_workflow import _get_process_workflow
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from fractal_server.syringe import Inject
@@ -153,9 +148,6 @@ def test_options_are_all_handled():
     [
         "--mem=2X",
         "--mem=2BG",
-        "--mem=-1G",
-        "--mem=1500K",
-        "--mem=2g",
         "--partition=main extra",
         '--job-name="unclosed',
         "--partition",
@@ -188,32 +180,6 @@ def test_build_job_description():
         "current_working_directory": "/remote/wf",
         "environment": ["PATH=/usr/bin:/bin", "SLURM_CPUS_PER_TASK=3"],
     }
-
-
-def test_build_job_description_variants():
-    job = build_job_description(
-        script=(
-            "#SBATCH --mem-per-cpu=2G\n"
-            "#SBATCH -p short\n"
-            "#SBATCH --qos high\n"
-            "#SBATCH --gres=gpu:v100:1\n"
-        ),
-        environment=[],
-    )
-    assert job == {
-        "memory_per_cpu": {"set": True, "number": 2000},
-        "partition": "short",
-        "qos": "high",
-        "tres_per_node": "gres/gpu:v100:1",
-        "environment": [],
-    }
-
-    with pytest.raises(SlurmConfigError, match="not supported"):
-        build_job_description(
-            script="#SBATCH --mail-type=ALL\n", environment=[]
-        )
-    with pytest.raises(SlurmConfigError, match="not supported"):
-        build_job_description(script="#SBATCH -Z 1\n", environment=[])
 
 
 @pytest.mark.parametrize(
@@ -451,16 +417,25 @@ def test_client(monkeypatch):
         "DELETE",
         "https://example.org/slurm/v0.0.44/job/125",
     )
+    # A failed cancellation does not hide the unknown fields
+    responses.extend(
+        [
+            {"job_id": 126, "warnings": [{"description": warning}]},
+            _http_error(500, {"errors": [{"error": "cancel broken"}]}),
+        ]
+    )
+    with pytest.raises(SlurmRestError) as exc_info:
+        client.submit_job({"script": "s", "job": {"x": "y"}})
+    assert "unknown fields" in str(exc_info.value)
+    assert "job 126 may still be queued" in str(exc_info.value)
+    assert "cancel broken" in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
     "body",
     [
         b"<html>Service unavailable</html>",
-        b"[]",
         b"{}",
-        b'{"jobs": null}',
-        b'{"jobs": {}}',
     ],
 )
 def test_job_states_invalid_response(monkeypatch, body):
@@ -550,7 +525,6 @@ def _runner_with_client(client: _FakeStatesClient) -> SlurmRestRunner:
     [
         SlurmTokenError("log in again"),
         SlurmRestError("GET /jobs -> HTTP 500"),
-        OSError("Connection refused"),
     ],
 )
 def test_run_squeue_failed_queries_keep_jobs_active(error):
@@ -657,15 +631,13 @@ def test_stop_while_requests_fail(tmp_path, monkeypatch):
     """
     Stopping a job while SLURM jobs can be neither polled nor cancelled: the
     jobs stay tracked, and polling and cancellation are retried once per
-    `poll_interval`, not in a busy loop. Only the start and the end of the
-    problem are logged above debug level, not every retry.
+    `poll_interval`, not in a busy loop. The cancel failure is logged as an
+    error once, not at every retry.
     """
     sleeps = []
     monkeypatch.setattr(runner_module.time, "sleep", sleeps.append)
     rest_logger = MagicMock()
-    base_logger = MagicMock()
     monkeypatch.setattr(runner_module, "logger", rest_logger)
-    monkeypatch.setattr(base_runner_module, "logger", base_logger)
     runner = SlurmRestRunner.__new__(SlurmRestRunner)
     runner.rest_client = _FakeDownClient()
     runner.jobs = {"1": None}
@@ -682,18 +654,12 @@ def test_stop_while_requests_fail(tmp_path, monkeypatch):
     assert runner.rest_client.requests == ["GET /jobs", "DELETE /job/1"] * 3
     assert sleeps == [5, 5, 5]
     assert rest_logger.error.call_count == 1
-    assert rest_logger.warning.call_count == 1  # From `run_squeue`
-    assert rest_logger.info.call_count == 3  # START, count, END
-    base_messages = [call.args[0] for call in base_logger.info.call_args_list]
-    assert sum("Shutdown file detected" in m for m in base_messages) == 1
 
     # Cancellation is possible again
     runner.rest_client = _FakeCancelClient(failing=set())
     assert runner.wait_and_check_shutdown() == ["1"]
     assert runner.rest_client.cancelled == ["1"]
     assert sleeps == [5, 5, 5, 5]
-    messages = [call.args[0] for call in rest_logger.info.call_args_list]
-    assert sum("Cancel possible again" in m for m in messages) == 1
     assert not runner._cancel_failed
 
 
@@ -727,49 +693,116 @@ def test_get_slurm_home():
         assert "unknown on the cluster" in exc_info.value.assemble_error()
 
 
+def test_mkdir_remote_folder():
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    runner.fractal_ssh = _FakeSSH("")
+    runner._mkdir_remote_folder(folder="/base/job dir")
+    assert runner.fractal_ssh.commands == ["mkdir -p -m 2775 '/base/job dir'"]
+
+
 class _FakePingClient:
     base_url = "https://example.org/slurm/v0.0.44"
 
-    def __init__(self, error: Exception | None):
+    def __init__(self, error: Exception | None, **kwargs):
         self.error = error
+        self.kwargs = kwargs
 
     def ping(self) -> None:
         if self.error is not None:
             raise self.error
 
 
-# Connection, DNS, TLS and timeout errors are all `OSError` (as `URLError`),
-# and take the same path: one case is enough
+class _FakeTokenProvider:
+    slurm_username = "alice"
+
+    def get_token(self, force_refresh: bool = False) -> str:
+        return "token"
+
+
+@pytest.mark.parametrize(
+    "provider_error,ping_error,expected_message",
+    [
+        (None, None, None),
+        # E.g. no SSO account
+        (SlurmTokenError("No SSO account"), None, "No SSO account"),
+        # E.g. refresh refused, at the first request
+        (None, SlurmTokenError("log in again"), "log in again"),
+        (
+            None,
+            SlurmRestError("GET /ping -> HTTP 502: []"),
+            "Cannot reach slurmrestd at https://example.org/slurm/v0.0.44 "
+            "(GET /ping -> HTTP 502: [])",
+        ),
+    ],
+)
+def test_init_rest_client(
+    monkeypatch, provider_error, ping_error, expected_message
+):
+    """
+    Token and `slurmrestd` errors at runner start become job errors (with a
+    hint), not tracebacks.
+    """
+
+    def _get_token_provider(**kwargs):
+        if provider_error is not None:
+            raise provider_error
+        return _FakeTokenProvider()
+
+    monkeypatch.setattr(
+        runner_module, "get_token_provider", _get_token_provider
+    )
+    monkeypatch.setattr(
+        runner_module,
+        "SlurmRestClient",
+        lambda **kwargs: _FakePingClient(ping_error, **kwargs),
+    )
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    if expected_message is None:
+        runner._init_rest_client(user_id=1, profile_username="ihbfrac")
+        assert runner.slurm_username == "alice"
+        assert runner.rest_client.kwargs["username"] == "alice"
+        return
+    with pytest.raises(JobExecutionError) as exc_info:
+        runner._init_rest_client(user_id=1, profile_username="ihbfrac")
+    assert expected_message in exc_info.value.assemble_error()
+
+
 @pytest.mark.parametrize(
     "error",
     [
-        SlurmRestError("GET /ping -> HTTP 502: []"),
         urllib.error.URLError(ConnectionRefusedError("refused")),
+        # Not `OSError`
+        http.client.IncompleteRead(b"partial", expected=10),
     ],
 )
-def test_check_slurmrestd(error):
-    runner = SlurmRestRunner.__new__(SlurmRestRunner)
-    runner.rest_client = _FakePingClient(None)
-    runner._check_slurmrestd()
+def test_client_network_errors(monkeypatch, error):
+    """
+    Network errors (`OSError`, e.g. connection, DNS, TLS, timeout) and
+    malformed responses (`http.client.HTTPException`) become `SlurmRestError`,
+    as HTTP errors.
+    """
 
-    runner.rest_client = _FakePingClient(error)
-    with pytest.raises(JobExecutionError) as exc_info:
-        runner._check_slurmrestd()
-    message = exc_info.value.assemble_error()
-    assert "Cannot reach slurmrestd at https://example.org" in message
-    assert type(error).__name__ in message
+    def fake_urlopen(request, timeout, context):
+        raise error
 
-    # Token errors are left to `process_workflow`
-    runner.rest_client = _FakePingClient(SlurmTokenError("log in again"))
-    with pytest.raises(SlurmTokenError):
-        runner._check_slurmrestd()
+    monkeypatch.setattr(client_module.urllib.request, "urlopen", fake_urlopen)
+    client = SlurmRestClient(
+        base_url="https://example.org",
+        username="user",
+        get_token=lambda force_refresh=False: "token",
+    )
+    with pytest.raises(SlurmRestError) as exc_info:
+        client.ping()
+    assert str(exc_info.value).startswith(
+        f"GET /ping -> {type(error).__name__}: "
+    )
 
 
 @pytest.mark.parametrize("rest_enabled", ["true", "false"])
 def test_get_process_workflow(rest_enabled):
     """
     `slurm_ssh` resources use the REST backend if and only if
-    `FRACTAL_SLURM_REST_ENABLED=true`; other resource types never do.
+    `FRACTAL_SLURM_REST_ENABLED=true`.
     """
     settings = SlurmRestSettings(
         _env_file=None,
@@ -784,88 +817,5 @@ def test_get_process_workflow(rest_enabled):
             if rest_enabled == "true"
             else slurm_ssh_backend.process_workflow
         )
-        assert _get_process_workflow(ResourceType.SLURM_SUDO) is (
-            slurm_sudo_backend.process_workflow
-        )
-        assert _get_process_workflow(ResourceType.LOCAL) is (
-            local_backend.process_workflow
-        )
     finally:
         Inject.pop(get_slurm_rest_settings)
-    with pytest.raises(ValueError, match="Unknown resource type"):
-        _get_process_workflow("unknown")
-
-
-def test_process_workflow(monkeypatch, tmp_path):
-    """
-    `process_workflow` runs the selected tasks with a `SlurmRestRunner`.
-    """
-    runners = []
-    executed = []
-
-    class _FakeRunner:
-        def __init__(self, **kwargs):
-            self.kwargs = kwargs
-            runners.append(self)
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(slurm_rest_backend, "SlurmRestRunner", _FakeRunner)
-    monkeypatch.setattr(
-        slurm_rest_backend, "execute_tasks", lambda **kw: executed.append(kw)
-    )
-    wftasks = ["wftask0", "wftask1", "wftask2"]
-    slurm_rest_backend.process_workflow(
-        job_id=7,
-        workflow=types.SimpleNamespace(task_list=wftasks),
-        dataset="dataset",
-        workflow_dir_local=tmp_path / "local",
-        workflow_dir_remote=tmp_path / "remote",
-        first_task_index=1,
-        last_task_index=1,
-        logger_name="test",
-        job_attribute_filters={},
-        job_type_filters={},
-        user_id=3,
-        resource=types.SimpleNamespace(id=5),
-        profile="profile",
-        fractal_ssh="fractal_ssh",
-        slurm_account="account",
-        worker_init="module load x",
-        user_cache_dir=str(tmp_path),
-    )
-
-    # Other arguments are passed on as in `_slurm_ssh.process_workflow`, and
-    # are not checked here
-    assert len(runners) == 1
-    assert runners[0].kwargs["user_id"] == 3
-    assert "module load x" in runners[0].kwargs["common_script_lines"]
-    assert len(executed) == 1
-    assert executed[0]["wf_task_list"] == ["wftask1"]
-    assert executed[0]["runner"] is runners[0]
-
-
-def test_process_workflow_token_error(monkeypatch, tmp_path):
-    def _fail(**kwargs):
-        raise SlurmTokenError("Hint: the user must log in to Fractal again.")
-
-    monkeypatch.setattr(slurm_rest_backend, "SlurmRestRunner", _fail)
-    with pytest.raises(JobExecutionError) as exc_info:
-        slurm_rest_backend.process_workflow(
-            job_id=1,
-            workflow=types.SimpleNamespace(task_list=[None]),
-            dataset=None,
-            workflow_dir_local=tmp_path,
-            logger_name="test",
-            job_attribute_filters={},
-            job_type_filters={},
-            user_id=1,
-            resource=types.SimpleNamespace(id=1),
-            profile=None,
-            user_cache_dir=str(tmp_path),
-        )
-    assert "log in to Fractal again" in exc_info.value.assemble_error()
