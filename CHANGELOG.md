@@ -1,6 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.27.0
+# 2.27.1
+
+* Testing:
+    * Bump `pypa/gh-action-pypi-publish` due to `GHSA-5xjx-3w67-w9x9` vulnerability (\#3488).
+
+# 2.27.0 (skipped)
+
+> WARNING: This released is not available on PyPI, please use 2.27.1.
 
 > **NOTE**: When upgrading to this version, you should also upgrade
 > `fractal-web` to version 1.30.0 (or more recent) - to make sure that
