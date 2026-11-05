@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.27.0 (unreleased)
+# 2.27.0
 
 > **NOTE**: When upgrading to this version, you should also upgrade
 > `fractal-web` to version 1.30.0 (or more recent) - to make sure that
