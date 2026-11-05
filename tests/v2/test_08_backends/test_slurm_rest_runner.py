@@ -1,0 +1,172 @@
+"""
+Run `SlurmRestRunner` against the dockerized SLURM cluster, which has no
+`slurmrestd`: the REST client is replaced by a fake that submits the REST
+script through `sbatch` over SSH (see `tests/v2/_aux_slurm_rest.py`).
+
+This covers the runner and the submitted script (in particular: inputs
+embedded in the script, no SSH upload). It does not cover the JSON job
+description (`sbatch` reads the `#SBATCH` lines instead), the job
+environment, the job states of `slurmrestd` (`squeue` is used), nor running
+as a SLURM user different from the SSH user (jobs run as the SSH user): see
+`test_slurm_rest_unit.py` and the opt-in `test_slurm_rest_live.py`.
+
+Inherited behaviour (task failures, compound tasks, fetching and
+postprocessing outputs, ...) is the same as for `SlurmSSHRunner`, and is
+covered by the SLURM/SSH and SLURM/sudo runner tests.
+"""
+
+import json
+
+import pytest
+
+from fractal_server.app.models import Profile
+from fractal_server.app.models import Resource
+from fractal_server.app.models.v2 import HistoryUnit
+from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
+from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
+from tests.v2._aux_runner import get_default_slurm_config
+from tests.v2._aux_slurm_rest import SLURM_USERNAME
+from tests.v2._aux_slurm_rest import SSHFakeRestClient
+from tests.v2._aux_slurm_rest import use_fake_slurm_rest
+from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
+
+from .aux_unit_runner import *  # noqa
+from .aux_unit_runner import ZARR_URLS
+from .aux_unit_runner import ZARR_URLS_AND_PARAMETER
+
+
+@pytest.fixture
+def fake_rest(monkeypatch, fractal_ssh) -> SSHFakeRestClient:
+    return use_fake_slurm_rest(monkeypatch, fractal_ssh)
+
+
+def _get_runner(tmp777_path, fractal_ssh, res, prof, job_id):
+    return SlurmRestRunner(
+        fractal_ssh=fractal_ssh,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
+        resource=res,
+        profile=prof,
+        fractal_job_id=job_id,
+        resource_id=res.id,
+        user_id=1,
+    )
+
+
+@pytest.mark.ssh
+@pytest.mark.container
+async def test_rest_submit(
+    db,
+    tmp777_path,
+    fractal_ssh,
+    fake_rest,
+    history_mock_for_submit,
+    valid_user_id,
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
+    fractal_job_id_mock,
+):
+    res, prof = slurm_ssh_resource_profile_db[:]
+    _, history_unit_id, wftask_id = history_mock_for_submit
+
+    with _get_runner(
+        tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
+    ) as runner:
+        task_files = get_dummy_task_files(
+            tmp777_path, component="0", is_slurm=True
+        )
+        result, exception = runner.submit(
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            parameters=dict(zarr_urls=ZARR_URLS),
+            task_files=task_files,
+            task_type="non_parallel",
+            history_unit_id=history_unit_id,
+            config=get_default_slurm_config(),
+            user_id=valid_user_id,
+        )
+    assert result is None
+    assert exception is None
+    unit = await db.get(HistoryUnit, history_unit_id)
+    assert unit.status == HistoryUnitStatus.DONE
+
+    assert len(fake_rest.submitted) == 1
+    job = fake_rest.submitted[0]["job"]
+    # Same stdout path as `sbatch` over SSH
+    # (`<subfolder>/<prefix>-slurm-%j.out`)
+    assert job["standard_output"] == (
+        f"{task_files.wftask_subfolder_remote.as_posix()}/"
+        f"{task_files.prefix}-slurm-%j.out"
+    )
+    assert "SLURM_CPUS_PER_TASK=1" in job["environment"]
+    # SLURM requests and job environment use the SLURM (token) user, not the
+    # SSH user
+    assert prof.username != SLURM_USERNAME
+    assert fake_rest.client_kwargs["username"] == SLURM_USERNAME
+    assert f"USER={SLURM_USERNAME}" in job["environment"]
+    assert "HOME=/root" in job["environment"]
+    assert job["current_working_directory"] == (
+        task_files.wftask_subfolder_remote.as_posix()
+    )
+    # Request is saved locally, next to the submission script
+    request_files = list(
+        task_files.wftask_subfolder_local.glob("*-slurm-submit.json")
+    )
+    assert len(request_files) == 1
+    assert json.loads(request_files[0].read_text())["job"] == job
+    # Args file was written remotely by the job itself (no SSH upload)
+    remote_args = fractal_ssh.read_remote_json_file(task_files.args_file_remote)
+    assert remote_args == dict(zarr_urls=ZARR_URLS)
+
+    fractal_ssh.run_command(cmd=f"chmod -R 777 {tmp777_path / 'user'}")
+
+
+@pytest.mark.ssh
+@pytest.mark.container
+async def test_rest_multisubmit_parallel(
+    db,
+    tmp777_path,
+    fractal_ssh,
+    fake_rest,
+    history_mock_for_multisubmit,
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
+    valid_user_id,
+    fractal_job_id_mock,
+):
+    res, prof = slurm_ssh_resource_profile_db[:]
+    _, history_unit_ids, wftask_id = history_mock_for_multisubmit
+
+    with _get_runner(
+        tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
+    ) as runner:
+        results, exceptions = runner.multisubmit(
+            base_command="true",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            list_parameters=ZARR_URLS_AND_PARAMETER,
+            list_task_files=[
+                get_dummy_task_files(
+                    tmp777_path,
+                    component=str(ind),
+                    is_slurm=True,
+                    prefix=f"{MULTISUBMIT_PREFIX}-{ind:06d}",
+                )
+                for ind in range(len(ZARR_URLS))
+            ],
+            task_type="parallel",
+            config=get_default_slurm_config(),
+            history_unit_ids=history_unit_ids,
+            user_id=valid_user_id,
+        )
+    assert results == {key: None for key in range(4)}
+    assert exceptions == {}
+    for unit_id in history_unit_ids:
+        unit = await db.get(HistoryUnit, unit_id)
+        assert unit.status == HistoryUnitStatus.DONE
+    assert len(fake_rest.submitted) >= 1
+
+    fractal_ssh.run_command(cmd=f"chmod -R 777 {tmp777_path / 'user'}")
