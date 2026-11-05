@@ -211,7 +211,6 @@ def test_fractalctl_sync_core_tasks_cli():
     assert "the following arguments are required" in res.stderr
 
     cmd = "fractalctl sync-core-tasks --resources-and-groups /tmp/list.json"
-
     res = subprocess.run(
         shlex.split(cmd),
         capture_output=True,
