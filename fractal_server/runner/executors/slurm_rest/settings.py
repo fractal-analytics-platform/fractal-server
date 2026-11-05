@@ -38,7 +38,7 @@ class SlurmRestSettings(BaseSettings):
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
 
     FRACTAL_SLURM_REST_ENABLED: Literal["true", "false"] = "false"
-    # TODO: move URL and CA bundle to `Resource` (e.g. with a
+    # TODO: move URL and CA bundle to dedicated `Resource` (e.g. with a
     # dedicated `slurm_rest` resource type), instead of global settings
     FRACTAL_SLURM_REST_URL: HttpUrl | None = None
     FRACTAL_SLURM_REST_CA_BUNDLE: str | None = None

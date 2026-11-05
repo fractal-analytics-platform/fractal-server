@@ -114,7 +114,7 @@ def _get_oauth_client(oauth_settings: OAuthSettings) -> BaseOAuth2:
 def _is_invalid_grant(response: httpx.Response | None) -> bool:
     """
     Whether the identity provider refused the refresh token (RFC 6749,
-    section 5.2), e.g. Roche WAM: HTTP 400, `invalid_grant`, "unknown,
+    section 5.2), e.g. HTTP 400, `invalid_grant`, "unknown,
     invalid, or expired refresh token".
     """
     if response is None or response.status_code != 400:

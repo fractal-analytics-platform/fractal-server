@@ -1,3 +1,4 @@
+import http.client
 import json
 import ssl
 import urllib.error
@@ -19,15 +20,14 @@ def squeue_state(job_state: list[str]) -> str:
     """
     Single job state, close to what `squeue --format=%T` reports.
 
-    `slurmrestd` returns the base state followed by the flags of a job, e.g.
-    `["COMPLETED", "COMPLETING"]` while the epilog runs, while `squeue`
-    reports a flag instead of the base state. Hence the last item: a job
-    with flags is not finished yet (except with `SPECIAL_EXIT`, a finished
-    state).
-
     Args:
         job_state: `job_state` of a `slurmrestd` job.
     """
+    # `slurmrestd` returns the base state followed by the flags of a job, e.g.
+    # `["COMPLETED", "COMPLETING"]` while the epilog runs, while `squeue`
+    # reports a flag instead of the base state. Use last item: a job
+    # with flags is not finished yet (except with `SPECIAL_EXIT`, a finished
+    # state).
     return job_state[-1] if job_state else "UNKNOWN"
 
 
@@ -136,13 +136,20 @@ class SlurmRestClient:
                 payload = _parse_body(e.read())
                 # slurmrestd answers 511 for invalid or expired tokens
                 if e.code in (401, 511) and attempt == 1:
-                    logger.info(
+                    logger.warning(
                         f"{method} {path} -> {e.code}, refreshing token."
                     )
                     continue
                 raise SlurmRestError(
                     f"{method} {path} -> HTTP {e.code}: "
                     f"{_error_descriptions(payload)}"
+                ) from None
+            except (OSError, http.client.HTTPException) as e:
+                # Connection, DNS, TLS and timeout errors (after `HTTPError`,
+                # which is an `OSError` too), and malformed or truncated
+                # responses (`http.client` errors that are not `OSError`)
+                raise SlurmRestError(
+                    f"{method} {path} -> {type(e).__name__}: {e}"
                 ) from None
             if "raw" in payload:
                 raise SlurmRestError(
@@ -178,11 +185,17 @@ class SlurmRestClient:
             if "unknown field" in str(warning.get("description")).lower()
         ]
         if unknown_fields:
+            message = f"Job description has unknown fields: {unknown_fields}"
             if job_id is not None:
-                self.cancel_job(str(job_id))
-            raise SlurmRestError(
-                f"Job description has unknown fields: {unknown_fields}"
-            )
+                # Do not hide the original error if the cleanup fails
+                try:
+                    self.cancel_job(str(job_id))
+                except Exception as e:
+                    message += (
+                        f" (job {job_id} may still be queued, cancel "
+                        f"failed: {e})"
+                    )
+            raise SlurmRestError(message)
         if job_id is None:
             raise SlurmRestError(f"No `job_id` in submit response: {payload}")
         return int(job_id)
@@ -191,8 +204,8 @@ class SlurmRestClient:
         """
         Return `{job_id: state}` for all jobs visible to the user.
 
-        Note: `GET /job/{id1},{id2}` is not supported, hence the single
-        `GET /jobs` call. Jobs older than `MinJobAge` are not listed.
+        Note: Jobs older than `MinJobAge` (slurm config) are moved
+        to accounting and not listed -> treat missing jobs as completed.
         """
         payload = self._request("GET", "/jobs")
         # A missing job is considered completed upstream: a response without

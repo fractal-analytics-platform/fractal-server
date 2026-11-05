@@ -8,6 +8,7 @@ from typing import override
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSLURM
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
@@ -35,7 +36,7 @@ STATUS_PLACEHOLDER = "FRACTAL_STATUS_PLACEHOLDER"
 
 class SlurmRestRunner(SlurmSSHRunner):
     """
-    `slurm_ssh` runner where submission, polling and cancellation go through
+    Slurm runner where submission, polling and cancellation go through
     `slurmrestd`.
 
     SSH is still used for: connection/version checks, `printenv PATH`,
@@ -60,10 +61,12 @@ class SlurmRestRunner(SlurmSSHRunner):
     def __init__(
         self,
         *,
+        # Common
         root_dir_local: Path,
         root_dir_remote: Path,
         common_script_lines: list[str] | None = None,
         resource: Resource,
+        # Specific
         slurm_account: str | None = None,
         profile: Profile,
         user_cache_dir: str,
@@ -72,6 +75,24 @@ class SlurmRestRunner(SlurmSSHRunner):
         resource_id: int,
         user_id: int,
     ) -> None:
+        # Checks that need no SSH come first, if they fail (e.g. expired SSO
+        # login, `slurmrestd` down), no SSH command is run and no remote job
+        # folder is created.
+        shared_config = JobRunnerConfigSLURM(**resource.jobs_runner_config)
+        # Invalid `#SBATCH` lines fail here, not at task submission.
+        validate_sbatch_lines(
+            shared_config.default_slurm_config.extra_lines
+            + (
+                shared_config.gpu_slurm_config.extra_lines
+                if shared_config.gpu_slurm_config is not None
+                else []
+            )
+            + (common_script_lines or [])
+        )
+        self._init_rest_client(
+            user_id=user_id, profile_username=profile.username
+        )
+
         super().__init__(
             root_dir_local=root_dir_local,
             root_dir_remote=root_dir_remote,
@@ -84,56 +105,48 @@ class SlurmRestRunner(SlurmSSHRunner):
             fractal_job_id=fractal_job_id,
             resource_id=resource_id,
         )
-        # Fail at job start rather than at the first submission of a task
-        validate_sbatch_lines(
-            self.shared_config.default_slurm_config.extra_lines
-            + (
-                self.shared_config.gpu_slurm_config.extra_lines
-                if self.shared_config.gpu_slurm_config is not None
-                else []
-            )
-            + self.common_script_lines
-        )
-        rest_settings = Inject(get_slurm_rest_settings)
-        token_provider = get_token_provider(
-            settings=rest_settings,
-            user_id=user_id,
-            profile_username=profile.username,
-        )
-        self.slurm_username = token_provider.slurm_username
+        # After `super().__init__`, which checks the SSH connection
         self.slurm_home = self._get_slurm_home()
         # Same `PATH` that `sbatch` over SSH passes on to the SLURM job
         self.remote_path = self.fractal_ssh.run_command(
             cmd="printenv PATH"
         ).strip()
-        self.rest_client = SlurmRestClient(
-            base_url=rest_settings.base_url,
-            username=self.slurm_username,
-            get_token=token_provider.get_token,
-            ca_bundle=rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
-        )
-        self._check_slurmrestd()
         logger.info(
             f"SLURM REST runner ready ({self.rest_client.base_url}, "
             f"ssh user={profile.username}, "
             f"slurm user={self.slurm_username})."
         )
 
-    def _check_slurmrestd(self) -> None:
+    def _init_rest_client(self, *, user_id: int, profile_username: str) -> None:
         """
-        Fail at runner start (before any submission) if `slurmrestd` cannot
-        be reached, with a job error instead of a traceback.
+        Set the SLURM user and the REST client, and check that `slurmrestd`
+        is reachable (before any submission).
 
-        Token errors are not handled here (see `_slurm_rest.py`).
+        Token errors (e.g. no SSO account, expired login) and `slurmrestd`
+        errors become job errors with a hint, instead of tracebacks.
         """
+        rest_settings = Inject(get_slurm_rest_settings)
         try:
+            token_provider = get_token_provider(
+                settings=rest_settings,
+                user_id=user_id,
+                profile_username=profile_username,
+            )
+            self.slurm_username = token_provider.slurm_username
+            self.rest_client = SlurmRestClient(
+                base_url=rest_settings.base_url,
+                username=self.slurm_username,
+                get_token=token_provider.get_token,
+                ca_bundle=rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
+            )
             self.rest_client.ping()
-        except (SlurmRestError, OSError) as e:
-            # `OSError` includes connection, DNS, TLS and timeout errors
+        except SlurmTokenError as e:
+            raise JobExecutionError(info=str(e)) from None
+        except SlurmRestError as e:
             raise JobExecutionError(
                 info=(
                     f"Cannot reach slurmrestd at {self.rest_client.base_url} "
-                    f"({type(e).__name__}: {e}). Hint: check that slurmrestd "
+                    f"({e}). Hint: check that slurmrestd "
                     "is running and reachable, FRACTAL_SLURM_REST_URL, and "
                     "the trusted CAs (FRACTAL_SLURM_REST_CA_BUNDLE)."
                 )
@@ -166,7 +179,9 @@ class SlurmRestRunner(SlurmSSHRunner):
     @override
     def _mkdir_remote_folder(self: Self, folder: str) -> None:
         # Group-writable and setgid, for jobs running as the SLURM user
-        self.fractal_ssh.run_command(cmd=f"mkdir -p -m 2775 {folder}")
+        self.fractal_ssh.run_command(
+            cmd=f"mkdir -p -m 2775 {shlex.quote(folder)}"
+        )
 
     @override
     def _send_many_job_inputs(

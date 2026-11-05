@@ -1,8 +1,8 @@
 """
 SLURM REST backend
 
-Same as `_slurm_ssh.py`, but with `SlurmRestRunner`. Selected in
-`submit_workflow.py` when `FRACTAL_SLURM_REST_ENABLED=true`.
+This backend runs fractal workflows in a SLURM cluster,
+using the SLURM REST API.
 """
 
 from pathlib import Path
@@ -11,12 +11,10 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.models.v2 import Resource
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.get_slurm_config import (
     get_slurm_config,
 )
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
-from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
@@ -50,8 +48,37 @@ def process_workflow(
     """
     Run a workflow through the SLURM REST runner.
 
-    Arguments are the same as for `_slurm_ssh.process_workflow`.
+    Args:
+        job_id: Job ID.
+        workflow: Workflow to be run
+        dataset: Dataset to be used.
+        workflow_dir_local: Local working directory for this job.
+        workflow_dir_remote:
+            Remote working directory for this job - only relevant for
+            `slurm_sudo` and `slurm_ssh` backends.
+        first_task_index:
+            Positional index of the first task to execute; if `None`, start
+            from `0`.
+        last_task_index:
+            Positional index of the last task to execute; if `None`, proceed
+            until the last task.
+        logger_name: Logger name
+        user_id: User ID.
+        resource: Computational resource for running this job.
+        profile: Computational profile for running this job.
+        user_cache_dir:
+            User-writeable folder to be exposed as `FRACTAL_CACHE_DIR`.
+        fractal_ssh:
+            `FractalSSH` object, only relevant for the `slurm_ssh` backend.
+        slurm_account:
+            SLURM account to set.
+            Only relevant for `slurm_sudo` and `slurm_ssh` backends.
+        worker_init:
+            Additional preamble lines for SLURM submission script.
+            Only relevant for `slurm_sudo` and `slurm_ssh` backends.
     """
+
+    # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
     first_task_index, last_task_index = set_start_and_last_task_index(
         num_tasks,
@@ -59,36 +86,32 @@ def process_workflow(
         last_task_index=last_task_index,
     )
 
-    try:
-        with SlurmRestRunner(
-            fractal_ssh=fractal_ssh,
-            root_dir_local=workflow_dir_local,
-            root_dir_remote=workflow_dir_remote,
-            slurm_account=slurm_account,
-            resource=resource,
-            profile=profile,
-            common_script_lines=_get_worker_init_lines(worker_init),
-            user_cache_dir=user_cache_dir,
-            fractal_job_id=job_id,
-            resource_id=resource.id,
+    with SlurmRestRunner(
+        fractal_ssh=fractal_ssh,
+        root_dir_local=workflow_dir_local,
+        root_dir_remote=workflow_dir_remote,
+        slurm_account=slurm_account,
+        resource=resource,
+        profile=profile,
+        common_script_lines=_get_worker_init_lines(worker_init),
+        user_cache_dir=user_cache_dir,
+        fractal_job_id=job_id,
+        resource_id=resource.id,
+        user_id=user_id,
+    ) as runner:
+        execute_tasks(
+            wf_task_list=workflow.task_list[
+                first_task_index : (last_task_index + 1)
+            ],
+            dataset=dataset,
+            job_id=job_id,
+            runner=runner,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
+            logger_name=logger_name,
+            get_runner_config=get_slurm_config,
+            job_attribute_filters=job_attribute_filters,
+            job_type_filters=job_type_filters,
             user_id=user_id,
-        ) as runner:
-            execute_tasks(
-                wf_task_list=workflow.task_list[
-                    first_task_index : (last_task_index + 1)
-                ],
-                dataset=dataset,
-                job_id=job_id,
-                runner=runner,
-                workflow_dir_local=workflow_dir_local,
-                workflow_dir_remote=workflow_dir_remote,
-                logger_name=logger_name,
-                get_runner_config=get_slurm_config,
-                job_attribute_filters=job_attribute_filters,
-                job_type_filters=job_type_filters,
-                user_id=user_id,
-                resource_id=resource.id,
-            )
-    except SlurmTokenError as e:
-        # Show the hint (e.g. "log in again") instead of a full traceback
-        raise JobExecutionError(info=str(e)) from e
+            resource_id=resource.id,
+        )

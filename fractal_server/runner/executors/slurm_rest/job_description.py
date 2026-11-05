@@ -182,6 +182,8 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
 def validate_sbatch_lines(lines: list[str]) -> None:
     """
     Raise `SlurmConfigError` if any `#SBATCH` line cannot be translated.
+
+    To validate before job submission.
     """
     for line in lines:
         if line.startswith(SBATCH_PREFIX):

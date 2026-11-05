@@ -1,5 +1,9 @@
 """
-Runner that submits, polls and cancels SLURM jobs through `slurmrestd`, with
-the SSO token of the Fractal user, while still using SSH for version checks,
-folder creation and artifact fetching.
+SLURM REST runner, for `slurm_ssh` resources with
+`FRACTAL_SLURM_REST_ENABLED=true`.
+
+SLURM jobs are submitted, polled and cancelled through `slurmrestd`, as the
+SLURM user of the Fractal user's SSO token (`sub` claim). SSH still runs as
+`Profile.username` (e.g. a shared service account) for version checks,
+`getent passwd`/`printenv PATH`, folder creation and fetching outputs.
 """

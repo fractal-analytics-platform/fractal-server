@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from .job_description import SBATCH_PREFIX
 
-# Default `slurmctld` limit (SchedulerParameters=max_script_size)
+# Default `slurmctld` limit
 MAX_SCRIPT_BYTES = 4 * 1024 * 1024
 
 
@@ -18,9 +18,7 @@ def build_job_script(
 
     The REST runner has no SSH upload step: the files that `remote.py` needs
     (input and args JSON files) are written by the job itself via quoted
-    heredocs, right after the shebang/`#SBATCH` header. The job uses
-    `umask 0002`, so that its files are group-writable and readable by the
-    SSH user.
+    heredocs, right after the shebang/`#SBATCH` header.
 
     Args:
         script: Original submission script.
@@ -43,6 +41,8 @@ def build_job_script(
     if any("'" in path for path in paths):
         raise ValueError(f"Single quotes are not allowed in paths: {paths}.")
 
+    # Use `umask 0002`, so that its files are group-writable and readable by the
+    # SSH user.
     block = ["umask 0002"]
     for remote_path, content in files:
         delimiter = f"FRACTAL_EOF_{uuid4().hex}"
