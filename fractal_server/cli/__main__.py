@@ -42,8 +42,8 @@ def run() -> None:
             sync_core_tasks(
                 resources_and_groups=args.resources_and_groups,
                 base=args.base,
-                add=args.additions,
-                remove=args.removals,
+                add=args.add,
+                remove=args.remove,
             )
         case "submissions-enable":
             submissions_enable()

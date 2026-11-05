@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.27.2
+
+* CLI:
+    * Fix CLI arguments for `fractalctl sync-core-tasks` (\#3490).
+
 # 2.27.1
 
 > WARNING: After updating to this version, you should remove Python 3.9 or 3.10 entries
