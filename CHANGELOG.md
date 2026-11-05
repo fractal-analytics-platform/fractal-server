@@ -2,6 +2,9 @@
 
 # 2.27.1
 
+> WARNING: After updating to this version, you should remove Python 3.9 or 3.10 entries
+> from the resource `tasks_python_config` entry.
+
 * Testing:
     * Bump `pypa/gh-action-pypi-publish` due to `GHSA-5xjx-3w67-w9x9` vulnerability (\#3488).
 
