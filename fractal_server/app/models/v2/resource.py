@@ -121,6 +121,27 @@ class Resource(Base):
     ```
     """
 
+    tasks_apptainer_config: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
+    """
+    Apptainer configuration for task collection. Example:
+    ```json
+    {
+        "pixi_version": "0.41.0",
+        "apptainer_bin": "/xxx/apptainer/bin/apptainer",
+        "SLURM_CONFIG": {
+            "partition": "main",
+            "cpus": 4,
+            "mem": "8G",
+            "mem_per_cpu": "2G",
+            "time": "01:00:00",
+            "preamble": []
+        }
+    }
+    ```
+    """
+
     @property
     def pip_cache_dir_arg(self: Self) -> str:
         """
