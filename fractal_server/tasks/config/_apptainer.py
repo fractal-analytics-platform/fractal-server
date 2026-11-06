@@ -13,8 +13,7 @@ class TasksApptainerSettings(BaseModel):
 
     pixi_version: NonEmptyStr
     """
-    `pixi` version used for building the apptainer image (must be a key of
-    `tasks_pixi_config["versions"]`).
+    `pixi` version used by apptainer.
     """
     apptainer_bin: AbsolutePathStr
     """

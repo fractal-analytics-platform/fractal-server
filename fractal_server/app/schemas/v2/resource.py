@@ -120,14 +120,6 @@ class ValidResourceBase(BaseModel):
             raise ValueError(
                 "`tasks_apptainer_config` must include `SLURM_CONFIG`."
             )
-        pixi_version = self.tasks_apptainer_config["pixi_version"]
-        available_pixi_versions = self.tasks_pixi_config.get("versions", {})
-        if pixi_version not in available_pixi_versions:
-            raise ValueError(
-                f"`tasks_apptainer_config` pixi version '{pixi_version}' is "
-                "not available in `tasks_pixi_config` "
-                f"(available versions: {list(available_pixi_versions)})."
-            )
         return self
 
 
