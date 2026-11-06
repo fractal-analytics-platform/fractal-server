@@ -4,9 +4,9 @@ from pydantic import ValidationError
 from fractal_server.app.routes.auth.oauth import get_oauth_router
 from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
-from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
+from fractal_server.tasks.config._slurm import SLURMConfig
 
 
 def test_database_settings():
@@ -229,7 +229,7 @@ def test_pixi_config():
 
 
 def test_pixi_slurm_config():
-    PixiSLURMConfig(
+    SLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
@@ -239,26 +239,26 @@ def test_pixi_slurm_config():
         ValueError,
         match="units suffix",
     ):
-        PixiSLURMConfig(
+        SLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
             mem="1000",
         )
-    PixiSLURMConfig(
+    SLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
         mem="1000M",
     )
-    PixiSLURMConfig(
+    SLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
         mem="10G",
     )
 
-    PixiSLURMConfig(
+    SLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
@@ -266,7 +266,7 @@ def test_pixi_slurm_config():
     )
 
     with pytest.raises(ValidationError, match="Invalid memory requirement"):
-        PixiSLURMConfig(
+        SLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
@@ -274,14 +274,14 @@ def test_pixi_slurm_config():
         )
 
     with pytest.raises(ValidationError, match="You must set either"):
-        PixiSLURMConfig(
+        SLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
         )
 
     with pytest.raises(ValidationError, match="You must set either"):
-        PixiSLURMConfig(
+        SLURMConfig(
             partition="fake",
             time="100",
             cpus=1,

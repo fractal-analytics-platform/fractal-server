@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.config import PixiSLURMConfig
+from fractal_server.tasks.config._slurm import SLURMConfig
 from fractal_server.tasks.v2.ssh._pixi_slurm_ssh import (
     FRACTAL_SQUEUE_ERROR_STATE,
 )
@@ -108,7 +108,7 @@ def test_sbatch_failure(
             job_name="test",
             script_paths=[script_path],
             final_commands=[],
-            slurm_config=PixiSLURMConfig(
+            slurm_config=SLURMConfig(
                 mem="1G", cpus=1, partition="main", time="10"
             ).model_dump(),
             fractal_ssh=MockFractalSSH(connection=None),
@@ -126,7 +126,7 @@ def test_sbatch_failure(
             job_name="test",
             script_paths=[script_path],
             final_commands=[],
-            slurm_config=PixiSLURMConfig(
+            slurm_config=SLURMConfig(
                 mem_per_cpu="1G",
                 cpus=1,
                 partition="main",
