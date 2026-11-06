@@ -228,26 +228,3 @@ async def check_no_related_workflowtask(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"TaskV2 {bad_wftask.task_id} is still in use",
         )
-
-
-def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
-    if not filename.endswith(".tar.gz"):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"{filename=} does not end with '.tar.gz'.",
-        )
-    filename_splitted = filename.split("-")
-    if len(filename_splitted) != 2:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                f"Invalid filename: '{filename}' must contain a single `-` "
-                "character, separating the package name from the version "
-                "(expected format: 'pkg_name-version')."
-            ),
-        )
-
-    pkg_name = filename_splitted[0]
-    version = filename.removeprefix(f"{pkg_name}-").removesuffix(".tar.gz")
-
-    return normalize_package_name(pkg_name), version

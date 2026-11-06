@@ -17,9 +17,6 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.app.models.v2 import TaskGroupV2
-from fractal_server.app.routes.api.v2._aux_functions_task_lifecycle import (
-    validate_pkgname_and_version,
-)
 from fractal_server.app.routes.api.v2._aux_functions_tasks import (
     _get_valid_user_group_id,
 )
@@ -46,12 +43,36 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import collect_local_pixi
 from fractal_server.tasks.v2.ssh import collect_ssh_pixi
+from fractal_server.tasks.v2.utils_package_names import normalize_package_name
 from fractal_server.types import NonEmptyStr
 from fractal_server.urls import verify_url_is_relative_to
 
 router = APIRouter()
 
 logger = set_logger(__name__)
+
+
+def validate_pkgname_and_version(filename: str) -> tuple[str, str]:
+    if not filename.endswith(".tar.gz"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"{filename=} does not end with '.tar.gz'.",
+        )
+    filename_splitted = filename.split("-")
+    if len(filename_splitted) != 2:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                f"Invalid filename: '{filename}' must contain a single `-` "
+                "character, separating the package name from the version "
+                "(expected format: 'pkg_name-version')."
+            ),
+        )
+
+    pkg_name = filename_splitted[0]
+    version = filename.removeprefix(f"{pkg_name}-").removesuffix(".tar.gz")
+
+    return normalize_package_name(pkg_name), version
 
 
 @router.post(
