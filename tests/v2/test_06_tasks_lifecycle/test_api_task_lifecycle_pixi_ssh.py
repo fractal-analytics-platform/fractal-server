@@ -11,8 +11,8 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHList
-from fractal_server.tasks.config import PixiSLURMConfig
 from fractal_server.tasks.config import TasksPixiSettings
+from fractal_server.tasks.config._slurm import SLURMConfig
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
@@ -58,7 +58,7 @@ def pixi_ssh(tmp777_path: Path) -> TasksPixiSettings:
     return TasksPixiSettings(
         default_version="0.82.1",
         versions={"0.82.1": pixi_home.as_posix()},
-        SLURM_CONFIG=PixiSLURMConfig(
+        SLURM_CONFIG=SLURMConfig(
             partition="main",
             cpus=1,
             mem="1G",

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.config import PixiSLURMConfig
+from fractal_server.tasks.config._slurm import SLURMConfig
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 
@@ -158,7 +158,7 @@ def run_script_on_remote_slurm(
     as a mechanism to propagate failure/errors.
     """
 
-    slurm_config_obj = PixiSLURMConfig(**slurm_config)
+    slurm_config_obj = SLURMConfig(**slurm_config)
 
     logger = get_logger(logger_name=logger_name)
 
