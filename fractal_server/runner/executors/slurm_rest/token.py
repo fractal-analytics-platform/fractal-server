@@ -29,10 +29,9 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import OAuthAccount
 from fractal_server.config import OAuthSettings
 from fractal_server.config import get_oauth_settings
+from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
-
-from .settings import SlurmRestSettings
 
 logger = set_logger(__name__)
 
@@ -297,7 +296,6 @@ class StaticTokenProvider(TokenProvider):
 
 def get_token_provider(
     *,
-    settings: SlurmRestSettings,
     user_id: int,
     profile_username: str,
 ) -> TokenProvider:
@@ -306,12 +304,12 @@ def get_token_provider(
     `FRACTAL_SLURM_REST_TOKEN` override is set.
 
     Args:
-        settings:
         user_id: Fractal user.
         profile_username:
             SSH user; also the SLURM user of `FRACTAL_SLURM_REST_TOKEN`, if
             the token has no user claim.
     """
+    settings = Inject(get_settings)
     provider: TokenProvider
     if settings.FRACTAL_SLURM_REST_TOKEN is not None:
         provider = StaticTokenProvider(

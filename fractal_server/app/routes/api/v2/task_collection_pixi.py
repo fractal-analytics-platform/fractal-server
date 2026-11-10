@@ -34,10 +34,10 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import FractalUploadedFile
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.app.schemas.v2.task_group import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import collect_local_pixi
@@ -113,7 +113,7 @@ async def collect_task_pixi(
         db=db,
     )
 
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         base_tasks_path = profile.tasks_remote_dir
     else:
         base_tasks_path = resource.tasks_local_dir
@@ -147,7 +147,7 @@ async def collect_task_pixi(
         db=db,
     )
 
-    if resource.type != ResourceType.SLURM_SSH:
+    if not is_ssh_resource_type(resource.type):
         if Path(task_group.path).exists():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -173,7 +173,7 @@ async def collect_task_pixi(
     await db.commit()
     await db.refresh(task_group_activity)
 
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         collect_function = collect_ssh_pixi
     else:
         collect_function = collect_local_pixi

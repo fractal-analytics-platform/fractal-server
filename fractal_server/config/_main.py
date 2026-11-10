@@ -53,6 +53,11 @@ class Settings(BaseSettings):
             Remove endpoints starting with `/token/login`.
         FRACTAL_ENABLE_TASK_GROUP_RESET:
             Enable admin-only endpoint to reset task groups.
+        FRACTAL_SLURM_REST_TOKEN:
+            Development TMP. If set, `slurm_rest` resources use this token for
+            all requests of all Fractal users, instead of their SSO token.
+            SLURM jobs run as its user (`sub`/`sun` claim,
+            else `Profile.username`), and it is never refreshed.
     """
 
     model_config = SettingsConfigDict(**SETTINGS_CONFIG_DICT)
@@ -61,9 +66,9 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: SecretStr
     COOKIE_EXPIRE_SECONDS: int = 86400
     # Note: we do not use ResourceType here to avoid circular imports
-    FRACTAL_RUNNER_BACKEND: Literal["local", "slurm_ssh", "slurm_sudo"] = (
-        "local"
-    )
+    FRACTAL_RUNNER_BACKEND: Literal[
+        "local", "slurm_ssh", "slurm_sudo", "slurm_rest"
+    ] = "local"
     FRACTAL_LOGGING_LEVEL: int = logging.INFO
     LOG_CONFIG_FILE: str | None = None
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
@@ -73,3 +78,4 @@ class Settings(BaseSettings):
     FRACTAL_LONG_REQUEST_TIME: float = 30.0
     FRACTAL_DISABLE_BASIC_AUTH: Literal["true", "false"] = "false"
     FRACTAL_ENABLE_TASK_GROUP_RESET: Literal["true", "false"] = "false"
+    FRACTAL_SLURM_REST_TOKEN: SecretStr | None = None

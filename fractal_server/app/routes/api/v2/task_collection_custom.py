@@ -17,12 +17,12 @@ from fractal_server.app.routes.auth import get_api_user
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectCustom
 from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.app.schemas.v2 import TaskGroupCreate
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.app.schemas.v2 import TaskRead
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.logger import set_logger
 from fractal_server.string_tools import validate_cmd
 from fractal_server.tasks.v2.utils_background import prepare_tasks_metadata
@@ -64,11 +64,14 @@ async def collect_task_custom(
         db=db,
     )
 
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         if task_collect.package_root is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
+                detail=(
+                    "Cannot infer 'package_root' with "
+                    f"'{resource.type}' backend."
+                ),
             )
     else:
         if not os.access(

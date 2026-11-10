@@ -36,12 +36,10 @@ from fractal_server.app.routes.aux.validate_user_profile import (
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.runner.executors.slurm_rest.settings import (
-    is_slurm_rest_enabled,
-)
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
@@ -263,11 +261,11 @@ async def _get_squeue_user(
     """
     SLURM user of the jobs of `user`.
 
-    With the SLURM REST runner, jobs of `slurm_ssh` resources run as the SSO
-    user (`OAuthAccount.account_id`, i.e. the `sub` claim, see
-    `SsoTokenProvider`), not as the SSH user `Profile.username`.
+    NOTE: On `slurm_rest` resources, jobs run as the SSO user
+    (`OAuthAccount.account_id`, i.e. the `sub` claim, see `SsoTokenProvider`),
+    not as the SSH user `Profile.username`.
     """
-    if resource.type == ResourceType.SLURM_SSH and is_slurm_rest_enabled():
+    if resource.type == ResourceType.SLURM_REST:
         res = await db.execute(
             select(OAuthAccount.account_id).where(
                 OAuthAccount.user_id == user.id
@@ -292,7 +290,11 @@ async def get_squeue(
 ):
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend not in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+    if backend not in [
+        ResourceType.SLURM_SUDO,
+        ResourceType.SLURM_SSH,
+        ResourceType.SLURM_REST,
+    ]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"This endpoint is not available for "
@@ -319,7 +321,7 @@ async def get_squeue(
     )
 
     try:
-        if resource.type == ResourceType.SLURM_SSH:
+        if is_ssh_resource_type(resource.type):
             with SingleUseFractalSSH(
                 ssh_config=SSHConfig(
                     host=resource.host,

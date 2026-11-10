@@ -26,9 +26,6 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.runner.executors.slurm_rest.settings import (
-    is_slurm_rest_enabled,
-)
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.types import AttributeFilters
@@ -67,8 +64,7 @@ class ProcessWorkflowType(Protocol):
 # `slurm_account`, so type checkers would reject the call in `submit_workflow`
 def _get_process_workflow(resource_type: str):
     """
-    Backend for a resource type; `slurm_ssh` resources use the SLURM REST
-    backend if `FRACTAL_SLURM_REST_ENABLED=true`.
+    Backend for a resource type.
     """
     match resource_type:
         case ResourceType.LOCAL:
@@ -76,9 +72,9 @@ def _get_process_workflow(resource_type: str):
         case ResourceType.SLURM_SUDO:
             return slurm_sudo_process_workflow
         case ResourceType.SLURM_SSH:
-            if is_slurm_rest_enabled():
-                return slurm_rest_process_workflow
             return slurm_ssh_process_workflow
+        case ResourceType.SLURM_REST:
+            return slurm_rest_process_workflow
         case _:
             raise ValueError(f"Unknown resource type: {resource_type}.")
 
@@ -145,7 +141,9 @@ def submit_workflow(
             cluster).
         profile:
             Computational profile to be used for this job.
-        fractal_ssh: SSH object, for when `resource.type = "slurm_ssh"`.
+        fractal_ssh:
+            SSH object, for when `resource.type` is `slurm_ssh` or
+            `slurm_rest`.
     """
     # Declare runner backend and set `process_workflow` function
     logger_name = f"WF{workflow_id}_job{job_id}"
@@ -191,7 +189,7 @@ def submit_workflow(
                         parents=True, mode=0o755, exist_ok=False
                     )
                     os.umask(original_umask)
-                case ResourceType.SLURM_SSH:
+                case ResourceType.SLURM_SSH | ResourceType.SLURM_REST:
                     local_job_dir.mkdir(parents=True, exist_ok=False)
 
         except Exception as e:
@@ -237,7 +235,11 @@ def submit_workflow(
         logger.debug(f"Resource name: {resource.name}")
         logger.debug(f"Profile name: {profile.name}")
         logger.debug(f"Username: {profile.username}")
-        if resource.type in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+        if resource.type in [
+            ResourceType.SLURM_SUDO,
+            ResourceType.SLURM_SSH,
+            ResourceType.SLURM_REST,
+        ]:
             logger.debug(f"slurm_account: {job.slurm_account}")
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")

@@ -14,9 +14,13 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.executors.slurm_rest.client import (
+    SUPPORTED_API_VERSIONS,
+)
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
+from fractal_server.types import HttpUrlStr
 from fractal_server.types import NonEmptyStr
 
 
@@ -35,10 +39,41 @@ class ResourceType(StrEnum):
     Enum entry for resource type `slurm_ssh`.
     """
 
+    SLURM_REST = "slurm_rest"
+    """
+    Enum entry for resource type `slurm_rest`.
+    """
+
     LOCAL = "local"
     """
     Enum entry for resource type `local`.
     """
+
+
+def is_ssh_resource_type(resource_type: str) -> bool:
+    """
+    Whether the cluster of a resource type is (also) accessed over SSH.
+
+    Arguments:
+        resource_type: Resource type.
+    """
+    return resource_type in (ResourceType.SLURM_SSH, ResourceType.SLURM_REST)
+
+
+def val_rest_url(value: str) -> str:
+    # Tokens are sent in request headers
+    if not value.startswith("https://"):
+        raise ValueError(f"Invalid `rest_url` (https only): '{value}'.")
+    return value.rstrip("/")
+
+
+def val_rest_api_version(value: str) -> str:
+    if value not in SUPPORTED_API_VERSIONS:
+        raise ValueError(
+            f"Unsupported `rest_api_version` '{value}' "
+            f"(supported: {list(SUPPORTED_API_VERSIONS)})."
+        )
+    return value
 
 
 def cast_serialize_pixi_settings(
@@ -83,7 +118,7 @@ class ValidResourceBase(BaseModel):
     def _pixi_slurm_config(self) -> Self:
         if (
             self.tasks_pixi_config != {}
-            and self.type == ResourceType.SLURM_SSH
+            and is_ssh_resource_type(self.type)
             and self.tasks_pixi_config["SLURM_CONFIG"] is None
         ):
             raise ValueError("`tasks_pixi_config` must include `SLURM_CONFIG`.")
@@ -116,6 +151,9 @@ class ValidResourceLocal(ValidResourceBase):
     jobs_runner_config: JobRunnerConfigLocal
     jobs_slurm_python_worker: None = None
     host: None = None
+    rest_url: None = None
+    rest_ca_bundle: None = None
+    rest_api_version: None = None
 
 
 class ValidResourceSlurmSudo(ValidResourceBase):
@@ -148,6 +186,9 @@ class ValidResourceSlurmSudo(ValidResourceBase):
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
     host: None = None
+    rest_url: None = None
+    rest_ca_bundle: None = None
+    rest_api_version: None = None
 
 
 class ValidResourceSlurmSSH(ValidResourceBase):
@@ -182,6 +223,59 @@ class ValidResourceSlurmSSH(ValidResourceBase):
     host: NonEmptyStr
     jobs_slurm_python_worker: AbsolutePathStr
     jobs_runner_config: JobRunnerConfigSLURM
+    rest_url: None = None
+    rest_ca_bundle: None = None
+    rest_api_version: None = None
+
+
+class ValidResourceSlurmRest(ValidResourceBase):
+    """
+    Valid SLURM-REST resource.
+
+    SLURM jobs are submitted, polled and cancelled through `slurmrestd`,
+    while everything else goes over SSH, as for `slurm_ssh` resources.
+
+    Attributes:
+        name: Resource name
+        type: Resource type.
+        prevent_new_submissions:
+            When set to true: Prevent new job submissions and stop execution of
+            ongoing jobs as soon as the current task is complete.
+        tasks_python_config:
+            Configuration of Python interpreters used for task collection.
+        tasks_pixi_config:
+            Configuration of `pixi` interpreters used for task collection.
+        tasks_local_dir:
+            Local base folder for task environments.
+        jobs_local_dir:
+            Local base folder for job folders.
+        jobs_runner_config:
+            Runner configuration.
+        jobs_poll_interval:
+            Polling interval of SLURM job states.
+        jobs_slurm_python_worker:
+            Python worker to be used in SLURM jobs.
+        host:
+            Hostname or IP address of remote SLURM cluster (for SSH).
+        rest_url:
+            HTTPS base URL of `slurmrestd` (without `/slurm/<version>`).
+        rest_ca_bundle:
+            Optional CA file (PEM) on the `fractal-server` machine, to verify
+            the TLS certificate of `slurmrestd` (e.g. for an internal CA).
+            If unset, the system CAs are used.
+        rest_api_version:
+            Optional `slurmrestd` OpenAPI version (e.g. `v0.0.44`).
+    """
+
+    type: Literal[ResourceType.SLURM_REST]
+    host: NonEmptyStr
+    jobs_slurm_python_worker: AbsolutePathStr
+    jobs_runner_config: JobRunnerConfigSLURM
+    rest_url: Annotated[HttpUrlStr, AfterValidator(val_rest_url)]
+    rest_ca_bundle: AbsolutePathStr | None = None
+    rest_api_version: (
+        Annotated[NonEmptyStr, AfterValidator(val_rest_api_version)] | None
+    ) = None
 
 
 def get_discriminator_value(v: Any) -> str:
@@ -194,7 +288,8 @@ def get_discriminator_value(v: Any) -> str:
 ResourceCreate = Annotated[
     Annotated[ValidResourceLocal, Tag(ResourceType.LOCAL)]
     | Annotated[ValidResourceSlurmSudo, Tag(ResourceType.SLURM_SUDO)]
-    | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)],
+    | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)]
+    | Annotated[ValidResourceSlurmRest, Tag(ResourceType.SLURM_REST)],
     Discriminator(get_discriminator_value),
 ]
 """
@@ -214,6 +309,10 @@ class ResourceRead(BaseModel):
     timestamp_created: AwareDatetime
 
     host: str | None
+
+    rest_url: str | None = None
+    rest_ca_bundle: str | None = None
+    rest_api_version: str | None = None
 
     jobs_local_dir: str
     jobs_runner_config: dict[str, Any]

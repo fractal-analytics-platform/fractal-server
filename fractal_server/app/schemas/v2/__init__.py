@@ -25,6 +25,7 @@ from .manifest import TaskManifestV2  # noqa F401
 from .profile import ProfileCreate  # noqa F401
 from .profile import ProfileRead  # noqa F401
 from .profile import ValidProfileLocal  # noqa F401
+from .profile import ValidProfileSlurmRest  # noqa F401
 from .profile import ValidProfileSlurmSSH  # noqa F401
 from .profile import ValidProfileSlurmSudo  # noqa F401
 from .project import ProjectCreate  # noqa F401
@@ -42,8 +43,10 @@ from .resource import ResourceCreate  # noqa F401
 from .resource import ResourceRead  # noqa F401
 from .resource import ResourceType  # noqa F401
 from .resource import ValidResourceLocal  # noqa F401
+from .resource import ValidResourceSlurmRest  # noqa F401
 from .resource import ValidResourceSlurmSSH  # noqa F401
 from .resource import ValidResourceSlurmSudo  # noqa F401
+from .resource import is_ssh_resource_type  # noqa F401
 from .task import TaskCreate  # noqa F401
 from .task import TaskExport  # noqa F401
 from .task import TaskImport  # noqa F401
