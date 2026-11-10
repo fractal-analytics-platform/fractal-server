@@ -8,7 +8,8 @@ from typing import override
 from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.logger import set_logger
-from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.config import JobRunnerConfigSlurmRest
+from fractal_server.runner.config import SlurmRestConfig
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
     SlurmJob,
@@ -16,14 +17,13 @@ from fractal_server.runner.executors.slurm_common.slurm_job_task_models import (
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
-from fractal_server.syringe import Inject
 
+from .client import SLURM_REST_API_VERSION
 from .client import SlurmRestClient
 from .client import SlurmRestError
 from .job_description import build_job_description
 from .job_description import validate_sbatch_lines
 from .job_script import build_job_script
-from .settings import get_slurm_rest_settings
 from .token import SlurmTokenError
 from .token import get_token_provider
 
@@ -49,6 +49,8 @@ class SlurmRestRunner(SlurmSSHRunner):
     must share the remote job folders.
     """
 
+    shared_config_class = JobRunnerConfigSlurmRest
+    shared_config: JobRunnerConfigSlurmRest
     rest_client: SlurmRestClient
     slurm_home: str
     remote_path: str
@@ -78,7 +80,7 @@ class SlurmRestRunner(SlurmSSHRunner):
         # Checks that need no SSH come first, if they fail (e.g. expired SSO
         # login, `slurmrestd` down), no SSH command is run and no remote job
         # folder is created.
-        shared_config = JobRunnerConfigSLURM(**resource.jobs_runner_config)
+        shared_config = JobRunnerConfigSlurmRest(**resource.jobs_runner_config)
         # Invalid `#SBATCH` lines fail here, not at task submission.
         validate_sbatch_lines(
             shared_config.default_slurm_config.extra_lines
@@ -90,7 +92,10 @@ class SlurmRestRunner(SlurmSSHRunner):
             + (common_script_lines or [])
         )
         self._init_rest_client(
-            user_id=user_id, profile_username=profile.username
+            rest_config=shared_config.rest,
+            resource_name=resource.name,
+            user_id=user_id,
+            profile_username=profile.username,
         )
 
         super().__init__(
@@ -117,7 +122,14 @@ class SlurmRestRunner(SlurmSSHRunner):
             f"slurm user={self.slurm_username})."
         )
 
-    def _init_rest_client(self, *, user_id: int, profile_username: str) -> None:
+    def _init_rest_client(
+        self,
+        *,
+        rest_config: SlurmRestConfig,
+        resource_name: str,
+        user_id: int,
+        profile_username: str,
+    ) -> None:
         """
         Set the SLURM user and the REST client, and check that `slurmrestd`
         is reachable (before any submission).
@@ -125,19 +137,18 @@ class SlurmRestRunner(SlurmSSHRunner):
         Token errors (e.g. no SSO account, expired login) and `slurmrestd`
         errors become job errors with a hint, instead of tracebacks.
         """
-        rest_settings = Inject(get_slurm_rest_settings)
         try:
             token_provider = get_token_provider(
-                settings=rest_settings,
                 user_id=user_id,
                 profile_username=profile_username,
             )
             self.slurm_username = token_provider.slurm_username
             self.rest_client = SlurmRestClient(
-                base_url=rest_settings.base_url,
+                base_url=rest_config.url,
                 username=self.slurm_username,
                 get_token=token_provider.get_token,
-                ca_bundle=rest_settings.FRACTAL_SLURM_REST_CA_BUNDLE,
+                ca_bundle=rest_config.ca_bundle,
+                api_version=rest_config.api_version or SLURM_REST_API_VERSION,
             )
             self.rest_client.ping()
         except SlurmTokenError as e:
@@ -145,10 +156,10 @@ class SlurmRestRunner(SlurmSSHRunner):
         except SlurmRestError as e:
             raise JobExecutionError(
                 info=(
-                    f"Cannot reach slurmrestd at {self.rest_client.base_url} "
-                    f"({e}). Hint: check that slurmrestd "
-                    "is running and reachable, FRACTAL_SLURM_REST_URL, and "
-                    "the trusted CAs (FRACTAL_SLURM_REST_CA_BUNDLE)."
+                    f"Cannot reach slurmrestd at {rest_config.url} "
+                    f"({e}). Hint: check that slurmrestd is running and "
+                    "reachable, and the `rest` configuration (`url`, "
+                    f"`ca_bundle`) of resource '{resource_name}'."
                 )
             ) from None
 

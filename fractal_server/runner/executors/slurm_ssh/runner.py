@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from typing import ClassVar
 from typing import Self
 from typing import override
 
@@ -30,6 +31,10 @@ class SlurmSSHRunner(BaseSlurmRunner):
     """
 
     fractal_ssh: FractalSSH
+    # Schema of `resource.jobs_runner_config` (subclasses may extend it)
+    shared_config_class: ClassVar[type[JobRunnerConfigSLURM]] = (
+        JobRunnerConfigSLURM
+    )
 
     def __init__(
         self,
@@ -52,7 +57,9 @@ class SlurmSSHRunner(BaseSlurmRunner):
         different SLURM jobs/tasks.
         """
         self.fractal_ssh = fractal_ssh
-        self.shared_config = JobRunnerConfigSLURM(**resource.jobs_runner_config)
+        self.shared_config = self.shared_config_class(
+            **resource.jobs_runner_config
+        )
         logger.warning(self.fractal_ssh)
 
         # Check SSH connection and try to recover from a closed-socket error

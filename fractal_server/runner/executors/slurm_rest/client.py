@@ -11,8 +11,10 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 # The response parsing below and the job description built in
-# `job_description.py` follow this version of the `slurmrestd` OpenAPI
+# `job_description.py` follow these versions of the `slurmrestd` OpenAPI
 # plugin: supporting another version needs code changes, not configuration
+# TMP remove in next change when refatcoring API version logic
+SUPPORTED_API_VERSIONS = ("v0.0.44",)
 SLURM_REST_API_VERSION = "v0.0.44"
 
 
@@ -69,8 +71,7 @@ def _error_descriptions(payload: dict[str, Any]) -> list[str]:
 
 class SlurmRestClient:
     """
-    Minimal `slurmrestd` client (`/slurm/<SLURM_REST_API_VERSION>/` endpoints
-    only).
+    Minimal `slurmrestd` client (`/slurm/<api_version>/` endpoints only).
 
     Args:
         base_url: e.g. `https://ctrl1.example.org`.
@@ -82,6 +83,8 @@ class SlurmRestClient:
             Optional CA file (PEM) for TLS verification (else system CAs).
             Needed only when the system CAs are insufficient to verify the
             `slurmrestd` server's TLS certificate (eg. local dev).
+        api_version:
+            `slurmrestd` OpenAPI version (one of `SUPPORTED_API_VERSIONS`).
         timeout: Timeout of each request, in seconds.
     """
 
@@ -92,6 +95,7 @@ class SlurmRestClient:
         username: str,
         get_token: Callable[..., str],
         ca_bundle: str | None = None,
+        api_version: str = SLURM_REST_API_VERSION,
         timeout: float = 30.0,
     ) -> None:
         # Tokens are sent in request headers
@@ -99,11 +103,21 @@ class SlurmRestClient:
             raise ValueError(
                 f"Invalid slurmrestd URL scheme (https only): '{base_url}'."
             )
-        self.base_url = f"{base_url.rstrip('/')}/slurm/{SLURM_REST_API_VERSION}"
+        if api_version not in SUPPORTED_API_VERSIONS:
+            raise ValueError(
+                f"Unsupported slurmrestd API version '{api_version}' "
+                f"(supported: {list(SUPPORTED_API_VERSIONS)})."
+            )
+        self.base_url = f"{base_url.rstrip('/')}/slurm/{api_version}"
         self.username = username
         self.get_token = get_token
         self.timeout = timeout
-        self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
+        try:
+            self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
+        except (OSError, ssl.SSLError) as e:
+            raise SlurmRestError(
+                f"Cannot load CA bundle '{ca_bundle}': {e}"
+            ) from None
 
     def _request(
         self,
