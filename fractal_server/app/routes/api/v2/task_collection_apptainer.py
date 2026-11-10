@@ -104,7 +104,7 @@ async def collect_task_apptainer(
         user_group_id=user_group_id,
         resource_id=resource_id,
         origin=TaskGroupOriginEnum.APPTAINER,
-        pixi_version=resource.tasks_apptainer_config.pixi_version,
+        pixi_version=resource.tasks_apptainer_config["pixi_version"],
         pkg_name=pkg_name,
         version=version,
         path=task_group_path,
