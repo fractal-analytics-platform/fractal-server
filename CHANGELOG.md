@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.27.3
+
+* App lifetime:
+    * Add `FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN` configuration variable (\#3495).
+
 # 2.27.2
 
 * CLI:
