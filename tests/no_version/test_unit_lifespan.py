@@ -130,7 +130,7 @@ async def test_lifespan_shutdown_local(
     caplog.set_level(logging.INFO)
     async with lifespan(FastAPI()):
         pass
-    log_text = "Shutdown not available for this backend runner."
+    log_text = "Skipping shutdown"
     assert log_text in caplog.text
 
 
