@@ -37,6 +37,8 @@ class Settings(BaseSettings):
             `app.state`.
         FRACTAL_GRACEFUL_SHUTDOWN_TIME:
             Waiting time for the shutdown phase of executors, in seconds.
+        FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN:
+            If true, cancel existing SLURM jobs upon shutdown.
         FRACTAL_REGISTRATION_URL:
             The URL of an instance-specific Fractal-registration help page.
         FRACTAL_HELP_EMAIL:
@@ -71,6 +73,7 @@ class Settings(BaseSettings):
     LOG_CONFIG_FILE: str | None = None
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 25
     FRACTAL_GRACEFUL_SHUTDOWN_TIME: float = 30.0
+    FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN: Literal["true", "false"] = "true"
     FRACTAL_REGISTRATION_URL: HttpUrl | None = None
     FRACTAL_HELP_EMAIL: EmailStr | None = None
     FRACTAL_DEFAULT_GROUP_NAME: Literal["All"] | None = None

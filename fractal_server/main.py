@@ -118,7 +118,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
         f"Current worker with pid {os.getpid()} is shutting down. "
         f"Current jobs: {app.state.jobs=}"
     )
-    if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
+    if (
+        _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND)
+        and settings.FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN == "true"
+    ):
         try:
             await cleanup_after_shutdown(
                 jobs=app.state.jobs,
@@ -131,7 +134,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
                 f"Original error: {e}"
             )
     else:
-        logger_teardown.info("Shutdown not available for this backend runner.")
+        logger_teardown.info(
+            "Skipping shutdown of existing jobs "
+            f"(runner: {settings.FRACTAL_RUNNER_BACKEND}, "
+            "FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN: "
+            f"{settings.FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN})"
+        )
 
     logger_teardown.info(
         "Database-connection pool status (before disposal): "
