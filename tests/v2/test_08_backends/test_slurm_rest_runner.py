@@ -64,10 +64,10 @@ async def test_rest_submit(
     fake_rest,
     history_mock_for_submit,
     valid_user_id,
-    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
+    slurm_rest_resource_profile_db: tuple[Resource, Profile],
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_db[:]
+    res, prof = slurm_rest_resource_profile_db[:]
     _, history_unit_id, wftask_id = history_mock_for_submit
 
     with _get_runner(
@@ -132,11 +132,11 @@ async def test_rest_multisubmit_parallel(
     fractal_ssh,
     fake_rest,
     history_mock_for_multisubmit,
-    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
+    slurm_rest_resource_profile_db: tuple[Resource, Profile],
     valid_user_id,
     fractal_job_id_mock,
 ):
-    res, prof = slurm_ssh_resource_profile_db[:]
+    res, prof = slurm_rest_resource_profile_db[:]
     _, history_unit_ids, wftask_id = history_mock_for_multisubmit
 
     with _get_runner(

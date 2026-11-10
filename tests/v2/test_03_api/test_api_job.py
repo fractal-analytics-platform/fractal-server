@@ -837,7 +837,7 @@ async def test_stop_job(
         res = await client.get(
             f"{PREFIX}/project/{project.id}/job/{job.id}/stop/"
         )
-        if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+        if backend != ResourceType.LOCAL:
             assert res.status_code == 202
 
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
@@ -846,7 +846,7 @@ async def test_stop_job(
         else:
             assert res.status_code == 422
 
-        if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+        if backend != ResourceType.LOCAL:
             # Test error with `_write_shutdown_file`
             not_existing_working_dir = tmp_path / "foo"
             ds2 = await dataset_factory(project_id=project.id)

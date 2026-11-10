@@ -8,9 +8,11 @@ from fractal_server.app.models import Profile
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import ValidProfileLocal
+from fractal_server.app.schemas.v2 import ValidProfileSlurmRest
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSSH
 from fractal_server.app.schemas.v2 import ValidProfileSlurmSudo
 from fractal_server.app.schemas.v2 import ValidResourceLocal
+from fractal_server.app.schemas.v2 import ValidResourceSlurmRest
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 from tests.fixtures_slurm import SLURM_USER
@@ -237,6 +239,52 @@ def slurm_ssh_resource_profile_fake_objects(
     return res, prof
 
 
+def _slurm_rest_from_slurm_ssh(
+    res_ssh: Resource,
+    prof_ssh: Profile,
+) -> tuple[Resource, Profile]:
+    """
+    `slurm_rest` resource/profile with the same values as `slurm_ssh` ones.
+    """
+    res = Resource(
+        **res_ssh.model_dump(
+            exclude={"id", "type", "name", "jobs_runner_config"}
+        ),
+        name="SLURM REST cluster A",
+        type=ResourceType.SLURM_REST,
+        jobs_runner_config=res_ssh.jobs_runner_config
+        | {"rest": {"url": "https://slurmrestd.example.org"}},
+    )
+    prof = Profile(
+        **prof_ssh.model_dump(exclude={"id", "resource_type", "name"}),
+        name=f"{prof_ssh.name}_rest",
+        resource_type=ResourceType.SLURM_REST,
+    )
+    ValidResourceSlurmRest(**res.model_dump())
+    ValidProfileSlurmRest(**prof.model_dump())
+    return res, prof
+
+
+@pytest.fixture(scope="function")
+def slurm_rest_resource_profile_objects(
+    slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    """
+    This fixture does not act on the db. SSH goes to the SLURM container.
+    """
+    return _slurm_rest_from_slurm_ssh(*slurm_ssh_resource_profile_objects)
+
+
+@pytest.fixture(scope="function")
+def slurm_rest_resource_profile_fake_objects(
+    slurm_ssh_resource_profile_fake_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    """
+    This fixture does not require an active SSH service on a container.
+    """
+    return _slurm_rest_from_slurm_ssh(*slurm_ssh_resource_profile_fake_objects)
+
+
 @pytest.fixture(scope="function")
 def local_resource_profile_db(
     db_sync: Session,
@@ -282,6 +330,32 @@ def slurm_ssh_resource_profile_fake_db(
     slurm_ssh_resource_profile_fake_objects: tuple[Resource, Profile],
 ) -> tuple[Resource, Profile]:
     res, prof = slurm_ssh_resource_profile_fake_objects[:]
+    return _add_resource_profile_to_db(
+        res=res,
+        prof=prof,
+        db_sync=db_sync,
+    )
+
+
+@pytest.fixture(scope="function")
+def slurm_rest_resource_profile_db(
+    db_sync: Session,
+    slurm_rest_resource_profile_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    res, prof = slurm_rest_resource_profile_objects[:]
+    return _add_resource_profile_to_db(
+        res=res,
+        prof=prof,
+        db_sync=db_sync,
+    )
+
+
+@pytest.fixture(scope="function")
+def slurm_rest_resource_profile_fake_db(
+    db_sync: Session,
+    slurm_rest_resource_profile_fake_objects: tuple[Resource, Profile],
+) -> tuple[Resource, Profile]:
+    res, prof = slurm_rest_resource_profile_fake_objects[:]
     return _add_resource_profile_to_db(
         res=res,
         prof=prof,

@@ -9,16 +9,15 @@ from httpx_oauth.oauth2 import RefreshTokenError
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
+from fractal_server.config import get_settings
 from fractal_server.runner.executors.slurm_rest import token as token_module
-from fractal_server.runner.executors.slurm_rest.settings import (
-    SlurmRestSettings,
-)
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.executors.slurm_rest.token import SsoTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import check_token_user
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
 from fractal_server.runner.executors.slurm_rest.token import jwt_claims
+from fractal_server.syringe import Inject
 
 USERNAME = "slurm-user"
 # Shared SSH service account (`Profile.username`)
@@ -64,7 +63,7 @@ def test_static_token_provider():
     assert provider.slurm_username == SSH_USERNAME
 
 
-def test_get_token_provider(monkeypatch):
+def test_get_token_provider(monkeypatch, override_settings_factory):
     class _FakeSsoTokenProvider:
         def __init__(self, *, user_id: int):
             self.user_id = user_id
@@ -74,16 +73,16 @@ def test_get_token_provider(monkeypatch):
     kwargs = dict(user_id=7, profile_username=SSH_USERNAME)
 
     # SSO by default
-    settings = SlurmRestSettings(_env_file=None, FRACTAL_SLURM_REST_TOKEN=None)
-    provider = get_token_provider(settings=settings, **kwargs)
+    override_settings_factory(FRACTAL_SLURM_REST_TOKEN=None)
+    provider = get_token_provider(**kwargs)
     assert isinstance(provider, _FakeSsoTokenProvider)
     assert provider.user_id == 7
 
     # Development override, never shown in the settings
     token = _jwt(sub=USERNAME)
-    settings = SlurmRestSettings(_env_file=None, FRACTAL_SLURM_REST_TOKEN=token)
-    assert token not in repr(settings)
-    provider = get_token_provider(settings=settings, **kwargs)
+    override_settings_factory(FRACTAL_SLURM_REST_TOKEN=token)
+    assert token not in repr(Inject(get_settings))
+    provider = get_token_provider(**kwargs)
     assert isinstance(provider, StaticTokenProvider)
     assert provider.get_token() == token
 
