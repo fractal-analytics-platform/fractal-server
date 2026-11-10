@@ -14,7 +14,7 @@ SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 CONTAINER_ROOT="__CONTAINER_ROOT__"
 SIF_PATH="__SIF_PATH__"
 IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
-PROJECT_PYTHON_WRAPPER="__PROJECT_PYTHON_WRAPPER__"
+PYTHON_COMMAND="__PYTHON_COMMAND__"
 MANIFEST_PATH="__MANIFEST_PATH__"
 PIXI_LOCK_PATH="__PIXI_LOCK_PATH__"
 
@@ -24,7 +24,6 @@ CONTAINER_ROOT=${CONTAINER_ROOT%/}
 
 # Known paths (inside the container)
 CONTAINER_SOURCE_DIR="${CONTAINER_ROOT}/${SOURCE_DIR_NAME}"
-CONTAINER_PYPROJECT_TOML="${CONTAINER_SOURCE_DIR}/pyproject.toml"
 
 TIME_START=$(date +%s)
 
@@ -33,20 +32,13 @@ write_log "Changed working directory to ${PACKAGE_DIR}"
 
 # -----------------------------------------------------------------------------
 
-# Write project-scoped Python wrapper (runs Python inside the container)
-cat <<EOF > "${PROJECT_PYTHON_WRAPPER}"
-#!/bin/bash
-export PYTHONNOUSERSITE=1
-exec ${APPTAINER_BIN} exec ${SIF_PATH} pixi run --frozen --manifest-path ${CONTAINER_PYPROJECT_TOML} python "\$@"
-EOF
-chmod 755 "${PROJECT_PYTHON_WRAPPER}"
-write_log "Written ${PROJECT_PYTHON_WRAPPER} with 755 permissions"
-write_log "Project Python wrapper: ${PROJECT_PYTHON_WRAPPER}"
-write_log "Project-Python version: $(${PROJECT_PYTHON_WRAPPER} --version)"
+# Python command (runs Python inside the container)
+write_log "Python command: ${PYTHON_COMMAND}"
+write_log "Python version: $(${PYTHON_COMMAND} --version)"
 echo
 
 # Find PACKAGE_FOLDER (a path inside the container)
-PACKAGE_FOLDER=$(${PROJECT_PYTHON_WRAPPER} -c "import ${IMPORT_PACKAGE_NAME} as p, os; print(os.path.dirname(p.__file__))")
+PACKAGE_FOLDER=$(${PYTHON_COMMAND} -c "import ${IMPORT_PACKAGE_NAME} as p, os; print(os.path.dirname(p.__file__))")
 write_log "Package folder: ${PACKAGE_FOLDER}"
 echo
 

@@ -27,7 +27,6 @@ from fractal_server.tasks.v2.utils_database import (
     create_db_tasks_and_update_task_group_sync,
 )
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
-from fractal_server.tasks.v2.utils_pixi import parse_collect_stdout
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
@@ -37,9 +36,25 @@ from ._utils import check_ssh_or_fail_and_cleanup
 CONTAINER_ROOT = "/"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
-PROJECT_PYTHON_WRAPPER_FILENAME = "project_python.sh"
 MANIFEST_FILENAME = "__FRACTAL_MANIFEST__.json"
 PIXI_LOCK_FILENAME = "pixi.lock"
+
+
+def _parse_package_root(stdout: str) -> str:
+    """
+    Extract the package folder (a path inside the container) from the
+    stdout of `apptainer_3_post_build.sh`.
+    """
+    PACKAGE_FOLDER_PREFIX = "Package folder:"
+    matching_lines = [
+        line for line in stdout.splitlines() if PACKAGE_FOLDER_PREFIX in line
+    ]
+    if len(matching_lines) != 1:
+        raise ValueError(
+            f"String '{PACKAGE_FOLDER_PREFIX}' found {len(matching_lines)} "
+            "times in stdout (expected once)."
+        )
+    return matching_lines[0].split(PACKAGE_FOLDER_PREFIX)[-1].strip(" ")
 
 
 def collect_ssh_apptainer(
@@ -139,9 +154,18 @@ def collect_ssh_apptainer(
                         task_group.path, DEF_FILENAME
                     ).as_posix()
                     sif_path = Path(task_group.path, SIF_FILENAME).as_posix()
-                    project_python_wrapper = Path(
-                        task_group.path, PROJECT_PYTHON_WRAPPER_FILENAME
+                    container_pyproject_toml = Path(
+                        CONTAINER_ROOT, SOURCE_DIR_NAME, "pyproject.toml"
                     ).as_posix()
+                    # Command that runs Python inside the container
+                    python_command = (
+                        f"{apptainer_config['apptainer_bin']} exec "
+                        "--env PYTHONNOUSERSITE=1 "
+                        f"{sif_path} "
+                        "pixi run --frozen "
+                        f"--manifest-path {container_pyproject_toml} "
+                        "python"
+                    )
                     manifest_path_remote = Path(
                         task_group.path, MANIFEST_FILENAME
                     ).as_posix()
@@ -164,7 +188,7 @@ def collect_ssh_apptainer(
                             "__IMPORT_PACKAGE_NAME__",
                             task_group.pkg_name.replace("-", "_"),
                         ),
-                        ("__PROJECT_PYTHON_WRAPPER__", project_python_wrapper),
+                        ("__PYTHON_COMMAND__", python_command),
                         ("__MANIFEST_PATH__", manifest_path_remote),
                         ("__PIXI_LOCK_PATH__", pixi_lock_path_remote),
                     }
@@ -242,13 +266,8 @@ def collect_ssh_apptainer(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Parse stdout. NOTE: `package_root` is a path inside the
-                    # container, while `project_python_wrapper` lives on the
-                    # host and runs Python inside the container.
-                    parsed_output = parse_collect_stdout(stdout)
-                    package_root = parsed_output["package_root"]
-                    project_python_wrapper = parsed_output[
-                        "project_python_wrapper"
-                    ]
+                    # container.
+                    package_root = _parse_package_root(stdout)
 
                     # Read and validate manifest file (copied out of the image)
                     pkg_manifest_dict = fractal_ssh.read_remote_json_file(
@@ -263,7 +282,7 @@ def collect_ssh_apptainer(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root),
-                        project_python_wrapper=Path(project_python_wrapper),
+                        python_bin=Path(python_command),
                     )
                     logger.info("_prepare_tasks_metadata - end")
 
