@@ -16,6 +16,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
@@ -288,7 +289,7 @@ def collect_ssh_pixi(
 
                     # Read and validate remote manifest file
                     manifest_path_remote = (
-                        f"{package_root_remote}/__FRACTAL_MANIFEST__.json"
+                        f"{package_root_remote}/{MANIFEST_FILENAME}"
                     )
                     pkg_manifest_dict = fractal_ssh.read_remote_json_file(
                         manifest_path_remote

@@ -15,6 +15,7 @@ from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
+from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2.local._utils import _customize_and_run_template
@@ -207,7 +208,7 @@ def collect_local_pixi(
                 # Read and validate manifest
                 # NOTE: we are only supporting the manifest path being relative
                 # to the top-level folder
-                manifest_path = f"{package_root}/__FRACTAL_MANIFEST__.json"
+                manifest_path = f"{package_root}/{MANIFEST_FILENAME}"
                 with open(manifest_path) as json_data:
                     pkg_manifest_dict = json.load(json_data)
                 logger.info(f"loaded {manifest_path=}")

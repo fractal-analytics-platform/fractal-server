@@ -15,6 +15,7 @@ CONTAINER_ROOT="__CONTAINER_ROOT__"
 SIF_PATH="__SIF_PATH__"
 IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 PYTHON_COMMAND="__PYTHON_COMMAND__"
+MANIFEST_FILENAME="__MANIFEST_FILENAME__"
 MANIFEST_PATH="__MANIFEST_PATH__"
 PIXI_LOCK_PATH="__PIXI_LOCK_PATH__"
 
@@ -44,7 +45,7 @@ echo
 
 # Copy manifest and lockfile out of the image
 write_log "START copying manifest to ${MANIFEST_PATH}"
-${APPTAINER_BIN} exec "${SIF_PATH}" cat "${PACKAGE_FOLDER}/__FRACTAL_MANIFEST__.json" > "${MANIFEST_PATH}"
+${APPTAINER_BIN} exec "${SIF_PATH}" cat "${PACKAGE_FOLDER}/${MANIFEST_FILENAME}" > "${MANIFEST_PATH}"
 write_log "END   copying manifest to ${MANIFEST_PATH}"
 write_log "START copying pixi.lock to ${PIXI_LOCK_PATH}"
 ${APPTAINER_BIN} exec "${SIF_PATH}" cat "${CONTAINER_SOURCE_DIR}/pixi.lock" > "${PIXI_LOCK_PATH}"

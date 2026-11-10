@@ -15,6 +15,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
@@ -36,7 +37,6 @@ from ._utils import check_ssh_or_fail_and_cleanup
 CONTAINER_ROOT = "/"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
-MANIFEST_FILENAME = "__FRACTAL_MANIFEST__.json"
 PIXI_LOCK_FILENAME = "pixi.lock"
 
 
@@ -189,6 +189,7 @@ def collect_ssh_apptainer(
                             task_group.pkg_name.replace("-", "_"),
                         ),
                         ("__PYTHON_COMMAND__", python_command),
+                        ("__MANIFEST_FILENAME__", MANIFEST_FILENAME),
                         ("__MANIFEST_PATH__", manifest_path_remote),
                         ("__PIXI_LOCK_PATH__", pixi_lock_path_remote),
                     }
