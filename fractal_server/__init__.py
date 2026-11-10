@@ -4,4 +4,4 @@ part of `runner/executors/slurm_common/remote.py` - which needs to run in an
 environment where no dependencies are installed.
 """
 
-__VERSION__ = "2.27.2"
+__VERSION__ = "2.27.3"
