@@ -130,7 +130,7 @@
 | fractal\_server/config/\_\_init\_\_.py                                       |       13 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_database.py                                         |       22 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_email.py                                            |       44 |        0 |        8 |        0 |    100% |           |
-| fractal\_server/config/\_main.py                                             |       23 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/config/\_main.py                                             |       24 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/config/\_oauth.py                                            |       25 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/config/\_settings\_config.py                                 |        3 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/exceptions.py                                                |        8 |        0 |        0 |        0 |    100% |           |
@@ -142,7 +142,7 @@
 | fractal\_server/json\_utils.py                                               |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/logger/\_\_init\_\_.py                                       |       72 |        6 |       32 |        6 |     88% |110-\>113, 128, 148, 166-167, 198, 202 |
 | fractal\_server/logger/\_config\_file\_state.py                              |        1 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/main.py                                                      |      121 |        1 |       18 |        1 |     99% |       231 |
+| fractal\_server/main.py                                                      |      121 |        1 |       18 |        1 |     99% |       239 |
 | fractal\_server/migrations/naming\_convention.py                             |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/runner/components.py                                         |        2 |        0 |        0 |        0 |    100% |           |
@@ -233,7 +233,7 @@
 | fractal\_server/urls.py                                                      |       32 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/utils.py                                                     |       26 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/zip\_tools.py                                                |       73 |        0 |       20 |        0 |    100% |           |
-| **TOTAL**                                                                    | **11620** |  **156** | **1960** |   **84** | **98%** |           |
+| **TOTAL**                                                                    | **11621** |  **156** | **1960** |   **84** | **98%** |           |
 
 
 ## Setup coverage badge

@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">23 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">23<span class="text"> run</span></button>
+            <span class="text">24 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">24<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_0086ed950171d29b__oauth_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
-            created at 2026-11-05 11:10 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.2">coverage.py v7.17.2</a>,
+            created at 2026-11-10 11:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -121,46 +121,49 @@
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="str">            `app.state`.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="str">        FRACTAL_GRACEFUL_SHUTDOWN_TIME:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="str">            Waiting time for the shutdown phase of executors, in seconds.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="str">        FRACTAL_REGISTRATION_URL:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="str">            The URL of an instance-specific Fractal-registration help page.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="str">        FRACTAL_HELP_EMAIL:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="str">            An email address for Fractal-instance administrators.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t"><span class="str">        FRACTAL_DEFAULT_GROUP_NAME:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t"><span class="str">            Name of the default user group.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t"><span class="str">            If set to `&quot;All&quot;`, then the user group with that name is a special</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t"><span class="str">            user group (e.g. it cannot be deleted, and new users are</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t"><span class="str">            automatically added to it). If set to `None` (the default value),</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t"><span class="str">            then user groups are all equivalent, independently on their name.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t"><span class="str">        FRACTAL_LONG_REQUEST_TIME:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="str">            Time limit beyond which the execution of an API request is</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="str">            considered *slow* and an appropriate warning is logged by the</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t"><span class="str">            middleware.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t"><span class="str">        FRACTAL_DISABLE_BASIC_AUTH:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="str">            Remove endpoints starting with `/token/login`.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="str">        FRACTAL_ENABLE_TASK_GROUP_RESET:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="str">            Enable admin-only endpoint to reset task groups.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="str">    &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">model_config</span> <span class="op">=</span> <span class="nam">SettingsConfigDict</span><span class="op">(</span><span class="op">**</span><span class="nam">SETTINGS_CONFIG_DICT</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="str">        FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="str">            If true, cancel existing SLURM jobs upon shutdown.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="str">        FRACTAL_REGISTRATION_URL:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="str">            The URL of an instance-specific Fractal-registration help page.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t"><span class="str">        FRACTAL_HELP_EMAIL:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t"><span class="str">            An email address for Fractal-instance administrators.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t"><span class="str">        FRACTAL_DEFAULT_GROUP_NAME:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t"><span class="str">            Name of the default user group.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t"><span class="str">            If set to `&quot;All&quot;`, then the user group with that name is a special</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t"><span class="str">            user group (e.g. it cannot be deleted, and new users are</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t"><span class="str">            automatically added to it). If set to `None` (the default value),</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="str">            then user groups are all equivalent, independently on their name.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t"><span class="str">        FRACTAL_LONG_REQUEST_TIME:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t"><span class="str">            Time limit beyond which the execution of an API request is</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t"><span class="str">            considered *slow* and an appropriate warning is logged by the</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="str">            middleware.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="str">        FRACTAL_DISABLE_BASIC_AUTH:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="str">            Remove endpoints starting with `/token/login`.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="str">        FRACTAL_ENABLE_TASK_GROUP_RESET:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t"><span class="str">            Enable admin-only endpoint to reset task groups.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="str">    &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">JWT_EXPIRE_SECONDS</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">180</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">JWT_SECRET_KEY</span><span class="op">:</span> <span class="nam">SecretStr</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">COOKIE_EXPIRE_SECONDS</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">86400</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="com"># Note: we do not use ResourceType here to avoid circular imports</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">FRACTAL_RUNNER_BACKEND</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;local&quot;</span><span class="op">,</span> <span class="str">&quot;slurm_ssh&quot;</span><span class="op">,</span> <span class="str">&quot;slurm_sudo&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">        <span class="str">&quot;local&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">    <span class="nam">FRACTAL_LOGGING_LEVEL</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">INFO</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">    <span class="nam">LOG_CONFIG_FILE</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">    <span class="nam">FRACTAL_API_MAX_JOB_LIST_LENGTH</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">25</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="nam">FRACTAL_GRACEFUL_SHUTDOWN_TIME</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">30.0</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="nam">FRACTAL_REGISTRATION_URL</span><span class="op">:</span> <span class="nam">HttpUrl</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">FRACTAL_HELP_EMAIL</span><span class="op">:</span> <span class="nam">EmailStr</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="nam">FRACTAL_DEFAULT_GROUP_NAME</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;All&quot;</span><span class="op">]</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="nam">FRACTAL_LONG_REQUEST_TIME</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">30.0</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="nam">FRACTAL_DISABLE_BASIC_AUTH</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;true&quot;</span><span class="op">,</span> <span class="str">&quot;false&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;false&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="nam">FRACTAL_ENABLE_TASK_GROUP_RESET</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;true&quot;</span><span class="op">,</span> <span class="str">&quot;false&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;false&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">model_config</span> <span class="op">=</span> <span class="nam">SettingsConfigDict</span><span class="op">(</span><span class="op">**</span><span class="nam">SETTINGS_CONFIG_DICT</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">JWT_EXPIRE_SECONDS</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">180</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="nam">JWT_SECRET_KEY</span><span class="op">:</span> <span class="nam">SecretStr</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">COOKIE_EXPIRE_SECONDS</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">86400</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="com"># Note: we do not use ResourceType here to avoid circular imports</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">    <span class="nam">FRACTAL_RUNNER_BACKEND</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;local&quot;</span><span class="op">,</span> <span class="str">&quot;slurm_ssh&quot;</span><span class="op">,</span> <span class="str">&quot;slurm_sudo&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">        <span class="str">&quot;local&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">    <span class="nam">FRACTAL_LOGGING_LEVEL</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">INFO</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="nam">LOG_CONFIG_FILE</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="nam">FRACTAL_API_MAX_JOB_LIST_LENGTH</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">25</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="nam">FRACTAL_GRACEFUL_SHUTDOWN_TIME</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">30.0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="nam">FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;true&quot;</span><span class="op">,</span> <span class="str">&quot;false&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;true&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="nam">FRACTAL_REGISTRATION_URL</span><span class="op">:</span> <span class="nam">HttpUrl</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="nam">FRACTAL_HELP_EMAIL</span><span class="op">:</span> <span class="nam">EmailStr</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="nam">FRACTAL_DEFAULT_GROUP_NAME</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;All&quot;</span><span class="op">]</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">    <span class="nam">FRACTAL_LONG_REQUEST_TIME</span><span class="op">:</span> <span class="nam">float</span> <span class="op">=</span> <span class="num">30.0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="nam">FRACTAL_DISABLE_BASIC_AUTH</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;true&quot;</span><span class="op">,</span> <span class="str">&quot;false&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;false&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">    <span class="nam">FRACTAL_ENABLE_TASK_GROUP_RESET</span><span class="op">:</span> <span class="nam">Literal</span><span class="op">[</span><span class="str">&quot;true&quot;</span><span class="op">,</span> <span class="str">&quot;false&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;false&quot;</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -169,8 +172,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_0086ed950171d29b__oauth_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
-            created at 2026-11-05 11:10 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.2">coverage.py v7.17.2</a>,
+            created at 2026-11-10 11:50 +0000
         </p>
     </div>
 </footer>
