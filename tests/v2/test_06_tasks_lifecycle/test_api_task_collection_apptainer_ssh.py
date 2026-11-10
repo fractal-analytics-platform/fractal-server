@@ -10,6 +10,7 @@ from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.config._slurm import SLURMConfig
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh.collect_apptainer import SIF_FILENAME
+from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
 
 @pytest.mark.container
@@ -116,7 +117,7 @@ async def test_task_collection_apptainer_ssh(
         assert command.startswith(
             Path(task_group.path, "project_python.sh").as_posix()
         )
-        assert " /opt/" in command
+        assert f" /{SOURCE_DIR_NAME}/" in command
 
         # 3 / Failed collection - due to non-duplication constraint
         res = await client.post(

@@ -34,7 +34,7 @@ from fractal_server.utils import get_timestamp
 from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 
-CONTAINER_ROOT = "/opt"
+CONTAINER_ROOT = "/"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
 PROJECT_PYTHON_WRAPPER_FILENAME = "project_python.sh"

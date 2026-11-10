@@ -22,6 +22,8 @@ CONTAINER_ROOT=${CONTAINER_ROOT%/}
 # Known paths
 TAR_GZ_FILENAME=$(basename "${TAR_GZ_PATH}")
 TAR_GZ_BASENAME=$(basename "${TAR_GZ_PATH}" ".tar.gz")
+CONTAINER_TAR_GZ_PATH="${CONTAINER_ROOT}/${TAR_GZ_FILENAME}"
+CONTAINER_EXTRACTED_DIR="${CONTAINER_ROOT}/${TAR_GZ_BASENAME}"
 CONTAINER_SOURCE_DIR="${CONTAINER_ROOT}/${SOURCE_DIR_NAME}"
 CONTAINER_PYPROJECT_TOML="${CONTAINER_SOURCE_DIR}/pyproject.toml"
 
@@ -38,14 +40,13 @@ Bootstrap: docker
 From: ghcr.io/prefix-dev/pixi:${PIXI_VERSION}
 
 %files
-    ${TAR_GZ_PATH} ${CONTAINER_ROOT}/${TAR_GZ_FILENAME}
+    ${TAR_GZ_PATH} ${CONTAINER_TAR_GZ_PATH}
 
 %post
     set -e
-    cd ${CONTAINER_ROOT}
-    tar xz -f ${TAR_GZ_FILENAME} ${TAR_GZ_BASENAME}
-    mv ${TAR_GZ_BASENAME} ${SOURCE_DIR_NAME}
-    rm ${TAR_GZ_FILENAME}
+    tar xz -f ${CONTAINER_TAR_GZ_PATH} -C ${CONTAINER_ROOT:-/} ${TAR_GZ_BASENAME}
+    mv ${CONTAINER_EXTRACTED_DIR} ${CONTAINER_SOURCE_DIR}
+    rm ${CONTAINER_TAR_GZ_PATH}
     pixi install --frozen --manifest-path ${CONTAINER_PYPROJECT_TOML}
     pixi clean cache --yes || true
 EOF
