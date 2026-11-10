@@ -4,6 +4,8 @@
 
 * App lifetime:
     * Add `FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN` configuration variable (\#3495).
+* Dependencies:
+    * Bump gunicorn to v27 (\#3496).
 
 # 2.27.2
 
