@@ -2,22 +2,26 @@
 
 **NOTE** - Temporary doc to summarize the changes in sight of the PR
 
-For `slurm_ssh` resources, the SLURM REST runner submits, polls and cancels SLURM jobs through [`slurmrestd`](https://slurm.schedmd.com/rest.html) (HTTPS), instead of running `sbatch`, `squeue` and `scancel` over SSH. `SlurmRestRunner` is a subclass of `SlurmSSHRunner`: besides these three operations, it changes how the job inputs reach the cluster (embedded in the submission script, no upload), the mode of the remote folders, the job environment, and the wait after a shutdown request (see **How it works**). The rest (task execution, fetching outputs, ...) is the same as for the SLURM/SSH runner.
+For `slurm_rest` resources, the SLURM REST runner submits, polls and cancels SLURM jobs through [`slurmrestd`](https://slurm.schedmd.com/rest.html) (HTTPS), instead of running `sbatch`, `squeue` and `scancel` over SSH. `SlurmRestRunner` is a subclass of `SlurmSSHRunner`: besides these three operations, it changes how the job inputs reach the cluster (embedded in the submission script, no upload), the mode of the remote folders, the job environment, and the wait after a shutdown request (see **How it works**). The rest (task execution, fetching outputs, ...) is the same as for the SLURM/SSH runner.
 
 ## Enabling it
 
-The resource type stays `slurm_ssh`. When `FRACTAL_SLURM_REST_ENABLED=true`, **all** `slurm_ssh` resources use the REST runner (settings are read at server startup, and invalid values make it fail; there is no fallback to SSH). The other settings are described in [`SlurmRestSettings`](../../configuration.md#fractal_server.runner.executors.slurm_rest.settings.SlurmRestSettings); in short:
+Set `FRACTAL_RUNNER_BACKEND=slurm_rest`, and create `slurm_rest` resources and profiles. They have the same fields as `slurm_ssh` ones (SSH is still used, see **SSH is still required**, and task collection works as for `slurm_ssh` resources), and the resource `jobs_runner_config` has a required `rest` key (see [`JobRunnerConfigSlurmRest`](./runners.md#fractal_server.runner.config._slurm_rest.JobRunnerConfigSlurmRest)):
 
-| Variable | Default | Meaning |
+| `jobs_runner_config.rest` key | Required | Meaning |
 |---|---|---|
-| `FRACTAL_SLURM_REST_ENABLED` | `false` | `true` to use the REST runner |
-| `FRACTAL_SLURM_REST_URL` | – | HTTPS base URL of `slurmrestd` (without `/slurm/<version>`); required if enabled |
-| `FRACTAL_SLURM_REST_CA_BUNDLE` | – | PEM file with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs. TLS verification cannot be disabled |
-| `FRACTAL_SLURM_REST_TOKEN` | – | **Development only**: fixed token used for all requests of all users, instead of their SSO token (never refreshed) |
+| `url` | yes | HTTPS base URL of `slurmrestd` (without `/slurm/<version>`) |
+| `ca_bundle` | no | PEM file (on the `fractal-server` machine) with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs. TLS verification cannot be disabled |
+| `api_version` | no | `slurmrestd` OpenAPI version; if unset, `v0.0.44` (`SLURM_REST_API_VERSION`), since the JSON job description and the response parsing follow it |
 
-These settings are global, so all `slurm_ssh` resources share the same `slurmrestd` instance. The `slurmrestd` OpenAPI version is fixed in the code (`v0.0.44`, `SLURM_REST_API_VERSION`), since the JSON job description and the response parsing follow it.
+For example:
+```json
+"rest": {"url": "https://slurmrestd.example.org", "ca_bundle": "/etc/ssl/internal-ca.pem"}
+```
 
-**NOTE**: The settings describe a cluster, and could move to `Resource` (e.g. a dedicated `slurm_rest` resource type), as `host` and the other cluster settings.
+Each `slurm_rest` resource describes one cluster, so several clusters (each with its own `slurmrestd`) need several resources.
+
+`FRACTAL_SLURM_REST_TOKEN` (see [`Settings`](../../configuration.md#fractal_server.config._main.Settings)) is a **development-only** setting: a fixed token used for all requests of all users, instead of their SSO token (never refreshed).
 
 ## How it works
 
@@ -29,7 +33,7 @@ These settings are global, so all `slurm_ssh` resources share the same `slurmres
 - **No upload**: the job script writes its input/args JSON files (via quoted heredocs) and a copy of itself (`cp "$0"`) in the remote folder, with `umask 0002`. Remote folders are created (over SSH) with mode `2775`. Submission scripts are limited to 4 MB.
 - **Environment**: the job gets the same `PATH` as with `sbatch` over SSH (`printenv PATH` at runner start), `HOME` and `USER` of the SLURM user (`getent passwd`), and `SLURM_CPUS_PER_TASK` is set explicitly. Unlike with `sbatch`, the job does not get the environment of a login shell (e.g. no `module` command, no variables exported in `~/.bashrc`, ...). Configuration files are read from the SLURM user's `HOME` by default (e.g. `~/.aws/config`), so they may differ between users. For the same configuration for all user it is possible to the resource `extra_lines`, which are copied as is into every submission script, or let tasks configure themselves.
 - **Polling**: one `GET /jobs` call per poll. Job states are read as `squeue` reports them: `slurmrestd` returns the base state and the flags of each job, so that SLURM jobs are considered finished at the same time as with the SLURM/SSH runner. If the job states cannot be queried (no valid token, or `slurmrestd` unreachable, answering with errors, ...), the SLURM jobs are considered still running, and the query is repeated at the next poll, with no limit: a failed query never marks SLURM jobs as completed, and never fails the Fractal job. The job stays `submitted` and resumes as soon as a query succeeds (e.g. after a new SSO login, or when `slurmrestd` is back); SLURM jobs that finished in the meantime are then processed normally. A warning is logged once when the problem starts, and an info message when it ends.
-- **`GET /api/v2/job/squeue/?scope=user`**: still runs `squeue` over SSH, but filters on the SLURM user (the SSO `sub`) instead of `Profile.username`, so that users see their own REST jobs.
+- **`GET /api/v2/job/squeue/?scope=user`**: for `slurm_rest` resources, still runs `squeue` over SSH, but filters on the SLURM user (the SSO `sub`) instead of `Profile.username`, so that users see their own REST jobs.
 - **Restart behaviour**: the same as for the SLURM/SSH runner. On graceful shutdown, running SLURM jobs are cancelled (through `slurmrestd`) and the job is marked as failed.
 
 | REST call | When |

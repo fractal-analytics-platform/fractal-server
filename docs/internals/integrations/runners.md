@@ -4,7 +4,7 @@ The runner is the `fractal-server` components that executes a job (based on a ce
 
 ## Configuration
 
-The runner configuration is defined in the `jobs_runner_config` property of a computational resource. The configuration schemas reported below apply to a `local` resource (see `JobRunnerConfigLocal`) and to a `slurm_sudo/slurm_ssh` resource (see `JobRunnerConfigSLURM`). Some more specific details of the SLURM configurations are described at  [advanced SLURM configuration](./_advanced_slurm_config.md).
+The runner configuration is defined in the `jobs_runner_config` property of a computational resource. The configuration schemas reported below apply to a `local` resource (see `JobRunnerConfigLocal`), to a `slurm_sudo/slurm_ssh` resource (see `JobRunnerConfigSLURM`), and to a `slurm_rest` resource (see `JobRunnerConfigSlurmRest`, which adds the `slurmrestd` connection to `JobRunnerConfigSLURM`). Some more specific details of the SLURM configurations are described at  [advanced SLURM configuration](./_advanced_slurm_config.md).
 
 ### ::: fractal_server.runner.config._local.JobRunnerConfigLocal
         options:
@@ -13,6 +13,16 @@ The runner configuration is defined in the `jobs_runner_config` property of a co
 
 
 ### ::: fractal_server.runner.config._slurm.JobRunnerConfigSLURM
+        options:
+            show_root_heading: true
+            show_root_toc_entry: false
+
+### ::: fractal_server.runner.config._slurm_rest.JobRunnerConfigSlurmRest
+        options:
+            show_root_heading: true
+            show_root_toc_entry: false
+
+### ::: fractal_server.runner.config._slurm_rest.SlurmRestConfig
         options:
             show_root_heading: true
             show_root_toc_entry: false
@@ -26,4 +36,4 @@ The three runner implementations (for the local, SLURM/sudo and SLURM/SSH cases)
     * [`BaseSlurmRunner`](../../code_reference/runner/executors/slurm_common/base_slurm_runner.md#fractal_server.runner.executors.slurm_common.base_slurm_runner.BaseSlurmRunner) inherits from `BaseRunner` and adds the common part of SLURM runners:
         * [`SlurmSudoRunner`](../../code_reference/runner/executors/slurm_sudo/runner.md#fractal_server.runner.executors.slurm_sudo.runner.SlurmSudoRunner) is the runner implementation for a `slurm_sudo` resource.
         * [`SlurmSSHRunner`](../../code_reference/runner/executors/slurm_ssh/runner.md#fractal_server.runner.executors.slurm_ssh.runner.SlurmSSHRunner) is the runner implementation for a `slurm_ssh` resource.
-            * [`SlurmRestRunner`](../../code_reference/runner/executors/slurm_rest/runner.md#fractal_server.runner.executors.slurm_rest.runner.SlurmRestRunner) is used instead for `slurm_ssh` resources when `FRACTAL_SLURM_REST_ENABLED=true`; it submits, polls and cancels SLURM jobs through `slurmrestd` (see [SLURM REST runner](./slurm_rest.md)).
+            * [`SlurmRestRunner`](../../code_reference/runner/executors/slurm_rest/runner.md#fractal_server.runner.executors.slurm_rest.runner.SlurmRestRunner) is the runner implementation for a `slurm_rest` resource; it submits, polls and cancels SLURM jobs through `slurmrestd` (see [SLURM REST runner](./slurm_rest.md)).
