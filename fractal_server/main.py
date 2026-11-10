@@ -120,7 +120,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
     )
     if (
         _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND)
-        and settings.FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN == "true"
+        and settings.FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN == "true"
     ):
         try:
             await cleanup_after_shutdown(
@@ -137,8 +137,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
         logger_teardown.info(
             "Skipping shutdown of existing jobs "
             f"(runner: {settings.FRACTAL_RUNNER_BACKEND}, "
-            "FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN: "
-            f"{settings.FRACTAL_CANCEL_SLURM_JOBS_ON_SHUTDOWN})"
+            "FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN: "
+            f"{settings.FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN})"
         )
 
     logger_teardown.info(
