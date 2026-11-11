@@ -175,7 +175,6 @@ def collect_ssh_apptainer(
                             apptainer_config["apptainer_bin"],
                         ),
                         ("__PIXI_VERSION__", task_group.pixi_version),
-                        ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
                         ("__TAR_GZ_FILENAME__", tar_gz_filename),
                         (

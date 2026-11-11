@@ -9,7 +9,6 @@ write_log(){
 
 # Replacements
 APPTAINER_BIN="__APPTAINER_BIN__"
-PACKAGE_DIR="__PACKAGE_DIR__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 SIF_PATH="__SIF_PATH__"
 IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
@@ -18,16 +17,10 @@ MANIFEST_FILENAME="__MANIFEST_FILENAME__"
 MANIFEST_PATH="__MANIFEST_PATH__"
 PIXI_LOCK_PATH="__PIXI_LOCK_PATH__"
 
-# Strip trailing `/`
-PACKAGE_DIR=${PACKAGE_DIR%/}
-
 # Known paths (inside the container)
 CONTAINER_SOURCE_DIR="/${SOURCE_DIR_NAME}"
 
 TIME_START=$(date +%s)
-
-cd "${PACKAGE_DIR}"
-write_log "Changed working directory to ${PACKAGE_DIR}"
 
 # -----------------------------------------------------------------------------
 
