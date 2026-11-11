@@ -303,7 +303,7 @@ def collect_ssh_pixi(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
-                        project_python_wrapper=Path(project_python_wrapper),
+                        python_command=project_python_wrapper,
                     )
                     logger.info("_prepare_tasks_metadata - end")
 

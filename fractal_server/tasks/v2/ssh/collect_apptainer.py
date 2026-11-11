@@ -283,7 +283,7 @@ def collect_ssh_apptainer(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root),
-                        python_bin=Path(python_command),
+                        python_command=python_command,
                     )
                     logger.info("_prepare_tasks_metadata - end")
 
