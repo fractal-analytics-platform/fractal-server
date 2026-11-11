@@ -10,12 +10,20 @@ from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 
-# The response parsing below and the job description built in
-# `job_description.py` follow these versions of the `slurmrestd` OpenAPI
-# plugin: supporting another version needs code changes, not configuration
-# TMP remove in next change when refatcoring API version logic
-SUPPORTED_API_VERSIONS = ("v0.0.44",)
-SLURM_REST_API_VERSION = "v0.0.44"
+# Versions of the `slurmrestd` OpenAPI plugin (`/slurm/<version>/`) that the
+# response parsing below and the job description built in
+# `job_description.py` work with. All the paths and fields that they use are
+# the same in these versions (OpenAPI specs of v0.0.40 to v0.0.44, release
+# notes for v0.0.45). Supporting another version may need code changes: check
+# the paths and fields used here before adding it.
+SUPPORTED_API_VERSIONS = (
+    "v0.0.40",
+    "v0.0.41",
+    "v0.0.42",
+    "v0.0.43",
+    "v0.0.44",
+    "v0.0.45",
+)
 
 
 def squeue_state(job_state: list[str]) -> str:
@@ -34,7 +42,16 @@ def squeue_state(job_state: list[str]) -> str:
 
 
 class SlurmRestError(RuntimeError):
-    pass
+    """
+    Error of a `slurmrestd` request.
+
+    Attributes:
+        status: HTTP status code, if `slurmrestd` answered with an error.
+    """
+
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
 
 
 def _parse_body(raw: bytes) -> dict[str, Any]:
@@ -95,7 +112,7 @@ class SlurmRestClient:
         username: str,
         get_token: Callable[..., str],
         ca_bundle: str | None = None,
-        api_version: str = SLURM_REST_API_VERSION,
+        api_version: str,
         timeout: float = 30.0,
     ) -> None:
         # Tokens are sent in request headers
@@ -108,9 +125,12 @@ class SlurmRestClient:
                 f"Unsupported slurmrestd API version '{api_version}' "
                 f"(supported: {list(SUPPORTED_API_VERSIONS)})."
             )
-        self.base_url = f"{base_url.rstrip('/')}/slurm/{api_version}"
+        self.root_url = base_url.rstrip("/")
+        self.api_version = api_version
+        self.base_url = f"{self.root_url}/slurm/{api_version}"
         self.username = username
         self.get_token = get_token
+        self.ca_bundle = ca_bundle
         self.timeout = timeout
         try:
             self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
@@ -148,7 +168,10 @@ class SlurmRestClient:
                     payload = _parse_body(response.read())
             except urllib.error.HTTPError as e:
                 payload = _parse_body(e.read())
-                # slurmrestd answers 511 for invalid or expired tokens
+                # slurmrestd answers 511 for invalid or expired tokens (on
+                # Slurm 23.11, 500: not retried here, since 500 is also used
+                # for other errors; SSO tokens are refreshed before they
+                # expire anyway)
                 if e.code in (401, 511) and attempt == 1:
                     logger.warning(
                         f"{method} {path} -> {e.code}, refreshing token."
@@ -156,7 +179,8 @@ class SlurmRestClient:
                     continue
                 raise SlurmRestError(
                     f"{method} {path} -> HTTP {e.code}: "
-                    f"{_error_descriptions(payload)}"
+                    f"{_error_descriptions(payload)}",
+                    status=e.code,
                 ) from None
             except (OSError, http.client.HTTPException) as e:
                 # Connection, DNS, TLS and timeout errors (after `HTTPError`,
@@ -181,6 +205,28 @@ class SlurmRestClient:
 
     def ping(self) -> None:
         self._request("GET", "/ping")
+
+    def served_api_versions(self) -> list[str]:
+        """
+        Supported API versions that `slurmrestd` serves, i.e. whose `/ping`
+        succeeds (a version that is not served answers 404).
+        """
+        served = []
+        for api_version in SUPPORTED_API_VERSIONS:
+            client = SlurmRestClient(
+                base_url=self.root_url,
+                username=self.username,
+                get_token=self.get_token,
+                ca_bundle=self.ca_bundle,
+                api_version=api_version,
+                timeout=self.timeout,
+            )
+            try:
+                client.ping()
+            except SlurmRestError:
+                continue
+            served.append(api_version)
+        return served
 
     def submit_job(self, request_body: dict[str, Any]) -> int:
         """
@@ -233,7 +279,8 @@ class SlurmRestClient:
         states = {}
         for job in jobs:
             job_state = job.get("job_state")
-            # v0.0.44 returns a list, e.g. ["COMPLETED", "COMPLETING"]
+            # `job_state` is a list (base state, then flags),
+            # e.g. ["COMPLETED", "COMPLETING"]
             if isinstance(job_state, list):
                 job_state = squeue_state(job_state)
             states[str(job["job_id"])] = job_state

@@ -37,21 +37,20 @@ class SlurmRestConfig(BaseModel):
     Attributes:
         url:
             HTTPS base URL of `slurmrestd` (without `/slurm/<version>`).
+        api_version:
+            `slurmrestd` OpenAPI version (e.g. `v0.0.44`), one of
+            `SUPPORTED_API_VERSIONS` and served by `slurmrestd`.
         ca_bundle:
             Optional CA file (PEM) on the `fractal-server` machine, to verify
             the TLS certificate of `slurmrestd` (e.g. for an internal CA).
             If unset, the system CAs are used.
-        api_version:
-            Optional `slurmrestd` OpenAPI version (e.g. `v0.0.44`).
     """
 
     model_config = ConfigDict(extra="forbid")
 
     url: Annotated[HttpUrlStr, AfterValidator(_val_url)]
+    api_version: Annotated[NonEmptyStr, AfterValidator(_val_api_version)]
     ca_bundle: AbsolutePathStr | None = None
-    api_version: (
-        Annotated[NonEmptyStr, AfterValidator(_val_api_version)] | None
-    ) = None
 
 
 class JobRunnerConfigSlurmRest(JobRunnerConfigSLURM):
@@ -78,6 +77,7 @@ class JobRunnerConfigSlurmRest(JobRunnerConfigSLURM):
         },
         "rest": {
             "url": "https://slurmrestd.example.org",
+            "api_version": "v0.0.44",
             "ca_bundle": "/etc/ssl/internal-ca.pem"
         }
     }

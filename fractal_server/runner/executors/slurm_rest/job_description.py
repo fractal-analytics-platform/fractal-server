@@ -5,9 +5,9 @@ Translate the `#SBATCH` preamble of a fractal submission script into a
 `slurmrestd` ignores `#SBATCH` lines in the submitted script, so every
 option must become a JSON field.
 
-JSON fields follow the `SLURM_REST_API_VERSION` (`client.py`) of the
-`slurmrestd` OpenAPI plugin. All mappings were checked against `sbatch` on a
-real cluster (Slurm 25.11, `v0.0.44`).
+The JSON fields used here are the same in all the `SUPPORTED_API_VERSIONS`
+(`client.py`) of the `slurmrestd` OpenAPI plugin. All mappings were checked
+against `sbatch` on a real cluster (Slurm 25.11, `v0.0.44`).
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
 REST job description, and options and JSON fields differ in names and units

@@ -2,6 +2,7 @@ import json
 import shlex
 import time
 from pathlib import Path
+from typing import NoReturn
 from typing import Self
 from typing import override
 
@@ -18,7 +19,7 @@ from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import FractalSSHCommandError
 
-from .client import SLURM_REST_API_VERSION
+from .client import SUPPORTED_API_VERSIONS
 from .client import SlurmRestClient
 from .client import SlurmRestError
 from .job_description import build_job_description
@@ -148,12 +149,16 @@ class SlurmRestRunner(SlurmSSHRunner):
                 username=self.slurm_username,
                 get_token=token_provider.get_token,
                 ca_bundle=rest_config.ca_bundle,
-                api_version=rest_config.api_version or SLURM_REST_API_VERSION,
+                api_version=rest_config.api_version,
             )
             self.rest_client.ping()
         except SlurmTokenError as e:
             raise JobExecutionError(info=str(e)) from None
         except SlurmRestError as e:
+            if e.status == 404:
+                self._raise_api_version_not_served(
+                    rest_config=rest_config, resource_name=resource_name
+                )
             raise JobExecutionError(
                 info=(
                     f"Cannot reach slurmrestd at {rest_config.url} "
@@ -162,6 +167,40 @@ class SlurmRestRunner(SlurmSSHRunner):
                     f"`ca_bundle`) of resource '{resource_name}'."
                 )
             ) from None
+
+    def _raise_api_version_not_served(
+        self,
+        *,
+        rest_config: SlurmRestConfig,
+        resource_name: str,
+    ) -> NoReturn:
+        """
+        Fail with the supported API versions that `slurmrestd` serves, when
+        the configured one is not served (`/ping` answers 404).
+        """
+        try:
+            served = self.rest_client.served_api_versions()
+        except SlurmTokenError as e:
+            raise JobExecutionError(info=str(e)) from None
+        if served:
+            hint = (
+                f"Supported versions served by slurmrestd: {served}. Hint: "
+                "update `jobs_runner_config.rest.api_version` of resource "
+                f"'{resource_name}'."
+            )
+        else:
+            hint = (
+                "slurmrestd serves none of the supported versions "
+                f"{list(SUPPORTED_API_VERSIONS)}. Hint: check "
+                "`jobs_runner_config.rest.url` of resource "
+                f"'{resource_name}' (without `/slurm/<version>`)."
+            )
+        raise JobExecutionError(
+            info=(
+                f"slurmrestd at {rest_config.url} does not serve API version "
+                f"'{rest_config.api_version}' (GET /ping -> HTTP 404). {hint}"
+            )
+        ) from None
 
     def _get_slurm_home(self) -> str:
         """
