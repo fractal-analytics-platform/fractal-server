@@ -34,7 +34,6 @@ from fractal_server.utils import get_timestamp
 from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 
-CONTAINER_ROOT = "/"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
 PIXI_LOCK_FILENAME = "pixi.lock"
@@ -154,16 +153,13 @@ def collect_ssh_apptainer(
                         task_group.path, DEF_FILENAME
                     ).as_posix()
                     sif_path = Path(task_group.path, SIF_FILENAME).as_posix()
-                    container_pyproject_toml = Path(
-                        CONTAINER_ROOT, SOURCE_DIR_NAME, "pyproject.toml"
-                    ).as_posix()
                     # Command that runs Python inside the container
                     python_command = (
                         f"{apptainer_config['apptainer_bin']} exec "
                         "--env PYTHONNOUSERSITE=1 "
                         f"{sif_path} "
                         "pixi run --as-is "
-                        f"--manifest-path {container_pyproject_toml} "
+                        f"--manifest-path /{SOURCE_DIR_NAME}/pyproject.toml "
                         "python"
                     )
                     manifest_path_remote = Path(
@@ -181,7 +177,6 @@ def collect_ssh_apptainer(
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__CONTAINER_ROOT__", CONTAINER_ROOT),
                         ("__DEF_FILE__", def_file_path),
                         ("__SIF_PATH__", sif_path),
                         (
