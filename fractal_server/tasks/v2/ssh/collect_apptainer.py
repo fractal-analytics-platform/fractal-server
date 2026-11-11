@@ -162,7 +162,7 @@ def collect_ssh_apptainer(
                         f"{apptainer_config['apptainer_bin']} exec "
                         "--env PYTHONNOUSERSITE=1 "
                         f"{sif_path} "
-                        "pixi run --frozen "
+                        "pixi run --as-is "
                         f"--manifest-path {container_pyproject_toml} "
                         "python"
                     )

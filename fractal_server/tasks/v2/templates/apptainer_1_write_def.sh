@@ -14,6 +14,7 @@ TAR_GZ_PATH="__TAR_GZ_PATH__"
 SOURCE_DIR_NAME="__SOURCE_DIR_NAME__"
 CONTAINER_ROOT="__CONTAINER_ROOT__"
 DEF_FILE="__DEF_FILE__"
+IMPORT_PACKAGE_NAME="__IMPORT_PACKAGE_NAME__"
 
 # Strip trailing `/`
 PACKAGE_DIR=${PACKAGE_DIR%/}
@@ -48,6 +49,7 @@ From: ghcr.io/prefix-dev/pixi:${PIXI_VERSION}
     mv ${CONTAINER_EXTRACTED_DIR} ${CONTAINER_SOURCE_DIR}
     rm ${CONTAINER_TAR_GZ_PATH}
     pixi install --frozen --manifest-path ${CONTAINER_PYPROJECT_TOML}
+    pixi run --as-is --manifest-path ${CONTAINER_PYPROJECT_TOML} python -c 'import ${IMPORT_PACKAGE_NAME}'
     pixi clean cache --yes || true
 EOF
 write_log "END   writing definition file ${DEF_FILE}"
