@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eu
 
 write_log(){
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
