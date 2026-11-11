@@ -116,7 +116,7 @@ async def test_task_collection_apptainer_ssh(
         command = task.command_non_parallel or task.command_parallel
         sif_path = Path(task_group.path, SIF_FILENAME).as_posix()
         assert command.startswith("/usr/bin/apptainer exec ")
-        assert f" {sif_path} pixi run --frozen " in command
+        assert f" {sif_path} pixi run --as-is " in command
         assert f" /{SOURCE_DIR_NAME}/" in command
 
         # 3 / Failed collection - due to non-duplication constraint
