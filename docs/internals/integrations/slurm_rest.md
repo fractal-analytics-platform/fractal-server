@@ -11,13 +11,15 @@ Set `FRACTAL_RUNNER_BACKEND=slurm_rest`, and create `slurm_rest` resources and p
 | `jobs_runner_config.rest` key | Required | Meaning |
 |---|---|---|
 | `url` | yes | HTTPS base URL of `slurmrestd` (without `/slurm/<version>`) |
+| `api_version` | yes | `slurmrestd` OpenAPI version, one of `v0.0.40` to `v0.0.45` (`SUPPORTED_API_VERSIONS`), and served by `slurmrestd` |
 | `ca_bundle` | no | PEM file (on the `fractal-server` machine) with the CAs to trust (e.g. an internal CA); if set, it replaces the system CAs. TLS verification cannot be disabled |
-| `api_version` | no | `slurmrestd` OpenAPI version; if unset, `v0.0.44` (`SLURM_REST_API_VERSION`), since the JSON job description and the response parsing follow it |
 
 For example:
 ```json
-"rest": {"url": "https://slurmrestd.example.org", "ca_bundle": "/etc/ssl/internal-ca.pem"}
+"rest": {"url": "https://slurmrestd.example.org", "api_version": "v0.0.44", "ca_bundle": "/etc/ssl/internal-ca.pem"}
 ```
+
+**API versions**: the requests and the response fields used by the runner are the same in all supported versions, `v0.0.40` (Slurm 23.11) to `v0.0.45` (Slurm 26.05). This was checked on the OpenAPI specs of `v0.0.40` to `v0.0.44` and the OpenAPI release notes for `v0.0.45`, and tested on a cluster with `v0.0.40` to `v0.0.44`. A `slurmrestd` serves several versions (e.g. Slurm 25.11 serves `v0.0.41` to `v0.0.44`). The version is not discovered at each job: if the configured one is not served (`GET /slurm/<v>/ping` answers 404), the job fails and the error lists the supported versions that `slurmrestd` serves. Supporting a new version means adding it to `SUPPORTED_API_VERSIONS`, after checking the paths and fields used (`client.py`, `job_description.py`).
 
 Each `slurm_rest` resource describes one cluster, so several clusters (each with its own `slurmrestd`) need several resources.
 
@@ -38,7 +40,7 @@ Each `slurm_rest` resource describes one cluster, so several clusters (each with
 
 | REST call | When |
 |---|---|
-| `GET /slurm/<v>/ping` | Runner start, before any SSH command (if it fails, the job fails with a `Cannot reach slurmrestd` error, or with the "log in again" hint if the token cannot be refreshed; nothing is submitted and no remote folder is created) |
+| `GET /slurm/<v>/ping` | Runner start, before any SSH command (if it fails, the job fails with a `Cannot reach slurmrestd` error, with the "log in again" hint if the token cannot be refreshed, or with the served API versions if `<v>` is not served; nothing is submitted and no remote folder is created) |
 | `POST /slurm/<v>/job/submit` | Each SLURM job submission |
 | `GET /slurm/<v>/jobs` | Each poll |
 | `DELETE /slurm/<v>/job/{id}` | Job stop/shutdown, or unknown-field warning |
