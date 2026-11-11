@@ -43,7 +43,7 @@ PIXI_LOCK_FILENAME = "pixi.lock"
 def _parse_package_root(stdout: str) -> str:
     """
     Extract the package folder (a path inside the container) from the
-    stdout of `apptainer_2_post_build.sh`.
+    stdout of `apptainer_post_build.sh`.
     """
     PACKAGE_FOLDER_PREFIX = "Package folder:"
     matching_lines = [
@@ -183,7 +183,6 @@ def collect_ssh_apptainer(
                             tar_gz_filename.removesuffix(".tar.gz"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__DEF_FILE__", def_file_path),
                         ("__SIF_PATH__", sif_path),
                         (
                             "__IMPORT_PACKAGE_NAME__",
@@ -229,35 +228,34 @@ def collect_ssh_apptainer(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    # Prepare scripts 1 and 2
-                    remote_script1_path = _customize_and_send_template(
-                        template_filename="apptainer_1_build.sh",
-                        replacements=replacements,
-                        fractal_ssh=fractal_ssh,
-                        **common_args,
-                    )
-                    remote_script2_path = _customize_and_send_template(
-                        template_filename="apptainer_2_post_build.sh",
-                        replacements=replacements,
-                        fractal_ssh=fractal_ssh,
-                        **common_args,
+                    # Prepare post-build script
+                    remote_post_build_script_path = (
+                        _customize_and_send_template(
+                            template_filename="apptainer_post_build.sh",
+                            replacements=replacements,
+                            fractal_ssh=fractal_ssh,
+                            **common_args,
+                        )
                     )
                     logger.debug(
-                        f"Build script written to {remote_script1_path=}."
-                    )
-                    logger.debug(
-                        f"Post-build script written to {remote_script2_path=}."
+                        "Post-build script written to "
+                        f"{remote_post_build_script_path=}."
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    # Run scripts 1 and 2
+                    # Build the image and run the post-build script
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
-                        script_paths=[
-                            remote_script1_path,
-                            remote_script2_path,
+                        initial_commands=[
+                            "date",
+                            (
+                                f"{apptainer_config['apptainer_bin']} build "
+                                f"{sif_path} {def_file_path}"
+                            ),
+                            "date",
                         ],
+                        script_paths=[remote_post_build_script_path],
                         final_commands=[],
                         slurm_config=apptainer_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,

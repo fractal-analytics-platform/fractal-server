@@ -142,6 +142,7 @@ def run_script_on_remote_slurm(
     job_name: str,
     script_paths: list[str],
     final_commands: list[str],
+    initial_commands: list[str] | None = None,
     slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -153,6 +154,10 @@ def run_script_on_remote_slurm(
 ) -> str:
     """
     Run a `pixi install` script as a SLURM job.
+
+    The job runs, in this order: the SLURM-config preamble,
+    `initial_commands`, `bash <script>` for each one of `script_paths`, and
+    `final_commands`.
 
     NOTE: This is called from within a try/except, thus we can use exceptions
     as a mechanism to propagate failure/errors.
@@ -188,6 +193,7 @@ def run_script_on_remote_slurm(
         "set -e",
     ]
     script_lines.extend(slurm_config_obj.preamble)
+    script_lines.extend(initial_commands or [])
     for script_path in script_paths:
         script_lines.append(f"bash {script_path}")
     script_lines.extend(final_commands)
