@@ -260,12 +260,12 @@ class SlurmRestClient:
             raise SlurmRestError(f"No `job_id` in submit response: {payload}")
         return int(job_id)
 
-    def get_job_states(self) -> dict[str, str]:
+    def list_jobs(self) -> list[dict[str, Any]]:
         """
-        Return `{job_id: state}` for all jobs visible to the user.
-
-        Note: Jobs older than `MinJobAge` (slurm config) are moved
-        to accounting and not listed -> treat missing jobs as completed.
+        Return the jobs visible to the user (`GET /jobs` wrapper), as `squeue`
+        sees them: pending and running jobs, and jobs that finished less than
+        `MinJobAge` seconds ago (slurm config); older finished jobs are only
+        in the accounting database, and are not listed.
         """
         payload = self._request("GET", "/jobs")
         # A missing job is considered completed upstream: a response without
@@ -276,8 +276,17 @@ class SlurmRestClient:
                 f"GET /jobs -> no `jobs` list in response (keys: "
                 f"{sorted(payload)})."
             )
+        return jobs
+
+    def get_job_states(self) -> dict[str, str]:
+        """
+        Return `{job_id: state}` for all jobs visible to the user.
+
+        NOTE: Jobs that finished more than `MinJobAge` seconds ago are not
+        listed (see `list_jobs`) -> treat missing jobs as completed.
+        """
         states = {}
-        for job in jobs:
+        for job in self.list_jobs():
             job_state = job.get("job_state")
             # `job_state` is a list (base state, then flags),
             # e.g. ["COMPLETED", "COMPLETING"]
