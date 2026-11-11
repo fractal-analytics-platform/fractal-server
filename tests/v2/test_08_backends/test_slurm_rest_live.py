@@ -8,6 +8,7 @@ Required environment variables:
     FRACTAL_TEST_SLURM_REST_WORKDIR: remote folder writable by the user.
 
 Optional environment variables:
+    FRACTAL_TEST_SLURM_REST_API_VERSION: API version (default: v0.0.44).
     FRACTAL_TEST_SLURM_REST_CA_BUNDLE: CA file (PEM) for TLS verification.
     FRACTAL_TEST_SLURM_REST_PARTITION: SLURM partition.
 """
@@ -51,6 +52,7 @@ def _client(token: str | None = None) -> SlurmRestClient:
         username=_env("USER"),
         get_token=lambda force_refresh=False: token,
         ca_bundle=_env("CA_BUNDLE"),
+        api_version=_env("API_VERSION", "v0.0.44"),
     )
 
 

@@ -253,7 +253,12 @@ def _slurm_rest_from_slurm_ssh(
         name="SLURM REST cluster A",
         type=ResourceType.SLURM_REST,
         jobs_runner_config=res_ssh.jobs_runner_config
-        | {"rest": {"url": "https://slurmrestd.example.org"}},
+        | {
+            "rest": {
+                "url": "https://slurmrestd.example.org",
+                "api_version": "v0.0.44",
+            }
+        },
     )
     prof = Profile(
         **prof_ssh.model_dump(exclude={"id", "resource_type", "name"}),

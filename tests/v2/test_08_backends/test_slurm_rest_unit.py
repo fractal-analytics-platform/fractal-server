@@ -23,6 +23,9 @@ from fractal_server.runner.executors.slurm_common.slurm_config import (
 )
 from fractal_server.runner.executors.slurm_rest import client as client_module
 from fractal_server.runner.executors.slurm_rest import runner as runner_module
+from fractal_server.runner.executors.slurm_rest.client import (
+    SUPPORTED_API_VERSIONS,
+)
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.client import squeue_state
@@ -263,13 +266,14 @@ def test_slurm_rest_resource_schema(slurm_ssh_resource_profile_fake_objects):
             jobs_runner_config=ssh_runner_config | dict(rest=rest),
         )
 
-    data = _data(url="https://example.org/")
+    data = _data(url="https://example.org/", api_version="v0.0.44")
     rest = ValidResourceSlurmRest(**data).jobs_runner_config.rest
-    assert rest == SlurmRestConfig(url="https://example.org")
+    assert rest == SlurmRestConfig(
+        url="https://example.org", api_version="v0.0.44"
+    )
     assert rest.ca_bundle is None
-    assert rest.api_version is None
     assert cast_serialize_resource(data)["jobs_runner_config"]["rest"] == dict(
-        url="https://example.org", ca_bundle=None, api_version=None
+        url="https://example.org", api_version="v0.0.44", ca_bundle=None
     )
     ValidProfileSlurmRest(
         **(profile.model_dump() | dict(resource_type=ResourceType.SLURM_REST))
@@ -277,23 +281,37 @@ def test_slurm_rest_resource_schema(slurm_ssh_resource_profile_fake_objects):
 
     for url in ("http://example.org", "example.org", ""):
         with pytest.raises(ValueError):
-            ValidResourceSlurmRest(**_data(url=url))
+            ValidResourceSlurmRest(**_data(url=url, api_version="v0.0.44"))
     with pytest.raises(ValueError, match="rest"):
         ValidResourceSlurmRest(
             **(data | dict(jobs_runner_config=ssh_runner_config))
         )
     with pytest.raises(ValueError):
-        ValidResourceSlurmRest(**_data(url="https://a.b", foo="bar"))
+        ValidResourceSlurmRest(
+            **_data(url="https://a.b", api_version="v0.0.44", foo="bar")
+        )
     with pytest.raises(ValueError):
         ValidResourceSlurmRest(
-            **_data(url="https://a.b", ca_bundle="relative.pem")
+            **_data(
+                url="https://a.b",
+                api_version="v0.0.44",
+                ca_bundle="relative.pem",
+            )
         )
-    with pytest.raises(ValueError, match="Unsupported"):
-        ValidResourceSlurmRest(**_data(url="https://a.b", api_version="v0.0.1"))
-    rest = ValidResourceSlurmRest(
-        **_data(url="https://a.b", api_version="v0.0.44")
-    ).jobs_runner_config.rest
-    assert rest.api_version == "v0.0.44"
+
+    # `api_version` is required, and must be supported
+    with pytest.raises(ValueError, match="api_version"):
+        ValidResourceSlurmRest(**_data(url="https://a.b"))
+    for api_version in ("v0.0.39", "v0.0.46", "0.0.44", ""):
+        with pytest.raises(ValueError):
+            ValidResourceSlurmRest(
+                **_data(url="https://a.b", api_version=api_version)
+            )
+    for api_version in SUPPORTED_API_VERSIONS:
+        rest = ValidResourceSlurmRest(
+            **_data(url="https://a.b", api_version=api_version)
+        ).jobs_runner_config.rest
+        assert rest.api_version == api_version
 
     # The `rest` key is only valid for `slurm_rest` resources
     with pytest.raises(ValueError):
@@ -345,6 +363,7 @@ def test_client(monkeypatch):
     client = SlurmRestClient(
         base_url="https://example.org/",
         username="user",
+        api_version="v0.0.44",
         get_token=get_token,
     )
 
@@ -467,6 +486,7 @@ def test_job_states_invalid_response(monkeypatch, body):
     client = SlurmRestClient(
         base_url="https://example.org",
         username="user",
+        api_version="v0.0.44",
         get_token=lambda force_refresh=False: "token",
     )
     with pytest.raises(SlurmRestError):
@@ -510,6 +530,7 @@ def test_client_url_scheme(base_url):
         SlurmRestClient(
             base_url=base_url,
             username="user",
+            api_version="v0.0.44",
             get_token=lambda force_refresh=False: "token",
         )
 
@@ -526,6 +547,7 @@ def test_client_api_version_and_ca_bundle(tmp_path):
         SlurmRestClient(
             base_url="https://example.org",
             username="user",
+            api_version="v0.0.44",
             get_token=lambda force_refresh=False: "token",
             ca_bundle=(tmp_path / "missing.pem").as_posix(),
         )
@@ -761,7 +783,7 @@ class _FakeTokenProvider:
         (None, SlurmTokenError("log in again"), "log in again"),
         (
             None,
-            SlurmRestError("GET /ping -> HTTP 502: []"),
+            SlurmRestError("GET /ping -> HTTP 502: []", status=502),
             "Cannot reach slurmrestd at https://example.org "
             "(GET /ping -> HTTP 502: [])",
         ),
@@ -789,7 +811,7 @@ def test_init_rest_client(
         lambda **kwargs: _FakePingClient(ping_error, **kwargs),
     )
     rest_config = SlurmRestConfig(
-        url="https://example.org", ca_bundle="/ca.pem"
+        url="https://example.org", api_version="v0.0.42", ca_bundle="/ca.pem"
     )
     kwargs = dict(resource_name="rest", user_id=1, profile_username="ihbfrac")
     runner = SlurmRestRunner.__new__(SlurmRestRunner)
@@ -801,15 +823,95 @@ def test_init_rest_client(
             username="alice",
             get_token=runner.rest_client.kwargs["get_token"],
             ca_bundle="/ca.pem",
-            api_version="v0.0.44",
+            api_version="v0.0.42",
         )
-        rest_config.api_version = "v0.0.44"
-        runner._init_rest_client(rest_config=rest_config, **kwargs)
-        assert runner.rest_client.kwargs["api_version"] == "v0.0.44"
         return
     with pytest.raises(JobExecutionError) as exc_info:
         runner._init_rest_client(rest_config=rest_config, **kwargs)
     assert expected_message in exc_info.value.assemble_error()
+
+
+@pytest.mark.parametrize(
+    "served,expected_hint",
+    [
+        (
+            ["v0.0.41", "v0.0.44"],
+            "Supported versions served by slurmrestd: ['v0.0.41', 'v0.0.44']. "
+            "Hint: update `jobs_runner_config.rest.api_version` of resource "
+            "'rest'.",
+        ),
+        ([], "Hint: check `jobs_runner_config.rest.url` of resource 'rest'"),
+    ],
+)
+def test_init_rest_client_api_version_not_served(
+    monkeypatch, served, expected_hint
+):
+    """
+    If the configured API version is not served (`/ping` answers 404), the
+    job error lists the supported versions that `slurmrestd` serves.
+    """
+
+    class _Client(_FakePingClient):
+        def served_api_versions(self) -> list[str]:
+            return served
+
+    monkeypatch.setattr(
+        runner_module, "get_token_provider", lambda **_: _FakeTokenProvider()
+    )
+    monkeypatch.setattr(
+        runner_module,
+        "SlurmRestClient",
+        lambda **kwargs: _Client(
+            SlurmRestError("GET /ping -> HTTP 404: []", status=404), **kwargs
+        ),
+    )
+    runner = SlurmRestRunner.__new__(SlurmRestRunner)
+    with pytest.raises(JobExecutionError) as exc_info:
+        runner._init_rest_client(
+            rest_config=SlurmRestConfig(
+                url="https://example.org", api_version="v0.0.45"
+            ),
+            resource_name="rest",
+            user_id=1,
+            profile_username="ihbfrac",
+        )
+    message = exc_info.value.assemble_error()
+    assert (
+        "slurmrestd at https://example.org does not serve API version "
+        "'v0.0.45' (GET /ping -> HTTP 404)."
+    ) in message
+    assert expected_hint in message
+
+
+def test_client_served_api_versions(monkeypatch):
+    """
+    `served_api_versions` pings every supported version with the same
+    connection settings, and keeps those that answer.
+    """
+    served = {"v0.0.41", "v0.0.44"}
+    urls = []
+
+    def fake_urlopen(request, timeout, context):
+        urls.append(request.full_url)
+        api_version = request.full_url.split("/")[-2]
+        if api_version not in served:
+            raise _http_error(404, {})
+        return _FakeResponse(b"{}")
+
+    monkeypatch.setattr(client_module.urllib.request, "urlopen", fake_urlopen)
+    client = SlurmRestClient(
+        base_url="https://example.org/",
+        username="user",
+        get_token=lambda force_refresh=False: "token",
+        api_version="v0.0.45",
+    )
+    with pytest.raises(SlurmRestError) as exc_info:
+        client.ping()
+    assert exc_info.value.status == 404
+    assert client.served_api_versions() == ["v0.0.41", "v0.0.44"]
+    assert urls[1:] == [
+        f"https://example.org/slurm/{v}/ping" for v in SUPPORTED_API_VERSIONS
+    ]
 
 
 @pytest.mark.parametrize(
@@ -834,6 +936,7 @@ def test_client_network_errors(monkeypatch, error):
     client = SlurmRestClient(
         base_url="https://example.org",
         username="user",
+        api_version="v0.0.44",
         get_token=lambda force_refresh=False: "token",
     )
     with pytest.raises(SlurmRestError) as exc_info:
