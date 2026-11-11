@@ -17,7 +17,6 @@ from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
 from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
-from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import fail_and_cleanup
@@ -29,11 +28,13 @@ from fractal_server.tasks.v2.utils_database import (
 )
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
+from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import get_timestamp
 
 from ._pixi_slurm_ssh import run_script_on_remote_slurm
 from ._utils import check_ssh_or_fail_and_cleanup
 
+DEF_TEMPLATE_FILENAME = "apptainer_template.def"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
 PIXI_LOCK_FILENAME = "pixi.lock"
@@ -42,7 +43,7 @@ PIXI_LOCK_FILENAME = "pixi.lock"
 def _parse_package_root(stdout: str) -> str:
     """
     Extract the package folder (a path inside the container) from the
-    stdout of `apptainer_3_post_build.sh`.
+    stdout of `apptainer_2_post_build.sh`.
     """
     PACKAGE_FOLDER_PREFIX = "Package folder:"
     matching_lines = [
@@ -176,6 +177,11 @@ def collect_ssh_apptainer(
                         ("__PIXI_VERSION__", task_group.pixi_version),
                         ("__PACKAGE_DIR__", task_group.path),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
+                        ("__TAR_GZ_FILENAME__", tar_gz_filename),
+                        (
+                            "__TAR_GZ_BASENAME__",
+                            tar_gz_filename.removesuffix(".tar.gz"),
+                        ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
                         ("__DEF_FILE__", def_file_path),
                         ("__SIF_PATH__", sif_path),
@@ -208,45 +214,49 @@ def collect_ssh_apptainer(
                         logger_name=LOGGER_NAME,
                     )
 
-                    # Write the definition file (over SSH)
-                    stdout = _customize_and_run_template(
-                        template_filename="apptainer_1_write_def.sh",
+                    # Customize the definition file and send it to remote
+                    def_file_path_local = Path(tmpdir, DEF_FILENAME).as_posix()
+                    customize_template(
+                        template_name=DEF_TEMPLATE_FILENAME,
+                        replacements=replacements,
+                        script_path=def_file_path_local,
+                    )
+                    fractal_ssh.send_file(
+                        local=def_file_path_local,
+                        remote=def_file_path,
+                    )
+                    logger.info(f"Definition file written to {def_file_path}")
+                    activity.log = get_current_log(log_file_path)
+                    activity = add_commit_refresh(obj=activity, db=db)
+
+                    # Prepare scripts 1 and 2
+                    remote_script1_path = _customize_and_send_template(
+                        template_filename="apptainer_1_build.sh",
                         replacements=replacements,
                         fractal_ssh=fractal_ssh,
                         **common_args,
                     )
-                    logger.debug(f"STDOUT: {stdout}")
-                    activity.log = get_current_log(log_file_path)
-                    activity = add_commit_refresh(obj=activity, db=db)
-
-                    # Prepare scripts 2 and 3
                     remote_script2_path = _customize_and_send_template(
-                        template_filename="apptainer_2_build.sh",
-                        replacements=replacements,
-                        fractal_ssh=fractal_ssh,
-                        **common_args,
-                    )
-                    remote_script3_path = _customize_and_send_template(
-                        template_filename="apptainer_3_post_build.sh",
+                        template_filename="apptainer_2_post_build.sh",
                         replacements=replacements,
                         fractal_ssh=fractal_ssh,
                         **common_args,
                     )
                     logger.debug(
-                        f"Build script written to {remote_script2_path=}."
+                        f"Build script written to {remote_script1_path=}."
                     )
                     logger.debug(
-                        f"Post-build script written to {remote_script3_path=}."
+                        f"Post-build script written to {remote_script2_path=}."
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    # Run scripts 2 and 3
+                    # Run scripts 1 and 2
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
                         script_paths=[
+                            remote_script1_path,
                             remote_script2_path,
-                            remote_script3_path,
                         ],
                         final_commands=[],
                         slurm_config=apptainer_config["SLURM_CONFIG"],

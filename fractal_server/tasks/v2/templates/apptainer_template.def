@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: ghcr.io/prefix-dev/pixi:__PIXI_VERSION__
+
+%files
+    __TAR_GZ_PATH__ /__TAR_GZ_FILENAME__
+
+%post
+    set -e
+    cd /
+    tar xz -f __TAR_GZ_FILENAME__ __TAR_GZ_BASENAME__
+    mv __TAR_GZ_BASENAME__ __SOURCE_DIR_NAME__
+    rm __TAR_GZ_FILENAME__
+    cd __SOURCE_DIR_NAME__
+    pixi install --frozen
+    pixi run --as-is python -c 'import __IMPORT_PACKAGE_NAME__'
+    pixi clean cache --yes || true
