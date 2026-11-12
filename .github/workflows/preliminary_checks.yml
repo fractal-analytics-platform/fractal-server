@@ -1,4 +1,4 @@
-name: precommit and ty
+name: Preliminary checks
 
 on:
   push:
@@ -35,8 +35,10 @@ jobs:
         continue-on-error: true
 
   # Fails when .github/workflows/actions.lock is out of sync with the
-  # workflows or a locked pin no longer verifies upstream.
-  lockfile:
+  # workflows or a locked pin no longer verifies upstream. If this fails,
+  #  you should run `gh actions-lock` (note that it would require the
+  # GitHub CLI and `gh extension install github/gh-actions-lock`).
+  gha-lockfile:
     runs-on: ubuntu-26.04
     env:
       GH_TOKEN: ${{ github.token }}
