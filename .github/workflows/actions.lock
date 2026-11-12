@@ -31,7 +31,7 @@ workflows:
     '.github/workflows/pip_install.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-python@v7.1.0'
-    '.github/workflows/precommit.yml':
+    '.github/workflows/preliminary_checks.yml':
         - 'actions/checkout@v7.0.1'
         - 'astral-sh/setup-uv@v10.3.3'
     '.github/workflows/publish_github.yml':
