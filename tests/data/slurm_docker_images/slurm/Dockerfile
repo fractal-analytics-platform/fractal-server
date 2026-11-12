@@ -28,6 +28,6 @@ RUN pwd
 RUN ls -lh
 RUN $PYTHON_PATH -m pip install -e .
 
-EXPOSE 22 6817 6818
+EXPOSE 22 6817 6818 6820
 
 CMD ["tail", "-f"]
