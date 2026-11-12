@@ -254,6 +254,7 @@ def collect_ssh_apptainer(
                             "date",
                         ],
                         script_paths=[remote_post_build_script_path],
+                        workdir_remote=script_dir_remote,
                         final_commands=[],
                         slurm_config=apptainer_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,

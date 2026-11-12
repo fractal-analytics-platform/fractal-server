@@ -107,6 +107,7 @@ def test_sbatch_failure(
         run_script_on_remote_slurm(
             job_name="test",
             script_paths=[script_path],
+            workdir_remote=tmp777_path.as_posix(),
             final_commands=[],
             slurm_config=SLURMConfig(
                 mem="1G", cpus=1, partition="main", time="10"
@@ -125,6 +126,7 @@ def test_sbatch_failure(
         run_script_on_remote_slurm(
             job_name="test",
             script_paths=[script_path],
+            workdir_remote=tmp777_path.as_posix(),
             final_commands=[],
             slurm_config=SLURMConfig(
                 mem_per_cpu="1G",

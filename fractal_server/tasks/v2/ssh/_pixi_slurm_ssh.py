@@ -30,22 +30,6 @@ STATES_FINISHED = {
 }
 
 
-def _get_workdir_remote(script_paths: list[str]) -> str:
-    """
-    Check that there is one and only one `workdir`, and return it.
-
-    Note: The `is_absolute` check is to filter out a `chmod` command.
-    """
-    workdirs = [
-        Path(script_path).parent.as_posix()
-        for script_path in script_paths
-        if Path(script_path).is_absolute()
-    ]
-    if not len(set(workdirs)) == 1:
-        raise ValueError(f"Invalid {script_paths=}.")
-    return workdirs[0]
-
-
 def _read_file_if_exists(
     *,
     fractal_ssh: FractalSSH,
@@ -141,6 +125,7 @@ def run_script_on_remote_slurm(
     *,
     job_name: str,
     script_paths: list[str],
+    workdir_remote: str,
     final_commands: list[str],
     initial_commands: list[str] | None = None,
     slurm_config: dict[str, Any],
@@ -168,7 +153,6 @@ def run_script_on_remote_slurm(
     logger = get_logger(logger_name=logger_name)
 
     # (1) Prepare remote submission script
-    workdir_remote = _get_workdir_remote(script_paths)
     submission_script_remote = os.path.join(
         workdir_remote, f"{prefix}-submit.sh"
     )
