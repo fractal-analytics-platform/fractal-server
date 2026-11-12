@@ -13,7 +13,8 @@ class Profile(SQLModel, table=True):
 
     resource_type: str
     """
-    Type of resource (either `local`, `slurm_sudo` or `slurm_ssh`).
+    Type of resource (either `local`, `slurm_sudo`, `slurm_ssh` or
+    `slurm_rest`).
     """
 
     name: str = Field(unique=True)

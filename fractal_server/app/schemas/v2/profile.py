@@ -80,6 +80,30 @@ class ValidProfileSlurmSSH(BaseModel):
     pixi_cache_dir: AbsolutePathStr | None = None
 
 
+class ValidProfileSlurmRest(ValidProfileSlurmSSH):
+    """
+    Valid SLURM/REST profile.
+
+    Same as a SLURM/SSH profile: `username` and `ssh_key_path` are used for
+    SSH, while SLURM jobs run as the user of the SLURM token (e.g. the SSO
+    user), which may differ from `username`.
+
+    Attributes:
+        name: Profile name.
+        resource_type: Type of the corresponding resource.
+        username:
+            SSH user (e.g. as in `ssh username@cluster mkdir /some/folder`).
+        ssh_key_path:
+            Local path of SSH private key for user `username`.
+        tasks_remote_dir:
+            Base folder for task environments on the remote SLURM cluster.
+        jobs_remote_dir:
+            Base folder for job directories on the remote SLURM cluster.
+        pixi_cache_dir:
+            Optional override for `PIXI_CACHE_DIR`.
+    """
+
+
 def get_discriminator_value(v: Any) -> str:
     # See https://github.com/fastapi/fastapi/discussions/12941
     if isinstance(v, dict):
@@ -90,7 +114,8 @@ def get_discriminator_value(v: Any) -> str:
 ProfileCreate = Annotated[
     Annotated[ValidProfileLocal, Tag(ResourceType.LOCAL)]
     | Annotated[ValidProfileSlurmSudo, Tag(ResourceType.SLURM_SUDO)]
-    | Annotated[ValidProfileSlurmSSH, Tag(ResourceType.SLURM_SSH)],
+    | Annotated[ValidProfileSlurmSSH, Tag(ResourceType.SLURM_SSH)]
+    | Annotated[ValidProfileSlurmRest, Tag(ResourceType.SLURM_REST)],
     Discriminator(get_discriminator_value),
 ]
 

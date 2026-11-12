@@ -26,11 +26,11 @@ from fractal_server.app.routes.auth import current_superuser_act
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local import deactivate_local
 from fractal_server.tasks.v2.local import deactivate_local_pixi
@@ -124,7 +124,7 @@ async def deactivate_task_group(
     resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         if task_group.origin == TaskGroupOriginEnum.PIXI:
             deactivate_function = deactivate_ssh_pixi
         else:
@@ -234,7 +234,7 @@ async def reactivate_task_group(
     resource, profile = await validate_user_profile(user=user, db=db)
 
     # Submit background task
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         if task_group.origin == TaskGroupOriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
         else:
@@ -297,7 +297,7 @@ async def delete_task_group(
     task_owner = await db.get_one(UserOAuth, task_group.user_id)
     resource, profile = await validate_user_profile(user=task_owner, db=db)
 
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         delete_function = delete_ssh
     else:
         delete_function = delete_local

@@ -22,7 +22,7 @@ class Resource(SQLModel, table=True):
 
     type: str
     """
-    One of `local`, `slurm_sudo` or `slurm_ssh` - matching with
+    One of `local`, `slurm_sudo`, `slurm_ssh` or `slurm_rest` - matching with
     `settings.FRACTAL_RUNNER_BACKEND`.
     """
 
@@ -41,7 +41,7 @@ class Resource(SQLModel, table=True):
 
     host: str | None = None
     """
-    Address for ssh connections, when `type="slurm_ssh"`.
+    Address for ssh connections, when `type` is `slurm_ssh` or `slurm_rest`.
     """
 
     prevent_new_submissions: bool = Field(
@@ -65,8 +65,8 @@ class Resource(SQLModel, table=True):
         sa_column=Column(JSONB, nullable=False, server_default="{}")
     )
     """
-    Runner configuration, matching one of `JobRunnerConfigLocal` or
-    `JobRunnerConfigSLURM` schemas.
+    Runner configuration, matching one of `JobRunnerConfigLocal`,
+    `JobRunnerConfigSLURM` or `JobRunnerConfigSlurmRest` schemas.
     """
 
     jobs_slurm_python_worker: str | None = None
@@ -134,9 +134,10 @@ class Resource(SQLModel, table=True):
 
     # Check constraints
     __table_args__ = (
-        # `type` column must be one of "local", "slurm_sudo" or "slurm_ssh"
+        # `type` column must be one of "local", "slurm_sudo", "slurm_ssh" or
+        # "slurm_rest"
         CheckConstraint(
-            "type IN ('local', 'slurm_sudo', 'slurm_ssh')",
+            "type IN ('local', 'slurm_sudo', 'slurm_ssh', 'slurm_rest')",
             name="correct_type",
         ),
         # If `type` is not "local", `jobs_slurm_python_worker` must be set
