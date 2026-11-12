@@ -126,7 +126,6 @@ def collect_ssh_apptainer(
                     script_dir_remote = Path(
                         task_group.path, SCRIPTS_SUBFOLDER
                     ).as_posix()
-                    fractal_ssh.mkdir(folder=task_group.path, parents=True)
                     fractal_ssh.mkdir(folder=script_dir_remote, parents=True)
                     fractal_ssh.write_remote_file(
                         path=f"{task_group.path}/{TASK_GROUP_ID_FILENAME}",
