@@ -2,8 +2,6 @@
 
 # Unreleased
 
-* Dependencies:
-    * Bump `zensical` to 0.1.1 (\#3499).
 * Testing:
     * Use lockfile for GitHub actions (\#3499).
 
