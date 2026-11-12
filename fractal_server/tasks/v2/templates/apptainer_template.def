@@ -13,4 +13,6 @@ From: ghcr.io/prefix-dev/pixi:__PIXI_VERSION__
     cd __SOURCE_DIR_NAME__
     pixi install --frozen
     pixi run --as-is python -c 'import __IMPORT_PACKAGE_NAME__'
+    # Remove the download cache so the SIF is smaller.
+    # `|| true` means a failure here doesn't fail the build.
     pixi clean cache --yes || true
