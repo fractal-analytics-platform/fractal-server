@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Bump `zensical` to 0.1.1 (\#3450).
+
 # 2.27.3
 
 * App lifetime:
