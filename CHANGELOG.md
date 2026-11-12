@@ -4,6 +4,8 @@
 
 * Testing:
     * Use lockfile for GitHub actions (\#3499).
+* Dependencies:
+    * Bump `zensical` to 0.1.1 (\#3450).
 
 # 2.27.3
 
