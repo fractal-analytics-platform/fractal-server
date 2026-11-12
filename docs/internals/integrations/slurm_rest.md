@@ -73,10 +73,13 @@ E.g. with a shared SSH service account in the profiles:
 
 ## Testing
 
-- `tests/v2/test_08_backends/test_slurm_rest_unit.py`: unit tests
+- `tests/v2/test_08_backends/test_slurm_rest_unit.py`: unit tests (client, job description and script, runner, with fake HTTP responses), including cases that a real `slurmrestd` cannot easily produce (malformed responses, network errors, polling and cancellation while `slurmrestd` cannot be reached).
 - `tests/v2/test_08_backends/test_slurm_rest_token.py`: token providers (SSO refresh with a fake identity provider), needs the test database.
-- `tests/v2/test_08_backends/test_slurm_rest_runner.py`: needs the SLURM docker containers, which have no `slurmrestd`. The real `SlurmRestRunner` runs with a fake REST client (`tests/v2/_aux_slurm_rest.py`) that submits the generated script with `sbatch` over SSH (and polls/cancels with `squeue`/`scancel`). This checks what the runner builds (script with embedded inputs, JSON job description, SLURM user in the requests, `USER`/`HOME`) and the submit/poll/fetch cycle on a real cluster.
-- `tests/v2/test_07_full_workflow/test_full_workflow_slurm_rest.py`: a full job, from the API to `SlurmRestRunner`, with the same fake REST client; needs the SLURM docker containers.
-- `tests/v2/test_08_backends/test_slurm_rest_live.py`: opt-in tests against a real `slurmrestd` (JSON job description, job states, cancellation), skipped unless the `FRACTAL_TEST_SLURM_REST_*` environment variables are set (see the module docstring). To discuss if we ever want this.
+- `tests/v2/test_08_backends/test_slurm_rest_job_queue_table.py` and `tests/v2/test_03_api/test_api_squeue.py`: queue table of `GET /api/v2/job/squeue/`, with a fake client.
+- Docker tests, against the real `slurmrestd` of the SLURM container (Slurm 23.11, API `v0.0.40`, JWT authentication), served over HTTPS by a TLS proxy on `https://localhost:6820`, with a test CA copied from the container (fixtures in `tests/fixtures_slurm_rest.py`). Tokens come from `scontrol token`, through `FRACTAL_SLURM_REST_TOKEN`:
+    - `tests/v2/test_08_backends/test_slurm_rest_runner.py`: submission as the SSH user and as another SLURM user (job environment, files written by the job, outputs fetched by the SSH user), multisubmit, cancellation on shutdown, API version not served, invalid token;
+    - `tests/v2/test_07_full_workflow/test_full_workflow_slurm_rest.py`: a full job, from the API to `SlurmRestRunner`.
+
+CI covers API `v0.0.40` only (the version served by the container); the other supported versions were checked against their OpenAPI specifications and on a cluster (see **API versions**).
 
 Inherited behaviour (task failures, compound tasks, fetching outputs, ...) is covered by the SLURM/SSH and SLURM/sudo runner tests. What `SlurmRestRunner` changes, including polling and cancellation during a shutdown request while `slurmrestd` cannot be reached, is covered by the tests above.

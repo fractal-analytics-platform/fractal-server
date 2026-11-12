@@ -16,6 +16,8 @@ from fractal_server.app.schemas.v2 import ValidResourceSlurmRest
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSSH
 from fractal_server.app.schemas.v2 import ValidResourceSlurmSudo
 from tests.fixtures_slurm import SLURM_USER
+from tests.fixtures_slurm_rest import SLURM_REST_API_VERSION
+from tests.fixtures_slurm_rest import SLURM_REST_URL
 
 SLURM_CONFIG = {
     "default_slurm_config": {
@@ -242,9 +244,12 @@ def slurm_ssh_resource_profile_fake_objects(
 def _slurm_rest_from_slurm_ssh(
     res_ssh: Resource,
     prof_ssh: Profile,
+    *,
+    rest: dict[str, str],
 ) -> tuple[Resource, Profile]:
     """
-    `slurm_rest` resource/profile with the same values as `slurm_ssh` ones.
+    `slurm_rest` resource/profile with the same values as `slurm_ssh` ones,
+    and `rest` as `slurmrestd` configuration.
     """
     res = Resource(
         **res_ssh.model_dump(
@@ -252,13 +257,7 @@ def _slurm_rest_from_slurm_ssh(
         ),
         name="SLURM REST cluster A",
         type=ResourceType.SLURM_REST,
-        jobs_runner_config=res_ssh.jobs_runner_config
-        | {
-            "rest": {
-                "url": "https://slurmrestd.example.org",
-                "api_version": "v0.0.44",
-            }
-        },
+        jobs_runner_config=res_ssh.jobs_runner_config | {"rest": rest},
     )
     prof = Profile(
         **prof_ssh.model_dump(exclude={"id", "resource_type", "name"}),
@@ -273,11 +272,21 @@ def _slurm_rest_from_slurm_ssh(
 @pytest.fixture(scope="function")
 def slurm_rest_resource_profile_objects(
     slurm_ssh_resource_profile_objects: tuple[Resource, Profile],
+    slurm_rest_ca_bundle: str,
+    slurm_rest_alive: None,
 ) -> tuple[Resource, Profile]:
     """
-    This fixture does not act on the db. SSH goes to the SLURM container.
+    This fixture does not act on the db. SSH and `slurmrestd` requests go to
+    the SLURM container.
     """
-    return _slurm_rest_from_slurm_ssh(*slurm_ssh_resource_profile_objects)
+    return _slurm_rest_from_slurm_ssh(
+        *slurm_ssh_resource_profile_objects,
+        rest={
+            "url": SLURM_REST_URL,
+            "api_version": SLURM_REST_API_VERSION,
+            "ca_bundle": slurm_rest_ca_bundle,
+        },
+    )
 
 
 @pytest.fixture(scope="function")
@@ -287,7 +296,13 @@ def slurm_rest_resource_profile_fake_objects(
     """
     This fixture does not require an active SSH service on a container.
     """
-    return _slurm_rest_from_slurm_ssh(*slurm_ssh_resource_profile_fake_objects)
+    return _slurm_rest_from_slurm_ssh(
+        *slurm_ssh_resource_profile_fake_objects,
+        rest={
+            "url": "https://slurmrestd.example.org",
+            "api_version": "v0.0.44",
+        },
+    )
 
 
 @pytest.fixture(scope="function")
