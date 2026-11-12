@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Testing:
+    * Use lockfile for GitHub actions (\#3499).
+
 # 2.27.3
 
 * App lifetime:
