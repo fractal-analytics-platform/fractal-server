@@ -245,17 +245,16 @@ def collect_ssh_apptainer(
                     # Build the image and run the post-build script
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
-                        initial_commands=[
+                        commands=[
                             "date",
                             (
                                 f"{apptainer_config['apptainer_bin']} build "
                                 f"{sif_path} {def_file_path}"
                             ),
                             "date",
+                            f"bash {remote_post_build_script_path}",
                         ],
-                        script_paths=[remote_post_build_script_path],
                         workdir_remote=script_dir_remote,
-                        final_commands=[],
                         slurm_config=apptainer_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,

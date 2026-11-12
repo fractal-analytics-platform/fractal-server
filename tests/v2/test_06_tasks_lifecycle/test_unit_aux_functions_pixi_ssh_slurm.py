@@ -106,9 +106,8 @@ def test_sbatch_failure(
     with pytest.raises(ValueError, match="sbatch"):
         run_script_on_remote_slurm(
             job_name="test",
-            script_paths=[script_path],
+            commands=[f"bash {script_path}"],
             workdir_remote=tmp777_path.as_posix(),
-            final_commands=[],
             slurm_config=SLURMConfig(
                 mem="1G", cpus=1, partition="main", time="10"
             ).model_dump(),
@@ -125,9 +124,8 @@ def test_sbatch_failure(
     with pytest.raises(ValueError, match="sbatch"):
         run_script_on_remote_slurm(
             job_name="test",
-            script_paths=[script_path],
+            commands=[f"bash {script_path}"],
             workdir_remote=tmp777_path.as_posix(),
-            final_commands=[],
             slurm_config=SLURMConfig(
                 mem_per_cpu="1G",
                 cpus=1,

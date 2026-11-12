@@ -239,12 +239,12 @@ def reactivate_ssh_pixi(
                     # Run scripts 2 and 3
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
-                        script_paths=[
-                            remote_script2_path,
-                            remote_script3_path,
+                        commands=[
+                            f"bash {remote_script2_path}",
+                            f"bash {remote_script3_path}",
+                            f"chmod -R 755 {source_dir}",
                         ],
                         workdir_remote=script_dir_remote,
-                        final_commands=[f"chmod -R 755 {source_dir}"],
                         slurm_config=resource.tasks_pixi_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
