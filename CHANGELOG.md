@@ -5,9 +5,9 @@
 * Testing:
     * Use lockfile for GitHub actions (\#3499).
 * Dependencies:
-    * Bump `zensical` to 0.1.1 (\#3450).
-    * Require `gunicorn >= 27.0.1` (\#3451).
-    * Bump lockfile (\#3451).
+    * Bump `zensical` to 0.1.1 (\#3500).
+    * Require `gunicorn >= 27.0.1` (\#3501).
+    * Bump lockfile (\#3501).
 
 # 2.27.3
 
