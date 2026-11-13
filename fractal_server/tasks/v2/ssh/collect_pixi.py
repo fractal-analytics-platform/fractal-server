@@ -16,6 +16,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_run_template
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
@@ -262,11 +263,12 @@ def collect_ssh_pixi(
                     # Run scripts 2 and 3
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
-                        script_paths=[
-                            remote_script2_path,
-                            remote_script3_path,
+                        commands=[
+                            f"bash {remote_script2_path}",
+                            f"bash {remote_script3_path}",
+                            f"chmod -R 755 {source_dir}",
                         ],
-                        final_commands=[f"chmod -R 755 {source_dir}"],
+                        workdir_remote=script_dir_remote,
                         slurm_config=resource.tasks_pixi_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
@@ -288,7 +290,7 @@ def collect_ssh_pixi(
 
                     # Read and validate remote manifest file
                     manifest_path_remote = (
-                        f"{package_root_remote}/__FRACTAL_MANIFEST__.json"
+                        f"{package_root_remote}/{MANIFEST_FILENAME}"
                     )
                     pkg_manifest_dict = fractal_ssh.read_remote_json_file(
                         manifest_path_remote
@@ -302,7 +304,7 @@ def collect_ssh_pixi(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
-                        project_python_wrapper=Path(project_python_wrapper),
+                        python_command=project_python_wrapper,
                     )
                     logger.info("_prepare_tasks_metadata - end")
 

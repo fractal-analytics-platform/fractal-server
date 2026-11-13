@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from fractal_server.app.models.v2 import TaskGroupActivityV2
 from fractal_server.logger import get_logger
 from fractal_server.ssh._fabric import FractalSSH
-from fractal_server.tasks.config import PixiSLURMConfig
+from fractal_server.tasks.config._slurm import SLURMConfig
 from fractal_server.tasks.v2.utils_background import add_commit_refresh
 from fractal_server.tasks.v2.utils_background import get_current_log
 
@@ -28,22 +28,6 @@ STATES_FINISHED = {
     "TIMEOUT",
     FRACTAL_SQUEUE_ERROR_STATE,
 }
-
-
-def _get_workdir_remote(script_paths: list[str]) -> str:
-    """
-    Check that there is one and only one `workdir`, and return it.
-
-    Note: The `is_absolute` check is to filter out a `chmod` command.
-    """
-    workdirs = [
-        Path(script_path).parent.as_posix()
-        for script_path in script_paths
-        if Path(script_path).is_absolute()
-    ]
-    if not len(set(workdirs)) == 1:
-        raise ValueError(f"Invalid {script_paths=}.")
-    return workdirs[0]
 
 
 def _read_file_if_exists(
@@ -140,8 +124,8 @@ def _verify_success_file_exists(
 def run_script_on_remote_slurm(
     *,
     job_name: str,
-    script_paths: list[str],
-    final_commands: list[str],
+    commands: list[str],
+    workdir_remote: str,
     slurm_config: dict[str, Any],
     fractal_ssh: FractalSSH,
     logger_name: str,
@@ -152,18 +136,19 @@ def run_script_on_remote_slurm(
     poll_interval: int,
 ) -> str:
     """
-    Run a `pixi install` script as a SLURM job.
+    Run a list of commands as a SLURM job.
+
+    The job runs the SLURM-config preamble, followed by `commands`.
 
     NOTE: This is called from within a try/except, thus we can use exceptions
     as a mechanism to propagate failure/errors.
     """
 
-    slurm_config_obj = PixiSLURMConfig(**slurm_config)
+    slurm_config_obj = SLURMConfig(**slurm_config)
 
     logger = get_logger(logger_name=logger_name)
 
     # (1) Prepare remote submission script
-    workdir_remote = _get_workdir_remote(script_paths)
     submission_script_remote = os.path.join(
         workdir_remote, f"{prefix}-submit.sh"
     )
@@ -188,9 +173,7 @@ def run_script_on_remote_slurm(
         "set -e",
     ]
     script_lines.extend(slurm_config_obj.preamble)
-    for script_path in script_paths:
-        script_lines.append(f"bash {script_path}")
-    script_lines.extend(final_commands)
+    script_lines.extend(commands)
     script_lines.append(f"touch {success_file_remote}")
 
     script_contents = "\n".join(script_lines)

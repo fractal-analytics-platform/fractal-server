@@ -1,0 +1,172 @@
+import os
+from pathlib import Path
+
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Response
+from fastapi import UploadFile
+from fastapi import status
+
+from fractal_server import __VERSION__
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.v2 import TaskGroupActivityV2
+from fractal_server.app.models.v2.task_group import TaskGroupV2
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _get_valid_user_group_id,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_group_constraint,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    _verify_non_duplication_user_constraint,
+)
+from fractal_server.app.routes.api.v2._aux_functions_tasks import (
+    integrity_error_to_422,
+)
+from fractal_server.app.routes.api.v2.task_collection_pixi import (
+    validate_pkgname_and_version,
+)
+from fractal_server.app.routes.auth import get_api_user
+from fractal_server.app.routes.aux.validate_user_profile import (
+    validate_user_profile,
+)
+from fractal_server.app.schemas.v2 import TaskGroupActivityRead
+from fractal_server.app.schemas.v2.resource import ResourceType
+from fractal_server.app.schemas.v2.task_collection import FractalUploadedFile
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
+from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
+from fractal_server.app.schemas.v2.task_group import TaskGroupOriginEnum
+from fractal_server.logger import set_logger
+from fractal_server.tasks.v2.local.collect_apptainer import (
+    collect_local_apptainer,
+)
+from fractal_server.tasks.v2.ssh.collect_apptainer import collect_ssh_apptainer
+from fractal_server.urls import verify_url_is_relative_to
+
+router = APIRouter()
+
+logger = set_logger(__name__)
+
+
+@router.post(
+    "/collect/apptainer/",
+    status_code=202,
+    response_model=TaskGroupActivityRead,
+)
+async def collect_task_apptainer(
+    response: Response,
+    background_tasks: BackgroundTasks,
+    file: UploadFile,
+    private: bool = False,
+    user_group_id: int | None = None,
+    user: UserOAuth = Depends(get_api_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> TaskGroupActivityV2:
+    # Get validated resource and profile
+    resource, profile = await validate_user_profile(user=user, db=db)
+    resource_id = resource.id
+
+    if not resource.tasks_apptainer_config:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Apptainer task collection is not available.",
+        )
+
+    pkg_name, version = validate_pkgname_and_version(file.filename)
+    tar_gz_content = await file.read()
+    tar_gz_file = FractalUploadedFile(
+        filename=file.filename,
+        contents=tar_gz_content,
+    )
+
+    user_group_id = await _get_valid_user_group_id(
+        user_group_id=user_group_id,
+        private=private,
+        user_id=user.id,
+        db=db,
+    )
+
+    if resource.type == ResourceType.SLURM_SSH:
+        base_tasks_path = profile.tasks_remote_dir
+    else:
+        base_tasks_path = resource.tasks_local_dir
+    task_group_path = (
+        Path(base_tasks_path) / str(user.id) / pkg_name / version
+    ).as_posix()
+    verify_url_is_relative_to(base=base_tasks_path, url=task_group_path)
+
+    task_group = TaskGroupV2(
+        user_id=user.id,
+        user_group_id=user_group_id,
+        resource_id=resource_id,
+        origin=TaskGroupOriginEnum.APPTAINER,
+        pixi_version=resource.tasks_apptainer_config["pixi_version"],
+        pkg_name=pkg_name,
+        version=version,
+        path=task_group_path,
+    )
+
+    await _verify_non_duplication_user_constraint(
+        user_id=user.id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        user_resource_id=resource_id,
+        db=db,
+    )
+    await _verify_non_duplication_group_constraint(
+        user_group_id=task_group.user_group_id,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        db=db,
+    )
+
+    if resource.type != ResourceType.SLURM_SSH:
+        if Path(task_group.path).exists():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"{task_group.path} already exists.",
+            )
+
+    db.add(task_group)
+    async with integrity_error_to_422(db):
+        await db.commit()
+    await db.refresh(task_group)
+    db.expunge(task_group)
+
+    task_group_activity = TaskGroupActivityV2(
+        user_id=task_group.user_id,
+        taskgroupv2_id=task_group.id,
+        status=TaskGroupActivityStatus.PENDING,
+        action=TaskGroupActivityAction.COLLECT,
+        pkg_name=task_group.pkg_name,
+        version=task_group.version,
+        fractal_server_version=__VERSION__,
+    )
+    db.add(task_group_activity)
+    await db.commit()
+    await db.refresh(task_group_activity)
+
+    if resource.type == ResourceType.SLURM_SSH:
+        collect_function = collect_ssh_apptainer
+    else:
+        collect_function = collect_local_apptainer
+
+    background_tasks.add_task(
+        collect_function,
+        task_group_id=task_group.id,
+        task_group_activity_id=task_group_activity.id,
+        tar_gz_file=tar_gz_file,
+        resource=resource,
+        profile=profile,
+    )
+    logger.info(
+        "Task-collection endpoint: start background collection "
+        "and return task_group_activity. "
+        f"Current pid is {os.getpid()}. "
+    )
+    response.status_code = status.HTTP_202_ACCEPTED
+    return task_group_activity
