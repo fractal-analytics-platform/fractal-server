@@ -1,4 +1,4 @@
-name: precommit and ty
+name: Preliminary checks
 
 on:
   push:
@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "latest-known"
           enable-cache: true
@@ -33,3 +33,19 @@ jobs:
       - run: uv add "ty==0.0.84"
       - run: uv run ty check ./fractal_server
         continue-on-error: true
+
+  # Fails when .github/workflows/actions.lock is out of sync with the
+  # workflows or a locked pin no longer verifies upstream. If this fails,
+  #  you should run `gh actions-lock` (note that it would require the
+  # GitHub CLI and `gh extension install github/gh-actions-lock`).
+  gha-lockfile:
+    runs-on: ubuntu-26.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: gh extension install github/gh-actions-lock --pin v0.4.1
+      - run: gh actions-lock --verify
