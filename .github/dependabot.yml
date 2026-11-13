@@ -7,6 +7,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    allow:
+      # Update transitive dependencies too.
+      - dependency-type: "all"
     cooldown:
       default-days: 7
     exclude-paths:
@@ -24,6 +27,9 @@ updates:
     directory: /.github/workflows
     schedule:
       interval: "quarterly"
+    allow:
+      # Update transitive dependencies too.
+      - dependency-type: "all"
     cooldown:
       default-days: 7
     groups:
