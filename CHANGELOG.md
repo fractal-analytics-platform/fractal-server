@@ -1,11 +1,13 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.27.4
 
 * Testing:
     * Use lockfile for GitHub actions (\#3499).
 * Dependencies:
     * Bump `zensical` to 0.1.1 (\#3450).
+    * Require `gunicorn >= 27.0.1` (\#3451).
+    * Bump lockfile (\#3451).
 
 # 2.27.3
 
