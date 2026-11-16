@@ -169,7 +169,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ci/cache/docker/ubuntu24-slurm-multipy
-          key: cache-docker-ubuntu24-slurm-multipy
+          key: cache-docker-ubuntu24-slurm-multipy-rest
 
       - name: Use Ubuntu24 SLURM Docker Image Cache if cache hit
         if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit == 'true'
@@ -226,7 +226,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ci/cache/docker/ubuntu24-slurm-multipy
-          key: cache-docker-ubuntu24-slurm-multipy
+          key: cache-docker-ubuntu24-slurm-multipy-rest
 
       - name: Use Ubuntu24 SLURM Docker Image Cache if cache hit
         if: steps.cache-docker-ubuntu24-slurm-multipy.outputs.cache-hit == 'true'

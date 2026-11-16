@@ -1,8 +1,9 @@
 """
 Run `SlurmRestRunner` against the real `slurmrestd` of the SLURM docker
 container (Slurm 23.11, API `v0.0.40`, JWT auth, behind a TLS proxy, see
-`tests/fixtures_slurm_rest.py`). Tokens come from `scontrol token`, through
-the `FRACTAL_SLURM_REST_TOKEN` development setting.
+`tests/fixtures_slurm_rest.py`). Tokens are signed with the test key of
+the container, and set through the `FRACTAL_SLURM_REST_TOKEN` development
+setting.
 
 Inherited behaviour (task failures, compound tasks, fetching and
 postprocessing outputs, ...) is the same as for `SlurmSSHRunner`, and is
@@ -92,7 +93,7 @@ def reset_permissions(run_in_container, tmp777_path):
 
 @pytest.mark.ssh
 @pytest.mark.container
-@pytest.mark.parametrize("slurm_user", ["test01", "fractal"])
+@pytest.mark.parametrize("slurm_user", ["test01", "test02"])
 async def test_rest_submit(
     slurm_user,
     db,
@@ -108,8 +109,8 @@ async def test_rest_submit(
 ):
     """
     Submit a job through `slurmrestd`, as the SSH user (`test01`) or as
-    another SLURM user (`fractal`, as with SSO tokens and a shared SSH
-    account).
+    another SLURM user (`test02`, in group `test01`, as with SSO tokens and a
+    shared SSH account).
     """
     res, prof = slurm_rest_resource_profile_db[:]
     assert prof.username == "test01"
