@@ -14,6 +14,14 @@ services:
     hostname: slurm
     volumes:
       - /private:/private:rw
+      # Required by apptainer (rootless builds, user namespaces)
+      - /dev/null:/etc/subuid:ro
+      - /dev/null:/etc/subgid:ro
+    security_opt:
+      - seccomp=unconfined
+      - apparmor=unconfined
+    devices:
+      - /dev/fuse
     environment:
       - SLURM_CPUS_ON_NODE=1
     ports:
