@@ -199,16 +199,8 @@ def collect_ssh_apptainer(
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
-                    common_args = dict(
-                        script_dir_local=(
-                            Path(tmpdir, SCRIPTS_SUBFOLDER)
-                        ).as_posix(),
-                        script_dir_remote=script_dir_remote,
-                        prefix=(
-                            f"{int(time.time())}_"
-                            f"{TaskGroupActivityAction.COLLECT}"
-                        ),
-                        logger_name=LOGGER_NAME,
+                    prefix = (
+                        f"{int(time.time())}_{TaskGroupActivityAction.COLLECT}"
                     )
 
                     # Customize the definition file and send it to remote
@@ -232,7 +224,12 @@ def collect_ssh_apptainer(
                             template_filename="apptainer_post_build.sh",
                             replacements=replacements,
                             fractal_ssh=fractal_ssh,
-                            **common_args,
+                            script_dir_local=(
+                                Path(tmpdir, SCRIPTS_SUBFOLDER)
+                            ).as_posix(),
+                            script_dir_remote=script_dir_remote,
+                            prefix=prefix,
+                            logger_name=LOGGER_NAME,
                         )
                     )
                     logger.debug(
@@ -258,7 +255,7 @@ def collect_ssh_apptainer(
                         slurm_config=apptainer_config["SLURM_CONFIG"],
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
-                        prefix=common_args["prefix"],
+                        prefix=prefix,
                         db=db,
                         activity=activity,
                         log_file_path=log_file_path,
