@@ -235,9 +235,14 @@ async def test_rest_submit_shutdown(
         tmp777_path, fractal_ssh, res, prof, fractal_job_id_mock
     ) as runner:
 
-        def shutdown_when_running():
+        def shutdown_when_running(fut_submit):
             deadline = time.monotonic() + MAX_WAIT
             while time.monotonic() < deadline:
+                if fut_submit.done():
+                    raise RuntimeError(
+                        "`submit` returned before the SLURM job was RUNNING: "
+                        f"{fut_submit.result()}"
+                    )
                 if runner.jobs:
                     job_id = list(runner.jobs)[0]
                     state = run_in_container(
@@ -255,14 +260,16 @@ async def test_rest_submit_shutdown(
             fut_submit = executor.submit(
                 _submit,
                 runner,
-                base_command="sleep 1000",
+                # Not `sleep 1000`: the runner appends `--args-json` and
+                # `--out-json` options to the command
+                base_command="bash -c 'sleep 1000'",
                 task_files=get_dummy_task_files(
                     tmp777_path, component="0", is_slurm=True
                 ),
                 history_mock=history_mock_for_submit,
                 user_id=valid_user_id,
             )
-            fut_shutdown = executor.submit(shutdown_when_running)
+            fut_shutdown = executor.submit(shutdown_when_running, fut_submit)
             fut_shutdown.result()
             result, exception = fut_submit.result()
 
