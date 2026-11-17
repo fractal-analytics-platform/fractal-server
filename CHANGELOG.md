@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Testing:
+    * Remove obsolete docker-compose files (\#3505).
 * Dependencies:
     * Bump `fastapi` to `0.163` (\#3502).
     * Bump lockfile (\#3502).
