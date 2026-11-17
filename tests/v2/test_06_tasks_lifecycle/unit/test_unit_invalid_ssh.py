@@ -11,6 +11,7 @@ from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
+from fractal_server.tasks.v2.ssh.collect_apptainer import collect_ssh_apptainer
 
 
 async def test_unit_invalid_ssh(
@@ -73,6 +74,7 @@ async def test_unit_invalid_ssh(
         (deactivate_ssh_pixi, {}),
         (reactivate_ssh, {}),
         (reactivate_ssh_pixi, {}),
+        (collect_ssh_apptainer, dict(tar_gz_file=None)),
     ]:
         caplog.clear()
         function(

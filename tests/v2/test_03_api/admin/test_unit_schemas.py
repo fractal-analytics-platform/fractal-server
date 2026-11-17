@@ -33,6 +33,18 @@ def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
         ValidResourceBase(**orm_model_to_dict(res))
 
 
+def test_apptainer_validator(slurm_ssh_resource_profile_fake_objects):
+    res, prof = slurm_ssh_resource_profile_fake_objects
+    res.tasks_apptainer_config = dict(
+        pixi_version="0.84.1",
+        apptainer_bin="/usr/bin/apptainer",
+    )
+    with pytest.raises(
+        ValueError, match="`tasks_apptainer_config` must include `SLURM_CONFIG`"
+    ):
+        ValidResourceBase(**orm_model_to_dict(res))
+
+
 def test_TaskGroupOverridesPip():
     obj = TaskGroupOverridesPip()
     assert obj.python_version is None

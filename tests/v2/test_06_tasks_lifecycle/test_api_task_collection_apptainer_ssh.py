@@ -86,7 +86,26 @@ async def test_task_collection_apptainer_ssh(
         assert "already exists" in activity["log"]
         fractal_ssh.remove_folder(folder=task_group_path)
 
-        # 2 / Successful collection
+        # 2 / Failed collection - error during installation, and also
+        # during removal of the remote folder. A regular file in place of the
+        # parent folder makes both `mkdir -p` and `rm -r` fail.
+        parent_path = Path(task_group_path).parent.as_posix()
+        fractal_ssh.remove_folder(folder=parent_path)
+        fractal_ssh.write_remote_file(path=parent_path, content="")
+        res = await client.post(
+            "api/v2/task/collect/apptainer/",
+            data={},
+            files=files,
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["status"] == "failed"
+        assert "Removing folder failed" in activity["log"]
+        fractal_ssh.run_command(cmd=f"rm {parent_path}")
+
+        # 3 / Successful collection
         res = await client.post(
             "api/v2/task/collect/apptainer/",
             data={},
@@ -119,7 +138,7 @@ async def test_task_collection_apptainer_ssh(
         assert f" {sif_path} pixi run --as-is " in command
         assert f" /{SOURCE_DIR_NAME}/" in command
 
-        # 3 / Failed collection - due to non-duplication constraint
+        # 4 / Failed collection - due to non-duplication constraint
         res = await client.post(
             "api/v2/task/collect/apptainer/",
             data={},
@@ -127,3 +146,28 @@ async def test_task_collection_apptainer_ssh(
         )
         assert res.status_code == 422
         assert "already owns a task group" in str(res.json()["detail"])
+
+        # 5 / Failed collection - corrupted archive makes the image build
+        # fail, after the remote folder was created
+        files_corrupted = {
+            "file": (
+                "mock_pixi_tasks-9.9.9.tar.gz",
+                b"not a tar.gz archive",
+                "application/gzip",
+            )
+        }
+        res = await client.post(
+            "api/v2/task/collect/apptainer/",
+            data={},
+            files=files_corrupted,
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "failed"
+        assert "Deleted remoted folder" in activity["log"]
+        assert not fractal_ssh.remote_exists(
+            Path(task_group_path).parent.joinpath("9.9.9").as_posix()
+        )
