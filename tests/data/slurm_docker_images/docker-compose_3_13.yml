@@ -10,9 +10,6 @@ services:
     hostname: slurm
     volumes:
       - '/tmp:/tmp:rw'
-      # Required by apptainer (rootless builds, user namespaces)
-      - /dev/null:/etc/subuid:ro
-      - /dev/null:/etc/subgid:ro
     security_opt:
       - seccomp=unconfined
       - apparmor=unconfined
