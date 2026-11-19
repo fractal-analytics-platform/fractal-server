@@ -41,9 +41,6 @@ from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.task_group import TaskGroupOriginEnum
 from fractal_server.logger import set_logger
-from fractal_server.tasks.v2.local.collect_apptainer import (
-    collect_local_apptainer,
-)
 from fractal_server.tasks.v2.ssh.collect_apptainer import collect_ssh_apptainer
 from fractal_server.urls import verify_url_is_relative_to
 
@@ -70,7 +67,10 @@ async def collect_task_apptainer(
     resource, profile = await validate_user_profile(user=user, db=db)
     resource_id = resource.id
 
-    if not resource.tasks_apptainer_config:
+    if (
+        resource.type != ResourceType.SLURM_SSH
+        or not resource.tasks_apptainer_config
+    ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Apptainer task collection is not available.",
@@ -90,10 +90,7 @@ async def collect_task_apptainer(
         db=db,
     )
 
-    if resource.type == ResourceType.SLURM_SSH:
-        base_tasks_path = profile.tasks_remote_dir
-    else:
-        base_tasks_path = resource.tasks_local_dir
+    base_tasks_path = profile.tasks_remote_dir
     task_group_path = (
         Path(base_tasks_path) / str(user.id) / pkg_name / version
     ).as_posix()
@@ -124,13 +121,6 @@ async def collect_task_apptainer(
         db=db,
     )
 
-    if resource.type != ResourceType.SLURM_SSH:
-        if Path(task_group.path).exists():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"{task_group.path} already exists.",
-            )
-
     db.add(task_group)
     async with integrity_error_to_422(db):
         await db.commit()
@@ -150,13 +140,8 @@ async def collect_task_apptainer(
     await db.commit()
     await db.refresh(task_group_activity)
 
-    if resource.type == ResourceType.SLURM_SSH:
-        collect_function = collect_ssh_apptainer
-    else:
-        collect_function = collect_local_apptainer
-
     background_tasks.add_task(
-        collect_function,
+        collect_ssh_apptainer,
         task_group_id=task_group.id,
         task_group_activity_id=task_group_activity.id,
         tar_gz_file=tar_gz_file,
