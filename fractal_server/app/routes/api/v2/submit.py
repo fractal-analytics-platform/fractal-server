@@ -29,6 +29,7 @@ from fractal_server.app.schemas.v2 import JobCreate
 from fractal_server.app.schemas.v2 import JobRead
 from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -157,7 +158,7 @@ async def submit_job(
         )
 
     # User appropriate FractalSSH object
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         ssh_config = dict(
             user=profile.username,
             host=resource.host,
@@ -267,7 +268,7 @@ async def submit_job(
             working_dir_user = working_dir
         case ResourceType.SLURM_SUDO:
             working_dir_user = cache_dir / yyyy_mm / dir_name
-        case ResourceType.SLURM_SSH:
+        case ResourceType.SLURM_SSH | ResourceType.SLURM_REST:
             working_dir_user = Path(profile.jobs_remote_dir, yyyy_mm, dir_name)
     job.working_dir = working_dir.as_posix()
     job.working_dir_user = working_dir_user.as_posix()

@@ -14,6 +14,7 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.runner.config import JobRunnerConfigSlurmRest
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
@@ -35,10 +36,25 @@ class ResourceType(StrEnum):
     Enum entry for resource type `slurm_ssh`.
     """
 
+    SLURM_REST = "slurm_rest"
+    """
+    Enum entry for resource type `slurm_rest`.
+    """
+
     LOCAL = "local"
     """
     Enum entry for resource type `local`.
     """
+
+
+def is_ssh_resource_type(resource_type: str) -> bool:
+    """
+    Whether the cluster of a resource type is (also) accessed over SSH.
+
+    Arguments:
+        resource_type: Resource type.
+    """
+    return resource_type in (ResourceType.SLURM_SSH, ResourceType.SLURM_REST)
 
 
 def cast_serialize_pixi_settings(
@@ -83,7 +99,7 @@ class ValidResourceBase(BaseModel):
     def _pixi_slurm_config(self) -> Self:
         if (
             self.tasks_pixi_config != {}
-            and self.type == ResourceType.SLURM_SSH
+            and is_ssh_resource_type(self.type)
             and self.tasks_pixi_config["SLURM_CONFIG"] is None
         ):
             raise ValueError("`tasks_pixi_config` must include `SLURM_CONFIG`.")
@@ -184,6 +200,44 @@ class ValidResourceSlurmSSH(ValidResourceBase):
     jobs_runner_config: JobRunnerConfigSLURM
 
 
+class ValidResourceSlurmRest(ValidResourceBase):
+    """
+    Valid SLURM-REST resource.
+
+    SLURM jobs are submitted, polled and cancelled through `slurmrestd`,
+    while everything else goes over SSH, as for `slurm_ssh` resources.
+
+    Attributes:
+        name: Resource name
+        type: Resource type.
+        prevent_new_submissions:
+            When set to true: Prevent new job submissions and stop execution of
+            ongoing jobs as soon as the current task is complete.
+        tasks_python_config:
+            Configuration of Python interpreters used for task collection.
+        tasks_pixi_config:
+            Configuration of `pixi` interpreters used for task collection.
+        tasks_local_dir:
+            Local base folder for task environments.
+        jobs_local_dir:
+            Local base folder for job folders.
+        jobs_runner_config:
+            Runner configuration, including the `slurmrestd` connection
+            (`rest` key).
+        jobs_poll_interval:
+            Polling interval of SLURM job states.
+        jobs_slurm_python_worker:
+            Python worker to be used in SLURM jobs.
+        host:
+            Hostname or IP address of remote SLURM cluster (for SSH).
+    """
+
+    type: Literal[ResourceType.SLURM_REST]
+    host: NonEmptyStr
+    jobs_slurm_python_worker: AbsolutePathStr
+    jobs_runner_config: JobRunnerConfigSlurmRest
+
+
 def get_discriminator_value(v: Any) -> str:
     # See https://github.com/fastapi/fastapi/discussions/12941
     if isinstance(v, dict):
@@ -194,7 +248,8 @@ def get_discriminator_value(v: Any) -> str:
 ResourceCreate = Annotated[
     Annotated[ValidResourceLocal, Tag(ResourceType.LOCAL)]
     | Annotated[ValidResourceSlurmSudo, Tag(ResourceType.SLURM_SUDO)]
-    | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)],
+    | Annotated[ValidResourceSlurmSSH, Tag(ResourceType.SLURM_SSH)]
+    | Annotated[ValidResourceSlurmRest, Tag(ResourceType.SLURM_REST)],
     Discriminator(get_discriminator_value),
 ]
 """

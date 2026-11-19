@@ -28,13 +28,13 @@ from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
 from fractal_server.app.schemas.v2 import FractalUploadedFile
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskCollectPip
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupCreateStrict
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.tasks.v2.local.collect import collect_local
@@ -257,7 +257,7 @@ async def collect_tasks_pip(
     task_group_attrs["user_group_id"] = user_group_id
 
     # Set path and venv_path
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         base_tasks_path = profile.tasks_remote_dir
     else:
         base_tasks_path = resource.tasks_local_dir
@@ -301,7 +301,7 @@ async def collect_tasks_pip(
 
     # On-disk checks
 
-    if resource.type != ResourceType.SLURM_SSH:
+    if not is_ssh_resource_type(resource.type):
         # Verify that folder does not exist (for local collection)
         if Path(task_group.path).exists():
             raise HTTPException(
@@ -333,7 +333,7 @@ async def collect_tasks_pip(
 
     # END of SSH/non-SSH common part
 
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         collect_function = collect_ssh
     else:
         collect_function = collect_local

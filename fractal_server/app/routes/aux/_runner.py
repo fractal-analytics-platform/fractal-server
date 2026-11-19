@@ -7,7 +7,11 @@ from fractal_server.syringe import Inject
 
 
 def _backend_supports_shutdown(backend: str) -> bool:
-    if backend in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+    if backend in [
+        ResourceType.SLURM_SUDO,
+        ResourceType.SLURM_SSH,
+        ResourceType.SLURM_REST,
+    ]:
         return True
     else:
         return False

@@ -35,6 +35,11 @@ from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2.sharing import ProjectPermissions
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
+from fractal_server.runner.config import JobRunnerConfigSlurmRest
+from fractal_server.runner.executors.slurm_rest.job_queue_table import (
+    get_job_queue_table,
+)
+from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
@@ -257,7 +262,11 @@ async def get_squeue(
 ):
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend not in [ResourceType.SLURM_SUDO, ResourceType.SLURM_SSH]:
+    if backend not in [
+        ResourceType.SLURM_SUDO,
+        ResourceType.SLURM_SSH,
+        ResourceType.SLURM_REST,
+    ]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"This endpoint is not available for "
@@ -269,35 +278,65 @@ async def get_squeue(
         db=db,
     )
 
-    flags = ""
-    if scope == "user":
-        flags = f"--user {profile.username}"
-    elif scope == "accounts" and len(user.slurm_accounts) > 0:
-        flags = f"--accounts={','.join(user.slurm_accounts)}"
-
-    command = (
-        f"squeue {flags} --format="
-        f'"%.12i %.9P %.24j %.14u %.14a %.11T %.12M %.6D %.4C %.10m %R"'
-    )
-
-    try:
-        if resource.type == ResourceType.SLURM_SSH:
-            with SingleUseFractalSSH(
-                ssh_config=SSHConfig(
-                    host=resource.host,
-                    user=profile.username,
-                    key_path=profile.ssh_key_path,
-                ),
-                logger_name=logger.name,
-            ) as fractal_ssh:
-                out = fractal_ssh.run_command(cmd=command)
-                return PlainTextResponse(content=out)
-        else:
-            out = execute_command_sync(command=command)
-            return PlainTextResponse(content=out)
-    except Exception as e:
-        logger.error(f"Cannot execute squeue command. Original error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Error executing squeue command - please retry later.",
+    if resource.type in [ResourceType.SLURM_SSH, ResourceType.SLURM_SUDO]:
+        # `squeue` command, over SSH (`slurm_ssh`) or locally (`slurm_sudo`)
+        flags = ""
+        if scope == "user":
+            flags = f"--user {profile.username}"
+        elif scope == "accounts" and len(user.slurm_accounts) > 0:
+            flags = f"--accounts={','.join(user.slurm_accounts)}"
+        command = (
+            f"squeue {flags} --format="
+            f'"%.12i %.9P %.24j %.14u %.14a %.11T %.12M %.6D %.4C %.10m %R"'
         )
+        try:
+            if resource.type == ResourceType.SLURM_SSH:
+                # SLURM SSH
+                with SingleUseFractalSSH(
+                    ssh_config=SSHConfig(
+                        host=resource.host,
+                        user=profile.username,
+                        key_path=profile.ssh_key_path,
+                    ),
+                    logger_name=logger.name,
+                ) as fractal_ssh:
+                    out = fractal_ssh.run_command(cmd=command)
+            else:
+                # SLURM SUDO
+                out = execute_command_sync(command=command)
+        except Exception as e:
+            logger.error(
+                f"Cannot execute squeue command. Original error: {str(e)}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Error executing squeue command - please retry later.",
+            )
+    else:
+        # SLURM REST
+        # Jobs run as the SLURM user of the token, possibly different from
+        # `profile.username`: query `slurmrestd` with the user's token
+        try:
+            out = await asyncio.to_thread(
+                get_job_queue_table,
+                rest_config=JobRunnerConfigSlurmRest(
+                    **resource.jobs_runner_config
+                ).rest,
+                user_id=user.id,
+                profile_username=profile.username,
+                scope=scope,
+                slurm_accounts=user.slurm_accounts,
+            )
+        except SlurmTokenError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(e),
+            )
+        except Exception as e:
+            logger.error(f"Cannot query slurmrestd. Original error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Error querying SLURM jobs - please retry later.",
+            )
+
+    return PlainTextResponse(content=out)

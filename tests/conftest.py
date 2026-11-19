@@ -47,6 +47,7 @@ from .fixtures_factories import *  # noqa F403
 from .fixtures_tasks import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
+from .fixtures_slurm_rest import *  # noqa F403
 from .fixtures_pixi import *  # noqa F403
 from .fixtures_computational_settings import *  # noqa F403
 

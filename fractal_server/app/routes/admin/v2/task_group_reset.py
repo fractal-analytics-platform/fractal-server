@@ -30,11 +30,11 @@ from fractal_server.app.routes.aux.pixi_version import get_pixi_version_or_422
 from fractal_server.app.routes.aux.validate_user_profile import (
     validate_user_profile,
 )
-from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.schemas.v2 import TaskGroupActivityAction
 from fractal_server.app.schemas.v2 import TaskGroupActivityRead
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
@@ -90,7 +90,7 @@ def _verify_support(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(f"Invalid {task_group.origin=} (expected {pip_or_pixi})."),
         )
-    if resource.type == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(resource.type):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Resource type {resource.type} not supported.",

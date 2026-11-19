@@ -14,7 +14,7 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from fractal_server import __VERSION__
-from fractal_server.app.schemas.v2 import ResourceType
+from fractal_server.app.schemas.v2 import is_ssh_resource_type
 from fractal_server.exceptions import HTTPExceptionWithData
 
 from .app.routes.aux._runner import _backend_supports_shutdown
@@ -84,7 +84,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
     check_settings(logger_name="lifespan.startup")
     settings = Inject(get_settings)
 
-    if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(settings.FRACTAL_RUNNER_BACKEND):
         from fractal_server.ssh._fabric import FractalSSHList
 
         app.state.fractal_ssh_list = FractalSSHList()
@@ -105,7 +105,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
     logger_teardown = set_logger("lifespan.teardown")
     logger_teardown.info("START")
 
-    if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
+    if is_ssh_resource_type(settings.FRACTAL_RUNNER_BACKEND):
         logger_teardown.info(
             "Close FractalSSH connections "
             f"(current size: {app.state.fractal_ssh_list.size})."
