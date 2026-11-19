@@ -128,8 +128,8 @@ class Resource(Base):
     Apptainer configuration for task collection. Example:
     ```json
     {
-        "pixi_version": "0.41.0",
-        "apptainer_bin": "/xxx/apptainer/bin/apptainer",
+        "pixi_version": "0.84.2",
+        "apptainer_bin": "/some/path/bin/apptainer",
         "SLURM_CONFIG": {
             "partition": "main",
             "cpus": 4,
