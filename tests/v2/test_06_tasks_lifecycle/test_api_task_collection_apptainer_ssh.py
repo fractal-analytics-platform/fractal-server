@@ -138,6 +138,12 @@ async def test_task_collection_apptainer_ssh(
         assert f" {sif_path} pixi run --as-is " in command
         assert f" /{SOURCE_DIR_NAME}/" in command
 
+        # `PYTHONNOUSERSITE` is set by the image itself (`%environment`)
+        stdout = fractal_ssh.run_command(
+            cmd=f"/usr/bin/apptainer exec {sif_path} printenv PYTHONNOUSERSITE"
+        )
+        assert stdout.strip() == "1"
+
         # 4 / Failed collection - due to non-duplication constraint
         res = await client.post(
             "api/v2/task/collect/apptainer/",

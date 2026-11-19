@@ -4,6 +4,10 @@ From: ghcr.io/prefix-dev/pixi:__PIXI_VERSION__
 %files
     __TAR_GZ_PATH__ /__TAR_GZ_FILENAME__
 
+%environment
+    # Ignore user site-packages (e.g. from a bind-mounted `$HOME`)
+    export PYTHONNOUSERSITE=1
+
 %post
     set -e
     mkdir /__SOURCE_DIR_NAME__

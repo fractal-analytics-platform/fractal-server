@@ -160,7 +160,6 @@ def collect_ssh_apptainer(
                     # Command that runs Python inside the container
                     python_command = (
                         f"{apptainer_config['apptainer_bin']} exec "
-                        "--env PYTHONNOUSERSITE=1 "
                         f"{sif_path_remote} "
                         "pixi run --as-is "
                         f"--manifest-path /{SOURCE_DIR_NAME}/pyproject.toml "
