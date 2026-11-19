@@ -134,30 +134,34 @@ def collect_ssh_apptainer(
                     # Write tar.gz file locally and send it to remote path,
                     # and set task_group.archive_path
                     tar_gz_filename = tar_gz_file.filename
-                    archive_path = (
+                    archive_path_remote = (
                         Path(task_group.path) / tar_gz_filename
                     ).as_posix()
-                    tmp_archive_path = Path(tmpdir, tar_gz_filename).as_posix()
-                    logger.info(f"Write tar.gz file into {tmp_archive_path}")
-                    with open(tmp_archive_path, "wb") as f:
+                    archive_path_local = Path(
+                        tmpdir, tar_gz_filename
+                    ).as_posix()
+                    logger.info(f"Write tar.gz file into {archive_path_local}")
+                    with open(archive_path_local, "wb") as f:
                         f.write(tar_gz_file.contents)
                     fractal_ssh.send_file(
-                        local=tmp_archive_path,
-                        remote=archive_path,
+                        local=archive_path_local,
+                        remote=archive_path_remote,
                     )
-                    task_group.archive_path = archive_path
+                    task_group.archive_path = archive_path_remote
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
                     apptainer_config = resource.tasks_apptainer_config
-                    def_file_path = Path(
+                    def_path_remote = Path(
                         task_group.path, DEF_FILENAME
                     ).as_posix()
-                    sif_path = Path(task_group.path, SIF_FILENAME).as_posix()
+                    sif_path_remote = Path(
+                        task_group.path, SIF_FILENAME
+                    ).as_posix()
                     # Command that runs Python inside the container
                     python_command = (
                         f"{apptainer_config['apptainer_bin']} exec "
                         "--env PYTHONNOUSERSITE=1 "
-                        f"{sif_path} "
+                        f"{sif_path_remote} "
                         "pixi run --as-is "
                         f"--manifest-path /{SOURCE_DIR_NAME}/pyproject.toml "
                         "python"
@@ -181,7 +185,7 @@ def collect_ssh_apptainer(
                             tar_gz_filename.removesuffix(".tar.gz"),
                         ),
                         ("__SOURCE_DIR_NAME__", SOURCE_DIR_NAME),
-                        ("__SIF_PATH__", sif_path),
+                        ("__SIF_PATH__", sif_path_remote),
                         (
                             "__IMPORT_PACKAGE_NAME__",
                             task_group.pkg_name.replace("-", "_"),
@@ -204,22 +208,22 @@ def collect_ssh_apptainer(
                     )
 
                     # Customize the definition file and send it to remote
-                    def_file_path_local = Path(tmpdir, DEF_FILENAME).as_posix()
+                    def_path_local = Path(tmpdir, DEF_FILENAME).as_posix()
                     customize_template(
                         template_name=DEF_TEMPLATE_FILENAME,
                         replacements=replacements,
-                        script_path=def_file_path_local,
+                        script_path=def_path_local,
                     )
                     fractal_ssh.send_file(
-                        local=def_file_path_local,
-                        remote=def_file_path,
+                        local=def_path_local,
+                        remote=def_path_remote,
                     )
-                    logger.info(f"Definition file written to {def_file_path}")
+                    logger.info(f"Definition file written to {def_path_remote}")
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Prepare post-build script
-                    remote_post_build_script_path = (
+                    post_build_script_path_remote = (
                         _customize_and_send_template(
                             template_filename="apptainer_post_build.sh",
                             replacements=replacements,
@@ -234,7 +238,7 @@ def collect_ssh_apptainer(
                     )
                     logger.debug(
                         "Post-build script written to "
-                        f"{remote_post_build_script_path=}."
+                        f"{post_build_script_path_remote=}."
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
@@ -246,10 +250,10 @@ def collect_ssh_apptainer(
                             "date",
                             (
                                 f"{apptainer_config['apptainer_bin']} build "
-                                f"{sif_path} {def_file_path}"
+                                f"{sif_path_remote} {def_path_remote}"
                             ),
                             "date",
-                            f"bash {remote_post_build_script_path}",
+                            f"bash {post_build_script_path_remote}",
                         ],
                         workdir_remote=script_dir_remote,
                         slurm_config=apptainer_config["SLURM_CONFIG"],
