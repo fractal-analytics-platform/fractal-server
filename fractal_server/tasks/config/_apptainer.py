@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from fractal_server.types import NonEmptyStr
 
-from ._slurm import SLURMConfig
+from ._slurm import TasksSLURMConfig
 
 
 class TasksApptainerSettings(BaseModel):
@@ -19,7 +19,7 @@ class TasksApptainerSettings(BaseModel):
     Command used to invoke `apptainer` (e.g. `apptainer` or
     `/usr/bin/apptainer`).
     """
-    SLURM_CONFIG: SLURMConfig | None = None
+    SLURM_CONFIG: TasksSLURMConfig | None = None
     """
     SLURM configuration for the apptainer build. Required when using
     `apptainer` in a SSH/SLURM deployment.

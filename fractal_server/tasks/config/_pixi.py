@@ -4,7 +4,7 @@ from typing import Self
 from pydantic import BaseModel
 from pydantic import model_validator
 
-from fractal_server.tasks.config._slurm import SLURMConfig
+from fractal_server.tasks.config._slurm import TasksSLURMConfig
 from fractal_server.types import DictStrStr
 
 
@@ -56,7 +56,7 @@ class TasksPixiSettings(BaseModel):
     """
     Default platform for pixi.
     """
-    SLURM_CONFIG: SLURMConfig | None = None
+    SLURM_CONFIG: TasksSLURMConfig | None = None
     """
     Required when using `pixi` in a SSH/SLURM deployment.
     """

@@ -22,7 +22,7 @@ def _check_slurm_memory(mem: str) -> str:
 MemoryStr = Annotated[NonEmptyStr, AfterValidator(_check_slurm_memory)]
 
 
-class SLURMConfig(BaseModel):
+class TasksSLURMConfig(BaseModel):
     """
     Parameters that are passed directly to a `sbatch` command.
 

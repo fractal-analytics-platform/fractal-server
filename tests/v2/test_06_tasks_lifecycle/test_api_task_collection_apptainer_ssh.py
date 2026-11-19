@@ -7,7 +7,7 @@ from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import TasksApptainerSettings
-from fractal_server.tasks.config._slurm import SLURMConfig
+from fractal_server.tasks.config._slurm import TasksSLURMConfig
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh.collect_apptainer import SIF_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
@@ -36,7 +36,7 @@ async def test_task_collection_apptainer_ssh(
     resource.tasks_apptainer_config = TasksApptainerSettings(
         pixi_version="0.84.1",
         apptainer_bin="/usr/bin/apptainer",
-        SLURM_CONFIG=SLURMConfig(
+        SLURM_CONFIG=TasksSLURMConfig(
             partition="main",
             cpus=1,
             mem="1G",

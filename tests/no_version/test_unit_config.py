@@ -6,7 +6,7 @@ from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
-from fractal_server.tasks.config._slurm import SLURMConfig
+from fractal_server.tasks.config._slurm import TasksSLURMConfig
 
 
 def test_database_settings():
@@ -229,7 +229,7 @@ def test_pixi_config():
 
 
 def test_pixi_slurm_config():
-    SLURMConfig(
+    TasksSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
@@ -239,26 +239,26 @@ def test_pixi_slurm_config():
         ValueError,
         match="units suffix",
     ):
-        SLURMConfig(
+        TasksSLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
             mem="1000",
         )
-    SLURMConfig(
+    TasksSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
         mem="1000M",
     )
-    SLURMConfig(
+    TasksSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
         mem="10G",
     )
 
-    SLURMConfig(
+    TasksSLURMConfig(
         partition="fake",
         time="100",
         cpus=1,
@@ -266,7 +266,7 @@ def test_pixi_slurm_config():
     )
 
     with pytest.raises(ValidationError, match="Invalid memory requirement"):
-        SLURMConfig(
+        TasksSLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
@@ -274,14 +274,14 @@ def test_pixi_slurm_config():
         )
 
     with pytest.raises(ValidationError, match="You must set either"):
-        SLURMConfig(
+        TasksSLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
         )
 
     with pytest.raises(ValidationError, match="You must set either"):
-        SLURMConfig(
+        TasksSLURMConfig(
             partition="fake",
             time="100",
             cpus=1,
