@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-from fractal_server.types import AbsolutePathStr
 from fractal_server.types import NonEmptyStr
 
 from ._slurm import SLURMConfig
@@ -15,9 +14,10 @@ class TasksApptainerSettings(BaseModel):
     """
     `pixi` version used by apptainer.
     """
-    apptainer_bin: AbsolutePathStr
+    apptainer_bin: NonEmptyStr
     """
-    Absolute path to the `apptainer` executable.
+    Command used to invoke `apptainer` (e.g. `apptainer` or
+    `/usr/bin/apptainer`).
     """
     SLURM_CONFIG: SLURMConfig | None = None
     """
