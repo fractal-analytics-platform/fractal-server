@@ -5,8 +5,9 @@
 * Testing:
     * Remove obsolete docker-compose files (\#3505).
 * Dependencies:
-    * Bump `fastapi` to `0.163` (\#3502).
-    * Bump lockfile (\#3502).
+    * Bump `fastapi` to `0.166` (\#3502, \#3506).
+    * Bump lockfile (\#3502, \#3506).
+    * Require `fabric>=3.2.3` (\#3506).
     * Make imported dependencies explicit (\#3503).
 
 # 2.27.4
