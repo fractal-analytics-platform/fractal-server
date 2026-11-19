@@ -10,6 +10,10 @@ services:
     hostname: slurm
     volumes:
       - '/tmp:/tmp:rw'
+    # Required to run `apptainer` inside this container: relax seccomp and
+    # AppArmor confinement (user namespaces, mounts) and expose `/dev/fuse`
+    # (FUSE-mounting of SIF images). See
+    # https://github.com/fractal-analytics-platform/fractal-containers/pull/186
     security_opt:
       - seccomp=unconfined
       - apparmor=unconfined
