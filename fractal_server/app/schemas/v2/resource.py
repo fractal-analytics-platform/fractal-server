@@ -100,26 +100,16 @@ class ValidResourceBase(BaseModel):
     prevent_new_submissions: bool = False
 
     @model_validator(mode="after")
-    def _pixi_slurm_config(self) -> Self:
-        if (
-            self.tasks_pixi_config != {}
-            and self.type == ResourceType.SLURM_SSH
-            and self.tasks_pixi_config["SLURM_CONFIG"] is None
-        ):
-            raise ValueError("`tasks_pixi_config` must include `SLURM_CONFIG`.")
-        return self
-
-    @model_validator(mode="after")
-    def _apptainer_config(self) -> Self:
-        if self.tasks_apptainer_config == {}:
-            return self
-        if (
-            self.type == ResourceType.SLURM_SSH
-            and self.tasks_apptainer_config["SLURM_CONFIG"] is None
-        ):
-            raise ValueError(
-                "`tasks_apptainer_config` must include `SLURM_CONFIG`."
-            )
+    def _slurm_ssh_tasks_configs(self) -> Self:
+        """
+        For SLURM-SSH resources, non-empty `tasks_pixi_config` and
+        `tasks_apptainer_config` must include `SLURM_CONFIG`.
+        """
+        if self.type == ResourceType.SLURM_SSH:
+            for field in ("tasks_pixi_config", "tasks_apptainer_config"):
+                config = getattr(self, field)
+                if config != {} and config["SLURM_CONFIG"] is None:
+                    raise ValueError(f"`{field}` must include `SLURM_CONFIG`.")
         return self
 
 
