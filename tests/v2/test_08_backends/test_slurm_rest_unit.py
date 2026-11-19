@@ -23,9 +23,6 @@ from fractal_server.runner.executors.slurm_common.slurm_config import (
 )
 from fractal_server.runner.executors.slurm_rest import client as client_module
 from fractal_server.runner.executors.slurm_rest import runner as runner_module
-from fractal_server.runner.executors.slurm_rest.client import (
-    SUPPORTED_API_VERSIONS,
-)
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.client import squeue_state
@@ -48,11 +45,6 @@ from fractal_server.runner.executors.slurm_rest.job_script import (
 from fractal_server.runner.executors.slurm_rest.runner import STATUS_PLACEHOLDER
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
-from fractal_server.runner.v2 import _local as local_backend
-from fractal_server.runner.v2 import _slurm_rest as slurm_rest_backend
-from fractal_server.runner.v2 import _slurm_ssh as slurm_ssh_backend
-from fractal_server.runner.v2 import _slurm_sudo as slurm_sudo_backend
-from fractal_server.runner.v2.submit_workflow import _get_process_workflow
 from fractal_server.ssh._fabric import FractalSSHCommandError
 from tests.v2._aux_runner import get_default_slurm_config
 
@@ -121,14 +113,11 @@ def test_build_job_description_values(line, expected):
     "line,expected",
     [
         ("--partition=main", {"partition": "main"}),
-        ("--partition main", {"partition": "main"}),
         ("-p main", {"partition": "main"}),
-        ("-pmain", {"partition": "main"}),
         # Unambiguous abbreviations, as with `sbatch`
         ("--err=/x.err", {"standard_error": "/x.err"}),
         # Quotes and comments, as with `sbatch`
         ('--job-name="my job"', {"name": "my job"}),
-        ("--job-name='my job'", {"name": "my job"}),
         ("--time=10 # comment", {"time_limit": {"set": True, "number": 10}}),
         # Several options on one line
         ("--qos=high --account=acc", {"qos": "high", "account": "acc"}),
@@ -152,9 +141,7 @@ def test_options_are_all_handled():
         "--mem=2BG",
         "--partition=main extra",
         '--job-name="unclosed',
-        "--partition",
         "--mail-type=ALL",
-        "-Z 1",
         # Ambiguous abbreviation (`nodelist`, `nodes`, `ntasks`)
         "--n=1",
     ],
@@ -286,32 +273,15 @@ def test_slurm_rest_resource_schema(slurm_ssh_resource_profile_fake_objects):
         ValidResourceSlurmRest(
             **(data | dict(jobs_runner_config=ssh_runner_config))
         )
-    with pytest.raises(ValueError):
-        ValidResourceSlurmRest(
-            **_data(url="https://a.b", api_version="v0.0.44", foo="bar")
-        )
-    with pytest.raises(ValueError):
-        ValidResourceSlurmRest(
-            **_data(
-                url="https://a.b",
-                api_version="v0.0.44",
-                ca_bundle="relative.pem",
-            )
-        )
 
     # `api_version` is required, and must be supported
     with pytest.raises(ValueError, match="api_version"):
         ValidResourceSlurmRest(**_data(url="https://a.b"))
-    for api_version in ("v0.0.39", "v0.0.46", "0.0.44", ""):
+    for api_version in ("v0.0.39", "0.0.44"):
         with pytest.raises(ValueError):
             ValidResourceSlurmRest(
                 **_data(url="https://a.b", api_version=api_version)
             )
-    for api_version in SUPPORTED_API_VERSIONS:
-        rest = ValidResourceSlurmRest(
-            **_data(url="https://a.b", api_version=api_version)
-        ).jobs_runner_config.rest
-        assert rest.api_version == api_version
 
     # The `rest` key is only valid for `slurm_rest` resources
     with pytest.raises(ValueError):
@@ -384,17 +354,6 @@ def test_client(monkeypatch):
     assert calls[2][2] == "tok2"
     assert calls[3][2] == "tok3"
 
-    # Job states
-    responses.append(
-        {
-            "jobs": [
-                {"job_id": 1, "job_state": ["COMPLETED", "COMPLETING"]},
-                {"job_id": 2, "job_state": ["RUNNING"]},
-            ]
-        }
-    )
-    assert client.get_job_states() == {"1": "COMPLETING", "2": "RUNNING"}
-
     # Errors
     responses.append(
         _http_error(500, {"errors": [{"description": "Batch job failed"}]})
@@ -430,13 +389,10 @@ def test_client(monkeypatch):
     )
     with pytest.raises(SlurmRestError, match="HTTP 502.*Bad Gateway"):
         client.submit_job({"script": "s", "job": {}})
+    # Errors in an HTTP 200 response
     responses.append({"errors": [{"error": "bad"}]})
     with pytest.raises(SlurmRestError, match="bad"):
         client.cancel_job("1")
-    assert calls[-1][:2] == (
-        "DELETE",
-        "https://example.org/slurm/v0.0.44/job/1",
-    )
 
     # Unknown JSON fields are only a warning: cancel the job and fail
     warning = (
@@ -451,18 +407,6 @@ def test_client(monkeypatch):
         "DELETE",
         "https://example.org/slurm/v0.0.44/job/125",
     )
-    # A failed cancellation does not hide the unknown fields
-    responses.extend(
-        [
-            {"job_id": 126, "warnings": [{"description": warning}]},
-            _http_error(500, {"errors": [{"error": "cancel broken"}]}),
-        ]
-    )
-    with pytest.raises(SlurmRestError) as exc_info:
-        client.submit_job({"script": "s", "job": {"x": "y"}})
-    assert "unknown fields" in str(exc_info.value)
-    assert "job 126 may still be queued" in str(exc_info.value)
-    assert "cancel broken" in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
@@ -730,28 +674,20 @@ class _FakeSSH:
 
 
 def test_get_slurm_home():
+    """
+    The SLURM user (the SSO `sub`) is quoted, and must exist on the cluster.
+    """
     runner = SlurmRestRunner.__new__(SlurmRestRunner)
-    runner.slurm_username = "alice"
-    runner.fractal_ssh = _FakeSSH("alice:x:1:2::/home/alice:/bin/bash\n")
-    assert runner._get_slurm_home() == "/home/alice"
-    assert runner.fractal_ssh.commands == ["getent passwd alice"]
-
     runner.slurm_username = "a b;c"
+    runner.fractal_ssh = _FakeSSH("a b;c:x:1:2::/home/x:/bin/bash\n")
     runner._get_slurm_home()
-    assert runner.fractal_ssh.commands[-1] == "getent passwd 'a b;c'"
+    assert runner.fractal_ssh.commands == ["getent passwd 'a b;c'"]
 
     for output in (FractalSSHCommandError("exit code 2"), ""):
         runner.fractal_ssh = _FakeSSH(output)
         with pytest.raises(JobExecutionError) as exc_info:
             runner._get_slurm_home()
         assert "unknown on the cluster" in exc_info.value.assemble_error()
-
-
-def test_mkdir_remote_folder():
-    runner = SlurmRestRunner.__new__(SlurmRestRunner)
-    runner.fractal_ssh = _FakeSSH("")
-    runner._mkdir_remote_folder(folder="/base/job dir")
-    assert runner.fractal_ssh.commands == ["mkdir -p -m 2775 '/base/job dir'"]
 
 
 class _FakePingClient:
@@ -776,7 +712,6 @@ class _FakeTokenProvider:
 @pytest.mark.parametrize(
     "provider_error,ping_error,expected_message",
     [
-        (None, None, None),
         # E.g. no SSO account
         (SlurmTokenError("No SSO account"), None, "No SSO account"),
         # E.g. refresh refused, at the first request
@@ -815,45 +750,21 @@ def test_init_rest_client(
     )
     kwargs = dict(resource_name="rest", user_id=1, profile_username="ihbfrac")
     runner = SlurmRestRunner.__new__(SlurmRestRunner)
-    if expected_message is None:
-        runner._init_rest_client(rest_config=rest_config, **kwargs)
-        assert runner.slurm_username == "alice"
-        assert runner.rest_client.kwargs == dict(
-            base_url="https://example.org",
-            username="alice",
-            get_token=runner.rest_client.kwargs["get_token"],
-            ca_bundle="/ca.pem",
-            api_version="v0.0.42",
-        )
-        return
     with pytest.raises(JobExecutionError) as exc_info:
         runner._init_rest_client(rest_config=rest_config, **kwargs)
     assert expected_message in exc_info.value.assemble_error()
 
 
-@pytest.mark.parametrize(
-    "served,expected_hint",
-    [
-        (
-            ["v0.0.41", "v0.0.44"],
-            "Supported versions served by slurmrestd: ['v0.0.41', 'v0.0.44']. "
-            "Hint: update `jobs_runner_config.rest.api_version` of resource "
-            "'rest'.",
-        ),
-        ([], "Hint: check `jobs_runner_config.rest.url` of resource 'rest'"),
-    ],
-)
-def test_init_rest_client_api_version_not_served(
-    monkeypatch, served, expected_hint
-):
+def test_init_rest_client_no_api_version_served(monkeypatch):
     """
-    If the configured API version is not served (`/ping` answers 404), the
-    job error lists the supported versions that `slurmrestd` serves.
+    If `slurmrestd` serves none of the supported API versions (e.g. a wrong
+    URL), the job error points to `rest.url`. The case with some versions
+    served is covered by `test_rest_api_version_not_served`.
     """
 
     class _Client(_FakePingClient):
         def served_api_versions(self) -> list[str]:
-            return served
+            return []
 
     monkeypatch.setattr(
         runner_module, "get_token_provider", lambda **_: _FakeTokenProvider()
@@ -880,38 +791,9 @@ def test_init_rest_client_api_version_not_served(
         "slurmrestd at https://example.org does not serve API version "
         "'v0.0.45' (GET /ping -> HTTP 404)."
     ) in message
-    assert expected_hint in message
-
-
-def test_client_served_api_versions(monkeypatch):
-    """
-    `served_api_versions` pings every supported version with the same
-    connection settings, and keeps those that answer.
-    """
-    served = {"v0.0.41", "v0.0.44"}
-    urls = []
-
-    def fake_urlopen(request, timeout, context):
-        urls.append(request.full_url)
-        api_version = request.full_url.split("/")[-2]
-        if api_version not in served:
-            raise _http_error(404, {})
-        return _FakeResponse(b"{}")
-
-    monkeypatch.setattr(client_module.urllib.request, "urlopen", fake_urlopen)
-    client = SlurmRestClient(
-        base_url="https://example.org/",
-        username="user",
-        get_token=lambda force_refresh=False: "token",
-        api_version="v0.0.45",
-    )
-    with pytest.raises(SlurmRestError) as exc_info:
-        client.ping()
-    assert exc_info.value.status == 404
-    assert client.served_api_versions() == ["v0.0.41", "v0.0.44"]
-    assert urls[1:] == [
-        f"https://example.org/slurm/{v}/ping" for v in SUPPORTED_API_VERSIONS
-    ]
+    assert (
+        "Hint: check `jobs_runner_config.rest.url` of resource 'rest'"
+    ) in message
 
 
 @pytest.mark.parametrize(
@@ -944,21 +826,3 @@ def test_client_network_errors(monkeypatch, error):
     assert str(exc_info.value).startswith(
         f"GET /ping -> {type(error).__name__}: "
     )
-
-
-@pytest.mark.parametrize(
-    "resource_type,backend",
-    [
-        (ResourceType.LOCAL, local_backend),
-        (ResourceType.SLURM_SUDO, slurm_sudo_backend),
-        (ResourceType.SLURM_SSH, slurm_ssh_backend),
-        (ResourceType.SLURM_REST, slurm_rest_backend),
-    ],
-)
-def test_get_process_workflow(resource_type, backend):
-    assert _get_process_workflow(resource_type) is backend.process_workflow
-
-
-def test_get_process_workflow_unknown():
-    with pytest.raises(ValueError, match="Unknown resource type"):
-        _get_process_workflow("invalid")

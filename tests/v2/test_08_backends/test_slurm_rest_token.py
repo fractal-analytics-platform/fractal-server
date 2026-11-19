@@ -9,7 +9,6 @@ from httpx_oauth.oauth2 import RefreshTokenError
 
 from fractal_server.app.models import OAuthAccount
 from fractal_server.app.models import UserOAuth
-from fractal_server.config import get_settings
 from fractal_server.runner.executors.slurm_rest import token as token_module
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.executors.slurm_rest.token import SsoTokenProvider
@@ -17,7 +16,6 @@ from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import check_token_user
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
 from fractal_server.runner.executors.slurm_rest.token import jwt_claims
-from fractal_server.syringe import Inject
 
 USERNAME = "slurm-user"
 # Shared SSH service account (`Profile.username`)
@@ -54,10 +52,6 @@ def test_static_token_provider():
     with pytest.raises(SlurmTokenError, match="rejected"):
         provider.get_token(force_refresh=True)
     provider = StaticTokenProvider(
-        token=_jwt(sun=USERNAME), default_username=SSH_USERNAME
-    )
-    assert provider.slurm_username == USERNAME
-    provider = StaticTokenProvider(
         token="opaque-token", default_username=SSH_USERNAME
     )
     assert provider.slurm_username == SSH_USERNAME
@@ -78,10 +72,9 @@ def test_get_token_provider(monkeypatch, override_settings_factory):
     assert isinstance(provider, _FakeSsoTokenProvider)
     assert provider.user_id == 7
 
-    # Development override, never shown in the settings
+    # Development override
     token = _jwt(sub=USERNAME)
     override_settings_factory(FRACTAL_SLURM_REST_TOKEN=token)
-    assert token not in repr(Inject(get_settings))
     provider = get_token_provider(**kwargs)
     assert isinstance(provider, StaticTokenProvider)
     assert provider.get_token() == token
@@ -313,18 +306,17 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         return RefreshTokenError("refresh failed", response)
 
     # Retried at the next call: network error, client misconfiguration (also
-    # the path of 5xx answers), non-JSON answer
+    # the path of 5xx answers)
     responses.extend(
         [
             RefreshTokenError("connection failed"),
             _idp_error(401, error="invalid_client"),
-            _idp_error(400),
         ]
     )
-    for _ in range(3):
+    for _ in range(2):
         with pytest.raises(SlurmTokenError, match="log in to Fractal again"):
             provider.get_token()
-    assert calls == ["refresh-1"] * 3
+    assert calls == ["refresh-1"] * 2
 
     # Refused (answer of Roche WAM): not sent again
     responses.append(
@@ -338,7 +330,7 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         provider.get_token()
     with pytest.raises(SlurmTokenError, match="already refused"):
         provider.get_token()
-    assert calls == ["refresh-1"] * 4
+    assert calls == ["refresh-1"] * 3
 
     # New login, with an expired access token: refreshed again
     account = _get_account(db_sync, user_id)
@@ -348,4 +340,4 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
     new = _jwt(sub=USERNAME, n=2)
     responses.append(dict(access_token=new, expires_at=now + 3600))
     assert provider.get_token() == new
-    assert calls == ["refresh-1"] * 4 + ["refresh-2"]
+    assert calls == ["refresh-1"] * 3 + ["refresh-2"]

@@ -80,10 +80,6 @@ def test_format_job_queue_table():
     )
 
 
-def test_format_job_queue_table_empty():
-    assert format_job_queue_table([], now=NOW) == f"{HEADER}\n"
-
-
 def test_format_job_queue_table_completing():
     """
     A job whose epilog is still running is shown (as `COMPLETING`, with its

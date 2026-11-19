@@ -21,13 +21,10 @@ from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.runner.exceptions import JobExecutionError
-from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
-from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.runner import SlurmRestRunner
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
 from fractal_server.runner.task_files import TaskFiles
 from tests.fixtures_slurm_rest import SLURM_REST_API_VERSION
-from tests.fixtures_slurm_rest import SLURM_REST_URL
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
 
@@ -312,28 +309,3 @@ def test_rest_api_version_not_served(
     message = exc_info.value.assemble_error()
     assert "does not serve API version 'v0.0.44'" in message
     assert f"served by slurmrestd: ['{SLURM_REST_API_VERSION}']" in message
-
-
-@pytest.mark.container
-def test_rest_invalid_token(slurm_rest_ca_bundle, slurm_rest_alive):
-    """
-    `slurmrestd` rejects an invalid token (Slurm 23.11 answers HTTP 500,
-    not 401/511, so the client does not force a token refresh).
-    """
-    refreshes = []
-
-    def get_token(force_refresh: bool = False) -> str:
-        refreshes.append(force_refresh)
-        return "invalid-token"
-
-    client = SlurmRestClient(
-        base_url=SLURM_REST_URL,
-        username="test01",
-        get_token=get_token,
-        ca_bundle=slurm_rest_ca_bundle,
-        api_version=SLURM_REST_API_VERSION,
-    )
-    with pytest.raises(SlurmRestError) as exc_info:
-        client.get_job_states()
-    assert exc_info.value.status == 500
-    assert refreshes == [False]

@@ -77,9 +77,11 @@ E.g. with a shared SSH service account in the profiles:
 - `tests/v2/test_08_backends/test_slurm_rest_token.py`: token providers (SSO refresh with a fake identity provider), needs the test database.
 - `tests/v2/test_08_backends/test_slurm_rest_job_queue_table.py` and `tests/v2/test_03_api/test_api_squeue.py`: queue table of `GET /api/v2/job/squeue/`, with a fake client.
 - Docker tests, against the real `slurmrestd` of the SLURM container (Slurm 23.11, API `v0.0.40`, JWT authentication), served over HTTPS by a TLS proxy on `https://localhost:6820`, with the test CA of the container copied in `tests/data/slurm_docker_images/slurmrestd_ca.pem` (fixtures in `tests/fixtures_slurm_rest.py`). Tokens are signed with the fixed test-only JWT key of the container, and set through `FRACTAL_SLURM_REST_TOKEN`:
-    - `tests/v2/test_08_backends/test_slurm_rest_runner.py`: submission as the SSH user and as another SLURM user (job environment, files written by the job, outputs fetched by the SSH user), multisubmit, cancellation on shutdown, API version not served, invalid token;
+    - `tests/v2/test_08_backends/test_slurm_rest_runner.py`: submission as the SSH user and as another SLURM user (job environment, files written by the job, outputs fetched by the SSH user), multisubmit, cancellation on shutdown, API version not served;
     - `tests/v2/test_07_full_workflow/test_full_workflow_slurm_rest.py`: a full job, from the API to `SlurmRestRunner`.
 
 CI covers API `v0.0.40` only (the version served by the container); the other supported versions were checked against their OpenAPI specifications and on a cluster (see **API versions**).
 
 Inherited behaviour (task failures, compound tasks, fetching outputs, ...) is covered by the SLURM/SSH and SLURM/sudo runner tests. What `SlurmRestRunner` changes, including polling and cancellation during a shutdown request while `slurmrestd` cannot be reached, is covered by the tests above.
+
+Known overlap (**TODO**): `test_run_squeue_failed_queries_keep_jobs_active`, `test_run_squeue_logs_once` and `test_stop_while_requests_fail` (in `test_slurm_rest_unit.py`) all check that failed job-state queries never mark SLURM jobs as finished. They encode the unlimited wait described in **Known limitations**, and are to be merged when that behaviour changes (e.g. with a maximum wait).
