@@ -132,10 +132,9 @@ class Resource(Base):
         "apptainer_bin": "/some/path/bin/apptainer",
         "SLURM_CONFIG": {
             "partition": "main",
-            "cpus": 4,
-            "mem": "8G",
-            "mem_per_cpu": "2G",
-            "time": "01:00:00",
+            "cpus": 2,
+            "mem": "32G",
+            "time": "02:00:00",
             "preamble": []
         }
     }
