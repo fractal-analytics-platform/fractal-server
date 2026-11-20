@@ -97,9 +97,9 @@ class SlurmRestClient:
             Callable returning a valid JWT; called with `force_refresh=True`
             after a 401 or 511 response.
         ca_bundle:
-            Optional CA file (PEM) for TLS verification (else system CAs).
-            Needed only when the system CAs are insufficient to verify the
-            `slurmrestd` server's TLS certificate (eg. local dev).
+            Optional CA file (PEM) for TLS verification (else system CAs),
+            for a `slurmrestd` whose certificate is not signed by a CA
+            trusted by the system (e.g. a private or self-signed CA).
         api_version:
             `slurmrestd` OpenAPI version (one of `SUPPORTED_API_VERSIONS`).
         timeout: Timeout of each request, in seconds.

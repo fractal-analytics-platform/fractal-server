@@ -212,7 +212,7 @@ def build_job_description(
                 _apply_option(job, key, value)
 
     # As `sbatch` does ("can't run 1 processes on 2 nodes, setting nnodes to
-    # 1"), while `slurmrestd` would allocate the extra nodes
+    # 1"), while `slurmrestd` would allocate the extra (sitting idle) nodes
     if job.get("minimum_nodes", 0) > job.get("tasks", float("inf")):
         job["minimum_nodes"] = job["maximum_nodes"] = job["tasks"]
 
