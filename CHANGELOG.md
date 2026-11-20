@@ -2,6 +2,9 @@
 
 # 2.28.0
 
+> NOTE: This release introduces **experimental** support for collecting
+> pixi-locked task packages via `apptainer` on SSH-SLURM instances.
+
 * API:
     * Introduce `POST /api/v2/task/collect/apptainer/` (\#3492).
 * Task collection:
