@@ -27,6 +27,8 @@ def parse_stdout_value(stdout: str, key: str) -> str:
             f"String '{search}' found {len(matching_lines)} times in stdout "
             "(expected once)."
         )
+    elif matching_lines[0].count(search) != 1:
+        raise ValueError(f"Invalid matching line '{matching_lines[0]}'.")
     return matching_lines[0].split(search)[-1].strip(" ")
 
 

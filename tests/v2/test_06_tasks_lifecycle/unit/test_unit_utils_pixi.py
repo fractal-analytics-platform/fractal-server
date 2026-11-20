@@ -16,6 +16,11 @@ def test_parse_stdout_value():
             "Package folder: /a\nPackage folder: /b\n", "Package folder"
         )
 
+    with pytest.raises(ValueError, match="Invalid matching line"):
+        parse_stdout_value(
+            "Package folder: /a Package folder: /b\n", "Package folder"
+        )
+
 
 def test_parse_collect_stdout():
     with pytest.raises(ValueError):
