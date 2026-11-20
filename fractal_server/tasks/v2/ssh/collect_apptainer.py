@@ -27,6 +27,7 @@ from fractal_server.tasks.v2.utils_database import (
     create_db_tasks_and_update_task_group_sync,
 )
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
+from fractal_server.tasks.v2.utils_pixi import parse_stdout_value
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.tasks.v2.utils_templates import customize_template
 from fractal_server.utils import get_timestamp
@@ -38,23 +39,6 @@ DEF_TEMPLATE_FILENAME = "apptainer_template.def"
 DEF_FILENAME = "apptainer.def"
 SIF_FILENAME = "image.sif"
 PIXI_LOCK_FILENAME = "pixi.lock"
-
-
-def _parse_package_root(stdout: str) -> str:
-    """
-    Extract the package folder (a path inside the container) from the
-    stdout of `apptainer_post_build.sh`.
-    """
-    PACKAGE_FOLDER_PREFIX = "Package folder:"
-    matching_lines = [
-        line for line in stdout.splitlines() if PACKAGE_FOLDER_PREFIX in line
-    ]
-    if len(matching_lines) != 1:
-        raise ValueError(
-            f"String '{PACKAGE_FOLDER_PREFIX}' found {len(matching_lines)} "
-            "times in stdout (expected once)."
-        )
-    return matching_lines[0].split(PACKAGE_FOLDER_PREFIX)[-1].strip(" ")
 
 
 def collect_ssh_apptainer(
@@ -269,7 +253,7 @@ def collect_ssh_apptainer(
 
                     # Parse stdout. NOTE: `package_root` is a path inside the
                     # container.
-                    package_root = _parse_package_root(stdout)
+                    package_root = parse_stdout_value(stdout, "Package folder")
 
                     # Read and validate manifest file (copied out of the image)
                     pkg_manifest_dict = fractal_ssh.read_remote_json_file(
