@@ -275,7 +275,8 @@ def test_refresh_with_identity_provider(
             return dict(access_token=f"new-from-{refresh_token}")
 
     monkeypatch.setattr(
-        token_module, "_get_oauth_client", lambda _: FakeClient()
+        "fractal_server.app.routes.auth.oauth.create_oauth_client",
+        lambda _: FakeClient(),
     )
     override_oauth_settings_factory(
         OAUTH_CLIENT_NAME="github",

@@ -20,14 +20,12 @@ from typing import Any
 from typing import Protocol
 
 import httpx
-from httpx_oauth.oauth2 import BaseOAuth2
 from httpx_oauth.oauth2 import OAuth2Error
 from sqlalchemy.orm import Session
 from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import OAuthAccount
-from fractal_server.config import OAuthSettings
 from fractal_server.config import get_oauth_settings
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
@@ -89,27 +87,6 @@ def _expires_at(account: OAuthAccount) -> int | None:
     return jwt_claims(account.access_token).get("exp")
 
 
-def _get_oauth_client(oauth_settings: OAuthSettings) -> BaseOAuth2:
-    """
-    Same OAuth client as in `get_oauth_router`, which is not reused so that
-    `fractal_server.app.routes` is not modified.
-    """
-    # TODO: small refactor in oauth.py to remove the need of this copied code
-
-    # Imported here, to avoid loading the API routes in the runner modules
-    from fractal_server.app.routes.auth.oauth import _create_client_github
-    from fractal_server.app.routes.auth.oauth import _create_client_google
-    from fractal_server.app.routes.auth.oauth import _create_client_oidc
-
-    match oauth_settings.OAUTH_CLIENT_NAME:
-        case "google":
-            return _create_client_google(oauth_settings)
-        case "github":
-            return _create_client_github(oauth_settings)
-        case _:
-            return _create_client_oidc(oauth_settings)
-
-
 def _is_invalid_grant(response: httpx.Response | None) -> bool:
     """
     Whether the identity provider refused the refresh token (RFC 6749,
@@ -125,10 +102,13 @@ def _is_invalid_grant(response: httpx.Response | None) -> bool:
 
 
 def _refresh_with_identity_provider(refresh_token: str) -> dict[str, Any]:
+    # Imported here, to avoid loading the API routes in the runner modules
+    from fractal_server.app.routes.auth.oauth import create_oauth_client
+
     oauth_settings = Inject(get_oauth_settings)
     if not oauth_settings.is_set:
         raise SlurmTokenError("OAuth client is not configured.")
-    client = _get_oauth_client(oauth_settings)
+    client = create_oauth_client(oauth_settings)
     # The runner runs in a worker thread, without a running event loop
     return asyncio.run(client.refresh_token(refresh_token))
 
