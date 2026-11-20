@@ -7,6 +7,7 @@ from httpx_oauth.clients.openid import OpenID
 from httpx_oauth.clients.openid import OpenIDConfigurationError
 from httpx_oauth.exceptions import GetIdEmailError
 from httpx_oauth.exceptions import GetProfileError
+from httpx_oauth.oauth2 import BaseOAuth2
 
 from fractal_server.config import OAuthSettings
 from fractal_server.config import get_oauth_settings
@@ -74,6 +75,19 @@ def _create_client_oidc(cfg: OAuthSettings) -> OpenID:
     return open_id
 
 
+def create_oauth_client(cfg: OAuthSettings) -> BaseOAuth2:
+    """
+    Create the OAuth client of the configured identity provider.
+    """
+    client_name = cfg.OAUTH_CLIENT_NAME
+    if client_name == "google":
+        return _create_client_google(cfg)
+    elif client_name == "github":
+        return _create_client_github(cfg)
+    else:
+        return _create_client_oidc(cfg)
+
+
 def get_oauth_router() -> APIRouter | None:
     """
     Get the `APIRouter` object for OAuth endpoints.
@@ -85,12 +99,7 @@ def get_oauth_router() -> APIRouter | None:
         return None
 
     client_name = oauth_settings.OAUTH_CLIENT_NAME
-    if client_name == "google":
-        client = _create_client_google(oauth_settings)
-    elif client_name == "github":
-        client = _create_client_github(oauth_settings)
-    else:
-        client = _create_client_oidc(oauth_settings)
+    client = create_oauth_client(oauth_settings)
 
     router_oauth.include_router(
         fastapi_users.get_oauth_router(
