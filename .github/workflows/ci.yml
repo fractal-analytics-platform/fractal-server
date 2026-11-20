@@ -167,6 +167,12 @@ jobs:
           sudo --login -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
           sudo --login -u postgres createdb fractal_test
 
+      # Disable the AppArmor restriction on unprivileged user namespaces (on by
+      # default in Ubuntu >= 24.04), so that apptainer can create user
+      # namespaces inside the SLURM container (which shares the host kernel).
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Cache SLURM Docker images
         id: cache-docker-ubuntu24-slurm-multipy
         uses: actions/cache@v6.1.0

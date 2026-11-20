@@ -18,6 +18,9 @@ from .sharing import router as sharing_router
 from .submit import router as submit_job_router
 from .task import router as task_router
 from .task_collection import router as task_collection_router
+from .task_collection_apptainer import (
+    router as task_collection_apptainer_router,
+)
 from .task_collection_custom import router as task_collection_router_custom
 from .task_collection_pixi import router as task_collection_pixi_router
 from .task_group import router as task_group_router
@@ -54,6 +57,11 @@ router_api.include_router(
 )
 router_api.include_router(
     task_collection_pixi_router,
+    prefix="/task",
+    tags=["Task Lifecycle"],
+)
+router_api.include_router(
+    task_collection_apptainer_router,
     prefix="/task",
     tags=["Task Lifecycle"],
 )
