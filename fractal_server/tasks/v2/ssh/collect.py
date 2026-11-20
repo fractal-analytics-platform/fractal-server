@@ -266,7 +266,7 @@ def collect_ssh(
                         package_manifest=pkg_manifest,
                         package_version=task_group.version,
                         package_root=Path(package_root_remote),
-                        python_bin=Path(python_bin),
+                        python_command=python_bin,
                     )
                     logger.info("_prepare_tasks_metadata - end")
 

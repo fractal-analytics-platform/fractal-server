@@ -12,7 +12,6 @@ from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.app.schemas.v2 import TaskGroupActivityStatus
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.app.schemas.v2.task_group import TaskGroupActivityAction
-from fractal_server.exceptions import UnreachableBranchError
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.utils import get_timestamp
@@ -89,8 +88,7 @@ def prepare_tasks_metadata(
     *,
     package_manifest: ManifestV2,
     package_root: Path,
-    python_bin: Path | None = None,
-    project_python_wrapper: Path | None = None,
+    python_command: str,
     package_version: str,
 ) -> list[TaskCreate]:
     """
@@ -99,19 +97,11 @@ def prepare_tasks_metadata(
     Args:
         package_manifest:
         package_root:
+        python_command: Command that runs Python, to be prepended to each
+            task executable. It can be a path (e.g. `/some/venv/bin/python`)
+            or a multi-word command (e.g. `apptainer exec ... python`).
         package_version:
-        python_bin:
-        project_python_wrapper:
     """
-
-    if python_bin is not None and project_python_wrapper is None:
-        actual_python = python_bin
-    elif python_bin is None and project_python_wrapper is not None:
-        actual_python = project_python_wrapper
-    else:
-        raise UnreachableBranchError(
-            f"Either {project_python_wrapper} or {python_bin} must be set."
-        )
 
     task_list = []
     for _task in package_manifest.task_list:
@@ -126,14 +116,12 @@ def prepare_tasks_metadata(
         if _task.executable_non_parallel is not None:
             non_parallel_path = package_root / _task.executable_non_parallel
             cmd_non_parallel = (
-                f"{actual_python.as_posix()} {non_parallel_path.as_posix()}"
+                f"{python_command} {non_parallel_path.as_posix()}"
             )
             task_attributes["command_non_parallel"] = cmd_non_parallel
         if _task.executable_parallel is not None:
             parallel_path = package_root / _task.executable_parallel
-            cmd_parallel = (
-                f"{actual_python.as_posix()} {parallel_path.as_posix()}"
-            )
+            cmd_parallel = f"{python_command} {parallel_path.as_posix()}"
             task_attributes["command_parallel"] = cmd_parallel
         # Create object
         task_obj = TaskCreate(

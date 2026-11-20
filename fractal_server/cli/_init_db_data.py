@@ -89,6 +89,7 @@ def init_db_data(
                     "jobs_poll_interval": 0,
                     "jobs_runner_config": {},
                     "tasks_pixi_config": {},
+                    "tasks_apptainer_config": {},
                 }
                 print("Prepared default resource data.")
             else:

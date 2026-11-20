@@ -19,6 +19,7 @@ class TaskGroupOriginEnum(StrEnum):
     PYPI = "pypi"
     WHEELFILE = "wheel-file"
     PIXI = "pixi"
+    APPTAINER = "apptainer"
     OTHER = "other"
 
 

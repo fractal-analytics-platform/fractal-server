@@ -14,6 +14,7 @@ from pydantic.types import AwareDatetime
 
 from fractal_server.runner.config import JobRunnerConfigLocal
 from fractal_server.runner.config import JobRunnerConfigSLURM
+from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.types import AbsolutePathStr
@@ -56,6 +57,21 @@ def cast_serialize_pixi_settings(
     return value
 
 
+def cast_serialize_apptainer_settings(
+    value: dict[NonEmptyStr, Any],
+) -> dict[NonEmptyStr, Any]:
+    """
+    Cast/serialize round trip for `tasks_apptainer_config` through the
+    `TasksApptainerSettings` schema.
+
+    Arguments:
+        value: Current `tasks_apptainer_config` value.
+    """
+    if value != {}:
+        value = TasksApptainerSettings(**value).model_dump()
+    return value
+
+
 class ValidResourceBase(BaseModel):
     """
     Base resource schema.
@@ -70,6 +86,10 @@ class ValidResourceBase(BaseModel):
         dict[NonEmptyStr, Any],
         AfterValidator(cast_serialize_pixi_settings),
     ]
+    tasks_apptainer_config: Annotated[
+        dict[NonEmptyStr, Any],
+        AfterValidator(cast_serialize_apptainer_settings),
+    ] = {}
     tasks_local_dir: AbsolutePathStr
 
     # Jobs
@@ -80,13 +100,16 @@ class ValidResourceBase(BaseModel):
     prevent_new_submissions: bool = False
 
     @model_validator(mode="after")
-    def _pixi_slurm_config(self) -> Self:
-        if (
-            self.tasks_pixi_config != {}
-            and self.type == ResourceType.SLURM_SSH
-            and self.tasks_pixi_config["SLURM_CONFIG"] is None
-        ):
-            raise ValueError("`tasks_pixi_config` must include `SLURM_CONFIG`.")
+    def _slurm_ssh_tasks_configs(self) -> Self:
+        """
+        For SLURM-SSH resources, non-empty `tasks_pixi_config` and
+        `tasks_apptainer_config` must include `SLURM_CONFIG`.
+        """
+        if self.type == ResourceType.SLURM_SSH:
+            for field in ("tasks_pixi_config", "tasks_apptainer_config"):
+                config = getattr(self, field)
+                if config != {} and config["SLURM_CONFIG"] is None:
+                    raise ValueError(f"`{field}` must include `SLURM_CONFIG`.")
         return self
 
 
@@ -104,6 +127,8 @@ class ValidResourceLocal(ValidResourceBase):
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
             Configuration of `pixi` interpreters used for task collection.
+        tasks_apptainer_config:
+            Configuration of `apptainer`-based task collection.
         tasks_local_dir:
             Local base folder for task environments.
         jobs_local_dir:
@@ -132,6 +157,8 @@ class ValidResourceSlurmSudo(ValidResourceBase):
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
             Configuration of `pixi` interpreters used for task collection.
+        tasks_apptainer_config:
+            Configuration of `apptainer`-based task collection.
         tasks_local_dir:
             Local base folder for task environments.
         jobs_local_dir:
@@ -164,6 +191,8 @@ class ValidResourceSlurmSSH(ValidResourceBase):
             Configuration of Python interpreters used for task collection.
         tasks_pixi_config:
             Configuration of `pixi` interpreters used for task collection.
+        tasks_apptainer_config:
+            Configuration of `apptainer`-based task collection.
         tasks_local_dir:
             Local base folder for task environments.
         jobs_local_dir:
@@ -223,6 +252,7 @@ class ResourceRead(BaseModel):
     tasks_local_dir: str
     tasks_python_config: dict[str, Any]
     tasks_pixi_config: dict[str, Any]
+    tasks_apptainer_config: dict[str, Any]
 
 
 @validate_call
