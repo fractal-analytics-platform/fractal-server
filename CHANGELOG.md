@@ -1,7 +1,11 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.28.0
 
+* API:
+    * Introduce `POST /api/v2/task/collect/apptainer/` (\#3492).
+* Task collection:
+    * Add `apptainer` based task collection (SLURM-SSH only) (\#3492).
 * Testing:
     * Remove obsolete docker-compose files (\#3505).
 * Dependencies:
