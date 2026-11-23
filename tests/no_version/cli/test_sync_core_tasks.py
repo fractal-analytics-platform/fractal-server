@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from fractal_server.cli._sync_core_tasks import _count_core_tasks
-from fractal_server.cli._sync_core_tasks import _get_final_set
+from fractal_server.cli._aux_sync_core_tasks import _count_core_tasks
+from fractal_server.cli._aux_sync_core_tasks import _get_final_set
 from fractal_server.cli._sync_core_tasks import sync_core_tasks
 
 
@@ -209,6 +209,15 @@ def test_fractalctl_sync_core_tasks_cli():
     )
     assert res.returncode != 0
     assert "the following arguments are required" in res.stderr
+
+    cmd = "fractalctl sync-core-tasks --resources-and-groups /tmp/list.json"
+    res = subprocess.run(
+        shlex.split(cmd),
+        capture_output=True,
+        encoding="utf-8",
+    )
+    assert res.returncode == 1
+    assert "FileNotFoundError" in res.stderr
 
 
 def test_fractalctl_sync_core_tasks_run(monkeypatch):

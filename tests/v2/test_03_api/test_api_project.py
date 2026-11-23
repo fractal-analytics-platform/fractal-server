@@ -1,6 +1,6 @@
 from devtools import debug
-from sqlmodel import delete
-from sqlmodel import select
+from sqlalchemy import delete
+from sqlalchemy import select
 
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v2 import DatasetV2

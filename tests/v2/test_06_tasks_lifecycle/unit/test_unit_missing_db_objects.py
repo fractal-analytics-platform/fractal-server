@@ -10,6 +10,7 @@ from fractal_server.tasks.v2.ssh import deactivate_ssh
 from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
+from fractal_server.tasks.v2.ssh.collect_apptainer import collect_ssh_apptainer
 
 
 def test_unit_missing_objects(
@@ -68,6 +69,7 @@ def test_unit_missing_objects(
         collect_ssh_pixi,
         deactivate_ssh_pixi,
         reactivate_ssh_pixi,
+        collect_ssh_apptainer,
     ]:
         caplog.clear()
         assert caplog.text == ""
@@ -87,6 +89,14 @@ def test_unit_missing_objects(
                 resource=resource,
                 profile=profile,
                 use_pixi_lockfile=True,
+            )
+        elif function == collect_ssh_apptainer:
+            function(
+                task_group_activity_id=9999,
+                task_group_id=9999,
+                tar_gz_file=None,
+                resource=resource,
+                profile=profile,
             )
         else:
             function(

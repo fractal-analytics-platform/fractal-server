@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi_users import schemas
+from pydantic import MISSING
 from pydantic import AfterValidator
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -81,17 +82,18 @@ class UserUpdate(schemas.BaseUserUpdate):
     """
 
     model_config = ConfigDict(extra="forbid")
-    password: NonEmptyStr = None
-    email: EmailStr = None
-    is_active: bool = None
-    is_superuser: bool = None
-    is_verified: bool = None
-    is_guest: bool = None
-    profile_id: int | None = None
-    project_dirs: Annotated[
-        ListUniqueProjectDir, AfterValidator(_validate_cmd_list)
-    ] = Field(default=None, min_length=1)
-    slurm_accounts: SlurmAccountsList = None
+    password: NonEmptyStr | MISSING = MISSING
+    email: EmailStr | MISSING = MISSING
+    is_active: bool | MISSING = MISSING
+    is_superuser: bool | MISSING = MISSING
+    is_verified: bool | MISSING = MISSING
+    is_guest: bool | MISSING = MISSING
+    profile_id: int | None | MISSING = MISSING
+    project_dirs: (
+        Annotated[ListUniqueProjectDir, AfterValidator(_validate_cmd_list)]
+        | MISSING
+    ) = Field(default=MISSING, min_length=1)
+    slurm_accounts: SlurmAccountsList | MISSING = MISSING
 
 
 class UserUpdateStrict(BaseModel):
@@ -103,7 +105,7 @@ class UserUpdateStrict(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
-    slurm_accounts: SlurmAccountsList = None
+    slurm_accounts: SlurmAccountsList | MISSING = MISSING
 
 
 class UserCreate(schemas.BaseUserCreate):

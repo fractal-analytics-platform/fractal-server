@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from httpx import ASGITransport
 from httpx import AsyncClient
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models import DatasetV2
 from fractal_server.app.models import LinkUserProjectV2

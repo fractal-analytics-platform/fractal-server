@@ -196,7 +196,6 @@ def test_SingleImageUpdate():
     image = image_ok(model=SingleImageUpdate, zarr_url="/x")
     assert image.model_dump() == {
         "zarr_url": "/x",
-        "attributes": None,
         "types": None,
     }
     image_fail(model=SingleImageUpdate, zarr_url="x")

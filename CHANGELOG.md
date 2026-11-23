@@ -1,5 +1,169 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+
+# 2.28.0
+
+> NOTE: This release introduces **experimental** support for collecting
+> pixi-locked task packages via `apptainer` on SSH-SLURM instances.
+
+* API:
+    * Introduce `POST /api/v2/task/collect/apptainer/` (\#3492).
+* Task collection:
+    * Add `apptainer` based task collection (SLURM-SSH only) (\#3492).
+* Testing:
+    * Remove obsolete docker-compose files (\#3505).
+* Dependencies:
+    * Bump `fastapi` to `0.166` (\#3502, \#3506).
+    * Bump lockfile (\#3502, \#3506, baceaba88e).
+    * Require `fabric>=3.2.3` (\#3506).
+    * Make imported dependencies explicit (\#3503).
+
+# 2.27.4
+
+* Testing:
+    * Use lockfile for GitHub actions (\#3499).
+* Dependencies:
+    * Bump `zensical` to 0.1.1 (\#3500).
+    * Require `gunicorn >= 27.0.1` (\#3501).
+    * Bump lockfile (\#3501).
+
+# 2.27.3
+
+* App lifetime:
+    * Add `FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN` configuration variable (\#3495).
+* Dependencies:
+    * Bump gunicorn to v27 (\#3496).
+    * Bump lockfile (\#3496).
+
+# 2.27.2
+
+* CLI:
+    * Fix CLI arguments for `fractalctl sync-core-tasks` (\#3490).
+
+# 2.27.1
+
+> WARNING: After updating to this version, you should remove Python 3.9 or 3.10 entries
+> from the resource `tasks_python_config` entry.
+
+* Testing:
+    * Bump `pypa/gh-action-pypi-publish` due to `GHSA-5xjx-3w67-w9x9` vulnerability (\#3488).
+
+# 2.27.0 (skipped)
+
+> WARNING: This released is not available on PyPI, please use 2.27.1.
+
+> **NOTE**: When upgrading to this version, you should also upgrade
+> `fractal-web` to version 1.30.0 (or more recent) - to make sure that
+> self-registration error responses are handled properly.
+
+* Task collection:
+    * Deprecate Python 3.9 and 3.10 for `pip`-based task collections (\#3481).
+* App:
+    * Rename `FRACTAL_HELP_URL` into `FRACTAL_REGISTRATION_URL` (\#3483).
+    * Add `FRACTAL_HELP_EMAIL` configuration variable (\#3483).
+* Authentication:
+    * Customize errors for OAuth self-registration (\#3483).
+* Dependencies:
+    * Update lock (\#3484).
+    * Bump `pydantic-settings` version (\#3484).
+    * Bump `zensical` version (\#3484).
+
+# 2.26.0
+
+> **NOTE**: This release drops support for Python 3.12.
+
+* API:
+    * Make `use_pixi_lockfile` form field of `POST /api/v2/task/collect/pixi/` a `Literal["true", "false"]` (\#3473).
+* Dependencies:
+    * Bump `fastapi` to v0.162 (\#3473).
+    * Drop support for Python3.12 (\#3477).
+    * Update lock file (\#3477).
+* Testing:
+    * Use pixi v0.82.1 in tests (\#3474).
+* Documentation:
+    * Bump zensical to 0.0.72 and enable privacy plugin (\#3475).
+
+# 2.25.4
+
+* App:
+    * Add unique `References` header, to avoid spurious message grouping (e.g. of notifications coming from different instances) in email clients (\#3467).
+* Docs:
+    * Fix `markdown_extensions` configuration in `zensical.toml` (\#3469, \#3470).
+    * Re-include missing users page in documentation (\#3469).
+* Dependencies:
+    * Update lock (\#3469).
+    * Update lock (6a7d42cae8) - ref https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2.
+* Testing:
+    * Test that `remote.py` can run without 3rd-party dependencies (\#3472).
+
+# 2.25.3
+
+* API and schemas:
+    * Use `MISSING` sentinel for non-required non-nullable properties of PATCH request bodies and other schemas (\#3452, \#3463).
+* SSH:
+    * Make user-facing `SSHException`s more informative (\#3461).
+* Logging:
+    * Make `LOG_CONFIG_FILE` a JSON file rather than YAML (\#3464).
+* Dependencies:
+    * Support Python3.15 (\#3465).
+    * Bump `pydantic` to `2.14` (\#3452).
+    * Bump `fastapi` to `0.143` (\#3460).
+    * Bump `pydantic-settings` to `2.15` (\#3466).
+    * Bump `uvicorn` to `0.54` (\#3466).
+    * Bump lockfile (7acf272264).
+    * Bump `pytest`, `coverage` and `devtools` (\#3465).
+    * Bump `pytest-env` and `zensical` (\#3466).
+* Testing:
+    * Make CI run on Python 3.12 and 3.15 in PRs (\#3465).
+    * Make CI run on Python 3.12, 3.13, 3.14 and 3.15 on `main` (\#3465).
+    * Make GitHub actions run on ubuntu-26.04 (\#3466).
+
+# 2.25.2
+
+* SLURM-sudo runner:
+    * Make `SlurmSudoRunner._fetch_artifacts` raise for `ThreadPoolExecutor.map` (\#3455).
+    * Only ignore file-not-found errors when fetching remote job artifacts via `sudo -u` (\#3455).
+* `fractalctl` CLI:
+    * Improve logging for `submissions` commands (7b5b49e378).
+
+# 2.25.1
+
+* Database:
+    * Make `HistoryUnit.zarr_urls` not nullable (\#3446).
+* `fractalctl` CLI:
+    * Added `submissions-enable` and `submissions-disable` commands (\#3451).
+* Dependencies:
+    * Bump `sqlalchemy` to v2.1 (\#3447).
+
+# 2.25.0
+
+* Database:
+    * Drop SQLModel, in favor of bare SQLAlchemy (\#3418).
+
+# 2.24.4
+
+* Database:
+    * Dispose of the connection pool during app teardown (\#3435).
+* Testing:
+    * Drop `network: host` from CI docker-compose files (\#3432).
+
+# 2.24.3
+
+* `fractalctl` CLI:
+    * Lazy-load dependencies for CLI commands (\#3421).
+* Database:
+    * Add `NOT (is_superuser AND is_guest)` check constraint (\#3426).
+* Runner:
+    * Add `SlurmConfig.needs_gpu` attribute (\#XXXX).
+    * Set `parallel_tasks_per_job=1` for GPU tasks (\#XXXX).
+* Documentation:
+    * Add docs page about data access and `fractal-data` integration (\#3419).
+    * Add Trove classifiers (7ce44457ed).
+* Dependencies;
+    * Bump `fastapi`, `sqlmodel` and `uvicorn` upper bounds (\#3422).
+    * Generate `pylock` files and upload them to GitHub releases (\#3428).
+    * Add pre-bumpver hook to update `uv.lock` for new releases (\#3248).
+
 # 2.24.2
 
 * API:
@@ -586,9 +750,7 @@ The main contents of this release are the introduction of the project sharing an
 
 # 2.17.0
 
-> This version requires running a data-migration script (`fractalctl update-db-data`),
-> see [detailed
-> instructions](https://fractal-analytics-platform.github.io/fractal-server/internals/version_upgrades/upgrade_2_16_6_to_2_17_0/).
+> This version requires running a data-migration script (`fractalctl update-db-data`).
 
 The main content of this release is the introduction of the computational
 resource&profile concepts, and a review of the application settings.
@@ -636,7 +798,7 @@ resource&profile concepts, and a review of the application settings.
 * Testing and GitHub actions:
     * Simplify Python environment in documentation GitHub action (\#2919).
     * Simplify PyPI-publish GitHub action (\#2927).
-    * Drop explicit dependency on `python-dotenv (\#2921).
+    * Drop explicit dependency on `python-dotenv` (\#2921).
 * Testing:
     * Introduce `pytest-env` dependency.
     * Update testing database to version 2.16.6 (\#2909).
@@ -2302,7 +2464,7 @@ Warning: updating to this version requires changes to the configuration variable
     * Fix many-to-many relationship between users and project (\#660).
     * Rename `Project.user_member_list` into `Project.user_list` (\#660).
     * Add `username` column (\#704).
-* Update endpoints (see also [1.2->1.3 upgrade info](internals/version_upgrades/upgrade_1_2_5_to_1_3_0.md) in the documentation):
+* Update endpoints:
     * Review endpoint URLs (\#669).
     * Remove foreign keys from payloads (\#669).
 * Update `Task` models, task collection and task-related endpoints:

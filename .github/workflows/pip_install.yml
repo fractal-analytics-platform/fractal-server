@@ -14,20 +14,41 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-latest]
-        python-version: ["3.12", "3.13", "3.14"]
+        os: [ubuntu-26.04, macos-latest]
+        python-version: ["3.13", "3.14", "3.15"]
 
-    name: "Core, Python ${{ matrix.python-version }}, ${{ matrix.os }}"
+    name: "pip-install, Python ${{ matrix.python-version }}, ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 5
+    concurrency:
+      # This makes a single `pip_install` job run at the time (per-GHA, per-ref),
+      # while keeping up to 100 jobs in the queue.
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}
+      queue: max
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - run: pip install -e .
+
+  run-remote-without-dependencies:
+    name: "Run `remote.py` without dependencies"
+    runs-on: ubuntu-26.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.14"
+
+      # Setup an environment without dependencies, and make sure that `remote.py` does not raise import errors
+      - run: pip install -e . --no-dependencies
+      - run: python fractal_server/runner/executors/slurm_common/remote.py --input-file /tmp/in.json --output-file /tmp/out.json

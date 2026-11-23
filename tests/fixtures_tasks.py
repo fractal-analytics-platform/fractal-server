@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 from pytest import TempdirFactory
+from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSyncSession
-from sqlmodel import select
 
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
@@ -73,7 +73,7 @@ def fractal_tasks_mock_collection(
     manifest = ManifestV2(**manifest_dict)
     task_list: list[TaskCreate] = prepare_tasks_metadata(
         package_manifest=manifest,
-        python_bin=venv_python,
+        python_command=Path(venv_python).as_posix(),
         package_root=package_root,
         package_version="0",
     )

@@ -29,12 +29,12 @@ jobs:
 
   migrations:
     name: "Migrations - pg${{ matrix.postgres-version }} - py${{ matrix.python-version }}"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
 
     strategy:
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.13", "3.14", "3.15"]
         postgres-version: ["10", "18"]
 
     services:
@@ -52,7 +52,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -61,9 +61,9 @@ jobs:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${SOURCE_VERSION}.sql
 
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
@@ -88,7 +88,7 @@ jobs:
 
   downgrade:
     name: "Alembic downgrade - pg${{ matrix.postgres-version }}"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
 
     strategy:
@@ -110,15 +110,15 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.11.14"
+          version: "latest-known"
           enable-cache: true
-          python-version: "3.12"
+          python-version: "3.14"
 
       - run: uv sync --frozen
 

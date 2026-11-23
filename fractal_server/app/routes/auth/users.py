@@ -10,14 +10,17 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import exceptions
 from fastapi_users.router.common import ErrorCode
+from pydantic import MISSING
+from sqlalchemy import func
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import func
-from sqlmodel import select
 
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import LinkUserGroup
 from fractal_server.app.models import UserGroup
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import Profile
 from fractal_server.app.routes.auth._aux_auth import _user_or_404
 from fractal_server.app.schemas.user import UserRead
@@ -69,15 +72,16 @@ async def patch_user(
     # Check that user exists
     user_to_patch = await _user_or_404(user_id, db)
 
-    if user_update.profile_id is not None:
-        profile = await db.get(Profile, user_update.profile_id)
-        if profile is None:
+    if user_update.profile_id not in (MISSING, None):
+        try:
+            await db.get_one(Profile, user_update.profile_id)
+        except NoResultFound:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Profile {user_update.profile_id} not found.",
             )
 
-    if user_update.project_dirs is not None:
+    if user_update.project_dirs is not MISSING:
         await _check_project_dirs_update(
             old_project_dirs=user_to_patch.project_dirs,
             new_project_dirs=user_update.project_dirs,
@@ -87,10 +91,10 @@ async def patch_user(
 
     will_be_superuser = (
         user_update.is_superuser
-        if user_update.is_superuser is not None
+        if user_update.is_superuser is not MISSING
         else user_to_patch.is_superuser
     )
-    if user_update.is_guest and will_be_superuser:
+    if user_update.is_guest is True and will_be_superuser:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Superuser cannot be guest.",
@@ -104,10 +108,9 @@ async def patch_user(
             safe=False,
             request=None,
         )
-        validated_user = UserOAuth.model_validate(user.model_dump())
         patched_user = await db.get_one(
             UserOAuth,
-            validated_user.id,
+            user.id,
             populate_existing=True,
         )
     except exceptions.InvalidPasswordException as e:
@@ -156,7 +159,7 @@ async def list_users(
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1742
     users_dict = [
         dict(
-            **user_obj.model_dump(),
+            **orm_model_to_dict(user_obj),
             oauth_accounts=user_obj.oauth_accounts,
             group_ids=[
                 link.group_id for link in links if link.user_id == user_obj.id

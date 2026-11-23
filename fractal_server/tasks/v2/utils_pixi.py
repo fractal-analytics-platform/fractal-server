@@ -15,30 +15,33 @@ class ParsedOutput(TypedDict):
     project_python_wrapper: str
 
 
+def parse_stdout_value(stdout: str, key: str) -> str:
+    """
+    Extract the value following `{key}:` from the only line of `stdout`
+    that contains it.
+    """
+    search = f"{key}:"
+    matching_lines = [line for line in stdout.splitlines() if search in line]
+    if len(matching_lines) != 1:
+        raise ValueError(
+            f"String '{search}' found {len(matching_lines)} times in stdout "
+            "(expected once)."
+        )
+    elif matching_lines[0].count(search) != 1:
+        raise ValueError(f"Invalid matching line '{matching_lines[0]}'.")
+    return matching_lines[0].split(search)[-1].strip(" ")
+
+
 def parse_collect_stdout(stdout: str) -> ParsedOutput:
     """
     Parse standard output of `pixi/1_collect.sh`
     """
-    searches = [
-        ("Package folder:", "package_root"),
-        ("Project Python wrapper:", "project_python_wrapper"),
-    ]
-    stdout_lines = stdout.splitlines()
-    attributes = dict()
-    for search, attribute_name in searches:
-        matching_lines = [_line for _line in stdout_lines if search in _line]
-        if len(matching_lines) == 0:
-            raise ValueError(f"String '{search}' not found in stdout.")
-        elif len(matching_lines) > 1:
-            raise ValueError(
-                f"String '{search}' found too many times "
-                f"({len(matching_lines)})."
-            )
-        else:
-            actual_line = matching_lines[0]
-            attribute_value = actual_line.split(search)[-1].strip(" ")
-            attributes[attribute_name] = attribute_value
-    return attributes
+    return ParsedOutput(
+        package_root=parse_stdout_value(stdout, "Package folder"),
+        project_python_wrapper=parse_stdout_value(
+            stdout, "Project Python wrapper"
+        ),
+    )
 
 
 def simplify_pyproject_toml(

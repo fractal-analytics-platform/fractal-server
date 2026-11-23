@@ -9,7 +9,7 @@ Create Date: 2025-01-10 13:17:47.838607
 import logging
 
 from alembic import op
-from sqlmodel import SQLModel
+from sqlalchemy import MetaData
 
 from fractal_server.migrations.naming_convention import NAMING_CONVENTION
 
@@ -36,8 +36,7 @@ TABLES_V1 = [
 def upgrade() -> None:
     logger = logging.getLogger("alembic.runtime.migration")
 
-    target_metadata = SQLModel.metadata
-    target_metadata.naming_convention = NAMING_CONVENTION
+    target_metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
     connection = op.get_bind()
     target_metadata.reflect(

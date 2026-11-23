@@ -5,7 +5,7 @@ from typing import Literal
 
 import pytest
 from devtools import debug
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun

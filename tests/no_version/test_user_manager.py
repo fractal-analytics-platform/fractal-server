@@ -25,7 +25,7 @@ async def test_oauth_callback(
         )
     )
     HELP_PAGE = "https://example.org/fractal-help-page"
-    override_settings_factory(FRACTAL_HELP_URL=HELP_PAGE)
+    override_settings_factory(FRACTAL_REGISTRATION_URL=HELP_PAGE)
     user = UserOAuth(
         email="user1@example.org",
         hashed_password="xxx",
@@ -34,13 +34,13 @@ async def test_oauth_callback(
             OAuthAccount(
                 oauth_name="oidc",
                 access_token="abcd",
-                account_id=1,
+                account_id="1",
                 account_email="user1-oidc@example.org",
             ),
             OAuthAccount(
                 oauth_name="google",
                 access_token="1234",
-                account_id=1,
+                account_id="1",
                 account_email="user1-google@example.org",
             ),
         ],
@@ -61,7 +61,7 @@ async def test_oauth_callback(
             async for um in get_user_manager(user_db=user_db):
                 # User is found via `um.get_by_oauth_account`
                 await um.oauth_callback(
-                    account_id=1,
+                    account_id="1",
                     oauth_name="oidc",
                     access_token="fake",
                     account_email="user1@example.org",
@@ -72,7 +72,7 @@ async def test_oauth_callback(
                 # `oauth_name` mismatch), email already exists, association
                 # takes place
                 await um.oauth_callback(
-                    account_id=1,
+                    account_id="1",
                     oauth_name="aaaa",
                     access_token="fake",
                     account_email="user1@example.org",
@@ -84,7 +84,7 @@ async def test_oauth_callback(
                 # cannot take place and thus lead to an exception
                 with pytest.raises(UserAlreadyExists):
                     await um.oauth_callback(
-                        account_id=1,
+                        account_id="1",
                         oauth_name="bbbb",
                         access_token="fake",
                         account_email="user1@example.org",
@@ -99,4 +99,4 @@ async def test_oauth_callback(
                         account_id="x",
                         account_email="xxx@example.org",
                     )
-                assert HELP_PAGE in str(exc_info.value)
+                assert HELP_PAGE in str(exc_info.value.data)

@@ -101,6 +101,9 @@ class SlurmSudoRunner(BaseSlurmRunner):
     def _mkdir_remote_folder(self: Self, folder: str) -> None:
         _mkdir_as_user(folder=folder, user=self.slurm_user)
 
+    def _is_error_skippable(self, error_string: str) -> bool:
+        return "no such file or directory" in error_string.lower()
+
     def _fetch_artifacts_single_job(self: Self, job: SlurmJob) -> None:
         """
         Fetch artifacts for a single SLURM jobs.
@@ -143,10 +146,17 @@ class SlurmSudoRunner(BaseSlurmRunner):
                     f"{target}"
                 )
             except RuntimeError as e:
-                logger.warning(
-                    f"SKIP copy {source} into {target}. "
-                    f"Original error: {str(e)}"
-                )
+                if self._is_error_skippable(str(e)):
+                    logger.warning(
+                        f"Copying {source} into {target} failed with a "
+                        f"skippable error: {str(e)}"
+                    )
+                else:
+                    logger.warning(
+                        f"Copying {source} into {target} failed with a "
+                        f"non-skippable error: {str(e)}"
+                    )
+                    raise e
         logger.debug(f"[_fetch_artifacts_single_job] {job.slurm_job_id=} END")
 
     def _fetch_artifacts(
@@ -166,10 +176,12 @@ class SlurmSudoRunner(BaseSlurmRunner):
             max_workers=MAX_NUM_THREADS,
             thread_name_prefix=THREAD_NAME_PREFIX,
         ) as executor:
-            executor.map(
+            result_iterator = executor.map(
                 self._fetch_artifacts_single_job,
                 finished_slurm_jobs,
             )
+            # Consume iterator to make sure it raises exceptions if needed
+            list(result_iterator)
         logger.debug("[_fetch_artifacts] END.")
 
     @override

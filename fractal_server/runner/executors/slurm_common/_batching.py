@@ -42,9 +42,29 @@ def _estimate_parallel_tasks_per_job(
     """
     if cpus_per_task > max_cpus_per_job or mem_per_task > max_mem_per_job:
         return 1
+
     val_based_on_cpus = max_cpus_per_job // cpus_per_task
     val_based_on_mem = max_mem_per_job // mem_per_task
     return min(val_based_on_cpus, val_based_on_mem)
+
+
+def _update_parallel_tasks_per_job(
+    *,
+    parallel_tasks_per_job: int,
+    needs_gpu: bool,
+) -> int:
+    """
+    Replace parallel_tasks_per_job with 1, for GPU jobs.
+
+    A series of same-`sbatch`-script `srun` tasks that all require GPU access
+    will run sequentially, because they cannot share the GPU. Thus there is no
+    reason for requesting resources for running more than one at a time.
+
+    This function is *not* part of `_estimate_parallel_tasks_per_job`, because
+    otherwise `parallel_tasks_per_job=1` would also affect the batching pattern
+    (that is, how many jobs will be submitted).
+    """
+    return 1 if needs_gpu else parallel_tasks_per_job
 
 
 def heuristics(
@@ -54,6 +74,7 @@ def heuristics(
     # Optional WorkflowTask attributes:
     tasks_per_job: int | None = None,
     parallel_tasks_per_job: int | None = None,
+    needs_gpu: bool = False,
     # Task requirements (multiple possible sources):
     cpus_per_task: int,
     mem_per_task: int,
@@ -112,6 +133,8 @@ def heuristics(
             Optimal total number of SLURM jobs for a given WorkflowTask.
         max_num_jobs:
             Maximum total number of SLURM jobs for a given WorkflowTask.
+        needs_gpu:
+            Whether the task needs a GPU.
     Return:
         Valid values of `tasks_per_job` and `parallel_tasks_per_job`.
     """
@@ -183,6 +206,10 @@ def heuristics(
             msg = f"[heuristics] Requested {num_jobs=} but {max_num_jobs=}."
             logger.error(msg)
             raise SlurmHeuristicsError(msg)
+        parallel_tasks_per_job = _update_parallel_tasks_per_job(
+            parallel_tasks_per_job=parallel_tasks_per_job,
+            needs_gpu=needs_gpu,
+        )
         logger.debug("[heuristics] Return from branch 1")
         return (tasks_per_job, parallel_tasks_per_job)
 
@@ -194,6 +221,10 @@ def heuristics(
         max_mem_per_job=target_mem_per_job,
     )
     tasks_per_job = parallel_tasks_per_job
+    parallel_tasks_per_job = _update_parallel_tasks_per_job(
+        parallel_tasks_per_job=parallel_tasks_per_job,
+        needs_gpu=needs_gpu,
+    )
     num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= target_num_jobs:
         logger.debug("[heuristics] Return from branch 2")
@@ -207,6 +238,10 @@ def heuristics(
         max_mem_per_job=max_mem_per_job,
     )
     tasks_per_job = parallel_tasks_per_job
+    parallel_tasks_per_job = _update_parallel_tasks_per_job(
+        parallel_tasks_per_job=parallel_tasks_per_job,
+        needs_gpu=needs_gpu,
+    )
     num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= max_num_jobs:
         logger.debug("[heuristics] Return from branch 3")
@@ -218,6 +253,10 @@ def heuristics(
         mem_per_task=mem_per_task,
         max_cpus_per_job=max_cpus_per_job,
         max_mem_per_job=max_mem_per_job,
+    )
+    parallel_tasks_per_job = _update_parallel_tasks_per_job(
+        parallel_tasks_per_job=parallel_tasks_per_job,
+        needs_gpu=needs_gpu,
     )
     tasks_per_job = math.ceil(tot_tasks / max_num_jobs)
     logger.debug("[heuristics] Return from branch 4")

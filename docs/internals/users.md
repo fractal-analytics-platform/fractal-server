@@ -18,7 +18,7 @@ This is done by means of the [`init-db-data`](../cli_reference.md#fractalctl-ini
 The most common use cases for `fractal-server` are:
 
 1. The server is used by a single user (e.g. on their own machine). In this case you may simply use the first (and only) user.
-2. The server has multiple users, and it is connected to one or more SLURM clusters. To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its [`Profile`] (more details [here](./integrations/index.md)).
+2. The server has multiple users, and it is connected to one or more SLURM clusters. To execute jobs on a SLURM cluster, a user must be associated to that cluster and to a valid cluster-user via its `Profile` (more details [here](./integrations/index.md)).
 
 
 ## Authentication
@@ -80,7 +80,7 @@ $ curl \
 
 Fractal Server also allows a different authentication procedure, not based on the knowledge of a user's password but on external `OAuth2` authentication clients.
 
-Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/code_reference/httpx_oauth.clients/) can be readily included).
+Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [more clients](https://frankie567.github.io/httpx-oauth/code_reference/fractal_server/httpx_oauth.clients/) can be readily included).
 
 #### Configuration
 
@@ -193,7 +193,7 @@ fractalctl init-db-data \
 Now the user wants to log in using her GitHub account associated to the same email.
 
 First, she makes a call to `/auth/github/authorize/`:
-```
+```console
 $ curl \
     -X GET \
     http://127.0.0.1:8000/auth/github/authorize/
@@ -219,7 +219,7 @@ http://127.0.0.1:8000/auth/github/callback/?
 ```
 
 The callback function does not return anything, but the response cookie contains a JWT token
-```
+```json
 "fastapiusersauth": {
 	"httpOnly": true,
 	"path": "/",
@@ -232,8 +232,8 @@ The callback function does not return anything, but the response cookie contains
 > The response cookie can be found using the developer tools of the browser, inspecting the response on the network page.
 
 The user can now make [authenticated calls](#authenticated-calls) using this token, as in
-```
-curl \
+```console
+$ curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
     http://127.0.0.1:8000/auth/current-user/

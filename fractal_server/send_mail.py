@@ -1,4 +1,5 @@
 import smtplib
+import uuid
 from email.message import EmailMessage
 from email.utils import formataddr
 
@@ -40,6 +41,13 @@ def send_fractal_email_or_log_failure(
         mail_msg["Subject"] = (
             f"[Fractal, {email_settings.instance_name}] {subject}"
         )
+        # Add unique References header,  to avoid spurious message grouping
+        # (e.g. of notifications coming from different Fractal instances) in
+        # email clients. See e.g. https://support.google.com/mail/answer/5900.
+        references_header = f"<{uuid.uuid4()}>"
+        logger.info(f"Add 'References: {references_header}' header.")
+        mail_msg.add_header("References", references_header)
+
         with smtplib.SMTP(
             email_settings.smtp_server,
             email_settings.port,

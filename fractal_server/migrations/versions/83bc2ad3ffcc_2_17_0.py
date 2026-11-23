@@ -7,7 +7,6 @@ Create Date: 2025-10-30 14:16:53.639006
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
@@ -23,15 +22,15 @@ def upgrade() -> None:
     op.create_table(
         "resource",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("host", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("host", sa.String(), nullable=True),
         sa.Column(
             "jobs_local_dir",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=False,
         ),
         sa.Column(
@@ -42,13 +41,13 @@ def upgrade() -> None:
         ),
         sa.Column(
             "jobs_slurm_python_worker",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.Column("jobs_poll_interval", sa.Integer(), nullable=False),
         sa.Column(
             "tasks_local_dir",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=False,
         ),
         sa.Column(
@@ -78,24 +77,18 @@ def upgrade() -> None:
         "profile",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("resource_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "resource_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "ssh_key_path", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("resource_type", sa.String(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("username", sa.String(), nullable=True),
+        sa.Column("ssh_key_path", sa.String(), nullable=True),
         sa.Column(
             "jobs_remote_dir",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.Column(
             "tasks_remote_dir",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=True,
         ),
         sa.ForeignKeyConstraint(

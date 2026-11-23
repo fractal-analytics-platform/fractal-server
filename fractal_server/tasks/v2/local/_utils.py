@@ -1,6 +1,8 @@
 import shutil
 from pathlib import Path
 
+from pydantic import MISSING
+
 from fractal_server.app.models import Resource
 from fractal_server.app.schemas.v2 import TaskCreate
 from fractal_server.logger import get_logger
@@ -61,14 +63,14 @@ def check_task_files_exist(task_list: list[TaskCreate]) -> None:
     """
 
     for _task in task_list:
-        if _task.command_non_parallel is not None:
+        if _task.command_non_parallel is not MISSING:
             _task_path = _task.command_non_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(
                     f"Task `{_task.name}` has `command_non_parallel` "
                     f"pointing to missing file `{_task_path}`."
                 )
-        if _task.command_parallel is not None:
+        if _task.command_parallel is not MISSING:
             _task_path = _task.command_parallel.split()[-1]
             if not Path(_task_path).exists():
                 raise FileNotFoundError(

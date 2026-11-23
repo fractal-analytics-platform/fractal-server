@@ -292,6 +292,26 @@ async def test_task_group_lifecycle_pixi_local_lock_no_lock(
         assert res.status_code == 200
         assert res.json()["status"] == "failed"
 
+        # Failed collection (pixi lock is missing, explicit API parameter)
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data=dict(use_pixi_lockfile=True),
+            files=files,
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        assert res.status_code == 200
+        assert res.json()["status"] == "failed"
+
+        # Invalid API parameter
+        res = await client.post(
+            "api/v2/task/collect/pixi/",
+            data=dict(use_pixi_lockfile="invalid"),
+            files=files,
+        )
+        assert res.status_code == 422
+
         # Successful collection (with different API parameter)
         res = await client.post(
             "api/v2/task/collect/pixi/",

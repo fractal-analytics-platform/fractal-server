@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pydantic import MISSING
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -47,7 +48,7 @@ class WorkflowReadWithWarnings(WorkflowRead):
 class WorkflowUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: NonEmptyStr = None
+    name: NonEmptyStr | MISSING = MISSING
     reordered_workflowtask_ids: ListUniqueNonNegativeInt | None = None
     description: NonEmptyStr | None = None
 

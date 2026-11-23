@@ -7,12 +7,14 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic import MISSING
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.models import UserOAuth
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -130,7 +132,7 @@ async def read_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.model_dump(),
+        **orm_model_to_dict(workflow),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )
@@ -160,7 +162,7 @@ async def update_workflow(
         db=db,
     )
 
-    if patch.name and patch.name != workflow.name:
+    if patch.name is not MISSING and patch.name != workflow.name:
         await _check_workflow_exists(
             name=patch.name, project_id=project_id, db=db
         )
@@ -205,7 +207,7 @@ async def update_workflow(
         wftask_list=workflow.task_list, user_id=user.id, db=db
     )
     workflow_data = dict(
-        **workflow.model_dump(),
+        **orm_model_to_dict(workflow),
         project=workflow.project,
         task_list=wftask_list_with_warnings,
     )

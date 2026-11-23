@@ -51,7 +51,7 @@ async def test_task_collection_ssh_from_pypi(
 
     async with MockCurrentUser(is_verified=True, profile_id=profile.id) as user:
         # SUCCESSFUL COLLECTION
-        package_version = "0.1.4"
+        package_version = "0.1.5"
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             data=dict(

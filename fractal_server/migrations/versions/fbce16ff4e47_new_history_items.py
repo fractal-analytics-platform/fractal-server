@@ -7,7 +7,6 @@ Create Date: 2025-03-14 15:25:01.083619
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
@@ -38,7 +37,7 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_started", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("status", sa.String(), nullable=False),
         sa.Column("num_available_images", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["dataset_id"],
@@ -58,8 +57,8 @@ def upgrade() -> None:
         "historyunit",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("history_run_id", sa.Integer(), nullable=False),
-        sa.Column("logfile", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("logfile", sa.String(), nullable=True),
+        sa.Column("status", sa.String(), nullable=False),
         sa.Column("zarr_urls", postgresql.ARRAY(sa.String()), nullable=True),
         sa.ForeignKeyConstraint(
             ["history_run_id"],
@@ -71,9 +70,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "historyimagecache",
-        sa.Column(
-            "zarr_url", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("zarr_url", sa.String(), nullable=False),
         sa.Column("dataset_id", sa.Integer(), nullable=False),
         sa.Column("workflowtask_id", sa.Integer(), nullable=False),
         sa.Column("latest_history_unit_id", sa.Integer(), nullable=False),

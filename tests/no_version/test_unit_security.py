@@ -2,7 +2,7 @@ import contextlib
 import logging
 
 import pytest
-from sqlmodel import select
+from sqlalchemy import select
 
 import fractal_server.app.security
 from fractal_server.app.models import UserGroup

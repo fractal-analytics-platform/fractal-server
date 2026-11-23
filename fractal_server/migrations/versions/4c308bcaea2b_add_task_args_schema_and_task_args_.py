@@ -7,7 +7,6 @@ Create Date: 2023-05-29 17:09:02.492639
 """
 
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -24,7 +23,7 @@ def upgrade() -> None:
         "task",
         sa.Column(
             "args_schema_version",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.String(),
             nullable=True,
         ),
     )

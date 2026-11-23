@@ -1,6 +1,7 @@
 from devtools import debug
-from sqlmodel import func
+from sqlalchemy import func
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -393,6 +394,17 @@ async def test_patch_dataset(
         debug(dataset)
         assert dataset["name"] == NEW_NAME
 
+        # Dummy patch
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json={},
+        )
+        assert res.status_code == 200
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+        )
+        assert res.status_code == 200
+
 
 async def test_dataset_import(
     client,
@@ -488,7 +500,10 @@ async def test_export_dataset(
             f"/api/v2/project/{project.id}/dataset/{dataset.id}/export/"
         )
         assert res.status_code == 200
-        assert res.json() == DatasetExport(**dataset.model_dump()).model_dump()
+        assert (
+            res.json()
+            == DatasetExport(**orm_model_to_dict(dataset)).model_dump()
+        )
 
 
 async def test_get_datasets(

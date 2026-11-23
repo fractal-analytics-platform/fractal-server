@@ -14,6 +14,7 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from fractal_server import __VERSION__
+from fractal_server.app.db import DB
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.exceptions import HTTPExceptionWithData
 
@@ -117,7 +118,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
         f"Current worker with pid {os.getpid()} is shutting down. "
         f"Current jobs: {app.state.jobs=}"
     )
-    if _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND):
+    if (
+        _backend_supports_shutdown(settings.FRACTAL_RUNNER_BACKEND)
+        and settings.FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN == "true"
+    ):
         try:
             await cleanup_after_shutdown(
                 jobs=app.state.jobs,
@@ -130,7 +134,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
                 f"Original error: {e}"
             )
     else:
-        logger_teardown.info("Shutdown not available for this backend runner.")
+        logger_teardown.info(
+            "Skipping shutdown of existing jobs "
+            f"(runner: {settings.FRACTAL_RUNNER_BACKEND}, "
+            "FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN: "
+            f"{settings.FRACTAL_STOP_SLURM_JOBS_ON_SHUTDOWN})"
+        )
+
+    logger_teardown.info(
+        "Database-connection pool status (before disposal): "
+        f"{DB.engine_sync().pool.status()}"
+    )
+    logger_teardown.info("Now dispose of the pool of sync/async engines.")
+    DB.engine_sync().dispose()
+    await DB.engine_async().dispose()
+    logger_teardown.info(
+        "Database-connection pool status (after disposal): "
+        f"{DB.engine_sync().pool.status()}"
+    )
 
     logger_teardown.info("END")
     reset_logger_handlers(logger_teardown)
@@ -143,6 +164,7 @@ def _endpoint_has_background_task(method: str, path: str) -> bool:
     has_background_task = (method == "POST") and (
         "/job/submit/" in path
         or "/task/collect/pi" in path  # "/pip" and "/pixi"
+        or "/task/collect/apptainer/" in path
         or ("/task-group/" in path and "core" not in path)
     )
     return has_background_task
@@ -213,7 +235,7 @@ def start_application() -> FastAPI:
 
     settings = Inject(get_settings)
 
-    # Load logging configuration from YAML
+    # Load logging configuration from JSON
     if settings.LOG_CONFIG_FILE is not None:
         _load_logging_config(settings.LOG_CONFIG_FILE)
 

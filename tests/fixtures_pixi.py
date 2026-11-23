@@ -40,16 +40,17 @@ def pixi(
     tmpdir_factory: TempdirFactory,
 ) -> TasksPixiSettings:
     """
-    Session scoped fixture that installs pixi 0.54.1.
+    Session scoped fixture that installs pixi 0.82.1.
     """
     base_dir = Path(tmpdir_factory.getbasetemp())
     pixi_common = base_dir / "pixi"
     pixi_common.mkdir()
 
-    pixi_home = (pixi_common / "0.54.1").as_posix()
+    pixi_home = (pixi_common / "0.82.1").as_posix()
     script_contents = (
+        "export DO_NOT_TRACK=1\n"
         "export PIXI_NO_PATH_UPDATE=1\n"
-        "export PIXI_VERSION=0.54.1\n"
+        "export PIXI_VERSION=0.82.1\n"
         f"export PIXI_HOME={pixi_home}\n"
         "curl -fsSL https://pixi.sh/install.sh | sh\n"
     )
@@ -63,6 +64,6 @@ def pixi(
     logging.info(f"END   running {cmd=}")
 
     return TasksPixiSettings(
-        default_version="0.54.1",
-        versions={"0.54.1": pixi_home},
+        default_version="0.82.1",
+        versions={"0.82.1": pixi_home},
     )

@@ -1,5 +1,6 @@
 import pytest
 
+from fractal_server.app.models import orm_model_to_dict
 from fractal_server.app.routes.admin.v2.task_group_reset import (
     TaskGroupOverridesPip,
 )
@@ -25,11 +26,23 @@ def test_get_discriminator_value():
 def test_pixi_validator(slurm_ssh_resource_profile_fake_objects):
     res, prof = slurm_ssh_resource_profile_fake_objects
     res.tasks_pixi_config = dict(
-        default_version="0.54.1",
-        versions={"0.54.1": "/fake/0.54.1"},
+        default_version="0.82.1",
+        versions={"0.82.1": "/fake/0.82.1"},
     )
     with pytest.raises(ValueError, match="must include `SLURM_CONFIG`"):
-        ValidResourceBase(**res.model_dump())
+        ValidResourceBase(**orm_model_to_dict(res))
+
+
+def test_apptainer_validator(slurm_ssh_resource_profile_fake_objects):
+    res, prof = slurm_ssh_resource_profile_fake_objects
+    res.tasks_apptainer_config = dict(
+        pixi_version="0.84.1",
+        apptainer_bin="/usr/bin/apptainer",
+    )
+    with pytest.raises(
+        ValueError, match="`tasks_apptainer_config` must include `SLURM_CONFIG`"
+    ):
+        ValidResourceBase(**orm_model_to_dict(res))
 
 
 def test_TaskGroupOverridesPip():

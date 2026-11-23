@@ -65,6 +65,7 @@ class SlurmConfig(BaseModel):
             Key-value pairs to be included as `export`-ed variables in SLURM
             submission script, after prepending values with the user's cache
             directory.
+        needs_gpu: Whether the task needs a GPU.
 
     """
 
@@ -91,6 +92,8 @@ class SlurmConfig(BaseModel):
     nodelist: str | None = None
     nodes: int | None = None
     exclude: str | None = None
+
+    needs_gpu: bool = False
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble

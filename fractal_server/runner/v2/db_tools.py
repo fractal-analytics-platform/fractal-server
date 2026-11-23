@@ -3,11 +3,11 @@ import subprocess  # nosec
 from functools import cache
 from typing import Any
 
+from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm import Session
-from sqlmodel import select
-from sqlmodel import update
 
 from fractal_server.app.models.v2 import HistoryImageCache
 from fractal_server.app.models.v2 import HistoryRun

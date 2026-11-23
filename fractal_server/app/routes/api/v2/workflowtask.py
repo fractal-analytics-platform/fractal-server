@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.params import Query
+from pydantic import MISSING
 
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
@@ -175,7 +176,7 @@ async def update_workflowtask(
         required_permissions=ProjectPermissions.WRITE,
         db=db,
     )
-    if workflow_task_update.type_filters is not None:
+    if workflow_task_update.type_filters is not MISSING:
         _check_type_filters_compatibility(
             task_input_types=db_wf_task.task.input_types,
             wftask_type_filters=workflow_task_update.type_filters,

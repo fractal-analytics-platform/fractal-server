@@ -1,4 +1,5 @@
 import pytest
+from pydantic import MISSING
 from pydantic import BaseModel
 
 from fractal_server.tasks.v2.local._utils import check_task_files_exist
@@ -7,8 +8,8 @@ from fractal_server.tasks.v2.local._utils import check_task_files_exist
 class _MockTaskCreate(BaseModel):
     name: str = "task_name"
     version: str = "0"
-    command_non_parallel: str | None = None
-    command_parallel: str | None = None
+    command_non_parallel: str | MISSING = MISSING
+    command_parallel: str | MISSING = MISSING
 
 
 def test_check_task_files_exist(tmp_path):

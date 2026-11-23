@@ -5,3 +5,6 @@ SETTINGS_CONFIG_DICT = dict(
     env_file=Path(".fractal_server.env"),
     extra="ignore",
 )
+"""
+Configuration to be passed to `pydantic_settings.SettingsConfigDict`.
+"""

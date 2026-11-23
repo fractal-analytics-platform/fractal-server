@@ -1,7 +1,7 @@
 from typing import Literal
 
 from devtools import debug  # noqa
-from sqlmodel import select
+from sqlalchemy import select
 
 from fractal_server.app.models.v2 import TaskGroupV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
