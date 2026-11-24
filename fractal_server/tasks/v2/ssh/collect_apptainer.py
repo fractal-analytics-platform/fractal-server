@@ -230,15 +230,17 @@ def collect_ssh_apptainer(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Build the image and run the post-build script
+                    build_command = (
+                        f"{apptainer_config.build_env_prefix}"
+                        f"{apptainer_config.apptainer_bin} build "
+                        f"{sif_path_remote} {def_path_remote}"
+                    )
+                    logger.info(f"Build command: {build_command}")
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
                         commands=[
                             "date",
-                            (
-                                f"{apptainer_config.build_env_prefix}"
-                                f"{apptainer_config.apptainer_bin} build "
-                                f"{sif_path_remote} {def_path_remote}"
-                            ),
+                            build_command,
                             "date",
                             f"bash {post_build_script_path_remote}",
                         ],
