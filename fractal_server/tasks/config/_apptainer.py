@@ -19,7 +19,7 @@ class TasksApptainerSettings(BaseModel):
     Command used to invoke `apptainer` (e.g. `apptainer` or
     `/usr/bin/apptainer`).
     """
-    build_env_vars: list[tuple[str, str]] = [("APPTAINER_BINDPATH", "")]
+    build_env_vars: list[tuple[NonEmptyStr, str]] = [("APPTAINER_BINDPATH", "")]
     """
     Environment variables (as `(name, value)` pairs) for `apptainer build`.
     """

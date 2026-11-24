@@ -315,3 +315,20 @@ def test_tasks_apptainer_settings_build_env_vars():
         'APPTAINER_BINDPATH="" TMPDIR="/dev/shm" '
         'APPTAINER_CACHEDIR="/scratch/$USER" '
     )
+
+    # Name is stripped
+    settings = TasksApptainerSettings(
+        **base, build_env_vars=[["  TMPDIR ", "/dev/shm"]]
+    )
+    assert settings.build_env_vars == [("TMPDIR", "/dev/shm")]
+
+    # Empty value is allowed
+    settings = TasksApptainerSettings(**base, build_env_vars=[["TMPDIR", ""]])
+    assert settings.build_env_vars == [("TMPDIR", "")]
+
+    # Empty name is not allowed
+    for invalid_name in ["", "   "]:
+        with pytest.raises(ValidationError):
+            TasksApptainerSettings(
+                **base, build_env_vars=[[invalid_name, "value"]]
+            )
