@@ -21,8 +21,8 @@ from typing import Protocol
 
 import httpx
 from httpx_oauth.oauth2 import OAuth2Error
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import OAuthAccount
