@@ -26,9 +26,11 @@ from fractal_server.tasks.v2.local import delete_local
 from fractal_server.tasks.v2.local import reactivate_local
 from fractal_server.tasks.v2.local import reactivate_local_pixi
 from fractal_server.tasks.v2.ssh import deactivate_ssh
+from fractal_server.tasks.v2.ssh import deactivate_ssh_apptainer
 from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import delete_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh
+from fractal_server.tasks.v2.ssh import reactivate_ssh_apptainer
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.utils import get_timestamp
 
@@ -126,6 +128,8 @@ async def deactivate_task_group(
     if resource.type == ResourceType.SLURM_SSH:
         if task_group.origin == TaskGroupOriginEnum.PIXI:
             deactivate_function = deactivate_ssh_pixi
+        elif task_group.origin == TaskGroupOriginEnum.APPTAINER:
+            deactivate_function = deactivate_ssh_apptainer
         else:
             deactivate_function = deactivate_ssh
     else:
@@ -237,6 +241,8 @@ async def reactivate_task_group(
     if resource.type == ResourceType.SLURM_SSH:
         if task_group.origin == TaskGroupOriginEnum.PIXI:
             reactivate_function = reactivate_ssh_pixi
+        elif task_group.origin == TaskGroupOriginEnum.APPTAINER:
+            reactivate_function = reactivate_ssh_apptainer
         else:
             reactivate_function = reactivate_ssh
     else:
