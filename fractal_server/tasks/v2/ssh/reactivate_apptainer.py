@@ -160,7 +160,7 @@ def reactivate_ssh_apptainer(
                     try:
                         if fractal_ssh.remote_exists(sif_path_remote):
                             logger.info(f"Now delete {sif_path_remote}")
-                            fractal_ssh.remove_folder(folder=sif_path_remote)
+                            fractal_ssh.run_command(cmd=f"rm {sif_path_remote}")
                             logger.info(f"Deleted {sif_path_remote}")
                     except Exception as rm_e:
                         logger.error(

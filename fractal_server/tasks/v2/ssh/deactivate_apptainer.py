@@ -107,7 +107,7 @@ def deactivate_ssh_apptainer(
 
                     # Proceed with deactivation
                     logger.info(f"Now removing {sif_path_remote}.")
-                    fractal_ssh.remove_folder(folder=sif_path_remote)
+                    fractal_ssh.run_command(cmd=f"rm {sif_path_remote}")
                     logger.info(f"All good, {sif_path_remote} removed.")
                     activity.status = TaskGroupActivityStatus.OK
                     activity.log = get_current_log(log_file_path)
