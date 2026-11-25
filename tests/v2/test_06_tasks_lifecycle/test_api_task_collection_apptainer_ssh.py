@@ -9,6 +9,7 @@ from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.config._slurm import TasksSLURMConfig
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
+from fractal_server.tasks.v2.ssh.collect_apptainer import DEF_FILENAME
 from fractal_server.tasks.v2.ssh.collect_apptainer import SIF_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
@@ -187,3 +188,63 @@ async def test_task_collection_apptainer_ssh(
         assert not fractal_ssh.remote_exists(
             Path(task_group_path).parent.joinpath("9.9.9").as_posix()
         )
+
+        # 6 / Deactivate: SIF file is removed, definition file is kept
+        sif_path_remote = Path(task_group.path, SIF_FILENAME).as_posix()
+        def_path_remote = Path(task_group.path, DEF_FILENAME).as_posix()
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "OK"
+        assert not fractal_ssh.remote_exists(sif_path_remote)
+        assert fractal_ssh.remote_exists(def_path_remote)
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is False
+
+        # 7 / Reactivate: SIF file is re-built
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "OK"
+        assert fractal_ssh.remote_exists(sif_path_remote)
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is True
+
+        # 8 / Failed deactivation - SIF file does not exist
+        fractal_ssh.remove_folder(folder=sif_path_remote)
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["status"] == "failed"
+        assert "does not exist" in activity["log"]
+
+        # 9 / Failed reactivation - SIF file already exists
+        db.expunge_all()
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        task_group.active = False
+        db.add(task_group)
+        await db.commit()
+        fractal_ssh.write_remote_file(path=sif_path_remote, content="")
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["status"] == "failed"
+        assert "already exists" in activity["log"]
