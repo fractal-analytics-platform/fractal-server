@@ -158,10 +158,9 @@ def reactivate_ssh_apptainer(
                 except Exception as reactivate_e:
                     # Delete corrupted SIF file, if any
                     try:
-                        if fractal_ssh.remote_exists(sif_path_remote):
-                            logger.info(f"Now delete {sif_path_remote}")
-                            fractal_ssh.run_command(cmd=f"rm {sif_path_remote}")
-                            logger.info(f"Deleted {sif_path_remote}")
+                        logger.info(f"Now delete {sif_path_remote}")
+                        fractal_ssh.run_command(cmd=f"rm -f {sif_path_remote}")
+                        logger.info(f"Deleted {sif_path_remote}")
                     except Exception as rm_e:
                         logger.error(
                             f"Removing {sif_path_remote} failed. "
