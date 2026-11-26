@@ -199,13 +199,8 @@ def run_script_on_remote_slurm(
         )
         fractal_ssh.write_remote_file(
             path=pre_submission_script_remote,
-            content="\n".join(
-                [
-                    "#!/bin/bash",
-                    "set -e",
-                    pre_submission_cmd,
-                    sbatch_cmd,
-                ]
+            content=(
+                f"#!/bin/bash\nset -e\n{pre_submission_cmd}\n{sbatch_cmd}\n"
             ),
         )
         logger.debug(f"Written {pre_submission_script_remote=}.")
