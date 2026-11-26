@@ -46,4 +46,4 @@ tar \
     -vcz \
     -f ${OUTPUT_FILE} \
     $(basename ${PIXI_TASK})/
-echo "Successfully created ${OUTPUT_FILE}."
+echo; echo "Successfully created ${OUTPUT_FILE}."
