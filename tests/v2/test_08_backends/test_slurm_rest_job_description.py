@@ -208,6 +208,11 @@ def test_build_job_script_writes_files(tmp_path):
     assert copy_path.read_text() == script
 
 
+def test_build_job_script_header_only():
+    script = build_job_script(script="#!/bin/sh\n#SBATCH -p x\n", files=[])
+    assert script == "#!/bin/sh\n#SBATCH -p x\numask 0002\n"
+
+
 def test_build_job_script_limits():
     with pytest.raises(ValueError, match="Single quotes"):
         build_job_script(script="#!/bin/sh\n", files=[("/a'b", "")])

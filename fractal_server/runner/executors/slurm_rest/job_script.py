@@ -28,13 +28,11 @@ def build_job_script(
             would have uploaded it).
     """
     lines = script.splitlines()
-    header_end = 0
+    header_end = len(lines)
     for ind, line in enumerate(lines):
-        if (ind == 0 and line.startswith("#!")) or line.startswith(
-            SBATCH_PREFIX
-        ):
-            header_end = ind + 1
-        else:
+        is_shebang = ind == 0 and line.startswith("#!")
+        if not (is_shebang or line.startswith(SBATCH_PREFIX)):
+            header_end = ind
             break
 
     paths = [path for path, _ in files] + [script_copy_path or ""]
