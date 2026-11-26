@@ -7,6 +7,9 @@ from fractal_server.runner.executors.slurm_common._job_states import (
 from fractal_server.runner.executors.slurm_rest import client as client_module
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestClient
 from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
+from fractal_server.runner.executors.slurm_rest.client import (
+    served_api_versions,
+)
 from fractal_server.runner.executors.slurm_rest.client import squeue_state
 
 
@@ -145,6 +148,22 @@ def test_job_states_invalid_response(monkeypatch, body):
     # An empty job list is valid: jobs are missing, hence completed
     _fake_httpx(monkeypatch, [{"jobs": []}])
     assert client.get_job_states() == {}
+
+
+def test_served_api_versions(monkeypatch):
+    supported = ("v1", "v2", "v3")
+    monkeypatch.setattr(client_module, "SUPPORTED_API_VERSIONS", supported)
+    calls = []
+    # Simulate the responses for two served API versions and one not served
+    _fake_httpx(monkeypatch, [{}, httpx.Response(404), {}], calls)
+    assert served_api_versions(
+        base_url="https://example.org",
+        username="user",
+        get_token=lambda force_refresh=False: "token",
+    ) == ["v1", "v3"]
+    assert [call[1] for call in calls] == [
+        f"https://example.org/slurm/{v}/ping" for v in supported
+    ]
 
 
 @pytest.mark.parametrize(

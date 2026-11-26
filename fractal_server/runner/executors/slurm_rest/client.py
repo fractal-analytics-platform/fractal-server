@@ -104,12 +104,10 @@ class SlurmRestClient:
                 f"Unsupported slurmrestd API version '{api_version}' "
                 f"(supported: {list(SUPPORTED_API_VERSIONS)})."
             )
-        self.root_url = base_url.rstrip("/")
-        self.api_version = api_version
-        self.base_url = f"{self.root_url}/slurm/{api_version}"
+        root_url = base_url.rstrip("/")
+        self.base_url = f"{root_url}/slurm/{api_version}"
         self.username = username
         self.get_token = get_token
-        self.ca_bundle = ca_bundle
         self.timeout = timeout
         try:
             self._ssl_context = ssl.create_default_context(cafile=ca_bundle)
@@ -129,7 +127,7 @@ class SlurmRestClient:
         try:
             return httpx.request(
                 method,
-                f"{self.base_url}{path}",
+                f"{self.base_url}/{path.lstrip('/')}",
                 json=body,
                 headers={
                     "X-SLURM-USER-NAME": self.username,
@@ -187,28 +185,6 @@ class SlurmRestClient:
 
     def ping(self) -> None:
         self._request("GET", "/ping")
-
-    def served_api_versions(self) -> list[str]:
-        """
-        Supported API versions that `slurmrestd` serves, i.e. whose `/ping`
-        succeeds (a version that is not served answers 404).
-        """
-        served = []
-        for api_version in SUPPORTED_API_VERSIONS:
-            client = SlurmRestClient(
-                base_url=self.root_url,
-                username=self.username,
-                get_token=self.get_token,
-                ca_bundle=self.ca_bundle,
-                api_version=api_version,
-                timeout=self.timeout,
-            )
-            try:
-                client.ping()
-            except SlurmRestError:
-                continue
-            served.append(api_version)
-        return served
 
     def submit_job(self, request_body: dict[str, Any]) -> int:
         """
@@ -279,3 +255,31 @@ class SlurmRestClient:
 
     def cancel_job(self, job_id: str) -> None:
         self._request("DELETE", f"/job/{job_id}")
+
+
+def served_api_versions(
+    *,
+    base_url: str,
+    username: str,
+    get_token: Callable[..., str],
+    ca_bundle: str | None = None,
+) -> list[str]:
+    """
+    Supported API versions that `slurmrestd` serves, i.e. whose `/ping`
+    succeeds (a version that is not served answers 404).
+    """
+    served = []
+    for api_version in SUPPORTED_API_VERSIONS:
+        client = SlurmRestClient(
+            base_url=base_url,
+            username=username,
+            get_token=get_token,
+            ca_bundle=ca_bundle,
+            api_version=api_version,
+        )
+        try:
+            client.ping()
+        except SlurmRestError:
+            continue
+        served.append(api_version)
+    return served
