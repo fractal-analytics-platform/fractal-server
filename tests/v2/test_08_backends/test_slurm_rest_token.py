@@ -29,12 +29,11 @@ def test_jwt_claims_and_token_user():
     assert jwt_claims("a.not-base64-json.c") == {}
 
     check_token_user(_jwt(sub=USERNAME), USERNAME)
-    check_token_user(_jwt(sun=USERNAME), USERNAME)
-    check_token_user("opaque-token", USERNAME)
     with pytest.raises(SlurmTokenError, match="differs"):
         check_token_user(_jwt(sub="other"), USERNAME)
-    with pytest.raises(SlurmTokenError, match="differs"):
-        check_token_user(_jwt(sun="other"), USERNAME)
+    for token in ("opaque-token", _jwt(sun=USERNAME)):
+        with pytest.raises(SlurmTokenError, match="`sub` claim"):
+            check_token_user(token, USERNAME)
 
 
 def test_get_token_provider(monkeypatch):

@@ -55,15 +55,18 @@ def jwt_claims(token: str) -> dict[str, Any]:
 
 def check_token_user(token: str, slurm_username: str) -> None:
     """
-    Fail if the token is a JWT for a user other than `slurm_username`.
+    Fail unless the token is a JWT whose `sub` claim is `slurm_username`.
 
-    `slurmrestd` runs the request as the user in the token (`sub` for
-    identity-provider tokens, `sun` for Slurm-issued ones), not as the
-    one in the `X-SLURM-USER-NAME` header.
+    `slurmrestd` runs the request as the user in the token, not as the one
+    in the `X-SLURM-USER-NAME` header.
     """
-    claims = jwt_claims(token)
-    token_user = claims.get("sub", claims.get("sun"))
-    if token_user is not None and token_user != slurm_username:
+    token_user = jwt_claims(token).get("sub")
+    if token_user is None:
+        raise SlurmTokenError(
+            "SSO access token is not a JWT with a `sub` claim, so slurmrestd "
+            "cannot use it."
+        )
+    if token_user != slurm_username:
         raise SlurmTokenError(
             f"Token user '{token_user}' differs from the SLURM user "
             f"'{slurm_username}'."
