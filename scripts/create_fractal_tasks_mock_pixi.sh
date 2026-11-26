@@ -4,14 +4,8 @@ set -e
 
 TASK_NAME="fractal_tasks_mock_pixi"
 TASK_VERSION="0.0.1"
-OUTPUT_DIR="."
 
-if [ ! -d "${OUTPUT_DIR}" ]; then
-    echo "ERROR: Output directory '${OUTPUT_DIR}' does not exist."
-    exit 1
-fi
-
-OUTPUT_FILE="$(cd "${OUTPUT_DIR}" && pwd)/${TASK_NAME}-${TASK_VERSION}.tar.gz"
+OUTPUT_FILE="$(pwd)/${TASK_NAME}-${TASK_VERSION}.tar.gz"
 if [ -e "${OUTPUT_FILE}" ]; then
     echo "ERROR: File ${OUTPUT_FILE} already exists."
     exit 1
