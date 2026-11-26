@@ -13,16 +13,15 @@ For development only, a fixed token can be set instead
 """
 
 import asyncio
-import base64
-import json
 import time
 from typing import Any
 from typing import Protocol
 
 import httpx
+import jwt
 from httpx_oauth.oauth2 import OAuth2Error
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlmodel import select
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import OAuthAccount
@@ -52,15 +51,9 @@ def jwt_claims(token: str) -> dict[str, Any]:
     """
     Claims of a JWT, without verifying its signature (`{}` if not a JWT).
     """
-    parts = token.split(".")
-    if len(parts) != 3:
-        return {}
-    payload = parts[1]
     try:
-        return json.loads(
-            base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
-        )
-    except ValueError:
+        return jwt.decode(token, options={"verify_signature": False})
+    except jwt.PyJWTError:
         return {}
 
 

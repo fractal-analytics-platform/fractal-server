@@ -1,9 +1,8 @@
-import base64
-import json
 import time
 from uuid import uuid4
 
 import httpx
+import jwt
 import pytest
 from httpx_oauth.oauth2 import RefreshTokenError
 
@@ -23,11 +22,8 @@ SSH_USERNAME = "ssh-service-user"
 
 
 def _jwt(**claims) -> str:
-    def encode(data: dict) -> str:
-        raw = base64.urlsafe_b64encode(json.dumps(data).encode())
-        return raw.decode().rstrip("=")
-
-    return f"{encode(dict(alg='RS256'))}.{encode(claims)}.signature"
+    # Fractal never checks the signature, so any algorithm and key will do
+    return jwt.encode(claims, "test-key" * 4, algorithm="HS256")
 
 
 def test_jwt_claims_and_token_user():
