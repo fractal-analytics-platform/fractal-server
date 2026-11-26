@@ -2,7 +2,7 @@
 
 set -e
 
-TASK_NAME="fractal_pixi_tasks_mock"
+TASK_NAME="fractal_tasks_mock_pixi"
 TASK_VERSION="0.0.1"
 OUTPUT_DIR="."
 
