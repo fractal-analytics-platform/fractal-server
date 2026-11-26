@@ -121,6 +121,23 @@ def test_client(monkeypatch):
         "DELETE",
         "https://example.org/slurm/v0.0.44/job/125",
     )
+    # The cancel error is reported, without hiding the original one
+    responses.extend(
+        [
+            {"job_id": 126, "warnings": [{"description": warning}]},
+            httpx.Response(500, json={"errors": [{"error": "busy"}]}),
+        ]
+    )
+    with pytest.raises(SlurmRestError, match="unknown fields.*busy"):
+        client.submit_job({"script": "s", "job": {"x": "y"}})
+    # No job to cancel
+    responses.append({"warnings": [{"description": warning}]})
+    with pytest.raises(SlurmRestError, match="unknown fields"):
+        client.submit_job({"script": "s", "job": {"x": "y"}})
+
+    responses.append({})
+    with pytest.raises(SlurmRestError, match="No `job_id`"):
+        client.submit_job({"script": "s", "job": {}})
 
 
 @pytest.mark.parametrize(
