@@ -1,10 +1,8 @@
-import http.client
-import json
 import ssl
-import urllib.error
-import urllib.request
 from collections.abc import Callable
 from typing import Any
+
+import httpx
 
 from fractal_server.logger import set_logger
 
@@ -54,20 +52,6 @@ class SlurmRestError(RuntimeError):
         self.status = status
 
 
-def _parse_body(raw: bytes) -> dict[str, Any]:
-    """
-    Parse a response body; anything else than a JSON object (e.g. an HTML
-    page from a proxy) is returned as `{"raw": <beginning of the body>}`.
-    """
-    try:
-        payload = json.loads(raw)
-    except ValueError:
-        payload = None
-    if not isinstance(payload, dict):
-        return {"raw": raw.decode(errors="replace")[:500]}
-    return payload
-
-
 def _error_description(err: dict[str, Any]) -> str:
     # `description` is often generic (e.g. "Batch job submission failed"),
     # while `error` has the cause (e.g. "Job cannot be submitted without the
@@ -78,12 +62,7 @@ def _error_description(err: dict[str, Any]) -> str:
 
 
 def _error_descriptions(payload: dict[str, Any]) -> list[str]:
-    descriptions = [
-        _error_description(err) for err in payload.get("errors", [])
-    ]
-    if not descriptions and "raw" in payload:
-        descriptions = [payload["raw"]]
-    return descriptions
+    return [_error_description(err) for err in payload.get("errors", [])]
 
 
 class SlurmRestClient:
@@ -139,69 +118,72 @@ class SlurmRestClient:
                 f"Cannot load CA bundle '{ca_bundle}': {e}"
             ) from None
 
+    def _send(
+        self,
+        method: str,
+        path: str,
+        body: dict[str, Any] | None,
+        *,
+        force_refresh: bool,
+    ) -> httpx.Response:
+        try:
+            return httpx.request(
+                method,
+                f"{self.base_url}{path}",
+                json=body,
+                headers={
+                    "X-SLURM-USER-NAME": self.username,
+                    "X-SLURM-USER-TOKEN": self.get_token(
+                        force_refresh=force_refresh
+                    ),
+                },
+                verify=self._ssl_context,
+                timeout=self.timeout,
+            )
+        except httpx.HTTPError as e:
+            # Connection, DNS, TLS, timeout and protocol errors
+            raise SlurmRestError(
+                f"{method} {path} -> {type(e).__name__}: {e}"
+            ) from None
+
     def _request(
         self,
         method: str,
         path: str,
         body: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        url = f"{self.base_url}{path}"
-        data = json.dumps(body).encode() if body is not None else None
-        for attempt in (1, 2):
-            request = urllib.request.Request(
-                url,
-                method=method,
-                data=data,
-                headers={
-                    "X-SLURM-USER-NAME": self.username,
-                    "X-SLURM-USER-TOKEN": self.get_token(
-                        force_refresh=(attempt == 2)
-                    ),
-                    "Content-Type": "application/json",
-                },
+        response = self._send(method, path, body, force_refresh=False)
+        # slurmrestd answers 511 for invalid or expired tokens (on Slurm
+        # 23.11, 500: not retried here, since 500 is also used for other
+        # errors; SSO tokens are refreshed before they expire anyway)
+        if response.status_code in (401, 511):
+            logger.warning(
+                f"{method} {path} -> {response.status_code}, refreshing token."
             )
-            try:
-                # `https` scheme is checked in `__init__`
-                with urllib.request.urlopen(  # nosec B310
-                    request, timeout=self.timeout, context=self._ssl_context
-                ) as response:
-                    payload = _parse_body(response.read())
-            except urllib.error.HTTPError as e:
-                payload = _parse_body(e.read())
-                # slurmrestd answers 511 for invalid or expired tokens (on
-                # Slurm 23.11, 500: not retried here, since 500 is also used
-                # for other errors; SSO tokens are refreshed before they
-                # expire anyway)
-                if e.code in (401, 511) and attempt == 1:
-                    logger.warning(
-                        f"{method} {path} -> {e.code}, refreshing token."
-                    )
-                    continue
-                raise SlurmRestError(
-                    f"{method} {path} -> HTTP {e.code}: "
-                    f"{_error_descriptions(payload)}",
-                    status=e.code,
-                ) from None
-            except (OSError, http.client.HTTPException) as e:
-                # Connection, DNS, TLS and timeout errors (after `HTTPError`,
-                # which is an `OSError` too), and malformed or truncated
-                # responses (`http.client` errors that are not `OSError`)
-                raise SlurmRestError(
-                    f"{method} {path} -> {type(e).__name__}: {e}"
-                ) from None
-            if "raw" in payload:
-                raise SlurmRestError(
-                    f"{method} {path} -> response is not a JSON object: "
-                    f"{payload['raw']!r}"
-                )
-            if payload.get("errors"):
-                raise SlurmRestError(
-                    f"{method} {path} -> errors: {_error_descriptions(payload)}"
-                )
-            for warning in payload.get("warnings", []):
-                logger.warning(f"{method} {path} -> warning: {warning}")
-            return payload
-        raise SlurmRestError(f"{method} {path} -> unexpected retry exit.")
+            response = self._send(method, path, body, force_refresh=True)
+
+        status = response.status_code if response.is_error else None
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+        if not isinstance(payload, dict):
+            # E.g. an HTML page from a proxy in front of `slurmrestd`
+            # Cut to first 500 characters for readability.
+            raise SlurmRestError(
+                f"{method} {path} -> HTTP {response.status_code}, not a JSON "
+                f"object: {response.text[:500]!r}",
+                status=status,
+            )
+        if response.is_error or payload.get("errors"):
+            raise SlurmRestError(
+                f"{method} {path} -> HTTP {response.status_code}: "
+                f"{_error_descriptions(payload)}",
+                status=status,
+            )
+        for warning in payload.get("warnings", []):
+            logger.warning(f"{method} {path} -> warning: {warning}")
+        return payload
 
     def ping(self) -> None:
         self._request("GET", "/ping")

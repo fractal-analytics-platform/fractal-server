@@ -1,8 +1,4 @@
-import http.client
-import io
-import json
-import urllib.error
-
+import httpx
 import pytest
 
 from fractal_server.runner.executors.slurm_common._job_states import (
@@ -14,39 +10,29 @@ from fractal_server.runner.executors.slurm_rest.client import SlurmRestError
 from fractal_server.runner.executors.slurm_rest.client import squeue_state
 
 
-class _FakeResponse(io.BytesIO):
-    def __enter__(self):
-        return self
+def _fake_httpx(monkeypatch, responses: list, calls: list | None = None):
+    """
+    Replace `httpx.request`: each call pops the next item of `responses` (a
+    `dict` becomes an HTTP 200 JSON response, an exception is raised).
+    """
 
-    def __exit__(self, *args):
-        self.close()
+    def fake_request(method, url, *, json, headers, verify, timeout):
+        if calls is not None:
+            calls.append((method, url, headers["X-SLURM-USER-TOKEN"], json))
+        response = responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        if isinstance(response, dict):
+            return httpx.Response(200, json=response)
+        return response
 
-
-def _http_error(code: int, body: dict) -> urllib.error.HTTPError:
-    return urllib.error.HTTPError(
-        "url", code, "msg", {}, io.BytesIO(json.dumps(body).encode())
-    )
+    monkeypatch.setattr(client_module.httpx, "request", fake_request)
 
 
 def test_client(monkeypatch):
     calls = []
     responses = []
-
-    def fake_urlopen(request, timeout, context):
-        calls.append(
-            (
-                request.get_method(),
-                request.full_url,
-                request.get_header("X-slurm-user-token"),
-                request.data,
-            )
-        )
-        response = responses.pop(0)
-        if isinstance(response, Exception):
-            raise response
-        return _FakeResponse(json.dumps(response).encode())
-
-    monkeypatch.setattr(client_module.urllib.request, "urlopen", fake_urlopen)
+    _fake_httpx(monkeypatch, responses, calls)
 
     tokens = iter(["tok1", "tok2", "tok3"])
     current = {}
@@ -64,7 +50,7 @@ def test_client(monkeypatch):
     )
 
     # Submit, with a 401 + token refresh
-    responses.extend([_http_error(401, {}), {"job_id": 123}])
+    responses.extend([httpx.Response(401), {"job_id": 123}])
     assert client.submit_job({"script": "s", "job": {}}) == 123
     assert calls[0][:3] == (
         "POST",
@@ -72,25 +58,27 @@ def test_client(monkeypatch):
         "tok1",
     )
     assert calls[1][2] == "tok2"
-    assert json.loads(calls[1][3]) == {"script": "s", "job": {}}
+    assert calls[1][3] == {"script": "s", "job": {}}
 
     # Expired token: slurmrestd answers 511, also triggering a refresh
-    responses.extend([_http_error(511, {}), {"job_id": 124}])
+    responses.extend([httpx.Response(511), {"job_id": 124}])
     assert client.submit_job({"script": "s", "job": {}}) == 124
     assert calls[2][2] == "tok2"
     assert calls[3][2] == "tok3"
 
     # Errors
     responses.append(
-        _http_error(500, {"errors": [{"description": "Batch job failed"}]})
+        httpx.Response(
+            500, json={"errors": [{"description": "Batch job failed"}]}
+        )
     )
     with pytest.raises(SlurmRestError, match="HTTP 500.*Batch job failed"):
         client.submit_job({"script": "s", "job": {}})
     # Both the generic description and the specific error (JUNO answer)
     responses.append(
-        _http_error(
+        httpx.Response(
             500,
-            {
+            json={
                 "errors": [
                     {
                         "description": "Batch job submission failed",
@@ -108,11 +96,7 @@ def test_client(monkeypatch):
         client.submit_job({"script": "s", "job": {}})
     # (Errors with neither field fall back to the whole error: not tested)
     # Not JSON
-    responses.append(
-        urllib.error.HTTPError(
-            "url", 502, "msg", {}, io.BytesIO(b"<html>Bad Gateway</html>")
-        )
-    )
+    responses.append(httpx.Response(502, text="<html>Bad Gateway</html>"))
     with pytest.raises(SlurmRestError, match="HTTP 502.*Bad Gateway"):
         client.submit_job({"script": "s", "job": {}})
     # Errors in an HTTP 200 response
@@ -148,11 +132,7 @@ def test_job_states_invalid_response(monkeypatch, body):
     from a proxy in front of `slurmrestd`, is an error: it must not mean "no
     jobs", which would mark all jobs as completed.
     """
-    monkeypatch.setattr(
-        client_module.urllib.request,
-        "urlopen",
-        lambda request, timeout, context: _FakeResponse(body),
-    )
+    _fake_httpx(monkeypatch, [httpx.Response(200, content=body)])
     client = SlurmRestClient(
         base_url="https://example.org",
         username="user",
@@ -163,11 +143,7 @@ def test_job_states_invalid_response(monkeypatch, body):
         client.get_job_states()
 
     # An empty job list is valid: jobs are missing, hence completed
-    monkeypatch.setattr(
-        client_module.urllib.request,
-        "urlopen",
-        lambda request, timeout, context: _FakeResponse(b'{"jobs": []}'),
-    )
+    _fake_httpx(monkeypatch, [{"jobs": []}])
     assert client.get_job_states() == {}
 
 
@@ -223,22 +199,17 @@ def test_client_api_version_and_ca_bundle(tmp_path):
 @pytest.mark.parametrize(
     "error",
     [
-        urllib.error.URLError(ConnectionRefusedError("refused")),
-        # Not `OSError`
-        http.client.IncompleteRead(b"partial", expected=10),
+        httpx.ConnectError("refused"),
+        httpx.ReadTimeout("timed out"),
+        httpx.RemoteProtocolError("truncated"),
     ],
 )
 def test_client_network_errors(monkeypatch, error):
     """
-    Network errors (`OSError`, e.g. connection, DNS, TLS, timeout) and
-    malformed responses (`http.client.HTTPException`) become `SlurmRestError`,
-    as HTTP errors.
+    Network errors (connection, DNS, TLS, timeout) and malformed responses
+    become `SlurmRestError`, as HTTP errors.
     """
-
-    def fake_urlopen(request, timeout, context):
-        raise error
-
-    monkeypatch.setattr(client_module.urllib.request, "urlopen", fake_urlopen)
+    _fake_httpx(monkeypatch, [error])
     client = SlurmRestClient(
         base_url="https://example.org",
         username="user",
