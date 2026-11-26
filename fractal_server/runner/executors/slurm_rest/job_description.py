@@ -83,13 +83,6 @@ def slurm_time_to_minutes(value: str) -> int:
     return days * 24 * 60 + hours * 60 + minutes + (1 if seconds > 0 else 0)
 
 
-def _mem_MB(value: str) -> int:
-    # `srun`-style "MB" suffix is also accepted by sbatch
-    if value.endswith("B"):
-        value = value[:-1]
-    return slurm_mem_to_MB(value)
-
-
 def _gres_to_tres(value: str) -> str:
     # As `gres_prepend_tres_type` in Slurm: `gpu:1,shard:2` becomes
     # `gres/gpu:1,gres/shard:2`
@@ -130,9 +123,9 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
         case "cpus-per-task":
             job["cpus_per_task"] = int(value)
         case "mem":
-            job["memory_per_node"] = _set_number(_mem_MB(value))
+            job["memory_per_node"] = _set_number(slurm_mem_to_MB(value))
         case "mem-per-cpu":
-            job["memory_per_cpu"] = _set_number(_mem_MB(value))
+            job["memory_per_cpu"] = _set_number(slurm_mem_to_MB(value))
         case "time":
             job["time_limit"] = _set_number(slurm_time_to_minutes(value))
         case "output":

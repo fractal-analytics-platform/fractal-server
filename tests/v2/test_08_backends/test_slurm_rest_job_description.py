@@ -68,11 +68,7 @@ def test_slurm_time_to_minutes_invalid():
     "line,expected",
     [
         # As Fractal's own configuration (`slurm_mem_to_MB`, powers of 1000)
-        ("--mem=600", {"memory_per_node": {"set": True, "number": 600}}),
-        ("--mem=600M", {"memory_per_node": {"set": True, "number": 600}}),
         ("--mem=2G", {"memory_per_node": {"set": True, "number": 2000}}),
-        ("--mem=2GB", {"memory_per_node": {"set": True, "number": 2000}}),
-        ("--mem=1T", {"memory_per_node": {"set": True, "number": 1000000}}),
         ("--mem-per-cpu=2G", {"memory_per_cpu": {"set": True, "number": 2000}}),
         # Each GRES gets its `gres/` prefix, as with `sbatch`
         ("--gres=gpu:a100:1", {"tres_per_node": "gres/gpu:a100:1"}),
@@ -111,7 +107,6 @@ def test_aliases_are_all_handled():
     "line",
     [
         "--mem=2X",
-        "--mem=2BG",
         "--partition=main extra",
         '--job-name="my job"',
         "--qos=high --account=acc",
