@@ -77,7 +77,8 @@ def test_client(monkeypatch):
     )
     with pytest.raises(SlurmRestError, match="HTTP 500.*Batch job failed"):
         client.submit_job({"script": "s", "job": {}})
-    # Both the generic description and the specific error (JUNO answer)
+    # Both the generic description and the specific error
+    # Mimimcs real slurmrestd 25.11 response
     responses.append(
         httpx.Response(
             500,

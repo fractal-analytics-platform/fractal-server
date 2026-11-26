@@ -1,6 +1,6 @@
 import ssl
-from collections.abc import Callable
 from typing import Any
+from typing import Protocol
 
 import httpx
 
@@ -65,6 +65,10 @@ def _error_descriptions(payload: dict[str, Any]) -> list[str]:
     return [_error_description(err) for err in payload.get("errors", [])]
 
 
+class GetTokenFunction(Protocol):
+    def __call__(self, force_refresh: bool) -> str: ...
+
+
 class SlurmRestClient:
     """
     Minimal `slurmrestd` client (`/slurm/<api_version>/` endpoints only).
@@ -89,7 +93,7 @@ class SlurmRestClient:
         *,
         base_url: str,
         username: str,
-        get_token: Callable[..., str],
+        get_token: GetTokenFunction,
         ca_bundle: str | None = None,
         api_version: str,
         timeout: float = 30.0,
@@ -256,7 +260,7 @@ def served_api_versions(
     *,
     base_url: str,
     username: str,
-    get_token: Callable[..., str],
+    get_token: GetTokenFunction,
     ca_bundle: str | None = None,
 ) -> list[str]:
     """
