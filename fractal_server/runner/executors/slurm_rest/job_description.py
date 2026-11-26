@@ -5,19 +5,21 @@ Translate the `#SBATCH` preamble of a fractal submission script into a
 `slurmrestd` ignores `#SBATCH` lines in the submitted script, so every
 option must become a JSON field.
 
-The JSON fields used here are the same in all the `SUPPORTED_API_VERSIONS`
-(`client.py`) of the `slurmrestd` OpenAPI plugin. All mappings were checked
-against `sbatch` on a real cluster (Slurm 25.11, `v0.0.44`).
+Versions: the JSON fields used here are the same in all the
+`SUPPORTED_API_VERSIONS` (`client.py`) of the `slurmrestd` OpenAPI plugin.
+# NOTE: Rarely some options could be renamed in new SLURM versions
+# (e.g. `--workdir` -> `--chdir`, #1158). Keep this in mind when adding
+# new supported versions.
 
 Why a hand-written mapping: no SLURM tool converts `sbatch` options into a
 REST job description, and options and JSON fields differ in names and units
 (`--mem` -> `memory_per_node` in MB, `--time` -> `time_limit` in minutes,
 `--ntasks` -> `tasks`, ...), so a generic name-based translation would be
 wrong. The lines are a closed set (`SlurmConfig.to_sbatch_preamble` plus the
-runner) except for admin `extra_lines`. Gaps fail loudly: unknown options
-raise here (also at runner start, for the resource `extra_lines`), unknown
-JSON fields are rejected at submission, and a unit test covers every
-`SlurmConfig` option.
+runner) except for `extra_lines` (resource and task `meta`). Gaps fail
+loudly: unknown options raise here (also at runner start, for the resource
+`extra_lines`), unknown JSON fields are rejected at submission, and a unit
+test covers every `SlurmConfig` option.
 """
 
 from typing import Any
