@@ -16,10 +16,10 @@ from fractal_server.runner.executors.slurm_rest.job_description import (
     build_job_description,
 )
 from fractal_server.runner.executors.slurm_rest.job_description import (
-    slurm_time_to_minutes,
+    parse_sbatch_lines,
 )
 from fractal_server.runner.executors.slurm_rest.job_description import (
-    validate_sbatch_lines,
+    slurm_time_to_minutes,
 )
 from fractal_server.runner.executors.slurm_rest.job_script import (
     build_job_script,
@@ -181,10 +181,12 @@ def test_build_job_description_covers_slurm_config(use_mem_per_cpu):
     assert len(job) == len(sbatch_lines) + 2
 
 
-def test_validate_sbatch_lines():
-    validate_sbatch_lines(["#SBATCH --qos=high", "export X=1", "module load y"])
+def test_parse_sbatch_lines():
+    assert parse_sbatch_lines(
+        ["#SBATCH --qos=high", "export X=1", "module load y"]
+    ) == {"qos": "high"}
     with pytest.raises(SlurmConfigError, match="not supported"):
-        validate_sbatch_lines(["#SBATCH --mail-type=ALL"])
+        parse_sbatch_lines(["#SBATCH --mail-type=ALL"])
 
 
 def test_build_job_script_writes_files(tmp_path):

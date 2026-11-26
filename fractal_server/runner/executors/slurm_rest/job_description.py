@@ -163,15 +163,18 @@ def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
             )
 
 
-def validate_sbatch_lines(lines: list[str]) -> None:
+def parse_sbatch_lines(lines: list[str]) -> dict[str, Any]:
     """
-    Raise `SlurmConfigError` if any `#SBATCH` line cannot be translated.
+    Return the job fields of the `#SBATCH` lines (other lines are skipped).
 
-    To validate before job submission.
+    Raises `SlurmConfigError` if any `#SBATCH` line cannot be translated, so
+    it also validates lines before job submission.
     """
+    job: dict[str, Any] = {}
     for line in lines:
         if line.startswith(SBATCH_PREFIX):
-            _apply_option({}, *_parse_sbatch_line(line))
+            _apply_option(job, *_parse_sbatch_line(line))
+    return job
 
 
 def build_job_description(
@@ -188,10 +191,7 @@ def build_job_description(
             Base environment (`KEY=value` items). `slurmrestd` requires it,
             and jobs do not inherit any login environment.
     """
-    job: dict[str, Any] = {}
-    for line in script.splitlines():
-        if line.startswith(SBATCH_PREFIX):
-            _apply_option(job, *_parse_sbatch_line(line))
+    job = parse_sbatch_lines(script.splitlines())
 
     # As `sbatch` does ("can't run 1 processes on 2 nodes, setting nnodes to
     # 1"), while `slurmrestd` would allocate the extra (sitting idle) nodes
