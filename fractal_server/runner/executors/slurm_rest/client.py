@@ -243,15 +243,10 @@ class SlurmRestClient:
         NOTE: Jobs that finished more than `MinJobAge` seconds ago are not
         listed (see `list_jobs`) -> treat missing jobs as completed.
         """
-        states = {}
-        for job in self.list_jobs():
-            job_state = job.get("job_state")
-            # `job_state` is a list (base state, then flags),
-            # e.g. ["COMPLETED", "COMPLETING"]
-            if isinstance(job_state, list):
-                job_state = squeue_state(job_state)
-            states[str(job["job_id"])] = job_state
-        return states
+        return {
+            str(job["job_id"]): squeue_state(job["job_state"])
+            for job in self.list_jobs()
+        }
 
     def cancel_job(self, job_id: str) -> None:
         self._request("DELETE", f"/job/{job_id}")

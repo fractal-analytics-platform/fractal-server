@@ -149,6 +149,13 @@ def test_job_states_invalid_response(monkeypatch, body):
     _fake_httpx(monkeypatch, [{"jobs": []}])
     assert client.get_job_states() == {}
 
+    jobs = [
+        {"job_id": 1, "job_state": ["RUNNING"]},
+        {"job_id": 2, "job_state": ["COMPLETED", "COMPLETING"]},
+    ]
+    _fake_httpx(monkeypatch, [{"jobs": jobs}])
+    assert client.get_job_states() == {"1": "RUNNING", "2": "COMPLETING"}
+
 
 def test_served_api_versions(monkeypatch):
     supported = ("v1", "v2", "v3")
