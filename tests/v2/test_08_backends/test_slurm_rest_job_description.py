@@ -209,6 +209,8 @@ def test_build_job_script_writes_files(tmp_path):
 
 
 def test_build_job_script_limits():
+    with pytest.raises(ValueError, match="Heredoc delimiter"):
+        build_job_script(script="#!/bin/sh\n", files=[("/a", "x\nFRACTAL_EOF")])
     with pytest.raises(ValueError, match="Single quotes"):
         build_job_script(script="#!/bin/sh\n", files=[("/a'b", "")])
     with pytest.raises(ValueError, match="limit"):

@@ -1,9 +1,8 @@
-from uuid import uuid4
-
 from .job_description import SBATCH_PREFIX
 
 # Default `slurmctld` limit
 MAX_SCRIPT_BYTES = 4 * 1024 * 1024
+HEREDOC_DELIMITER = "FRACTAL_EOF"
 
 
 def build_job_script(
@@ -43,12 +42,12 @@ def build_job_script(
     # SSH user.
     block = ["umask 0002"]
     for remote_path, content in files:
-        delimiter = f"FRACTAL_EOF_{uuid4().hex}"
-        if delimiter in content:
+        # A heredoc ends at the first line equal to its delimiter
+        if HEREDOC_DELIMITER in content.splitlines():
             raise ValueError(f"Heredoc delimiter found in {remote_path}.")
-        block.append(f"cat > '{remote_path}' <<'{delimiter}'")
+        block.append(f"cat > '{remote_path}' <<'{HEREDOC_DELIMITER}'")
         block.append(content.rstrip("\n"))
-        block.append(delimiter)
+        block.append(HEREDOC_DELIMITER)
     if script_copy_path is not None:
         block.append(f"cp \"$0\" '{script_copy_path}'")
 
