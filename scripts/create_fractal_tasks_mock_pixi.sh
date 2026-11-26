@@ -19,37 +19,37 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ORIGINAL_TASK="${SCRIPT_DIR}/../tests/v2/fractal_tasks_mock"
-APPTAINER_TASK="$(dirname ${ORIGINAL_TASK})/${TASK_NAME}-${TASK_VERSION}"
+PIXI_TASK="$(dirname ${ORIGINAL_TASK})/${TASK_NAME}-${TASK_VERSION}"
 
 # Fail if the temporary folder already exists (without removing it),
 # otherwise remove it on exit, also if a command fails
-if [ -e "${APPTAINER_TASK}" ]; then
-    echo "ERROR: Folder $(realpath ${APPTAINER_TASK}) already exists."
+if [ -e "${PIXI_TASK}" ]; then
+    echo "ERROR: Folder $(realpath ${PIXI_TASK}) already exists."
     exit 1
 fi
-trap 'rm -rf "${APPTAINER_TASK}"' EXIT
+trap 'rm -rf "${PIXI_TASK}"' EXIT
 
-cp -r ${ORIGINAL_TASK} ${APPTAINER_TASK}
+cp -r ${ORIGINAL_TASK} ${PIXI_TASK}
 
 # Rename the package from `fractal_tasks_mock` to `${TASK_NAME}`
-mv ${APPTAINER_TASK}/src/fractal_tasks_mock ${APPTAINER_TASK}/src/${TASK_NAME}
+mv ${PIXI_TASK}/src/fractal_tasks_mock ${PIXI_TASK}/src/${TASK_NAME}
 # Replace the package name in `pyproject.toml` and in the Python imports
 sed -i \
     -e "s/fractal_tasks_mock/${TASK_NAME}/g" \
     -e "s/fractal-tasks-mock/${TASK_NAME//_/-}/g" \
-    ${APPTAINER_TASK}/pyproject.toml \
-    $(find ${APPTAINER_TASK}/src -name "*.py")
+    ${PIXI_TASK}/pyproject.toml \
+    $(find ${PIXI_TASK}/src -name "*.py")
 # Set the package version in `pyproject.toml`
 sed -i \
     "s/^version = \".*\"/version = \"${TASK_VERSION}\"/" \
-    ${APPTAINER_TASK}/pyproject.toml
+    ${PIXI_TASK}/pyproject.toml
 
 # `pixi init` + `pixi lock`
-if ! pixi init --format pyproject ${APPTAINER_TASK}; then
+if ! pixi init --format pyproject ${PIXI_TASK}; then
     echo "ERROR: 'pixi init' failed (is '${TASK_VERSION}' a valid version?)."
     exit 1
 fi
-pixi lock --manifest-path ${APPTAINER_TASK}
+pixi lock --manifest-path ${PIXI_TASK}
 
 tar \
     --exclude='.*' \
@@ -58,9 +58,9 @@ tar \
     --exclude="venv" \
     --exclude="dist" \
     --exclude="*.sh" \
-    -C $(dirname ${APPTAINER_TASK}) \
+    -C $(dirname ${PIXI_TASK}) \
     -vcz \
     -f ${OUTPUT_FILE} \
-    $(basename ${APPTAINER_TASK})/
+    $(basename ${PIXI_TASK})/
 
 echo "Successfully created ${OUTPUT_FILE}."
