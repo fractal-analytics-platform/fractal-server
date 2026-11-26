@@ -194,17 +194,17 @@ def run_script_on_remote_slurm(
     logger.debug("Now submit SLURM job.")
     sbatch_cmd = f"sbatch --parsable {submission_script_remote}"
     if pre_submission_cmd:
-        pre_submission_script_remote = os.path.join(
-            workdir_remote, f"{prefix}-pre-submit.sh"
+        submission_wrapper_remote = os.path.join(
+            workdir_remote, f"{prefix}-submit-wrapper.sh"
         )
         fractal_ssh.write_remote_file(
-            path=pre_submission_script_remote,
+            path=submission_wrapper_remote,
             content=(
                 f"#!/bin/bash\nset -e\n{pre_submission_cmd}\n{sbatch_cmd}\n"
             ),
         )
-        logger.debug(f"Written {pre_submission_script_remote=}.")
-        sbatch_cmd = f"bash {pre_submission_script_remote}"
+        logger.debug(f"Written {submission_wrapper_remote=}.")
+        sbatch_cmd = f"bash {submission_wrapper_remote}"
     try:
         stdout = fractal_ssh.run_command(cmd=sbatch_cmd)
         # NOTE: `pre_submission_cmd` may also write to stdout,
