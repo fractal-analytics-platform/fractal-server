@@ -142,6 +142,9 @@ def reactivate_ssh_apptainer(
                         activity=activity,
                         log_file_path=log_file_path,
                         poll_interval=resource.jobs_poll_interval,
+                        pre_submission_cmd=(
+                            apptainer_config.pre_submission_cmd
+                        ),
                     )
 
                     # Finalize (write metadata to DB)

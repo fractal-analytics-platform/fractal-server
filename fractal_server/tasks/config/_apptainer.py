@@ -19,6 +19,12 @@ class TasksApptainerSettings(BaseModel):
     Command used to invoke `apptainer` (e.g. `apptainer` or
     `/usr/bin/apptainer`).
     """
+    pre_submission_cmd: str = ""
+    """
+    Command to run (on the SSH host) right before submitting the SLURM job
+    for `apptainer build` (e.g. `module load apptainer`). If set, the
+    `sbatch` command is run within a wrapper script, after this command.
+    """
     build_env_vars: list[tuple[NonEmptyStr, str]] = [("APPTAINER_BINDPATH", "")]
     """
     Environment variables (as `(name, value)` pairs) for `apptainer build`.

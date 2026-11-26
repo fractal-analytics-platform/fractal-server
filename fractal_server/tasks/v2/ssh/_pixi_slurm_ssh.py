@@ -134,11 +134,15 @@ def run_script_on_remote_slurm(
     db: Session,
     activity: TaskGroupActivityV2,
     poll_interval: int,
+    pre_submission_cmd: str = "",
 ) -> str:
     """
     Run a list of commands as a SLURM job.
 
     The job runs the SLURM-config preamble, followed by `commands`.
+
+    If `pre_submission_cmd` is set, the `sbatch` command is run from within
+    a wrapper script, right after `pre_submission_cmd`.
 
     NOTE: This is called from within a try/except, thus we can use exceptions
     as a mechanism to propagate failure/errors.
@@ -189,9 +193,28 @@ def run_script_on_remote_slurm(
     # (2) Submit SLURM job
     logger.debug("Now submit SLURM job.")
     sbatch_cmd = f"sbatch --parsable {submission_script_remote}"
+    if pre_submission_cmd:
+        pre_submission_script_remote = os.path.join(
+            workdir_remote, f"{prefix}-pre-submit.sh"
+        )
+        fractal_ssh.write_remote_file(
+            path=pre_submission_script_remote,
+            content="\n".join(
+                [
+                    "#!/bin/bash",
+                    "set -e",
+                    pre_submission_cmd,
+                    sbatch_cmd,
+                ]
+            ),
+        )
+        logger.debug(f"Written {pre_submission_script_remote=}.")
+        sbatch_cmd = f"bash {pre_submission_script_remote}"
     try:
         stdout = fractal_ssh.run_command(cmd=sbatch_cmd)
-        job_id = int(stdout)
+        # NOTE: `pre_submission_cmd` may also write to stdout,
+        # while the job ID is printed by `sbatch` on the last line.
+        job_id = int(stdout.strip().splitlines()[-1])
         logger.debug(f"SLURM-job submission successful ({job_id=}).")
     except Exception as e:
         logger.error(
