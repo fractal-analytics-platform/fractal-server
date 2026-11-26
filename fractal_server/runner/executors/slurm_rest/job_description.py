@@ -191,10 +191,9 @@ def build_job_description(
     if job.get("minimum_nodes", 0) > job.get("tasks", float("inf")):
         job["minimum_nodes"] = job["maximum_nodes"] = job["tasks"]
 
-    job_environment = list(environment)
+    job["environment"] = environment.copy()
     # Unlike with sbatch, SLURM_CPUS_PER_TASK is not set in REST-submitted
     # jobs, but fractal `srun` lines rely on it.
     if "cpus_per_task" in job:
-        job_environment.append(f"SLURM_CPUS_PER_TASK={job['cpus_per_task']}")
-    job["environment"] = job_environment
+        job["environment"].append(f"SLURM_CPUS_PER_TASK={job['cpus_per_task']}")
     return job
