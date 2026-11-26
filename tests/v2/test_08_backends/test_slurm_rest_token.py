@@ -11,14 +11,11 @@ from fractal_server.app.models import UserOAuth
 from fractal_server.runner.executors.slurm_rest import token as token_module
 from fractal_server.runner.executors.slurm_rest.token import SlurmTokenError
 from fractal_server.runner.executors.slurm_rest.token import SsoTokenProvider
-from fractal_server.runner.executors.slurm_rest.token import StaticTokenProvider
 from fractal_server.runner.executors.slurm_rest.token import check_token_user
 from fractal_server.runner.executors.slurm_rest.token import get_token_provider
 from fractal_server.runner.executors.slurm_rest.token import jwt_claims
 
 USERNAME = "slurm-user"
-# Shared SSH service account (`Profile.username`)
-SSH_USERNAME = "ssh-service-user"
 
 
 def _jwt(**claims) -> str:
@@ -40,40 +37,15 @@ def test_jwt_claims_and_token_user():
         check_token_user(_jwt(sun="other"), USERNAME)
 
 
-def test_static_token_provider():
-    token = _jwt(sub=USERNAME)
-    provider = StaticTokenProvider(token=token, default_username=SSH_USERNAME)
-    assert provider.slurm_username == USERNAME
-    assert provider.get_token() == token
-    with pytest.raises(SlurmTokenError, match="rejected"):
-        provider.get_token(force_refresh=True)
-    provider = StaticTokenProvider(
-        token="opaque-token", default_username=SSH_USERNAME
-    )
-    assert provider.slurm_username == SSH_USERNAME
-
-
-def test_get_token_provider(monkeypatch, override_settings_factory):
+def test_get_token_provider(monkeypatch):
     class _FakeSsoTokenProvider:
         def __init__(self, *, user_id: int):
             self.user_id = user_id
-            self.slurm_username = USERNAME
 
     monkeypatch.setattr(token_module, "SsoTokenProvider", _FakeSsoTokenProvider)
-    kwargs = dict(user_id=7, profile_username=SSH_USERNAME)
-
-    # SSO by default
-    override_settings_factory(FRACTAL_SLURM_REST_TOKEN=None)
-    provider = get_token_provider(**kwargs)
+    provider = get_token_provider(user_id=7)
     assert isinstance(provider, _FakeSsoTokenProvider)
     assert provider.user_id == 7
-
-    # Development override
-    token = _jwt(sub=USERNAME)
-    override_settings_factory(FRACTAL_SLURM_REST_TOKEN=token)
-    provider = get_token_provider(**kwargs)
-    assert isinstance(provider, StaticTokenProvider)
-    assert provider.get_token() == token
 
 
 @pytest.fixture
