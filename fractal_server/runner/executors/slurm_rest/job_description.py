@@ -20,8 +20,6 @@ JSON fields are rejected at submission, and a unit test covers every
 `SlurmConfig` option.
 """
 
-import getopt
-import shlex
 from typing import Any
 
 from fractal_server.runner.config.slurm_mem_to_MB import slurm_mem_to_MB
@@ -29,29 +27,26 @@ from fractal_server.runner.exceptions import SlurmConfigError
 
 SBATCH_PREFIX = "#SBATCH"
 
-# Supported options (all take a value), with their short form if any; each
-# one must be handled in `_apply_option`
-OPTIONS = {
-    "account": "A",
-    "chdir": "D",
-    "constraint": "C",
-    "cpus-per-task": "c",
-    "error": "e",
-    "exclude": "x",
-    "gpus": "G",
-    "gres": None,
-    "job-name": "J",
-    "mem": None,
-    "mem-per-cpu": None,
-    "nodelist": "w",
-    "nodes": "N",
-    "ntasks": "n",
-    "output": "o",
-    "partition": "p",
-    "qos": "q",
-    "time": "t",
+# Short forms, and the abbreviations written by the SLURM runners
+ALIASES = {
+    "-A": "account",
+    "-C": "constraint",
+    "-D": "chdir",
+    "-G": "gpus",
+    "-J": "job-name",
+    "-N": "nodes",
+    "-c": "cpus-per-task",
+    "-e": "error",
+    "-n": "ntasks",
+    "-o": "output",
+    "-p": "partition",
+    "-q": "qos",
+    "-t": "time",
+    "-w": "nodelist",
+    "-x": "exclude",
+    "--err": "error",
+    "--out": "output",
 }
-_LONG_NAMES = {short: name for name, short in OPTIONS.items() if short}
 
 
 def _set_number(value: int) -> dict[str, Any]:
@@ -104,33 +99,22 @@ def _gres_to_tres(value: str) -> str:
     )
 
 
-def _parse_sbatch_line(line: str) -> list[tuple[str, str]]:
+def _parse_sbatch_line(line: str) -> tuple[str, str]:
     """
-    Return the `(long option name, value)` pairs of an `#SBATCH` line.
-
-    The line is split as `sbatch` does (quotes, `#` comments, several
-    options per line, `--opt=value` or `--opt value`); unsupported options
-    are an error.
+    Return the `(long option name, value)` of an `#SBATCH` line, written as
+    `--name=value`, `--name value` or `-X value` (one option per line).
     """
-    try:
-        options, extra = getopt.gnu_getopt(
-            shlex.split(line[len(SBATCH_PREFIX) :], comments=True),
-            "".join(f"{short}:" for short in _LONG_NAMES),
-            [f"{name}=" for name in OPTIONS],
-        )
-    except (getopt.GetoptError, ValueError) as e:
-        raise SlurmConfigError(
-            f"SBATCH line '{line}' is not supported by the SLURM REST "
-            f"runner ({e})."
-        )
-    if extra:
-        raise SlurmConfigError(
-            f"Unexpected arguments {extra} in SBATCH line '{line}'."
-        )
-    return [
-        (_LONG_NAMES[option[1]] if len(option) == 2 else option[2:], value)
-        for option, value in options
-    ]
+    match line[len(SBATCH_PREFIX) :].split():
+        case [option] if option.startswith("--") and "=" in option:
+            option, value = option.split("=", 1)
+        case [option, value] if option.startswith("-") and "=" not in option:
+            pass
+        case _:
+            raise SlurmConfigError(
+                f"SBATCH line '{line}' is not supported by the SLURM REST "
+                "runner (expected one `--name=value` or `-X value` option)."
+            )
+    return ALIASES.get(option, option.removeprefix("--")), value
 
 
 def _apply_option(job: dict[str, Any], key: str, value: str) -> None:
@@ -187,8 +171,7 @@ def validate_sbatch_lines(lines: list[str]) -> None:
     """
     for line in lines:
         if line.startswith(SBATCH_PREFIX):
-            for key, value in _parse_sbatch_line(line):
-                _apply_option({}, key, value)
+            _apply_option({}, *_parse_sbatch_line(line))
 
 
 def build_job_description(
@@ -208,8 +191,7 @@ def build_job_description(
     job: dict[str, Any] = {}
     for line in script.splitlines():
         if line.startswith(SBATCH_PREFIX):
-            for key, value in _parse_sbatch_line(line):
-                _apply_option(job, key, value)
+            _apply_option(job, *_parse_sbatch_line(line))
 
     # As `sbatch` does ("can't run 1 processes on 2 nodes, setting nnodes to
     # 1"), while `slurmrestd` would allocate the extra (sitting idle) nodes

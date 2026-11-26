@@ -8,7 +8,7 @@ from fractal_server.runner.exceptions import SlurmConfigError
 from fractal_server.runner.executors.slurm_common.slurm_config import (
     SlurmConfig,
 )
-from fractal_server.runner.executors.slurm_rest.job_description import OPTIONS
+from fractal_server.runner.executors.slurm_rest.job_description import ALIASES
 from fractal_server.runner.executors.slurm_rest.job_description import (
     _apply_option,
 )
@@ -91,14 +91,10 @@ def test_build_job_description_values(line, expected):
     "line,expected",
     [
         ("--partition=main", {"partition": "main"}),
+        ("--partition main", {"partition": "main"}),
         ("-p main", {"partition": "main"}),
-        # Unambiguous abbreviations, as with `sbatch`
+        ("-D /remote/wf", {"current_working_directory": "/remote/wf"}),
         ("--err=/x.err", {"standard_error": "/x.err"}),
-        # Quotes and comments, as with `sbatch`
-        ('--job-name="my job"', {"name": "my job"}),
-        ("--time=10 # comment", {"time_limit": {"set": True, "number": 10}}),
-        # Several options on one line
-        ("--qos=high --account=acc", {"qos": "high", "account": "acc"}),
     ],
 )
 def test_build_job_description_line_syntax(line, expected):
@@ -106,9 +102,8 @@ def test_build_job_description_line_syntax(line, expected):
     assert job == expected | {"environment": []}
 
 
-def test_options_are_all_handled():
-    # Every option accepted by the parser has a JSON mapping
-    for name in OPTIONS:
+def test_aliases_are_all_handled():
+    for name in ALIASES.values():
         _apply_option({}, name, "1")
 
 
@@ -118,9 +113,14 @@ def test_options_are_all_handled():
         "--mem=2X",
         "--mem=2BG",
         "--partition=main extra",
-        '--job-name="unclosed',
+        '--job-name="my job"',
+        "--qos=high --account=acc",
+        "--time=10 # comment",
+        "-Dremote",
+        "",
         "--mail-type=ALL",
-        # Ambiguous abbreviation (`nodelist`, `nodes`, `ntasks`)
+        "-Z 1",
+        # Short names only after a single dash
         "--n=1",
     ],
 )
