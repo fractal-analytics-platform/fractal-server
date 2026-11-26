@@ -5,6 +5,7 @@
 * Task collection:
     * Add `TasksApptainerSettings.build_env_vars` (\#3515).
     * Support deactivation/reactivation of `apptainer` task groups (\#3516).
+    * Make `TasksApptainerSettings.apptainer_bin` optional and add `TasksApptainerSettings.pre_submission_cmd` (\#3518).
 
 # 2.28.0
 
