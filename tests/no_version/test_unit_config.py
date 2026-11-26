@@ -291,10 +291,11 @@ def test_pixi_slurm_config():
 
 
 def test_tasks_apptainer_settings_build_env_vars():
-    base = dict(pixi_version="0.84.1", apptainer_bin="apptainer")
+    base = dict(pixi_version="0.84.1")
 
     # Default
     settings = TasksApptainerSettings(**base)
+    assert settings.apptainer_bin == "apptainer"
     assert settings.build_env_vars == [("APPTAINER_BINDPATH", "")]
     assert settings.build_env_prefix == 'APPTAINER_BINDPATH="" '
 

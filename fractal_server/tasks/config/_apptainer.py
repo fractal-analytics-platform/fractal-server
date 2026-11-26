@@ -14,7 +14,7 @@ class TasksApptainerSettings(BaseModel):
     """
     `pixi` version used by apptainer.
     """
-    apptainer_bin: NonEmptyStr
+    apptainer_bin: NonEmptyStr = "apptainer"
     """
     Command used to invoke `apptainer` (e.g. `apptainer` or
     `/usr/bin/apptainer`).
