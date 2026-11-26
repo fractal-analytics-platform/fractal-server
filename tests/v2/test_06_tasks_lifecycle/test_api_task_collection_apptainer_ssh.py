@@ -35,6 +35,10 @@ async def test_task_collection_apptainer_ssh(
         key_path=profile.ssh_key_path,
     )
 
+    # The pre-submission command creates a marker file
+    pre_submission_marker = Path(
+        profile.tasks_remote_dir, "pre-submission.txt"
+    ).as_posix()
     resource.tasks_apptainer_config = TasksApptainerSettings(
         pixi_version="0.84.1",
         apptainer_bin="/usr/bin/apptainer",
@@ -42,6 +46,7 @@ async def test_task_collection_apptainer_ssh(
             ("APPTAINER_BINDPATH", ""),
             ("FRACTAL_TEST_VAR", "$HOME"),
         ],
+        pre_submission_cmd=f"touch {pre_submission_marker}",
         SLURM_CONFIG=TasksSLURMConfig(
             partition="main",
             cpus=1,
@@ -112,6 +117,7 @@ async def test_task_collection_apptainer_ssh(
         fractal_ssh.run_command(cmd=f"rm {parent_path}")
 
         # 3 / Successful collection
+        assert not fractal_ssh.remote_exists(pre_submission_marker)
         res = await client.post(
             "api/v2/task/collect/apptainer/",
             data={},
@@ -134,6 +140,9 @@ async def test_task_collection_apptainer_ssh(
         assert Path(task_group.path, SIF_FILENAME).exists()
         txt_file = Path(task_group.path, TASK_GROUP_ID_FILENAME)
         assert txt_file.read_text() == str(task_group.id)
+
+        # `pre_submission_cmd` ran before submitting the build job
+        assert fractal_ssh.remote_exists(pre_submission_marker)
 
         # `build_env_vars` are prefixed to the `apptainer build` command
         assert (
@@ -208,6 +217,8 @@ async def test_task_collection_apptainer_ssh(
         assert res.json()["active"] is False
 
         # 7 / Reactivate: SIF file is re-built
+        fractal_ssh.run_command(cmd=f"rm {pre_submission_marker}")
+        assert not fractal_ssh.remote_exists(pre_submission_marker)
         res = await client.post(
             f"api/v2/task-group/{task_group_id}/reactivate/"
         )
@@ -218,6 +229,7 @@ async def test_task_collection_apptainer_ssh(
         debug(activity["log"])
         assert activity["status"] == "OK"
         assert fractal_ssh.remote_exists(sif_path_remote)
+        assert fractal_ssh.remote_exists(pre_submission_marker)
         res = await client.get(f"api/v2/task-group/{task_group_id}/")
         assert res.json()["active"] is True
 
