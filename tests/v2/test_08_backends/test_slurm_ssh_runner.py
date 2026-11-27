@@ -203,14 +203,19 @@ async def test_submit_with_pre_submission_cmd(
     expected_status: HistoryUnitStatus,
 ):
     """
-    The task only succeeds if `pre_submission_cmd` ran within its SLURM job,
-    which only happens for `apptainer` task groups.
+    The task only succeeds if `pre_submission_cmd` ran right before `sbatch`
+    (so that the exported variable propagates to the SLURM job), which only
+    happens for `apptainer` task groups.
     """
     res, prof = slurm_ssh_resource_profile_db[:]
     _, history_unit_id, wftask_id = history_mock_for_submit
 
-    # Stand-in for `module load apptainer`, with a visible side effect
-    pre_submission_cmd = "export FRACTAL_TEST_VAR=expected-value"
+    # Stand-in for `module load apptainer`, with a visible side effect. It
+    # also writes to stdout, which must not break the parsing of the SLURM
+    # job ID.
+    pre_submission_cmd = (
+        "echo 'some output'\nexport FRACTAL_TEST_VAR=expected-value"
+    )
     check_script = (tmp777_path / "check_env.sh").as_posix()
     fractal_ssh.write_remote_file(
         path=check_script,
@@ -257,6 +262,19 @@ async def test_submit_with_pre_submission_cmd(
 
     unit = await db.get(HistoryUnit, history_unit_id)
     assert unit.status == expected_status
+
+    # `pre_submission_cmd` is in the wrapper script (only for `apptainer`),
+    # and never in the SLURM submission script
+    remote_dir = tmp777_path / "user"
+    wrappers = list(remote_dir.rglob("*-slurm-submit-wrapper.sh"))
+    submission_scripts = list(remote_dir.rglob("*-slurm-submit.sh"))
+    assert len(submission_scripts) == 1
+    assert pre_submission_cmd not in submission_scripts[0].read_text()
+    if origin == TaskGroupOriginEnum.APPTAINER:
+        assert len(wrappers) == 1
+        assert pre_submission_cmd in wrappers[0].read_text()
+    else:
+        assert wrappers == []
 
     _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
 
