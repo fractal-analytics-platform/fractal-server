@@ -6,6 +6,8 @@ from itertools import chain
 
 from fastapi import FastAPI
 from fastapi import Request
+from sqlalchemy import func
+from sqlalchemy import select
 from starlette.responses import JSONResponse
 from starlette.types import Message
 from starlette.types import Receive
@@ -14,6 +16,8 @@ from starlette.types import Send
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
+from fractal_server.app.models import JobV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.exceptions import HTTPExceptionWithData
 
@@ -29,6 +33,21 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+
+
+async def _check_submitted_jobs(logger_name: str) -> int:
+    """
+    Emit a warning if there are submitted jobs.
+    """
+    stm = select(func.count(JobV2.id)).where(
+        JobV2.status == JobStatusType.SUBMITTED
+    )
+    async for db in DB.get_async_db():
+        res = await db.execute(stm)
+        num_jobs = res.scalar()
+    if num_jobs > 0:
+        _logger = get_logger(logger_name=logger_name)
+        _logger.warning(f"There are {num_jobs} submitted job(s) at startup.")
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -96,6 +115,8 @@ async def lifespan(app: FastAPI):
         )
     else:
         app.state.fractal_ssh_list = None
+
+    await _check_submitted_jobs()
 
     config_uvicorn_loggers()
     logger_startup.info("END")
