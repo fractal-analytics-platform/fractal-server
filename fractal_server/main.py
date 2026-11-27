@@ -3,10 +3,11 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from itertools import chain
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi import Request
+from sqlalchemy import func
+from sqlalchemy import select
 from starlette.responses import JSONResponse
 from starlette.types import Message
 from starlette.types import Receive
@@ -15,6 +16,8 @@ from starlette.types import Send
 
 from fractal_server import __VERSION__
 from fractal_server.app.db import DB
+from fractal_server.app.models import JobV2
+from fractal_server.app.schemas.v2 import JobStatusType
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.exceptions import HTTPExceptionWithData
 
@@ -30,6 +33,31 @@ from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
+
+
+async def _check_submitted_jobs(logger_name: str) -> None:
+    """
+    Emit a warning if there are submitted jobs.
+    """
+    _logger = get_logger(logger_name=logger_name)
+    try:
+        stm = select(func.count(JobV2.id)).where(
+            JobV2.status == JobStatusType.SUBMITTED
+        )
+        async for db in DB.get_async_db():
+            res = await db.execute(stm)
+            num_jobs = res.scalar_one()
+        if num_jobs > 0:
+            _logger.warning(
+                f"There are {num_jobs} submitted job(s) at startup."
+            )
+    except Exception as e:
+        _error = str(e).splitlines()[0]
+        _logger.warning(
+            "Unexpected error in `_check_submitted_jobs`, "
+            "is the database reachable? "
+            f"Original error: {_error}"
+        )
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -78,11 +106,12 @@ def check_settings(logger_name: str) -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator:
+async def lifespan(app: FastAPI):
     app.state.jobs = []
-    logger_startup = set_logger("lifespan.startup")
+    logger_name = "lifespan.startup"
+    logger_startup = set_logger(logger_name=logger_name)
     logger_startup.info(f"START (fractal-server {__VERSION__})")
-    check_settings(logger_name="lifespan.startup")
+    check_settings(logger_name=logger_name)
     settings = Inject(get_settings)
 
     if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
@@ -96,6 +125,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator:
         )
     else:
         app.state.fractal_ssh_list = None
+
+    await _check_submitted_jobs(logger_name=logger_name)
 
     config_uvicorn_loggers()
     logger_startup.info("END")

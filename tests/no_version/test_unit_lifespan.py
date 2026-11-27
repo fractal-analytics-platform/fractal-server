@@ -13,6 +13,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.app.security import _create_first_group
 from fractal_server.app.security import _create_first_user
+from fractal_server.main import _check_submitted_jobs
 from fractal_server.main import lifespan
 from fractal_server.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.ssh._fabric import FractalSSHList
@@ -181,3 +182,54 @@ async def test_lifespan_slurm_ssh(override_settings_factory, db):
         assert len(app.state.jobs) == 0
         assert isinstance(app.state.fractal_ssh_list, FractalSSHList)
         assert app.state.fractal_ssh_list.size == 0
+
+
+async def test_check_submitted_jobs(
+    db,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    local_resource_profile_db,
+    caplog,
+):
+    # CASE 1: No submitted jobs
+    await _check_submitted_jobs(logger_name="test")
+    assert caplog.text == ""
+
+    # CASE 2: One submitted job
+    resource, profile = local_resource_profile_db
+    await _create_first_user(
+        email="1234@example.org",
+        password="1234",
+        project_dir="/fake",
+        profile_id=profile.id,
+    )
+    user = (await db.execute(select(UserOAuth))).scalars().unique().one()
+    proj = await project_factory(user)
+    ds = await dataset_factory(project_id=proj.id)
+    wf = await workflow_factory(project_id=proj.id)
+    db.add(
+        JobV2(
+            project_id=proj.id,
+            dataset_id=ds.id,
+            workflow_id=wf.id,
+            dataset_dump={},
+            workflow_dump={},
+            project_dump={},
+            last_task_index=0,
+            first_task_index=0,
+            user_email=user.email,
+            status="submitted",
+        )
+    )
+    await db.commit()
+
+    await _check_submitted_jobs(logger_name="test")
+    assert "There are 1 submitted job(s) at startup." in caplog.text
+
+
+async def test_check_submitted_jobs_no_db(caplog):
+    await _check_submitted_jobs(logger_name="test")
+    assert "Unexpected error" in caplog.text
+    assert "psycopg.errors.UndefinedTable" in caplog.text
+    print(caplog.text)
