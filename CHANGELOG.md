@@ -2,10 +2,11 @@
 
 # Unreleased
 
-* Task collection:
+* Task-groups lifecycle:
     * Add `TasksApptainerSettings.build_env_vars` (\#3515).
     * Support deactivation/reactivation of `apptainer` task groups (\#3516).
     * Make `TasksApptainerSettings.apptainer_bin` optional and add `TasksApptainerSettings.pre_submission_cmd` (\#3518).
+    * Replace original pixi version with default one upon task-group reactivation, if needed (\#3523).
 * Testing:
     * Add script to generate the pixi version of `fractal-tasks-mock` (\#3519).
 * Dependencies:
