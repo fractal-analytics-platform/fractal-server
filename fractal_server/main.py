@@ -116,7 +116,7 @@ async def lifespan(app: FastAPI):
     else:
         app.state.fractal_ssh_list = None
 
-    await _check_submitted_jobs()
+    await _check_submitted_jobs(logger_name=logger_name)
 
     config_uvicorn_loggers()
     logger_startup.info("END")
