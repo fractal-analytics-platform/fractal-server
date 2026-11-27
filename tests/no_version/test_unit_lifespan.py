@@ -108,6 +108,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
 
 
 async def test_lifespan_shutdown_local(
+    db,
     caplog,
     monkeypatch,
 ):
