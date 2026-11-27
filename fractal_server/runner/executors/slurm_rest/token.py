@@ -1,0 +1,279 @@
+"""
+SLURM tokens (JWTs) for `slurmrestd`.
+
+In deployments, the token of a Fractal user is the access token of their
+OAuth/OIDC (SSO) login. At every login, fractal-server stores the access
+token and refresh token of the identity provider in the `oauthaccount`
+table. When `slurmrestd` trusts the identity provider (`AuthAltTypes=auth/jwt`
+with a `jwks` file and `userclaimfield=sub`), this access token is a valid
+SLURM token for the user whose name is the `sub` claim.
+"""
+
+import asyncio
+import time
+from typing import Any
+from typing import Protocol
+
+import httpx
+import jwt
+from httpx_oauth.oauth2 import OAuth2Error
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import OAuthAccount
+from fractal_server.config import get_oauth_settings
+from fractal_server.logger import set_logger
+from fractal_server.syringe import Inject
+
+logger = set_logger(__name__)
+
+# A token closer than this to its expiration is refreshed before use. It only
+# has to cover clock skew and the request itself: it must stay well below the
+# token lifetime (e.g. 300 s by default in Keycloak), or every request would
+# trigger a refresh
+REFRESH_MARGIN = 60
+
+
+class SlurmTokenError(RuntimeError):
+    """
+    No valid SLURM token is available for the user.
+
+    This may happen if the access token is missing or expired.
+    """
+
+
+def jwt_claims(token: str) -> dict[str, Any]:
+    """
+    Claims of a JWT, without verifying its signature (`{}` if not a JWT).
+    """
+    try:
+        return jwt.decode(token, options={"verify_signature": False})
+    except jwt.PyJWTError:
+        return {}
+
+
+def check_token_user(token: str, slurm_username: str) -> None:
+    """
+    Fail unless the token is a JWT whose `sub` claim is `slurm_username`.
+
+    `slurmrestd` runs the request as the user in the token, not as the one
+    in the `X-SLURM-USER-NAME` header.
+    """
+    token_user = jwt_claims(token).get("sub")
+    if token_user is None:
+        raise SlurmTokenError(
+            "SSO access token is not a JWT with a `sub` claim, so slurmrestd "
+            "cannot use it."
+        )
+    if token_user != slurm_username:
+        raise SlurmTokenError(
+            f"Token user '{token_user}' differs from the SLURM user "
+            f"'{slurm_username}'."
+        )
+
+
+def _expires_at(account: OAuthAccount) -> int | None:
+    if account.expires_at is not None:
+        return account.expires_at
+    return jwt_claims(account.access_token).get("exp")
+
+
+def _is_invalid_grant(response: httpx.Response | None) -> bool:
+    """
+    Whether the identity provider refused the refresh token (RFC 6749,
+    section 5.2), e.g. HTTP 400, `invalid_grant`, "unknown,
+    invalid, or expired refresh token".
+    """
+    if response is None or response.status_code != 400:
+        return False
+    try:
+        return response.json().get("error") == "invalid_grant"
+    except ValueError:
+        return False
+
+
+def _refresh_with_identity_provider(refresh_token: str) -> dict[str, Any]:
+    # Imported here, to avoid loading the API routes in the runner modules
+    from fractal_server.app.routes.auth.oauth import create_oauth_client
+
+    oauth_settings = Inject(get_oauth_settings)
+    if not oauth_settings.is_set:
+        raise SlurmTokenError("OAuth client is not configured.")
+    client = create_oauth_client(oauth_settings)
+    # The runner runs in a worker thread, without a running event loop
+    return asyncio.run(client.refresh_token(refresh_token))
+
+
+# --- Token provider interface and implementation ---
+
+
+class TokenProvider(Protocol):
+    # User that `slurmrestd` acts as (the token user)
+    slurm_username: str
+
+    def get_token(self, force_refresh: bool = False) -> str: ...
+
+
+class SsoTokenProvider(TokenProvider):
+    """
+    Provide the SSO access token of a Fractal user as SLURM token.
+
+    The token is read from the database and refreshed (with the stored
+    refresh token) when it is about to expire or after `slurmrestd` rejects
+    it. The refresh locks the database row, so that runners in other threads
+    or server workers do not refresh it at the same time.
+
+    The SLURM user is the `account_id` (`sub` claim) of the OAuth account,
+    which may differ from `Profile.username` (the SSH user).
+
+    Args:
+        user_id: ID of the Fractal user.
+    """
+
+    def __init__(self, *, user_id: int) -> None:
+        self.user_id = user_id
+        self._token: str | None = None
+        self._expires_at: int | None = None
+        # Not sent again to the identity provider; a new login replaces it
+        self._failed_refresh_token: str | None = None
+        with next(get_sync_db()) as db:
+            account = self._get_account(db, lock=False)
+        self.slurm_username: str = account.account_id
+
+    def _is_usable(
+        self, token: str, expires_at: int | None, rejected: str | None
+    ) -> bool:
+        if token == rejected:
+            return False
+        return expires_at is None or expires_at - time.time() > REFRESH_MARGIN
+
+    def get_token(self, force_refresh: bool = False) -> str:
+        """
+        Return a usable token, refreshing it if needed.
+
+        Steps, all in one database transaction:
+
+        1. Read the account row without lock; if its token is usable, use it.
+        2. Else lock the row and read it again, if no other runner refreshed it
+           in the meantime, proceed to refresh the token.
+        3. Commit: this saves the new tokens and releases the lock. If any
+           step raises, closing the session rolls back and releases it.
+
+        Args:
+            force_refresh:
+                If `True`, the last returned token was rejected: return a
+                different one.
+        """
+        if (
+            not force_refresh
+            and self._token is not None
+            and self._is_usable(self._token, self._expires_at, None)
+        ):
+            return self._token
+        rejected = self._token if force_refresh else None
+        with next(get_sync_db()) as db:
+            account = self._get_account(db, lock=False)
+            if not self._is_usable(
+                account.access_token, _expires_at(account), rejected
+            ):
+                account = self._get_account(db, lock=True)
+                # Another runner may have refreshed it in the meantime
+                if not self._is_usable(
+                    account.access_token, _expires_at(account), rejected
+                ):
+                    self._refresh(db, account)
+            token, expires_at = account.access_token, _expires_at(account)
+            # Release the row lock, if any
+            db.commit()
+        check_token_user(token, self.slurm_username)
+        if token != self._token:
+            expires_in = (
+                None if expires_at is None else expires_at - int(time.time())
+            )
+            logger.info(
+                f"Using SSO token of user {self.user_id} ({expires_in=} s)."
+            )
+        self._token, self._expires_at = token, expires_at
+        return token
+
+    def _get_account(self, db: Session, *, lock: bool) -> OAuthAccount:
+        """
+        Read the user's only OAuth account.
+
+        With `lock=True`, the row is locked when the query runs, and stays
+        locked until the transaction ends (commit or rollback in `get_token`).
+
+        Raises:
+            SlurmTokenError: The user has no OAuth account, or several.
+        """
+        stm = select(OAuthAccount).where(OAuthAccount.user_id == self.user_id)
+        if lock:
+            stm = stm.with_for_update().execution_options(
+                populate_existing=True
+            )
+        accounts = db.execute(stm).scalars().all()
+        if len(accounts) == 0:
+            raise SlurmTokenError(
+                f"No SSO account for user {self.user_id}. "
+                "Hint: the user must log in to Fractal via SSO."
+            )
+        if len(accounts) > 1:
+            names = sorted(account.oauth_name for account in accounts)
+            raise SlurmTokenError(
+                f"User {self.user_id} has several SSO accounts ({names}): "
+                "cannot choose the SLURM user."
+            )
+        return accounts[0]
+
+    def _refresh(self, db: Session, account: OAuthAccount) -> None:
+        """
+        Get new tokens from the identity provider and write them to
+        `account`.
+
+        Must be called with the account row locked (see `get_token`). Changes
+        are flushed, the caller commits them which also releases the lock.
+
+        Raises:
+            SlurmTokenError: No refresh token, or the refresh failed.
+        """
+        if account.refresh_token is None:
+            raise SlurmTokenError(
+                f"SSO token of user {self.user_id} expired and cannot be "
+                "refreshed. Hint: the user must log in to Fractal again."
+            )
+        if account.refresh_token == self._failed_refresh_token:
+            raise SlurmTokenError(
+                f"SSO refresh token of user {self.user_id} was already "
+                "refused. Hint: the user must log in to Fractal again."
+            )
+        try:
+            new = _refresh_with_identity_provider(account.refresh_token)
+        except (OAuth2Error, httpx.HTTPError) as e:
+            # Only a refused grant needs a new login; network errors, 5xx and
+            # client misconfiguration (e.g. `invalid_client`) are retried
+            if _is_invalid_grant(getattr(e, "response", None)):
+                self._failed_refresh_token = account.refresh_token
+            raise SlurmTokenError(
+                f"Cannot refresh the SSO token of user {self.user_id} "
+                f"({type(e).__name__}: {e}). "
+                "Hint: the user must log in to Fractal again."
+            ) from None
+        account.access_token = new["access_token"]
+        account.expires_at = new.get("expires_at")
+        # Some identity providers rotate the refresh token
+        if new.get("refresh_token"):
+            account.refresh_token = new["refresh_token"]
+        db.add(account)
+        db.flush()
+        logger.info(
+            f"Refreshed SSO token of user {self.user_id} "
+            f"(expires_at={account.expires_at})."
+        )
+
+
+def get_token_provider(*, user_id: int) -> TokenProvider:
+    """
+    Token provider of a Fractal user (tests replace it with a fixed token).
+    """
+    return SsoTokenProvider(user_id=user_id)

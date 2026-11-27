@@ -18,6 +18,7 @@ dependencies = [
     "sqlmodel == 0.0.38",
     "sqlalchemy[asyncio] >=2.0.23,<2.1",
     "fastapi-users[oauth] >=15,<16",
+    "pyjwt >=2.13.0,<3.0.0",
     "alembic >=1.13.1, <2.0.0",
     "uvicorn >= 0.50.0, <0.51.0",
     "uvicorn-worker == 0.4.0",

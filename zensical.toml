@@ -17,6 +17,7 @@ nav = [
         { "Integrations" = [
             "internals/integrations/index.md",
             "internals/integrations/runners.md",
+            "internals/integrations/slurm_rest.md",
             "internals/integrations/tasks.md",
         ]
         },
