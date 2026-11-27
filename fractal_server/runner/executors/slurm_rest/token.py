@@ -150,6 +150,16 @@ class SsoTokenProvider(TokenProvider):
 
     def get_token(self, force_refresh: bool = False) -> str:
         """
+        Return a usable token, refreshing it if needed.
+
+        Steps, all in one database transaction:
+
+        1. Read the account row without lock; if its token is usable, use it.
+        2. Else lock the row and read it again, if no other runner refreshed it
+           in the meantime, proceed to refresh the token.
+        3. Commit: this saves the new tokens and releases the lock. If any
+           step raises, closing the session rolls back and releases it.
+
         Args:
             force_refresh:
                 If `True`, the last returned token was rejected: return a
@@ -188,9 +198,17 @@ class SsoTokenProvider(TokenProvider):
         return token
 
     def _get_account(self, db: Session, *, lock: bool) -> OAuthAccount:
+        """
+        Read the user's only OAuth account.
+
+        With `lock=True`, the row is locked when the query runs, and stays
+        locked until the transaction ends (commit or rollback in `get_token`).
+
+        Raises:
+            SlurmTokenError: The user has no OAuth account, or several.
+        """
         stm = select(OAuthAccount).where(OAuthAccount.user_id == self.user_id)
         if lock:
-            # `populate_existing`: reload the row already in the session
             stm = stm.with_for_update().execution_options(
                 populate_existing=True
             )
@@ -209,6 +227,16 @@ class SsoTokenProvider(TokenProvider):
         return accounts[0]
 
     def _refresh(self, db: Session, account: OAuthAccount) -> None:
+        """
+        Get new tokens from the identity provider and write them to
+        `account`.
+
+        Must be called with the account row locked (see `get_token`). Changes
+        are flushed, the caller commits them which also releases the lock.
+
+        Raises:
+            SlurmTokenError: No refresh token, or the refresh failed.
+        """
         if account.refresh_token is None:
             raise SlurmTokenError(
                 f"SSO token of user {self.user_id} expired and cannot be "
