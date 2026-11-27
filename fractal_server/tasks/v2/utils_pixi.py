@@ -28,7 +28,7 @@ def get_pixi_home(
         default_version = config["default_version"]
         pixi_home = config["versions"][default_version]
         logger.warning(
-            f"{version=} is not available, using {default_version=}."
+            f"Pixi {version} is not available, using {default_version=}."
         )
     return pixi_home
 
