@@ -9,9 +9,11 @@ from fractal_server.app.models import Resource
 from fractal_server.app.models.v2 import HistoryRun
 from fractal_server.app.models.v2 import HistoryUnit
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.runner.exceptions import TaskExecutionError
 from fractal_server.runner.executors.slurm_ssh.runner import SlurmSSHRunner
 from fractal_server.runner.task_files import MULTISUBMIT_PREFIX
+from fractal_server.runner.v2.runner import _add_pre_submission_cmd
 from fractal_server.ssh._fabric import FractalSSH
 from tests.v2._aux_runner import get_default_slurm_config
 from tests.v2.test_08_backends.aux_unit_runner import get_dummy_task_files
@@ -176,6 +178,85 @@ async def test_submit_fail(
     unit = await db.get(HistoryUnit, history_unit_id)
     debug(unit)
     assert unit.status == HistoryUnitStatus.FAILED
+
+    _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
+
+
+@pytest.mark.ssh
+@pytest.mark.container
+@pytest.mark.parametrize(
+    "origin,expected_status",
+    [
+        (TaskGroupOriginEnum.APPTAINER, HistoryUnitStatus.DONE),
+        (TaskGroupOriginEnum.PYPI, HistoryUnitStatus.FAILED),
+    ],
+)
+async def test_submit_with_pre_submission_cmd(
+    db,
+    tmp777_path,
+    fractal_ssh,
+    history_mock_for_submit,
+    valid_user_id,
+    slurm_ssh_resource_profile_db: tuple[Resource, Profile],
+    fractal_job_id_mock,
+    origin: TaskGroupOriginEnum,
+    expected_status: HistoryUnitStatus,
+):
+    """
+    The task only succeeds if `pre_submission_cmd` ran within its SLURM job,
+    which only happens for `apptainer` task groups.
+    """
+    res, prof = slurm_ssh_resource_profile_db[:]
+    _, history_unit_id, wftask_id = history_mock_for_submit
+
+    # Stand-in for `module load apptainer`, with a visible side effect
+    pre_submission_cmd = "export FRACTAL_TEST_VAR=expected-value"
+    check_script = (tmp777_path / "check_env.sh").as_posix()
+    fractal_ssh.write_remote_file(
+        path=check_script,
+        content='#!/bin/sh\ntest "$FRACTAL_TEST_VAR" = expected-value\n',
+    )
+
+    get_runner_config = _add_pre_submission_cmd(
+        get_runner_config=lambda **kwargs: get_default_slurm_config(),
+        task_group_origin=origin,
+        resource=Resource(
+            tasks_apptainer_config=dict(
+                pixi_version="0.1",
+                pre_submission_cmd=pre_submission_cmd,
+            )
+        ),
+    )
+
+    with SlurmSSHRunner(
+        fractal_ssh=fractal_ssh,
+        root_dir_local=tmp777_path / "server",
+        root_dir_remote=tmp777_path / "user",
+        user_cache_dir=(tmp777_path / "cache_dir").as_posix(),
+        resource=res,
+        profile=prof,
+        fractal_job_id=fractal_job_id_mock,
+        resource_id=res.id,
+    ) as runner:
+        runner.submit(
+            base_command=f"sh {check_script}",
+            workflow_task_order=0,
+            workflow_task_id=wftask_id,
+            task_name="fake-task-name",
+            parameters=dict(zarr_urls=ZARR_URLS),
+            task_files=get_dummy_task_files(
+                tmp777_path,
+                component="0",
+                is_slurm=True,
+            ),
+            task_type="non_parallel",
+            history_unit_id=history_unit_id,
+            config=get_runner_config(),
+            user_id=valid_user_id,
+        )
+
+    unit = await db.get(HistoryUnit, history_unit_id)
+    assert unit.status == expected_status
 
     _reset_permissions((tmp777_path / "user").as_posix(), fractal_ssh)
 
