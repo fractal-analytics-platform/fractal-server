@@ -81,6 +81,18 @@ class SlurmJob(BaseModel):
         ).as_posix()
 
     @property
+    def slurm_submission_wrapper_local(self) -> str:
+        return (
+            self.workdir_local / f"{self.prefix}-slurm-submit-wrapper.sh"
+        ).as_posix()
+
+    @property
+    def slurm_submission_wrapper_remote(self) -> str:
+        return (
+            self.workdir_remote / f"{self.prefix}-slurm-submit-wrapper.sh"
+        ).as_posix()
+
+    @property
     def slurm_job_id_placeholder(self) -> str:
         if self.slurm_job_id:
             return self.slurm_job_id

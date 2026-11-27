@@ -93,13 +93,13 @@ def _add_pre_submission_cmd(
     resource: Resource,
 ) -> GetRunnerConfigType:
     """
-    Wrap `get_runner_config`, so that it also includes `pre_submission_cmd`
-    in the SLURM submission script.
+    Wrap `get_runner_config`, so that it also sets `pre_submission_cmd`.
 
     For `apptainer` task groups, the `pre_submission_cmd` used for
-    `apptainer build` (e.g. `module load apptainer`) is appended to
-    `extra_lines`, so that it runs within the SLURM job, before the task
-    commands. For all other cases, `get_runner_config` is returned unchanged.
+    `apptainer build` (e.g. `module load apptainer`) is set in the runner
+    configuration, so that it runs right before `sbatch` (and its effects on
+    the environment propagate to the SLURM job). For all other cases,
+    `get_runner_config` is returned unchanged.
     """
     if (
         task_group_origin != TaskGroupOriginEnum.APPTAINER
@@ -114,8 +114,7 @@ def _add_pre_submission_cmd(
 
     def _get_runner_config(**kwargs):
         runner_config = get_runner_config(**kwargs)
-        if pre_submission_cmd not in runner_config.extra_lines:
-            runner_config.extra_lines.append(pre_submission_cmd)
+        runner_config.pre_submission_cmd = pre_submission_cmd
         return runner_config
 
     return _get_runner_config
