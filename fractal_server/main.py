@@ -44,7 +44,7 @@ async def _check_submitted_jobs(logger_name: str) -> None:
     )
     async for db in DB.get_async_db():
         res = await db.execute(stm)
-        num_jobs = res.scalar()
+        num_jobs = res.scalar_one()
     if num_jobs > 0:
         _logger = get_logger(logger_name=logger_name)
         _logger.warning(f"There are {num_jobs} submitted job(s) at startup.")
