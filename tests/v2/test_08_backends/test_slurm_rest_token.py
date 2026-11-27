@@ -274,17 +274,18 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         return RefreshTokenError("refresh failed", response)
 
     # Retried at the next call: network error, client misconfiguration (also
-    # the path of 5xx answers)
+    # the path of 5xx answers), 400 without a JSON body (e.g. from a proxy)
     responses.extend(
         [
             RefreshTokenError("connection failed"),
             _idp_error(401, error="invalid_client"),
+            _idp_error(400),
         ]
     )
-    for _ in range(2):
+    for _ in range(3):
         with pytest.raises(SlurmTokenError, match="log in to Fractal again"):
             provider.get_token()
-    assert calls == ["refresh-1"] * 2
+    assert calls == ["refresh-1"] * 3
 
     # Refused (answer of Roche WAM): not sent again
     responses.append(
@@ -298,7 +299,7 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
         provider.get_token()
     with pytest.raises(SlurmTokenError, match="already refused"):
         provider.get_token()
-    assert calls == ["refresh-1"] * 3
+    assert calls == ["refresh-1"] * 4
 
     # New login, with an expired access token: refreshed again
     account = _get_account(db_sync, user_id)
@@ -308,4 +309,4 @@ def test_sso_token_refused_refresh_not_retried(db_sync, oauth_user, fake_idp):
     new = _jwt(sub=USERNAME, n=2)
     responses.append(dict(access_token=new, expires_at=now + 3600))
     assert provider.get_token() == new
-    assert calls == ["refresh-1"] * 3 + ["refresh-2"]
+    assert calls == ["refresh-1"] * 4 + ["refresh-2"]
