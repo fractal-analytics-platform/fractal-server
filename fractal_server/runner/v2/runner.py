@@ -20,6 +20,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2 import HistoryUnitStatus
 from fractal_server.app.schemas.v2 import TaskDump
 from fractal_server.app.schemas.v2 import TaskGroupDump
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.app.schemas.v2 import TaskType
 from fractal_server.images import SingleImage
 from fractal_server.images.status_tools import IMAGE_STATUS_KEY
@@ -31,6 +32,7 @@ from fractal_server.logger import get_logger
 from fractal_server.runner.exceptions import JobExecutionError
 from fractal_server.runner.executors.base_runner import BaseRunner
 from fractal_server.runner.v2.db_tools import update_status_of_history_run
+from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.types import AttributeFilters
 
 from .db_tools import update_executor_error_log_safe
@@ -82,6 +84,41 @@ def get_origin_attribute_and_types(
         updated_attributes = copy(origin_image["attributes"])
         updated_types = copy(origin_image["types"])
     return updated_attributes, updated_types
+
+
+def _add_pre_submission_cmd(
+    *,
+    get_runner_config: GetRunnerConfigType,
+    task_group_origin: str,
+    resource: Resource,
+) -> GetRunnerConfigType:
+    """
+    Wrap `get_runner_config`, so that it also includes `pre_submission_cmd`
+    in the SLURM submission script.
+
+    For `apptainer` task groups, the `pre_submission_cmd` used for
+    `apptainer build` (e.g. `module load apptainer`) is appended to
+    `extra_lines`, so that it runs within the SLURM job, before the task
+    commands. For all other cases, `get_runner_config` is returned unchanged.
+    """
+    if (
+        task_group_origin != TaskGroupOriginEnum.APPTAINER
+        or not resource.tasks_apptainer_config
+    ):
+        return get_runner_config
+    pre_submission_cmd = TasksApptainerSettings(
+        **resource.tasks_apptainer_config
+    ).pre_submission_cmd
+    if not pre_submission_cmd:
+        return get_runner_config
+
+    def _get_runner_config(**kwargs):
+        runner_config = get_runner_config(**kwargs)
+        if pre_submission_cmd not in runner_config.extra_lines:
+            runner_config.extra_lines.append(pre_submission_cmd)
+        return runner_config
+
+    return _get_runner_config
 
 
 def execute_tasks(
@@ -245,6 +282,12 @@ def execute_tasks(
                     db_sync=db,
                 )
                 raise JobExecutionError(error_msg)
+            task_group = db.get_one(TaskGroupV2, task.taskgroupv2_id)
+            wftask_get_runner_config = _add_pre_submission_cmd(
+                get_runner_config=get_runner_config,
+                task_group_origin=task_group.origin,
+                resource=resource,
+            )
 
         # TASK EXECUTION
         try:
@@ -260,7 +303,7 @@ def execute_tasks(
                     workflow_dir_local=workflow_dir_local,
                     workflow_dir_remote=workflow_dir_remote,
                     runner=runner,
-                    get_runner_config=get_runner_config,
+                    get_runner_config=wftask_get_runner_config,
                     history_run_id=history_run_id,
                     dataset_id=dataset.id,
                     task_type=task.type,
@@ -274,7 +317,7 @@ def execute_tasks(
                     workflow_dir_local=workflow_dir_local,
                     workflow_dir_remote=workflow_dir_remote,
                     runner=runner,
-                    get_runner_config=get_runner_config,
+                    get_runner_config=wftask_get_runner_config,
                     history_run_id=history_run_id,
                     dataset_id=dataset.id,
                     user_id=user_id,
@@ -291,7 +334,7 @@ def execute_tasks(
                     workflow_dir_local=workflow_dir_local,
                     workflow_dir_remote=workflow_dir_remote,
                     runner=runner,
-                    get_runner_config=get_runner_config,
+                    get_runner_config=wftask_get_runner_config,
                     history_run_id=history_run_id,
                     dataset_id=dataset.id,
                     task_type=task.type,
