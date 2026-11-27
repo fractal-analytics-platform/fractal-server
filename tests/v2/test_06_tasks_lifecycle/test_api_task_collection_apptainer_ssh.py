@@ -36,6 +36,10 @@ async def test_task_collection_apptainer_ssh(
     resource.tasks_apptainer_config = TasksApptainerSettings(
         pixi_version="0.84.1",
         apptainer_bin="/usr/bin/apptainer",
+        build_env_vars=[
+            ("APPTAINER_BINDPATH", ""),
+            ("FRACTAL_TEST_VAR", "$HOME"),
+        ],
         SLURM_CONFIG=TasksSLURMConfig(
             partition="main",
             cpus=1,
@@ -128,6 +132,12 @@ async def test_task_collection_apptainer_ssh(
         assert Path(task_group.path, SIF_FILENAME).exists()
         txt_file = Path(task_group.path, TASK_GROUP_ID_FILENAME)
         assert txt_file.read_text() == str(task_group.id)
+
+        # `build_env_vars` are prefixed to the `apptainer build` command
+        assert (
+            'Build command: APPTAINER_BINDPATH="" FRACTAL_TEST_VAR="$HOME" '
+            "/usr/bin/apptainer build "
+        ) in activity["log"]
 
         # Task command runs Python inside the container
         task = task_group.task_list[0]

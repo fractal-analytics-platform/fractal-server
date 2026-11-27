@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Task collection:
+    * Add `TasksApptainerSettings.build_env_vars` (\#3515).
+
 # 2.28.0
 
 > NOTE: This release introduces **experimental** support for collecting
