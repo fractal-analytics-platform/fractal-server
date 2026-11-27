@@ -35,7 +35,7 @@ from .logger import set_logger
 from .syringe import Inject
 
 
-async def _check_submitted_jobs(logger_name: str) -> int:
+async def _check_submitted_jobs(logger_name: str) -> None:
     """
     Emit a warning if there are submitted jobs.
     """
