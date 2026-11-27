@@ -79,9 +79,10 @@ def check_settings(logger_name: str) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.jobs = []
-    logger_startup = set_logger("lifespan.startup")
+    logger_name = "lifespan.startup"
+    logger_startup = set_logger(logger_name=logger_name)
     logger_startup.info(f"START (fractal-server {__VERSION__})")
-    check_settings(logger_name="lifespan.startup")
+    check_settings(logger_name=logger_name)
     settings = Inject(get_settings)
 
     if settings.FRACTAL_RUNNER_BACKEND == ResourceType.SLURM_SSH:
