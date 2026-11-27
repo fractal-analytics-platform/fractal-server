@@ -1,13 +1,36 @@
 import tomllib
+from typing import Any
 from typing import TypedDict
 
 import tomli_w
 
+from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
 
 SOURCE_DIR_NAME = "source_dir"
+
+
+def get_pixi_home(
+    *,
+    version: str,
+    config: dict[str, Any],
+    logger_name: str,
+) -> str:
+    """
+    Get pixi home for a given version, or the default one.
+    """
+    try:
+        pixi_home = config["versions"][version]
+    except KeyError:
+        logger = get_logger(logger_name=logger_name)
+        default_version = config["default_version"]
+        pixi_home = config["versions"][default_version]
+        logger.warning(
+            f"{version=} is not available, using {default_version=}."
+        )
+    return pixi_home
 
 
 class ParsedOutput(TypedDict):

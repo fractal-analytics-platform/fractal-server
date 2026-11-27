@@ -22,6 +22,7 @@ from fractal_server.tasks.v2.utils_background import fail_and_cleanup
 from fractal_server.tasks.v2.utils_background import get_activity_and_task_group
 from fractal_server.tasks.v2.utils_background import get_current_log
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
+from fractal_server.tasks.v2.utils_pixi import get_pixi_home
 from fractal_server.tasks.v2.utils_templates import SCRIPTS_SUBFOLDER
 from fractal_server.utils import get_timestamp
 
@@ -110,9 +111,11 @@ def reactivate_ssh_pixi(
                         )
                         return
 
-                    pixi_home = resource.tasks_pixi_config["versions"][
-                        task_group.pixi_version
-                    ]
+                    pixi_home = get_pixi_home(
+                        version=task_group.pixi_version,
+                        config=resource.tasks_pixi_config,
+                        logger_name=LOGGER_NAME,
+                    )
                     pixi_cache_dir = profile.pixi_cache_dir or os.path.join(
                         pixi_home, "cache"
                     )
