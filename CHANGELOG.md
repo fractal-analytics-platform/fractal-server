@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* App:
+    * Add warning about submitted jobs at startup (\#3520).
 * Task collection:
     * Add `TasksApptainerSettings.build_env_vars` (\#3515).
     * Support deactivation/reactivation of `apptainer` task groups (\#3516).
