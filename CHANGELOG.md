@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Task collection:
+    * Add `TasksApptainerSettings.build_env_vars` (\#3515).
+    * Support deactivation/reactivation of `apptainer` task groups (\#3516).
+    * Make `TasksApptainerSettings.apptainer_bin` optional and add `TasksApptainerSettings.pre_submission_cmd` (\#3518).
+* Testing:
+    * Add script to generate the pixi version of `fractal-tasks-mock` (\#3519).
+
 # 2.28.0
 
 > NOTE: This release introduces **experimental** support for collecting

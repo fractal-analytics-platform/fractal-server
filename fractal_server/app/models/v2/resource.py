@@ -129,7 +129,6 @@ class Resource(Base):
     ```json
     {
         "pixi_version": "0.84.2",
-        "apptainer_bin": "/some/path/bin/apptainer",
         "SLURM_CONFIG": {
             "partition": "main",
             "cpus": 2,

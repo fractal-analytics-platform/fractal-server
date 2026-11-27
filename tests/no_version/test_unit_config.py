@@ -4,6 +4,8 @@ from pydantic import ValidationError
 from fractal_server.app.routes.auth.oauth import get_oauth_router
 from fractal_server.config import DatabaseSettings
 from fractal_server.config import EmailSettings
+from fractal_server.config import OAuthSettings
+from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.config import TasksPixiSettings
 from fractal_server.tasks.config import TasksPythonSettings
 from fractal_server.tasks.config._slurm import TasksSLURMConfig
@@ -26,8 +28,6 @@ def test_database_settings():
 
 
 def test_OAuthSettings():
-    from fractal_server.config import OAuthSettings
-
     config = OAuthSettings(
         OAUTH_CLIENT_NAME="GOOGLE",
         OAUTH_CLIENT_ID="123",
@@ -288,3 +288,48 @@ def test_pixi_slurm_config():
             mem="4G",
             mem_per_cpu="4G",
         )
+
+
+def test_tasks_apptainer_settings_build_env_vars():
+    base = dict(pixi_version="0.84.1")
+
+    # Default
+    settings = TasksApptainerSettings(**base)
+    assert settings.apptainer_bin == "apptainer"
+    assert settings.build_env_vars == [("APPTAINER_BINDPATH", "")]
+    assert settings.build_env_prefix == 'APPTAINER_BINDPATH="" '
+
+    # Empty
+    settings = TasksApptainerSettings(**base, build_env_vars=[])
+    assert settings.build_env_prefix == ""
+
+    # Custom
+    settings = TasksApptainerSettings(
+        **base,
+        build_env_vars=[
+            ["APPTAINER_BINDPATH", ""],
+            ["TMPDIR", "/dev/shm"],
+            ["APPTAINER_CACHEDIR", "/scratch/$USER"],
+        ],
+    )
+    assert settings.build_env_prefix == (
+        'APPTAINER_BINDPATH="" TMPDIR="/dev/shm" '
+        'APPTAINER_CACHEDIR="/scratch/$USER" '
+    )
+
+    # Name is stripped
+    settings = TasksApptainerSettings(
+        **base, build_env_vars=[["  TMPDIR ", "/dev/shm"]]
+    )
+    assert settings.build_env_vars == [("TMPDIR", "/dev/shm")]
+
+    # Empty value is allowed
+    settings = TasksApptainerSettings(**base, build_env_vars=[["TMPDIR", ""]])
+    assert settings.build_env_vars == [("TMPDIR", "")]
+
+    # Empty name is not allowed
+    for invalid_name in ["", "   "]:
+        with pytest.raises(ValidationError):
+            TasksApptainerSettings(
+                **base, build_env_vars=[[invalid_name, "value"]]
+            )

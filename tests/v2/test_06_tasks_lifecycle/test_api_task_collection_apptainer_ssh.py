@@ -3,12 +3,14 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import Resource
 from fractal_server.app.models import TaskGroupV2
 from fractal_server.app.schemas.v2 import ResourceType
 from fractal_server.ssh._fabric import FractalSSHList
 from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.config._slurm import TasksSLURMConfig
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
+from fractal_server.tasks.v2.ssh.collect_apptainer import DEF_FILENAME
 from fractal_server.tasks.v2.ssh.collect_apptainer import SIF_FILENAME
 from fractal_server.tasks.v2.utils_pixi import SOURCE_DIR_NAME
 
@@ -33,9 +35,18 @@ async def test_task_collection_apptainer_ssh(
         key_path=profile.ssh_key_path,
     )
 
+    # The pre-submission command creates a marker file
+    pre_submission_marker = Path(
+        profile.tasks_remote_dir, "pre-submission.txt"
+    ).as_posix()
     resource.tasks_apptainer_config = TasksApptainerSettings(
         pixi_version="0.84.1",
         apptainer_bin="/usr/bin/apptainer",
+        build_env_vars=[
+            ("APPTAINER_BINDPATH", ""),
+            ("FRACTAL_TEST_VAR", "$HOME"),
+        ],
+        pre_submission_cmd=f"touch {pre_submission_marker}",
         SLURM_CONFIG=TasksSLURMConfig(
             partition="main",
             cpus=1,
@@ -106,6 +117,7 @@ async def test_task_collection_apptainer_ssh(
         fractal_ssh.run_command(cmd=f"rm {parent_path}")
 
         # 3 / Successful collection
+        assert not fractal_ssh.remote_exists(pre_submission_marker)
         res = await client.post(
             "api/v2/task/collect/apptainer/",
             data={},
@@ -128,6 +140,15 @@ async def test_task_collection_apptainer_ssh(
         assert Path(task_group.path, SIF_FILENAME).exists()
         txt_file = Path(task_group.path, TASK_GROUP_ID_FILENAME)
         assert txt_file.read_text() == str(task_group.id)
+
+        # `pre_submission_cmd` ran before submitting the build job
+        assert fractal_ssh.remote_exists(pre_submission_marker)
+
+        # `build_env_vars` are prefixed to the `apptainer build` command
+        assert (
+            'Build command: APPTAINER_BINDPATH="" FRACTAL_TEST_VAR="$HOME" '
+            "/usr/bin/apptainer build "
+        ) in activity["log"]
 
         # Task command runs Python inside the container
         task = task_group.task_list[0]
@@ -177,3 +198,133 @@ async def test_task_collection_apptainer_ssh(
         assert not fractal_ssh.remote_exists(
             Path(task_group_path).parent.joinpath("9.9.9").as_posix()
         )
+
+        # 6 / Deactivate: SIF file is removed, definition file is kept
+        sif_path_remote = Path(task_group.path, SIF_FILENAME).as_posix()
+        def_path_remote = Path(task_group.path, DEF_FILENAME).as_posix()
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "OK"
+        assert not fractal_ssh.remote_exists(sif_path_remote)
+        assert fractal_ssh.remote_exists(def_path_remote)
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is False
+
+        # 7 / Reactivate: SIF file is re-built
+        fractal_ssh.run_command(cmd=f"rm {pre_submission_marker}")
+        assert not fractal_ssh.remote_exists(pre_submission_marker)
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "OK"
+        assert fractal_ssh.remote_exists(sif_path_remote)
+        assert fractal_ssh.remote_exists(pre_submission_marker)
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is True
+
+        # 8 / Failed deactivation - SIF file does not exist
+        fractal_ssh.remove_folder(folder=sif_path_remote)
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["status"] == "failed"
+        assert "does not exist" in activity["log"]
+
+        # 9 / Failed reactivation - SIF file already exists
+        db.expunge_all()
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        task_group.active = False
+        db.add(task_group)
+        await db.commit()
+        fractal_ssh.write_remote_file(path=sif_path_remote, content="")
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        assert activity["status"] == "failed"
+        assert "already exists" in activity["log"]
+
+        # 10 / Failed reactivation - image build fails (via a fake
+        # `apptainer_bin`), and the SIF file is removed
+        fractal_ssh.run_command(cmd=f"rm {sif_path_remote}")
+        apptainer_config = TasksApptainerSettings(
+            **resource.tasks_apptainer_config
+        )
+        apptainer_config.apptainer_bin = "false"
+        resource = await db.get(Resource, resource.id)
+        resource.tasks_apptainer_config = apptainer_config.model_dump()
+        db.add(resource)
+        await db.commit()
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "failed"
+        assert f"Deleted {sif_path_remote}" in activity["log"]
+        assert not fractal_ssh.remote_exists(sif_path_remote)
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is False
+
+        # 11 / Failed reactivation - image build fails, and also removal of
+        # the SIF file fails. Using `mkdir` as `apptainer_bin` makes the
+        # build command (`mkdir build <sif> <def>`) create a folder in place
+        # of the SIF file, and then fail since the definition file exists.
+        apptainer_config.apptainer_bin = "mkdir"
+        resource.tasks_apptainer_config = apptainer_config.model_dump()
+        db.add(resource)
+        await db.commit()
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/reactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "failed"
+        assert f"Removing {sif_path_remote} failed" in activity["log"]
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is False
+
+        # 12 / Failed deactivation - removal of the SIF file fails, since it
+        # is a folder (as a leftover of step 11)
+        db.expunge_all()
+        task_group = await db.get(TaskGroupV2, task_group_id)
+        task_group.active = True
+        db.add(task_group)
+        await db.commit()
+        res = await client.post(
+            f"api/v2/task-group/{task_group_id}/deactivate/"
+        )
+        assert res.status_code == 202
+        activity_id = res.json()["id"]
+        res = await client.get(f"/api/v2/task-group/activity/{activity_id}/")
+        activity = res.json()
+        debug(activity["log"])
+        assert activity["status"] == "failed"
+        assert "Is a directory" in activity["log"]
+        res = await client.get(f"api/v2/task-group/{task_group_id}/")
+        assert res.json()["active"] is True
+        fractal_ssh.remove_folder(folder=sif_path_remote)
