@@ -2,8 +2,8 @@
 
 # Unreleased
 
-> NOTE: Starting from this version, the app cannot start if the database
-> is not reachable.
+> NOTE: Starting from this version, the app startup phase will emit a warning
+> if the database is not reachable.
 
 * App:
     * Add warning about submitted jobs at startup (\#3520).

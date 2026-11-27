@@ -39,15 +39,25 @@ async def _check_submitted_jobs(logger_name: str) -> None:
     """
     Emit a warning if there are submitted jobs.
     """
-    stm = select(func.count(JobV2.id)).where(
-        JobV2.status == JobStatusType.SUBMITTED
-    )
-    async for db in DB.get_async_db():
-        res = await db.execute(stm)
-        num_jobs = res.scalar_one()
-    if num_jobs > 0:
-        _logger = get_logger(logger_name=logger_name)
-        _logger.warning(f"There are {num_jobs} submitted job(s) at startup.")
+    _logger = get_logger(logger_name=logger_name)
+    try:
+        stm = select(func.count(JobV2.id)).where(
+            JobV2.status == JobStatusType.SUBMITTED
+        )
+        async for db in DB.get_async_db():
+            res = await db.execute(stm)
+            num_jobs = res.scalar_one()
+        if num_jobs > 0:
+            _logger.warning(
+                f"There are {num_jobs} submitted job(s) at startup."
+            )
+    except Exception as e:
+        _error = str(e).splitlines()[0]
+        _logger.warning(
+            "Unexpected error in `_check_submitted_jobs`, "
+            "is the database reachable? "
+            f"Original error: {_error}"
+        )
 
 
 def collect_routers(app: FastAPI) -> None:

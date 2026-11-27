@@ -108,7 +108,6 @@ async def test_lifespan_shutdown_empty_jobs_list(
 
 
 async def test_lifespan_shutdown_local(
-    db,
     caplog,
     monkeypatch,
 ):
@@ -227,3 +226,10 @@ async def test_check_submitted_jobs(
 
     await _check_submitted_jobs(logger_name="test")
     assert "There are 1 submitted job(s) at startup." in caplog.text
+
+
+async def test_check_submitted_jobs_no_db(caplog):
+    await _check_submitted_jobs(logger_name="test")
+    assert "Unexpected error" in caplog.text
+    assert "psycopg.errors.UndefinedTable" in caplog.text
+    print(caplog.text)
