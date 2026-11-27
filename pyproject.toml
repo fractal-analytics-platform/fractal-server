@@ -27,7 +27,7 @@ dependencies = [
     "sqlalchemy[asyncio] >=2.1.1,<2.2.0",
     "fastapi-users[oauth] >=15,<16",
     "httpx-oauth >= 0.13",
-    "httpx >=0.28.0,<0.29.0",
+    "httpx >=0.29.0,<0.30.0",
     "pwdlib",
     "alembic >=1.13.1, <2.0.0",
     "uvicorn>=0.54.0,<0.55.0",

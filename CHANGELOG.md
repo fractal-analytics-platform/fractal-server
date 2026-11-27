@@ -8,6 +8,9 @@
     * Make `TasksApptainerSettings.apptainer_bin` optional and add `TasksApptainerSettings.pre_submission_cmd` (\#3518).
 * Testing:
     * Add script to generate the pixi version of `fractal-tasks-mock` (\#3519).
+* Dependencies:
+    * Bump lock (\#3521).
+    * Bump `httpx` to 0.29 (\#3521).
 
 # 2.28.0
 
