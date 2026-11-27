@@ -435,6 +435,21 @@ class BaseSlurmRunner(BaseRunner):
             submit_command = (
                 f"sbatch --parsable {slurm_job.slurm_submission_script_remote}"
             )
+            if slurm_config.pre_submission_cmd:
+                with open(slurm_job.slurm_submission_wrapper_local, "w") as f:
+                    f.write(
+                        "#!/bin/bash\n"
+                        "set -e\n"
+                        f"{slurm_config.pre_submission_cmd}\n"
+                        f"{submit_command}\n"
+                    )
+                logger.debug(
+                    "[_prepare_single_slurm_job] Written "
+                    f"{slurm_job.slurm_submission_wrapper_local=}"
+                )
+                submit_command = (
+                    f"bash {slurm_job.slurm_submission_wrapper_remote}"
+                )
         else:
             submit_command = (
                 f"sbatch --parsable {slurm_job.slurm_submission_script_local}"
@@ -476,10 +491,8 @@ class BaseSlurmRunner(BaseRunner):
         logger.debug(f"[_submit_single_sbatch] Now run {submit_command=}")
         sbatch_stdout = self._run_remote_cmd(submit_command)
         logger.info(f"[_submit_single_sbatch] {sbatch_stdout=}")
-        stdout = sbatch_stdout.strip("\n")
-        submitted_job_id = int(stdout)
+        submitted_job_id = int(sbatch_stdout.strip().splitlines()[-1])
         slurm_job.slurm_job_id = str(submitted_job_id)
-
         # Add job to self.jobs
         self.jobs[slurm_job.slurm_job_id] = slurm_job
         logger.debug(

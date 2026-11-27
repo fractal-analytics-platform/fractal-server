@@ -66,6 +66,10 @@ class SlurmConfig(BaseModel):
             submission script, after prepending values with the user's cache
             directory.
         needs_gpu: Whether the task needs a GPU.
+        pre_submission_cmd:
+            Command to run right before `sbatch`, within the same shell (e.g.
+            `module load apptainer`). If set, `sbatch` is run from within a
+            wrapper script.
 
     """
 
@@ -101,6 +105,9 @@ class SlurmConfig(BaseModel):
 
     # Variables that will be `export`ed in the SLURM submission script
     user_local_exports: dict[str, str] = Field(default_factory=dict)
+
+    # Command to run before `sbatch`, in the same shell
+    pre_submission_cmd: str = ""
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: int | None = None

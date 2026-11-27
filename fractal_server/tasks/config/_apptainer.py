@@ -21,9 +21,10 @@ class TasksApptainerSettings(BaseModel):
     """
     pre_submission_cmd: str = ""
     """
-    Command to run (on the SSH host) right before submitting the SLURM job
-    for `apptainer build` (e.g. `module load apptainer`). If set, the
-    `sbatch` command is run within a wrapper script, after this command.
+    Command needed to make `apptainer` available (e.g. `module load apptainer`).
+    It runs (on the SSH host) right before `sbatch`, within a wrapper script,
+    both for the `apptainer build` SLURM job and for the SLURM jobs running
+    `apptainer` tasks.
     """
     build_env_vars: list[tuple[NonEmptyStr, str]] = [("APPTAINER_BINDPATH", "")]
     """

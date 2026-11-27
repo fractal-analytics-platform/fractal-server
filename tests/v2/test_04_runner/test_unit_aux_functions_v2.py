@@ -2,6 +2,8 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
+from fractal_server.app.models import Resource
+from fractal_server.app.schemas.v2 import TaskGroupOriginEnum
 from fractal_server.images import SingleImageTaskOutput
 from fractal_server.runner.exceptions import TaskOutputValidationError
 from fractal_server.runner.executors.call_command_wrapper import MAX_LEN_STDERR
@@ -10,6 +12,7 @@ from fractal_server.runner.executors.call_command_wrapper import (
 )
 from fractal_server.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.runner.v2.merge_outputs import merge_outputs
+from fractal_server.runner.v2.runner import _add_pre_submission_cmd
 from fractal_server.runner.v2.runner_functions import _process_init_task_output
 from fractal_server.runner.v2.runner_functions import _process_task_output
 from fractal_server.runner.v2.task_interface import InitArgsModel
@@ -21,6 +24,7 @@ from fractal_server.runner.v2.task_interface import (
 from fractal_server.runner.v2.task_interface import (
     _cast_and_validate_TaskOutput,
 )
+from tests.v2._aux_runner import get_default_slurm_config
 
 
 def test_deduplicate_list_of_dicts():
@@ -180,3 +184,49 @@ def test_placeholder_if_too_long():
     string = "x" * (MAX_LEN_STDERR + 1)
     assert string != placeholder_if_too_long(string)
     assert str(MAX_LEN_STDERR + 1) in placeholder_if_too_long(string)
+
+
+@pytest.mark.parametrize(
+    "origin,tasks_apptainer_config,expected",
+    [
+        # Apptainer task group, with `pre_submission_cmd`
+        (
+            TaskGroupOriginEnum.APPTAINER,
+            dict(pixi_version="0.1", pre_submission_cmd="module load x"),
+            "module load x",
+        ),
+        # Apptainer task group, without `pre_submission_cmd`
+        (
+            TaskGroupOriginEnum.APPTAINER,
+            dict(pixi_version="0.1"),
+            "",
+        ),
+        # Apptainer task group, with empty `tasks_apptainer_config`
+        (TaskGroupOriginEnum.APPTAINER, {}, ""),
+        # Non-apptainer task group
+        (
+            TaskGroupOriginEnum.PYPI,
+            dict(pixi_version="0.1", pre_submission_cmd="module load x"),
+            "",
+        ),
+    ],
+)
+def test_add_pre_submission_cmd(
+    origin: TaskGroupOriginEnum,
+    tasks_apptainer_config: dict,
+    expected: str,
+):
+    def get_runner_config(**kwargs):
+        return get_default_slurm_config()
+
+    new_get_runner_config = _add_pre_submission_cmd(
+        get_runner_config=get_runner_config,
+        task_group_origin=origin,
+        resource=Resource(tasks_apptainer_config=tasks_apptainer_config),
+    )
+    if not expected:
+        assert new_get_runner_config is get_runner_config
+    runner_config = new_get_runner_config()
+    assert runner_config.pre_submission_cmd == expected
+    # `pre_submission_cmd` must not end up in the SLURM submission script
+    assert runner_config.extra_lines == []
