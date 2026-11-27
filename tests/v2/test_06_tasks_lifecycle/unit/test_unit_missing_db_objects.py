@@ -11,6 +11,12 @@ from fractal_server.tasks.v2.ssh import deactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh import reactivate_ssh
 from fractal_server.tasks.v2.ssh import reactivate_ssh_pixi
 from fractal_server.tasks.v2.ssh.collect_apptainer import collect_ssh_apptainer
+from fractal_server.tasks.v2.ssh.deactivate_apptainer import (
+    deactivate_ssh_apptainer,
+)
+from fractal_server.tasks.v2.ssh.reactivate_apptainer import (
+    reactivate_ssh_apptainer,
+)
 
 
 def test_unit_missing_objects(
@@ -70,6 +76,8 @@ def test_unit_missing_objects(
         deactivate_ssh_pixi,
         reactivate_ssh_pixi,
         collect_ssh_apptainer,
+        deactivate_ssh_apptainer,
+        reactivate_ssh_apptainer,
     ]:
         caplog.clear()
         assert caplog.text == ""

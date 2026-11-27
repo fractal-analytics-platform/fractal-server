@@ -15,6 +15,7 @@ from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import SingleUseFractalSSH
 from fractal_server.ssh._fabric import SSHConfig
+from fractal_server.tasks.config import TasksApptainerSettings
 from fractal_server.tasks.utils import MANIFEST_FILENAME
 from fractal_server.tasks.utils import TASK_GROUP_ID_FILENAME
 from fractal_server.tasks.v2.ssh._utils import _customize_and_send_template
@@ -134,7 +135,9 @@ def collect_ssh_apptainer(
                     task_group.archive_path = archive_path_remote
                     task_group = add_commit_refresh(obj=task_group, db=db)
 
-                    apptainer_config = resource.tasks_apptainer_config
+                    apptainer_config = TasksApptainerSettings(
+                        **resource.tasks_apptainer_config
+                    )
                     def_path_remote = Path(
                         task_group.path, DEF_FILENAME
                     ).as_posix()
@@ -143,7 +146,7 @@ def collect_ssh_apptainer(
                     ).as_posix()
                     # Command that runs Python inside the container
                     python_command = (
-                        f"{apptainer_config['apptainer_bin']} exec "
+                        f"{apptainer_config.apptainer_bin} exec "
                         f"{sif_path_remote} "
                         "pixi run --as-is "
                         f"--manifest-path /{SOURCE_DIR_NAME}/pyproject.toml "
@@ -158,7 +161,7 @@ def collect_ssh_apptainer(
                     replacements = {
                         (
                             "__APPTAINER_BIN__",
-                            apptainer_config["apptainer_bin"],
+                            apptainer_config.apptainer_bin,
                         ),
                         ("__PIXI_VERSION__", task_group.pixi_version),
                         ("__TAR_GZ_PATH__", task_group.archive_path),
@@ -227,19 +230,22 @@ def collect_ssh_apptainer(
                     activity = add_commit_refresh(obj=activity, db=db)
 
                     # Build the image and run the post-build script
+                    build_command = (
+                        f"{apptainer_config.build_env_prefix}"
+                        f"{apptainer_config.apptainer_bin} build "
+                        f"{sif_path_remote} {def_path_remote}"
+                    )
+                    logger.info(f"Build command: {build_command}")
                     stdout = run_script_on_remote_slurm(
                         job_name=LOGGER_NAME,
                         commands=[
                             "date",
-                            (
-                                f"{apptainer_config['apptainer_bin']} build "
-                                f"{sif_path_remote} {def_path_remote}"
-                            ),
+                            build_command,
                             "date",
                             f"bash {post_build_script_path_remote}",
                         ],
                         workdir_remote=script_dir_remote,
-                        slurm_config=apptainer_config["SLURM_CONFIG"],
+                        slurm_config=apptainer_config.SLURM_CONFIG.model_dump(),
                         fractal_ssh=fractal_ssh,
                         logger_name=LOGGER_NAME,
                         prefix=prefix,
@@ -247,6 +253,9 @@ def collect_ssh_apptainer(
                         activity=activity,
                         log_file_path=log_file_path,
                         poll_interval=resource.jobs_poll_interval,
+                        pre_submission_cmd=(
+                            apptainer_config.pre_submission_cmd
+                        ),
                     )
                     activity.log = get_current_log(log_file_path)
                     activity = add_commit_refresh(obj=activity, db=db)
